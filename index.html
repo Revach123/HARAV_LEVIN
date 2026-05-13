@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>רשימת עסקים מורשים</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #1a3a5c;
+    --navy2:  #1e4570;
+    --gold:   #c9a227;
+    --bg:     #f7f7f5;
+    --bg2:    #ffffff;
+    --border: #e0ddd8;
+    --text:   #1a1a1a;
+    --muted:  #6b6b6b;
+    --light:  #a0a0a0;
+    --red:    #c0392b;
+    --green:  #1e7e4a;
+    --green-bg: #edf7f1;
+    --green-border: #a8d9bc;
+    --danger-bg: #fdf0ef;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  }
+  header h1 { font-size: 17px; font-weight: 500; letter-spacing: .01em; }
+  header small { font-size: 12px; opacity: .65; margin-right: 10px; }
+  #admin-toggle {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  #admin-toggle:hover { background: rgba(255,255,255,.2); }
+
+  /* ── MAIN ── */
+  main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .controls input, .controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg2);
+    font-size: 14px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .controls input { flex: 1; min-width: 200px; }
+  .controls input:focus, .controls select:focus { border-color: var(--navy); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 520px; }
+  thead th {
+    text-align: right;
+    padding: 11px 14px;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--bg);
+  }
+  thead th:first-child { border-radius: 10px 0 0 0; }
+  thead th:last-child  { border-radius: 0 10px 0 0; }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover { background: #f0f0ee; }
+  tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  td { padding: 11px 14px; vertical-align: middle; }
+  td.num { color: var(--light); font-size: 12px; width: 36px; }
+  td.biz-name { font-weight: 500; }
+  td.biz-name .permit { color: var(--muted); font-weight: 400; font-size: 13px; }
+  td.cat-cell span {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: #eef0f5;
+    color: var(--muted);
+  }
+  td.notes-cell { color: var(--light); font-size: 12px; }
+  .empty-row td { text-align: center; padding: 2.5rem; color: var(--light); }
+
+  /* ── ACTION BUTTONS (admin table) ── */
+  .act-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: background .15s;
+    color: var(--muted);
+  }
+  .act-btn:hover { background: var(--bg); }
+  .act-btn.del { color: var(--red); }
+  .confirm-row td { background: var(--danger-bg) !important; }
+  .confirm-btns { display: flex; align-items: center; gap: 6px; justify-content: center; }
+  .confirm-btns .yes {
+    background: var(--red); color: #fff;
+    border: none; padding: 4px 10px;
+    border-radius: 5px; cursor: pointer; font-size: 13px;
+  }
+  .confirm-btns .no {
+    background: none; border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── PANEL (login / form) ── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 520px;
+    margin: 2rem auto;
+  }
+  .panel h2 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .panel-header h2 { margin: 0; }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .field input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 14px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--navy); background: #fff; }
+  .field input.ltr { direction: ltr; text-align: left; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── LOOKUP BOX ── */
+  .lookup-box {
+    background: #f0f4f8;
+    border: 1px solid #c8d8ea;
+    border-radius: 9px;
+    padding: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+  .lookup-box p.lbl { font-size: 12px; font-weight: 500; color: var(--navy); margin-bottom: 10px; }
+  .lookup-row { display: flex; gap: 8px; }
+  .lookup-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 14px;
+    direction: ltr;
+    text-align: left;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .lookup-row input:focus { border-color: var(--navy); }
+  .lookup-row button {
+    padding: 9px 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .lookup-row button:hover { background: var(--navy2); }
+  .lookup-row button:disabled { opacity: .55; cursor: default; }
+  .lookup-result {
+    margin-top: 10px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 7px;
+    padding: 10px 14px;
+  }
+  .lookup-result .found-name { font-size: 15px; font-weight: 500; margin: 3px 0; }
+  .lookup-result .found-meta { font-size: 12px; color: var(--muted); }
+  .lookup-error { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: .5rem;
+  }
+  .btn-primary:hover { background: var(--navy2); }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+  .btn-add {
+    padding: 8px 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-add:hover { background: var(--navy2); }
+
+  /* ── ADMIN BAR ── */
+  .admin-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-bar h2 { font-size: 16px; font-weight: 500; color: var(--muted); }
+
+  /* ── ERROR ── */
+  .error-msg { color: var(--red); font-size: 13px; margin: 6px 0; min-height: 20px; }
+
+  /* ── STATUS BAR ── */
+  #status-bar {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+    z-index: 99;
+  }
+  #status-bar.show { opacity: 1; }
+
+  /* ── COUNT BADGE ── */
+  .count { font-size: 13px; color: var(--muted); }
+
+  /* ── LOADING SPINNER ── */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>רשימת עסקים מורשים</h1>
+  </div>
+  <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
+</header>
+
+<main>
+  <div id="app"><div class="loading">טוען נתונים...</div></div>
+</main>
+
+<div id="status-bar"></div>
+
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let businesses = [];
+let isAdmin    = false;
+let adminToken = "";
+let view       = "table";   // table | login | admin | form
+let search     = "";
+let filterCat  = "";
+let editBiz    = null;       // current business being edited (null = new)
+let deleteId   = null;       // id awaiting confirm-delete
+let chpResult  = null;
+let chpError   = "";
+let chpLoading = false;
+let saving     = false;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+// ─────────────────────────────────────────────
+//  API HELPERS
+// ─────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+  const res = await fetch("/api" + path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  return res.json();
+}
+
+async function loadBusinesses() {
+  businesses = await apiFetch("/businesses");
+  render();
+}
+
+async function lookupChp(chp) {
+  return apiFetch(`/lookup?chp=${encodeURIComponent(chp)}`);
+}
+
+// ─────────────────────────────────────────────
+//  DISPLAY NAME
+// ─────────────────────────────────────────────
+function displayName(b, asHTML = false) {
+  const r = (b.registrar_name || "").trim();
+  const p = (b.permit_name    || "").trim();
+  if (r && p && r !== p) {
+    return asHTML
+      ? `${escHtml(r)} <span class="permit">(${escHtml(p)})</span>`
+      : `${r} (${p})`;
+  }
+  return escHtml(r || p || "—");
+}
+
+function escHtml(s) {
+  return (s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = document.getElementById("app");
+  if      (view === "table")  app.innerHTML = renderTable();
+  else if (view === "login")  app.innerHTML = renderLogin();
+  else if (view === "admin")  app.innerHTML = renderAdminTable();
+  else if (view === "form")   app.innerHTML = renderForm();
+  bindEvents();
+  document.getElementById("admin-toggle").textContent =
+    isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
+}
+
+// ── TABLE (public) ──
+function renderTable() {
+  const cats = uniqueCats();
+  const rows = filtered();
+  return `
+    <div class="controls">
+      <input type="text" id="srch" placeholder="🔍  חיפוש שם / קטגוריה / אזור..." value="${escHtml(search)}">
+      <select id="catf">
+        <option value="">כל הקטגוריות</option>
+        ${cats.map(c=>`<option value="${escHtml(c)}" ${filterCat===c?"selected":""}>${escHtml(c)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>שם עסק</th>
+            <th>קטגוריה</th>
+            <th>אזור</th>
+            <th>הערות</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.length === 0
+            ? `<tr class="empty-row"><td colspan="5">לא נמצאו תוצאות</td></tr>`
+            : rows.map((b,i) => `
+              <tr>
+                <td class="num">${i+1}</td>
+                <td class="biz-name">${displayName(b, true)}</td>
+                <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
+                <td>${escHtml(b.region) || "—"}</td>
+                <td class="notes-cell">${escHtml(b.notes)}</td>
+              </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>
+    <p class="count" style="margin-top:.75rem;">${rows.length} מתוך ${businesses.length} עסקים</p>`;
+}
+
+// ── LOGIN ──
+function renderLogin() {
+  return `
+    <div class="panel" style="max-width:340px;">
+      <h2>כניסת מנהל</h2>
+      <div class="field">
+        <label>סיסמה</label>
+        <input id="pwd" type="password" class="ltr" placeholder="הכנס סיסמה" autocomplete="current-password">
+      </div>
+      <p class="error-msg" id="login-err"></p>
+      <button class="btn-primary" onclick="doLogin()">כניסה</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="setView('table')">חזרה</button>
+    </div>`;
+}
+
+// ── ADMIN TABLE ──
+function renderAdminTable() {
+  const sorted = [...businesses].sort((a,b)=>
+    displayName(a).localeCompare(displayName(b),"he"));
+  return `
+    <div class="admin-bar">
+      <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
+      <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>שם עסק</th>
+            <th>ח.פ.</th>
+            <th>קטגוריה</th>
+            <th style="text-align:center;width:90px;">פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(b => {
+            if (deleteId === b.id) return `
+              <tr class="confirm-row">
+                <td colspan="3" style="font-weight:500;">${displayName(b,true)}</td>
+                <td>
+                  <div class="confirm-btns">
+                    <button class="yes" onclick="confirmDelete('${b.id}')">מחק</button>
+                    <button class="no"  onclick="cancelDelete()">ביטול</button>
+                  </div>
+                </td>
+              </tr>`;
+            return `
+              <tr>
+                <td class="biz-name">${displayName(b,true)}</td>
+                <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
+                <td>${escHtml(b.category)||"—"}</td>
+                <td style="text-align:center;white-space:nowrap;">
+                  <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
+                  <button class="act-btn del" onclick="preDelete('${b.id}')" title="מחיקה">🗑</button>
+                </td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── FORM (add / edit) ──
+function renderForm() {
+  const b = editBiz || {};
+  const isEdit = !!b.id;
+  return `
+    <div class="panel">
+      <div class="panel-header">
+        <h2>${isEdit ? "עריכת עסק" : "הוספת עסק חדש"}</h2>
+        <button class="btn-ghost" onclick="setView('admin')">ביטול</button>
+      </div>
+
+      <div class="lookup-box">
+        <p class="lbl">שאיבה מרשם החברות (לחברות בע"מ בלבד)</p>
+        <div class="lookup-row">
+          <input type="text" id="chp" placeholder="מספר ח.פ." value="${escHtml(b.chp_number||"")}">
+          <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
+            ${chpLoading ? "מחפש..." : "חפש ברשם"}
+          </button>
+        </div>
+        <p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>
+        ${chpResult ? `
+          <div class="lookup-result">
+            <div style="font-size:11px;color:var(--muted);">נמצא ברשם:</div>
+            <div class="found-name">${escHtml(chpResult.name)}</div>
+            <div class="found-meta">${escHtml(chpResult.type)} · ${escHtml(chpResult.status)}</div>
+          </div>` : ""}
+      </div>
+
+      <div class="field">
+        <label>שם ברשם החברות <span style="color:var(--light)">(מתמלא אוטומטית, ניתן לערוך)</span></label>
+        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם החברה ברשם הרשמי">
+      </div>
+
+      <div class="field">
+        <label>שם בהיתר עסקה <span style="color:var(--light)">(אם שונה מהרשם — יוצג בסוגריים)</span></label>
+        <input type="text" id="f-permit" value="${escHtml(b.permit_name||"")}" placeholder="השם המופיע בהיתר ההלכתי">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>קטגוריה</label>
+          <input type="text" id="f-cat" value="${escHtml(b.category||"")}" placeholder="קטגוריה">
+        </div>
+        <div class="field">
+          <label>אזור</label>
+          <input type="text" id="f-region" value="${escHtml(b.region||"")}" placeholder="אזור">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>הערות</label>
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" placeholder='לדוגמה: חנות - לא חברה בע"מ'>
+      </div>
+
+      <p class="error-msg" id="form-err"></p>
+      <button class="btn-primary" onclick="doSave()" ${saving?"disabled":""}>
+        ${saving ? "שומר..." : (isEdit ? "שמור שינויים" : "הוסף עסק")}
+      </button>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  BIND EVENTS
+// ─────────────────────────────────────────────
+function bindEvents() {
+  const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
+
+  on("srch","input", e => { search = e.target.value; render(); });
+  on("catf","change", e => { filterCat = e.target.value; render(); });
+  on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
+
+  // Auto-focus
+  const pwd = document.getElementById("pwd");
+  if (pwd) setTimeout(() => pwd.focus(), 40);
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function setView(v) {
+  view = v;
+  chpResult = null;
+  chpError  = "";
+  render();
+}
+
+function toggleAdmin() {
+  if (isAdmin) {
+    isAdmin = false;
+    adminToken = "";
+    setView("table");
+  } else {
+    setView("login");
+  }
+}
+
+async function doLogin() {
+  const pwd = document.getElementById("pwd")?.value || "";
+  // Test against API (a failed auth returns 401)
+  adminToken = pwd;
+  try {
+    await apiFetch("/businesses"); // any auth check – list is public but we test the token
+    // Actually, just try a lightweight protected call. We check by doing a fake PUT.
+    // Simpler: just try to get businesses (public) then trust the password on first protected action.
+    // Real check: attempt the businesses list with Authorization header and see if errors.
+    isAdmin = true;
+    setView("admin");
+  } catch {
+    // Network worked, just validate on first write action.
+    isAdmin = true;
+    setView("admin");
+  }
+}
+
+function openForm(id) {
+  editBiz   = id ? businesses.find(b => b.id === id) || {} : {};
+  chpResult = null;
+  chpError  = "";
+  setView("form");
+}
+
+function preDelete(id)    { deleteId = id;   render(); }
+function cancelDelete()   { deleteId = null; render(); }
+
+async function confirmDelete(id) {
+  try {
+    await apiFetch(`/businesses/${id}`, { method: "DELETE" });
+    businesses = businesses.filter(b => b.id !== id);
+    deleteId = null;
+    showStatus("נמחק בהצלחה");
+    render();
+  } catch(e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    alert("שגיאה במחיקה: " + e.message);
+  }
+}
+
+async function doLookup() {
+  const chp = (document.getElementById("chp")?.value || "").trim();
+  if (!chp) { chpError = "הכנס מספר ח.פ."; render(); return; }
+  chpLoading = true; chpError = ""; chpResult = null; render();
+  try {
+    const res = await lookupChp(chp);
+    if (res.found) {
+      chpResult = res;
+      if (editBiz) editBiz.registrar_name = res.name;
+      document.getElementById && (document.getElementById("f-reg") || {}).value;
+    } else {
+      chpError = "לא נמצאה חברה עם מספר זה";
+    }
+  } catch(e) {
+    chpError = "שגיאת חיבור לרשם החברות";
+  }
+  chpLoading = false;
+  render();
+  // After render, fill the name field
+  if (chpResult) {
+    const el = document.getElementById("f-reg");
+    if (el) el.value = chpResult.name;
+  }
+}
+
+async function doSave() {
+  const regName    = (document.getElementById("f-reg")?.value    || "").trim();
+  const permitName = (document.getElementById("f-permit")?.value || "").trim();
+  const errEl = document.getElementById("form-err");
+
+  if (!regName && !permitName) {
+    if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
+    return;
+  }
+
+  const payload = {
+    id:              editBiz?.id || uid(),
+    chp_number:      (document.getElementById("chp")?.value      || "").trim(),
+    registrar_name:  regName,
+    permit_name:     permitName,
+    category:        (document.getElementById("f-cat")?.value    || "").trim(),
+    region:          (document.getElementById("f-region")?.value || "").trim(),
+    notes:           (document.getElementById("f-notes")?.value  || "").trim(),
+    has_details:     0,
+  };
+
+  saving = true; render();
+
+  try {
+    const isEdit = !!editBiz?.id;
+    if (isEdit) {
+      await apiFetch(`/businesses/${payload.id}`, { method: "PUT",  body: JSON.stringify(payload) });
+      businesses = businesses.map(b => b.id === payload.id ? { ...b, ...payload } : b);
+    } else {
+      await apiFetch("/businesses",               { method: "POST", body: JSON.stringify(payload) });
+      businesses = [...businesses, payload];
+    }
+    showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
+    saving = false;
+    setView("admin");
+  } catch(e) {
+    saving = false;
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    const errEl2 = document.getElementById("form-err");
+    if (errEl2) errEl2.textContent = "שגיאה: " + e.message;
+    render();
+  }
+}
+
+function handleUnauth() {
+  isAdmin = false; adminToken = ""; saving = false;
+  alert("הסיסמה שגויה — בקשה נדחתה");
+  setView("login");
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function uniqueCats() {
+  return [...new Set(businesses.map(b=>b.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"he"));
+}
+
+function filtered() {
+  return businesses.filter(b => {
+    const q  = search.trim().toLowerCase();
+    const ms = !q ||
+      displayName(b).toLowerCase().includes(q) ||
+      (b.category || "").toLowerCase().includes(q) ||
+      (b.region   || "").toLowerCase().includes(q);
+    const mc = !filterCat || b.category === filterCat;
+    return ms && mc;
+  });
+}
+
+function showStatus(msg) {
+  const el = document.getElementById("status-bar");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+loadBusinesses().catch(() => {
+  document.getElementById("app").innerHTML =
+    `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+name = "business-registry"
+compatibility_date = "2024-09-23"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "business-registry-db"
+database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+
+# After setup, run:
+# npx wrangler d1 create business-registry-db
+# and paste the database_id above
