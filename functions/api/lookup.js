@@ -1,19 +1,55 @@
-// GET /api/lookup?chp=XXXXXXX
-// Proxy to data.gov.il — runs server-side so no CORS issues
+// GET /api/lookup?number=XXX&type=company|partnership|association
+// Proxy to data.gov.il — runs server-side, no CORS issues
 
-const GOV_API = "https://data.gov.il/api/3/action/datastore_search";
-const RESOURCE = "f004176c-b85f-4542-8901-7b3176f9a054";
+const SOURCES = {
+  company: {
+    resource:    "f004176c-b85f-4542-8901-7b3176f9a054",
+    filterField: "מספר חברה",
+    nameField:   "שם חברה",
+    typeField:   "סוג תאגיד",
+    statusField: "סטטוס חברה",
+  },
+  partnership: {
+    resource:    "139aa193-fabb-4f6b-a71b-0bb40fd73eb2",
+    filterField: "מספר שותפות",
+    nameField:   "שם שותפות",
+    typeField:   "סוג תאגיד",
+    statusField: "סטטוס תאגיד",
+  },
+  association: {
+    resource:    "be5b7935-3922-45d4-9638-08871b17ec95",
+    filterField: "מספר עמותה",
+    nameField:   "שם עמותה בעברית",
+    typeField:   "סיווג פעילות ענפי",
+    statusField: "סטטוס עמותה",
+  },
+};
+
+function cleanName(name) {
+  return (name || "")
+    .replace(/~/g, '"')
+    .replace(/שותפות מוגבלת/g, "")
+    .trim()
+    .replace(/[.,\-!?~"]+$/, "")
+    .trim();
+}
 
 export async function onRequestGet({ request }) {
-  const url = new URL(request.url);
-  const chp = (url.searchParams.get("chp") || "").trim();
+  const url    = new URL(request.url);
+  const number = (url.searchParams.get("number") || "").trim();
+  const type   = (url.searchParams.get("type")   || "company").trim();
 
-  if (!chp) {
-    return Response.json({ error: "Missing chp parameter" }, { status: 400 });
+  if (!number) {
+    return Response.json({ error: "Missing number parameter" }, { status: 400 });
   }
 
-  const filters = encodeURIComponent(JSON.stringify({ "מספר חברה": chp }));
-  const govUrl  = `${GOV_API}?resource_id=${RESOURCE}&filters=${filters}&limit=1`;
+  const source = SOURCES[type];
+  if (!source) {
+    return Response.json({ error: "Invalid type. Use: company, partnership, association" }, { status: 400 });
+  }
+
+  const filters = encodeURIComponent(JSON.stringify({ [source.filterField]: number }));
+  const govUrl  = `https://data.gov.il/api/3/action/datastore_search?resource_id=${source.resource}&filters=${filters}&limit=1`;
 
   try {
     const res  = await fetch(govUrl, { headers: { "User-Agent": "Business-Registry/1.0" } });
@@ -24,9 +60,9 @@ export async function onRequestGet({ request }) {
       const rec = records[0];
       return Response.json({
         found:  true,
-        name:   rec["שם חברה"]    || "",
-        type:   rec["סוג תאגיד"]  || "",
-        status: rec["סטטוס חברה"] || "",
+        name:   cleanName(rec[source.nameField]),
+        type:   rec[source.typeField]   || "",
+        status: rec[source.statusField] || "",
       });
     }
 
