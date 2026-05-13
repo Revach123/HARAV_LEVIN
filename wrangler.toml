@@ -5,7 +5,7 @@ pages_build_output_dir = "."
 [[d1_databases]]
 binding = "DB"
 database_name = "business-registry-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "61e1a52e-1083-478d-914c-5375d8ed59bb"
 
 # After setup, run:
 # npx wrangler d1 create business-registry-db
