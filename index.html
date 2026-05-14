@@ -656,13 +656,14 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6
 // ─────────────────────────────────────────────
 const CSV_FIELDS = [
   { key: "chp_number",     label: "ח.פ. / מספר רישום",  aliases: ["חפ","ח.פ","ח.פ.","chp","chp_number","מספר רישום","מספר תאגיד","ס.מ.","ס\"מ"] },
-  { key: "registrar_name", label: "שם ברשם הרשמי",       aliases: ["שם ברשם","שם רשמי","registrar_name","registrar","שם תאגיד","שם החברה"] },
-  { key: "permit_name",    label: "שם בהיתר עסקה",       aliases: ["שם בהיתר","היתר","permit_name","permit","שם עסק","שם"] },
-  { key: "category",       label: "קטגוריה",              aliases: ["קטגוריה","category","ענף","סוג"] },
+  { key: "registrar_name", label: "שם ברשם הרשמי",       aliases: ["שם ברשם","שם רשמי","registrar_name","registrar","שם תאגיד","שם החברה","שם חברה / שותפות רשמי","שם חברה","שם שותפות"] },
+  { key: "permit_name",    label: "שם בהיתר עסקה",       aliases: ["שם בהיתר","היתר","permit_name","permit","שם עסק","שם","היתר עסקה על שם","היתר עסקה"] },
+  { key: "category",       label: "קטגוריה",              aliases: ["קטגוריה","category","ענף","סוג","עיסוק","תחום עיסוק"] },
   { key: "region",         label: "אזור",                 aliases: ["אזור","region","מחוז"] },
-  { key: "visibility",     label: "פרטי / כללי",          aliases: ["פרטי/כללי","פרטי כללי","visibility","סוג עסק"] },
-  { key: "agch_approved",  label: "אישור אג\"ח",          aliases: ["אישור אגח","אישור אג\"ח","agch_approved","אגח מאושר"] },
+  { key: "visibility",     label: "פרטי / כללי",          aliases: ["פרטי/כללי","פרטי כללי","visibility","היתר עסקה חברה"] },
+  { key: "agch_approved",  label: "אישור אג\"ח",          aliases: ["אישור אגח","אישור אג\"ח","agch_approved","אגח מאושר","היתר עסקה אגח","היתר עסקה אג\"ח"] },
   { key: "tase_has_agch",  label: "אג\"ח בורסה",          aliases: ["אגח בורסה","אג\"ח בורסה","tase_has_agch","בורסה"] },
+  { key: "biz_type",       label: "סוג עסק",              aliases: ["סוג עסק","entity_type","biz_type","סוג החברה","סוג תאגיד","סוג"] },
   { key: "notes",          label: "הערות",                aliases: ["הערות","notes","remarks","הערה"] },
 ];
 
@@ -740,6 +741,7 @@ function renderTable() {
             <th>שם עסק</th>
             <th>קטגוריה</th>
             <th>אזור</th>
+            <th>סוג עסק</th>
             <th>פרטי/כללי</th>
             <th>אג"ח בורסה</th>
             <th>אישור אג"ח</th>
@@ -748,13 +750,14 @@ function renderTable() {
         </thead>
         <tbody>
           ${rows.length === 0
-            ? `<tr class="empty-row"><td colspan="8">לא נמצאו תוצאות</td></tr>`
+            ? `<tr class="empty-row"><td colspan="9">לא נמצאו תוצאות</td></tr>`
             : rows.map((b,i) => `
               <tr>
                 <td class="num">${i+1}</td>
                 <td class="biz-name">${displayName(b, true)}</td>
                 <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
                 <td>${escHtml(b.region) || "—"}</td>
+                <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
                 <td style="font-size:13px;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
                 <td style="font-size:13px;text-align:center;">${
                   b.tase_has_agch === "יש" ? `<span style="color:var(--green);font-weight:500;">✓ יש</span>` :
@@ -809,6 +812,7 @@ function renderAdminTable() {
             <th>שם עסק</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
+            <th>סוג עסק</th>
             <th style="text-align:center;width:80px;">פרטי/כללי</th>
             <th style="text-align:center;width:80px;">אג"ח בורסה</th>
             <th style="text-align:center;width:80px;">אישור אג"ח</th>
@@ -822,6 +826,7 @@ function renderAdminTable() {
                 <td class="biz-name">${displayName(b,true)}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
+                <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
                 <td style="text-align:center;">
                   <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
@@ -919,6 +924,19 @@ function renderForm() {
               .join("")}
           </datalist>
         </div>
+      </div>
+
+      <div class="field">
+        <label>סוג עסק</label>
+        <input type="text" id="f-biztype" value="${escHtml(b.biz_type||"")}"
+          placeholder="חברה פרטית - בע&quot;מ, עמותה, שותפות..."
+          list="biztype-list" autocomplete="off">
+        <datalist id="biztype-list">
+          ${[...new Set(businesses.map(b=>b.biz_type).filter(Boolean))]
+            .sort((a,c)=>a.localeCompare(c,"he"))
+            .map(n=>`<option value="${escHtml(n)}">`)
+            .join("")}
+        </datalist>
       </div>
 
       <div class="field-row">
@@ -1355,6 +1373,7 @@ async function doSave() {
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),
     notes:          (document.getElementById("f-notes")?.value     || "").trim(),
+    biz_type:       (document.getElementById("f-biztype")?.value   || "").trim(),
     visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
     agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),
     has_details:    0,
@@ -1490,6 +1509,14 @@ function updateColMap(fieldKey, value) {
   }
 }
 
+// Normalize agch_approved values from CSV → system values
+function normalizeAgch(val) {
+  const v = (val || "").trim();
+  if (v === "מאושר"  || v === "כן" || v === "yes" || v === "true" || v === "1") return "כן";
+  if (v === "לא מאושר" || v === "לא" || v === "no"  || v === "false"|| v === "0") return "לא";
+  return "";
+}
+
 async function startImport() {
   // Validate at least a name field is mapped
   const hasName = (csvColMap["registrar_name"]??-1) >= 0 || (csvColMap["permit_name"]??-1) >= 0;
@@ -1553,8 +1580,9 @@ async function startImport() {
       category:       get("category"),
       region:         get("region"),
       visibility:     get("visibility"),
-      agch_approved:  get("agch_approved"),
+      agch_approved:  normalizeAgch(get("agch_approved")),
       tase_has_agch:  get("tase_has_agch"),
+      biz_type:       get("biz_type"),
       notes:          get("notes"),
       has_details:    0,
     };
