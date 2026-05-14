@@ -475,7 +475,8 @@ function renderAdminTable() {
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn-ghost" onclick="runSync()" id="sync-btn">🔄 עדכן מרשם ובורסה</button>
+        <button class="btn-ghost" onclick="runSync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
+        <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
@@ -759,6 +760,39 @@ async function inlineUpdate(id, field, value) {
     showStatus("שגיאה בשמירה");
     render();
   }
+}
+
+async function runTaseSync() {
+  const btn    = document.getElementById("tase-btn");
+  const status = document.getElementById("sync-status");
+  if (!btn || !status) return;
+
+  btn.disabled    = true;
+  btn.textContent = "⏳ מושך מבורסה...";
+  status.style.display = "block";
+  status.style.background = "var(--bg2)";
+  status.innerHTML = "מושך נתוני אג\"ח מהבורסה — אנא המתן...";
+
+  try {
+    const res = await apiFetch("/sync-tase", { method: "POST" });
+    const { dateUsed, taseTotal, bondCompanies, dbChecked, withBonds, updated } = res;
+    status.style.background = "#edf7f1";
+    status.innerHTML = `
+      ✅ אג"ח בורסה עודכן &nbsp;|&nbsp;
+      תאריך נתונים: <strong>${dateUsed}</strong> &nbsp;|&nbsp;
+      ניירות בבורסה: <strong>${taseTotal}</strong> &nbsp;|&nbsp;
+      חברות עם אג"ח: <strong>${bondCompanies}</strong> &nbsp;|&nbsp;
+      נמצאו ברשימה שלנו: <strong>${withBonds}</strong> &nbsp;|&nbsp;
+      עודכנו: <strong>${updated}</strong>
+    `;
+    await loadBusinesses();
+  } catch(e) {
+    status.style.background = "#fdf0ef";
+    status.innerHTML = `❌ שגיאה: ${e.message}`;
+  }
+
+  btn.disabled    = false;
+  btn.textContent = "📈 עדכן אג\"ח מבורסה";
 }
 
 async function runSync() {
