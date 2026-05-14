@@ -475,7 +475,7 @@ function renderAdminTable() {
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn-ghost" onclick="runSync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
+        <button class="btn-ghost" onclick="runRegistrySync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
         <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
@@ -760,6 +760,36 @@ async function inlineUpdate(id, field, value) {
     showStatus("שגיאה בשמירה");
     render();
   }
+}
+
+async function runRegistrySync() {
+  const btn    = document.getElementById("sync-btn");
+  const status = document.getElementById("sync-status");
+  if (!btn || !status) return;
+
+  btn.disabled    = true;
+  btn.textContent = "⏳ מפעיל...";
+  status.style.display   = "block";
+  status.style.background = "var(--bg2)";
+  status.innerHTML = `
+    🔄 עדכון שמות מרשם הופעל ב-Cloudflare Worker — רץ ברקע ללא הגבלת זמן.<br>
+    <span style="font-size:12px;color:var(--muted);">תוצאות יופיעו ב-Logs של ה-Worker ב-Cloudflare.</span>
+  `;
+
+  try {
+    await apiFetch("/run-worker", { method: "POST" });
+    status.style.background = "#edf7f1";
+    status.innerHTML = `
+      ✅ עדכון שמות מרשם הופעל בהצלחה — רץ ברקע.<br>
+      <span style="font-size:12px;color:var(--muted);">לצפייה בתוצאות: Cloudflare → Workers → registry-updater → Logs</span>
+    `;
+  } catch(e) {
+    status.style.background = "#fdf0ef";
+    status.innerHTML = `❌ שגיאה: ${e.message}`;
+  }
+
+  btn.disabled    = false;
+  btn.textContent = "🔄 עדכן שמות מרשם";
 }
 
 async function runTaseSync() {
