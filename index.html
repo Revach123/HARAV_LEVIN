@@ -478,14 +478,16 @@ function renderAdminTable() {
             <th>שם עסק</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
-            <th style="text-align:center;width:90px;">פעולות</th>
+            <th style="text-align:center;width:90px;">פרטי/כללי</th>
+            <th style="text-align:center;width:80px;">אג"ח</th>
+            <th style="text-align:center;width:80px;">פעולות</th>
           </tr>
         </thead>
         <tbody>
           ${sorted.map(b => {
             if (deleteId === b.id) return `
               <tr class="confirm-row">
-                <td colspan="3" style="font-weight:500;">${displayName(b,true)}</td>
+                <td colspan="5" style="font-weight:500;">${displayName(b,true)}</td>
                 <td>
                   <div class="confirm-btns">
                     <button class="yes" onclick="confirmDelete('${b.id}')">מחק</button>
@@ -498,6 +500,22 @@ function renderAdminTable() {
                 <td class="biz-name">${displayName(b,true)}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
+                <td style="text-align:center;">
+                  <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
+                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value=""   ${!b.visibility?"selected":""}>—</option>
+                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>
+                    <option value="כללי" ${b.visibility==="כללי"?"selected":""}>כללי</option>
+                  </select>
+                </td>
+                <td style="text-align:center;">
+                  <select onchange="inlineUpdate('${b.id}','agch_approved',this.value)"
+                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value=""   ${!b.agch_approved?"selected":""}>—</option>
+                    <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
+                    <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+                  </select>
+                </td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
                   <button class="act-btn del" onclick="preDelete('${b.id}')" title="מחיקה">🗑</button>
@@ -711,6 +729,21 @@ async function doLookup() {
   if (chpResult) {
     const el = document.getElementById("f-reg");
     if (el) el.value = chpResult.name;
+  }
+}
+
+async function inlineUpdate(id, field, value) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  const updated = { ...biz, [field]: value };
+  try {
+    await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
+    businesses = businesses.map(b => b.id === id ? updated : b);
+    showStatus("עודכן ✓");
+  } catch(e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    showStatus("שגיאה בשמירה");
+    render();
   }
 }
 
