@@ -420,6 +420,8 @@ function renderTable() {
             <th>שם עסק</th>
             <th>קטגוריה</th>
             <th>אזור</th>
+            <th>פרטי/כללי</th>
+            <th>אג"ח</th>
             <th>הערות</th>
           </tr>
         </thead>
@@ -432,6 +434,11 @@ function renderTable() {
                 <td class="biz-name">${displayName(b, true)}</td>
                 <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
                 <td>${escHtml(b.region) || "—"}</td>
+                <td style="font-size:13px;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
+                <td style="font-size:13px;">${
+                  b.agch_approved === "כן" ? `<span style="color:var(--green);font-weight:500;">✓ כן</span>` :
+                  b.agch_approved === "לא" ? `<span style="color:var(--red);font-size:12px;">לא</span>` : "—"
+                }</td>
                 <td class="notes-cell">${escHtml(b.notes)}</td>
               </tr>`).join("")}
         </tbody>
@@ -567,6 +574,25 @@ function renderForm() {
               .map(n=>`<option value="${escHtml(n)}">`)
               .join("")}
           </datalist>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>פרטי / כללי</label>
+          <select id="f-visibility" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+            <option value=""   ${!b.visibility?"selected":""}>— לא מוגדר —</option>
+            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>
+            <option value="כללי" ${b.visibility==="כללי"?"selected":""}>כללי</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>אישור לאג"ח</label>
+          <select id="f-agch" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+            <option value=""   ${!b.agch_approved?"selected":""}>— לא מוגדר —</option>
+            <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
+            <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+          </select>
         </div>
       </div>
 
@@ -718,6 +744,8 @@ async function doSave() {
     category:        (document.getElementById("f-cat")?.value        || "").trim(),
     region:          (document.getElementById("f-region")?.value     || "").trim(),
     notes:           (document.getElementById("f-notes")?.value      || "").trim(),
+    visibility:      (document.getElementById("f-visibility")?.value || "").trim(),
+    agch_approved:   (document.getElementById("f-agch")?.value       || "").trim(),
     has_details:     0,
   };
 
