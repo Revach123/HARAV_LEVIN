@@ -60,13 +60,19 @@ async function doRegistrySync(env) {
   console.log(`Registry sync done. Updated: ${updated}/${results.length}`);
 }
 
-export async function onRequestPost({ request, env, waitUntil }) {
+export async function onRequest(context) {
+  const { request, env } = context;
+
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method Not Allowed" }, { status: 405 });
+  }
+
   if (!isAuthed(request, env)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // מחזיר מיד — העדכון ממשיך ברקע
-  waitUntil(doRegistrySync(env));
+  // מפעיל ברקע ומחזיר תשובה מיידית
+  context.waitUntil(doRegistrySync(env));
 
   return Response.json({
     started: true,
