@@ -514,16 +514,9 @@ function renderForm() {
       </div>
 
       <div class="lookup-box">
-        <p class="lbl">שאיבה מהרשם הרשמי</p>
-        <div style="display:flex;gap:8px;margin-bottom:8px;">
-          <select id="entity-type" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);font-size:14px;direction:rtl;color:var(--text);outline:none;">
-            <option value="company"     ${(b.entity_type||"company")==="company"    ?"selected":""}>חברה בע"מ (ח.פ.)</option>
-            <option value="partnership" ${(b.entity_type||"")==="partnership"?"selected":""}>שותפות</option>
-            <option value="association" ${(b.entity_type||"")==="association"?"selected":""}>עמותה / ע"ר</option>
-          </select>
-        </div>
+        <p class="lbl">שאיבה מהרשם הרשמי — מחפש אוטומטית בכל הרשמים</p>
         <div class="lookup-row">
-          <input type="text" id="chp" placeholder="מספר רישום" value="${escHtml(b.chp_number||"")}">
+          <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}">
           <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
             ${chpLoading ? "מחפש..." : "חפש ברשם"}
           </button>
@@ -674,18 +667,15 @@ async function confirmDelete(id) {
 }
 
 async function doLookup() {
-  const number     = (document.getElementById("chp")?.value         || "").trim();
-  const entityType = (document.getElementById("entity-type")?.value || "company").trim();
-  const typeLabels = { company: "חברה", partnership: "שותפות", association: "עמותה" };
-
+  const number = (document.getElementById("chp")?.value || "").trim();
   if (!number) { chpError = "הכנס מספר רישום"; render(); return; }
   chpLoading = true; chpError = ""; chpResult = null; render();
   try {
-    const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}&type=${entityType}`);
+    const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
     if (res.found) {
       chpResult = res;
     } else {
-      chpError = `לא נמצאה ${typeLabels[entityType]||"רשות"} עם מספר זה`;
+      chpError = "לא נמצא תאגיד עם מספר זה בשום רשם";
     }
   } catch(e) {
     chpError = "שגיאת חיבור לרשם הרשמי";
