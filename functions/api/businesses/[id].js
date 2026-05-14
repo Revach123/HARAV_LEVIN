@@ -14,21 +14,24 @@ export async function onRequestPut({ request, env, params }) {
   try {
     const id = params.id;
     const body = await request.json();
-    const { chp_number, registrar_name, permit_name, category, region, notes, has_details } = body;
+    const { chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details } = body;
 
     const result = await env.DB.prepare(
       `UPDATE businesses
-       SET chp_number=?, registrar_name=?, permit_name=?, category=?, region=?, notes=?, has_details=?,
+       SET chp_number=?, entity_type=?, registrar_name=?, permit_name=?, category=?, region=?, notes=?, visibility=?, agch_approved=?, has_details=?,
            updated_at=datetime('now')
        WHERE id=?`
     ).bind(
-      chp_number    || "",
+      chp_number     || "",
+      entity_type    || "company",
       registrar_name || "",
-      permit_name   || "",
-      category      || "",
-      region        || "",
-      notes         || "",
-      has_details   ? 1 : 0,
+      permit_name    || "",
+      category       || "",
+      region         || "",
+      notes          || "",
+      visibility     || "",
+      agch_approved  || "",
+      has_details    ? 1 : 0,
       id
     ).run();
 
