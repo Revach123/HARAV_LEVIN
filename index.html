@@ -62,7 +62,7 @@
   #admin-toggle:hover { background: rgba(255,255,255,.2); }
 
   /* ── MAIN ── */
-  main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
+  main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
 
   /* ── CONTROLS ── */
   .controls {
@@ -89,16 +89,17 @@
   .table-wrap { overflow-x: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px; table-layout: fixed; }
   col.c-num      { width: 36px; }
-  col.c-name     { width: 220px; }
-  col.c-name-lg  { width: 260px; }
-  col.c-chp      { width: 100px; }
+  col.c-name     { width: 200px; }
+  col.c-name-lg  { width: 240px; }
+  col.c-chp      { width: 96px; }
   col.c-cat      { width: 110px; }
-  col.c-biztype  { width: 160px; }
-  col.c-region   { width: 80px; }
-  col.c-vis      { width: 72px; }
+  col.c-biztype  { width: 170px; }
+  col.c-region   { width: 75px; }
+  col.c-vis      { width: 65px; }
+  col.c-agch-combined { width: 150px; }
   col.c-tase     { width: 76px; }
   col.c-agch     { width: 80px; }
-  col.c-notes    { width: 130px; }
+  col.c-notes    { width: auto; }
   col.c-actions  { width: 70px; }
   thead th {
     text-align: right;
@@ -715,6 +716,22 @@ function displayName(b, asHTML = false) {
   return escHtml(r || p || "—");
 }
 
+// Combined אג"ח status label for public table
+function agchLabel(b) {
+  const has  = (b.tase_has_agch  || "").trim();
+  const appr = (b.agch_approved  || "").trim();
+  if (has !== "יש") {
+    return `<span style="color:var(--light);">אין אג"ח</span>`;
+  }
+  if (appr === "כן") {
+    return `<span style="color:var(--green);font-weight:500;">יש אג"ח · מאושר</span>`;
+  }
+  if (appr === "לא") {
+    return `<span style="color:#b85c00;font-weight:500;">יש אג"ח · לא מאושר</span>`;
+  }
+  return `<span style="color:var(--muted);">יש אג"ח</span>`;
+}
+
 function escHtml(s) {
   return (s || "")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -753,25 +770,25 @@ function renderTable() {
       <table>
         <colgroup>
           <col class="c-num">
+          <col class="c-chp">
           <col class="c-name-lg">
           <col class="c-cat">
           <col class="c-region">
           <col class="c-biztype">
           <col class="c-vis">
-          <col class="c-tase">
-          <col class="c-agch">
+          <col class="c-agch-combined">
           <col class="c-notes">
         </colgroup>
         <thead>
           <tr>
             <th>#</th>
+            <th>ח.פ.</th>
             <th>שם עסק</th>
             <th>קטגוריה</th>
             <th>אזור</th>
             <th>סוג עסק</th>
             <th style="text-align:center;">פרטי/כללי</th>
-            <th style="text-align:center;">אג"ח בורסה</th>
-            <th style="text-align:center;">אישור אג"ח</th>
+            <th style="text-align:center;">אג"ח</th>
             <th>הערות</th>
           </tr>
         </thead>
@@ -781,20 +798,14 @@ function renderTable() {
             : rows.map((b,i) => `
               <tr>
                 <td class="num">${i+1}</td>
+                <td style="direction:ltr;text-align:right;font-size:12px;color:var(--light);">${escHtml(b.chp_number)||"—"}</td>
                 <td class="biz-name">${displayName(b, true)}</td>
                 <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
-                <td>${escHtml(b.region) || "—"}</td>
+                <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
-                <td style="font-size:13px;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
-                <td style="font-size:13px;text-align:center;">${
-                  b.tase_has_agch === "יש" ? `<span style="color:var(--green);font-weight:500;">✓ יש</span>` :
-                  b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
-                }</td>
-                <td style="font-size:13px;text-align:center;">${
-                  b.agch_approved === "כן" ? `<span style="color:var(--green);font-weight:500;">✓ כן</span>` :
-                  b.agch_approved === "לא" ? `<span style="color:var(--red);font-size:12px;">לא</span>` : "—"
-                }</td>
-                <td class="notes-cell">${escHtml(b.notes)}</td>
+                <td style="font-size:12px;text-align:center;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
+                <td style="font-size:12px;text-align:center;">${agchLabel(b)}</td>
+                <td class="notes-cell">${escHtml(b.notes)||"—"}</td>
               </tr>`).join("")}
         </tbody>
       </table>
