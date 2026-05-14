@@ -71,11 +71,31 @@ export async function onRequest(context) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // מפעיל ברקע ומחזיר תשובה מיידית
-  context.waitUntil(doRegistrySync(env));
+  const { results } = await env.DB.prepare(
+    `SELECT id, chp_number, registrar_name FROM businesses
+     WHERE chp_number IS NOT NULL AND chp_number != ''`
+  ).all();
 
-  return Response.json({
-    started: true,
-    message: "עדכון שמות מרשם הופעל ברקע — יסתיים תוך מספר דקות",
-  });
+  if (!results.length) {
+    return Response.json({ done: true, updated: 0, total: 0 });
+  }
+
+  let updated = 0;
+  const BATCH = 5;
+
+  for (let i = 0; i < results.length; i += BATCH) {
+    await Promise.allSettled(results.slice(i, i + BATCH).map(async (biz) => {
+      try {
+        const name = await lookupNumber(biz.chp_number);
+        if (name && name !== (biz.registrar_name || "").trim()) {
+          await env.DB.prepare(
+            `UPDATE businesses SET registrar_name=?, updated_at=datetime('now') WHERE id=?`
+          ).bind(name, biz.id).run();
+          updated++;
+        }
+      } catch {}
+    }));
+  }
+
+  return Response.json({ done: true, updated, total: results.length });
 }
