@@ -64,7 +64,82 @@
   /* ── MAIN ── */
   main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
 
-  /* ── CONTROLS ── */
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: .6rem;
+    align-items: center;
+  }
+  .filter-bar .fb-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .filter-bar .fb-label {
+    font-size: 10px;
+    color: var(--light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding-right: 2px;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg2);
+    font-size: 13px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+    height: 34px;
+  }
+  .filter-bar select:focus, .filter-bar input:focus { border-color: var(--navy); }
+  .filter-bar select.active, .filter-bar input.active {
+    border-color: var(--navy);
+    background: #eef3f9;
+    color: var(--navy);
+    font-weight: 500;
+  }
+  .fb-search { flex: 1; min-width: 200px; }
+  .clear-filters {
+    padding: 6px 12px;
+    background: none;
+    border: 1px solid #f0b0aa;
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--red);
+    cursor: pointer;
+    height: 34px;
+    white-space: nowrap;
+    transition: background .15s;
+    align-self: flex-end;
+  }
+  .clear-filters:hover { background: var(--danger-bg); }
+
+  /* ── SORTABLE HEADERS ── */
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-left: 22px;
+  }
+  thead th.sortable:hover { color: var(--navy); }
+  thead th.sort-active { color: var(--navy); font-weight: 600; }
+  .sort-icon {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    opacity: .5;
+  }
+  thead th.sort-active .sort-icon { opacity: 1; color: var(--navy); }
+
+  /* ── CONTROLS (keep for compat) ── */
   .controls {
     display: flex;
     gap: 10px;
@@ -643,9 +718,15 @@
 let businesses = [];
 let isAdmin    = false;
 let adminToken = "";
-let view       = "table";   // table | login | admin | form | csv-import
+let view       = "table";
 let search     = "";
 let filterCat  = "";
+let filterRegion   = "";
+let filterBizType  = "";
+let filterVis      = "";
+let filterAgch     = "";   // "" | "אין" | "מאושר" | "לא מאושר" | "יש"
+let sortCol    = "name";   // name | chp | category | region | biz_type | visibility | agch | notes
+let sortDir    = "asc";    // asc | desc
 let editBiz    = null;
 let deleteId   = null;
 let chpResult  = null;
@@ -755,17 +836,81 @@ function render() {
 
 // ── TABLE (public) ──
 function renderTable() {
-  const cats = uniqueCats();
-  const rows = filtered();
+  const rows = filteredAndSorted();
+  const hasFilters = search || filterCat || filterRegion || filterBizType || filterVis || filterAgch;
+
+  const uniq = (key) => [...new Set(businesses.map(b => b[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b,"he"));
+
+  const selOpts = (values, current, emptyLabel) =>
+    `<option value="">${emptyLabel}</option>` +
+    values.map(v => `<option value="${escHtml(v)}" ${current===v?"selected":""}>${escHtml(v)}</option>`).join("");
+
+  const agchOpts = [
+    { val:"אין",        lbl:'אין אג"ח' },
+    { val:"מאושר",      lbl:'יש אג"ח – מאושר' },
+    { val:"לא מאושר",   lbl:'יש אג"ח – לא מאושר' },
+    { val:"יש",         lbl:'יש אג"ח (כללי)' },
+  ];
+
+  const th = (col, label, extra="") => {
+    const active = sortCol === col;
+    const icon   = active ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
+    return `<th class="sortable${active?" sort-active":""}" onclick="setSort('${col}')" ${extra}>
+      ${label}<span class="sort-icon">${icon}</span>
+    </th>`;
+  };
+
   return `
-    <div class="controls">
-      <input type="text" id="srch" placeholder="🔍  חיפוש שם / קטגוריה / אזור..." value="${escHtml(search)}">
-      <select id="catf">
-        <option value="">כל הקטגוריות</option>
-        ${cats.map(c=>`<option value="${escHtml(c)}" ${filterCat===c?"selected":""}>${escHtml(c)}</option>`).join("")}
-      </select>
-      <button class="btn-ghost" onclick="exportCsv(false)" title="ייצוא לקובץ CSV">📤 ייצוא CSV</button>
+    <div class="filter-bar">
+      <div class="fb-group" style="flex:1;min-width:180px;">
+        <span class="fb-label">חיפוש חופשי</span>
+        <input type="text" id="srch" class="fb-search${search?" active":""}"
+          placeholder="🔍  שם / ח.פ. / הערות..."
+          value="${escHtml(search)}">
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">קטגוריה</span>
+        <select id="f-cat" class="${filterCat?"active":""}">
+          ${selOpts(uniq("category"), filterCat, "כל הקטגוריות")}
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">אזור</span>
+        <select id="f-region" class="${filterRegion?"active":""}">
+          ${selOpts(uniq("region"), filterRegion, "כל האזורים")}
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">סוג עסק</span>
+        <select id="f-biztype" class="${filterBizType?"active":""}">
+          ${selOpts(uniq("biz_type"), filterBizType, "כל הסוגים")}
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">פרטי / כללי</span>
+        <select id="f-vis" class="${filterVis?"active":""}">
+          <option value="">הכל</option>
+          <option value="פרטי" ${filterVis==="פרטי"?"selected":""}>פרטי</option>
+          <option value="כללי" ${filterVis==="כללי"?"selected":""}>כללי</option>
+        </select>
+      </div>
+      <div class="fb-group">
+        <span class="fb-label">אג"ח</span>
+        <select id="f-agch" class="${filterAgch?"active":""}">
+          <option value="">כולם</option>
+          ${agchOpts.map(o=>`<option value="${o.val}" ${filterAgch===o.val?"selected":""}>${o.lbl}</option>`).join("")}
+        </select>
+      </div>
+      <div class="fb-group" style="justify-content:flex-end;">
+        <span class="fb-label">&nbsp;</span>
+        <button class="btn-ghost" onclick="exportCsv(false)" title="ייצוא לקובץ CSV" style="height:34px;font-size:12px;">📤 ייצוא CSV</button>
+      </div>
+      ${hasFilters ? `<div class="fb-group" style="justify-content:flex-end;">
+        <span class="fb-label">&nbsp;</span>
+        <button class="clear-filters" onclick="clearFilters()">✕ נקה סינונים</button>
+      </div>` : ""}
     </div>
+
     <div class="table-wrap">
       <table>
         <colgroup>
@@ -781,20 +926,20 @@ function renderTable() {
         </colgroup>
         <thead>
           <tr>
-            <th>#</th>
-            <th>ח.פ.</th>
-            <th>שם עסק</th>
-            <th>קטגוריה</th>
-            <th>אזור</th>
-            <th>סוג עסק</th>
-            <th style="text-align:center;">פרטי/כללי</th>
-            <th style="text-align:center;">אג"ח</th>
-            <th>הערות</th>
+            ${th("num",        "#",          'style="text-align:center;"')}
+            ${th("chp",        "ח.פ.")}
+            ${th("name",       "שם עסק")}
+            ${th("category",   "קטגוריה")}
+            ${th("region",     "אזור")}
+            ${th("biz_type",   "סוג עסק")}
+            ${th("visibility", "פרטי/כללי",  'style="text-align:center;"')}
+            ${th("agch",       'אג"ח',       'style="text-align:center;"')}
+            ${th("notes",      "הערות")}
           </tr>
         </thead>
         <tbody>
           ${rows.length === 0
-            ? `<tr class="empty-row"><td colspan="9">לא נמצאו תוצאות</td></tr>`
+            ? `<tr class="empty-row"><td colspan="9">לא נמצאו תוצאות${hasFilters ? " — נסה לנקות סינונים" : ""}</td></tr>`
             : rows.map((b,i) => `
               <tr>
                 <td class="num">${i+1}</td>
@@ -810,7 +955,10 @@ function renderTable() {
         </tbody>
       </table>
     </div>
-    <p class="count" style="margin-top:.75rem;">${rows.length} מתוך ${businesses.length} עסקים${rows.length < businesses.length ? ` · הייצוא יכלול ${rows.length} שורות מסוננות` : ""}</p>`;
+    <p class="count" style="margin-top:.75rem;">
+      ${rows.length} מתוך ${businesses.length} עסקים
+      ${hasFilters ? `· <span style="color:var(--navy);cursor:pointer;" onclick="clearFilters()">נקה סינונים</span>` : ""}
+    </p>`;
 }
 
 // ── LOGIN ──
@@ -1066,7 +1214,6 @@ function renderCsvImport() {
 
   // ── STEP 2: Preview + Mapping ──
   else if (csvStep === "preview") {
-    const previewRows = csvRows.slice(0, 8);
     const colOptions  = (selVal) => `
       <option value="-1" ${selVal===-1?"selected":""}>— לא למפות —</option>
       ${csvHeaders.map((h,i) => `<option value="${i}" ${selVal===i?"selected":""}>${escHtml(h)}</option>`).join("")}`;
@@ -1089,26 +1236,76 @@ function renderCsvImport() {
       </div>
 
       <div class="preview-section">
-        <h3>תצוגה מקדימה — ${Math.min(8,csvRows.length)} שורות ראשונות מתוך ${csvRows.length}</h3>
-        <div class="preview-wrap">
-          <table>
-            <thead>
-              <tr>
-                ${CSV_FIELDS
-                    .filter(f => (csvColMap[f.key]??-1) >= 0)
-                    .map(f=>`<th>${f.label}</th>`).join("")}
-              </tr>
-            </thead>
-            <tbody>
-              ${previewRows.map(row => `
+        <h3>תצוגה מקדימה — ${Math.min(20,csvRows.length)} שורות ראשונות מתוך ${csvRows.length}</h3>
+        ${(() => {
+          const previewRows   = csvRows.slice(0, 20);
+          const mappedFields  = CSV_FIELDS.filter(f => (csvColMap[f.key]??-1) >= 0);
+          // detect duplicate chp within the file
+          const chpIdx = csvColMap["chp_number"] ?? -1;
+          const chpCounts = {};
+          if (chpIdx >= 0) {
+            csvRows.forEach(r => {
+              const v = (r[chpIdx]||"").trim();
+              if (v) chpCounts[v] = (chpCounts[v]||0) + 1;
+            });
+          }
+          // existing chp numbers
+          const existingChp = new Set(businesses.map(b=>(b.chp_number||"").trim()).filter(Boolean));
+          const dupInFile   = Object.values(chpCounts).some(c=>c>1);
+          const dupWarning  = dupInFile
+            ? `<div style="margin-bottom:.75rem;padding:8px 12px;background:#fff3cd;border:1px solid #f0c040;border-radius:7px;font-size:13px;color:#7a5800;">⚠️ זוהו ח.פ. כפולים בקובץ (מודגשים באדום) — רק הרשומה הראשונה תיובא</div>`
+            : "";
+          // col width map
+          const colWidths = {
+            chp_number:     "90px",  registrar_name: "200px",
+            permit_name:    "180px", category:       "110px",
+            region:         "75px",  visibility:     "68px",
+            agch_approved:  "90px",  tase_has_agch:  "80px",
+            biz_type:       "150px", notes:          "auto",
+          };
+          const seenChp = new Set();
+          return dupWarning + `
+          <div class="preview-wrap" style="max-height:360px;">
+            <table style="table-layout:fixed;min-width:600px;">
+              <colgroup>
+                <col style="width:32px;">
+                ${mappedFields.map(f=>`<col style="width:${colWidths[f.key]||'120px'};">`).join("")}
+              </colgroup>
+              <thead>
                 <tr>
-                  ${CSV_FIELDS
-                      .filter(f => (csvColMap[f.key]??-1) >= 0)
-                      .map(f => `<td>${escHtml(row[csvColMap[f.key]] || "")}</td>`).join("")}
-                </tr>`).join("")}
-            </tbody>
-          </table>
-        </div>
+                  <th style="text-align:center;padding:8px 6px;">#</th>
+                  ${mappedFields.map(f=>`<th style="padding:8px 12px;">${f.label}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${previewRows.map((row, i) => {
+                  const chpVal = chpIdx >= 0 ? (row[chpIdx]||"").trim() : "";
+                  const isDupInFile = chpVal && chpCounts[chpVal] > 1 && seenChp.has(chpVal);
+                  const isExisting  = chpVal && existingChp.has(chpVal);
+                  if (chpVal) seenChp.add(chpVal);
+                  const rowStyle = isDupInFile
+                    ? 'background:#fdf0ef;'
+                    : isExisting ? 'background:#fff8e6;' : '';
+                  const badge = isDupInFile
+                    ? `<span style="font-size:10px;color:var(--red);margin-right:4px;">כפול</span>`
+                    : isExisting
+                    ? `<span style="font-size:10px;color:#9a7010;margin-right:4px;">קיים</span>`
+                    : "";
+                  return `<tr style="${rowStyle}">
+                    <td style="text-align:center;color:var(--light);font-size:11px;padding:7px 4px;">${i+1}</td>
+                    ${mappedFields.map((f,fi) => {
+                      const val = escHtml(row[csvColMap[f.key]] || "");
+                      const isChp = f.key === "chp_number";
+                      return `<td style="padding:7px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${isChp?"direction:ltr;text-align:right;font-size:12px;":"font-size:13px;"}">
+                        ${isChp ? badge : ""}${val||"—"}
+                      </td>`;
+                    }).join("")}
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>`;
+        })()}
       </div>
 
       <div class="confirm-import-box">
@@ -1180,9 +1377,19 @@ function renderCsvImport() {
 function bindEvents() {
   const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
 
-  on("srch","input", e => { search = e.target.value; render(); });
-  on("catf","change", e => { filterCat = e.target.value; render(); });
+  on("srch",     "input",  e => { search        = e.target.value; render(); });
+  on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
+  on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
+  on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
+  on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
+  on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
   on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
+
+  // שמירת ח.פ. שמוקלד בזמן אמת כדי שלא יאבד בעת render מחדש
+  const chpEl = document.getElementById("chp");
+  if (chpEl) chpEl.addEventListener("input", e => {
+    editBiz = { ...(editBiz || {}), chp_number: e.target.value };
+  });
 
   // CSV drag-drop
   const dz = document.getElementById("drop-zone");
@@ -1319,6 +1526,8 @@ async function confirmDelete(id) {
 async function doLookup() {
   const number = (document.getElementById("chp")?.value || "").trim();
   if (!number) { chpError = "הכנס מספר רישום"; render(); return; }
+  // שמור את הח.פ. שהוקלד ב-editBiz כדי שלא יתנקה בעת רנדור מחדש
+  editBiz = { ...(editBiz || {}), chp_number: number };
   chpLoading = true; chpError = ""; chpResult = null; render();
   try {
     const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
@@ -1412,6 +1621,18 @@ async function doSave() {
   if (!regName && !permitName) {
     if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
     return;
+  }
+  const chpVal = (document.getElementById("chp")?.value || "").trim();
+  // ── Duplicate ח.פ. check ──
+  if (chpVal) {
+    const duplicate = businesses.find(b =>
+      (b.chp_number || "").trim() === chpVal && b.id !== editBiz?.id
+    );
+    if (duplicate) {
+      if (errEl) errEl.textContent =
+        `ח.פ. ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
+      return;
+    }
   }
   const payload = {
     id:             editBiz?.id || uid(),
@@ -1621,6 +1842,15 @@ async function startImport() {
       continue;
     }
 
+    // ── Duplicate ח.פ. check within import ──
+    const chpVal = get("chp_number");
+    if (chpVal && businesses.some(b => (b.chp_number||"").trim() === chpVal)) {
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ח.פ. ${chpVal} כבר קיים — דולגה`);
+      csvProgress++;
+      updateProgressUI();
+      continue;
+    }
+
     const payload = {
       id:             uid(),
       chp_number:     get("chp_number"),
@@ -1731,17 +1961,79 @@ function uniqueCats() {
   return [...new Set(businesses.map(b=>b.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"he"));
 }
 
-function filtered() {
-  return businesses.filter(b => {
-    const q  = search.trim().toLowerCase();
-    const ms = !q ||
-      displayName(b).toLowerCase().includes(q) ||
-      (b.category || "").toLowerCase().includes(q) ||
-      (b.region   || "").toLowerCase().includes(q);
-    const mc = !filterCat || b.category === filterCat;
-    return ms && mc;
-  });
+function setSort(col) {
+  if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+  else { sortCol = col; sortDir = "asc"; }
+  render();
 }
+
+function clearFilters() {
+  search = ""; filterCat = ""; filterRegion = "";
+  filterBizType = ""; filterVis = ""; filterAgch = "";
+  render();
+}
+
+function agchSortKey(b) {
+  if ((b.tase_has_agch||"") !== "יש") return 0;
+  if ((b.agch_approved||"") === "כן")  return 2;
+  if ((b.agch_approved||"") === "לא")  return 1;
+  return 1;
+}
+
+function filteredAndSorted() {
+  const q = search.trim().toLowerCase();
+
+  // Filter
+  let rows = businesses.filter(b => {
+    if (q) {
+      const name = displayName(b).toLowerCase();
+      const hits = name.includes(q)
+        || (b.category   ||"").toLowerCase().includes(q)
+        || (b.region     ||"").toLowerCase().includes(q)
+        || (b.chp_number ||"").toLowerCase().includes(q)
+        || (b.notes      ||"").toLowerCase().includes(q)
+        || (b.biz_type   ||"").toLowerCase().includes(q);
+      if (!hits) return false;
+    }
+    if (filterCat     && b.category    !== filterCat)     return false;
+    if (filterRegion  && b.region      !== filterRegion)  return false;
+    if (filterBizType && b.biz_type    !== filterBizType) return false;
+    if (filterVis     && b.visibility  !== filterVis)     return false;
+    if (filterAgch) {
+      const has  = (b.tase_has_agch||"").trim();
+      const appr = (b.agch_approved||"").trim();
+      if (filterAgch === "אין"      && has === "יש")                 return false;
+      if (filterAgch === "אין"      && has !== "יש")                 {} // keep
+      else if (filterAgch === "מאושר"   && !(has === "יש" && appr === "כן")) return false;
+      else if (filterAgch === "לא מאושר" && !(has === "יש" && appr === "לא")) return false;
+      else if (filterAgch === "יש"      && has !== "יש")             return false;
+    }
+    return true;
+  });
+
+  // Sort
+  const he = (a, b) => (a||"").localeCompare(b||"", "he");
+  rows.sort((a, b) => {
+    let cmp = 0;
+    switch (sortCol) {
+      case "num":        cmp = 0; break;
+      case "chp":        cmp = (a.chp_number||"").localeCompare(b.chp_number||""); break;
+      case "name":       cmp = he(displayName(a), displayName(b)); break;
+      case "category":   cmp = he(a.category,   b.category);   break;
+      case "region":     cmp = he(a.region,      b.region);     break;
+      case "biz_type":   cmp = he(a.biz_type,    b.biz_type);   break;
+      case "visibility": cmp = he(a.visibility,  b.visibility); break;
+      case "agch":       cmp = agchSortKey(a) - agchSortKey(b); break;
+      case "notes":      cmp = he(a.notes,       b.notes);      break;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  return rows;
+}
+
+// keep old filtered() for CSV export
+function filtered() { return filteredAndSorted(); }
 
 function showStatus(msg) {
   const el = document.getElementById("status-bar");
