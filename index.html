@@ -242,6 +242,7 @@
     margin-top: .5rem;
   }
   .btn-primary:hover { background: var(--navy2); }
+  .btn-primary:disabled { opacity: .55; cursor: default; }
   .btn-ghost {
     background: none;
     border: 1px solid var(--border);
@@ -264,6 +265,19 @@
     transition: background .15s;
   }
   .btn-add:hover { background: var(--navy2); }
+  .btn-danger {
+    padding: 8px 16px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-danger:hover { background: #a93226; }
+  .btn-danger:disabled { opacity: .55; cursor: default; }
 
   /* ── ADMIN BAR ── */
   .admin-bar {
@@ -307,6 +321,216 @@
     color: var(--muted);
     font-size: 14px;
   }
+
+  /* ════════════════════════════════════════════
+     CSV IMPORT STYLES
+  ════════════════════════════════════════════ */
+
+  .csv-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 860px;
+    margin: 1.5rem auto;
+  }
+  .csv-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .csv-panel-header h2 { font-size: 18px; font-weight: 500; }
+
+  /* Drop Zone */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--bg);
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--navy);
+    background: #f0f4f8;
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-zone .dz-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .drop-zone .dz-title { font-size: 15px; font-weight: 500; color: var(--navy); margin-bottom: .3rem; }
+  .drop-zone .dz-sub { font-size: 13px; color: var(--muted); }
+  .drop-zone .dz-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 8px 20px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Column mapping */
+  .mapping-section { margin-bottom: 1.5rem; }
+  .mapping-section h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: .9rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .mapping-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .mapping-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mapping-row label { font-size: 12px; color: var(--muted); }
+  .mapping-row select {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 13px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .mapping-row select:focus { border-color: var(--navy); }
+  .mapping-row select.mapped { border-color: var(--green); background: var(--green-bg); }
+
+  /* Preview table */
+  .preview-section { margin-bottom: 1.5rem; }
+  .preview-section h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .preview-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .preview-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .preview-wrap thead th {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  .preview-wrap tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  .preview-wrap tbody tr:hover { background: #f5f5f3; }
+  .preview-wrap td { padding: 8px 12px; }
+
+  /* Confirm box */
+  .confirm-import-box {
+    background: #fff8e6;
+    border: 1px solid #f0d070;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 14px;
+  }
+  .confirm-import-box strong { color: var(--red); }
+  .confirm-import-box .ci-count { color: var(--green); font-weight: 500; }
+
+  /* Progress */
+  .progress-wrap { margin: 1.5rem 0; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 20px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 20px;
+    transition: width .15s;
+  }
+  .progress-phase {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* Done summary */
+  .done-box {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .done-box .done-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+  .done-box h3 { font-size: 17px; font-weight: 500; color: var(--green); margin-bottom: .4rem; }
+  .done-box p { font-size: 14px; color: var(--muted); }
+  .done-error-box {
+    background: var(--danger-bg);
+    border: 1px solid #f0b0aa;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-top: .75rem;
+    font-size: 13px;
+    color: var(--red);
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.75rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .step {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--light);
+    background: var(--bg);
+    text-align: center;
+    border-left: 1px solid var(--border);
+    transition: all .2s;
+  }
+  .step:last-child { border-left: none; }
+  .step.active { background: var(--navy); color: #fff; font-weight: 500; }
+  .step.done { background: var(--green-bg); color: var(--green); }
 </style>
 </head>
 <body>
@@ -331,17 +555,44 @@
 let businesses = [];
 let isAdmin    = false;
 let adminToken = "";
-let view       = "table";   // table | login | admin | form
+let view       = "table";   // table | login | admin | form | csv-import
 let search     = "";
 let filterCat  = "";
-let editBiz    = null;       // current business being edited (null = new)
-let deleteId   = null;       // id awaiting confirm-delete
+let editBiz    = null;
+let deleteId   = null;
 let chpResult  = null;
 let chpError   = "";
 let chpLoading = false;
 let saving     = false;
 
+// CSV import state
+let csvStep       = "upload";   // upload | preview | importing | done
+let csvHeaders    = [];
+let csvRows       = [];         // array of arrays (raw)
+let csvColMap     = {};         // fieldKey → colIndex (or -1)
+let csvProgress   = 0;
+let csvTotal      = 0;
+let csvPhase      = "";
+let csvErrors     = [];
+let csvImported   = 0;
+let csvDeleted    = 0;
+
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+// ─────────────────────────────────────────────
+//  FIELD DEFINITIONS FOR CSV MAPPING
+// ─────────────────────────────────────────────
+const CSV_FIELDS = [
+  { key: "chp_number",     label: "ח.פ. / מספר רישום",  aliases: ["חפ","ח.פ","ח.פ.","chp","chp_number","מספר רישום","מספר תאגיד","ס.מ.","ס\"מ"] },
+  { key: "registrar_name", label: "שם ברשם הרשמי",       aliases: ["שם ברשם","שם רשמי","registrar_name","registrar","שם תאגיד","שם החברה"] },
+  { key: "permit_name",    label: "שם בהיתר עסקה",       aliases: ["שם בהיתר","היתר","permit_name","permit","שם עסק","שם"] },
+  { key: "category",       label: "קטגוריה",              aliases: ["קטגוריה","category","ענף","סוג"] },
+  { key: "region",         label: "אזור",                 aliases: ["אזור","region","מחוז"] },
+  { key: "visibility",     label: "פרטי / כללי",          aliases: ["פרטי/כללי","פרטי כללי","visibility","סוג עסק"] },
+  { key: "agch_approved",  label: "אישור אג\"ח",          aliases: ["אישור אגח","אישור אג\"ח","agch_approved","אגח מאושר"] },
+  { key: "tase_has_agch",  label: "אג\"ח בורסה",          aliases: ["אגח בורסה","אג\"ח בורסה","tase_has_agch","בורסה"] },
+  { key: "notes",          label: "הערות",                aliases: ["הערות","notes","remarks","הערה"] },
+];
 
 // ─────────────────────────────────────────────
 //  API HELPERS
@@ -360,10 +611,6 @@ async function apiFetch(path, opts = {}) {
 async function loadBusinesses() {
   businesses = await apiFetch("/businesses");
   render();
-}
-
-async function lookupChp(chp) {
-  return apiFetch(`/lookup?chp=${encodeURIComponent(chp)}`);
 }
 
 // ─────────────────────────────────────────────
@@ -391,10 +638,11 @@ function escHtml(s) {
 // ─────────────────────────────────────────────
 function render() {
   const app = document.getElementById("app");
-  if      (view === "table")  app.innerHTML = renderTable();
-  else if (view === "login")  app.innerHTML = renderLogin();
-  else if (view === "admin")  app.innerHTML = renderAdminTable();
-  else if (view === "form")   app.innerHTML = renderForm();
+  if      (view === "table")      app.innerHTML = renderTable();
+  else if (view === "login")      app.innerHTML = renderLogin();
+  else if (view === "admin")      app.innerHTML = renderAdminTable();
+  else if (view === "form")       app.innerHTML = renderForm();
+  else if (view === "csv-import") app.innerHTML = renderCsvImport();
   bindEvents();
   document.getElementById("admin-toggle").textContent =
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
@@ -474,9 +722,10 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
-      <div style="display:flex;gap:8px;align-items:center;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button class="btn-ghost" onclick="runRegistrySync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
         <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
+        <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
@@ -588,7 +837,7 @@ function renderForm() {
       <div class="field-row">
         <div class="field">
           <label>קטגוריה</label>
-          <input type="text" id="f-cat" value="${escHtml(b.category||"")}" 
+          <input type="text" id="f-cat" value="${escHtml(b.category||"")}"
             placeholder="קטגוריה" list="cat-list" autocomplete="off">
           <datalist id="cat-list">
             ${[...new Set(businesses.map(b=>b.category).filter(Boolean))]
@@ -599,7 +848,7 @@ function renderForm() {
         </div>
         <div class="field">
           <label>אזור</label>
-          <input type="text" id="f-region" value="${escHtml(b.region||"")}" 
+          <input type="text" id="f-region" value="${escHtml(b.region||"")}"
             placeholder="אזור" list="region-list" autocomplete="off">
           <datalist id="region-list">
             ${[...new Set(businesses.map(b=>b.region).filter(Boolean))]
@@ -631,7 +880,7 @@ function renderForm() {
 
       <div class="field">
         <label>הערות</label>
-        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" 
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}"
           placeholder='בחר מהרשימה או הקלד הערה חדשה'
           list="notes-list" autocomplete="off">
         <datalist id="notes-list">
@@ -649,6 +898,153 @@ function renderForm() {
     </div>`;
 }
 
+// ════════════════════════════════════════════
+//  CSV IMPORT VIEW
+// ════════════════════════════════════════════
+function renderCsvImport() {
+  const stepLabels = ["העלאת קובץ", "מיפוי עמודות", "ייבוא", "סיום"];
+  const stepIndex  = { upload: 0, preview: 1, importing: 2, done: 3 };
+  const curStep    = stepIndex[csvStep] ?? 0;
+
+  const stepsHtml = stepLabels.map((lbl, i) => {
+    const cls = i < curStep ? "done" : i === curStep ? "active" : "";
+    return `<div class="step ${cls}">${i < curStep ? "✓ " : ""}${lbl}</div>`;
+  }).join("");
+
+  let body = "";
+
+  // ── STEP 1: Upload ──
+  if (csvStep === "upload") {
+    body = `
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file-input').click()">
+        <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none">
+        <div class="dz-icon">📄</div>
+        <div class="dz-title">גרור קובץ CSV לכאן</div>
+        <div class="dz-sub">או לחץ לבחירת קובץ</div>
+        <div class="dz-btn">בחר קובץ CSV</div>
+      </div>
+      <div style="margin-top:1rem;padding:12px 16px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+        <p style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px;">📋 עמודות נתמכות (לפי שם הכותרת בקובץ):</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${CSV_FIELDS.map(f=>`
+            <span style="font-size:12px;padding:3px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--muted);">
+              ${f.label}
+            </span>`).join("")}
+        </div>
+        <p style="font-size:12px;color:var(--light);margin-top:8px;">הקובץ יכול להכיל כותרות בעברית או באנגלית — המערכת מזהה אוטומטית.</p>
+      </div>`;
+  }
+
+  // ── STEP 2: Preview + Mapping ──
+  else if (csvStep === "preview") {
+    const previewRows = csvRows.slice(0, 8);
+    const colOptions  = (selVal) => `
+      <option value="-1" ${selVal===-1?"selected":""}>— לא למפות —</option>
+      ${csvHeaders.map((h,i) => `<option value="${i}" ${selVal===i?"selected":""}>${escHtml(h)}</option>`).join("")}`;
+
+    body = `
+      <div class="mapping-section">
+        <h3>מיפוי עמודות — ${csvHeaders.length} עמודות זוהו, ${csvRows.length} שורות נתונים</h3>
+        <div class="mapping-grid">
+          ${CSV_FIELDS.map(f => {
+            const val = csvColMap[f.key] ?? -1;
+            return `
+              <div class="mapping-row">
+                <label>${f.label}</label>
+                <select id="map-${f.key}" onchange="updateColMap('${f.key}',this.value)" class="${val>=0?'mapped':''}">
+                  ${colOptions(val)}
+                </select>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="preview-section">
+        <h3>תצוגה מקדימה — ${Math.min(8,csvRows.length)} שורות ראשונות מתוך ${csvRows.length}</h3>
+        <div class="preview-wrap">
+          <table>
+            <thead>
+              <tr>
+                ${CSV_FIELDS
+                    .filter(f => (csvColMap[f.key]??-1) >= 0)
+                    .map(f=>`<th>${f.label}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${previewRows.map(row => `
+                <tr>
+                  ${CSV_FIELDS
+                      .filter(f => (csvColMap[f.key]??-1) >= 0)
+                      .map(f => `<td>${escHtml(row[csvColMap[f.key]] || "")}</td>`).join("")}
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="confirm-import-box">
+        ⚠️ פעולה זו תמחק את כל <strong>${businesses.length} העסקים הקיימים</strong> ותייבא
+        <span class="ci-count">${csvRows.length} עסקים חדשים</span> מהקובץ. לא ניתן לבטל פעולה זו.
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="csvStep='upload';render()">← חזור</button>
+        <button class="btn-danger" onclick="startImport()">
+          🗑 מחק ${businesses.length} קיימים וייבא ${csvRows.length} חדשים
+        </button>
+      </div>`;
+  }
+
+  // ── STEP 3: Importing ──
+  else if (csvStep === "importing") {
+    const pct = csvTotal > 0 ? Math.round((csvProgress / csvTotal) * 100) : 0;
+    body = `
+      <div style="text-align:center;padding:1rem 0 0.5rem;">
+        <div style="font-size:1.8rem;margin-bottom:.5rem;">⏳</div>
+        <p style="font-size:15px;font-weight:500;margin-bottom:.3rem;">מייבא נתונים...</p>
+        <p style="font-size:13px;color:var(--muted);">אנא המתן, אל תסגור את הדף</p>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>${csvPhase}</span>
+          <span>${csvProgress} / ${csvTotal}</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="progress-phase">${pct}% הושלם</div>
+      </div>`;
+  }
+
+  // ── STEP 4: Done ──
+  else if (csvStep === "done") {
+    body = `
+      <div class="done-box">
+        <div class="done-icon">✅</div>
+        <h3>הייבוא הושלם בהצלחה</h3>
+        <p>נמחקו <strong>${csvDeleted}</strong> עסקים קיימים · יובאו <strong>${csvImported}</strong> עסקים חדשים</p>
+      </div>
+      ${csvErrors.length > 0 ? `
+        <div class="done-error-box">
+          <strong>שגיאות (${csvErrors.length}):</strong><br>
+          ${csvErrors.map(e=>escHtml(e)).join("<br>")}
+        </div>` : ""}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:1rem;">
+        <button class="btn-primary" style="width:auto;padding:10px 28px;" onclick="finishImport()">חזור לניהול</button>
+      </div>`;
+  }
+
+  return `
+    <div class="csv-panel">
+      <div class="csv-panel-header">
+        <h2>📥 ייבוא עסקים מ-CSV</h2>
+        ${csvStep !== "importing" ? `<button class="btn-ghost" onclick="setView('admin')">✕ ביטול</button>` : ""}
+      </div>
+      <div class="steps">${stepsHtml}</div>
+      ${body}
+    </div>`;
+}
+
 // ─────────────────────────────────────────────
 //  BIND EVENTS
 // ─────────────────────────────────────────────
@@ -658,6 +1054,24 @@ function bindEvents() {
   on("srch","input", e => { search = e.target.value; render(); });
   on("catf","change", e => { filterCat = e.target.value; render(); });
   on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
+
+  // CSV drag-drop
+  const dz = document.getElementById("drop-zone");
+  if (dz) {
+    dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("drag-over"); });
+    dz.addEventListener("dragleave", () => dz.classList.remove("drag-over"));
+    dz.addEventListener("drop", e => {
+      e.preventDefault();
+      dz.classList.remove("drag-over");
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleCsvFile(file);
+    });
+  }
+  const fi = document.getElementById("csv-file-input");
+  if (fi) fi.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (file) handleCsvFile(file);
+  });
 
   // Auto-focus
   const pwd = document.getElementById("pwd");
@@ -669,48 +1083,38 @@ function bindEvents() {
 // ─────────────────────────────────────────────
 function setView(v) {
   view = v;
-  chpResult = null;
-  chpError  = "";
+  if (v !== "csv-import") {
+    csvStep = "upload"; csvHeaders = []; csvRows = []; csvColMap = {};
+    csvErrors = []; csvImported = 0; csvDeleted = 0;
+  }
+  chpResult = null; chpError = "";
   render();
 }
 
 function toggleAdmin() {
-  if (isAdmin) {
-    isAdmin = false;
-    adminToken = "";
-    setView("table");
-  } else {
-    setView("login");
-  }
+  if (isAdmin) { isAdmin = false; adminToken = ""; setView("table"); }
+  else setView("login");
 }
 
 async function doLogin() {
   const pwd = document.getElementById("pwd")?.value || "";
-  // Test against API (a failed auth returns 401)
   adminToken = pwd;
   try {
-    await apiFetch("/businesses"); // any auth check – list is public but we test the token
-    // Actually, just try a lightweight protected call. We check by doing a fake PUT.
-    // Simpler: just try to get businesses (public) then trust the password on first protected action.
-    // Real check: attempt the businesses list with Authorization header and see if errors.
-    isAdmin = true;
-    setView("admin");
+    await apiFetch("/businesses");
+    isAdmin = true; setView("admin");
   } catch {
-    // Network worked, just validate on first write action.
-    isAdmin = true;
-    setView("admin");
+    isAdmin = true; setView("admin");
   }
 }
 
 function openForm(id) {
-  editBiz   = id ? businesses.find(b => b.id === id) || {} : {};
-  chpResult = null;
-  chpError  = "";
+  editBiz = id ? businesses.find(b => b.id === id) || {} : {};
+  chpResult = null; chpError = "";
   setView("form");
 }
 
-function preDelete(id)    { deleteId = id;   render(); }
-function cancelDelete()   { deleteId = null; render(); }
+function preDelete(id)  { deleteId = id;   render(); }
+function cancelDelete() { deleteId = null; render(); }
 
 async function confirmDelete(id) {
   try {
@@ -731,16 +1135,12 @@ async function doLookup() {
   chpLoading = true; chpError = ""; chpResult = null; render();
   try {
     const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
-    if (res.found) {
-      chpResult = res;
-    } else {
-      chpError = "לא נמצא תאגיד עם מספר זה בשום רשם";
-    }
+    if (res.found) chpResult = res;
+    else chpError = "לא נמצא תאגיד עם מספר זה בשום רשם";
   } catch(e) {
     chpError = "שגיאת חיבור לרשם הרשמי";
   }
-  chpLoading = false;
-  render();
+  chpLoading = false; render();
   if (chpResult) {
     const el = document.getElementById("f-reg");
     if (el) el.value = chpResult.name;
@@ -757,8 +1157,7 @@ async function inlineUpdate(id, field, value) {
     showStatus("עודכן ✓");
   } catch(e) {
     if (e.message === "Unauthorized") { handleUnauth(); return; }
-    showStatus("שגיאה בשמירה");
-    render();
+    showStatus("שגיאה בשמירה"); render();
   }
 }
 
@@ -766,13 +1165,9 @@ async function runRegistrySync() {
   const btn    = document.getElementById("sync-btn");
   const status = document.getElementById("sync-status");
   if (!btn || !status) return;
-
-  btn.disabled    = true;
-  btn.textContent = "⏳ מעדכן שמות...";
-  status.style.display    = "block";
-  status.style.background = "var(--bg2)";
-  status.innerHTML        = "⏳ מחפש שינויים ברשם החברות — אנא המתן...";
-
+  btn.disabled = true; btn.textContent = "⏳ מעדכן שמות...";
+  status.style.display = "block"; status.style.background = "var(--bg2)";
+  status.innerHTML = "⏳ מחפש שינויים ברשם החברות — אנא המתן...";
   try {
     const res = await apiFetch("/sync-registry", { method: "POST" });
     status.style.background = "#edf7f1";
@@ -782,22 +1177,16 @@ async function runRegistrySync() {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
   }
-
-  btn.disabled    = false;
-  btn.textContent = "🔄 עדכן שמות מרשם";
+  btn.disabled = false; btn.textContent = "🔄 עדכן שמות מרשם";
 }
 
 async function runTaseSync() {
   const btn    = document.getElementById("tase-btn");
   const status = document.getElementById("sync-status");
   if (!btn || !status) return;
-
-  btn.disabled    = true;
-  btn.textContent = "⏳ מושך מבורסה...";
-  status.style.display = "block";
-  status.style.background = "var(--bg2)";
+  btn.disabled = true; btn.textContent = "⏳ מושך מבורסה...";
+  status.style.display = "block"; status.style.background = "var(--bg2)";
   status.innerHTML = "מושך נתוני אג\"ח מהבורסה — אנא המתן...";
-
   try {
     const res = await apiFetch("/sync-tase", { method: "POST" });
     const { dateUsed, taseTotal, bondCompanies, dbChecked, withBonds, updated } = res;
@@ -815,52 +1204,11 @@ async function runTaseSync() {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
   }
-
-  btn.disabled    = false;
-  btn.textContent = "📈 עדכן אג\"ח מבורסה";
-}
-
-async function runSync() {
-  const btn    = document.getElementById("sync-btn");
-  const status = document.getElementById("sync-status");
-  if (!btn || !status) return;
-
-  btn.disabled    = true;
-  btn.textContent = "⏳ מעדכן...";
-  status.style.display = "block";
-  status.style.background = "var(--bg2)";
-  status.innerHTML = "מעדכן שמות מרשם ובודק אג\"ח בבורסה — אנא המתן...";
-
-  try {
-    const res = await apiFetch("/sync", { method: "POST" });
-    const { namesUpdated, taseUpdated, taseError, total, duration } = res;
-
-    const taseMsg = taseError
-      ? `<span style="color:var(--red)">שגיאה בחיבור לבורסה</span>`
-      : `אג"ח בורסה: <strong>${taseUpdated}</strong> עודכנו`;
-
-    status.style.background = "var(--green-bg, #edf7f1)";
-    status.innerHTML = `
-      ✅ עדכון הושלם תוך ${duration} שניות &nbsp;|&nbsp;
-      שמות: <strong>${namesUpdated}</strong> עודכנו &nbsp;|&nbsp;
-      ${taseMsg} &nbsp;|&nbsp;
-      סה"כ עסקים שנבדקו: <strong>${total}</strong>
-    `;
-
-    // Reload the businesses list to reflect changes
-    await loadBusinesses();
-
-  } catch(e) {
-    status.style.background = "#fdf0ef";
-    status.innerHTML = `❌ שגיאה: ${e.message}`;
-  }
-
-  btn.disabled    = false;
-  btn.textContent = "🔄 עדכן מרשם ובורסה";
+  btn.disabled = false; btn.textContent = "📈 עדכן אג\"ח מבורסה";
 }
 
 function copyRegToPermit() {
-  const reg    = document.getElementById("f-reg");
+  const reg = document.getElementById("f-reg");
   const permit = document.getElementById("f-permit");
   if (reg && permit && reg.value.trim()) {
     permit.value = reg.value.trim();
@@ -874,40 +1222,35 @@ async function doSave() {
   const regName    = (document.getElementById("f-reg")?.value    || "").trim();
   const permitName = (document.getElementById("f-permit")?.value || "").trim();
   const errEl = document.getElementById("form-err");
-
   if (!regName && !permitName) {
     if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
     return;
   }
-
   const payload = {
-    id:              editBiz?.id || uid(),
-    chp_number:      (document.getElementById("chp")?.value          || "").trim(),
-    entity_type:     (document.getElementById("entity-type")?.value  || "company").trim(),
-    registrar_name:  regName,
-    permit_name:     permitName,
-    category:        (document.getElementById("f-cat")?.value        || "").trim(),
-    region:          (document.getElementById("f-region")?.value     || "").trim(),
-    notes:           (document.getElementById("f-notes")?.value      || "").trim(),
-    visibility:      (document.getElementById("f-visibility")?.value || "").trim(),
-    agch_approved:   (document.getElementById("f-agch")?.value       || "").trim(),
-    has_details:     0,
+    id:             editBiz?.id || uid(),
+    chp_number:     (document.getElementById("chp")?.value         || "").trim(),
+    entity_type:    (document.getElementById("entity-type")?.value || "company").trim(),
+    registrar_name: regName,
+    permit_name:    permitName,
+    category:       (document.getElementById("f-cat")?.value       || "").trim(),
+    region:         (document.getElementById("f-region")?.value    || "").trim(),
+    notes:          (document.getElementById("f-notes")?.value     || "").trim(),
+    visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
+    agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),
+    has_details:    0,
   };
-
   saving = true; render();
-
   try {
     const isEdit = !!editBiz?.id;
     if (isEdit) {
       await apiFetch(`/businesses/${payload.id}`, { method: "PUT",  body: JSON.stringify(payload) });
       businesses = businesses.map(b => b.id === payload.id ? { ...b, ...payload } : b);
     } else {
-      await apiFetch("/businesses",               { method: "POST", body: JSON.stringify(payload) });
+      await apiFetch("/businesses", { method: "POST", body: JSON.stringify(payload) });
       businesses = [...businesses, payload];
     }
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
-    saving = false;
-    setView("admin");
+    saving = false; setView("admin");
   } catch(e) {
     saving = false;
     if (e.message === "Unauthorized") { handleUnauth(); return; }
@@ -921,6 +1264,212 @@ function handleUnauth() {
   isAdmin = false; adminToken = ""; saving = false;
   alert("הסיסמה שגויה — בקשה נדחתה");
   setView("login");
+}
+
+// ════════════════════════════════════════════
+//  CSV IMPORT LOGIC
+// ════════════════════════════════════════════
+
+function openCsvImport() {
+  csvStep = "upload"; csvHeaders = []; csvRows = [];
+  csvColMap = {}; csvErrors = []; csvImported = 0; csvDeleted = 0;
+  view = "csv-import";
+  render();
+}
+
+// Parse CSV (handles quoted fields, commas inside quotes, \r\n and \n)
+function parseCsv(text) {
+  // Normalize line endings
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const result = [];
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let cur = "";
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuote) {
+        if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQuote = false; }
+        else { cur += ch; }
+      } else {
+        if (ch === '"') { inQuote = true; }
+        else if (ch === ',') { row.push(cur.trim()); cur = ""; }
+        else { cur += ch; }
+      }
+    }
+    row.push(cur.trim());
+    result.push(row);
+  }
+  return result;
+}
+
+// Auto-detect which column maps to which field
+function autoDetectMapping(headers) {
+  const map = {};
+  for (const field of CSV_FIELDS) {
+    map[field.key] = -1;
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i].trim().toLowerCase().replace(/['"]/g,"");
+      for (const alias of field.aliases) {
+        if (h === alias.toLowerCase().replace(/['"]/g,"") || h.includes(alias.toLowerCase())) {
+          map[field.key] = i;
+          break;
+        }
+      }
+      if (map[field.key] >= 0) break;
+    }
+  }
+  return map;
+}
+
+function handleCsvFile(file) {
+  if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+    alert("אנא בחר קובץ CSV בלבד");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    let text = e.target.result;
+    // Strip BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    const parsed = parseCsv(text);
+    if (parsed.length < 2) {
+      alert("הקובץ ריק או מכיל שורה אחת בלבד");
+      return;
+    }
+    csvHeaders = parsed[0];
+    csvRows    = parsed.slice(1).filter(r => r.some(c => c.trim()));
+    csvColMap  = autoDetectMapping(csvHeaders);
+    csvStep    = "preview";
+    render();
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+function updateColMap(fieldKey, value) {
+  csvColMap[fieldKey] = parseInt(value, 10);
+  // Update the select's 'mapped' class visually
+  const sel = document.getElementById(`map-${fieldKey}`);
+  if (sel) sel.className = parseInt(value) >= 0 ? "mapped" : "";
+  // Re-render preview table only (lightweight update)
+  const previewSection = document.querySelector(".preview-section");
+  if (previewSection) {
+    const previewRows = csvRows.slice(0, 8);
+    const mappedFields = CSV_FIELDS.filter(f => (csvColMap[f.key]??-1) >= 0);
+    previewSection.querySelector("table").innerHTML = `
+      <thead><tr>${mappedFields.map(f=>`<th>${f.label}</th>`).join("")}</tr></thead>
+      <tbody>
+        ${previewRows.map(row=>`
+          <tr>${mappedFields.map(f=>`<td>${escHtml(row[csvColMap[f.key]]||"")}</td>`).join("")}</tr>
+        `).join("")}
+      </tbody>`;
+  }
+}
+
+async function startImport() {
+  // Validate at least a name field is mapped
+  const hasName = (csvColMap["registrar_name"]??-1) >= 0 || (csvColMap["permit_name"]??-1) >= 0;
+  if (!hasName) {
+    alert("חובה למפות לפחות את עמודת 'שם ברשם הרשמי' או 'שם בהיתר עסקה'");
+    return;
+  }
+
+  csvStep    = "importing";
+  csvErrors  = [];
+  csvImported = 0;
+  csvDeleted  = 0;
+
+  const existingIds = businesses.map(b => b.id);
+  csvTotal    = existingIds.length + csvRows.length;
+  csvProgress = 0;
+  csvPhase    = "מוחק עסקים קיימים...";
+  render();
+
+  // ── PHASE 1: Delete all existing ──
+  for (const id of existingIds) {
+    try {
+      await apiFetch(`/businesses/${id}`, { method: "DELETE" });
+      csvDeleted++;
+    } catch(e) {
+      csvErrors.push(`שגיאה במחיקת ${id}: ${e.message}`);
+    }
+    csvProgress++;
+    updateProgressUI();
+  }
+
+  // Clear local cache
+  businesses = [];
+
+  // ── PHASE 2: Import new rows ──
+  csvPhase = "מייבא שורות חדשות...";
+  updateProgressUI();
+
+  for (let i = 0; i < csvRows.length; i++) {
+    const row = csvRows[i];
+    const get = (key) => {
+      const idx = csvColMap[key] ?? -1;
+      return idx >= 0 ? (row[idx] || "").trim() : "";
+    };
+
+    const regName    = get("registrar_name");
+    const permitName = get("permit_name");
+
+    if (!regName && !permitName) {
+      csvErrors.push(`שורה ${i+2}: חסר שם — דולגה`);
+      csvProgress++;
+      updateProgressUI();
+      continue;
+    }
+
+    const payload = {
+      id:             uid(),
+      chp_number:     get("chp_number"),
+      registrar_name: regName,
+      permit_name:    permitName,
+      category:       get("category"),
+      region:         get("region"),
+      visibility:     get("visibility"),
+      agch_approved:  get("agch_approved"),
+      tase_has_agch:  get("tase_has_agch"),
+      notes:          get("notes"),
+      has_details:    0,
+    };
+
+    try {
+      await apiFetch("/businesses", { method: "POST", body: JSON.stringify(payload) });
+      businesses = [...businesses, payload];
+      csvImported++;
+    } catch(e) {
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ${e.message}`);
+    }
+
+    csvProgress++;
+    updateProgressUI();
+  }
+
+  csvStep = "done";
+  render();
+}
+
+function updateProgressUI() {
+  const fill  = document.querySelector(".progress-bar-fill");
+  const label = document.querySelector(".progress-label span:last-child");
+  const phase = document.querySelector(".progress-phase");
+  const pct   = csvTotal > 0 ? Math.round((csvProgress / csvTotal) * 100) : 0;
+  if (fill)  fill.style.width = pct + "%";
+  if (label) label.textContent = `${csvProgress} / ${csvTotal}`;
+  if (phase) phase.textContent = pct + "% הושלם";
+  const phaseEl = document.querySelector(".progress-label span:first-child");
+  if (phaseEl) phaseEl.textContent = csvPhase;
+}
+
+function finishImport() {
+  showStatus(`✅ יובאו ${csvImported} עסקים בהצלחה`);
+  setView("admin");
 }
 
 // ─────────────────────────────────────────────
