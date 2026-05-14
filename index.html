@@ -421,13 +421,14 @@ function renderTable() {
             <th>קטגוריה</th>
             <th>אזור</th>
             <th>פרטי/כללי</th>
-            <th>אג"ח</th>
+            <th>אג"ח בורסה</th>
+            <th>אישור אג"ח</th>
             <th>הערות</th>
           </tr>
         </thead>
         <tbody>
           ${rows.length === 0
-            ? `<tr class="empty-row"><td colspan="5">לא נמצאו תוצאות</td></tr>`
+            ? `<tr class="empty-row"><td colspan="8">לא נמצאו תוצאות</td></tr>`
             : rows.map((b,i) => `
               <tr>
                 <td class="num">${i+1}</td>
@@ -435,7 +436,11 @@ function renderTable() {
                 <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
                 <td>${escHtml(b.region) || "—"}</td>
                 <td style="font-size:13px;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
-                <td style="font-size:13px;">${
+                <td style="font-size:13px;text-align:center;">${
+                  b.tase_has_agch === "יש" ? `<span style="color:var(--green);font-weight:500;">✓ יש</span>` :
+                  b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
+                }</td>
+                <td style="font-size:13px;text-align:center;">${
                   b.agch_approved === "כן" ? `<span style="color:var(--green);font-weight:500;">✓ כן</span>` :
                   b.agch_approved === "לא" ? `<span style="color:var(--red);font-size:12px;">לא</span>` : "—"
                 }</td>
@@ -482,8 +487,9 @@ function renderAdminTable() {
             <th>שם עסק</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
-            <th style="text-align:center;width:90px;">פרטי/כללי</th>
-            <th style="text-align:center;width:80px;">אג"ח</th>
+            <th style="text-align:center;width:80px;">פרטי/כללי</th>
+            <th style="text-align:center;width:80px;">אג"ח בורסה</th>
+            <th style="text-align:center;width:80px;">אישור אג"ח</th>
             <th style="text-align:center;width:80px;">פעולות</th>
           </tr>
         </thead>
@@ -491,7 +497,7 @@ function renderAdminTable() {
           ${sorted.map(b => {
             if (deleteId === b.id) return `
               <tr class="confirm-row">
-                <td colspan="5" style="font-weight:500;">${displayName(b,true)}</td>
+                <td colspan="6" style="font-weight:500;">${displayName(b,true)}</td>
                 <td>
                   <div class="confirm-btns">
                     <button class="yes" onclick="confirmDelete('${b.id}')">מחק</button>
@@ -512,6 +518,10 @@ function renderAdminTable() {
                     <option value="כללי" ${b.visibility==="כללי"?"selected":""}>כללי</option>
                   </select>
                 </td>
+                <td style="text-align:center;font-size:13px;">${
+                  b.tase_has_agch === "יש" ? `<span style="color:var(--green);font-weight:500;">✓ יש</span>` :
+                  b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
+                }</td>
                 <td style="text-align:center;">
                   <select onchange="inlineUpdate('${b.id}','agch_approved',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
