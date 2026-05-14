@@ -769,20 +769,14 @@ async function runRegistrySync() {
 
   btn.disabled    = true;
   btn.textContent = "⏳ מפעיל...";
-  status.style.display   = "block";
+  status.style.display    = "block";
   status.style.background = "var(--bg2)";
-  status.innerHTML = `
-    🔄 עדכון שמות מרשם הופעל ב-Cloudflare Worker — רץ ברקע ללא הגבלת זמן.<br>
-    <span style="font-size:12px;color:var(--muted);">תוצאות יופיעו ב-Logs של ה-Worker ב-Cloudflare.</span>
-  `;
+  status.innerHTML        = "מפעיל עדכון שמות מרשם...";
 
   try {
-    await apiFetch("/run-worker", { method: "POST" });
+    const res = await apiFetch("/sync-registry", { method: "POST" });
     status.style.background = "#edf7f1";
-    status.innerHTML = `
-      ✅ עדכון שמות מרשם הופעל בהצלחה — רץ ברקע.<br>
-      <span style="font-size:12px;color:var(--muted);">לצפייה בתוצאות: Cloudflare → Workers → registry-updater → Logs</span>
-    `;
+    status.innerHTML = `✅ ${res.message}`;
   } catch(e) {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
