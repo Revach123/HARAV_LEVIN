@@ -768,15 +768,16 @@ async function runRegistrySync() {
   if (!btn || !status) return;
 
   btn.disabled    = true;
-  btn.textContent = "⏳ מפעיל...";
+  btn.textContent = "⏳ מעדכן שמות...";
   status.style.display    = "block";
   status.style.background = "var(--bg2)";
-  status.innerHTML        = "מפעיל עדכון שמות מרשם...";
+  status.innerHTML        = "⏳ מחפש שינויים ברשם החברות — אנא המתן...";
 
   try {
     const res = await apiFetch("/sync-registry", { method: "POST" });
     status.style.background = "#edf7f1";
-    status.innerHTML = `✅ ${res.message}`;
+    status.innerHTML = `✅ עדכון הושלם — שונו <strong>${res.updated}</strong> שמות מתוך <strong>${res.total}</strong> עסקים`;
+    await loadBusinesses();
   } catch(e) {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
