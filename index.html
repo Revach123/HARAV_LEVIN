@@ -118,6 +118,75 @@
   td.notes-cell { color: var(--light); font-size: 12px; }
   .empty-row td { text-align: center; padding: 2.5rem; color: var(--light); }
 
+  /* ── DELETE MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInOverlay .15s ease;
+  }
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--bg2);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    margin: 1rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    animation: slideUpModal .18s ease;
+  }
+  @keyframes slideUpModal { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-icon { font-size: 2.2rem; text-align: center; margin-bottom: .75rem; }
+  .modal-title { font-size: 17px; font-weight: 600; text-align: center; margin-bottom: .4rem; }
+  .modal-biz-name {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin: .75rem 0 1.1rem;
+    word-break: break-word;
+  }
+  .modal-instruction { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .modal-instruction strong { color: var(--red); font-family: monospace; }
+  .modal-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    direction: ltr;
+    text-align: center;
+    outline: none;
+    transition: border-color .15s;
+    letter-spacing: .06em;
+  }
+  .modal-input:focus { border-color: var(--red); }
+  .modal-input.confirmed { border-color: var(--red); background: #fff5f5; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.1rem; }
+  .modal-actions .cancel {
+    flex: 1; padding: 10px; background: none;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; color: var(--muted); cursor: pointer;
+    transition: border-color .15s;
+  }
+  .modal-actions .cancel:hover { border-color: var(--navy); color: var(--navy); }
+  .modal-actions .confirm-del {
+    flex: 1; padding: 10px; background: var(--red);
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: #fff; cursor: pointer;
+    opacity: .4; transition: opacity .15s;
+    pointer-events: none;
+  }
+  .modal-actions .confirm-del.ready { opacity: 1; pointer-events: auto; }
+  .modal-actions .confirm-del.ready:hover { background: #a93226; }
+
   /* ── ACTION BUTTONS (admin table) ── */
   .act-btn {
     background: none;
@@ -546,6 +615,9 @@
   <div id="app"><div class="loading">טוען נתונים...</div></div>
 </main>
 
+<!-- Delete confirmation modal -->
+<div id="delete-modal" style="display:none;"></div>
+
 <div id="status-bar"></div>
 
 <script>
@@ -745,16 +817,6 @@ function renderAdminTable() {
         </thead>
         <tbody>
           ${sorted.map(b => {
-            if (deleteId === b.id) return `
-              <tr class="confirm-row">
-                <td colspan="6" style="font-weight:500;">${displayName(b,true)}</td>
-                <td>
-                  <div class="confirm-btns">
-                    <button class="yes" onclick="confirmDelete('${b.id}')">מחק</button>
-                    <button class="no"  onclick="cancelDelete()">ביטול</button>
-                  </div>
-                </td>
-              </tr>`;
             return `
               <tr>
                 <td class="biz-name">${displayName(b,true)}</td>
@@ -1113,14 +1175,72 @@ function openForm(id) {
   setView("form");
 }
 
-function preDelete(id)  { deleteId = id;   render(); }
-function cancelDelete() { deleteId = null; render(); }
+function preDelete(id) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  showDeleteModal(id, displayName(biz));
+}
+
+function cancelDelete() {
+  deleteId = null;
+  const modal = document.getElementById("delete-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function showDeleteModal(id, name) {
+  deleteId = id;
+  const modal = document.getElementById("delete-modal");
+  if (!modal) return;
+  modal.style.display = "block";
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="handleOverlayClick(event)">
+      <div class="modal-box">
+        <div class="modal-icon">🗑️</div>
+        <div class="modal-title">מחיקת עסק</div>
+        <div class="modal-biz-name">${escHtml(name)}</div>
+        <p class="modal-instruction">להמשך המחיקה, הקלד <strong>מחק</strong> בתיבה:</p>
+        <input
+          class="modal-input"
+          id="delete-confirm-input"
+          type="text"
+          placeholder="הקלד מחק לאישור"
+          autocomplete="off"
+          oninput="onDeleteInput(this)"
+          onkeydown="if(event.key==='Enter') tryConfirmDelete()"
+        >
+        <div class="modal-actions">
+          <button class="cancel" onclick="cancelDelete()">ביטול</button>
+          <button class="confirm-del" id="delete-confirm-btn" onclick="tryConfirmDelete()">מחק לצמיתות</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(() => document.getElementById("delete-confirm-input")?.focus(), 60);
+}
+
+function handleOverlayClick(e) {
+  if (e.target.classList.contains("modal-overlay")) cancelDelete();
+}
+
+function onDeleteInput(el) {
+  const btn = document.getElementById("delete-confirm-btn");
+  const ready = el.value.trim() === "מחק";
+  el.classList.toggle("confirmed", ready);
+  if (btn) btn.classList.toggle("ready", ready);
+}
+
+async function tryConfirmDelete() {
+  const input = document.getElementById("delete-confirm-input");
+  if (!input || input.value.trim() !== "מחק") return;
+  await confirmDelete(deleteId);
+}
 
 async function confirmDelete(id) {
   try {
     await apiFetch(`/businesses/${id}`, { method: "DELETE" });
     businesses = businesses.filter(b => b.id !== id);
     deleteId = null;
+    const modal = document.getElementById("delete-modal");
+    if (modal) modal.style.display = "none";
     showStatus("נמחק בהצלחה");
     render();
   } catch(e) {
