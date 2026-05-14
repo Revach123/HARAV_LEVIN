@@ -555,17 +555,39 @@ function renderForm() {
       <div class="field-row">
         <div class="field">
           <label>קטגוריה</label>
-          <input type="text" id="f-cat" value="${escHtml(b.category||"")}" placeholder="קטגוריה">
+          <input type="text" id="f-cat" value="${escHtml(b.category||"")}" 
+            placeholder="קטגוריה" list="cat-list" autocomplete="off">
+          <datalist id="cat-list">
+            ${[...new Set(businesses.map(b=>b.category).filter(Boolean))]
+              .sort((a,c)=>a.localeCompare(c,"he"))
+              .map(n=>`<option value="${escHtml(n)}">`)
+              .join("")}
+          </datalist>
         </div>
         <div class="field">
           <label>אזור</label>
-          <input type="text" id="f-region" value="${escHtml(b.region||"")}" placeholder="אזור">
+          <input type="text" id="f-region" value="${escHtml(b.region||"")}" 
+            placeholder="אזור" list="region-list" autocomplete="off">
+          <datalist id="region-list">
+            ${[...new Set(businesses.map(b=>b.region).filter(Boolean))]
+              .sort((a,c)=>a.localeCompare(c,"he"))
+              .map(n=>`<option value="${escHtml(n)}">`)
+              .join("")}
+          </datalist>
         </div>
       </div>
 
       <div class="field">
         <label>הערות</label>
-        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" placeholder='לדוגמה: חנות - לא חברה בע"מ'>
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" 
+          placeholder='בחר מהרשימה או הקלד הערה חדשה'
+          list="notes-list" autocomplete="off">
+        <datalist id="notes-list">
+          ${[...new Set(businesses.map(b=>b.notes).filter(Boolean))]
+            .sort((a,c)=>a.localeCompare(c,"he"))
+            .map(n=>`<option value="${escHtml(n)}">`)
+            .join("")}
+        </datalist>
       </div>
 
       <p class="error-msg" id="form-err"></p>
