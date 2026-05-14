@@ -514,9 +514,16 @@ function renderForm() {
       </div>
 
       <div class="lookup-box">
-        <p class="lbl">שאיבה מרשם החברות (לחברות בע"מ בלבד)</p>
+        <p class="lbl">שאיבה מהרשם הרשמי</p>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <select id="entity-type" style="flex:1;padding:8px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+            <option value="company"     ${(b.entity_type||"company")==="company"    ?"selected":""}>חברה בע"מ (ח.פ.)</option>
+            <option value="partnership" ${(b.entity_type||"")==="partnership"?"selected":""}>שותפות</option>
+            <option value="association" ${(b.entity_type||"")==="association"?"selected":""}>עמותה / ע"ר</option>
+          </select>
+        </div>
         <div class="lookup-row">
-          <input type="text" id="chp" placeholder="מספר ח.פ." value="${escHtml(b.chp_number||"")}">
+          <input type="text" id="chp" placeholder="מספר רישום" value="${escHtml(b.chp_number||"")}">
           <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
             ${chpLoading ? "מחפש..." : "חפש ברשם"}
           </button>
@@ -531,8 +538,8 @@ function renderForm() {
       </div>
 
       <div class="field">
-        <label>שם ברשם החברות <span style="color:var(--light)">(מתמלא אוטומטית, ניתן לערוך)</span></label>
-        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם החברה ברשם הרשמי">
+        <label>שם ברשם הרשמי <span style="color:var(--light)">(מתמלא אוטומטית, ניתן לערוך)</span></label>
+        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם כפי שרשום בגוף הממשלתי">
       </div>
 
       <div class="field">
@@ -640,24 +647,24 @@ async function confirmDelete(id) {
 }
 
 async function doLookup() {
-  const chp = (document.getElementById("chp")?.value || "").trim();
-  if (!chp) { chpError = "הכנס מספר ח.פ."; render(); return; }
+  const number     = (document.getElementById("chp")?.value         || "").trim();
+  const entityType = (document.getElementById("entity-type")?.value || "company").trim();
+  const typeLabels = { company: "חברה", partnership: "שותפות", association: "עמותה" };
+
+  if (!number) { chpError = "הכנס מספר רישום"; render(); return; }
   chpLoading = true; chpError = ""; chpResult = null; render();
   try {
-    const res = await lookupChp(chp);
+    const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}&type=${entityType}`);
     if (res.found) {
       chpResult = res;
-      if (editBiz) editBiz.registrar_name = res.name;
-      document.getElementById && (document.getElementById("f-reg") || {}).value;
     } else {
-      chpError = "לא נמצאה חברה עם מספר זה";
+      chpError = `לא נמצאה ${typeLabels[entityType]||"רשות"} עם מספר זה`;
     }
   } catch(e) {
-    chpError = "שגיאת חיבור לרשם החברות";
+    chpError = "שגיאת חיבור לרשם הרשמי";
   }
   chpLoading = false;
   render();
-  // After render, fill the name field
   if (chpResult) {
     const el = document.getElementById("f-reg");
     if (el) el.value = chpResult.name;
@@ -676,12 +683,13 @@ async function doSave() {
 
   const payload = {
     id:              editBiz?.id || uid(),
-    chp_number:      (document.getElementById("chp")?.value      || "").trim(),
+    chp_number:      (document.getElementById("chp")?.value          || "").trim(),
+    entity_type:     (document.getElementById("entity-type")?.value  || "company").trim(),
     registrar_name:  regName,
     permit_name:     permitName,
-    category:        (document.getElementById("f-cat")?.value    || "").trim(),
-    region:          (document.getElementById("f-region")?.value || "").trim(),
-    notes:           (document.getElementById("f-notes")?.value  || "").trim(),
+    category:        (document.getElementById("f-cat")?.value        || "").trim(),
+    region:          (document.getElementById("f-region")?.value     || "").trim(),
+    notes:           (document.getElementById("f-notes")?.value      || "").trim(),
     has_details:     0,
   };
 
