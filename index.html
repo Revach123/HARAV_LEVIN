@@ -469,8 +469,12 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
-      <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-ghost" onclick="runSync()" id="sync-btn">🔄 עדכן מרשם ובורסה</button>
+        <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
+      </div>
     </div>
+    <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -745,6 +749,45 @@ async function inlineUpdate(id, field, value) {
     showStatus("שגיאה בשמירה");
     render();
   }
+}
+
+async function runSync() {
+  const btn    = document.getElementById("sync-btn");
+  const status = document.getElementById("sync-status");
+  if (!btn || !status) return;
+
+  btn.disabled    = true;
+  btn.textContent = "⏳ מעדכן...";
+  status.style.display = "block";
+  status.style.background = "var(--bg2)";
+  status.innerHTML = "מעדכן שמות מרשם ובודק אג\"ח בבורסה — אנא המתן...";
+
+  try {
+    const res = await apiFetch("/sync", { method: "POST" });
+    const { namesUpdated, taseUpdated, taseError, total, duration } = res;
+
+    const taseMsg = taseError
+      ? `<span style="color:var(--red)">שגיאה בחיבור לבורסה</span>`
+      : `אג"ח בורסה: <strong>${taseUpdated}</strong> עודכנו`;
+
+    status.style.background = "var(--green-bg, #edf7f1)";
+    status.innerHTML = `
+      ✅ עדכון הושלם תוך ${duration} שניות &nbsp;|&nbsp;
+      שמות: <strong>${namesUpdated}</strong> עודכנו &nbsp;|&nbsp;
+      ${taseMsg} &nbsp;|&nbsp;
+      סה"כ עסקים שנבדקו: <strong>${total}</strong>
+    `;
+
+    // Reload the businesses list to reflect changes
+    await loadBusinesses();
+
+  } catch(e) {
+    status.style.background = "#fdf0ef";
+    status.innerHTML = `❌ שגיאה: ${e.message}`;
+  }
+
+  btn.disabled    = false;
+  btn.textContent = "🔄 עדכן מרשם ובורסה";
 }
 
 function copyRegToPermit() {
