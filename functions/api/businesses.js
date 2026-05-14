@@ -24,7 +24,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const body = await request.json();
-    const { id, chp_number, registrar_name, permit_name, category, region, notes, has_details } = body;
+    const { id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details } = body;
 
     if (!id) return Response.json({ error: "Missing id" }, { status: 400 });
     if (!registrar_name && !permit_name) {
@@ -32,17 +32,20 @@ export async function onRequestPost({ request, env }) {
     }
 
     await env.DB.prepare(
-      `INSERT INTO businesses (id, chp_number, registrar_name, permit_name, category, region, notes, has_details)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO businesses (id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id,
-      chp_number    || "",
+      chp_number     || "",
+      entity_type    || "company",
       registrar_name || "",
-      permit_name   || "",
-      category      || "",
-      region        || "",
-      notes         || "",
-      has_details   ? 1 : 0
+      permit_name    || "",
+      category       || "",
+      region         || "",
+      notes          || "",
+      visibility     || "",
+      agch_approved  || "",
+      has_details    ? 1 : 0
     ).run();
 
     return Response.json({ success: true });
