@@ -544,7 +544,12 @@ function renderForm() {
 
       <div class="field">
         <label>שם בהיתר עסקה <span style="color:var(--light)">(אם שונה מהרשם — יוצג בסוגריים)</span></label>
-        <input type="text" id="f-permit" value="${escHtml(b.permit_name||"")}" placeholder="השם המופיע בהיתר ההלכתי">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="f-permit" value="${escHtml(b.permit_name||"")}" placeholder="השם המופיע בהיתר ההלכתי" style="flex:1;">
+          <button type="button" onclick="copyRegToPermit()" title="העתק מהרשם" style="padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='var(--border)'">
+            העתק מהרשם ↑
+          </button>
+        </div>
       </div>
 
       <div class="field-row">
@@ -668,6 +673,17 @@ async function doLookup() {
   if (chpResult) {
     const el = document.getElementById("f-reg");
     if (el) el.value = chpResult.name;
+  }
+}
+
+function copyRegToPermit() {
+  const reg    = document.getElementById("f-reg");
+  const permit = document.getElementById("f-permit");
+  if (reg && permit && reg.value.trim()) {
+    permit.value = reg.value.trim();
+    permit.focus();
+    permit.style.borderColor = "var(--navy)";
+    setTimeout(() => permit.style.borderColor = "", 1000);
   }
 }
 
