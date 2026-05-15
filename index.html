@@ -1563,25 +1563,71 @@ async function inlineUpdate(id, field, value) {
   }
 }
 
+// החלף את הפונקציה runRegistrySync הקיימת בזו:
+
 async function runRegistrySync() {
   const btn    = document.getElementById("sync-btn");
   const status = document.getElementById("sync-status");
   if (!btn || !status) return;
-  btn.disabled = true; btn.textContent = "⏳ מעדכן שמות...";
-  status.style.display = "block"; status.style.background = "var(--bg2)";
-  status.innerHTML = "⏳ מחפש שינויים ברשם החברות — אנא המתן...";
-  try {
-    const res = await apiFetch("/sync-registry", { method: "POST" });
-    status.style.background = "#edf7f1";
-    status.innerHTML = `✅ עדכון הושלם — שונו <strong>${res.updated}</strong> שמות מתוך <strong>${res.total}</strong> עסקים`;
-    await loadBusinesses();
-  } catch(e) {
-    status.style.background = "#fdf0ef";
-    status.innerHTML = `❌ שגיאה: ${e.message}`;
-  }
-  btn.disabled = false; btn.textContent = "🔄 עדכן שמות מרשם";
-}
 
+  btn.disabled = true;
+  btn.textContent = "⏳ מסנכרן...";
+  status.style.display  = "block";
+  status.style.background = "var(--bg2)";
+  status.innerHTML = "מתחיל סנכרון...";
+
+  const withChp   = businesses.filter(b => b.chp_number);
+  const total     = withChp.length;
+  let processed   = 0;
+  let updated     = 0;
+  let errors      = 0;
+  const CONCURRENCY = 5;   // 5 בקשות במקביל
+
+  for (let i = 0; i < withChp.length; i += CONCURRENCY) {
+    const batch = withChp.slice(i, i + CONCURRENCY);
+
+    await Promise.all(batch.map(async (biz) => {
+      try {
+        const res = await apiFetch(`/lookup?number=${encodeURIComponent(biz.chp_number)}`);
+
+        if (res.found) {
+          const newName = (res.name    || "").trim();
+          const newType = (res.bizType || "").trim();
+
+          const nameChanged = newName && newName !== (biz.registrar_name || "").trim();
+          const typeChanged = newType && newType !== (biz.biz_type       || "").trim();
+
+          if (nameChanged || typeChanged) {
+            const updatedBiz = {
+              ...biz,
+              registrar_name: nameChanged ? newName : biz.registrar_name,
+              biz_type:       typeChanged ? newType : biz.biz_type,
+            };
+            await apiFetch(`/businesses/${biz.id}`, {
+              method: "PUT",
+              body:   JSON.stringify(updatedBiz),
+            });
+            businesses = businesses.map(b => b.id === biz.id ? updatedBiz : b);
+            updated++;
+          }
+        }
+      } catch(e) {
+        errors++;
+        console.warn(`Lookup failed (${biz.chp_number}):`, e.message);
+      }
+
+      processed++;
+      const pct = Math.round((processed / total) * 100);
+      status.innerHTML = `⏳ ${pct}% — עברו ${processed}/${total} · עודכנו: <strong>${updated}</strong>`;
+    }));
+  }
+
+  status.style.background = "#edf7f1";
+  status.innerHTML = `✅ סנכרון הושלם — עודכנו <strong>${updated}</strong> מתוך <strong>${total}</strong> עסקים${errors ? ` · שגיאות: ${errors}` : ""}`;
+  btn.disabled    = false;
+  btn.textContent = "🔄 עדכן שמות מרשם";
+  render();
+}
 async function runTaseSync() {
   const btn    = document.getElementById("tase-btn");
   const status = document.getElementById("sync-status");
