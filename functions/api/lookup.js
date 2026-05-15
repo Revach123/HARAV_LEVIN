@@ -1,5 +1,5 @@
 // GET /api/lookup?number=XXX
-// Searches all three registries IN PARALLEL — returns first match found
+// מחזיר שם, סוג עסק (bizType), סוג ישות, וסטטוס
 
 const SOURCES = [
   {
@@ -8,7 +8,16 @@ const SOURCES = [
     filterField: "מספר חברה",
     nameField:   "שם חברה",
     typeField:   "סוג תאגיד",
+    limField:    "מגבלות",
     statusField: "סטטוס חברה",
+    classify(rec) {
+      const typeRaw  = String(rec["סוג תאגיד"] || "").trim();
+      const limRaw   = String(rec["מגבלות"]    || "").trim();
+      const isPublic = typeRaw.includes("ציבורית");
+      const type     = isPublic ? "חברה ציבורית" : "חברה פרטית";
+      const lim      = limRaw.includes("לא מוגבלת") ? "לא מוגבלת" : 'בע"מ';
+      return `${type} - ${lim}`;
+    },
   },
   {
     entityType:  "partnership",
@@ -17,6 +26,7 @@ const SOURCES = [
     nameField:   "שם שותפות",
     typeField:   "סוג תאגיד",
     statusField: "סטטוס תאגיד",
+    classify()  { return 'שותפות - לא בע"מ'; },
   },
   {
     entityType:  "association",
@@ -25,6 +35,7 @@ const SOURCES = [
     nameField:   "שם עמותה בעברית",
     typeField:   "סיווג פעילות ענפי",
     statusField: "סטטוס עמותה",
+    classify()  { return "עמותה רשומה"; },
   },
 ];
 
@@ -42,37 +53,32 @@ async function searchSource(source, number) {
   const url     = `https://data.gov.il/api/3/action/datastore_search?resource_id=${source.resource}&filters=${filters}&limit=1`;
   const res     = await fetch(url, { headers: { "User-Agent": "Business-Registry/1.0" } });
   const json    = await res.json();
-  const records = json?.result?.records;
-
-  if (records && records.length > 0) {
-    const rec = records[0];
-    return {
-      found:      true,
-      entityType: source.entityType,
-      name:       cleanName(rec[source.nameField]),
-      type:       rec[source.typeField]   || "",
-      status:     rec[source.statusField] || "",
-    };
-  }
-  // Return null if not found in this source (will be filtered out)
-  return null;
+  const rec     = json?.result?.records?.[0];
+  if (!rec) return null;
+  const name = cleanName(rec[source.nameField]);
+  if (!name) return null;
+  return {
+    found:      true,
+    entityType: source.entityType,
+    name,
+    bizType: source.classify(rec),
+    type:    rec[source.typeField]   || "",
+    status:  rec[source.statusField] || "",
+  };
 }
 
 export async function onRequestGet({ request }) {
   const url    = new URL(request.url);
   const number = (url.searchParams.get("number") || "").trim();
-
   if (!number) {
     return Response.json({ error: "Missing number parameter" }, { status: 400 });
   }
-
   try {
-    // Search all three registries in parallel
-    const results = await Promise.all(SOURCES.map(s => searchSource(s, number).catch(() => null)));
-    const found   = results.find(r => r !== null);
-
+    const results = await Promise.all(
+      SOURCES.map(s => searchSource(s, number).catch(() => null))
+    );
+    const found = results.find(r => r !== null);
     if (found) return Response.json(found);
-
     return Response.json({ found: false });
   } catch (e) {
     return Response.json({ error: "Failed to reach registrar: " + e.message }, { status: 502 });
