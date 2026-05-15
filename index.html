@@ -1538,8 +1538,14 @@ async function doLookup() {
   }
   chpLoading = false; render();
   if (chpResult) {
-    const el = document.getElementById("f-reg");
-    if (el) el.value = chpResult.name;
+    const regEl = document.getElementById("f-reg");
+    if (regEl) regEl.value = chpResult.name;
+    // מלא סוג עסק אוטומטית אם הגיע מהרשם
+    if (chpResult.bizType) {
+      const btEl = document.getElementById("f-biztype");
+      if (btEl) btEl.value = chpResult.bizType;
+      editBiz = { ...(editBiz || {}), biz_type: chpResult.bizType };
+    }
   }
 }
 
