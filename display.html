@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>אג"ח ומורשים — הון כשר</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#1a3a5c; --navy2:#1e4570; --gold:#c9a227;
+    --bg:#f7f7f5; --bg2:#fff; --border:#e0ddd8;
+    --text:#1a1a1a; --muted:#6b6b6b; --light:#a0a0a0;
+    --red:#c0392b; --green:#1e7e4a; --green-bg:#edf7f1; --green-border:#a8d9bc;
+  }
+  body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;padding:0 0 3rem}
+  header{background:var(--navy);color:#fff;height:56px;display:flex;align-items:center;padding:0 1.5rem;position:sticky;top:0;z-index:20}
+  header h1{font-size:18px;font-weight:600}
+  header h1 .gold{color:var(--gold)}
+  .wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
+
+  /* ── ניווט דו-שלבי ── */
+  .nav-primary{display:flex;gap:.6rem;margin-bottom:1rem}
+  .nav-primary button{
+    flex:1;max-width:220px;padding:.85rem 1rem;font-size:16px;font-weight:600;font-family:inherit;
+    background:var(--bg2);color:var(--navy);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s
+  }
+  .nav-primary button:hover{border-color:var(--navy)}
+  .nav-primary button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+  .nav-sub{display:flex;gap:.5rem;margin-bottom:1.25rem}
+  .nav-sub button{
+    padding:.5rem 1.3rem;font-size:14px;font-weight:500;font-family:inherit;
+    background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:.15s
+  }
+  .nav-sub button:hover{border-color:var(--navy);color:var(--navy)}
+  .nav-sub button.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+
+  /* ── בקרות ── */
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap}
+  .list-title{font-size:17px;font-weight:600;color:var(--navy)}
+  .list-title .cnt{font-size:13px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
+  .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:8px;min-width:220px;background:var(--bg2)}
+  .search:focus{outline:none;border-color:var(--navy)}
+
+  /* ── טבלה ── */
+  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
+  thead th{background:#f0efec;color:var(--navy);font-weight:600;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:56px}
+  tbody td{padding:9px 12px;border-bottom:1px solid #f0efec;white-space:nowrap}
+  tbody tr:hover{background:#faf9f7}
+  tbody tr:last-child td{border-bottom:none}
+  .name-cell{white-space:normal;font-weight:500;min-width:150px}
+  .num{font-variant-numeric:tabular-nums;text-align:left;direction:ltr}
+  .up{color:var(--green)} .down{color:var(--red)}
+  .badge-yes{display:inline-block;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600}
+  .badge-no{color:var(--light);font-size:13px}
+  .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
+  .state.err{color:var(--red)}
+  .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
+</style>
+</head>
+<body>
+<header><h1>הון כשר · <span class="gold">אג"ח ומורשים</span></h1></header>
+
+<div class="wrap">
+  <div class="nav-primary" id="navPrimary">
+    <button data-topic="companies" class="active">חברות מורשות</button>
+    <button data-topic="bonds">איגרות חוב</button>
+  </div>
+  <div class="nav-sub" id="navSub">
+    <button data-level="private" class="active">פרטי</button>
+    <button data-level="general">כללי</button>
+  </div>
+
+  <!-- כאן מוזרקת הרשימה. אותו container משמש לכל 4 התצוגות. -->
+  <div id="listContainer"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG — לשנות לכתובת האתר בעת הטמעה באתר אחר
+// ═══════════════════════════════════════════════════════════════
+const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same site
+
+// הגדרת העמודות לכל סוג רשימה
+const COLUMNS = {
+  companies: [
+    { key:"permit_name", label:"שם החברה", cell:"name" },
+    { key:"chp_number",  label:'ח"פ',       cell:"num"  },
+    { key:"category",    label:"קטגוריה"                },
+    { key:"region",      label:"אזור"                  },
+    { key:"approved",    label:'אג"ח מאושר', cell:"badge" },
+  ],
+  bonds: [
+    { key:"bond_name",     label:'אג"ח',     cell:"name" },
+    { key:"symbol",        label:"סימול"                },
+    { key:"company",       label:"חברה",     cell:"name" },
+    { key:"interest",      label:"ריבית %",  cell:"num"  },
+    { key:"maturity_date", label:"מועד פדיון"           },
+    { key:"linkage",       label:"הצמדה"                },
+    { key:"last_price",    label:"שער אחרון", cell:"num" },
+    { key:"change_pct",    label:"שינוי %",  cell:"chg"  },
+  ],
+};
+
+// נתוני דוגמה — מוצגים רק אם ה-API לא זמין (כדי לראות את העיצוב)
+const SAMPLE = {
+  "bonds-private": [
+    {bond_name:"אאורה אגח יז",symbol:"אארה.ק17",company:"אאורה השקעות בע\"מ",interest:"3.85",maturity_date:"31/01/2029",linkage:"מדד המחירים לצרכן",last_price:113.87,change_pct:-0.06},
+    {bond_name:"לוי אגח ט",symbol:"לוי.ק9",company:"א. לוי השקעות ובנין בע\"מ",interest:"4.10",maturity_date:"30/06/2030",linkage:"לא צמוד",last_price:101.2,change_pct:0.12},
+  ],
+  "bonds-general": [
+    {bond_name:"אמות אגח ד",symbol:"אמת.ק4",company:"אמות השקעות בע\"מ",interest:"3.20",maturity_date:"02/07/2028",linkage:"מדד המחירים לצרכן",last_price:121.19,change_pct:0.04},
+  ],
+  "companies-private": [
+    {permit_name:"אאורה השקעות בע\"מ",chp_number:"520038274",category:"נדל\"ן",region:"מרכז",approved:1},
+    {permit_name:"א. לוי השקעות ובנין בע\"מ",chp_number:"520041096",category:"נדל\"ן",region:"מרכז",approved:1},
+  ],
+  "companies-general": [
+    {permit_name:"אמות השקעות בע\"מ",chp_number:"520037649",category:"נדל\"ן",region:"מרכז",approved:1},
+    {permit_name:"חברה כללית לדוגמה",chp_number:"510000000",category:"מסחר",region:"צפון",approved:0},
+  ],
+};
+
+const el = (t, c, h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+// ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
+async function mountList(container, type) {
+  const topic = type.startsWith("bonds") ? "bonds" : "companies";
+  const cols  = COLUMNS[topic];
+  container.innerHTML = '<div class="state">טוען…</div>';
+
+  let rows = null, usedSample = false;
+  try {
+    const res = await fetch(`${API_BASE}/api/lists?type=${type}`);
+    const data = await res.json();
+    if (data && data.ok) rows = data.rows;
+    else throw new Error(data?.error || "bad response");
+  } catch (e) {
+    rows = SAMPLE[type] || [];
+    usedSample = true;
+  }
+
+  const state = { rows, filtered: rows, cols, topic };
+  render(container, state, type, usedSample);
+}
+
+function render(container, state, type, usedSample) {
+  container.innerHTML = "";
+
+  if (usedSample) {
+    container.appendChild(el("div","sample-note",
+      'מוצגים נתוני דוגמה בלבד — ה-API לא נענה. אחרי פריסת <code>lists.js</code> יוצגו הנתונים האמיתיים.'));
+  }
+
+  const head = el("div","list-head");
+  const title = el("div","list-title");
+  const label = state.topic === "bonds" ? "איגרות חוב" : "חברות";
+  title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+  const search = el("input","search"); search.type="search"; search.placeholder="חיפוש…";
+  head.append(title, search);
+  container.appendChild(head);
+
+  const wrap = el("div","table-wrap");
+  const table = el("table");
+  const thead = el("thead");
+  const trh = el("tr");
+  state.cols.forEach(c => trh.appendChild(el("th", null, esc(c.label))));
+  thead.appendChild(trh);
+  const tbody = el("tbody");
+  table.append(thead, tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+
+  const draw = () => {
+    tbody.innerHTML = "";
+    if (!state.filtered.length) {
+      const tr = el("tr");
+      const td = el("td"); td.colSpan = state.cols.length;
+      td.className = "state"; td.textContent = "אין רשומות להצגה";
+      tr.appendChild(td); tbody.appendChild(tr);
+      return;
+    }
+    for (const row of state.filtered) {
+      const tr = el("tr");
+      for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key]));
+      tbody.appendChild(tr);
+    }
+    title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+  };
+
+  search.addEventListener("input", () => {
+    const q = search.value.trim().toLowerCase();
+    state.filtered = !q ? state.rows : state.rows.filter(r =>
+      state.cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q)));
+    draw();
+  });
+
+  draw();
+}
+
+function cellFor(col, val) {
+  const td = el("td");
+  if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "chg")  {
+    td.className = "num";
+    if (val == null || val === "") { td.textContent = ""; return td; }
+    const n = Number(val);
+    td.classList.add(n > 0 ? "up" : n < 0 ? "down" : "");
+    td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+    return td;
+  }
+  if (col.cell === "badge") {
+    td.innerHTML = Number(val) === 1
+      ? '<span class="badge-yes">מאושר ✓</span>'
+      : '<span class="badge-no">—</span>';
+    return td;
+  }
+  td.textContent = val ?? "";
+  return td;
+}
+
+// ── ניווט דו-שלבי ──
+const nav = { topic: "companies", level: "private" };
+const container = document.getElementById("listContainer");
+
+function refresh() { mountList(container, `${nav.topic}-${nav.level}`); }
+
+document.getElementById("navPrimary").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  nav.topic = b.dataset.topic;
+  [...e.currentTarget.children].forEach(x => x.classList.toggle("active", x === b));
+  refresh();
+});
+document.getElementById("navSub").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  nav.level = b.dataset.level;
+  [...e.currentTarget.children].forEach(x => x.classList.toggle("active", x === b));
+  refresh();
+});
+
+refresh(); // טעינה ראשונית
+</script>
+</body>
+</html>
