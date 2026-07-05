@@ -1042,6 +1042,8 @@ function renderAdminTable() {
                     <option value=""   ${!b.agch_approved?"selected":""}>—</option>
                     <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
                     <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+                    <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
+                    <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
                   </select>
                 </td>
                 <td style="text-align:center;white-space:nowrap;">
@@ -1151,6 +1153,8 @@ function renderForm() {
             <option value=""   ${!b.agch_approved?"selected":""}>— לא מוגדר —</option>
             <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
             <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+            <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
+            <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
           </select>
         </div>
       </div>
