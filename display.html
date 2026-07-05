@@ -45,7 +45,7 @@
   /* ── טבלה ── */
   .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
   table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
-  thead th{background:#f0efec;color:var(--navy);font-weight:600;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border);position:sticky;top:56px}
+  thead th{background:#f0efec;color:var(--navy);font-weight:600;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border)}
   tbody td{padding:9px 12px;border-bottom:1px solid #f0efec;white-space:nowrap}
   tbody tr:hover{background:#faf9f7}
   tbody tr:last-child td{border-bottom:none}
@@ -208,7 +208,8 @@ function cellFor(col, val) {
     td.className = "num";
     if (val == null || val === "") { td.textContent = ""; return td; }
     const n = Number(val);
-    td.classList.add(n > 0 ? "up" : n < 0 ? "down" : "");
+    if (n > 0) td.classList.add("up");
+    else if (n < 0) td.classList.add("down");
     td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
     return td;
   }
