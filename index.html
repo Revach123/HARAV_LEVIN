@@ -1028,8 +1028,7 @@ function renderAdminTable() {
                   <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.visibility?"selected":""}>—</option>
-                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>
-                    <option value="כללי" ${b.visibility==="כללי"?"selected":""}>כללי</option>
+                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>                    
                   </select>
                 </td>
                 <td style="text-align:center;font-size:13px;">${
@@ -1143,8 +1142,7 @@ function renderForm() {
           <label>פרטי / כללי</label>
           <select id="f-visibility" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
             <option value=""   ${!b.visibility?"selected":""}>— לא מוגדר —</option>
-            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>
-            <option value="כללי" ${b.visibility==="כללי"?"selected":""}>כללי</option>
+            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>            
           </select>
         </div>
         <div class="field">
