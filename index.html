@@ -1840,9 +1840,10 @@ function normalizeAgch(val) {
   const v = (val || "").trim();
   if (v === "מאושר"  || v === "כן" || v === "yes" || v === "true" || v === "1") return "כן";
   if (v === "לא מאושר" || v === "לא" || v === "no"  || v === "false"|| v === "0") return "לא";
+  if (v === "רק פרטי" || v === "פרטי בלבד" || v === "רק-פרטי") return "רק פרטי";
+  if (v === "רק כללי" || v === "כללי בלבד" || v === "רק-כללי") return "רק כללי";
   return "";
 }
-
 async function startImport() {
   // Validate at least a name field is mapped
   const hasName = (csvColMap["registrar_name"]??-1) >= 0 || (csvColMap["permit_name"]??-1) >= 0;
