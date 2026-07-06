@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>רשימת עסקים מורשים</title>
+<title>מכון להיתר עסקה למהדרין</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -697,7 +697,7 @@
 
 <header>
   <div>
-    <h1>רשימת עסקים מורשים</h1>
+    <h1>מכון להיתר עסקה למהדרין</h1>
   </div>
   <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
 </header>
@@ -834,131 +834,190 @@ function render() {
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
 }
 
-// ── TABLE (public) ──
+// ── TABLE (public) — combined view ──
+// ═══════════════════════════════════════════════════════════════
+//  PUBLIC COMBINED VIEW — חברות / אג"ח → פרטי / כללי
+// ═══════════════════════════════════════════════════════════════
+let pubTopic   = "companies";  // companies | bonds
+let pubLevel   = "private";    // private | general
+let pubRows    = [];
+let pubLoading = false;
+let pubErr     = "";
+let pubSearch  = "";
+let pubLinkage = "";
+let pubSortCol = null;
+let pubSortDir = 1;
+
+const PUB_COLS = {
+  companies: [
+    { key:"permit_name", label:"שם החברה",        type:"name" },
+    { key:"chp_number",  label:'ח"פ',             type:"ltr"  },
+    { key:"category",    label:"קטגוריה"                       },
+    { key:"region",      label:"אזור"                         },
+    { key:"approved",    label:'מאושר לאג"ח',      type:"badge"},
+  ],
+  bonds: [
+    { key:"bond_name",     label:'שם אג"ח',    type:"name" },
+    { key:"symbol",        label:"סימול"                  },
+    { key:"company",       label:"חברה",       type:"name" },
+    { key:"interest",      label:"ריבית %",    type:"num"  },
+    { key:"maturity_date", label:"מועד פדיון"             },
+    { key:"linkage",       label:"הצמדה"                  },
+    { key:"last_price",    label:"שער אחרון",  type:"num"  },
+    { key:"change_pct",    label:"שינוי %",    type:"chg"  },
+  ],
+};
+
+async function loadPublic() {
+  pubLoading = true; pubErr = ""; render();
+  try {
+    const r = await fetch(`/api/lists?type=${pubTopic}-${pubLevel}`);
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || "error");
+    pubRows = d.rows || [];
+  } catch (e) {
+    pubErr = e.message; pubRows = [];
+  }
+  pubLoading = false; render();
+}
+
+function setPubTopic(t) {
+  if (pubTopic === t) return;
+  pubTopic = t; pubSearch = ""; pubLinkage = ""; pubSortCol = null; pubSortDir = 1;
+  loadPublic();
+}
+function setPubLevel(l) {
+  if (pubLevel === l) return;
+  pubLevel = l; loadPublic();
+}
+function setPubSort(c) {
+  if (pubSortCol === c) pubSortDir *= -1;
+  else { pubSortCol = c; pubSortDir = 1; }
+  render();
+}
+function setPubLinkage(v) { pubLinkage = v; render(); }
+function pubExport() { window.location.href = `/api/lists?type=${pubTopic}-${pubLevel}&format=csv`; }
+
+// חיפוש — עדכון גוף הטבלה בלבד (לא render מלא, כדי לא לאבד פוקוס)
+function onPubSearch(v) { pubSearch = v; refreshPubBody(); }
+
+function pubViewRows() {
+  let rows = pubRows.slice();
+  const cols = PUB_COLS[pubTopic];
+  const q = pubSearch.trim().toLowerCase();
+  if (q) rows = rows.filter(r => cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q)));
+  if (pubTopic === "bonds" && pubLinkage) rows = rows.filter(r => (r.linkage || "") === pubLinkage);
+  if (pubSortCol) {
+    const c = pubSortCol, dir = pubSortDir;
+    rows.sort((a, b) => {
+      const x = a[c], y = b[c];
+      const xn = x !== "" && x != null && !isNaN(Number(x));
+      const yn = y !== "" && y != null && !isNaN(Number(y));
+      if (xn && yn) return (Number(x) - Number(y)) * dir;
+      return String(x ?? "").localeCompare(String(y ?? ""), "he") * dir;
+    });
+  }
+  return rows;
+}
+
+function pubCell(col, row) {
+  const v = row[col.key];
+  if (col.type === "badge")
+    return Number(v) === 1
+      ? '<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600;">מאושר ✓</span>'
+      : '<span style="color:var(--light);">—</span>';
+  if (col.type === "chg") {
+    if (v == null || v === "") return "";
+    const n = Number(v);
+    const col2 = n > 0 ? "var(--green)" : n < 0 ? "var(--red)" : "var(--muted)";
+    return `<span style="color:${col2};">${n > 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
+  }
+  if (col.type === "ltr")
+    return `<span style="direction:ltr;">${escHtml(v == null ? "" : String(v)) || "—"}</span>`;
+  return escHtml(v == null ? "" : String(v)) || "—";
+}
+
+function pubBodyHtml() {
+  const cols = PUB_COLS[pubTopic];
+  const rows = pubViewRows();
+  if (pubLoading) return `<tr class="empty-row"><td colspan="${cols.length}">טוען…</td></tr>`;
+  if (pubErr)     return `<tr class="empty-row"><td colspan="${cols.length}" style="color:var(--red);">שגיאה: ${escHtml(pubErr)}</td></tr>`;
+  if (!rows.length) return `<tr class="empty-row"><td colspan="${cols.length}">לא נמצאו תוצאות</td></tr>`;
+  return rows.map(r => `<tr>${cols.map(c => {
+    const cls = c.type === "name" ? ' class="biz-name"' : c.type === "num" || c.type === "chg" ? ' style="direction:ltr;font-variant-numeric:tabular-nums;"' : "";
+    return `<td${cls}>${pubCell(c, r)}</td>`;
+  }).join("")}</tr>`).join("");
+}
+
+function refreshPubBody() {
+  const tb = document.getElementById("pub-tbody");
+  if (tb) tb.innerHTML = pubBodyHtml();
+  const cnt = document.getElementById("pub-count");
+  if (cnt) cnt.textContent = pubViewRows().length;
+}
+
+// כפתור נושא/רמה
+function pubBtn(active, label, onclick, big) {
+  const base = big
+    ? "flex:1;max-width:230px;padding:.85rem 1rem;font-size:16px;font-weight:600;"
+    : "padding:.5rem 1.4rem;font-size:14px;font-weight:500;border-radius:20px;";
+  const on = big
+    ? (active ? "background:var(--navy);color:#fff;border:1.5px solid var(--navy);" : "background:var(--bg2);color:var(--navy);border:1.5px solid var(--border);")
+    : (active ? "background:var(--gold);color:#fff;border:1px solid var(--gold);" : "background:transparent;color:var(--muted);border:1px solid var(--border);");
+  const radius = big ? "border-radius:10px;" : "";
+  return `<button onclick="${onclick}" style="${base}${radius}${on}font-family:inherit;cursor:pointer;transition:.15s;">${label}</button>`;
+}
+
 function renderTable() {
-  const rows = filteredAndSorted();
-  const hasFilters = search || filterCat || filterRegion || filterBizType || filterVis || filterAgch;
+  const cols = PUB_COLS[pubTopic];
+  const linkages = pubTopic === "bonds"
+    ? [...new Set(pubRows.map(r => r.linkage).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"))
+    : [];
 
-  const uniq = (key) => [...new Set(businesses.map(b => b[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b,"he"));
-
-  const selOpts = (values, current, emptyLabel) =>
-    `<option value="">${emptyLabel}</option>` +
-    values.map(v => `<option value="${escHtml(v)}" ${current===v?"selected":""}>${escHtml(v)}</option>`).join("");
-
-  const agchOpts = [
-    { val:"אין",        lbl:'אין אג"ח' },
-    { val:"מאושר",      lbl:'יש אג"ח – מאושר' },
-    { val:"לא מאושר",   lbl:'יש אג"ח – לא מאושר' },
-    { val:"יש",         lbl:'יש אג"ח (כללי)' },
-  ];
-
-  const th = (col, label, extra="") => {
-    const active = sortCol === col;
-    const icon   = active ? (sortDir === "asc" ? "▲" : "▼") : "⇅";
-    return `<th class="sortable${active?" sort-active":""}" onclick="setSort('${col}')" ${extra}>
-      ${label}<span class="sort-icon">${icon}</span>
-    </th>`;
+  const th = (c) => {
+    const active = pubSortCol === c.key;
+    const icon = active ? (pubSortDir > 0 ? "▲" : "▼") : "⇅";
+    const alignNum = (c.type === "num" || c.type === "chg") ? "direction:ltr;" : "";
+    return `<th class="sortable${active ? " sort-active" : ""}" onclick="setPubSort('${c.key}')" style="${alignNum}">${escHtml(c.label)}<span class="sort-icon">${icon}</span></th>`;
   };
 
   return `
+    <div style="display:flex;gap:.6rem;margin-bottom:.9rem;">
+      ${pubBtn(pubTopic === "companies", "חברות מורשות", "setPubTopic('companies')", true)}
+      ${pubBtn(pubTopic === "bonds", 'איגרות חוב', "setPubTopic('bonds')", true)}
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:1.1rem;">
+      ${pubBtn(pubLevel === "private", "פרטי", "setPubLevel('private')", false)}
+      ${pubBtn(pubLevel === "general", "כללי", "setPubLevel('general')", false)}
+    </div>
+
     <div class="filter-bar">
-      <div class="fb-group" style="flex:1;min-width:180px;">
+      <div class="fb-group" style="flex:1;min-width:200px;">
         <span class="fb-label">חיפוש חופשי</span>
-        <input type="text" id="srch" class="fb-search${search?" active":""}"
-          placeholder="🔍  שם / ח.פ. / הערות..."
-          value="${escHtml(search)}">
+        <input type="text" id="pub-srch" class="fb-search${pubSearch ? " active" : ""}"
+          placeholder="🔍 חיפוש…" value="${escHtml(pubSearch)}" oninput="onPubSearch(this.value)">
       </div>
+      ${pubTopic === "bonds" ? `
       <div class="fb-group">
-        <span class="fb-label">קטגוריה</span>
-        <select id="f-cat" class="${filterCat?"active":""}">
-          ${selOpts(uniq("category"), filterCat, "כל הקטגוריות")}
+        <span class="fb-label">הצמדה</span>
+        <select class="${pubLinkage ? "active" : ""}" onchange="setPubLinkage(this.value)">
+          <option value="">כל ההצמדות</option>
+          ${linkages.map(l => `<option value="${escHtml(l)}" ${pubLinkage === l ? "selected" : ""}>${escHtml(l)}</option>`).join("")}
         </select>
-      </div>
-      <div class="fb-group">
-        <span class="fb-label">אזור</span>
-        <select id="f-region" class="${filterRegion?"active":""}">
-          ${selOpts(uniq("region"), filterRegion, "כל האזורים")}
-        </select>
-      </div>
-      <div class="fb-group">
-        <span class="fb-label">סוג עסק</span>
-        <select id="f-biztype" class="${filterBizType?"active":""}">
-          ${selOpts(uniq("biz_type"), filterBizType, "כל הסוגים")}
-        </select>
-      </div>
-      <div class="fb-group">
-        <span class="fb-label">פרטי / כללי</span>
-        <select id="f-vis" class="${filterVis?"active":""}">
-          <option value="">הכל</option>
-          <option value="פרטי" ${filterVis==="פרטי"?"selected":""}>פרטי</option>
-          <option value="כללי" ${filterVis==="כללי"?"selected":""}>כללי</option>
-        </select>
-      </div>
-      <div class="fb-group">
-        <span class="fb-label">אג"ח</span>
-        <select id="f-agch" class="${filterAgch?"active":""}">
-          <option value="">כולם</option>
-          ${agchOpts.map(o=>`<option value="${o.val}" ${filterAgch===o.val?"selected":""}>${o.lbl}</option>`).join("")}
-        </select>
-      </div>
+      </div>` : ""}
       <div class="fb-group" style="justify-content:flex-end;">
         <span class="fb-label">&nbsp;</span>
-        <button class="btn-ghost" onclick="exportCsv(false)" title="ייצוא לקובץ CSV" style="height:34px;font-size:12px;">📤 ייצוא CSV</button>
+        <button class="btn-ghost" onclick="pubExport()" style="height:34px;font-size:12px;">📤 ייצוא CSV</button>
       </div>
-      ${hasFilters ? `<div class="fb-group" style="justify-content:flex-end;">
-        <span class="fb-label">&nbsp;</span>
-        <button class="clear-filters" onclick="clearFilters()">✕ נקה סינונים</button>
-      </div>` : ""}
     </div>
 
     <div class="table-wrap">
-      <table>
-        <colgroup>
-          <col class="c-num">
-          <col class="c-chp">
-          <col class="c-name-lg">
-          <col class="c-cat">
-          <col class="c-region">
-          <col class="c-biztype">
-          <col class="c-vis">
-          <col class="c-agch-combined">
-          <col class="c-notes">
-        </colgroup>
-        <thead>
-          <tr>
-            ${th("num",        "#",          'style="text-align:center;"')}
-            ${th("chp",        "ח.פ.")}
-            ${th("name",       "שם עסק")}
-            ${th("category",   "קטגוריה")}
-            ${th("region",     "אזור")}
-            ${th("biz_type",   "סוג עסק")}
-            ${th("visibility", "פרטי/כללי",  'style="text-align:center;"')}
-            ${th("agch",       'אג"ח',       'style="text-align:center;"')}
-            ${th("notes",      "הערות")}
-          </tr>
-        </thead>
-        <tbody>
-          ${rows.length === 0
-            ? `<tr class="empty-row"><td colspan="9">לא נמצאו תוצאות${hasFilters ? " — נסה לנקות סינונים" : ""}</td></tr>`
-            : rows.map((b,i) => `
-              <tr>
-                <td class="num">${i+1}</td>
-                <td style="direction:ltr;text-align:right;font-size:12px;color:var(--light);">${escHtml(b.chp_number)||"—"}</td>
-                <td class="biz-name">${displayName(b, true)}</td>
-                <td class="cat-cell">${b.category ? `<span>${escHtml(b.category)}</span>` : "—"}</td>
-                <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
-                <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
-                <td style="font-size:12px;text-align:center;color:var(--muted);">${escHtml(b.visibility)||"—"}</td>
-                <td style="font-size:12px;text-align:center;">${agchLabel(b)}</td>
-                <td class="notes-cell">${escHtml(b.notes)||"—"}</td>
-              </tr>`).join("")}
-        </tbody>
+      <table style="min-width:${pubTopic === "bonds" ? "820px" : "640px"};table-layout:auto;">
+        <thead><tr>${cols.map(th).join("")}</tr></thead>
+        <tbody id="pub-tbody">${pubBodyHtml()}</tbody>
       </table>
     </div>
-    <p class="count" style="margin-top:.75rem;">
-      ${rows.length} מתוך ${businesses.length} עסקים
-      ${hasFilters ? `· <span style="color:var(--navy);cursor:pointer;" onclick="clearFilters()">נקה סינונים</span>` : ""}
-    </p>`;
+    <p class="count" style="margin-top:.75rem;"><span id="pub-count">${pubViewRows().length}</span> רשומות</p>`;
 }
 
 // ── LOGIN ──
@@ -2120,12 +2179,20 @@ function showStatus(msg) {
   el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 2500);
 }
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
 // סגירת dropdown של מסד הנתונים בלחיצה בחוץ
 document.addEventListener("click", (e) => {
   document.querySelectorAll("details.dbmenu[open]").forEach((d) => {
     if (!d.contains(e.target)) d.removeAttribute("open");
   });
 });
+
+// טעינה ראשונית של התצוגה הציבורית
+loadPublic();
+
 loadBusinesses().catch(() => {
   document.getElementById("app").innerHTML =
     `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
