@@ -1011,14 +1011,6 @@ function renderAdminTable() {
             <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
           </div>
         </details>
-        <script>
-           document.addEventListener("click", (e) => {
-                document.querySelectorAll("details.dbmenu[open]").forEach((d) => {
-                // סגור כל dropdown שלא לחצו בתוכו
-                if (!d.contains(e.target)) d.removeAttribute("open");
-                });
-           });
-        </script>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
@@ -2128,10 +2120,12 @@ function showStatus(msg) {
   el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 2500);
 }
-
-// ─────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────
+// סגירת dropdown של מסד הנתונים בלחיצה בחוץ
+document.addEventListener("click", (e) => {
+  document.querySelectorAll("details.dbmenu[open]").forEach((d) => {
+    if (!d.contains(e.target)) d.removeAttribute("open");
+  });
+});
 loadBusinesses().catch(() => {
   document.getElementById("app").innerHTML =
     `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
