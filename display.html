@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>אג"ח ומורשים — מכון להיתר עסקה למהדרין</title>
+<title>אג"ח ומורשים — הון כשר</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -41,6 +41,9 @@
   .list-title .cnt{font-size:13px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
   .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:8px;min-width:220px;background:var(--bg2)}
   .search:focus{outline:none;border-color:var(--navy)}
+  .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .btn-csv:hover{background:var(--navy2)}
+  .head-tools{display:flex;gap:.5rem;align-items:center}
 
   /* ── טבלה ── */
   .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
@@ -60,7 +63,7 @@
 </style>
 </head>
 <body>
-<header><h1>מכון להיתר עסקה למהדרין · <span class="gold">אג"ח ומורשים</span></h1></header>
+<header><h1>הון כשר · <span class="gold">אג"ח ומורשים</span></h1></header>
 
 <div class="wrap">
   <div class="nav-primary" id="navPrimary">
@@ -158,8 +161,12 @@ function render(container, state, type, usedSample) {
   const title = el("div","list-title");
   const label = state.topic === "bonds" ? "איגרות חוב" : "חברות";
   title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+  const tools = el("div","head-tools");
   const search = el("input","search"); search.type="search"; search.placeholder="חיפוש…";
-  head.append(title, search);
+  const csvBtn = el("button","btn-csv","⬇ ייצוא CSV");
+  csvBtn.onclick = () => { window.location.href = `${API_BASE}/api/lists?type=${type}&format=csv`; };
+  tools.append(search, csvBtn);
+  head.append(title, tools);
   container.appendChild(head);
 
   const wrap = el("div","table-wrap");
