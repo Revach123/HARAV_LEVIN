@@ -1,14 +1,16 @@
 // functions/api/lists.js
-// מגיש 4 רשימות כ-JSON, עם CORS פתוח (לאפשר הטמעה גם באתר אחר).
-//   /api/lists?type=companies-private
-//   /api/lists?type=companies-general
-//   /api/lists?type=bonds-private
-//   /api/lists?type=bonds-general
-//
-// לוגיקת אישור:
-//   פרטי  → agch_approved ∈ (כן, רק פרטי)
-//   כללי  → agch_approved ∈ (כן, רק כללי)
-// "כללי" מבחינת visibility = כל מה שאינו 'פרטי'.
+// מגיש רשימות כ-JSON או CSV, עם CORS פתוח.
+//   סינון (ציבורי):
+//     /api/lists?type=companies-private
+//     /api/lists?type=companies-general
+//     /api/lists?type=bonds-private
+//     /api/lists?type=bonds-general
+//   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
+//     /api/lists?type=companies-all
+//     /api/lists?type=bonds-all
+//   פורמט:
+//     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
+//     (ברירת מחדל)  → JSON
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -22,20 +24,44 @@ const json = (data, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
   });
 
+// המרת שורות ל-CSV עם BOM (כדי שאקסל יזהה UTF-8 ויציג עברית)
+function toCsv(rows) {
+  if (!rows.length) return "\uFEFF";
+  const cols = Object.keys(rows[0]);
+  const esc = v => {
+    const s = v == null ? "" : String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [cols.join(",")];
+  for (const r of rows) lines.push(cols.map(c => esc(r[c])).join(","));
+  return "\uFEFF" + lines.join("\r\n");
+}
+
+const csvResponse = (rows, name) =>
+  new Response(toCsv(rows), {
+    status: 200,
+    headers: {
+      ...CORS,
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="${name}.csv"`,
+    },
+  });
+
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: CORS });
 }
 
 export async function onRequestGet(context) {
   const { request, env } = context;
-  const type = new URL(request.url).searchParams.get("type") || "";
+  const params = new URL(request.url).searchParams;
+  const type = params.get("type") || "";
+  const format = (params.get("format") || "").toLowerCase();
 
   try {
-    let sql, binds = [];
+    let sql;
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
-      // סימון אישור מחושב לפי הרמה
       const approvedExpr = isPrivate
         ? "CASE WHEN agch_approved IN ('כן','רק פרטי') THEN 1 ELSE 0 END"
         : "CASE WHEN agch_approved IN ('כן','רק כללי') THEN 1 ELSE 0 END";
@@ -67,11 +93,23 @@ export async function onRequestGet(context) {
         ORDER BY biz.permit_name, b.bond_name`;
     }
 
+    // ── ייצוא גולמי מלא ──
+    else if (type === "companies-all") {
+      sql = `SELECT * FROM businesses ORDER BY permit_name`;
+    }
+    else if (type === "bonds-all") {
+      sql = `SELECT * FROM bonds ORDER BY company_full_name, bond_name`;
+    }
+
     else {
       return json({ ok: false, error: "unknown_type", type }, 400);
     }
 
-    const { results } = await env.DB.prepare(sql).bind(...binds).all();
+    const { results } = await env.DB.prepare(sql).all();
+
+    if (format === "csv") {
+      return csvResponse(results, type);
+    }
     return json({ ok: true, type, count: results.length, rows: results });
   } catch (e) {
     return json({ ok: false, error: e.message, type }, 500);
