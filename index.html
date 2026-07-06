@@ -988,6 +988,9 @@ function renderAdminTable() {
         <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
         <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
         <button class="btn-ghost" onclick="exportCsv(true)" title="ייצוא כל הנתונים לCSV">📤 ייצוא CSV</button>
+        <button class="btn-ghost" onclick="window.open('/api/lists?type=bonds-all&format=csv','_blank')" title='ייצוא כל האג"ח לקובץ CSV'>📊 ייצוא אג"ח CSV</button>
+        <button class="btn-ghost" onclick="window.open('/api/lists?type=bonds-all','_blank')" title='צפייה בכל האג"ח בדפדפן'>👁 צפה אג"ח</button>
+        <button class="btn-ghost" onclick="window.open('/api/lists?type=companies-all','_blank')" title="צפייה בכל החברות בדפדפן">👁 צפה חברות</button>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
