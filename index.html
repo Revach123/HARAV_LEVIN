@@ -988,9 +988,29 @@ function renderAdminTable() {
         <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
         <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
         <button class="btn-ghost" onclick="exportCsv(true)" title="ייצוא כל הנתונים לCSV">📤 ייצוא CSV</button>
-        <button class="btn-ghost" onclick="window.open('/api/lists?type=bonds-all&format=csv','_blank')" title='ייצוא כל האג"ח לקובץ CSV'>📊 ייצוא אג"ח CSV</button>
-        <button class="btn-ghost" onclick="window.open('/api/lists?type=bonds-all','_blank')" title='צפייה בכל האג"ח בדפדפן'>👁 צפה אג"ח</button>
-        <button class="btn-ghost" onclick="window.open('/api/lists?type=companies-all','_blank')" title="צפייה בכל החברות בדפדפן">👁 צפה חברות</button>
+        <style>
+          .dbmenu{position:relative;display:inline-block}
+          .dbmenu>summary{list-style:none;cursor:pointer}
+          .dbmenu>summary::-webkit-details-marker{display:none}
+          .dbmenu[open]>summary{outline:2px solid var(--navy,#1a3a5c)}
+          .dbmenu-items{position:absolute;top:calc(100% + 4px);right:0;z-index:100;background:#fff;border:1px solid var(--border,#e0ddd8);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:190px;overflow:hidden}
+          .dbmenu-items a{display:block;padding:9px 14px;font-size:13px;color:#1a3a5c;text-decoration:none;white-space:nowrap}
+          .dbmenu-items a:hover{background:#f0efec}
+        </style>
+        <details class="dbmenu">
+          <summary class="btn-ghost">🗄️ צפה במסד הנתונים ▾</summary>
+          <div class="dbmenu-items">
+            <a href="/admin-view.html?type=companies-all" target="_blank">רשם החברות</a>
+            <a href="/admin-view.html?type=bonds-all" target="_blank">נתוני אג"ח מלאים</a>
+          </div>
+        </details>
+        <details class="dbmenu">
+          <summary class="btn-ghost">📤 ייצוא מסד נתונים ל-CSV ▾</summary>
+          <div class="dbmenu-items">
+            <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
+            <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
+          </div>
+        </details>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
