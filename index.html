@@ -1068,6 +1068,7 @@ function renderAdminTable() {
           <div class="dbmenu-items">
             <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
             <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
+            <a href="#" onclick="exportBondsLiveCsv();return false;" id="bonds-export-link">אג"ח מהבורסה (לפי חברות שלנו)</a>
           </div>
         </details>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
@@ -1737,6 +1738,34 @@ async function runTaseSync() {
     status.innerHTML = `❌ שגיאה: ${e.message}`;
   }
   btn.disabled = false; btn.textContent = "📈 עדכן אג\"ח מבורסה";
+}
+
+// שולף CSV חי של אג"ח (/api/bonds-export) — לא JSON, לכן לא דרך apiFetch;
+// שולח את ה-Bearer token ידנית (קישור <a> רגיל לא יכול לשאת header),
+// ואז מפעיל הורדה בדפדפן בדיוק כמו exportCsv().
+async function exportBondsLiveCsv() {
+  const link = document.getElementById("bonds-export-link");
+  const orig = link?.textContent;
+  if (link) link.textContent = "⏳ מושך מהבורסה...";
+  try {
+    const res = await fetch("/api/bonds-export", {
+      headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : {},
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || res.statusText);
+    }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    const date = new Date().toISOString().slice(0, 10);
+    a.href = url; a.download = `אגח-מהבורסה-${date}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    showStatus(`שגיאה בייצוא אג"ח: ${e.message}`);
+  }
+  if (link) link.textContent = orig;
 }
 
 function copyRegToPermit() {
