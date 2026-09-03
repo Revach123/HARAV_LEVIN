@@ -29,11 +29,46 @@ function isAuthed(request, env) {
   return (request.headers.get("Authorization") || "").replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
 }
 
-function json(data, status = 200) {
+function json(data, status = 200, extra = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", ...extra },
   });
+}
+
+// תקרת קצב בסיסית לכל IP — אותו דפוס (upsert על חלון זמן ב-D1) כמו
+// guard.js ב-revach, בלי חלק ה-Origin/Turnstile/alert שלא מתאים ל-endpoint
+// שכבר מוגן ב-Bearer: מגן על מקרה שבו ה-token דלף או מנוצל לרעה בתדירות
+// גבוהה, כדי שזה לא יחזור להיות עומס/בעיית מכסה על fetch מ-TASE + D1.
+// דורש טבלת bonds_export_rate_limit (migrations/0002_bonds_export_rate_limit.sql);
+// אם הטבלה עוד לא קיימת (או כל שגיאת D1 אחרת) — נכשל פתוח (לא חוסם בקשה
+// לגיטימית), בדיוק כמו guard.js.
+const RATE_LIMIT  = 30; // בקשות מקסימום לחלון
+const RATE_WINDOW = 60; // שניות
+
+async function checkRateLimit(env, ip) {
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    const row = await env.DB.prepare(
+      "SELECT count, window_start FROM bonds_export_rate_limit WHERE ip = ?"
+    ).bind(ip).first();
+
+    if (!row || now - row.window_start >= RATE_WINDOW) {
+      await env.DB.prepare(
+        `INSERT INTO bonds_export_rate_limit (ip, count, window_start) VALUES (?, 1, ?)
+         ON CONFLICT(ip) DO UPDATE SET count = 1, window_start = ?`
+      ).bind(ip, now, now).run();
+      return true;
+    }
+    if (row.count >= RATE_LIMIT) return false;
+
+    await env.DB.prepare(
+      "UPDATE bonds_export_rate_limit SET count = count + 1 WHERE ip = ?"
+    ).bind(ip).run();
+    return true;
+  } catch {
+    return true;
+  }
 }
 
 // זהה ל-fetchTaseBondIds ב-sync-tase.js: מנסה יום המסחר האחרון, וחוזר עד
@@ -88,6 +123,11 @@ export async function onRequestOptions() {
 export async function onRequestGet({ request, env }) {
   if (!isAuthed(request, env)) {
     return json({ error: "Unauthorized" }, 401);
+  }
+
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+  if (!(await checkRateLimit(env, ip))) {
+    return json({ error: "rate_limited" }, 429, { "Retry-After": String(RATE_WINDOW) });
   }
 
   const fetched = await fetchTaseBondRows();
