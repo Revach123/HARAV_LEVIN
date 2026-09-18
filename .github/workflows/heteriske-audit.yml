@@ -74,6 +74,13 @@ jobs:
             python scripts/heteriske_audit/build_name_accuracy_report.py
           fi
 
+      - name: Classify name differences (trivial/administrative vs. worth reviewing)
+        if: always()
+        run: |
+          if [ -f "scripts/heteriske_audit/out/heteriske_name_accuracy_report.json" ]; then
+            python scripts/heteriske_audit/classify_name_differences.py
+          fi
+
       - name: Upload heteriske audit results
         if: always()
         uses: actions/upload-artifact@v4
@@ -90,7 +97,8 @@ jobs:
                    comparison_missing_in_heteriske.csv heteriske_businesses_with_chp.json \
                    heteriske_businesses_with_chp.csv heteriske_similar_candidates.json \
                    heteriske_similar_candidates.csv heteriske_name_accuracy_report.json \
-                   heteriske_name_accuracy_report.csv; do
+                   heteriske_name_accuracy_report.csv heteriske_name_differences_classified.json \
+                   heteriske_name_differences_classified.csv; do
             if [ -f "scripts/heteriske_audit/out/$f" ]; then
               cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
             fi
