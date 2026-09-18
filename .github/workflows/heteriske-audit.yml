@@ -8,9 +8,12 @@ name: Full Audit (heteriske.com + name accuracy)
 #        לכל עסק ב-heteriske דרך המרשם המלא של revach.pages.dev
 #        (חברות/שותפויות/עמותות). ריצה ארוכה (שעה-שעתיים, תלוי כמה שמות
 #        לא נפתרים בטייר המהיר).
-#   4. name accuracy audit - לכל עסק ברשימה שלנו, בודק שהשם השמור תואם
-#      לשם הרשמי העדכני ברשם (data.gov.il), ומאתר זוגות עסקים עם שם דומה
-#      מספיק לבלבל משתמש שמחפש בלי ח.פ. ריצה קצרה (~10 דקות).
+#   4. heteriske name accuracy - לכל עסק ב-heteriske: האם השם שם תואם
+#      *למאגר שבנינו* (לא ל-data.gov.il) - נגזר מקומית מפלט resolve_chp.py,
+#      בלי קריאת רשת נוספת (מיידי).
+#   5. similar names (במאגר שלנו) - בתוך רשימת companies-all שלנו, אילו
+#      זוגות עסקים (ח.פ. שונה) יש להם שם דומה מספיק לבלבל משתמש שמחפש
+#      בלי ח.פ. גם זה מקומי/מיידי.
 #
 # רץ מהריפו הציבורי הזה (לא מ-Revach123/Revach) כי זו ריצה ארוכה ודקות
 # Actions כאן חינמיות/ללא הגבלה.
@@ -35,7 +38,7 @@ env:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 200
+    timeout-minutes: 180
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,6 +67,13 @@ jobs:
       - name: Resolve ח.פ. numbers via revach.pages.dev registry, verify on heteriske.com
         run: python scripts/heteriske_audit/resolve_chp.py
 
+      - name: Build heteriske name-accuracy report (vs. our own database, local/instant)
+        if: always()
+        run: |
+          if [ -f "scripts/heteriske_audit/out/heteriske_businesses_with_chp.json" ]; then
+            python scripts/heteriske_audit/build_name_accuracy_report.py
+          fi
+
       - name: Upload heteriske audit results
         if: always()
         uses: actions/upload-artifact@v4
@@ -79,7 +89,8 @@ jobs:
           for f in comparison_report.json comparison_missing_in_harav_levin.csv \
                    comparison_missing_in_heteriske.csv heteriske_businesses_with_chp.json \
                    heteriske_businesses_with_chp.csv heteriske_similar_candidates.json \
-                   heteriske_similar_candidates.csv; do
+                   heteriske_similar_candidates.csv heteriske_name_accuracy_report.json \
+                   heteriske_name_accuracy_report.csv; do
             if [ -f "scripts/heteriske_audit/out/$f" ]; then
               cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
             fi
@@ -93,25 +104,24 @@ jobs:
             git push
           fi
 
-      # ── name accuracy audit ──────────────────────────────────────────
-      - name: Check name accuracy + find similar names
+      # ── similar names within our own database (local, no external calls) ──
+      - name: Find similar-name pairs in our own companies-all list
         if: always()
-        run: python scripts/registry_audit/check_name_accuracy.py
+        run: python scripts/registry_audit/check_similar_names.py
 
-      - name: Upload name-accuracy audit results
+      - name: Upload similar-names audit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: name-accuracy-audit-report
+          name: similar-names-audit-report
           path: scripts/registry_audit/out/
           retention-days: 30
 
-      - name: Commit name-accuracy audit report
+      - name: Commit similar-names audit report
         if: always()
         run: |
           mkdir -p reports/registry_audit
-          for f in name_accuracy_report.json name_accuracy_report.csv \
-                   similar_names_report.json similar_names_report.csv; do
+          for f in similar_names_report.json similar_names_report.csv; do
             if [ -f "scripts/registry_audit/out/$f" ]; then
               cp "scripts/registry_audit/out/$f" "reports/registry_audit/$f"
             fi
@@ -120,7 +130,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "אין שינויים"
           else
-            git commit -m "name-accuracy-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git commit -m "similar-names-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             git pull --rebase --autostash
             git push
           fi
