@@ -5491,6 +5491,33 @@
       "score": 0.982,
       "confidence": "fuzzy",
       "alternatives": []
+    },
+    "שי - לי": null,
+    "שי דיגיטל": null,
+    "שיווק א.ד.ר. הגפן": null,
+    "שייע גטר שירותי ניהול ויעוץ (2012) בע\"מ": null,
+    "שימי משקאות": null,
+    "שיפוצים וניהול נדל\"ן": null,
+    "שלית טסט מוטורס בע\"מ": null,
+    "שלמוביץ שרה טובית": null,
+    "שמחה בונים ורשביאק - מימון חכם": null,
+    "שפירא תאורה": {
+      "kind": "company",
+      "id": 516826989,
+      "name": "שפירא תאורה בע\"מ",
+      "name_en": "SHAPIRA LIGHTNING LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "14/06/2023",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.815,
+      "confidence": "fuzzy",
+      "alternatives": []
     }
   },
   "verified": {}
