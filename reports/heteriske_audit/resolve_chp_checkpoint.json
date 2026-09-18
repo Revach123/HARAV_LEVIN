@@ -5611,7 +5611,51 @@
       "score": 0.909,
       "confidence": "fuzzy",
       "alternatives": []
-    }
+    },
+    "ספארק איי אל בע\"מ": {
+      "kind": "company",
+      "id": 516113479,
+      "name": "ספארק איי אל בע\"מ (חל\"צ)",
+      "name_en": "SPARK IL LTD (CC)",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "02/12/2019",
+      "purpose": "מטרות ציבוריות בלבד",
+      "score": 0.829,
+      "confidence": "fuzzy",
+      "alternatives": [
+        {
+          "kind": "company",
+          "id": 512991282,
+          "name": "טי איי ספארקל ישראל בע\"מ",
+          "name_en": "TI SPARKLE ISRAEL LTD",
+          "status": "פעילה",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "03/08/2000",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.683
+        }
+      ]
+    },
+    "עוגן סוכנות לביטוח": null,
+    "פייז מדיקל בע\"מ-FIZE Medical Inc": null,
+    "פרקש": null,
+    "קול יהודה תל ציון (ע\"ר)": null,
+    "קיו מוטורס": null,
+    "קל זכות": null,
+    "קלקטה קרמיקס": null,
+    "ר.טיילור אדריכלות ועיצוב פנים": null,
+    "שותפות הבינלאומית לתמ\"א הרצליה רעננה שותפות מוגבלת": null
   },
   "verified": {}
 }
