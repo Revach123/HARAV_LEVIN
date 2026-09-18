@@ -170,11 +170,35 @@ def _check_guard_response(resp):
     resp.raise_for_status()
 
 
+NETWORK_RETRIES = 3
+NETWORK_RETRY_BACKOFF_SEC = 5.0
+
+
+def with_retry(fn, *args, **kwargs):
+    """מריץ fn עם ניסיונות חוזרים על שגיאות רשת חולפות (timeout/connection) -
+    לא על GuardBlocked, זה מטופל בנפרד ומכוון (לא לנסות שוב מול חסימה)."""
+    last_exc = None
+    for attempt in range(1, NETWORK_RETRIES + 1):
+        try:
+            return fn(*args, **kwargs)
+        except GuardBlocked:
+            raise
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            last_exc = e
+            if attempt < NETWORK_RETRIES:
+                print(f"    שגיאת רשת חולפת ({type(e).__name__}) - ניסיון {attempt}/{NETWORK_RETRIES}, "
+                      f"ממתין {NETWORK_RETRY_BACKOFF_SEC:.0f}s...")
+                time.sleep(NETWORK_RETRY_BACKOFF_SEC)
+    raise last_exc
+
+
 # ── שלב ב, טייר 1: exact seek דרך /api/match (זול, batch עד 100) ──────────
 def match_exact_batch(names, session):
-    resp = session.post(MATCH_URL, json={"names": names}, headers=SITE_HEADERS, timeout=30)
-    _check_guard_response(resp)
-    return resp.json().get("matches", {})
+    def _do():
+        resp = session.post(MATCH_URL, json={"names": names}, headers=SITE_HEADERS, timeout=30)
+        _check_guard_response(resp)
+        return resp.json().get("matches", {})
+    return with_retry(_do)
 
 
 def resolve_exact(names, session, exact, state):
@@ -194,9 +218,11 @@ def resolve_exact(names, session, exact, state):
 
 # ── שלב ב, טייר 2: fuzzy דרך /api/search (יקר יותר - מרווח בין קריאות) ────
 def search_fuzzy(name, session):
-    resp = session.get(SEARCH_URL, params={"q": name}, headers=SITE_HEADERS, timeout=30)
-    _check_guard_response(resp)
-    return resp.json().get("results", [])
+    def _do():
+        resp = session.get(SEARCH_URL, params={"q": name}, headers=SITE_HEADERS, timeout=30)
+        _check_guard_response(resp)
+        return resp.json().get("results", [])
+    return with_retry(_do)
 
 
 ALT_MARGIN = 0.15       # חלופה נחשבת "דומה מספיק כדי לבלבל" אם הציון שלה בטווח הזה מתחת לנבחרת
@@ -237,17 +263,19 @@ def verify_on_heteriske(chp, session):
     כבר אומת ש-heteriske מסנן לפי company_id באופן מדויק (3 בדיקות חיוביות
     + 3 בבקרת שלילה החזירו 0 תוצאות).
     """
-    url = f"{HETERISKE_BASE}?q=&company_id={chp}&country=&city=&field=&heter_iska_number="
-    resp = session.get(url, headers=HETERISKE_HEADERS, timeout=30)
-    resp.raise_for_status()
-    html = resp.text
-    idx = html.find(CODE_RE_LINE_START)
-    if idx == -1:
-        return None
-    # השורה מוצגת כ-"קוד במערכת: #NNN" (או בלי #, תלוי רינדור) - שולפים ספרות
-    tail = html[idx:idx + 60]
-    digits = "".join(ch for ch in tail if ch.isdigit())
-    return digits or None
+    def _do():
+        url = f"{HETERISKE_BASE}?q=&company_id={chp}&country=&city=&field=&heter_iska_number="
+        resp = session.get(url, headers=HETERISKE_HEADERS, timeout=30)
+        resp.raise_for_status()
+        html = resp.text
+        idx = html.find(CODE_RE_LINE_START)
+        if idx == -1:
+            return None
+        # השורה מוצגת כ-"קוד במערכת: #NNN" (או בלי #, תלוי רינדור) - שולפים ספרות
+        tail = html[idx:idx + 60]
+        digits = "".join(ch for ch in tail if ch.isdigit())
+        return digits or None
+    return with_retry(_do)
 
 
 def main():
