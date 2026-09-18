@@ -4971,7 +4971,100 @@
           "score": 0.85
         }
       ]
-    }
+    },
+    "מ.ר תקשורת": null,
+    "מאסטרפון": null,
+    "מאפית מצות באיאן": null,
+    "מגדלור - מוצרים אלטרנטיביים בע\"מ": {
+      "kind": "company",
+      "id": 515514263,
+      "name": "מגדלור- מוצרים אלטרנטיביים בע\"מ",
+      "name_en": "MIGDALOR- ALTERNATIVE PRODUCTS LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "28/08/2016",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.984,
+      "confidence": "fuzzy",
+      "alternatives": [
+        {
+          "kind": "company",
+          "id": 516322641,
+          "name": "מגדלור - הפצת מוצרים אלטרנטיביים בע\"מ",
+          "name_en": "MIGDALOR - ALTERNATIVE PRODUCTS DISTRIBUTION LTD",
+          "status": "מחוסלת מרצון",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "17/01/2021",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.928
+        },
+        {
+          "kind": "company",
+          "id": 516322963,
+          "name": "מגדלור בית למוצרים אלטרנטיביים בע\"מ",
+          "name_en": "MIGDALOR ALTERNATIVE PRODUCTS HOUSE LTD",
+          "status": "מחוסלת מרצון",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "18/01/2021",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.925
+        },
+        {
+          "kind": "company",
+          "id": 516443504,
+          "name": "מגדלור - מוצרים אלטרנטיביים (קלטון) בע\"מ",
+          "name_en": "MIGDALOR - ALTERNATIVE PRODUCTS (KELTON) LTD",
+          "status": "פעילה",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "03/08/2021",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.889
+        }
+      ]
+    },
+    "מגן דוד אדום": null,
+    "מועצה אזורית מרחבים": null,
+    "מועצה מקומית אלפי מנשה": null,
+    "מועצה מקומית חריש": null,
+    "מוצרים זה ברור": {
+      "kind": "company",
+      "id": 515314748,
+      "name": "מוצרים זה ברור בע\"מ",
+      "name_en": "MUZARIM ZE BARUR LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "17/09/2015",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.848,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "מוריה שפרינגר- מיתוג": null
   },
   "verified": {}
 }
