@@ -5555,7 +5555,29 @@
       "score": 0.889,
       "confidence": "fuzzy",
       "alternatives": []
-    }
+    },
+    "בנה בתך": {
+      "kind": "partnership",
+      "id": 540123114,
+      "name": "בנה ביתך",
+      "name_en": null,
+      "status": "מחוקה",
+      "ptype": "ישראלית כללית",
+      "city": null,
+      "country": "ישראל",
+      "care_of": null,
+      "reg_date": "05/07/1977",
+      "score": 0.933,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "גלנור מנוס פינוי בינוי - דרך חברון 116 בע\"מ": null,
+    "דלת פלוס": null,
+    "דניאל בנדר- home space": null,
+    "ה. מצנבר פאות בהזמנה אישית": null,
+    "הוס יהודית": null,
+    "המרכז לייעוץ משכנתאות": null,
+    "ולדמן ספרים": null
   },
   "verified": {}
 }
