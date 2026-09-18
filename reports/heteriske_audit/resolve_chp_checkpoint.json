@@ -4839,7 +4839,34 @@
       "score": 0.8,
       "confidence": "fuzzy",
       "alternatives": []
-    }
+    },
+    "יופי של ריהוט סניף אלעד": null,
+    "יוקרתית": null,
+    "יין ומשקאות לוק": null,
+    "יעד שיאן נדל\"ן בע\"מ": null,
+    "יעד שיאן ניהול פרויקטים ויזמות בע\"מ": null,
+    "יריד החסידות בע\"מ": {
+      "kind": "company",
+      "id": 515482131,
+      "name": "איכה - יריד החסידות בע\"מ",
+      "name_en": "AYECA - CHASSIDUS FAIR LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": "מפרה",
+      "restrictions": "מוגבלת",
+      "reg_date": "30/06/2016",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.829,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "כהן אודליה": null,
+    "כוכב התקשורת (מלאך ישראל)": null,
+    "כידון": null,
+    "כל בו הכוכב": null
   },
   "verified": {}
 }
