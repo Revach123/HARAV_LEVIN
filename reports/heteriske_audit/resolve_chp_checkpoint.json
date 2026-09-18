@@ -4601,7 +4601,51 @@
       "alternatives": []
     },
     "בית ירושלמי שלי אחזקות וניהול פרוייקטים בע\"מ": null,
-    "בית פלוס": null
+    "בית פלוס": null,
+    "בני הישיבות": null,
+    "בנימין תכשיטים": null,
+    "בעל התניא ישראל בע\"מ": null,
+    "ברבר רבקה": null,
+    "ברכה צדק": null,
+    "ברכת ישראל": {
+      "kind": "company",
+      "id": 510950173,
+      "name": "ברכת ישראל בע\"מ",
+      "name_en": null,
+      "status": "מחוקה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "24/10/1982",
+      "purpose": "לעסוק בסוגי עיסוק שפורטו בתקנון",
+      "score": 0.8,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "ברמן עשת": null,
+    "ברק פיננסים": null,
+    "ברק שוהם סוכנות פנסיוני(2015) בע\"מ": {
+      "kind": "company",
+      "id": 515225449,
+      "name": "ברק שוהם סוכנות לביטוח פנסיוני (2015) בע\"מ",
+      "name_en": "BARAK SHOAM PENSION INSURANCE (2015) LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "23/03/2015",
+      "purpose": "לעסוק בסוגי עיסוק שפורטו בתקנון",
+      "score": 0.895,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "בשעה טובה": null
   },
   "verified": {}
 }
