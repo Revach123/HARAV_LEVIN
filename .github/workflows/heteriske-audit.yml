@@ -12,12 +12,19 @@ name: Heteriske.com Audit
 # פלט: scripts/heteriske_audit/out/*.json + *.csv, מועלה כ-artifact
 # (30 יום), וגם נכתב ל-reports/heteriske_audit/ בריפו (ר' "Commit report"
 # למטה) כדי שהדוח יהיה קריא ב-git בלי תלות בהורדת artifact.
+#
+# resolve_chp.py שומר checkpoint ל-git תוך כדי הריצה (לא רק בסוף) - אם
+# הריצה נעצרת/נכשלת/עוברת timeout באמצע, ריצה חדשה על אותו checkout
+# ממשיכה מאיפה שהקודמת עצרה במקום להתחיל מאפס.
 
 on:
   workflow_dispatch: {}
 
 permissions:
   contents: write
+
+env:
+  PYTHONUNBUFFERED: "1"   # פלט חי בלוג במקום מצטבר בבאפר עד סוף הצעד
 
 jobs:
   audit:
@@ -26,6 +33,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Configure git identity (for mid-run checkpoint commits)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -59,7 +71,8 @@ jobs:
           mkdir -p reports/heteriske_audit
           for f in comparison_report.json comparison_missing_in_harav_levin.csv \
                    comparison_missing_in_heteriske.csv heteriske_businesses_with_chp.json \
-                   heteriske_businesses_with_chp.csv; do
+                   heteriske_businesses_with_chp.csv heteriske_similar_candidates.json \
+                   heteriske_similar_candidates.csv; do
             if [ -f "scripts/heteriske_audit/out/$f" ]; then
               cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
             fi
