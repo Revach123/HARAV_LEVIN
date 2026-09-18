@@ -5658,5 +5658,606 @@
     "שותפות הבינלאומית לתמ\"א הרצליה רעננה שותפות מוגבלת": null,
     "שמעון בורנשטיין": null
   },
-  "verified": {}
+  "verified": {
+    "653": {
+      "chp_verify_returned_code": "653",
+      "chp_verified": true
+    },
+    "468": {
+      "chp_verify_returned_code": "468",
+      "chp_verified": true
+    },
+    "1097": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "516": {
+      "chp_verify_returned_code": "516",
+      "chp_verified": true
+    },
+    "529": {
+      "chp_verify_returned_code": "529",
+      "chp_verified": true
+    },
+    "577": {
+      "chp_verify_returned_code": "577",
+      "chp_verified": true
+    },
+    "759": {
+      "chp_verify_returned_code": "759",
+      "chp_verified": true
+    },
+    "758": {
+      "chp_verify_returned_code": "758",
+      "chp_verified": true
+    },
+    "757": {
+      "chp_verify_returned_code": "757",
+      "chp_verified": true
+    },
+    "475": {
+      "chp_verify_returned_code": "475",
+      "chp_verified": true
+    },
+    "532": {
+      "chp_verify_returned_code": "532",
+      "chp_verified": true
+    },
+    "736": {
+      "chp_verify_returned_code": "736",
+      "chp_verified": true
+    },
+    "687": {
+      "chp_verify_returned_code": "687",
+      "chp_verified": true
+    },
+    "1052": {
+      "chp_verify_returned_code": "1052",
+      "chp_verified": true
+    },
+    "1323": {
+      "chp_verify_returned_code": "1323",
+      "chp_verified": true
+    },
+    "1141": {
+      "chp_verify_returned_code": "1141",
+      "chp_verified": true
+    },
+    "1082": {
+      "chp_verify_returned_code": "1082",
+      "chp_verified": true
+    },
+    "851": {
+      "chp_verify_returned_code": "851",
+      "chp_verified": true
+    },
+    "1092": {
+      "chp_verify_returned_code": "1092",
+      "chp_verified": true
+    },
+    "1093": {
+      "chp_verify_returned_code": "1093",
+      "chp_verified": true
+    },
+    "1146": {
+      "chp_verify_returned_code": "1146",
+      "chp_verified": true
+    },
+    "1056": {
+      "chp_verify_returned_code": "1056",
+      "chp_verified": true
+    },
+    "1057": {
+      "chp_verify_returned_code": "1057",
+      "chp_verified": true
+    },
+    "1059": {
+      "chp_verify_returned_code": "1059",
+      "chp_verified": true
+    },
+    "1064": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "1067": {
+      "chp_verify_returned_code": "1067",
+      "chp_verified": true
+    },
+    "1068": {
+      "chp_verify_returned_code": "1068",
+      "chp_verified": true
+    },
+    "1071": {
+      "chp_verify_returned_code": "1071",
+      "chp_verified": true
+    },
+    "1072": {
+      "chp_verify_returned_code": "1072",
+      "chp_verified": true
+    },
+    "1073": {
+      "chp_verify_returned_code": "1073",
+      "chp_verified": true
+    },
+    "1074": {
+      "chp_verify_returned_code": "1074",
+      "chp_verified": true
+    },
+    "1075": {
+      "chp_verify_returned_code": "1075",
+      "chp_verified": true
+    },
+    "1079": {
+      "chp_verify_returned_code": "1079",
+      "chp_verified": true
+    },
+    "1080": {
+      "chp_verify_returned_code": "1080",
+      "chp_verified": true
+    },
+    "1145": {
+      "chp_verify_returned_code": "1145",
+      "chp_verified": true
+    },
+    "853": {
+      "chp_verify_returned_code": "853",
+      "chp_verified": true
+    },
+    "1139": {
+      "chp_verify_returned_code": "1139",
+      "chp_verified": true
+    },
+    "1143": {
+      "chp_verify_returned_code": "1143",
+      "chp_verified": true
+    },
+    "1144": {
+      "chp_verify_returned_code": "1144",
+      "chp_verified": true
+    },
+    "1107": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "1053": {
+      "chp_verify_returned_code": "1053",
+      "chp_verified": true
+    },
+    "1158": {
+      "chp_verify_returned_code": "1158",
+      "chp_verified": true
+    },
+    "1157": {
+      "chp_verify_returned_code": "1157",
+      "chp_verified": true
+    },
+    "1063": {
+      "chp_verify_returned_code": "1063",
+      "chp_verified": true
+    },
+    "1147": {
+      "chp_verify_returned_code": "1147",
+      "chp_verified": true
+    },
+    "852": {
+      "chp_verify_returned_code": "852",
+      "chp_verified": true
+    },
+    "1054": {
+      "chp_verify_returned_code": "1054",
+      "chp_verified": true
+    },
+    "1102": {
+      "chp_verify_returned_code": "1102",
+      "chp_verified": true
+    },
+    "1156": {
+      "chp_verify_returned_code": "1156",
+      "chp_verified": true
+    },
+    "864": {
+      "chp_verify_returned_code": "864",
+      "chp_verified": true
+    },
+    "1088": {
+      "chp_verify_returned_code": "1088",
+      "chp_verified": true
+    },
+    "1089": {
+      "chp_verify_returned_code": "1089",
+      "chp_verified": true
+    },
+    "1137": {
+      "chp_verify_returned_code": "1137",
+      "chp_verified": true
+    },
+    "1135": {
+      "chp_verify_returned_code": "1135",
+      "chp_verified": true
+    },
+    "1090": {
+      "chp_verify_returned_code": "1090",
+      "chp_verified": true
+    },
+    "1100": {
+      "chp_verify_returned_code": "1100",
+      "chp_verified": true
+    },
+    "1101": {
+      "chp_verify_returned_code": "1101",
+      "chp_verified": true
+    },
+    "1149": {
+      "chp_verify_returned_code": "1149",
+      "chp_verified": true
+    },
+    "1150": {
+      "chp_verify_returned_code": "1150",
+      "chp_verified": true
+    },
+    "1151": {
+      "chp_verify_returned_code": "1151",
+      "chp_verified": true
+    },
+    "1152": {
+      "chp_verify_returned_code": "1152",
+      "chp_verified": true
+    },
+    "1155": {
+      "chp_verify_returned_code": "1155",
+      "chp_verified": true
+    },
+    "850": {
+      "chp_verify_returned_code": "850",
+      "chp_verified": true
+    },
+    "848": {
+      "chp_verify_returned_code": "848",
+      "chp_verified": true
+    },
+    "862": {
+      "chp_verify_returned_code": "862",
+      "chp_verified": true
+    },
+    "859": {
+      "chp_verify_returned_code": "859",
+      "chp_verified": true
+    },
+    "1081": {
+      "chp_verify_returned_code": "1081",
+      "chp_verified": true
+    },
+    "1164": {
+      "chp_verify_returned_code": "1164",
+      "chp_verified": true
+    },
+    "863": {
+      "chp_verify_returned_code": "863",
+      "chp_verified": true
+    },
+    "1095": {
+      "chp_verify_returned_code": "1095",
+      "chp_verified": true
+    },
+    "1104": {
+      "chp_verify_returned_code": "1104",
+      "chp_verified": true
+    },
+    "1108": {
+      "chp_verify_returned_code": "1108",
+      "chp_verified": true
+    },
+    "1163": {
+      "chp_verify_returned_code": "1163",
+      "chp_verified": true
+    },
+    "861": {
+      "chp_verify_returned_code": "861",
+      "chp_verified": true
+    },
+    "1078": {
+      "chp_verify_returned_code": "1078",
+      "chp_verified": true
+    },
+    "871": {
+      "chp_verify_returned_code": "871",
+      "chp_verified": true
+    },
+    "869": {
+      "chp_verify_returned_code": "869",
+      "chp_verified": true
+    },
+    "874": {
+      "chp_verify_returned_code": "874",
+      "chp_verified": true
+    },
+    "867": {
+      "chp_verify_returned_code": "867",
+      "chp_verified": true
+    },
+    "866": {
+      "chp_verify_returned_code": "866",
+      "chp_verified": true
+    },
+    "1160": {
+      "chp_verify_returned_code": "1160",
+      "chp_verified": true
+    },
+    "849": {
+      "chp_verify_returned_code": "849",
+      "chp_verified": true
+    },
+    "1055": {
+      "chp_verify_returned_code": "1055",
+      "chp_verified": true
+    },
+    "1061": {
+      "chp_verify_returned_code": "1061",
+      "chp_verified": true
+    },
+    "1062": {
+      "chp_verify_returned_code": "1062",
+      "chp_verified": true
+    },
+    "858": {
+      "chp_verify_returned_code": "858",
+      "chp_verified": true
+    },
+    "1087": {
+      "chp_verify_returned_code": "1087",
+      "chp_verified": true
+    },
+    "1096": {
+      "chp_verify_returned_code": "1096",
+      "chp_verified": true
+    },
+    "870": {
+      "chp_verify_returned_code": "870",
+      "chp_verified": true
+    },
+    "857": {
+      "chp_verify_returned_code": "857",
+      "chp_verified": true
+    },
+    "856": {
+      "chp_verify_returned_code": "856",
+      "chp_verified": true
+    },
+    "855": {
+      "chp_verify_returned_code": "855",
+      "chp_verified": true
+    },
+    "1140": {
+      "chp_verify_returned_code": "1140",
+      "chp_verified": true
+    },
+    "1051": {
+      "chp_verify_returned_code": "1051",
+      "chp_verified": true
+    },
+    "1058": {
+      "chp_verify_returned_code": "1058",
+      "chp_verified": true
+    },
+    "1083": {
+      "chp_verify_returned_code": "1083",
+      "chp_verified": true
+    },
+    "1094": {
+      "chp_verify_returned_code": "1094",
+      "chp_verified": true
+    },
+    "1105": {
+      "chp_verify_returned_code": "1105",
+      "chp_verified": true
+    },
+    "1413": {
+      "chp_verify_returned_code": "1413",
+      "chp_verified": true
+    },
+    "1677": {
+      "chp_verify_returned_code": "1677",
+      "chp_verified": true
+    },
+    "639": {
+      "chp_verify_returned_code": "639",
+      "chp_verified": true
+    },
+    "61": {
+      "chp_verify_returned_code": "61",
+      "chp_verified": true
+    },
+    "2000": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "652": {
+      "chp_verify_returned_code": "652",
+      "chp_verified": true
+    },
+    "630": {
+      "chp_verify_returned_code": "630",
+      "chp_verified": true
+    },
+    "1775": {
+      "chp_verify_returned_code": "1775",
+      "chp_verified": true
+    },
+    "2544": {
+      "chp_verify_returned_code": "2544",
+      "chp_verified": true
+    },
+    "190": {
+      "chp_verify_returned_code": "190",
+      "chp_verified": true
+    },
+    "1707": {
+      "chp_verify_returned_code": "1707",
+      "chp_verified": true
+    },
+    "1763": {
+      "chp_verify_returned_code": "1763",
+      "chp_verified": true
+    },
+    "1772": {
+      "chp_verify_returned_code": "1772",
+      "chp_verified": true
+    },
+    "1965": {
+      "chp_verify_returned_code": "1965",
+      "chp_verified": true
+    },
+    "1821": {
+      "chp_verify_returned_code": "1821",
+      "chp_verified": true
+    },
+    "651": {
+      "chp_verify_returned_code": "651",
+      "chp_verified": true
+    },
+    "527": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "1809": {
+      "chp_verify_returned_code": "1809",
+      "chp_verified": true
+    },
+    "1767": {
+      "chp_verify_returned_code": "1767",
+      "chp_verified": true
+    },
+    "1766": {
+      "chp_verify_returned_code": "1766",
+      "chp_verified": true
+    },
+    "1769": {
+      "chp_verify_returned_code": "1769",
+      "chp_verified": true
+    },
+    "2133": {
+      "chp_verify_returned_code": "2133",
+      "chp_verified": true
+    },
+    "2132": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "672": {
+      "chp_verify_returned_code": "672",
+      "chp_verified": true
+    },
+    "671": {
+      "chp_verify_returned_code": "671",
+      "chp_verified": true
+    },
+    "2802": {
+      "chp_verify_returned_code": "2802",
+      "chp_verified": true
+    },
+    "484": {
+      "chp_verify_returned_code": "484",
+      "chp_verified": true
+    },
+    "654": {
+      "chp_verify_returned_code": "654",
+      "chp_verified": true
+    },
+    "655": {
+      "chp_verify_returned_code": "655",
+      "chp_verified": true
+    },
+    "656": {
+      "chp_verify_returned_code": "656",
+      "chp_verified": true
+    },
+    "657": {
+      "chp_verify_returned_code": "657",
+      "chp_verified": true
+    },
+    "1885": {
+      "chp_verify_returned_code": "1885",
+      "chp_verified": true
+    },
+    "1920": {
+      "chp_verify_returned_code": "1920",
+      "chp_verified": true
+    },
+    "658": {
+      "chp_verify_returned_code": "658",
+      "chp_verified": true
+    },
+    "1928": {
+      "chp_verify_returned_code": "1928",
+      "chp_verified": true
+    },
+    "659": {
+      "chp_verify_returned_code": "659",
+      "chp_verified": true
+    },
+    "1655": {
+      "chp_verify_returned_code": "1655",
+      "chp_verified": true
+    },
+    "23": {
+      "chp_verify_returned_code": "23",
+      "chp_verified": true
+    },
+    "2553": {
+      "chp_verify_returned_code": "2553",
+      "chp_verified": true
+    },
+    "2543": {
+      "chp_verify_returned_code": "2543",
+      "chp_verified": true
+    },
+    "1926": {
+      "chp_verify_returned_code": "1926",
+      "chp_verified": true
+    },
+    "461": {
+      "chp_verify_returned_code": "461",
+      "chp_verified": true
+    },
+    "660": {
+      "chp_verify_returned_code": "660",
+      "chp_verified": true
+    },
+    "525": {
+      "chp_verify_returned_code": "525",
+      "chp_verified": true
+    },
+    "635": {
+      "chp_verify_returned_code": "635",
+      "chp_verified": true
+    },
+    "634": {
+      "chp_verify_returned_code": "634",
+      "chp_verified": true
+    },
+    "1789": {
+      "chp_verify_returned_code": "1789",
+      "chp_verified": true
+    },
+    "624": {
+      "chp_verify_returned_code": "624",
+      "chp_verified": true
+    },
+    "2326": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "1940": {
+      "chp_verify_returned_code": "1940",
+      "chp_verified": true
+    },
+    "1740": {
+      "chp_verify_returned_code": null,
+      "chp_verified": false
+    },
+    "768": {
+      "chp_verify_returned_code": "768",
+      "chp_verified": true
+    }
+  }
 }
