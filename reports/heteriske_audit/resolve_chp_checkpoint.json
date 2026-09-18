@@ -5342,7 +5342,34 @@
     "צויבל אלעזר": null,
     "צמיגי יוסף": null,
     "צרכניית אחיעזר": null,
-    "צרכנית ברכת השדה": null
+    "צרכנית ברכת השדה": null,
+    "קאש פויינט השקעות": {
+      "kind": "company",
+      "id": 514847581,
+      "name": "קאש פויינט השקעות בע\"מ",
+      "name_en": "CASH POINT INVESTMENT LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "05/12/2012",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.872,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "קוואלטי הנדסה פיננסית 2014 בע\"מ": null,
+    "קויט אליהו": null,
+    "קופשיץ יהודית": null,
+    "קופת חולים מאוחדת": null,
+    "קוקטייל": null,
+    "קיפרמן מהנדסים ויועצים": null,
+    "קלינג": null,
+    "קציר אוטומציות": null,
+    "קראוון ניצנים": null
   },
   "verified": {}
 }
