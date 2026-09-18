@@ -1,0 +1,465 @@
+[
+  {
+    "heteriske_code": "1097",
+    "heteriske_name": "הסתדרות אגודת ישראל בארץ ישראל",
+    "chosen_name": "הסתדרות אגודת ישראל בארץ ישראל בבני ברק (ע\"ר)",
+    "chosen_chp": 580421527,
+    "chosen_kind": "association",
+    "chosen_score": 0.8,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "association",
+        "id": 580268209,
+        "name": "הסתדרות \"אגודת ישראל\" בארץ ישראל סניף תל-אביב-יפו (ע\"ר)",
+        "status": "רשומה",
+        "category": "קהילה וחברה",
+        "city": "תל אביב - יפו",
+        "reg_date": "31/07/1995",
+        "purpose": "ליסד לנהל ו/או לעזור לקיומם ושגשוגם של בתי כנסת ומוסדות חינוך חרדיים וכן בתי ספר מקצועיים ומועדוני נוער\" לעזור לקליטתם של עולים מחו\"ל ולהקים שיכונים\" לדאוג להספקת צרכים דתיים. להוציא לאור עיתונים וספרות.",
+        "score": 0.706
+      },
+      {
+        "kind": "association",
+        "id": 580066934,
+        "name": "הסתדרות צעירי אגודת ישראל הנוער האגודתי בארץ ישראל (ע\"ר)",
+        "status": "רשומה",
+        "category": "דת",
+        "city": "בני ברק",
+        "reg_date": "02/04/1984",
+        "purpose": "לחנך\" להשפיע ולגרום ללימוד התורה\" קיום המצוות\" לתיקון המידות ולהשלטת התורה בחיי הפרט והכלל.&#x0D; ליזום\" להקים\" לארגן ולהחזיק בין היתר בית כנסת\" שעורי תורה\" הוצאת ספרים וספריות.&#x0D; &#x0D; \"כולל אברכים\"פעילות חינוכית תרבותית ותורנית לבחורי וילדי הקהילה.",
+        "score": 0.698
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1064",
+    "heteriske_name": "אפי קפיטל אחזקות בע\"מ",
+    "chosen_name": "אפי קפיטל פ. אחזקות בע\"מ",
+    "chosen_chp": 517084216,
+    "chosen_kind": "company",
+    "chosen_score": 0.933,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1107",
+    "heteriske_name": "מגדלור קרן השקעות שירותי ניהול בע\"מ",
+    "chosen_name": "מגדלור קרן השקעות 2 - שירותי ניהול בע\"מ",
+    "chosen_chp": 516284387,
+    "chosen_kind": "company",
+    "chosen_score": 0.946,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "2132",
+    "heteriske_name": "אוניקס חי בע\"מ",
+    "chosen_name": "אוניקס חיפה מ.מ בע\"מ",
+    "chosen_chp": 516712122,
+    "chosen_kind": "company",
+    "chosen_score": 0.824,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1701",
+    "heteriske_name": "ברכת ישראל",
+    "chosen_name": "ברכת ישראל בע\"מ",
+    "chosen_chp": 510950173,
+    "chosen_kind": "company",
+    "chosen_score": 0.8,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "2125",
+    "heteriske_name": "ברק שוהם סוכנות פנסיוני(2015) בע\"מ",
+    "chosen_name": "ברק שוהם סוכנות לביטוח פנסיוני (2015) בע\"מ",
+    "chosen_chp": 515225449,
+    "chosen_kind": "company",
+    "chosen_score": 0.895,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1909",
+    "heteriske_name": "הסתדרות אגודת ישראל בארץ ישראל",
+    "chosen_name": "הסתדרות אגודת ישראל בארץ ישראל בבני ברק (ע\"ר)",
+    "chosen_chp": 580421527,
+    "chosen_kind": "association",
+    "chosen_score": 0.8,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "association",
+        "id": 580268209,
+        "name": "הסתדרות \"אגודת ישראל\" בארץ ישראל סניף תל-אביב-יפו (ע\"ר)",
+        "status": "רשומה",
+        "category": "קהילה וחברה",
+        "city": "תל אביב - יפו",
+        "reg_date": "31/07/1995",
+        "purpose": "ליסד לנהל ו/או לעזור לקיומם ושגשוגם של בתי כנסת ומוסדות חינוך חרדיים וכן בתי ספר מקצועיים ומועדוני נוער\" לעזור לקליטתם של עולים מחו\"ל ולהקים שיכונים\" לדאוג להספקת צרכים דתיים. להוציא לאור עיתונים וספרות.",
+        "score": 0.706
+      },
+      {
+        "kind": "association",
+        "id": 580066934,
+        "name": "הסתדרות צעירי אגודת ישראל הנוער האגודתי בארץ ישראל (ע\"ר)",
+        "status": "רשומה",
+        "category": "דת",
+        "city": "בני ברק",
+        "reg_date": "02/04/1984",
+        "purpose": "לחנך\" להשפיע ולגרום ללימוד התורה\" קיום המצוות\" לתיקון המידות ולהשלטת התורה בחיי הפרט והכלל.&#x0D; ליזום\" להקים\" לארגן ולהחזיק בין היתר בית כנסת\" שעורי תורה\" הוצאת ספרים וספריות.&#x0D; &#x0D; \"כולל אברכים\"פעילות חינוכית תרבותית ותורנית לבחורי וילדי הקהילה.",
+        "score": 0.698
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1723",
+    "heteriske_name": "זילבר ייעוץ והדרכה",
+    "chosen_name": "זילבר ייעוץ והדרכה בע\"מ",
+    "chosen_chp": 515843399,
+    "chosen_kind": "company",
+    "chosen_score": 0.878,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "15",
+    "heteriske_name": "י.ס. אנרגיה מתחדשת",
+    "chosen_name": "סער אנרגיה מתחדשת",
+    "chosen_chp": 540237807,
+    "chosen_kind": "partnership",
+    "chosen_score": 0.857,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "company",
+        "id": 517112082,
+        "name": "י.ס אנרגיה מתחדשת בע\"מ",
+        "name_en": null,
+        "status": "פעילה",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "30/01/2025",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.85
+      },
+      {
+        "kind": "partnership",
+        "id": 550250583,
+        "name": "הליוס אנרגיה מתחדשת 1",
+        "name_en": null,
+        "status": "פעילה",
+        "ptype": "ישראלית מוגבלת",
+        "city": "הוד השרון",
+        "country": "ישראל",
+        "care_of": "כיכר המושבה – מתחם עסקים",
+        "reg_date": "23/10/2013",
+        "score": 0.821
+      },
+      {
+        "kind": "partnership",
+        "id": 540278793,
+        "name": "הליוס אנרגיה מתחדשת 4",
+        "name_en": "HELIOS RENEWABLE ENERGY 4 LIMITED PARTNERSHIP",
+        "status": "פעילה",
+        "ptype": "ישראלית מוגבלת",
+        "city": "הוד השרון",
+        "country": "ישראל",
+        "care_of": "כיכר המושבה-מתחם עסקים",
+        "reg_date": "14/12/2017",
+        "score": 0.821
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1878",
+    "heteriske_name": "כרמים נווה פת בע\"מ",
+    "chosen_name": "כרמים נווה פת מרכז בע\"מ",
+    "chosen_chp": 517280277,
+    "chosen_kind": "company",
+    "chosen_score": 0.878,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "2134",
+    "heteriske_name": "מ.פ. טופז החזקות בע\"מ",
+    "chosen_name": "א.נ. טופז החזקות בע\"מ",
+    "chosen_chp": 517156998,
+    "chosen_kind": "company",
+    "chosen_score": 0.905,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "company",
+        "id": 516589934,
+        "name": "טל טופז החזקות בע\"מ",
+        "name_en": "TAL TOPAZ HOLDINGS LTD",
+        "status": "מחוסלת מרצון",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "30/03/2022",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.85
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1906",
+    "heteriske_name": "מגדלור - מוצרים אלטרנטיביים בע\"מ",
+    "chosen_name": "מגדלור- מוצרים אלטרנטיביים בע\"מ",
+    "chosen_chp": 515514263,
+    "chosen_kind": "company",
+    "chosen_score": 0.984,
+    "chp_verified": true,
+    "chp_verify_returned_code": "1906",
+    "alternatives": [
+      {
+        "kind": "company",
+        "id": 516322641,
+        "name": "מגדלור - הפצת מוצרים אלטרנטיביים בע\"מ",
+        "name_en": "MIGDALOR - ALTERNATIVE PRODUCTS DISTRIBUTION LTD",
+        "status": "מחוסלת מרצון",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "17/01/2021",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.928
+      },
+      {
+        "kind": "company",
+        "id": 516322963,
+        "name": "מגדלור בית למוצרים אלטרנטיביים בע\"מ",
+        "name_en": "MIGDALOR ALTERNATIVE PRODUCTS HOUSE LTD",
+        "status": "מחוסלת מרצון",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "18/01/2021",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.925
+      },
+      {
+        "kind": "company",
+        "id": 516443504,
+        "name": "מגדלור - מוצרים אלטרנטיביים (קלטון) בע\"מ",
+        "name_en": "MIGDALOR - ALTERNATIVE PRODUCTS (KELTON) LTD",
+        "status": "פעילה",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "03/08/2021",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.889
+      }
+    ]
+  },
+  {
+    "heteriske_code": "65",
+    "heteriske_name": "מרפאת שיניים",
+    "chosen_name": "מרפאת שיניים גילת",
+    "chosen_chp": 540182276,
+    "chosen_kind": "partnership",
+    "chosen_score": 0.828,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "partnership",
+        "id": 540224268,
+        "name": "שנחי מרפאת שיניים",
+        "name_en": null,
+        "status": "פעילה",
+        "ptype": "ישראלית כללית",
+        "city": "ראשון לציון",
+        "country": "ישראל",
+        "care_of": null,
+        "reg_date": "04/07/2006",
+        "score": 0.828
+      },
+      {
+        "kind": "partnership",
+        "id": 540213899,
+        "name": "מרפאת שיניים אם.די.אם",
+        "name_en": null,
+        "status": "מחוקה",
+        "ptype": "ישראלית כללית",
+        "city": "אשדוד",
+        "country": "ישראל",
+        "care_of": "משרד 24",
+        "reg_date": "11/05/2003",
+        "score": 0.727
+      },
+      {
+        "kind": "company",
+        "id": 515012888,
+        "name": "מרפאת שיניים גפן בע\"מ",
+        "name_en": null,
+        "status": "מחוסלת מרצון",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "05/01/2014",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.727
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1848",
+    "heteriske_name": "נופטק מחשבים",
+    "chosen_name": "נופטק מחשבים בע\"מ",
+    "chosen_chp": 517359352,
+    "chosen_kind": "company",
+    "chosen_score": 0.828,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1875",
+    "heteriske_name": "קרתא כרמים התחדשות עירונית בע\"מ",
+    "chosen_name": "קרתא כרמים התחדשות עירונית בצלאל 28 בע\"מ",
+    "chosen_chp": 516727682,
+    "chosen_kind": "company",
+    "chosen_score": 0.873,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": [
+      {
+        "kind": "company",
+        "id": 516454915,
+        "name": "כרמים התחדשות עירונית מקבוצת קרתא בע\"מ",
+        "name_en": null,
+        "status": "פעילה",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "23/08/2021",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.754
+      }
+    ]
+  },
+  {
+    "heteriske_code": "1918",
+    "heteriske_name": "רפאל אינטרנשיונל בע\"מ",
+    "chosen_name": "רפאלי אינטרנשיונל בע\"מ",
+    "chosen_chp": 510760804,
+    "chosen_kind": "company",
+    "chosen_score": 0.977,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1760",
+    "heteriske_name": "רפאלי - הקוטב הצפוני",
+    "chosen_name": "רפאלי הקוטב הצפוני בע\"מ",
+    "chosen_chp": 515852259,
+    "chosen_kind": "company",
+    "chosen_score": 0.837,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1676",
+    "heteriske_name": "שפירא תאורה",
+    "chosen_name": "שפירא תאורה בע\"מ",
+    "chosen_chp": 516826989,
+    "chosen_kind": "company",
+    "chosen_score": 0.815,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "775",
+    "heteriske_name": "בנה בתך",
+    "chosen_name": "בנה ביתך",
+    "chosen_chp": 540123114,
+    "chosen_kind": "partnership",
+    "chosen_score": 0.933,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "1508",
+    "heteriske_name": "סימפל",
+    "chosen_name": "סימפלי",
+    "chosen_chp": 540167152,
+    "chosen_kind": "partnership",
+    "chosen_score": 0.909,
+    "chp_verified": false,
+    "chp_verify_returned_code": null,
+    "alternatives": []
+  },
+  {
+    "heteriske_code": "800",
+    "heteriske_name": "ספארק איי אל בע\"מ",
+    "chosen_name": "ספארק איי אל בע\"מ (חל\"צ)",
+    "chosen_chp": 516113479,
+    "chosen_kind": "company",
+    "chosen_score": 0.829,
+    "chp_verified": true,
+    "chp_verify_returned_code": "800",
+    "alternatives": [
+      {
+        "kind": "company",
+        "id": 512991282,
+        "name": "טי איי ספארקל ישראל בע\"מ",
+        "name_en": "TI SPARKLE ISRAEL LTD",
+        "status": "פעילה",
+        "sub_status": null,
+        "corp_type": "פרטית",
+        "country": "ישראלית",
+        "gov": "לא",
+        "violating": null,
+        "restrictions": "מוגבלת",
+        "reg_date": "03/08/2000",
+        "purpose": "לעסוק בכל עיסוק חוקי",
+        "score": 0.683
+      }
+    ]
+  }
+]
