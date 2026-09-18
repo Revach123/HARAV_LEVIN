@@ -5369,7 +5369,51 @@
     "קיפרמן מהנדסים ויועצים": null,
     "קלינג": null,
     "קציר אוטומציות": null,
-    "קראוון ניצנים": null
+    "קראוון ניצנים": null,
+    "קרגו אשראי לצמיחה בע\"מ": null,
+    "קרדיט שופ בע\"מ": null,
+    "קרויזר הדפסות קלף": null,
+    "קרן סיגמא סיטי 2 נדל\"ן שותפות מוגבלת": null,
+    "קרתא כרמים התחדשות עירונית בע\"מ": {
+      "kind": "company",
+      "id": 516727682,
+      "name": "קרתא כרמים התחדשות עירונית בצלאל 28 בע\"מ",
+      "name_en": null,
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "27/12/2022",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.873,
+      "confidence": "fuzzy",
+      "alternatives": [
+        {
+          "kind": "company",
+          "id": 516454915,
+          "name": "כרמים התחדשות עירונית מקבוצת קרתא בע\"מ",
+          "name_en": null,
+          "status": "פעילה",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "23/08/2021",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.754
+        }
+      ]
+    },
+    "קרתא משכנתות הבוכרים בע\"מ": null,
+    "ר. offich": null,
+    "רהיטי יונה": null,
+    "רהיטי מרקוס RM": null,
+    "רכטשפר חנה חנצא": null
   },
   "verified": {}
 }
