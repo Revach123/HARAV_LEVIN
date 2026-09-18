@@ -4927,7 +4927,51 @@
       "confidence": "fuzzy",
       "alternatives": []
     },
-    "לוי -נוי דוד נחום": null
+    "לוי -נוי דוד נחום": null,
+    "לוי רהיטים": null,
+    "לוי שיווק": null,
+    "ליברמן רהיטים": null,
+    "לידר טופ קפיטל מימון ויעוץ בע\"מ": null,
+    "ליזרוביץ ישראל": null,
+    "לינדר משכנתאות והלוואות": null,
+    "ליצ'י - בגדי ילדים": null,
+    "לרנר יעקב": null,
+    "מ.ישראל אספקת דלק": null,
+    "מ.פ. טופז החזקות בע\"מ": {
+      "kind": "company",
+      "id": 517156998,
+      "name": "א.נ. טופז החזקות בע\"מ",
+      "name_en": "E.N. TOPAZ HOLDINGS LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "04/05/2025",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.905,
+      "confidence": "fuzzy",
+      "alternatives": [
+        {
+          "kind": "company",
+          "id": 516589934,
+          "name": "טל טופז החזקות בע\"מ",
+          "name_en": "TAL TOPAZ HOLDINGS LTD",
+          "status": "מחוסלת מרצון",
+          "sub_status": null,
+          "corp_type": "פרטית",
+          "country": "ישראלית",
+          "gov": "לא",
+          "violating": null,
+          "restrictions": "מוגבלת",
+          "reg_date": "30/03/2022",
+          "purpose": "לעסוק בכל עיסוק חוקי",
+          "score": 0.85
+        }
+      ]
+    }
   },
   "verified": {}
 }
