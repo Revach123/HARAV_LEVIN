@@ -2,6 +2,7 @@
 # meant to be committed (the run also commits final reports to
 # reports/heteriske_audit/ via the workflow)
 scripts/heteriske_audit/out/
+scripts/registry_audit/out/
 
 __pycache__/
 *.pyc
