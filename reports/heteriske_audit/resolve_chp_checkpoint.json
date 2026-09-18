@@ -5528,7 +5528,34 @@
     "תיווך": null,
     "תכשיטים סילבר סטורי": null,
     "תל אביב נדל\"ן סנטר": null,
-    "תמר הלר - מילה עיצוב גרפי": null
+    "תמר הלר - מילה עיצוב גרפי": null,
+    "תנופה": null,
+    "תפארת": null,
+    "Kollel Torah Temimah": null,
+    "MSP": null,
+    "spaces": null,
+    "א.א חומרי בניין": null,
+    "אהרן רינגל": null,
+    "או סקרלט": null,
+    "אייר סיון 2004 בע\"מ": null,
+    "בית אדיר יזמות ובניה": {
+      "kind": "company",
+      "id": 515668218,
+      "name": "בית אדיר יזמות ובניה בע\"מ",
+      "name_en": null,
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "05/06/2017",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.889,
+      "confidence": "fuzzy",
+      "alternatives": []
+    }
   },
   "verified": {}
 }
