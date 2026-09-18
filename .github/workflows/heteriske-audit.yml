@@ -1,17 +1,23 @@
-name: Heteriske.com Audit
+name: Full Audit (heteriske.com + name accuracy)
 
-# הרצה חד-פעמית/על-פי-דרישה (workflow_dispatch) - משווה את רשימת העסקים
-# ב-heteriske.com מול הרשימה שלנו (/api/lists?type=companies-all, מוגש
-# מתוך הריפו הזה עצמו), ומנסה לפתור ח.פ. לכל עסק ב-heteriske דרך המרשם
-# המלא של revach.pages.dev (חברות/שותפויות/עמותות).
+# הרצה חד-פעמית/על-פי-דרישה (workflow_dispatch) - מריצה את כל הבדיקות
+# ביחד, ריצה אחת:
 #
-# הועבר לכאן (מ-Revach123/Revach) כי זו ריצה ארוכה (שעה-שעתיים, תלוי כמה
-# שמות לא נפתרים בטייר המהיר) והריפו הזה ציבורי - דקות Actions חינמיות
-# וללא הגבלה, בלי לצרוך את המכסה של הריפו הפרטי.
+#   1-3. heteriske.com audit - משווה את רשימת העסקים ב-heteriske.com מול
+#        הרשימה שלנו (/api/lists?type=companies-all), ומנסה לפתור ח.פ.
+#        לכל עסק ב-heteriske דרך המרשם המלא של revach.pages.dev
+#        (חברות/שותפויות/עמותות). ריצה ארוכה (שעה-שעתיים, תלוי כמה שמות
+#        לא נפתרים בטייר המהיר).
+#   4. name accuracy audit - לכל עסק ברשימה שלנו, בודק שהשם השמור תואם
+#      לשם הרשמי העדכני ברשם (data.gov.il), ומאתר זוגות עסקים עם שם דומה
+#      מספיק לבלבל משתמש שמחפש בלי ח.פ. ריצה קצרה (~10 דקות).
 #
-# פלט: scripts/heteriske_audit/out/*.json + *.csv, מועלה כ-artifact
-# (30 יום), וגם נכתב ל-reports/heteriske_audit/ בריפו (ר' "Commit report"
-# למטה) כדי שהדוח יהיה קריא ב-git בלי תלות בהורדת artifact.
+# רץ מהריפו הציבורי הזה (לא מ-Revach123/Revach) כי זו ריצה ארוכה ודקות
+# Actions כאן חינמיות/ללא הגבלה.
+#
+# פלט: כל שלב כותב ל-scripts/<תיקייה>/out/, מועלה כ-artifact (30 יום),
+# וגם נכתב ל-reports/<תיקייה>/ בריפו (ר' צעדי "Commit report" למטה) כדי
+# שהדוחות יהיו קריאים ב-git בלי תלות בהורדת artifact.
 #
 # resolve_chp.py שומר checkpoint ל-git תוך כדי הריצה (לא רק בסוף) - אם
 # הריצה נעצרת/נכשלת/עוברת timeout באמצע, ריצה חדשה על אותו checkout
@@ -29,7 +35,7 @@ env:
 jobs:
   audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 200
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +54,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      # ── heteriske.com audit ──────────────────────────────────────────
       - name: Scrape heteriske.com
         run: python scripts/heteriske_audit/scrape_heteriske.py
 
@@ -57,7 +64,7 @@ jobs:
       - name: Resolve ח.פ. numbers via revach.pages.dev registry, verify on heteriske.com
         run: python scripts/heteriske_audit/resolve_chp.py
 
-      - name: Upload audit results
+      - name: Upload heteriske audit results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -65,7 +72,7 @@ jobs:
           path: scripts/heteriske_audit/out/
           retention-days: 30
 
-      - name: Commit report
+      - name: Commit heteriske audit report
         if: always()
         run: |
           mkdir -p reports/heteriske_audit
@@ -77,10 +84,43 @@ jobs:
               cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
             fi
           done
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add reports/heteriske_audit/
-          git diff --staged --quiet && echo "אין שינויים" && exit 0
-          git commit -m "heteriske-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          git pull --rebase --autostash
-          git push
+          if git diff --staged --quiet; then
+            echo "אין שינויים"
+          else
+            git commit -m "heteriske-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git pull --rebase --autostash
+            git push
+          fi
+
+      # ── name accuracy audit ──────────────────────────────────────────
+      - name: Check name accuracy + find similar names
+        if: always()
+        run: python scripts/registry_audit/check_name_accuracy.py
+
+      - name: Upload name-accuracy audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: name-accuracy-audit-report
+          path: scripts/registry_audit/out/
+          retention-days: 30
+
+      - name: Commit name-accuracy audit report
+        if: always()
+        run: |
+          mkdir -p reports/registry_audit
+          for f in name_accuracy_report.json name_accuracy_report.csv \
+                   similar_names_report.json similar_names_report.csv; do
+            if [ -f "scripts/registry_audit/out/$f" ]; then
+              cp "scripts/registry_audit/out/$f" "reports/registry_audit/$f"
+            fi
+          done
+          git add reports/registry_audit/
+          if git diff --staged --quiet; then
+            echo "אין שינויים"
+          else
+            git commit -m "name-accuracy-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git pull --rebase --autostash
+            git push
+          fi
