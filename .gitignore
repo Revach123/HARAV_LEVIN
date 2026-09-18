@@ -1,0 +1,7 @@
+# one-off scrape/comparison dumps from scripts/heteriske_audit - not
+# meant to be committed (the run also commits final reports to
+# reports/heteriske_audit/ via the workflow)
+scripts/heteriske_audit/out/
+
+__pycache__/
+*.pyc

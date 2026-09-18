@@ -1,0 +1,73 @@
+name: Heteriske.com Audit
+
+# הרצה חד-פעמית/על-פי-דרישה (workflow_dispatch) - משווה את רשימת העסקים
+# ב-heteriske.com מול הרשימה שלנו (/api/lists?type=companies-all, מוגש
+# מתוך הריפו הזה עצמו), ומנסה לפתור ח.פ. לכל עסק ב-heteriske דרך המרשם
+# המלא של revach.pages.dev (חברות/שותפויות/עמותות).
+#
+# הועבר לכאן (מ-Revach123/Revach) כי זו ריצה ארוכה (שעה-שעתיים, תלוי כמה
+# שמות לא נפתרים בטייר המהיר) והריפו הזה ציבורי - דקות Actions חינמיות
+# וללא הגבלה, בלי לצרוך את המכסה של הריפו הפרטי.
+#
+# פלט: scripts/heteriske_audit/out/*.json + *.csv, מועלה כ-artifact
+# (30 יום), וגם נכתב ל-reports/heteriske_audit/ בריפו (ר' "Commit report"
+# למטה) כדי שהדוח יהיה קריא ב-git בלי תלות בהורדת artifact.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Scrape heteriske.com
+        run: python scripts/heteriske_audit/scrape_heteriske.py
+
+      - name: Compare against our own companies-all list
+        run: python scripts/heteriske_audit/compare_registry.py
+
+      - name: Resolve ח.פ. numbers via revach.pages.dev registry, verify on heteriske.com
+        run: python scripts/heteriske_audit/resolve_chp.py
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heteriske-audit-report
+          path: scripts/heteriske_audit/out/
+          retention-days: 30
+
+      - name: Commit report
+        if: always()
+        run: |
+          mkdir -p reports/heteriske_audit
+          for f in comparison_report.json comparison_missing_in_harav_levin.csv \
+                   comparison_missing_in_heteriske.csv heteriske_businesses_with_chp.json \
+                   heteriske_businesses_with_chp.csv; do
+            if [ -f "scripts/heteriske_audit/out/$f" ]; then
+              cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
+            fi
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/heteriske_audit/
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "heteriske-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          git pull --rebase --autostash
+          git push
