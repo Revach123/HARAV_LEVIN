@@ -1,0 +1,4264 @@
+{
+  "exact": {
+    "אגוז הנפקות ופיננסים בע\"מ": {
+      "kind": "company",
+      "id": 515293223,
+      "name": "אגוז הנפקות ופיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בנק לאומי לישראל בע\"מ": {
+      "kind": "company",
+      "id": 520018078,
+      "name": "בנק לאומי לישראל בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הסתדרות אגודת ישראל בארץ ישראל": null,
+    "וויל קפיטל ב.ד.ש. בע\"מ": {
+      "kind": "company",
+      "id": 516602216,
+      "name": "וויל קפיטל ב.ד.ש. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מיטב הלוואות בע\"מ": {
+      "kind": "company",
+      "id": 514817154,
+      "name": "מיטב הלוואות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מימון ישיר נדל\"ן ומשכנתאות בע\"מ": {
+      "kind": "company",
+      "id": 516100153,
+      "name": "מימון ישיר נדל\"ן ומשכנתאות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - בן יפונה 10 בע\"מ": {
+      "kind": "company",
+      "id": 515089191,
+      "name": "מנוס - בן יפונה 10 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - שאול המלך 63 בע\"מ": {
+      "kind": "company",
+      "id": 514832781,
+      "name": "מנוס - שאול המלך 63 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - שמעוני 34 בע\"מ": {
+      "kind": "company",
+      "id": 515848968,
+      "name": "מנוס - שמעוני 34 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס ניהול ואחזקות בע\"מ": null,
+    "מרכז בית יעקב בארץ ישראל (ע\"ר)": {
+      "kind": "association",
+      "id": 580026805,
+      "name": "מרכז בית יעקב בארץ ישראל (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נדרים פלוס מערכות מידע בע\"מ": {
+      "kind": "company",
+      "id": 516831591,
+      "name": "נדרים פלוס מערכות מידע בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עיריית אלעד": null,
+    "עיריית ירושלים": null,
+    "פיקס האלומיניום": null,
+    "קבוצת מנוס ייזום והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 514662519,
+      "name": "קבוצת מנוס ייזום והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רם אדרת סלעית גני איילון בע\"מ": {
+      "kind": "company",
+      "id": 516386745,
+      "name": "רם אדרת סלעית גני איילון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ב ברזיל ישראל נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 514533470,
+      "name": "א.ב ברזיל ישראל נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פיתוח מזרח ירושלים בע\"מ": {
+      "kind": "company",
+      "id": 520027392,
+      "name": "פיתוח מזרח ירושלים בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גרינקאר (אייימאד) יבוא ומסחר בע\"מ": {
+      "kind": "company",
+      "id": 516330123,
+      "name": "גרינקאר (אייימאד) יבוא ומסחר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קול יששכר ע\"ר": null,
+    "גומל חסדים טובים בע\"מ": {
+      "kind": "company",
+      "id": 515715969,
+      "name": "גומל חסדים טובים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "די.בי.אס נצח קפיטל גרופ בע\"מ": {
+      "kind": "company",
+      "id": 517017406,
+      "name": "די.בי.אס נצח קפיטל גרופ בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דרך 38 מרכז לבריאות בע\"מ": {
+      "kind": "company",
+      "id": 515421253,
+      "name": "דרך 38 מרכז לבריאות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דרך 38 שירותים מקצועיים בע\"מ": {
+      "kind": "company",
+      "id": 515032209,
+      "name": "דרך 38 שירותים מקצועיים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וויידלי מובייל בע\"מ": null,
+    "פסיפלורה": null,
+    "פיתרון": null,
+    "שי מידע פיננסים והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 514768803,
+      "name": "שי מידע פיננסים והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אופק חופים בע\"מ": {
+      "kind": "company",
+      "id": 514698216,
+      "name": "אופק חופים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אחוזת אריה 2015 בע\"מ": {
+      "kind": "company",
+      "id": 515242378,
+      "name": "אחוזת אריה 2015 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "איחוד מגורי ישראל בע\"מ": {
+      "kind": "company",
+      "id": 516242419,
+      "name": "איחוד מגורי ישראל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל אחזקות בע\"מ": null,
+    "אפי קפיטל אחזקות משכנות בראל בע\"מ": null,
+    "אפי קפיטל ביוני בע\"מ": null,
+    "אפי קפיטל בע\"מ": {
+      "kind": "company",
+      "id": 515116820,
+      "name": "אפי קפיטל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל בעיר היין בע\"מ": {
+      "kind": "company",
+      "id": 515695633,
+      "name": "אפי קפיטל בעיר היין בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל בראל ביצוע בע\"מ": null,
+    "אפי קפיטל בראל למשתכן בע\"מ": null,
+    "אפי קפיטל מגורים בע\"מ": {
+      "kind": "company",
+      "id": 515836369,
+      "name": "אפי קפיטל מגורים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל מתחמים בע\"מ": {
+      "kind": "company",
+      "id": 515851673,
+      "name": "אפי קפיטל מתחמים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל עמרם אברהם בע\"מ": {
+      "kind": "company",
+      "id": 515529493,
+      "name": "אפי קפיטל עמרם אברהם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל עמרם אברהם קריית גת בע\"מ": {
+      "kind": "company",
+      "id": 515924926,
+      "name": "אפי קפיטל עמרם אברהם קריית גת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי קפיטל פרוייקטים בע\"מ": {
+      "kind": "company",
+      "id": 515837276,
+      "name": "אפי קפיטל פרוייקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ב.ו.ב מדף 24 בע\"מ": null,
+    "בלו-אי טכנולוגיות מים בע\"מ": {
+      "kind": "company",
+      "id": 513484675,
+      "name": "בלו-אי טכנולוגיות מים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בראל אפי קפיטל בע\"מ": {
+      "kind": "company",
+      "id": 515851731,
+      "name": "בראל אפי קפיטל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פירות הכיכר": null,
+    "יאדיר תורה בנגב בע\"מ": null,
+    "כספא סליקה כשרה בע\"מ": {
+      "kind": "company",
+      "id": 517066940,
+      "name": "כספא סליקה כשרה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משכן התורה נתיבות (ע\"ר)": {
+      "kind": "association",
+      "id": 580400323,
+      "name": "משכן התורה נתיבות (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נטעי ראובן (ע\"ר)": {
+      "kind": "association",
+      "id": 580356947,
+      "name": "נטעי ראובן (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נתיבות ראובן יוסף (ע\"ר)": {
+      "kind": "association",
+      "id": 580077865,
+      "name": "נתיבות ראובן יוסף (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קהלני שלום": null,
+    "מגדלור קרן השקעות בעסקים שותפות מוגבלת": null,
+    "מגדלור קרן השקעות שירותי ניהול בע\"מ": null,
+    "ישראל שאולי תכנון ובנייה בע\"מ": null,
+    "א.י קרן גשרים אשראי בע\"מ": {
+      "kind": "company",
+      "id": 512848110,
+      "name": "א.י קרן גשרים אשראי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גשרים 2 - שותפות השקעה שותפות מוגבלת": null,
+    "גשרים 2 שותפות אשראי שותפות מוגבלת": null,
+    "גשרים 2-שותפות ליווי בניה שותפות מוגבלת": null,
+    "מי כרמל בע\"מ": {
+      "kind": "company",
+      "id": 513531046,
+      "name": "מי כרמל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פיינסטר בע\"מ": {
+      "kind": "company",
+      "id": 515781003,
+      "name": "פיינסטר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אנ\"ש משכנתאות ופתרונות אשראי חכמים בע\"מ": {
+      "kind": "company",
+      "id": 516078797,
+      "name": "אנ\"ש משכנתאות ופתרונות אשראי חכמים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ארבל ב.ש. פתרונות מימון ומשכנתאות בע\"מ": {
+      "kind": "company",
+      "id": 516214723,
+      "name": "ארבל ב.ש. פתרונות מימון ומשכנתאות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שמואל ברוך יזמות ובניה בע\"מ": {
+      "kind": "company",
+      "id": 512403247,
+      "name": "שמואל ברוך יזמות ובניה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אבי בן רפאל יעוץ והדרכה לבטיחות בדרכים בע\"מ": {
+      "kind": "company",
+      "id": 515004943,
+      "name": "אבי בן רפאל יעוץ והדרכה לבטיחות בדרכים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יעקב בן יוסף מערכות תקשורת מתקדמות בע\"מ": {
+      "kind": "company",
+      "id": 516173366,
+      "name": "יעקב בן יוסף מערכות תקשורת מתקדמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בראשית לוגיסטיקה בינלאומית בע\"מ": {
+      "kind": "company",
+      "id": 513999672,
+      "name": "בראשית - לוגיסטיקה בינלאומית בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "י. שרעבי ושות' משרד עורכי דין ונוטריון": null,
+    "א.ב.ג. קרית יערים בע\"מ": {
+      "kind": "company",
+      "id": 517037917,
+      "name": "א.ב.ג. קרית יערים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אלון מורן": null,
+    "אלישע אלישי להב": null,
+    "דלקל אחזקות 2009 בע\"מ": {
+      "kind": "company",
+      "id": 514338250,
+      "name": "דלקל אחזקות 2009 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלקל גז בע\"מ": {
+      "kind": "company",
+      "id": 514864826,
+      "name": "דלקל גז בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלקל דקלים בע\"מ": null,
+    "דלקל מואס גז בע\"מ": {
+      "kind": "company",
+      "id": 516108099,
+      "name": "דלקל מואס גז בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלקל נכסים (2015) בע\"מ": {
+      "kind": "company",
+      "id": 515138998,
+      "name": "דלקל נכסים (2015) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלקלומט בע\"מ": {
+      "kind": "company",
+      "id": 513492595,
+      "name": "דלקלומט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "טי.סי.אי תמ\"א במרכז בע\"מ": null,
+    "י.א.מ.א. מרגליות פיתוח בע\"מ": {
+      "kind": "company",
+      "id": 513522615,
+      "name": "י.א.מ.א. מרגליות פיתוח בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ים הדר סוכנות לביטוח (2017) בע\"מ": {
+      "kind": "company",
+      "id": 515702728,
+      "name": "ים הדר סוכנות לביטוח ( 2017 ) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ירוחם תיווך ויזמות בע\"מ": null,
+    "מגה פון": null,
+    "פנחס 70 רמת גן בע\"מ": {
+      "kind": "company",
+      "id": 515423267,
+      "name": "פנחס 70 רמת גן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרסונל אינווסט בע\"מ": {
+      "kind": "company",
+      "id": 515947828,
+      "name": "פרסונל אינווסט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרסונל אנד מור סוכנות לביטוח ותכנון פנסיוני (2018) בע\"מ": {
+      "kind": "company",
+      "id": 515820751,
+      "name": "פרסונל אנד מור סוכנות לביטוח ותכנון פנסיוני (2018) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרסונל יזמות מ.ל. בע\"מ": {
+      "kind": "company",
+      "id": 516022167,
+      "name": "פרסונל יזמות מ.ל. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "תשתיות השרון מ.ל בע\"מ": {
+      "kind": "company",
+      "id": 516038874,
+      "name": "תשתיות השרון מ.ל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סילבר ג.י. ניהול בע\"מ": {
+      "kind": "company",
+      "id": 515572212,
+      "name": "סילבר ג.י. ניהול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שרי את אלכס השקעות וניהול פרוייקטים בע\"מ": {
+      "kind": "company",
+      "id": 513998435,
+      "name": "שרי את אלכס השקעות וניהול פרוייקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אורנשטיין ניהול וביצוע פרוייקטים בע\"מ": {
+      "kind": "company",
+      "id": 514637354,
+      "name": "אורנשטיין - ניהול וביצוע פרוייקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפיקי מים נתיבות ע\"ר": null,
+    "ארד בע\"מ": {
+      "kind": "company",
+      "id": 510007800,
+      "name": "ארד בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ג.מ.נ. שיווק לבניה בע\"מ": {
+      "kind": "company",
+      "id": 514693761,
+      "name": "ג.מ.נ. שיווק לבניה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סונול גז פלוס בע\"מ": {
+      "kind": "company",
+      "id": 515916542,
+      "name": "סונול גז פלוס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "Shower top": null,
+    "א. זלוצ'בסקי": null,
+    "אברהם זילברברג בניה ויזום בע\"מ": {
+      "kind": "company",
+      "id": 516734472,
+      "name": "אברהם זילברברג בניה ויזום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הדרום בפריחה ערד (ע\"ר)": {
+      "kind": "association",
+      "id": 580648772,
+      "name": "הדרום בפריחה - ערד (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "טוליפ": null,
+    "לנד א.י בע\"מ": {
+      "kind": "company",
+      "id": 516118163,
+      "name": "לנד א.י בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסדות חסידי בעלז בני-ברק (ע\"ר)": null,
+    "מחסני המזון": null,
+    "מיגון ישראל": null,
+    "ניהוז": null,
+    "פשוט לעזור לערד (ע\"ר)": {
+      "kind": "association",
+      "id": 580599728,
+      "name": "פשוט לעזור לערד (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קלאסי שוז": null,
+    "אלסקה פרקמטיא בע\"מ": {
+      "kind": "company",
+      "id": 515108413,
+      "name": "אלסקה פרקמטיא בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית דוד בית שמש (ע\"ר)": {
+      "kind": "association",
+      "id": 580572782,
+      "name": "בית דוד בית שמש (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגורי ביתר שי עולמות בע\"מ": {
+      "kind": "company",
+      "id": 516768744,
+      "name": "מגורי ביתר שי עולמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופי בראשית שי בגליל בע\"מ": {
+      "kind": "company",
+      "id": 516681947,
+      "name": "נופי בראשית שי בגליל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נתיב החסד סופר חסד בע\"מ": {
+      "kind": "company",
+      "id": 513777219,
+      "name": "נתיב החסד - סופר חסד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרימה": null,
+    "קשת גיבורים בע\"מ": {
+      "kind": "company",
+      "id": 514131499,
+      "name": "קשת גיבורים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קשת גיבורים שיווק בע\"מ": {
+      "kind": "company",
+      "id": 514844893,
+      "name": "קשת גיבורים - שיווק בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סתם מהודר בע\"מ": {
+      "kind": "company",
+      "id": 515189157,
+      "name": "סתם מהודר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ר.א.ב. בונוס בע\"מ": {
+      "kind": "company",
+      "id": 512056789,
+      "name": "א.ר.א.ב. בונוס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אובלי ערבויות בע\"מ": {
+      "kind": "company",
+      "id": 515966661,
+      "name": "אובלי ערבויות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ג'רוזלם צ'יינג'": null,
+    "אלדד פרי אסטרטגיות בע\"מ": {
+      "kind": "company",
+      "id": 515272078,
+      "name": "אלדד פרי אסטרטגיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אלדד פרי נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 514474634,
+      "name": "אלדד פרי נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית יעקב- בית יהודה אריה ע\"ר": null,
+    "דיילנא אוכל מרוקאי ביתי בע\"מ": {
+      "kind": "company",
+      "id": 515231546,
+      "name": "דיילנא אוכל מרוקאי ביתי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הנחלה - דיור להשכרה בע\"מ": {
+      "kind": "company",
+      "id": 515783777,
+      "name": "הנחלה - דיור להשכרה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגן אברהם קרנות לעזרה ולגמילות חסדים ע\"ר": null,
+    "ברקת מימון בע\"מ": {
+      "kind": "company",
+      "id": 515279016,
+      "name": "ברקת מימון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברקת מימון יזמים בע\"מ": {
+      "kind": "company",
+      "id": 517032579,
+      "name": "ברקת מימון יזמים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברקת קפיטל בע\"מ": {
+      "kind": "company",
+      "id": 515187326,
+      "name": "ברקת קפיטל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רזאור הנדסה ויעוץ בע\"מ": null,
+    "א.א. נכסים": null,
+    "א.א. תכלת השקעות בטכנולוגיה בע\"מ": {
+      "kind": "company",
+      "id": 516205390,
+      "name": "א.א. תכלת השקעות בטכנולוגיה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אחים גבאי חקלאות (1996) בע\"מ": {
+      "kind": "company",
+      "id": 512279050,
+      "name": "אחים גבאי חקלאות (1996) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אימפקט אירופה ישראל יזמות והשקעות בע\"מ": null,
+    "גרין סיטי נכסים בוקרשט בע\"מ": {
+      "kind": "company",
+      "id": 516162146,
+      "name": "גרין סיטי נכסים בוקרשט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דפוס שילת": null,
+    "ה.ש.מ אירופה ישראל יזמות בע\"מ": {
+      "kind": "company",
+      "id": 515018729,
+      "name": "ה.ש.מ אירופה - ישראל יזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מ.א.מ.י.א יזמות והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 514968940,
+      "name": "מ.א.מ.י.א - יזמות והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "\"חויבי\"": null,
+    "3SV Asset and Holding Management": null,
+    "ACS Participações": null,
+    "ADAR IND. COM. IMP. EXP. LTDA.": null,
+    "Aicom": null,
+    "AJS Asset Management": null,
+    "Alberto Joseph Safra Holding Ltda.": null,
+    "aridesk": null,
+    "Asa Assessor de Invesrimentos": null,
+    "Asa Asset Management": null,
+    "Asa Digital Assets S.A.": null,
+    "Asa Real Estate IMoveis Ltda.": null,
+    "Asa Services": null,
+    "Asa Sistemas Technologicos Ltda.": null,
+    "Asa Sociedade de Credito, Financiamento e Investimentos S.A.": null,
+    "Asa Sociedade de Credito, Financiamento e Investos S.A.": null,
+    "AVANTI IND. COM. IMP. EXP. LTDA.": null,
+    "BANCO DAYCOVAL": null,
+    "BELMONT GROUP CORP.": null,
+    "Brl1 Consortium S/A": null,
+    "Cainvest Bank and Trust Limited": null,
+    "Cainvest International S.A": null,
+    "CISA Fundo de Investimento Financeiro Multimercado": null,
+    "CISA Liquidity Provider Ltd": null,
+    "Create Brokerage": null,
+    "CSS AGENCIA DE TURISMO": null,
+    "Dartley Securities Limited": null,
+    "DAYCO FINANCIAL CORPORATION BVI": null,
+    "DAYCOVAL ASSET MANAGEMENT": null,
+    "DAYPREV VIDA E PREVIDÊNCIA.": null,
+    "EIN compit holding LLC": null,
+    "EIN compit II holding LLC": null,
+    "EIN compit Inc": null,
+    "EIN compit Now LLC": null,
+    "EIN Tavivian Gronp Inc": null,
+    "FONTAINE BUSINESS S.A.": null,
+    "GLOBAL POWER DIGITAL PAYMENTS LTDA": null,
+    "GLOBUS REAL ESTATE INVESTMENTS BATUMI": null,
+    "GO APP": null,
+    "HELVETICA MANAGEMENT CORP": null,
+    "IFPP “Ptomotora” de Serviços de Consultoria e Cadastro Ltda.": null,
+    "KATEC IMPORTATION LTDA": null,
+    "KERALA EXPERT SRL": null,
+    "KRONU HOLDINGS LTD. BVI": null,
+    "LENDAL US INC. EIN": null,
+    "LR SOUTHEND LTD": null,
+    "M המשכנתאות": null,
+    "MASINA INVESTMENTS INC. BVI": null,
+    "MONFICA COMERCIO E IMPORTADORA LTDA": null,
+    "NAPOL - DIAMONDS": null,
+    "NEW DAY BUSINESS HOLDINGS LTD. BVI": null,
+    "OURIBANK MULTIPLE BANK": null,
+    "SCI EVEN": null,
+    "SKYLIGHT OFFSHORE LIMITED": null,
+    "SYNERO": null,
+    "THE FIRST VISA TRUST": null,
+    "THE OWNERS CLASS LLC": null,
+    "THREE PRINCESS INC.": null,
+    "TREETOP INVESTMENTS": null,
+    "Valco Administration": null,
+    "YELLOW MOON INVESTMENT SERVICES LIMITED": null,
+    "YosseFinace": null,
+    "ZARAPLAST SA.": null,
+    "א. גורדו בע\"מ": {
+      "kind": "company",
+      "id": 510810575,
+      "name": "א. גורדו בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א. פטמן ליווי עומק לשיווק רווחי": null,
+    "א. פרץ צעצועים בע\"מ": {
+      "kind": "company",
+      "id": 515173086,
+      "name": "א. פרץ צעצועים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ב. כיפות": null,
+    "א.וייסלר עורכת דין ומגשרת": null,
+    "א.ט.מ.ס מטריקס בע\"מ": {
+      "kind": "company",
+      "id": 515633345,
+      "name": "א.ט.מ.ס מטריקס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ל. שפירא כוח אדם": null,
+    "א.מ. רום השקעות (2007) בע\"מ": {
+      "kind": "company",
+      "id": 514065085,
+      "name": "א.מ. רום השקעות (2007) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ע.מ ליאל החזקות בע\"מ": {
+      "kind": "company",
+      "id": 516536190,
+      "name": "א.ע.מ ליאל החזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.צור": null,
+    "א.ק קרן בטחונות ממוקדת שותפות מוגבלת": null,
+    "א.ק.ח נכסים בע\"מ": {
+      "kind": "company",
+      "id": 515534691,
+      "name": "א.ק.ח נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "א.ר. נכסי אלאר בע\"מ": {
+      "kind": "company",
+      "id": 514134030,
+      "name": "א.ר. נכסי אלאר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אבא א.ב אחזקות נדלן בע\"מ": {
+      "kind": "company",
+      "id": 515342269,
+      "name": "אבא א.ב אחזקות נדלן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אבי גטי 770 בע\"מ": {
+      "kind": "company",
+      "id": 516426822,
+      "name": "אבי גטי 770 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אביר יעקב ישראל נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515819183,
+      "name": "אביר יעקב ישראל נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אבן גיר בע\"מ": {
+      "kind": "company",
+      "id": 515689776,
+      "name": "אבן גיר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אברהם ירט": null,
+    "אגבד ייזום פרויקטים בתמ\"א 38 בע\"מ": {
+      "kind": "company",
+      "id": 514795277,
+      "name": "אגבד ייזום פרויקטים בתמ\"א 38 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אגודת חסידי ספינקא בארץ ישראל מיסודו של כ\"ק מרן האדמו\"ר ר יעקב יוסף": {
+      "kind": "association",
+      "id": 580270007,
+      "name": "אגודת חסידי ספינקא בארץ ישראל מיסודו של כ\"ק מרן האדמו\"ר ר' יעקב יוסף (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אגרטון ס.ד בע\"מ": {
+      "kind": "company",
+      "id": 515871267,
+      "name": "אגרטון ס.ד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אדיר מיתוג ופירסום": null,
+    "אדר נדל\"ן והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 514263177,
+      "name": "אדר נדל\"ן והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אהבת תורה וחסד רמת בית שמש (ע\"ר)": {
+      "kind": "association",
+      "id": 580597268,
+      "name": "אהבת תורה וחסד רמת בית שמש (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "או.סי.ליינס אינטרשיונל בע\"מ": null,
+    "או.סי.ליינס בע\"מ": {
+      "kind": "company",
+      "id": 514244599,
+      "name": "או.סי ליינס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אובליגו ואליו בע\"מ": null,
+    "אוורסט 38 (ש.פ.) 2014 בע\"מ": null,
+    "אוורסט אוצר הצמחים 5 הרצליה בע\"מ": {
+      "kind": "company",
+      "id": 515238293,
+      "name": "אוורסט אוצר הצמחים 5 הרצליה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אוורסט האסיף 4 בע\"מ": {
+      "kind": "company",
+      "id": 514972587,
+      "name": "אוורסט האסיף 4 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אוורסט נדל\"ן הדור בע\"מ": null,
+    "אוורסט עין גנים תמ\"א 38 בע\"מ": null,
+    "אוורסט קהילת ציון 17 בע\"מ": {
+      "kind": "company",
+      "id": 515115566,
+      "name": "אוורסט קהילת ציון 17 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אוניברסיטת חיפה מלכ\"ר": null,
+    "אוניקס אחזקות בע\"מ": {
+      "kind": "company",
+      "id": 515679652,
+      "name": "אוניקס אחזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אוניקס חי בע\"מ": null,
+    "אוניקס פ.מגורי יוקרה בע\"מ": null,
+    "אוניקס קרמיקה": null,
+    "אופק (נ.ה.א) ניהול השקעות אלטרנטיביות בע\"מ": {
+      "kind": "company",
+      "id": 516201464,
+      "name": "אופק (נ.ה.א) ניהול השקעות אלטרנטיביות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אופק פרויקט לישנסקי 22 ראשון לציון בע\"מ": {
+      "kind": "company",
+      "id": 515952786,
+      "name": "אופק פרויקט לישנסקי 22 ראשון לציון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אופקים סנטר בע\"מ": {
+      "kind": "company",
+      "id": 516125895,
+      "name": "אופקים סנטר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אופרה על הים בע\"מ": {
+      "kind": "company",
+      "id": 512785536,
+      "name": "אופרה על הים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אור - לציון ירושלים (ע\"ר)": {
+      "kind": "association",
+      "id": 580136976,
+      "name": "אור - לציון ירושלים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אור-גני ישראל": null,
+    "אוריאל - חן השקעות בע\"מ": {
+      "kind": "company",
+      "id": 512458738,
+      "name": "אוריאל - חן השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אורקום אסטרטגיות בע\"מ": {
+      "kind": "company",
+      "id": 513676791,
+      "name": "אורקום אסטרטגיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אורקום אסטרטגיות ונכסים בע\"מ": {
+      "kind": "company",
+      "id": 514813146,
+      "name": "אורקום אסטרטגיות ונכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אחדות הארץ המובטחת בע\"מ": {
+      "kind": "company",
+      "id": 515410785,
+      "name": "אחדות הארץ המובטחת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אי די אם אינטרנשיונל בע\"מ": {
+      "kind": "company",
+      "id": 515061943,
+      "name": "אי די אם אינטרנשיונל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אי-לון ג'יפי בע\"מ": {
+      "kind": "company",
+      "id": 515644755,
+      "name": "אי-לון ג'יפי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אי.פי.ג'י פרי השקעות בע\"מ": {
+      "kind": "company",
+      "id": 515179323,
+      "name": "אי.פי.ג'י פרי השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "איגוד העסקים החרדים בע\"מ": {
+      "kind": "company",
+      "id": 517006995,
+      "name": "איגוד העסקים החרדים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אידיאל טורס (1982)(ישראל) בע\"מ": {
+      "kind": "company",
+      "id": 510940505,
+      "name": "אידיאל טורס (1982)(ישראל) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אייטופ ב.ה. בע\"מ": {
+      "kind": "company",
+      "id": 516494838,
+      "name": "אייטופ ב.ה. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אייס פרינט -א.א. אדיר": null,
+    "איכות הטבע": null,
+    "אינדיגו מגדל העמק בע\"מ": null,
+    "אינדיגו מניבים בע\"מ": {
+      "kind": "company",
+      "id": 516023827,
+      "name": "אינדיגו מניבים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אינדיגו ניהול בע\"מ": {
+      "kind": "company",
+      "id": 516615077,
+      "name": "אינדיגו ניהול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אינדיגו ניהול הצפון בע\"מ": null,
+    "אינסוליין מדיקל בע\"מ": null,
+    "אירנשטיין ת": null,
+    "אלדד פרי אינטרנשיונל בע\"מ": {
+      "kind": "company",
+      "id": 514878982,
+      "name": "אלדד פרי אינטרנשיונל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אלי ייבוא שיווק והפצה": null,
+    "אליעזר הלוי 8 בע\"מ": {
+      "kind": "company",
+      "id": 515769586,
+      "name": "אליעזר הלוי 8 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אליעזר קייקוב": null,
+    "אלפא גידורים בע\"מ": {
+      "kind": "company",
+      "id": 514234467,
+      "name": "אלפא גידורים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אמ קיי הולדינגס ישראל 26 בע\"מ": {
+      "kind": "company",
+      "id": 515142503,
+      "name": "אמ קיי הולדינגס ישראל 26 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אם. אן. גי התחדשות עירונית בע\"מ": {
+      "kind": "company",
+      "id": 515265908,
+      "name": "אם. אן. גי התחדשות עירונית בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אם.אן.ג'י התחדשות קרית ים בע\"מ": {
+      "kind": "company",
+      "id": 516941168,
+      "name": "אם.אן.ג'י התחדשות קרית ים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אמא מ.א.א. ניהול והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515824613,
+      "name": "אמא מ.א.א. ניהול והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אמיגה מ.ל. השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516330131,
+      "name": "אמיגה מ.ל. השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אמילי": {
+      "kind": "association",
+      "id": 580038677,
+      "name": "אמילי (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אמין עסקים ולוגיסטיקה בע\"מ": {
+      "kind": "company",
+      "id": 515037976,
+      "name": "אמין עסקים ולוגיסטיקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אנ\"ש בע\"מ": {
+      "kind": "company",
+      "id": 511901050,
+      "name": "אנ\"ש (אחזקה , נכסים ושיפוצים) בע\"מ",
+      "confidence": "exact",
+      "via": "b"
+    },
+    "אסיה סיירוס הנדסה וביצוע בע\"מ": {
+      "kind": "company",
+      "id": 513484972,
+      "name": "אסיה סיירוס הנדסה וביצוע בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפהל נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 514985274,
+      "name": "אפהל נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפטק א. א. י. בע\"מ": {
+      "kind": "company",
+      "id": 515891919,
+      "name": "אפטק א. א. י. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפי'ס": null,
+    "אפילוגיק בית שמש": null,
+    "אפרת סנטר בע\"מ": {
+      "kind": "company",
+      "id": 515605327,
+      "name": "אפרת סנטר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אקס טו וואן ישראל בע\"מ": {
+      "kind": "company",
+      "id": 515292621,
+      "name": "אקס טו וואן ישראל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אקסלנט": null,
+    "אר.אי. מכוניות בע\"מ": {
+      "kind": "company",
+      "id": 511629164,
+      "name": "אר. אי. מכוניות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אריה טוויג מאסטר בעסקים ושייוק דיגטלי": null,
+    "ארמנה (יוטה פולצ'ק)": null,
+    "ארמס חברה לסחר בע\"מ": {
+      "kind": "company",
+      "id": 513895268,
+      "name": "ארמס חברה לסחר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ארמס מטווחי ירי בע\"מ": {
+      "kind": "company",
+      "id": 514697804,
+      "name": "ארמס מטווחי ירי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אשר אייצר": null,
+    "ב.ח. שיווק": null,
+    "ב.שיינברגר עיצוב פנים": null,
+    "בול מסחר והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 510992183,
+      "name": "בול מסחר והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בוסתנים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516445483,
+      "name": "בוסתנים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בי\"ס תיכון בית - יעקב פתח - תקוה": null,
+    "ביאליק האם מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516858503,
+      "name": "ביאליק - האם מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ביאליק מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516858511,
+      "name": "ביאליק מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ביבלוג לוגיסטיקה בע\"מ": null,
+    "ביגלנס": null,
+    "ביוטי בית": {
+      "kind": "company",
+      "id": 516706470,
+      "name": "ביוטי בית",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ביזנסט": null,
+    "בית היצירה איבון בע\"מ": {
+      "kind": "company",
+      "id": 513775809,
+      "name": "בית היצירה איבון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית הכנסת המרכזי אילת השחר פרדס כץ": {
+      "kind": "association",
+      "id": 580677177,
+      "name": "בית הכנסת המרכזי אילת השחר פרדס כץ (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית חדש מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516099082,
+      "name": "בית חדש מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית ירוק מקבוצת בית ירושלמי שלי בע\"מ": null,
+    "בית ירושלמי שלי אחזקות וניהול פרוייקטים בע\"מ": null,
+    "בית ירושלמי שלי יזמות ובינוי בע\"מ": {
+      "kind": "company",
+      "id": 515558047,
+      "name": "בית ירושלמי שלי יזמות ובינוי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית ירושלמי שלי נכסים בע\"מ": {
+      "kind": "company",
+      "id": 515746675,
+      "name": "בית ירושלמי שלי נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית ירושלמי שלי תמ\"א 38 בע\"מ": {
+      "kind": "company",
+      "id": 515611168,
+      "name": "בית ירושלמי שלי תמ\"א 38 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית פלוס": null,
+    "בן חורין השקעות בע\"מ": {
+      "kind": "company",
+      "id": 515397347,
+      "name": "בן חורין השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אביחי בע\"מ": {
+      "kind": "company",
+      "id": 516063146,
+      "name": "בני ארי השקעות אביחי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אבישי בע\"מ": {
+      "kind": "company",
+      "id": 516062601,
+      "name": "בני ארי השקעות אבישי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אודם בע\"מ": {
+      "kind": "company",
+      "id": 515948123,
+      "name": "בני ארי השקעות אודם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אוריה בע\"מ": {
+      "kind": "company",
+      "id": 516063138,
+      "name": "בני ארי השקעות אוריה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אחלמה בע\"מ": {
+      "kind": "company",
+      "id": 515947901,
+      "name": "בני ארי השקעות אחלמה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות אפרת בע\"מ": {
+      "kind": "company",
+      "id": 515948552,
+      "name": "בני ארי השקעות אפרת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות ברקת בע\"מ": {
+      "kind": "company",
+      "id": 515946028,
+      "name": "בני ארי השקעות ברקת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות דבורה בע\"מ": {
+      "kind": "company",
+      "id": 515948057,
+      "name": "בני ארי השקעות דבורה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות הודיה בע\"מ": {
+      "kind": "company",
+      "id": 515948511,
+      "name": "בני ארי השקעות הודיה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות ופרויקטים בע\"מ": {
+      "kind": "company",
+      "id": 513327502,
+      "name": "בני ארי השקעות ופרויקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות חיה בע\"מ": {
+      "kind": "company",
+      "id": 515948545,
+      "name": "בני ארי השקעות חיה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות יהודית בע\"מ": {
+      "kind": "company",
+      "id": 515948396,
+      "name": "בני ארי השקעות יהודית בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות יהלום בע\"מ": {
+      "kind": "company",
+      "id": 515948743,
+      "name": "בני ארי השקעות יהלום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות יצחק בע\"מ": {
+      "kind": "company",
+      "id": 516062759,
+      "name": "בני ארי השקעות יצחק בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות ישפה בע\"מ": {
+      "kind": "company",
+      "id": 515948404,
+      "name": "בני ארי השקעות ישפה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות לאה בע\"מ": {
+      "kind": "company",
+      "id": 516063120,
+      "name": "בני ארי השקעות לאה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות לשם בע\"מ": {
+      "kind": "company",
+      "id": 515946010,
+      "name": "בני ארי השקעות לשם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות מיכאל בע\"מ": {
+      "kind": "company",
+      "id": 516063153,
+      "name": "בני ארי השקעות מיכאל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות מיכל בע\"מ": {
+      "kind": "company",
+      "id": 516062734,
+      "name": "בני ארי השקעות מיכל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות נעמה בע\"מ": {
+      "kind": "company",
+      "id": 515946085,
+      "name": "בני ארי השקעות נעמה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות נפך בע\"מ": {
+      "kind": "company",
+      "id": 515948750,
+      "name": "בני ארי השקעות נפך בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות ספיר בע\"מ": {
+      "kind": "company",
+      "id": 515946044,
+      "name": "בני ארי השקעות ספיר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות פטדה בע\"מ": {
+      "kind": "company",
+      "id": 515948776,
+      "name": "בני ארי השקעות פטדה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות רעות בע\"מ": {
+      "kind": "company",
+      "id": 515947919,
+      "name": "בני ארי השקעות רעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות שבו בע\"מ": {
+      "kind": "company",
+      "id": 515948784,
+      "name": "בני ארי השקעות שבו בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות שהם בע\"מ": {
+      "kind": "company",
+      "id": 515946036,
+      "name": "בני ארי השקעות שהם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות שיר בע\"מ": {
+      "kind": "company",
+      "id": 515948537,
+      "name": "בני ארי השקעות שיר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות שירה בע\"מ": {
+      "kind": "company",
+      "id": 515947968,
+      "name": "בני ארי השקעות שירה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות תהילה בע\"מ": {
+      "kind": "company",
+      "id": 515946101,
+      "name": "בני ארי השקעות תהילה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי השקעות תרשיש בע\"מ": {
+      "kind": "company",
+      "id": 515948859,
+      "name": "בני ארי השקעות תרשיש בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני ארי ייזום וניהול פרויקטים בע\"מ": {
+      "kind": "company",
+      "id": 514803501,
+      "name": "בני ארי ייזום וניהול פרויקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בני הישיבות": null,
+    "בני הישיבות גן הדסים מודיעין עילית": {
+      "kind": "association",
+      "id": 580811487,
+      "name": "בני הישיבות גן הדסים מודיעין עילית (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בנימין ויהודה אחזקות בע\"מ": {
+      "kind": "company",
+      "id": 515729747,
+      "name": "בנימין ויהודה אחזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בנימין תכשיטים": null,
+    "בעל התניא ישראל בע\"מ": null,
+    "בראל סלעית בנחל בע\"מ": {
+      "kind": "company",
+      "id": 516700713,
+      "name": "בראל סלעית בנחל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בראשית א.ה.מ סחר בע\"מ": {
+      "kind": "company",
+      "id": 514060185,
+      "name": "בראשית א.ה.מ סחר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברבר רבקה": null,
+    "ברוהאוס הגולן בע\"מ": {
+      "kind": "company",
+      "id": 513792648,
+      "name": "ברוהאוס הגולן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בריאות השן ברמה בע\"מ": {
+      "kind": "company",
+      "id": 513390260,
+      "name": "בריאות השן ברמה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברכה בככר בע\"מ": {
+      "kind": "company",
+      "id": 514231109,
+      "name": "ברכה בככר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברכה צדק": null,
+    "ברכת ישראל": null,
+    "ברמן עשת": null,
+    "ברק לשם פיננסים בע\"מ": {
+      "kind": "company",
+      "id": 515084416,
+      "name": "ברק לשם פיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברק פיננסים": null,
+    "ברק שוהם סוכנות פנסיוני(2015) בע\"מ": null,
+    "בשעה טובה": null,
+    "בתים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516641974,
+      "name": "בתים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ג.ק. חילו השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516464534,
+      "name": "ג.ק. חילו השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ג'י.יו.אס מרקטינג בע\"מ": {
+      "kind": "company",
+      "id": 513935858,
+      "name": "ג'י.יו.אס מרקטינג בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גאולה אופטיקס": null,
+    "גד": null,
+    "גוט קרמיק": null,
+    "גוטמן - אמיר עו\"ד": null,
+    "גולדגרף-שוהם": null,
+    "גולדמוביל ירושלים בע\"מ": {
+      "kind": "company",
+      "id": 514204445,
+      "name": "גולדמוביל ירושלים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גולדמוביל קיה מודיעין בע\"מ": {
+      "kind": "company",
+      "id": 515505758,
+      "name": "גולדמוביל קיה מודיעין בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גטנדר בע\"צ": null,
+    "גטר שרה": null,
+    "גיל צעד נבון בע\"מ": {
+      "kind": "company",
+      "id": 512610577,
+      "name": "גיל צעד נבון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גירסא שניה בע\"מ": null,
+    "גלאט נופש בע\"מ": {
+      "kind": "company",
+      "id": 515374593,
+      "name": "גלאט נופש בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גלעד מאי חברה להשקעות בניה ופיתוח בע\"מ": {
+      "kind": "company",
+      "id": 513177345,
+      "name": "גלעד מאי חברה להשקעות בניה ופיתוח בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גלעד משאט עו\"ד": null,
+    "גמ\"ח אהבת חסד": null,
+    "גמילות חסדים חסדי ישראל דחסידי מודזי'ץ": {
+      "kind": "association",
+      "id": 580665651,
+      "name": "גמילות חסדים חסדי ישראל דחסידי מודז'יץ (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גן פייגי": null,
+    "גראנאטאוויטש יוכבד": null,
+    "גרופריסייל": null,
+    "גרייטדור תעשיות בע\"מ": {
+      "kind": "company",
+      "id": 516393048,
+      "name": "גרייטדור תעשיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גרשטנקורן טובה": null,
+    "גשר קדמה יזמות בע\"מ": {
+      "kind": "company",
+      "id": 517040382,
+      "name": "גשר קדמה יזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ד. מלכא עיצוב פנים": null,
+    "ד.שבוט השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516461381,
+      "name": "ד. שבוט השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ד\"ר בני כהן": null,
+    "ד\"ר סמואל שמואל": null,
+    "ד\"ר שפירו דניאל": null,
+    "דוידיאן ייבוא ושיווק": null,
+    "דונה לינן (מצעי בן ברבר)": null,
+    "דינקלס יוסף": null,
+    "ה.מ פתרונות הדפסה (דוקטור דיו)": null,
+    "הבית בגנים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516186251,
+      "name": "הבית בגנים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בהרצוג מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516198769,
+      "name": "הבית בהרצוג מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בהשומר מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516186038,
+      "name": "הבית בהשומר מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בכרם מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516335445,
+      "name": "הבית בכרם מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית במעלות דפנה מקבוצת בית ירושלמי שלי בע\"מ": null,
+    "הבית במרגולין מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516219169,
+      "name": "הבית במרגולין מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בנורית מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516211216,
+      "name": "הבית בנורית מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בפינס מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516779980,
+      "name": "הבית בפינס מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית בקוסטריקה מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516211422,
+      "name": "הבית בקוסטריקה מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבית ברמת שרת מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516867389,
+      "name": "הבית ברמת שרת מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הבנק הדיגיטלי הראשון בע\"מ": null,
+    "הדר אברהם חברה להשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515543320,
+      "name": "הדר אברהם חברה להשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הויזמן מנחם": null,
+    "הומי משכנתאות חברתיות בע\"מ": {
+      "kind": "company",
+      "id": 515739498,
+      "name": "הומי משכנתאות חברתיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הופמן ובניו": null,
+    "הוצלר יהודה (1999) בע\"מ": {
+      "kind": "company",
+      "id": 512782244,
+      "name": "הוצלר יהודה (1999) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הי קום-הומפיוטר": null,
+    "הידורים": null,
+    "היי-לימיט שותף כללי בע\"מ": {
+      "kind": "company",
+      "id": 516079886,
+      "name": "היי-לימיט שותף כללי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "היימשע בייגלס": null,
+    "הכל בקול": {
+      "kind": "association",
+      "id": 580715266,
+      "name": "הכל בקול (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הל\"ה 23-25 בע\"מ": {
+      "kind": "company",
+      "id": 515903318,
+      "name": "הל\"ה 23-25 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הלבשה אישית l.v": null,
+    "המועצה הדתית נצרת עילית": null,
+    "המרכז העולמי לתורה וחסידות שע\"י חסידי בעלזא": null,
+    "המרכז לבית ברמה": null,
+    "המרכז לתעשייה ומסחר מפרץ חיפה בע\"מ": {
+      "kind": "company",
+      "id": 510588106,
+      "name": "המרכז לתעשייה ומסחר מפרץ חיפה בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "העמותה למען דיור בר השגה": {
+      "kind": "association",
+      "id": 580556504,
+      "name": "העמותה למען דיור בר השגה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הפאה של צילי": null,
+    "הר שמואל סנטר בע\"מ": {
+      "kind": "company",
+      "id": 515973501,
+      "name": "הר שמואל סנטר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "השבועון לבית היהודי -מ.ל. בע\"מ": {
+      "kind": "company",
+      "id": 515227411,
+      "name": "השבועון לבית היהודי - מ.ל. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "השטעטל דיור להשכרה בע\"מ": {
+      "kind": "company",
+      "id": 516273596,
+      "name": "השטעטל דיור להשכרה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "השטעטל נכסים והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515783355,
+      "name": "השטעטל נכסים והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "השכרת צימרים משה אזרחי": null,
+    "וואליו קרן למימון חוץ בנקאי שותפות מוגבלת": null,
+    "וויצ'ק בע\"מ": {
+      "kind": "company",
+      "id": 515664555,
+      "name": "וויצ'ק בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וויצ'ק השכרה בע\"מ": {
+      "kind": "company",
+      "id": 516338746,
+      "name": "וויצ'ק השכרה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וויצ'ק נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 516337441,
+      "name": "וויצ'ק נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וויצ'ק פאנד 1 בע\"מ": {
+      "kind": "company",
+      "id": 515897775,
+      "name": "וויצ'ק פאנד 1 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וולף יהושע פאלק": null,
+    "ויזר יוסף חיים": null,
+    "וילונות דקורטיב": null,
+    "ועשית הישר בע\"מ": {
+      "kind": "company",
+      "id": 515531606,
+      "name": "ועשית הישר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "זול פה": null,
+    "זיוה עובדיה השקעות בע\"מ": {
+      "kind": "company",
+      "id": 515294387,
+      "name": "זיוה עובדיה השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "זילבר ייעוץ והדרכה": null,
+    "ח. רובינשטיין": null,
+    "ח.מ. גולד מוטורס מרכז שירות מודיעין בע\"מ": {
+      "kind": "company",
+      "id": 514657428,
+      "name": "ח.מ. גולד מוטורס מרכז שירות מודיעין בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ח.מ. חולון מוטורס (2010) בע\"מ": {
+      "kind": "company",
+      "id": 514534460,
+      "name": "ח.מ. חולון מוטורס (2010) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חברת איזי בס בע\"מ": null,
+    "חברת בין לאומית לתמ\"א 38 בע\"מ": null,
+    "חברת בש-יונה בע\"מ": null,
+    "חברת די.אי.אס קונטו בע\"מ": null,
+    "חברת המלך דוד מכירות פומביות בע\"מ": null,
+    "חברת י.מ. אחים שמואלי בע\"מ": null,
+    "חברת יוסף גרופ בזלמן ארן 3": null,
+    "חברת ל.י.א.ל. בסט ווד נגרות ובינוי בע\"מ": null,
+    "חברת מבית משמחים בע\"מ": null,
+    "חברת מי ק. גת בע\"מ": null,
+    "חברת משכנות אומנים מסחרי בע\"מ": null,
+    "חברת נימה שפע בע\"מ": null,
+    "חברת סלעית א.י.ש בע\"מ": null,
+    "חברת סלעית א.י.ש נדל\"ן בע\"מ": null,
+    "חברת סלעית אבי נדל\"ן בע\"מ": null,
+    "חברת סלעית דמרי 66 נדל\"ן מגורים בע\"מ": null,
+    "חברת סלעית דמרי בגבעה בע\"מ": null,
+    "חברת סלעית דמרי גבעת זאב בע\"מ": null,
+    "חברת סלעית יובלים בע\"מ": null,
+    "חברת סלעית יתד מגורים בע\"מ": null,
+    "חברת עדי מעליות נכסים והשקעות בע\"מ": null,
+    "חברת עדי עד יזמות והשקעות א.ע בע\"מ": null,
+    "חברת עוגן - קרן להלוואות חברתיות בע\"מ": null,
+    "חברת עטרת ישועה": null,
+    "חברת פאות מ.קופולוביץ": null,
+    "חברת פסגות ניהול תחבורה בע\"מ": null,
+    "חברת שפאן השקעות בע\"מ": null,
+    "חברת תות תקשורת ותוצאות בע\"מ": null,
+    "חוצות הגולן בע\"מ": {
+      "kind": "company",
+      "id": 517041323,
+      "name": "חוצות הגולן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חיטוי טק בע\"מ": {
+      "kind": "company",
+      "id": 515527315,
+      "name": "חיטוי טק בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חיים של תורה": null,
+    "חיים שלומוביץ ,ד\"ר לאופטומטריה (ארה\"ב) בע\"מ": {
+      "kind": "company",
+      "id": 512834292,
+      "name": "חיים שלומוביץ, ד\"ר לאופטומטריה (ארה\"ב) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חילו חוסני השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516466307,
+      "name": "חילו חוסני השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חלקת ארץ שיווק נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 516452802,
+      "name": "חלקת ארץ שיווק נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חסדך יסעדני בע\"מ": {
+      "kind": "company",
+      "id": 515671600,
+      "name": "חסדך יסעדני בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חרוב מימון בע\"מ": {
+      "kind": "company",
+      "id": 515664431,
+      "name": "חרוב מימון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ט.י.ם טכנולוגיה מתקדמת": null,
+    "טאבו נדל\"ן ויזמות": null,
+    "טובר אחזקות בע\"מ": {
+      "kind": "company",
+      "id": 515347631,
+      "name": "טובר אחזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "טובר נדלן בע\"מ": {
+      "kind": "company",
+      "id": 515664316,
+      "name": "טובר נדלן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "טונר ישראל": null,
+    "טועמיה": {
+      "kind": "association",
+      "id": 580557676,
+      "name": "טועמיה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "טליה איפור וסירוק": null,
+    "טרקלין אולמות ואירועים בע\"מ": {
+      "kind": "company",
+      "id": 514564863,
+      "name": "טרקלין אולמות ואירועים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "י.ברסקי - איי בי תקשורת בע\"מ": {
+      "kind": "company",
+      "id": 515577468,
+      "name": "י.ברסקי - איי בי תקשורת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "י.ג. באטומי אחזקות בע\"מ": null,
+    "י.ג. גרינבוקס ייעוץ ויזמות בע\"מ": null,
+    "י.ד הדרים יזמות בניה ופרויקטים בע\"מ": {
+      "kind": "company",
+      "id": 515345072,
+      "name": "י.ד הדרים יזמות בניה ופרויקטים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "י.ס. אנרגיה מתחדשת": null,
+    "י.ק.ז. גרופ בע\"מ": {
+      "kind": "company",
+      "id": 515936086,
+      "name": "י.ק.ז. גרופ בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "י.ש.א. לניאדו השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516545076,
+      "name": "י.ש.א. לניאדו השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יאלון (הרחבה 1983) בע\"מ": null,
+    "יו אס טקסס בע\"מ": {
+      "kind": "company",
+      "id": 514488840,
+      "name": "יו אס טקסס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יו.יו. שיווק בע\"מ": null,
+    "יואב את רמי בניה ,ניהול ופיקוח בע\"מ": {
+      "kind": "company",
+      "id": 514932243,
+      "name": "יואב את רמי בניה, ניהול ופיקוח בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יואל דיקשטיין תיירות": null,
+    "יובלים": null,
+    "יונתן מנור מחשבים ורשתות": null,
+    "יוסף אילנברג י.נ.נ.א. שירותי אחזקה והפצה": null,
+    "יוסף עשת": null,
+    "יופי של ריהוט סניף אלעד": null,
+    "יופיי פיננסים בע\"מ": {
+      "kind": "company",
+      "id": 514672575,
+      "name": "יופיי פיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יוקרתית": null,
+    "יין ומשקאות לוק": null,
+    "יעד שיאן נדל\"ן בע\"מ": null,
+    "יעד שיאן ניהול פרויקטים ויזמות בע\"מ": null,
+    "ירושלים של זהב מכירות פומביות בע\"מ": {
+      "kind": "company",
+      "id": 515606366,
+      "name": "ירושלים של זהב מכירות פומביות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יריד החסידות בע\"מ": null,
+    "ישיבת ספינקא בארץ ישראל": {
+      "kind": "association",
+      "id": 580052769,
+      "name": "ישיבת ספינקא בארץ ישראל (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כ\"ט בנובמבר מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516854882,
+      "name": "כ''ט בנובמבר מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כאיל תערוג נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515350387,
+      "name": "כאיל תערוג נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כהן אודליה": null,
+    "כוכב התקשורת (מלאך ישראל)": null,
+    "כידון": null,
+    "כל בו הכוכב": null,
+    "כסטלס": null,
+    "כפתור ופרח אורלוגין": null,
+    "כריכית ויס בע\"מ": {
+      "kind": "company",
+      "id": 511611212,
+      "name": "כריכית ויס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כרמים נווה פת בע\"מ": null,
+    "כרמים קרתא בן גמלא 6-8-10 בע\"מ": null,
+    "כרמים קרתא בן גמלא ברוריה בע\"מ": {
+      "kind": "company",
+      "id": 516526746,
+      "name": "כרמים קרתא בן גמלא ברוריה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כרמים קרתא סן מרטין 4+6 בע\"מ": {
+      "kind": "company",
+      "id": 516526738,
+      "name": "כרמים קרתא סן מרטין 4+6 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כתב סופר -תמשישי קדושה בע\"מ": null,
+    "ל.שני": null,
+    "להתענג": null,
+    "לואן וייז (ישראל) בע\"מ": null,
+    "לואן וייז בע\"מ": null,
+    "לוי -נוי דוד נחום": null,
+    "לוי רהיטים": null,
+    "לוי שיווק": null,
+    "ליברמן רהיטים": null,
+    "לידר טופ קפיטל מימון ויעוץ בע\"מ": null,
+    "ליזרוביץ ישראל": null,
+    "לינדר משכנתאות והלוואות": null,
+    "ליצ'י - בגדי ילדים": null,
+    "לרנר יעקב": null,
+    "מ לסר בע\"מ": {
+      "kind": "company",
+      "id": 510228182,
+      "name": "מ לסר בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מ.ב.צ. יזמות והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 512283599,
+      "name": "מ.ב.צ. יזמות והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מ.ישראל אספקת דלק": null,
+    "מ.פ. טופז החזקות בע\"מ": null,
+    "מ.פלאטיניום בע\"מ": {
+      "kind": "company",
+      "id": 515931590,
+      "name": "מ. פלאטיניום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מ.צ.ג ייעוץ והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515428456,
+      "name": "מ.צ.ג ייעוץ והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מ.ר תקשורת": null,
+    "מאגר אוקיאנוס במרינה החדשה בע\"מ": {
+      "kind": "company",
+      "id": 515825834,
+      "name": "מאגר אוקיאנוס במרינה החדשה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מאה שערים השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516903986,
+      "name": "מאה שערים השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מאני טיים שירותים פיננסים בע\"מ": {
+      "kind": "company",
+      "id": 514821180,
+      "name": "מאני טיים שירותים פיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מאסטרפון": null,
+    "מאפית מצות באיאן": null,
+    "מאפית מצות קוממיות בע\"מ": {
+      "kind": "company",
+      "id": 514569540,
+      "name": "מאפית מצות קוממיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מברוק ולחיים בע\"מ": {
+      "kind": "company",
+      "id": 516542404,
+      "name": "מברוק ולחיים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מבשלות בירת הגולן בע\"מ": {
+      "kind": "company",
+      "id": 514321447,
+      "name": "מבשלות בירת הגולן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מבשלת הגולן א.ח.ר (2009)": {
+      "kind": "partnership",
+      "id": 550235238,
+      "name": "מבשלת הגולן א.ח.ר (2009)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגדלור - מוצרים אלטרנטיביים בע\"מ": null,
+    "מגדלור - קרן השקעות בע\"מ": {
+      "kind": "company",
+      "id": 515779569,
+      "name": "מגדלור- קרן השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגדלור לקהילה ולרוח (ע\"ר)": {
+      "kind": "association",
+      "id": 580829752,
+      "name": "מגדלור לקהילה ולרוח (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגדלי קטמון מקבוצת בית ירושלמי - גראנד יזמות בע\"מ": {
+      "kind": "company",
+      "id": 515899789,
+      "name": "מגדלי קטמון מקבוצת בית ירושלמי - גראנד יזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגורים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516603156,
+      "name": "מגורים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגן אפיקים בע\"מ": {
+      "kind": "company",
+      "id": 516354446,
+      "name": "מגן אפיקים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגן דוד אדום": null,
+    "מוזס יהונתן בע\"מ": {
+      "kind": "company",
+      "id": 515462190,
+      "name": "מוזס יהונתן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסדות הגר\"א רמת בית שמש (ע\"ר)": {
+      "kind": "association",
+      "id": 580354462,
+      "name": "מוסדות הגר\"א רמת בית שמש (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסדות חסידי בעלזא -בית שמש": {
+      "kind": "association",
+      "id": 580385284,
+      "name": "מוסדות חסידי בעלזא - בית שמש (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסדות מחנה ישראל מרכז להנחלת ערכי היהדות בירושלים (ע\"ר)": {
+      "kind": "association",
+      "id": 580026284,
+      "name": "מוסדות מחנה ישראל מרכז להנחלת ערכי היהדות בירושלים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסך מרכזי לרכב יפני - חולון בע\"מ": {
+      "kind": "company",
+      "id": 511679854,
+      "name": "מוסך מרכזי לרכב יפני - חולון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מועצה אזורית מרחבים": null,
+    "מועצה מקומית אלפי מנשה": null,
+    "מועצה מקומית חריש": null,
+    "מוצרים זה ברור": null,
+    "מוריה שפרינגר- מיתוג": null,
+    "מורינגה עץ הפלא בע\"מ": {
+      "kind": "company",
+      "id": 515420263,
+      "name": "מורינגה עץ הפלא בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מחסן המזרנים": null,
+    "מחשבת מערכות מידע בע\"מ": {
+      "kind": "company",
+      "id": 515260412,
+      "name": "מחשבת מערכות מידע בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מטעמים": null,
+    "מטרה הפקות בע\"מ": {
+      "kind": "company",
+      "id": 515984094,
+      "name": "מטרה הפקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מי נעם תאגיד מים וביוב אזורי בע\"מ": null,
+    "מידר גני עדן בע\"מ": {
+      "kind": "company",
+      "id": 516200441,
+      "name": "מידר גני עדן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מידר לב העיר בע\"מ": {
+      "kind": "company",
+      "id": 516244159,
+      "name": "מידר לב העיר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מיטב מימון שותפות מוגבלת": null,
+    "מיכאל גבאי": null,
+    "מיכל סבה - משרד רו\"ח וייעוץ מס": null,
+    "מילשטיין אהובה": null,
+    "מימון אגריפס בע\"מ": {
+      "kind": "company",
+      "id": 516425931,
+      "name": "מימון אגריפס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מימון פעמון בע\"מ": {
+      "kind": "company",
+      "id": 516427135,
+      "name": "מימון פעמון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מיקרוקיט בע\"מ": {
+      "kind": "company",
+      "id": 516614476,
+      "name": "מיקרוקיט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מירב בן עבו - פרודקשיין": null,
+    "מישל ייזום ובניה בע\"מ": null,
+    "מכבסת האמוראים": null,
+    "מכבסת שלגית": null,
+    "מכולת הקריה": null,
+    "מכולתת ציטליין 20": null,
+    "מכון ואנוהו": null,
+    "מכון חינוך וסיוע בית רבקה באידיש חסידי (ע\"ר)": null,
+    "מכון לאוקמי גירסא": null,
+    "מכון לייבדיק": null,
+    "מכון סופרי המלך": null,
+    "מכללה אקדמית הדסה": null,
+    "מלאך תוכנה בע\"מ": {
+      "kind": "company",
+      "id": 512789751,
+      "name": "מלאך תוכנה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מלול מאור": null,
+    "מליבו אפי קפיטל ייזום בע\"מ": {
+      "kind": "company",
+      "id": 515031391,
+      "name": "מליבו - אפי קפיטל ייזום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מלכות וקסברגר בע\"מ": {
+      "kind": "company",
+      "id": 514392927,
+      "name": "מלכות וקסברגר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מלכות שטריימלאך": null,
+    "ממתקי שהכל בע\"מ": null,
+    "מנג'ט": null,
+    "מנדלוביץ בתיה יהודית": null,
+    "מנוס - אליעזר הלוי 28 בע\"מ": {
+      "kind": "company",
+      "id": 515066934,
+      "name": "מנוס - אליעזר הלוי 28 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - בוליביה 4 בע\"מ": {
+      "kind": "company",
+      "id": 514902063,
+      "name": "מנוס - בוליביה 4 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - בר יוחאי 18 בע\"מ": {
+      "kind": "company",
+      "id": 514788694,
+      "name": "מנוס - בר יוחאי 18 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - דידס 6 בע\"מ": {
+      "kind": "company",
+      "id": 515136976,
+      "name": "מנוס - דידס 6 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - ים סוף 3 בע\"מ": {
+      "kind": "company",
+      "id": 515451805,
+      "name": "מנוס - ים סוף 3 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - ים סוף 5 בע\"מ": {
+      "kind": "company",
+      "id": 514832773,
+      "name": "מנוס - ים סוף 5 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - ריש לקיש 10 בע\"מ": {
+      "kind": "company",
+      "id": 514960335,
+      "name": "מנוס - ריש לקיש 10 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס - שירותי ניהול בע\"מ": {
+      "kind": "company",
+      "id": 514664622,
+      "name": "מנוס - שירותי ניהול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס בן יפונה 8 בע\"מ": {
+      "kind": "company",
+      "id": 515755601,
+      "name": "מנוס בן יפונה 8 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס השיירות 3 בע\"מ": {
+      "kind": "company",
+      "id": 514939925,
+      "name": "מנוס השיירות 3 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס- מקסיקו 22 בע\"מ": {
+      "kind": "company",
+      "id": 515748622,
+      "name": "מנוס- מקסיקו 22 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנוס-אלעזר המודעי 4 בע\"מ": {
+      "kind": "company",
+      "id": 514856673,
+      "name": "מנוס-אלעזר המודעי 4 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מנטה בייגל": null,
+    "מסגרות איכות אי 1": null,
+    "מסגריית פאלוך": null,
+    "מעדנית אגמים": null,
+    "מעון ביתך": null,
+    "מפעלות חסדי יוסף לחינוך ונתינה (ע\"ר)": {
+      "kind": "association",
+      "id": 580126167,
+      "name": "מפעלות חסדי יוסף לחינוך ונתינה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מפעלי חינוך וחסד": {
+      "kind": "association",
+      "id": 580684595,
+      "name": "מפעלי חינוך וחסד (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מפרץ עכו-חיפה 1934 בע\"מ": {
+      "kind": "company",
+      "id": 520009424,
+      "name": "מפרץ עכו-חיפה 1934 בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מצות יד מהודרות (בית שמש)": null,
+    "מקור הברכה": {
+      "kind": "association",
+      "id": 580180768,
+      "name": "מקור הברכה",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מקור חיים החדשה בע\"מ": {
+      "kind": "company",
+      "id": 515588754,
+      "name": "מקור חיים החדשה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מקסיקלאב אינווסט בע\"מ": {
+      "kind": "company",
+      "id": 516473691,
+      "name": "מקסיקלאב אינווסט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרומי צפת העתיקה בע\"מ": {
+      "kind": "company",
+      "id": 515743227,
+      "name": "מרומי צפת העתיקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מריבו 11 בע\"מ": {
+      "kind": "company",
+      "id": 514770858,
+      "name": "מריבו 11 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מריבו 6-8 בע\"מ": {
+      "kind": "company",
+      "id": 514853134,
+      "name": "מריבו 6-8 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכוס נכסים והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 516470036,
+      "name": "מרכוס נכסים והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכז הפעמון - חברה לניהול ואחזקה 92' בע\"מ": {
+      "kind": "company",
+      "id": 511731077,
+      "name": "מרכז הפעמון - חברה לניהול ואחזקה 92' בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכז לסת\"ם": null,
+    "מרכז ערד להכרת היהדות (ע\"ר)": {
+      "kind": "association",
+      "id": 580134088,
+      "name": "מרכז ערד להכרת היהדות (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכז רפואה, שיקום וסיעוד בית הדר (ע\"ר)": {
+      "kind": "association",
+      "id": 580540870,
+      "name": "מרכז רפואה\" שיקום וסיעוד בית הדר (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכז תורה וחינוך חצור הגלילית": {
+      "kind": "association",
+      "id": 580008910,
+      "name": "מרכז תורה וחינוך חצור הגלילית (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכזול": {
+      "kind": "partnership",
+      "id": 540172822,
+      "name": "מרכזול",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרפאת שיניים": null,
+    "מרשל מוטורס": null,
+    "מש\"י - מרכז שקום ילדים": {
+      "kind": "association",
+      "id": 580326239,
+      "name": "מש\"י - מרכז שקום ילדים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משה שמשון": null,
+    "משולם פתרונות תשלום בע\"מ": null,
+    "משי נט מ.נ. בע\"מ": {
+      "kind": "company",
+      "id": 514722669,
+      "name": "משי נט מ.נ בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משכנטיים": null,
+    "משכני הדרים בע\"מ": {
+      "kind": "company",
+      "id": 513661579,
+      "name": "משכני הדרים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משכנתא 10": null,
+    "משקיעים בירושלים ייעוץ והשקעות נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515806263,
+      "name": "משקיעים בירושלים ייעוץ והשקעות נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משרד הדריכלות ווקסלר ישראל": null,
+    "מתאים לך יופי": null,
+    "מתבגרים לחיים": null,
+    "מתד ייזום והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 510846561,
+      "name": "מתד ייזום והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מתחדשים בעיר מקבוצת בית ירושלמי שלי בע\"מ": null,
+    "נגריית גולדברג": null,
+    "נגריית גרר (פרפקשן -מטבחי יוקרה)": null,
+    "נדל\"ן מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516594595,
+      "name": "נדל\"ן מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נדרים קארד בע\"מ": {
+      "kind": "company",
+      "id": 516850351,
+      "name": "נדרים קארד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נוה (מנהיים) מעבדות אורטופדיות בע\"מ": {
+      "kind": "company",
+      "id": 511269599,
+      "name": "נוה (מנהיים) מעבדות אורטופדיות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נווה אור ש.פ. יזמות בע\"מ": {
+      "kind": "company",
+      "id": 514956721,
+      "name": "נווה אור ש.פ. יזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופטק מחשבים": null,
+    "נופי אילן הירוקה בע\"מ": {
+      "kind": "company",
+      "id": 515837086,
+      "name": "נופי אילן הירוקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופי בית הכרם בע\"מ": {
+      "kind": "company",
+      "id": 515786085,
+      "name": "נופי בית הכרם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופי צפת 2019 בע\"מ": {
+      "kind": "company",
+      "id": 515977973,
+      "name": "נופי צפת 2019 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופי ראש פינה בע\"מ": {
+      "kind": "company",
+      "id": 517041307,
+      "name": "נופי ראש פינה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופים מקבוצת בית ירושלמי והדס קפיטל בע\"מ": {
+      "kind": "company",
+      "id": 516943354,
+      "name": "נופים מקבוצת בית ירושלמי והדס קפיטל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נופך - דניאל ייזום נדל\"ן בע\"מ": null,
+    "נחלת שלמה זלמן (ע\"ר)": {
+      "kind": "association",
+      "id": 580643229,
+      "name": "נחלת שלמה זלמן (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נטליה ת.א.א. השקעות": null,
+    "ניגון טויס בע\"מ": {
+      "kind": "company",
+      "id": 515855468,
+      "name": "ניגון טויס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ניו אייג' מרקט בע\"מ": {
+      "kind": "company",
+      "id": 516795283,
+      "name": "ניו אייג' מרקט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ניו בורן / פיקאבו": null,
+    "ניו סטאר סילבר בע\"מ": {
+      "kind": "company",
+      "id": 514264753,
+      "name": "ניו סטאר סילבר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ניימן השקעות ויזמות בע\"מ": {
+      "kind": "company",
+      "id": 515516201,
+      "name": "ניימן השקעות ויזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נימבל פיננסים בע\"מ": {
+      "kind": "company",
+      "id": 516516721,
+      "name": "נימבל פיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נצפה נוף מקבוצת בית ירושלמי שלי בע\"מ": {
+      "kind": "company",
+      "id": 515901890,
+      "name": "נצפה נוף מקבוצת בית ירושלמי שלי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נקודה מיזוג אויר בע\"מ": {
+      "kind": "company",
+      "id": 515770147,
+      "name": "נקודה מיזוג אויר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נשר נכסים עם עתיד בע\"מ": {
+      "kind": "company",
+      "id": 516882248,
+      "name": "נשר נכסים עם עתיד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נתניה נדלן סנטר פרמיום בע\"מ": {
+      "kind": "company",
+      "id": 516695079,
+      "name": "נתניה נדלן סנטר פרמיום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נתניה סי- שור דיבלופמנט קו בע\"מ": {
+      "kind": "company",
+      "id": 520003823,
+      "name": "נתניה סי- שור דיבלופמנט קו בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ס. ציקורל השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516468949,
+      "name": "ס. ציקורל השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סאנסקרין ורוד בע\"מ": {
+      "kind": "company",
+      "id": 517274155,
+      "name": "סאנסקרין ורוד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סאנפלאוור בע\"מ": {
+      "kind": "company",
+      "id": 516704707,
+      "name": "סאנפלאוור בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סביונים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516988755,
+      "name": "סביונים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סולארא בע\"מ": {
+      "kind": "company",
+      "id": 510998149,
+      "name": "סולארא בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סופרמן - מרכולים בע\"מ": {
+      "kind": "company",
+      "id": 516474061,
+      "name": "סופרמן -מרכולים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סוקר גרביים ואביזרי שיער": null,
+    "סחלבים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 517034138,
+      "name": "סחלבים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סט": null,
+    "סטודיו אורגינל": null,
+    "סי.אר.וי. בע\"מ": {
+      "kind": "company",
+      "id": 512019837,
+      "name": "סי.אר.וי. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סיטי גן": null,
+    "סייפקאש אפליקציות בע\"מ": {
+      "kind": "company",
+      "id": 516016045,
+      "name": "סייפקאש אפליקציות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סלון פאות ב .גולדמן": null,
+    "סמארטסוויץ' בע\"מ": {
+      "kind": "company",
+      "id": 515865947,
+      "name": "סמארטסוויץ' בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סמינר דעת ניסים (ע\"ר)": {
+      "kind": "association",
+      "id": 580657393,
+      "name": "סמינר דעת ניסים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סמינר למורות ולגננות הליכות בית יעקב": {
+      "kind": "association",
+      "id": 580386100,
+      "name": "סמינר למורות ולגננות הליכות בית יעקב (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סמינר מרכז בית יעקב למורות ולגננות -פתח תקוה": {
+      "kind": "association",
+      "id": 580403350,
+      "name": "סמינר מרכז בית יעקב למורות ולגננות - פתח תקוה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סנטר דנטל (ד\"ר סורובסקי)": null,
+    "סנטר המושבה 975 בע\"מ": {
+      "kind": "company",
+      "id": 516706975,
+      "name": "סנטר המושבה 975 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סנטר המושבה בע\"מ": {
+      "kind": "company",
+      "id": 516707221,
+      "name": "סנטר המושבה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סנטר מערב העיר בע\"מ": {
+      "kind": "company",
+      "id": 516707148,
+      "name": "סנטר מערב העיר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סעידוב מתכות בע\"מ": {
+      "kind": "company",
+      "id": 514366285,
+      "name": "סעידוב מתכות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ספרי גאולה 2006 בע\"מ": {
+      "kind": "company",
+      "id": 513771444,
+      "name": "ספרי גאולה 2006 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "סתיו - עוגות מעוצבות": null,
+    "ע.ר. קרתא בצפת בע\"מ": {
+      "kind": "company",
+      "id": 516528908,
+      "name": "ע.ר. קרתא בצפת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ע.ר. קרתא הפעמון בע\"מ": {
+      "kind": "company",
+      "id": 516083995,
+      "name": "ע.ר קרתא הפעמון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ע.ר. קרתא נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515603462,
+      "name": "ע.ר. קרתא נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ע.ר. קרתא נכסים בע\"מ": {
+      "kind": "company",
+      "id": 516493285,
+      "name": "ע.ר. קרתא נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ע.ר. קרתא סנטר רמת בית שמש (משכנות שיא) בע\"מ": {
+      "kind": "company",
+      "id": 516544269,
+      "name": "ע.ר. קרתא סנטר רמת בית שמש (משכנות שיא) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עבוד ט. לוי השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516462835,
+      "name": "עבוד ט. לוי השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עדיף יזמות פיתוח בע\"מ": null,
+    "עובדיה הררי - מיקאסה": null,
+    "עולם הדקורציה": null,
+    "עידית ייזום והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515066603,
+      "name": "עידית ייזום והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עידן תשמישי קדושה- בגדי שש": null,
+    "עיצוב פנים הום סטיילינג": null,
+    "עיר וגן מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 517090817,
+      "name": "עיר וגן מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עיריית ביתר עילית": null,
+    "עיריית חיפה": null,
+    "עיריית כפר סבא": null,
+    "עיריית לוד": null,
+    "עיריית מגדל העמק": null,
+    "עיריית נצרת עילית": null,
+    "עיריית עפולה": null,
+    "עיריית קריית אונו": null,
+    "עיריית קריית מלאכי": null,
+    "על -רד הנדסת מעליות (1992)בע\"מ": {
+      "kind": "company",
+      "id": 511703936,
+      "name": "על-רד הנדסת מעליות (1992) בע\"מ",
+      "confidence": "exact",
+      "via": "b"
+    },
+    "עמותת אדני הקודש בעלז\"א": null,
+    "עמותת אור חיה - המרכז לאישה היהודיה": null,
+    "עמותת איל\"ה - איכות יחודית לבית היהודי": null,
+    "עמותת אסנט - היבטים פנימיים של סגנון החיים היהודי": null,
+    "עמותת דרכי שמחה": null,
+    "עמותת ועד הורים ירושלמי": null,
+    "עמותת חייל - חיים למוצאיהם": null,
+    "עמותת ישיבת שפתי צדיק קריה חסידית חצור הגלילית": null,
+    "עמותת כולל אברכים תורה תמימה": null,
+    "עמותת מביאים ברכה וסיוע": {
+      "kind": "association",
+      "id": 580724995,
+      "name": "עמותת מביאים ברכה וסיוע (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עמותת משכנותיך ישראל ירושלים": null,
+    "עמותת נחלת יעקב עמנואל": null,
+    "עמותת עוגן - הקרן להלוואות ללא ריבית": null,
+    "עמותת צדקה וחסד בערד ברדיטשוב": null,
+    "עמותת שערי דעת לחינוך הוראה וחסד": null,
+    "עמותת שערי ישיבה": null,
+    "עמותת תורת חסד בגליל": null,
+    "עמינדב בוטיק בע\"מ": null,
+    "עמינדב רזידנס בע\"מ": {
+      "kind": "company",
+      "id": 515655058,
+      "name": "עמינדב רזידנס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "עריכת וידאו": null,
+    "ערך מיבוי עירוני וניהול נדל\"ן בע\"מ": null,
+    "ערערא עיצוב פנים": null,
+    "עתיד - חברה לאדריכלות בע\"מ": {
+      "kind": "company",
+      "id": 515215697,
+      "name": "עתיד - חברה לאדריכלות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פאות צילי בינלאומי בע\"מ": {
+      "kind": "company",
+      "id": 515998482,
+      "name": "פאות צילי בינלאומי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פאות רבקי": null,
+    "פאי נשיונל בע\"מ": {
+      "kind": "company",
+      "id": 514249952,
+      "name": "פאי נשיונל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פאיימי בע\"מ": {
+      "kind": "company",
+      "id": 515033553,
+      "name": "פאיימי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פוד שפע והצלחה בע\"מ": {
+      "kind": "company",
+      "id": 517180337,
+      "name": "פוד שפע והצלחה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פוטו מגנט": null,
+    "פוטניצאל": null,
+    "פופקורן אחזקות בנדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515214153,
+      "name": "פופקורן אחזקות בנדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פי.וי.נכסים בע\"מ": {
+      "kind": "company",
+      "id": 513080200,
+      "name": "פי.וי. נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פיימנס - הלבשה אלגנטית לגברים": null,
+    "פינטקה, שותפות כללית": {
+      "kind": "partnership",
+      "id": 540321700,
+      "name": "פינטקה, שותפות כללית",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פיקנטי ע.מ.": null,
+    "פלא פיי בע\"מ": {
+      "kind": "company",
+      "id": 515020147,
+      "name": "פלא פיי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פלטבוש סחר והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 515124584,
+      "name": "פלטבוש סחר והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פלטרין השקעות בע\"מ": {
+      "kind": "company",
+      "id": 514162296,
+      "name": "פלטרין השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פליגלמן שלמה עו'ד": null,
+    "פליי פאנקשן ישראל בע\"מ": {
+      "kind": "company",
+      "id": 514972330,
+      "name": "פליי פאנקשן ישראל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פני העיר ב. ש. מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516712254,
+      "name": "פני העיר ב.ש. מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פנינת בזלת בע\"מ": {
+      "kind": "company",
+      "id": 517041315,
+      "name": "פנינת בזלת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פנינת גושן בע\"מ": {
+      "kind": "company",
+      "id": 516074564,
+      "name": "פנינת גושן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פנינת קטמון בע\"מ": {
+      "kind": "company",
+      "id": 515588762,
+      "name": "פנינת קטמון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פסגת בית וגן 2021 בע\"מ": {
+      "kind": "company",
+      "id": 516483591,
+      "name": "פסגת בית וגן 2021 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פפר פלטפורם בע\"מ": {
+      "kind": "company",
+      "id": 515772820,
+      "name": "פפר פלטפורם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרופיט אדג' בע\"מ": {
+      "kind": "company",
+      "id": 516102241,
+      "name": "פרופיט אדג' בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרי ביצועים בע\"מ": {
+      "kind": "company",
+      "id": 514333202,
+      "name": "פרי ביצועים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרי נדל\"ן בגן הפאקן בע\"מ": null,
+    "פרי נדל\"ן בגן הפאקן ג.ב בע\"מ": null,
+    "פרי נדל\"ן ברובע יזרעאל בע\"מ": {
+      "kind": "company",
+      "id": 514989219,
+      "name": "פרי נדל\"ן ברובע יזרעאל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרי ריזורט בע\"מ": {
+      "kind": "company",
+      "id": 515312445,
+      "name": "פרי ריזורט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרי שוחט אנרגיה בע\"מ": {
+      "kind": "company",
+      "id": 516048337,
+      "name": "פרי שוחט אנרגיה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרי-טק השקעותוטכנולוגיות בע\"מ": null,
+    "פרידלנד נכסים בע\"מ": {
+      "kind": "company",
+      "id": 515768497,
+      "name": "פרידלנד נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פרינט כל": null,
+    "פרפ קסם אישי": null,
+    "צ.ח. שטרן פיננסים בע\"מ": {
+      "kind": "company",
+      "id": 515671618,
+      "name": "צ.ח. שטרן פיננסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "צ.ש ערד": null,
+    "צ.ש.ש.א. החברה להתחדשות נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515030435,
+      "name": "צ.ש.ש.א. החברה להתחדשות נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "צ'יינג' יפתח דרויס": null,
+    "צאן ברזל - אליאנס בע\"מ": {
+      "kind": "company",
+      "id": 514955343,
+      "name": "צאן ברזל - אליאנס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "צביקה קסלר": null,
+    "צויבל אלעזר": null,
+    "ציון תורג'מן בע\"מ": {
+      "kind": "company",
+      "id": 513910752,
+      "name": "ציון תורג'מן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "צמיגי יוסף": null,
+    "צפורה מסעי א\"י בע\"מ": {
+      "kind": "company",
+      "id": 512310160,
+      "name": "צפורה מסעי א\"י בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "צרכניית אחיעזר": null,
+    "צרכנית ברכת השדה": null,
+    "ק.י ברקת השקעות מתקדמות בנדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 516280799,
+      "name": "ק.י ברקת השקעות מתקדמות בנדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ק.י ספיר השקעות וסוכנויות בע\"מ": {
+      "kind": "company",
+      "id": 515088995,
+      "name": "ק.י. ספיר השקעות וסוכנויות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קאש פויינט השקעות": null,
+    "קבוצת אהרוני (מ.א.) יזום והשקעות בע\"מ": {
+      "kind": "company",
+      "id": 512828492,
+      "name": "קבוצת אהרוני (מ.א) יזום והשקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קבוצת אלדד פרי בע\"מ": {
+      "kind": "company",
+      "id": 514911080,
+      "name": "קבוצת אלדד פרי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קבוצת אלדד פרי ניהול בע\"מ": {
+      "kind": "company",
+      "id": 514989227,
+      "name": "קבוצת אלדד פרי - ניהול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קבוצת בית ירושלמי שלי בע\"מ": {
+      "kind": "company",
+      "id": 515887487,
+      "name": "קבוצת בית ירושלמי שלי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קדמה מגורים בע\"מ": {
+      "kind": "company",
+      "id": 516917325,
+      "name": "קדמה מגורים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קוואלטי הנדסה פיננסית 2014 בע\"מ": null,
+    "קויט אליהו": null,
+    "קומפיט נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 515102762,
+      "name": "קומפיט נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קונסול ייעוץ וניהול בע\"מ": {
+      "kind": "company",
+      "id": 515957397,
+      "name": "קונסול ייעוץ וניהול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קונסנפנסיון בע\"מ": {
+      "kind": "company",
+      "id": 515794105,
+      "name": "קונסנפנסיון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קופשיץ יהודית": null,
+    "קופת חולים מאוחדת": null,
+    "קוקטייל": null,
+    "קידום פרוייקטים שיקומיים ב.ה. בע\"מ": {
+      "kind": "company",
+      "id": 513295170,
+      "name": "קידום פרוייקטים שיקומיים ב.ה. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קיי.אם .אר הירוקה בע\"מ": {
+      "kind": "company",
+      "id": 515546133,
+      "name": "קיי. אם. אר. הירוקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קינדר טויס גנים ח.ר. בע\"מ": {
+      "kind": "company",
+      "id": 516011780,
+      "name": "קינדר טויס גנים ח.ר. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קינדר טויס צעצועי הכוכבים בע\"מ": {
+      "kind": "company",
+      "id": 515546679,
+      "name": "קינדר טויס צעצועי הכוכבים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קיפרמן מהנדסים ויועצים": null,
+    "קלינג": null,
+    "קמפוס שטראוס אפיקי לומדה": {
+      "kind": "association",
+      "id": 580573384,
+      "name": "קמפוס שטראוס אפיקי לומדה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קנה פלסט בע\"מ": {
+      "kind": "company",
+      "id": 511026924,
+      "name": "קנה פלסט בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קניון לב הים עתלית בע\"מ": {
+      "kind": "company",
+      "id": 516305752,
+      "name": "קניון לב הים עתלית בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קפיטל מוטורס בע\"מ": {
+      "kind": "company",
+      "id": 515002020,
+      "name": "קפיטל מוטורס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קציר אוטומציות": null,
+    "קראוון ניצנים": null,
+    "קרגו אשראי לצמיחה בע\"מ": null,
+    "קרדיט שופ בע\"מ": null,
+    "קרויזר הדפסות קלף": null,
+    "קרמיק דיפו בע\"מ": {
+      "kind": "company",
+      "id": 513825943,
+      "name": "קרמיק דיפו בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרן להחזקת תורה רמת בית שמש א' (ע\"ר)": {
+      "kind": "association",
+      "id": 580520385,
+      "name": "קרן להחזקת תורה רמת בית שמש א' (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרן סיגמא סיטי 2 נדל\"ן שותפות מוגבלת": null,
+    "קרתא אחזקות בע\"מ": {
+      "kind": "company",
+      "id": 516103710,
+      "name": "קרתא אחזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא בגילה בע\"מ": {
+      "kind": "company",
+      "id": 516455029,
+      "name": "קרתא בגילה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא בסנהדריה בע\"מ": {
+      "kind": "company",
+      "id": 516473170,
+      "name": "קרתא בסנהדריה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא גבעת שאול בע\"מ": {
+      "kind": "company",
+      "id": 516473147,
+      "name": "קרתא גבעת שאול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה - 104 בע\"מ": {
+      "kind": "company",
+      "id": 516455102,
+      "name": "קרתא השקעה - 104 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה - 105 בע\"מ": {
+      "kind": "company",
+      "id": 516455060,
+      "name": "קרתא השקעה - 105 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה - 106 בע\"מ": {
+      "kind": "company",
+      "id": 516455037,
+      "name": "קרתא השקעה - 106 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה - 107 בע\"מ": {
+      "kind": "company",
+      "id": 516486065,
+      "name": "קרתא השקעה 107 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 101 בע\"מ": {
+      "kind": "company",
+      "id": 516451077,
+      "name": "קרתא השקעה 101 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 102 בע\"מ": {
+      "kind": "company",
+      "id": 516451135,
+      "name": "קרתא השקעה 102 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 103 בע\"מ": {
+      "kind": "company",
+      "id": 516451085,
+      "name": "קרתא השקעה 103 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 108 בע\"מ": {
+      "kind": "company",
+      "id": 516486057,
+      "name": "קרתא השקעה 108 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 109 בע\"מ": {
+      "kind": "company",
+      "id": 516486040,
+      "name": "קרתא השקעה 109 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 110 בע\"מ": {
+      "kind": "company",
+      "id": 516486032,
+      "name": "קרתא השקעה 110 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעה 111 בע\"מ": {
+      "kind": "company",
+      "id": 515718815,
+      "name": "קרתא השקעה 111 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעות בע\"מ": {
+      "kind": "company",
+      "id": 515516177,
+      "name": "קרתא השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא השקעות החדשה בע\"מ": {
+      "kind": "company",
+      "id": 516419868,
+      "name": "קרתא השקעות החדשה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא כרמים התחדשות עירונית בע\"מ": null,
+    "קרתא מגורים נכסים 2020 בע\"מ": {
+      "kind": "company",
+      "id": 516263498,
+      "name": "קרתא מגורים נכסים 2020 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא מוסיוף 6 בע\"מ": {
+      "kind": "company",
+      "id": 516432929,
+      "name": "קרתא מוסיוף 6 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קרתא משכנתות הבוכרים בע\"מ": null,
+    "קרתא תפעול בע\"מ": {
+      "kind": "company",
+      "id": 516451150,
+      "name": "קרתא תפעול בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קשר המרכז הישראלי להוראות קבע בע\"מ": {
+      "kind": "company",
+      "id": 513996132,
+      "name": "קשר המרכז הישראלי להוראות קבע בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "קשר פיננסים פאי- מ.ה. בע\"מ": {
+      "kind": "company",
+      "id": 515179398,
+      "name": "קשר פיננסים פאי- מ.ה. בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ר. offich": null,
+    "ר.פ.ב נכסים בע\"מ": {
+      "kind": "company",
+      "id": 515946143,
+      "name": "ר.פ.ב נכסים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רבקה 22 בע\"מ": {
+      "kind": "company",
+      "id": 514736453,
+      "name": "רבקה 22 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רהיטי יונה": null,
+    "רהיטי מרקוס RM": null,
+    "רובע 1 בע\"מ": {
+      "kind": "company",
+      "id": 513423863,
+      "name": "רובע 1 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רוח אביב ז'בוטינסקי קרית ים בע\"מ": {
+      "kind": "company",
+      "id": 516038379,
+      "name": "רוח אביב ז'בוטינסקי קרית ים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רוממה אחים סנטר בע\"מ": {
+      "kind": "company",
+      "id": 515966133,
+      "name": "רוממה אחים סנטר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רזידנס מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516594520,
+      "name": "רזידנס מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רינת מבואות ירושלים בע\"מ": {
+      "kind": "company",
+      "id": 515694222,
+      "name": "רינת מבואות ירושלים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ריש לקיש 5 בע\"מ": {
+      "kind": "company",
+      "id": 514776442,
+      "name": "ריש לקיש 5 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רכטשפר חנה חנצא": null,
+    "רם אדרת-סלעית בע\"מ": {
+      "kind": "company",
+      "id": 516106028,
+      "name": "רם אדרת-סלעית בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רמת אילן הירוקה בע\"מ": {
+      "kind": "company",
+      "id": 516281813,
+      "name": "רמת אילן הירוקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "רפאל אינטרנשיונל בע\"מ": null,
+    "רפאל דיזיין": null,
+    "רפאל פתרונות איכותיים": null,
+    "רפאלי - הקוטב הצפוני": null,
+    "רקפות מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516982840,
+      "name": "רקפות מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ש.י. אביעד בע\"מ": {
+      "kind": "company",
+      "id": 515363133,
+      "name": "ש.י. אביעד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ש.פיגנבוים": null,
+    "ש.שטראוס": null,
+    "שאול סגל יזמות ונדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 516215589,
+      "name": "שאול סגל יזמות ונדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שבתאי מרגלית": null,
+    "שדרות יפו 1 בע\"מ": null,
+    "שהם רהיטים": null,
+    "שורש אגור בע\"מ": {
+      "kind": "company",
+      "id": 516354305,
+      "name": "שורש אגור בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שורש מגורים בע\"מ": {
+      "kind": "company",
+      "id": 516440468,
+      "name": "שורש מגורים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שחר השקעות-י.שדות בע\"מ": {
+      "kind": "company",
+      "id": 515839975,
+      "name": "שחר השקעות - י. שדות בע\"מ",
+      "confidence": "exact",
+      "via": "b"
+    },
+    "שחר לאנשים שרוצים להתקדם בע\"מ": {
+      "kind": "company",
+      "id": 515953750,
+      "name": "שחר לאנשים שרוצים להתקדם בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שטיבלך קהל חסידים בע\"מ(חל\"צ)": null,
+    "שי - לי": null,
+    "שי דיגיטל": null,
+    "שיא החשמל והמיזוג ב\"ה בע\"מ": {
+      "kind": "company",
+      "id": 514535970,
+      "name": "שיא החשמל והמיזוג ב\"ה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שיא מימונים בע\"מ": {
+      "kind": "company",
+      "id": 516107448,
+      "name": "שיא מימונים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שיווק א.ד.ר. הגפן": null,
+    "שייע גטר שירותי ניהול ויעוץ (2012) בע\"מ": null,
+    "שילת אופטרוניקה בע\"מ": {
+      "kind": "company",
+      "id": 514123082,
+      "name": "שילת אופטרוניקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שימי משקאות": null,
+    "שיפוצים וניהול נדל\"ן": null,
+    "שלוות צפת בע\"מ": {
+      "kind": "company",
+      "id": 516924016,
+      "name": "שלוות צפת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שלית טסט מוטורס בע\"מ": null,
+    "שלמוביץ שרה טובית": null,
+    "שמחה בונים ורשביאק - מימון חכם": null,
+    "שן סמייל בע\"מ": {
+      "kind": "company",
+      "id": 515920650,
+      "name": "שן סמייל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שערי עוזיהו בע\"מ": {
+      "kind": "company",
+      "id": 515617314,
+      "name": "שערי עוזיהו בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שערים מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516438801,
+      "name": "שערים מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שפירא תאורה": null,
+    "שפע ייזום ותיווך נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 514581180,
+      "name": "שפע ייזום ותיווך נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "תאגיד המים מי לוד בע\"מ": null,
+    "תבליני כהן -סלטי נחום": null,
+    "תדיראן טלקום - שרותי תקשורת בישראל- שותפות מוגבלת": null,
+    "תדיראן טלקום(תטל) , שותפות מוגבלת": null,
+    "תהילינס 10 בע\"מ": {
+      "kind": "company",
+      "id": 514471937,
+      "name": "תהילינס 10 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "תו של רגש": null,
+    "תומכת לידה חנה אזרחי": null,
+    "תיווך": null,
+    "תכלית מזון מוכן בע\"מ": {
+      "kind": "company",
+      "id": 513828251,
+      "name": "תכלית מזון מוכן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "תכשיטים סילבר סטורי": null,
+    "תל אביב נדל\"ן סנטר": null,
+    "תמר הלר - מילה עיצוב גרפי": null,
+    "תנופה": null,
+    "תפארת": null,
+    "תפארת רכסים (ע\"ר)": {
+      "kind": "association",
+      "id": 580405496,
+      "name": "תפארת רכסים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "Kollel Torah Temimah": null,
+    "MSP": null,
+    "spaces": null,
+    "א.א חומרי בניין": null,
+    "אבי שמאים ויועצים 770 בעמ": {
+      "kind": "company",
+      "id": 515891620,
+      "name": "אבי שמאים ויועצים 770 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אביב חדש בלוד 2012 בע\"מ": {
+      "kind": "company",
+      "id": 514784578,
+      "name": "אביב חדש בלוד 2012 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אדיר 55 בע\"מ": {
+      "kind": "company",
+      "id": 512776337,
+      "name": "אדיר 55 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אהרן רינגל": null,
+    "או סקרלט": null,
+    "אוורסט בן גוריון 28 בע\"מ": {
+      "kind": "company",
+      "id": 515492833,
+      "name": "אוורסט בן גוריון 28 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אורה סמארט אייר בע\"מ": {
+      "kind": "company",
+      "id": 515816114,
+      "name": "אורה סמארט אייר בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אוריקאר תחבורה בע\"מ": {
+      "kind": "company",
+      "id": 512407222,
+      "name": "אוריקאר תחבורה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אייר סיון 2004 בע\"מ": null,
+    "אל.אר.ג'י איטום בניה ואחסנה בע\"מ": {
+      "kind": "company",
+      "id": 514943828,
+      "name": "אל.אר.ג'י איטום בניה ואחסנה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אסיה סיירוס פיתוח וייזום בע\"מ": {
+      "kind": "company",
+      "id": 513706424,
+      "name": "אסיה סיירוס פיתוח וייזום בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אפסנט מדיקל בע\"מ": {
+      "kind": "company",
+      "id": 515882041,
+      "name": "אפסנט מדיקל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אקשן טויס בע\"מ": {
+      "kind": "company",
+      "id": 516247608,
+      "name": "אקשן טויס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "אריה לדרמן החזקות בע\"מ": {
+      "kind": "company",
+      "id": 516033693,
+      "name": "אריה לדרמן החזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "באלי גלובל הולדינגס בע\"מ": {
+      "kind": "company",
+      "id": 514212570,
+      "name": "באלי גלובל הולדינגס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בהצלחה תמיד בע\"מ": {
+      "kind": "company",
+      "id": 516763133,
+      "name": "בהצלחה תמיד בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ביזי טופ בע\"מ": {
+      "kind": "company",
+      "id": 515901262,
+      "name": "ביזי טופ בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית אדיר יזמות ובניה": null,
+    "בית הצדיק בע\"מ": {
+      "kind": "company",
+      "id": 515756807,
+      "name": "בית הצדיק בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בית מדרש חניכי הישיבות נתיבות(ע\"ר)": {
+      "kind": "association",
+      "id": 580648939,
+      "name": "בית מדרש חניכי הישיבות נתיבות (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בלה מ.ב. השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516571783,
+      "name": "בלה מ.ב. השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בן אנד ברו 770 בע\"מ": {
+      "kind": "company",
+      "id": 516633542,
+      "name": "בן אנד ברו 770 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בנה בתך": null,
+    "בעל התניא אביטל בע\"מ": {
+      "kind": "company",
+      "id": 516468642,
+      "name": "בעל התניא אביטל בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא אחזקות בע\"מ": {
+      "kind": "company",
+      "id": 516717758,
+      "name": "בעל התניא אחזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא אילת בע\"מ": {
+      "kind": "company",
+      "id": 516016508,
+      "name": "בעל התניא אילת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא אפרת בע\"מ": {
+      "kind": "company",
+      "id": 516187853,
+      "name": "בעל התניא אפרת בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא בן שמן בע\"מ": {
+      "kind": "company",
+      "id": 516372919,
+      "name": "בעל התניא בן שמן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא השרון בע\"מ": {
+      "kind": "company",
+      "id": 516510310,
+      "name": "בעל התניא השרון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא התמרים בע\"מ": {
+      "kind": "company",
+      "id": 516387446,
+      "name": "בעל התניא התמרים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא מכרזים בע\"מ": {
+      "kind": "company",
+      "id": 516509866,
+      "name": "בעל התניא מכרזים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בעל התניא עפולה בע\"מ": {
+      "kind": "company",
+      "id": 516378874,
+      "name": "בעל התניא עפולה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "בראשית הירוקה בע\"מ": {
+      "kind": "company",
+      "id": 516040417,
+      "name": "בראשית הירוקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ברגר טאוורס ירושלים בע\"מ": {
+      "kind": "company",
+      "id": 515200137,
+      "name": "ברגר טאוורס ירושלים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ג'יי די סי מרפאת שיניים (ע\"ר)": {
+      "kind": "association",
+      "id": 580065050,
+      "name": "ג'יי די סי מרפאת שיניים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גדיש הירוקה בע\"מ": {
+      "kind": "company",
+      "id": 515755593,
+      "name": "גדיש הירוקה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "גלנור מנוס פינוי בינוי - דרך חברון 116 בע\"מ": null,
+    "גמילות חסדים בתפארתה(ע\"ר)": {
+      "kind": "association",
+      "id": 580802783,
+      "name": "גמילות חסדים בתפארתה (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ד. סיט השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516536083,
+      "name": "ד. סיט השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ד.ח. רומנו השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516606779,
+      "name": "ד.ח. רומנו השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דופלקס נאמן יזמות הנדסה ובניה בע\"מ": {
+      "kind": "company",
+      "id": 514745520,
+      "name": "דופלקס נאמן יזמות הנדסה ובניה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דור ודר מינוף פיננסים ויועצים בע\"מ": {
+      "kind": "company",
+      "id": 516319266,
+      "name": "דור ודר מינוף פיננסים ויועצים בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלקל אנרגיה (2004) בע\"מ": {
+      "kind": "company",
+      "id": 513592931,
+      "name": "דלקל אנרגיה (2004) בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "דלת פלוס": null,
+    "דניאל בנדר- home space": null,
+    "ה. מצנבר פאות בהזמנה אישית": null,
+    "הבית ברמות מקבוצת בית ירושלמי בע\"מ": {
+      "kind": "company",
+      "id": 516186053,
+      "name": "הבית ברמות מקבוצת בית ירושלמי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הולד מי בע\"מ": {
+      "kind": "company",
+      "id": 513933218,
+      "name": "הולד מי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הוס יהודית": null,
+    "המרכז לייעוץ משכנתאות": null,
+    "הנוטע בע\"מ": {
+      "kind": "company",
+      "id": 520002478,
+      "name": "הנוטע בעמ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "הפרדס הלבן חדרה 2023 בע\"מ": {
+      "kind": "company",
+      "id": 516793478,
+      "name": "הפרדס הלבן חדרה 2023 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "וידאה ניהול השקעות מקבוצת לאומי בע\"מ": {
+      "kind": "company",
+      "id": 515780138,
+      "name": "וידאה ניהול השקעות מקבוצת לאומי בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ולדמן ספרים": null,
+    "זאלו": null,
+    "זילברברג אברהם חיים": null,
+    "חזקי השקעות בע\"מ": {
+      "kind": "company",
+      "id": 516229457,
+      "name": "חזקי השקעות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "חלוק פלוס": null,
+    "חניכי הישיבות רמה ג' 2 (ע\"ר)": null,
+    "טובולסקי יזמות ושהקעות נדל\"ן בע\"מ": null,
+    "טי.סי.אי ניהול פרוייקטים בתמ\"א בע\"מ": null,
+    "טי.סי.אי תמ\"א הוד השרון בע\"מ": null,
+    "טי.סי.אי תמ\"א הרצליה בע\"מ": null,
+    "י. גראנאטאוויטש": null,
+    "י.ש. אזמרה יזמות בע\"מ": {
+      "kind": "company",
+      "id": 515770824,
+      "name": "י.ש אזמרה יזמות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "יהודה אנגל": null,
+    "יוד.פיי. יזמויות השקעות וייעוץ נדל\"ן בע\"מ": {
+      "kind": "company",
+      "id": 516598851,
+      "name": "יוד.פיי. יזמויות השקעות וייעוץ נדל\"ן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ימות המשיח בע\"מ": {
+      "kind": "company",
+      "id": 514226000,
+      "name": "ימות המשיח בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ישיבה ופנימיה פאר ישראל ירושלים (ע\"ר)": {
+      "kind": "association",
+      "id": 580635670,
+      "name": "ישיבה ופנימיה פאר ישראל ירושלים (ע''ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "ישיבת קמניץ ירושלים כנסת בית יצחק (ע\"ר)": {
+      "kind": "association",
+      "id": 580029239,
+      "name": "ישיבת קמניץ ירושלים כנסת בית יצחק (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "כשר אנרג'י": null,
+    "לאה קורלנסקי": null,
+    "לאומי פרטנרס בע\"מ": {
+      "kind": "company",
+      "id": 520031857,
+      "name": "לאומי פרטנרס בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "לאומי שירותי שוק ההון בע\"מ": {
+      "kind": "company",
+      "id": 511481996,
+      "name": "לאומי שירותי שוק ההון בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "לומדים היכל התורה והחסד המרכזי (ע\"ר)": {
+      "kind": "association",
+      "id": 580523264,
+      "name": "לומדים - היכל התורה והחסד המרכזי (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מגה פונים": null,
+    "מהודר": null,
+    "מוסדות ירוסלב (ע\"ר)": {
+      "kind": "association",
+      "id": 580575025,
+      "name": "מוסדות ירוסלב (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מוסדות רצון השם בית שמש (ע\"ר)": {
+      "kind": "association",
+      "id": 580515435,
+      "name": "מוסדות רצון השם - בית שמש (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מטעמי שולחן ערוך בע\"מ": {
+      "kind": "company",
+      "id": 515645844,
+      "name": "מטעמי שולחן ערוך בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מיה רימונים 770 בעמ": {
+      "kind": "company",
+      "id": 516427580,
+      "name": "מיה רימונים 770 בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מים אדירים הנדסה בע\"מ": {
+      "kind": "company",
+      "id": 513646869,
+      "name": "מים אדירים הנדסה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מיקסר בית שמש": null,
+    "מיקסר מוצרי חשמל": null,
+    "מלול שניר יצחק": null,
+    "מצות מהדרין וחבורה בע\"מ": {
+      "kind": "company",
+      "id": 514208206,
+      "name": "מצות מהדרין וחבורה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "מרכזיה בע\"מ": {
+      "kind": "company",
+      "id": 515266286,
+      "name": "מרכזיה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "משגב ציון ירושלים": {
+      "kind": "association",
+      "id": 580573921,
+      "name": "משגב ציון ירושלים (ע\"ר)",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "נאות הפסגה מדיקל 770בעמ": null,
+    "ניר גואטה גן האושר": null,
+    "סימפל": null,
+    "ספארק איי אל בע\"מ": null,
+    "עוגן סוכנות לביטוח": null,
+    "עוז תוכנה בע\"מ": {
+      "kind": "company",
+      "id": 514453224,
+      "name": "עוז תוכנה בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "פייז מדיקל בע\"מ-FIZE Medical Inc": null,
+    "פרקש": null,
+    "קול יהודה תל ציון (ע\"ר)": null,
+    "קיו מוטורס": null,
+    "קל זכות": null,
+    "קלקטה קרמיקס": null,
+    "ר.טיילור אדריכלות ועיצוב פנים": null,
+    "שותפות הבינלאומית לתמ\"א הרצליה רעננה שותפות מוגבלת": null,
+    "שמחה סטל החזקות בע\"מ": {
+      "kind": "company",
+      "id": 517202503,
+      "name": "שמחה סטל החזקות בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    },
+    "שמעון בורנשטיין": null,
+    "תשואות חן בע\"מ": {
+      "kind": "company",
+      "id": 515279396,
+      "name": "תשואות חן בע\"מ",
+      "confidence": "exact",
+      "via": "a"
+    }
+  },
+  "fuzzy": {},
+  "verified": {}
+}
