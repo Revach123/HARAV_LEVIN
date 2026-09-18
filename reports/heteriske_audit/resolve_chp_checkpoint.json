@@ -5249,7 +5249,34 @@
       "alternatives": []
     },
     "ניו בורן / פיקאבו": null,
-    "סוקר גרביים ואביזרי שיער": null
+    "סוקר גרביים ואביזרי שיער": null,
+    "סט": null,
+    "סטודיו אורגינל": null,
+    "סיטי גן": null,
+    "סלון פאות ב .גולדמן": null,
+    "סנטר דנטל (ד\"ר סורובסקי)": null,
+    "סתיו - עוגות מעוצבות": null,
+    "ע": null,
+    "עדיף יזמות פיתוח בע\"מ": {
+      "kind": "company",
+      "id": 515345379,
+      "name": "עדיף יזמות פיתוח ומסחר בע\"מ",
+      "name_en": "ADIF ENTREPRENEURSHIP DEVELOPMENT AND TRADE LTD",
+      "status": "פעילה",
+      "sub_status": null,
+      "corp_type": "פרטית",
+      "country": "ישראלית",
+      "gov": "לא",
+      "violating": null,
+      "restrictions": "מוגבלת",
+      "reg_date": "30/11/2015",
+      "purpose": "לעסוק בכל עיסוק חוקי",
+      "score": 0.875,
+      "confidence": "fuzzy",
+      "alternatives": []
+    },
+    "עובדיה הררי - מיקאסה": null,
+    "עולם הדקורציה": null
   },
   "verified": {}
 }
