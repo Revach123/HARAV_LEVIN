@@ -1,0 +1,72 @@
+name: Company Status Audit
+
+# הרצה על-פי-דרישה (workflow_dispatch) - לכל עסק ב-heteriske.com שקיבל
+# ח.פ. (מריצת heteriske-audit.yml הקודמת, reports/heteriske_audit/
+# heteriske_businesses_with_chp.json), בודק מול הרשם הרשמי (data.gov.il
+# דרך /api/lookup - ללא הגבלת קצב) האם הח.פ. קיים בפועל ומה הסטטוס שלו.
+#
+# לא מריץ מחדש את כל צינור ה-heteriske (scrape/compare/resolve) - רק
+# קורא את הפלט האחרון שכבר מחויב לריפו. ריצה קצרה (~4 דקות ל-~580 עסקים).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Prepare input from last committed heteriske audit
+        run: |
+          mkdir -p scripts/heteriske_audit/out
+          cp reports/heteriske_audit/heteriske_businesses_with_chp.json scripts/heteriske_audit/out/
+
+      - name: Check company status against the official registry
+        run: python scripts/heteriske_audit/check_company_status.py
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-status-audit-report
+          path: scripts/heteriske_audit/out/heteriske_company_status_report.*
+          retention-days: 30
+
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p reports/heteriske_audit
+          for f in heteriske_company_status_report.json heteriske_company_status_report.csv; do
+            if [ -f "scripts/heteriske_audit/out/$f" ]; then
+              cp "scripts/heteriske_audit/out/$f" "reports/heteriske_audit/$f"
+            fi
+          done
+          git add reports/heteriske_audit/heteriske_company_status_report.json \
+                   reports/heteriske_audit/heteriske_company_status_report.csv
+          if git diff --staged --quiet; then
+            echo "אין שינויים"
+          else
+            git commit -m "company-status-audit: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git pull --rebase --autostash
+            git push
+          fi
