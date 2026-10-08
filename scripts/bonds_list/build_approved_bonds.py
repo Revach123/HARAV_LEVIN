@@ -15,9 +15,7 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
      חברות שהח"פ שלהן מאושר, ורק ניירות מסוג אג"ח.
   3. תנאי הנייר:   GET api.tase.co.il/api/company/securitydata לכל אג"ח שנשמר
      (פדיון, ריבית, הצמדה, שער, תשואה...).
-  4. עדה:          טאב "עדה" בגיליון Google (אג"ח מאושרים להשקעה) + מאגר
-     היסטוריה מקומי (state.json) לחישוב ירושה: נייר חדש של חברה שכבר הופיעה
-     ברשימת עדה נחשב "עדה", אחרת "עדה?".
+  4. היסטוריה:     first_seen לכל נייר (state.json) — מתי הופיע לראשונה בסריקה.
 
 אם הסריקה נראית חלקית/חסומה (מעט מדי חברות או אפס אג"ח) הסקריפט נכשל בלי
 לדרוס את הפלט הקיים.
@@ -27,7 +25,6 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
 import concurrent.futures
 import csv
 import datetime
-import io
 import json
 import os
 import sys
@@ -37,8 +34,6 @@ import urllib.request
 HARAV_API = os.environ.get("HARAV_API", "https://harav-levin.pages.dev")
 MAYA_URL = "https://maya.tase.co.il/api/v1/companies/{id}/details"
 TERMS_URL = "https://api.tase.co.il/api/company/securitydata?securityId={id}&lang=0"
-ADA_URL = ("https://docs.google.com/spreadsheets/d/1kxI8Edo2GLxU3uYkLw9Oy3aBfaDboeVEkk5c4kSCX1s"
-           "/export?format=csv&gid=1578044802")
 
 MAX_ID = int(os.environ.get("MAYA_MAX_ID", "3000"))
 WORKERS = int(os.environ.get("WORKERS", "6"))
@@ -57,7 +52,7 @@ COLUMNS = [
     "company", "chp_number", "agch_approved", "is_private",
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
-    "ada_status", "first_seen",
+    "first_seen",
 ]
 
 
@@ -200,67 +195,19 @@ def add_terms(bonds, fetch=fetch_terms):
         })
 
 
-# ── 4. עדה + היסטוריה ───────────────────────────────────────────────────────
-def parse_ada(csv_text):
-    """מחזיר {מספר_נייר: שם_חברה} מטאב "עדה" (שורות בלי מספר נייר מדולגות)."""
-    rows = list(csv.reader(io.StringIO(csv_text)))
-    clean = lambda s: "".join(ch for ch in str(s) if ch not in "‎‏‪‫‬‭‮\xa0").strip()  # noqa: E731
-    hdr = next((i for i, r in enumerate(rows)
-                if any(clean(c) in ("שם החברה", "מס' ני\"ע", "מספר ניע") for c in r)), None)
-    if hdr is None:
-        return {}
-    cells = [clean(c) for c in rows[hdr]]
-    ci = next((i for i, c in enumerate(cells) if c == "שם החברה"), 0)
-    si = next((i for i, c in enumerate(cells) if c in ("מס' ני\"ע", "מספר ני\"ע", "מספר ניע")), 1)
-    out = {}
-    for r in rows[hdr + 1:]:
-        r = [clean(c) for c in r]
-        if len(r) > max(ci, si) and r[si].isdigit():
-            out[r[si]] = r[ci]
-    return out
-
-
+# ── 4. היסטוריית ניירות (first_seen) ────────────────────────────────────────
 def load_state():
     if os.path.exists(STATE_PATH):
         with open(STATE_PATH, encoding="utf-8") as f:
             return json.load(f)
-    return {"securities_first_seen": {}, "ada_first_seen": {}}
+    return {"securities_first_seen": {}}
 
 
-def apply_ada(bonds, ada_listed, state):
-    """ada_listed: {security_id_str: company_name} או None אם הטאב לא נמשך (אז אין שינוי בסטטוס)."""
+def apply_first_seen(bonds, state):
     first = state.setdefault("securities_first_seen", {})
     for b in bonds:
         first.setdefault(str(b["security_id"]), TODAY)
         b["first_seen"] = first[str(b["security_id"])]
-
-    if ada_listed is None:
-        for b in bonds:
-            b["ada_status"] = ""
-        return
-
-    chp_of = {str(b["security_id"]): b["chp_number"] for b in bonds}
-    ada_first = state.setdefault("ada_first_seen", {})   # ח"פ -> תאריך ראשון ברשימת עדה
-    for sid in ada_listed:
-        if sid in chp_of:
-            ada_first.setdefault(chp_of[sid], TODAY)
-    for b in bonds:
-        sid = str(b["security_id"])
-        if sid in ada_listed:
-            b["ada_status"] = "עדה"
-        elif b["chp_number"] in ada_first and b["first_seen"] > ada_first[b["chp_number"]]:
-            b["ada_status"] = "עדה"          # ירושה: הונפק אחרי שהחברה הוכיחה היתר-עדה
-        else:
-            b["ada_status"] = "עדה?"
-
-
-def fetch_ada():
-    try:
-        status, body = http_get(ADA_URL, accept="text/csv", referer="https://docs.google.com/")
-        return parse_ada(body.decode("utf-8-sig", errors="replace")) if status == 200 else None
-    except RuntimeError as e:
-        print(f"WARNING: ada tab not fetched: {e}", file=sys.stderr)
-        return None
 
 
 # ── פלט ─────────────────────────────────────────────────────────────────────
@@ -305,7 +252,7 @@ def main(companies_path=None):
 
     add_terms(bonds)
     state = load_state()
-    apply_ada(bonds, fetch_ada(), state)
+    apply_first_seen(bonds, state)
     counts = write_lists(bonds)
     os.makedirs(OUT, exist_ok=True)
     with open(STATE_PATH, "w", encoding="utf-8") as f:
