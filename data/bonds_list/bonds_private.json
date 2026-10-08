@@ -1,6 +1,6 @@
 {
  "updated": "2026-10-08",
- "count": 610,
+ "count": 608,
  "columns": [
   "security_id",
   "security_name",
@@ -960,26 +960,6 @@
    "annual_yield": 0.0,
    "base_indices": "",
    "is_tradable": true,
-   "first_seen": "2026-10-08"
-  },
-  {
-   "security_id": 1193408,
-   "security_name": "איילון הת נד",
-   "symbol": "אילון.ה",
-   "isin": "IL0011934085",
-   "security_type": "אג\"ח להמרה",
-   "company": "איילון אחזקות",
-   "chp_number": "520030677",
-   "agch_approved": "כן",
-   "is_private": "כן",
-   "redemption_date": "",
-   "annual_interest": "",
-   "linkage": "",
-   "linkage_type": "",
-   "last_price": "",
-   "annual_yield": "",
-   "base_indices": "",
-   "is_tradable": false,
    "first_seen": "2026-10-08"
   },
   {
@@ -8280,26 +8260,6 @@
    "annual_yield": -2.7,
    "base_indices": "",
    "is_tradable": true,
-   "first_seen": "2026-10-08"
-  },
-  {
-   "security_id": 1131911,
-   "security_name": "מנורה התח ג-ל",
-   "symbol": "מנמה.ג-ל",
-   "isin": "IL0011319113",
-   "security_type": "אג\"ח קונצרני",
-   "company": "מנורה מבטחים גיוס הון בע\"מ",
-   "chp_number": "513937714",
-   "agch_approved": "כן",
-   "is_private": "כן",
-   "redemption_date": "",
-   "annual_interest": "",
-   "linkage": "",
-   "linkage_type": "",
-   "last_price": "",
-   "annual_yield": "",
-   "base_indices": "",
-   "is_tradable": false,
    "first_seen": "2026-10-08"
   },
   {
