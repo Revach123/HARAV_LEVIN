@@ -12,7 +12,7 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
      (או קובץ JSON מקומי עם אותו מבנה, ארגומנט ראשון / COMPANIES_FILE).
   2. סריקת מאיה:   GET maya.tase.co.il/api/v1/companies/{id}/details לכל id
      בטווח; מתוך התגובה נלקחים corporateNo ורשימת "secrities". נשמרות רק
-     חברות שהח"פ שלהן מאושר, ורק ניירות מסוג אג"ח.
+     חברות שהח"פ שלהן מאושר, ורק ניירות מסוג אג"ח שהם סחירים (isTradable).
   3. תנאי הנייר:   GET api.tase.co.il/api/company/securitydata לכל אג"ח שנשמר
      (פדיון, ריבית, הצמדה, שער, תשואה...).
   4. היסטוריה:     first_seen לכל נייר (state.json) — מתי הופיע לראשונה בסריקה.
@@ -151,7 +151,7 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
             if not info:
                 continue
             for sec in body.get("secrities") or []:
-                if sec.get("securityId") is None or sec.get("isDeleted"):
+                if sec.get("securityId") is None or sec.get("isDeleted") or not sec.get("isTradable"):
                     continue
                 if not is_bond_type(sec.get("securityType")):
                     continue
