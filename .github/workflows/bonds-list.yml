@@ -1,0 +1,44 @@
+name: Bonds list (approved companies)
+
+# בונה מחדש כל יום את רשימת האג"ח של חברות "מאושר לאג"ח" (מאגר HARAV_LEVIN)
+# ישירות ממאיה/TASE, מפוצלת לפרטי וכללי:
+#   data/bonds_list/bonds_private.{json,csv}
+#   data/bonds_list/bonds_general.{json,csv}
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "30 3 * * *"
+  push:
+    branches:
+      - claude/serene-pasteur-02932s
+    paths:
+      - .github/workflows/bonds-list.yml
+      - scripts/bonds_list/build_approved_bonds.py
+
+permissions:
+  contents: write
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build bonds lists
+        run: python scripts/bonds_list/build_approved_bonds.py
+      - name: Commit
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/bonds_list
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "bonds-list: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash
+          git push
