@@ -45,11 +45,35 @@ OUT = os.path.join(ROOT, "data", "bonds_list")
 STATE_PATH = os.path.join(OUT, "state.json")
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
+
+# סיווג הערות החברה (notes) במאגר — אותה הגדרה כמו ב-Revach (heter_iska_lookup)
+NOTES_DISQUALIFY = {
+    'ריעותא בחכמ"א ועדים - צריך מסלול כשר', 'ריעותא בחתימה',
+    'ריעותא בתנאי החכמ"א', 'ריעותא בתנאי החכמ"א והעדים',
+    'חסר דברים המותרים', 'חסר דברים המותרים - צריך מסלול כשר',
+    'חסר דברים המותרים. הנוסח צ"ע', 'חסר חותמת',
+    'בעיה בתוקף החתימה', 'ההיתר עיסקא לא מספק',
+}
+NOTES_KNOWN_OK = {
+    'הנוסח חלש', 'הנוסח חלש - צריך מסלול כשר', 'יש סעיף בחוזה', 'מוזכר בחוזה',
+    'מאושר רק לאג"ח פרטי בלבד',
+    'לאג"ח בלבד', 'רק לאג"ח בלבד', 'לאג"ח בלבד - נוסח מהודר',
+    'היתר עיסקא לאג"ח בלבד (היום אין אג"ח)',
+    'הנוסח עדיף משל שאר הבנקים', 'מצורף לכל חוזה', 'רשום בחוזה',
+    'ההת"ע על שם הבעלים', 'צריך מסלול כשר', 'צריך השקעה כשרה',
+    'חנות - לא חברה בע"מ**', 'עמותה - לא חברה בע"מ*',
+    'שותפות לא רשומה', 'מטעם תאגיד מי שבע בלבד',
+}
+NOTES_GOYIM = {'בעלות גוי', 'מאושר מצד בעלות גוי', 'על סמך בנקים בחו"ל רוב גוים'}
+REASON_DISQUALIFY = "ריעותא בהיתר העסקה (נוסח פסול)"
+REASON_PENDING = "ממתין לבדיקה ידנית (סדרה/לא ידוע)"
+GOYIM_NOTE = "בבעלות גוי"
 TODAY = datetime.date.today().isoformat()
 
 COLUMNS = [
     "security_id", "security_name", "symbol", "isin", "security_type",
-    "company", "chp_number", "agch_approved", "is_private",
+    "asset_class", "issuer_name", "company", "chp_number", "agch_approved",
+    "is_private", "notes", "heter_reason",
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
     "first_seen",
@@ -70,6 +94,24 @@ def chp_norm(v):
 def is_bond_type(security_type):
     t = security_type or ""
     return 'אג"ח' in t or "אגח" in t or "אג''ח" in t
+
+
+def asset_class(security_type):
+    return 'אג"ח להמרה' if "להמרה" in (security_type or "") else 'אג"ח קונצרני'
+
+
+def classify_notes(notes_raw):
+    """-> (is_goyim, heter_reason). reason רק כשההערה פוסלת / טרם נבדקה (כמו ב-Revach)."""
+    n = (notes_raw or "").strip().replace("\xa0", " ")
+    if not n:
+        return False, ""
+    if n in NOTES_DISQUALIFY:
+        return False, REASON_DISQUALIFY
+    if n in NOTES_GOYIM:
+        return True, ""
+    if n in NOTES_KNOWN_OK:
+        return False, ""
+    return False, REASON_PENDING
 
 
 def http_get(url, accept="application/json", referer="https://market.tase.co.il/"):
@@ -119,9 +161,12 @@ def approved_map(companies):
             continue
         if k in out:
             continue
+        goyim, reason = classify_notes(c.get("notes"))
         out[k] = {
             "company": c.get("permit_name") or c.get("registrar_name") or "",
             "agch_approved": status,
+            "goyim": goyim,
+            "heter_reason": reason,
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
         }
     return out
@@ -161,8 +206,13 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
                     "symbol": sec.get("symbol") or "",
                     "isin": sec.get("isin") or "",
                     "security_type": sec.get("securityType") or "",
+                    "asset_class": asset_class(sec.get("securityType")),
+                    "issuer_name": (body.get("name") or "").strip(),
                     "company": info["company"],
                     "chp_number": k,
+                    "notes": GOYIM_NOTE if info["goyim"] else "",
+                    "heter_reason": info["heter_reason"],
+                    "goyim": info["goyim"],
                     "agch_approved": info["agch_approved"],
                     "is_private": info["is_private"],
                     "is_tradable": sec.get("isTradable"),
@@ -212,29 +262,43 @@ def apply_first_seen(bonds, state):
 
 # ── פלט ─────────────────────────────────────────────────────────────────────
 def write_lists(bonds):
-    def view(b):
+    def view(b, lst=""):
         r = dict(b)
         r["is_private"] = "כן" if b["is_private"] else "לא"
-        return {c: r.get(c, "") for c in COLUMNS}
+        r["list"] = lst
+        return r
 
     def allowed(b, private):
+        if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
+            return True
         if private:
             return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי")
         return (not b["is_private"]) and b["agch_approved"] in ("כן", "רק כללי")
 
-    os.makedirs(OUT, exist_ok=True)
-    counts = {}
-    for name, private in (("private", True), ("general", False)):
-        rows = sorted((view(b) for b in bonds if allowed(b, private)),
-                      key=lambda r: (r["company"], r["security_name"], r["security_id"]))
-        counts[name] = len(rows)
-        with open(os.path.join(OUT, f"bonds_{name}.json"), "w", encoding="utf-8") as f:
-            json.dump({"updated": TODAY, "count": len(rows), "columns": COLUMNS, "rows": rows},
+    def dump(name, rows, cols):
+        rows = [{c: r.get(c, "") for c in cols} for r in rows]
+        with open(os.path.join(OUT, f"{name}.json"), "w", encoding="utf-8") as f:
+            json.dump({"updated": TODAY, "count": len(rows), "columns": cols, "rows": rows},
                       f, ensure_ascii=False, indent=1)
-        with open(os.path.join(OUT, f"bonds_{name}.csv"), "w", encoding="utf-8-sig", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=COLUMNS)
+        with open(os.path.join(OUT, f"{name}.csv"), "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols)
             w.writeheader()
             w.writerows(rows)
+
+    key = lambda r: (r["company"], r["security_name"], str(r["security_id"]))  # noqa: E731
+    os.makedirs(OUT, exist_ok=True)
+    counts, merged = {}, {}
+    for name, private in (("private", True), ("general", False)):
+        rows = sorted((view(b) for b in bonds if allowed(b, private)), key=key)
+        counts[name] = len(rows)
+        dump(f"bonds_{name}", rows, COLUMNS)
+        for r in rows:
+            merged.setdefault(r["security_id"], []).append("פרטי" if private else "כללי")
+    # רשימה ממוזגת: נייר אחד בשורה אחת, עמודת list = פרטי / כללי / פרטי+כללי
+    by_id = {b["security_id"]: b for b in bonds}
+    all_rows = sorted((view(by_id[i], "+".join(sorted(l))) for i, l in merged.items()), key=key)
+    counts["all"] = len(all_rows)
+    dump("bonds_all", all_rows, COLUMNS + ["list"])
     return counts
 
 
@@ -257,7 +321,7 @@ def main(companies_path=None):
     os.makedirs(OUT, exist_ok=True)
     with open(STATE_PATH, "w", encoding="utf-8") as f:
         json.dump(state, f, ensure_ascii=False, indent=1, sort_keys=True)
-    print(f"written: private={counts['private']}, general={counts['general']}")
+    print(f"written: private={counts['private']}, general={counts['general']}, all(merged)={counts['all']}")
 
 
 if __name__ == "__main__":
