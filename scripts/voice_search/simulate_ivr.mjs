@@ -76,8 +76,12 @@ const bl = rows.find((x) => x.chp_number === '520018078');
 r = await call(env, { h1: '520018078' });
 console.log('1b', parts(r));
 assert.equal(parts(r)[0], 't-חברה פרטית'); assert.equal(parts(r)[1], 't-בנק לאומי לישראל');
-assert.equal(parts(r)[2], bl.visibility === 'פרטי' ? 't-קיים היתר עסקה פרטי' : 't-קיים היתר עסקה כללי');
+assert.equal(parts(r)[2], bl.visibility === 'פרטי' ? 't-לעסק זה יש רק היתר עסקה פרטי' : 't-קיים היתר עסקה כללי');
 assert.match(r, /=nx1,no,1,1,7,No,no,no,,1\.2,/);
+// עסק עם visibility = 'פרטי': רק היתר פרטי
+const prv = rows.find((x) => x.visibility === 'פרטי' && x.chp_number && x.chp_number !== '520018078');
+r = await call(env, { h1: prv.chp_number });
+assert.equal(parts(r)[2], 't-לעסק זה יש רק היתר עסקה פרטי'); console.log('1b2', parts(r)[1], parts(r)[2]);
 // חברה שאין לה היתר עסקה (רק ברישום)
 r = await call(env, { h1: '511111111' });
 console.log('1c', parts(r)); assert.deepEqual(parts(r).slice(0, 3), ['t-חברה ציבורית', 't-אבגד תעשיות', 't-לא קיים היתר עסקה']);
@@ -116,9 +120,14 @@ for (const q of ['הבנק לאומי', 'במק לאומי']) {
 }
 assert.equal(parts(await call(env, { m1: '2', s1_1: 'הבנק לאומי' }))[1], 't-בנק לאומי לישראל');
 assert.equal(parts(await call(env, { m1: '2', s1_1: 'חסד ואמת' }))[1], 't-עמותת חסד ואמת');
-// הרבה תוצאות -> מבקשים לדייק (ולא מקריאים)
+// הרבה תוצאות -> לא מקריאים; 1 = שם מלא יותר, 2 = ח.פ.
 r = await call(env, { m1: '2', s1_1: 'מנורה בטחון' });
-assert.match(r, /^read=t-נמצאו חברות רבות אנא אמרו את השם המלא אמרו שוב את שם החברה=s1_2,no,voice$/); console.log('2f', r);
+assert.match(r, /^read=t-הרבה מדי אפשרויות אנא אמרו את השם המלא או חפשו לפי מספר ח פ לאמירת השם המלא הקישו 1 לחיפוש לפי ח פ הקישו 2=t1_1,no,1,1,7,No,no,no,,1\.2,/); console.log('2f', r);
+assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1' }), /^read=t-אמרו שוב את שם החברה=s1_2,no,voice$/);
+assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '2' }), /=h1,no,9,5,/);
+// שם מלא יותר אחרי ההפניה: תוצאה יחידה
+r = await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1', s1_2: 'מנורה בטחון 7' });
+assert.equal(parts(r)[1], 't-מנורה בטחון 7');
 // לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
 assert.match(r, /^read=t-לא נמצאה חברה בשם הזה אמרו שוב את שם החברה=s1_2,no,voice$/);

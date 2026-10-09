@@ -48,19 +48,24 @@ function variantSets(words) {
   return { tier1, tier2 };
 }
 
-function ftsStatements(db, variant) {
+// shorts = מילים קצרות מ-3 תווים (למשל מספר): ל-FTS trigram אין בהן שימוש, אז הן מצמצמות
+// ב-LIKE על התוצאות שה-FTS כבר החזיר (זול), כדי שהן לא יגרמו לחתך שרירותי של 30 מועמדים.
+function ftsStatements(db, variant, shorts = []) {
   const expr = variant.map(ftsPhrase).join(' AND ');
+  const like = shorts.map(() => ' AND c.name_norm LIKE ?').join('');
+  const args = [expr, ...shorts.map((w) => `%${w}%`)];
+  const q = (tbl, sub) => `SELECT c.id,c.name,c.status,c.${sub} AS sub FROM ${tbl}_fts f JOIN ${tbl} c ON c.id=f.id WHERE ${tbl}_fts MATCH ?${like} LIMIT ${FETCH_LIMIT}`;
   return [
-    db.prepare(`SELECT c.id,c.name,c.status,c.corp_type AS sub FROM companies_fts f JOIN companies c ON c.id=f.id WHERE companies_fts MATCH ? LIMIT ${FETCH_LIMIT}`).bind(expr),
-    db.prepare(`SELECT c.id,c.name,c.status,c.ptype AS sub FROM partnerships_fts f JOIN partnerships c ON c.id=f.id WHERE partnerships_fts MATCH ? LIMIT ${FETCH_LIMIT}`).bind(expr),
-    db.prepare(`SELECT c.id,c.name,c.status,c.category AS sub FROM associations_fts f JOIN associations c ON c.id=f.id WHERE associations_fts MATCH ? LIMIT ${FETCH_LIMIT}`).bind(expr),
+    db.prepare(q('companies', 'corp_type')).bind(...args),
+    db.prepare(q('partnerships', 'ptype')).bind(...args),
+    db.prepare(q('associations', 'category')).bind(...args),
   ];
 }
 
 const KINDS = ['company', 'partnership', 'association'];
 
-async function fetchVariants(db, variants) {
-  const stmts = variants.flatMap((v) => ftsStatements(db, v));
+async function fetchVariants(db, variants, shorts) {
+  const stmts = variants.flatMap((v) => ftsStatements(db, v, shorts));
   const out = await db.batch(stmts);
   const rows = new Map();
   let truncated = false;
@@ -76,20 +81,23 @@ async function registryCandidates(db, query) {
   const words = normalize(query).split(' ').filter(Boolean);
   const { tier1, tier2 } = variantSets(words);
   if (!tier1.length) return { rows: [], truncated: false };
-  let got = await fetchVariants(db, tier1);
-  if (!got.rows.length && tier2.length) got = await fetchVariants(db, tier2);
+  const shorts = words.filter((w) => w.length < 3);
+  let got = await fetchVariants(db, tier1, shorts);
+  if (!got.rows.length && tier2.length) got = await fetchVariants(db, tier2, shorts);
   return got;
 }
 
 // ---------------------------------------------------------------------------
 //  היתרי עסקה (טבלת businesses)
 // ---------------------------------------------------------------------------
+// כמו lists.js: visibility = 'פרטי' = עסק שיש לו *רק* היתר עסקה פרטי (מופיע רק ברשימה הפרטית);
+// כל ערך אחר = היתר כללי. אם לאותו עסק כמה שורות והאחת מהן כללית - הוא כללי.
 export function permitIndex(businesses) {
   const byChp = new Map(), byName = new Map();
   const put = (map, key, vis) => {
     if (!key) return;
     const kind = vis === 'פרטי' ? 'פרטי' : 'כללי';
-    if (map.get(key) !== 'פרטי') map.set(key, kind);        // אם יש גם פרטי - פרטי גובר
+    if (map.get(key) !== 'כללי') map.set(key, kind);
   };
   for (const b of businesses) {
     put(byChp, digitsOnly(b.chp_number), b.visibility);
@@ -121,7 +129,7 @@ export function speechName(name) {
 
 export function describe(item, permitOf) {
   const p = permitOf(item);
-  const permit = p === 'פרטי' ? 'קיים היתר עסקה פרטי' : p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה';
+  const permit = p === 'פרטי' ? 'לעסק זה יש רק היתר עסקה פרטי' : p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה';
   return [typeLabel(item), speechName(item.name), permit];
 }
 

@@ -38,6 +38,7 @@ const CFG = {
   REC_MAX_SEC: 8,
 };
 
+const TOO_MANY_MSG = 'הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר ח פ. לאמירת השם המלא הקישו 1. לחיפוש לפי ח פ הקישו 2';
 const MENU_MSG = 'מומלץ לחפש לפי ח פ של החברה. במידה שיש לכם את מספר הח פ, הקישו 1. אם לא, הקישו 2 לחיפוש לפי שם החברה';
 
 export async function onRequest({ request, env }) {
@@ -99,6 +100,7 @@ async function round(ctx, r) {
 
   const n = await nameStep(ctx, r, note);
   if (n.body) return n.body;
+  if (n.goChp) return (await chpStep(ctx, r, '', false)).body;
 
   // כל הניסיונות לפי שם נכשלו: אם עוד לא ניסו ח.פ., מציעים אותו; אחרת מסיימים.
   if (!has(v, `h${r}`)) return (await chpStep(ctx, r, n.note, false)).body;
@@ -136,7 +138,14 @@ async function nameStep(ctx, r, note) {
 
     const found = await searchByName(env, spoken, rows);
     if (!found.items.length) { note = 'לא נמצאה חברה בשם הזה. '; continue; }
-    if (found.tooMany) { note = 'נמצאו חברות רבות. אנא אמרו את השם המלא. '; continue; }
+    if (found.tooMany) {
+      // יותר מ-MAX_LIST תוצאות: לא מקריאים. מציעים שם מלא יותר, או ח.פ.
+      const tKey = `t${r}_${a}`;
+      if (!has(v, tKey)) return { body: readTap(TOO_MANY_MSG, tKey, ['1', '2']) };
+      if (v[tKey] === '2') return { goChp: true };
+      note = '';
+      continue;
+    }
     return { body: listing(ctx, r, found.items) };
   }
   return { note };
