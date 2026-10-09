@@ -46,34 +46,15 @@ STATE_PATH = os.path.join(OUT, "state.json")
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
 
-# סיווג הערות החברה (notes) במאגר — אותה הגדרה כמו ב-Revach (heter_iska_lookup)
-NOTES_DISQUALIFY = {
-    'ריעותא בחכמ"א ועדים - צריך מסלול כשר', 'ריעותא בחתימה',
-    'ריעותא בתנאי החכמ"א', 'ריעותא בתנאי החכמ"א והעדים',
-    'חסר דברים המותרים', 'חסר דברים המותרים - צריך מסלול כשר',
-    'חסר דברים המותרים. הנוסח צ"ע', 'חסר חותמת',
-    'בעיה בתוקף החתימה', 'ההיתר עיסקא לא מספק',
-}
-NOTES_KNOWN_OK = {
-    'הנוסח חלש', 'הנוסח חלש - צריך מסלול כשר', 'יש סעיף בחוזה', 'מוזכר בחוזה',
-    'מאושר רק לאג"ח פרטי בלבד',
-    'לאג"ח בלבד', 'רק לאג"ח בלבד', 'לאג"ח בלבד - נוסח מהודר',
-    'היתר עיסקא לאג"ח בלבד (היום אין אג"ח)',
-    'הנוסח עדיף משל שאר הבנקים', 'מצורף לכל חוזה', 'רשום בחוזה',
-    'ההת"ע על שם הבעלים', 'צריך מסלול כשר', 'צריך השקעה כשרה',
-    'חנות - לא חברה בע"מ**', 'עמותה - לא חברה בע"מ*',
-    'שותפות לא רשומה', 'מטעם תאגיד מי שבע בלבד',
-}
+# הערות חברה שמסמנות בעלות גוי (כמו ב-Revach: heter_iska_lookup)
 NOTES_GOYIM = {'בעלות גוי', 'מאושר מצד בעלות גוי', 'על סמך בנקים בחו"ל רוב גוים'}
-REASON_DISQUALIFY = "ריעותא בהיתר העסקה (נוסח פסול)"
-REASON_PENDING = "ממתין לבדיקה ידנית (סדרה/לא ידוע)"
 GOYIM_NOTE = "בבעלות גוי"
 TODAY = datetime.date.today().isoformat()
 
 COLUMNS = [
     "security_id", "security_name", "symbol", "isin", "security_type",
     "asset_class", "issuer_name", "company", "chp_number", "agch_approved",
-    "is_private", "notes", "heter_reason",
+    "is_private", "notes",
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
     "first_seen",
@@ -100,18 +81,8 @@ def asset_class(security_type):
     return 'אג"ח להמרה' if "להמרה" in (security_type or "") else 'אג"ח קונצרני'
 
 
-def classify_notes(notes_raw):
-    """-> (is_goyim, heter_reason). reason רק כשההערה פוסלת / טרם נבדקה (כמו ב-Revach)."""
-    n = (notes_raw or "").strip().replace("\xa0", " ")
-    if not n:
-        return False, ""
-    if n in NOTES_DISQUALIFY:
-        return False, REASON_DISQUALIFY
-    if n in NOTES_GOYIM:
-        return True, ""
-    if n in NOTES_KNOWN_OK:
-        return False, ""
-    return False, REASON_PENDING
+def is_goyim(notes_raw):
+    return (notes_raw or "").strip().replace("\xa0", " ") in NOTES_GOYIM
 
 
 def http_get(url, accept="application/json", referer="https://market.tase.co.il/"):
@@ -161,12 +132,10 @@ def approved_map(companies):
             continue
         if k in out:
             continue
-        goyim, reason = classify_notes(c.get("notes"))
         out[k] = {
             "company": c.get("permit_name") or c.get("registrar_name") or "",
             "agch_approved": status,
-            "goyim": goyim,
-            "heter_reason": reason,
+            "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
         }
     return out
@@ -211,7 +180,6 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
                     "company": info["company"],
                     "chp_number": k,
                     "notes": GOYIM_NOTE if info["goyim"] else "",
-                    "heter_reason": info["heter_reason"],
                     "goyim": info["goyim"],
                     "agch_approved": info["agch_approved"],
                     "is_private": info["is_private"],
