@@ -35,7 +35,12 @@ const CFG = {
 export async function onRequest({ request, env }) {
   const raw = await parseYemot(request);
 
-  if ((raw[CFG.TOKEN_PARAM] || '') !== (env.IVR_SECRET || '')) {
+  // trim: רווח/שורה חדשה בסוף הסוד (הדבקה בדשבורד או ב-ext.ini) לא אמור לשבור את ההשוואה
+  const sent = String(raw[CFG.TOKEN_PARAM] || '').trim();
+  const expected = String(env.IVR_SECRET || '').trim();
+  if (sent !== expected) {
+    // אבחון בלי לחשוף ערכים: האם הסוד מוגדר בכלל, ומה האורכים
+    console.log(`ivr-company auth fail: IVR_SECRET ${expected ? 'set' : 'NOT SET'} (len ${expected.length}), sk ${sent ? 'sent' : 'MISSING'} (len ${sent.length})`);
     return text('id_list_message=t-שגיאת הרשאה&');
   }
   if (raw.hangup === 'yes') return text('');
