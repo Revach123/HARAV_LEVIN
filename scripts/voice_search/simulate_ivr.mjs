@@ -29,7 +29,7 @@ async function call(env, vars) {
   return (await onRequest({ request: new Request(u), env })).text();
 }
 
-// 1. ללא הגדרת דיבור: ח.פ. של בנק לאומי
+// 1. ללא הגדרת דיבור: מיד ח.פ. (אין תפריט)
 let env = mkEnv();
 let r = await call(env, {});
 assert.match(r, /^read=t-.*=h,no,9,5,/); console.log('1a', r);
@@ -41,24 +41,37 @@ assert.match(await call(env, { h: '123456789' }), /לא נמצא עסק/);
 assert.equal(await call(env, { hangup: 'yes' }), '');
 assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?sk=bad'); return (await onRequest({ request: new Request(u), env })).text(); })(), /הרשאה/);
 
-// 2. דיבור מוגדר: שם עם שגיאות זיהוי
+// 2. דיבור מוגדר (ימות מחזירה טקסט): תפריט פותח
 env = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice' });
 r = await call(env, {});
-assert.match(r, /^read=t-אמרו את שם העסק=s1,no,voice$/); console.log('2a', r);
-r = await call(env, { s1: 'הבנק לאומי' });
-assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/); console.log('2b', r);
-r = await call(env, { s1: 'הבנק לאומי', k1_0: '1' });
-assert.match(r, /נבחר בנק לאומי/); console.log('2c', r);
-// לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
-r = await call(env, { s1: 'קקקקקק' });
-assert.match(r, /לא נמצא עסק בשם הזה אמרו שוב את שם העסק=s2,no,voice$/); console.log('2d', r);
-r = await call(env, { s1: 'קקקקקק', s2: 'NONE', s3: 'זזזזזז' });
-assert.match(r, /=h,no,9,5,/); console.log('2e', r);
-// דחיית מועמד -> המועמד הבא
-r = await call(env, { s1: 'בנק', k1_0: '2' });
-assert.match(r, /=k1_1,/); console.log('2f', r);
-// הקלטה גולמית במקום טקסט -> הודעה ברורה
-assert.match(await call(env, { s1: '/5/8/rec001.wav' }), /לא הוגדר נכון/);
+assert.match(r, /^read=t-מומלץ לחפש לפי ח פ.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m,no,1,1,7,No,no,no,,1\.2,/); console.log('2a', r);
+// 2.1 מסלול ח.פ.
+r = await call(env, { m: '1' });
+assert.match(r, /=h,no,9,5,/);
+r = await call(env, { m: '1', h: '520018078' });
+assert.match(r, /=kh,/);
+assert.match(await call(env, { m: '1', h: '520018078', kh: '1' }), /נבחר בנק לאומי/);
+// ח.פ. לא קיים -> ממשיכים לחיפוש לפי שם
+r = await call(env, { m: '1', h: '111111111' });
+assert.match(r, /^read=t-לא נמצא עסק במספר הזה אמרו את שם העסק=s1,no,voice$/); console.log('2b', r);
+// ח.פ. נמצא אבל נדחה -> לפי שם
+assert.match(await call(env, { m: '1', h: '520018078', kh: '2' }), /אמרו את שם העסק=s1/);
+// 2.2 מסלול שם
+r = await call(env, { m: '2' });
+assert.match(r, /^read=t-אמרו את שם העסק=s1,no,voice$/); console.log('2c', r);
+r = await call(env, { m: '2', s1: 'הבנק לאומי' });
+assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/);
+assert.match(await call(env, { m: '2', s1: 'הבנק לאומי', k1_0: '1' }), /נבחר בנק לאומי/);
+r = await call(env, { m: '2', s1: 'קקקקקק' });
+assert.match(r, /לא נמצא עסק בשם הזה אמרו שוב את שם העסק=s2,no,voice$/);
+// אחרי 3 כשלונות לפי שם -> מציעים ח.פ.
+r = await call(env, { m: '2', s1: 'קקקקקק', s2: 'NONE', s3: 'זזזזזז' });
+assert.match(r, /=h,no,9,5,/); console.log('2d', r);
+// אחרי 3 כשלונות לפי שם וגם ח.פ. שנכשל -> מסיימים
+assert.match(await call(env, { m: '2', s1: 'קקקקקק', s2: 'NONE', s3: 'זזזזזז', h: '111111111' }), /^id_list_message=t-לא נמצא עסק מתאים&go_to_folder=\/5&$/);
+r = await call(env, { m: '2', s1: 'בנק', k1_0: '2' });
+assert.match(r, /=k1_1,/);
+assert.match(await call(env, { m: '2', s1: '/5/8/rec001.wav' }), /לא הוגדר נכון/);
 
 // 3. הקלטה + זיהוי חיצוני (Yemot DownloadFile + Azure), עם fetch מדומה
 const realFetch = globalThis.fetch;
@@ -75,16 +88,16 @@ globalThis.fetch = async (url, init = {}) => {
   throw new Error('unexpected ' + url);
 };
 env = mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: '0771:pw' });
-r = await call(env, { ApiCallId: 'abc-1' });
+assert.match(await call(env, { ApiCallId: 'abc-1' }), /=m,no,1,1,/);
+r = await call(env, { ApiCallId: 'abc-1', m: '2' });
 assert.match(r, /^read=t-אמרו את שם העסק=s1,no,record,\/6,rabc1_1,no,yes,no$/); console.log('3a', r);
-r = await call(env, { ApiCallId: 'abc-1', s1: '/6/rabc1_1.wav' });
+r = await call(env, { ApiCallId: 'abc-1', m: '2', s1: '/6/rabc1_1.wav' });
 assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/); console.log('3b', r, calls);
 const n = calls.length;
-r = await call(env, { ApiCallId: 'abc-1', s1: '/6/rabc1_1.wav', k1_0: '1' });
+r = await call(env, { ApiCallId: 'abc-1', m: '2', s1: '/6/rabc1_1.wav', k1_0: '1' });
 assert.match(r, /נבחר בנק לאומי/); assert.equal(calls.length, n, 'התמלול נשלף מהמטמון ולא חוזר ל-Azure'); console.log('3c', r);
-// דיבור לא מזוהה -> שואלים שוב
 heard = '';
-r = await call(env, { ApiCallId: 'abc-2', s1: '/6/rabc2_1.wav' });
+r = await call(env, { ApiCallId: 'abc-2', m: '2', s1: '/6/rabc2_1.wav' });
 assert.match(r, /לא הצלחתי להבין אמרו שוב את שם העסק=s2,no,record,\/6,rabc2_2/); console.log('3d', r);
 globalThis.fetch = realFetch;
 console.log('OK');
