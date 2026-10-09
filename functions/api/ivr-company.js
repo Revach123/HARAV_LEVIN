@@ -5,17 +5,23 @@
 //  אין שום תלות בשלוחה 5 או בהודעת הפתיחה שלה.
 //
 //  זרימה (בלי מצב בשרת - הכול נגזר מהמשתנים שימות מחזירה בכל קריאה):
-//    1. s1..s3  - "אמרו את שם העסק" (דיבור). רק אם הוגדר env.IVR_VOICE_READ_OPTS.
+//    1. s1..s3  - "אמרו את שם העסק" (דיבור). שני מצבים:
+//                 * הקלטה + זיהוי חיצוני (Azure) - כשמוגדרים AZURE_SPEECH_KEY ו-YEMOT_TOKEN (או YEMOT_TTS)
+//                 * ימות מחזירה טקסט מזוהה - כשמוגדר רק env.IVR_VOICE_READ_OPTS
 //                 כל ניסיון: חיפוש -> אישור מועמד אחר מועמד (k<a>_<i>: 1 = כן, 2 = הבא).
 //    2. h       - אחרי שלושה ניסיונות (או אם הדיבור לא מוגדר): הקשת ח.פ.
 //    3. נבחר עסק -> onSelected() (כאן יתווסף שליחת הפקס) וחזרה לתפריט.
 //
 //  דרישות: env.IVR_SECRET, binding DB (טבלת businesses).
-//  אופציונלי: env.IVR_VOICE_READ_OPTS, env.IVR_BACK_FOLDER (ברירת מחדל /5).
+//  זיהוי חיצוני: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, YEMOT_TOKEN (או YEMOT_TTS).
+//  אופציונלי: IVR_VOICE_READ_OPTS, IVR_REC_FOLDER (תיקיית ההקלטות, ברירת מחדל /6),
+//             IVR_BACK_FOLDER (ברירת מחדל /5).
 // ============================================================================
 
 import { searchBusinesses } from './_shared/voice-match.js';
 import { loadBusinesses } from './_shared/businesses-cache.js';
+import { sttConfigured, transcribeRecording } from './_shared/stt-azure.js';
+import { sttGet, sttPut } from './_shared/stt-cache.js';
 
 const CFG = {
   TOKEN_PARAM: 'sk',       // api_add_0=sk=<secret> בהגדרת השלוחה
@@ -45,19 +51,24 @@ export async function onRequest({ request, env }) {
 //  מכונת מצבים: הפעולה הבאה נקבעת לפי אילו משתנים כבר קיימים
 // ----------------------------------------------------------------------------
 async function route(v, env, rows) {
-  const voice = !!env.IVR_VOICE_READ_OPTS;
+  const record = sttConfigured(env);
+  const voice = record || !!env.IVR_VOICE_READ_OPTS;
   let note = '';                                   // הודעה שתצורף לשאלה הבאה
 
   if (voice) {
     for (let a = 1; a <= CFG.MAX_SPEECH_ATTEMPTS; a++) {
       const sKey = `s${a}`;
-      if (!has(v, sKey)) return readSpeech(env, sKey, note + (a === 1 ? 'אמרו את שם העסק' : 'אמרו שוב את שם העסק'));
+      if (!has(v, sKey)) {
+        return readSpeech(env, v, a, record, note + (a === 1 ? 'אמרו את שם העסק' : 'אמרו שוב את שם העסק'));
+      }
 
-      const spoken = String(v[sKey]);
-      if (looksLikeRecording(spoken)) {
+      let spoken = String(v[sKey]);
+      if (record && spoken !== CFG.EMPTY_VAL) spoken = await recognize(env, v, a, spoken);
+      else if (looksLikeRecording(spoken)) {
         return `id_list_message=t-זיהוי הדיבור עדיין לא הוגדר נכון&go_to_folder=${back(env)}&`;
       }
-      const found = spoken === CFG.EMPTY_VAL ? { results: [] } : searchBusinesses(spoken, rows);
+      if (!spoken || spoken === CFG.EMPTY_VAL) { note = 'לא הצלחתי להבין. '; continue; }
+      const found = searchBusinesses(spoken, rows);
       if (!found.results.length) { note = 'לא נמצא עסק בשם הזה. '; continue; }
 
       for (let i = 0; i < found.results.length; i++) {
@@ -92,10 +103,32 @@ async function finish(env, biz) {
 // ----------------------------------------------------------------------------
 //  פקודות ימות
 // ----------------------------------------------------------------------------
-// ההגדרה המדויקת של קלט הדיבור (הקלטה/זיהוי) נקבעת ב-env.IVR_VOICE_READ_OPTS: זה הזנב של
-// פקודת ה-read אחרי שם המשתנה, למשל "no,voice,..." לפי מה שימות מגדירים לשלוחה שלכם.
-function readSpeech(env, valName, msg) {
-  return `read=${say(msg)}=${valName},${env.IVR_VOICE_READ_OPTS}`;
+// מצב הקלטה: פקודת record של ימות, שמקליטה לקובץ בתיקיית ההקלטות. את הקובץ אנחנו קובעים
+// (recFile), כך שאפשר להוריד אותו בלי להסתמך על הערך שימות מחזירה במשתנה.
+// הזנב ניתן לדריסה ב-env.IVR_VOICE_READ_OPTS; {folder} ו-{file} מוחלפים.
+// מצב טקסט (בלי Azure): הזנב הוא מה שימות מגדירים לקבלת טקסט מזוהה.
+function readSpeech(env, v, a, record, msg) {
+  const tail = (env.IVR_VOICE_READ_OPTS || 'no,record,{folder},{file},no,yes,no')
+    .replace('{folder}', recFolder(env)).replace('{file}', recFile(v, a));
+  return `read=${say(msg)}=s${a},${tail}`;
+}
+
+const recFolder = (env) => (env.IVR_REC_FOLDER || '/6').replace(/\/$/, '');
+const recFile = (v, a) => `r${String(v.ApiCallId || 'x').replace(/\W/g, '')}_${a}`;
+
+// הקלטה -> טקסט (עם מטמון לשיחה, כי כל שלב אישור הוא בקשה חדשה).
+async function recognize(env, v, a, value) {
+  const callId = String(v.ApiCallId || '');
+  const cached = await sttGet(env, callId, a);
+  if (cached !== null) return cached;
+  const folder = recFolder(env), file = recFile(v, a);
+  const { text } = await transcribeRecording(env, [
+    ...(looksLikeRecording(value) ? [value] : []),
+    `${folder}/${file}.wav`,
+    `${folder}/${file}`,
+  ]);
+  await sttPut(env, callId, a, text);
+  return text;
 }
 
 function readConfirm(valName, name) {

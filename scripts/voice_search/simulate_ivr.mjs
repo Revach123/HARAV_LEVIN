@@ -10,7 +10,16 @@ for (const l of csv.split('\n').slice(1)) {
   const m = l.match(/^(\d+),[^,]*,("(?:[^"]|"")*"|[^,]*),[^,]*,[^,]*,[^,]*,(\d*)/);
   if (m) rows.push({ id: m[1], registrar_name: m[2].replace(/^"|"$/g, '').replace(/""/g, '"'), permit_name: '', chp_number: m[3] });
 }
-const mkEnv = (extra = {}) => ({ IVR_SECRET: 'S', DB: { prepare: () => ({ all: async () => ({ results: rows }) }) }, ...extra });
+const sttRows = new Map();
+const stmt = (sql) => ({
+  all: async () => ({ results: rows }),
+  run: async () => ({}),
+  bind: (...a) => ({
+    first: async () => (sql.startsWith('SELECT text') ? (sttRows.has(a.join(':')) ? { text: sttRows.get(a.join(':')) } : null) : null),
+    run: async () => { if (sql.startsWith('INSERT')) sttRows.set(`${a[0]}:${a[1]}`, a[2]); return {}; },
+  }),
+});
+const mkEnv = (extra = {}) => ({ IVR_SECRET: 'S', DB: { prepare: stmt }, ...extra });
 
 async function call(env, vars) {
   const u = new URL('https://x/api/ivr-company');
@@ -50,4 +59,32 @@ r = await call(env, { s1: 'בנק', k1_0: '2' });
 assert.match(r, /=k1_1,/); console.log('2f', r);
 // הקלטה גולמית במקום טקסט -> הודעה ברורה
 assert.match(await call(env, { s1: '/5/8/rec001.wav' }), /לא הוגדר נכון/);
+
+// 3. הקלטה + זיהוי חיצוני (Yemot DownloadFile + Azure), עם fetch מדומה
+const realFetch = globalThis.fetch;
+const calls = [];
+let heard = 'הבנק לאומי';
+globalThis.fetch = async (url, init = {}) => {
+  url = String(url); calls.push(url.split('?')[0].split('/').pop());
+  if (url.includes('DownloadFile')) return new Response(new Uint8Array([0x52, 0x49, 0x46, 0x46, ...new Array(100).fill(0)]));
+  if (url.includes('stt.speech.microsoft.com')) {
+    assert.equal(init.headers['Ocp-Apim-Subscription-Key'], 'AK'); assert.match(url, /language=he-IL/);
+    return Response.json({ RecognitionStatus: 'Success', DisplayText: heard });
+  }
+  if (url.includes('FileAction')) return Response.json({ responseStatus: 'OK' });
+  throw new Error('unexpected ' + url);
+};
+env = mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: '0771:pw' });
+r = await call(env, { ApiCallId: 'abc-1' });
+assert.match(r, /^read=t-אמרו את שם העסק=s1,no,record,\/6,rabc1_1,no,yes,no$/); console.log('3a', r);
+r = await call(env, { ApiCallId: 'abc-1', s1: '/6/rabc1_1.wav' });
+assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/); console.log('3b', r, calls);
+const n = calls.length;
+r = await call(env, { ApiCallId: 'abc-1', s1: '/6/rabc1_1.wav', k1_0: '1' });
+assert.match(r, /נבחר בנק לאומי/); assert.equal(calls.length, n, 'התמלול נשלף מהמטמון ולא חוזר ל-Azure'); console.log('3c', r);
+// דיבור לא מזוהה -> שואלים שוב
+heard = '';
+r = await call(env, { ApiCallId: 'abc-2', s1: '/6/rabc2_1.wav' });
+assert.match(r, /לא הצלחתי להבין אמרו שוב את שם העסק=s2,no,record,\/6,rabc2_2/); console.log('3d', r);
+globalThis.fetch = realFetch;
 console.log('OK');
