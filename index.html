@@ -1070,6 +1070,14 @@ function renderAdminTable() {
             <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
           </div>
         </details>
+        <details class="dbmenu">
+          <summary class="btn-ghost">📥 רשימות אג"ח מאושרות (מאיה) ▾</summary>
+          <div class="dbmenu-items">
+            <a href="/data/bonds_list/bonds_all.csv" download="bonds_all.csv">רשימה ממוזגת (פרטי + כללי)</a>
+            <a href="/data/bonds_list/bonds_private.csv" download="bonds_private.csv">אג"ח פרטי</a>
+            <a href="/data/bonds_list/bonds_general.csv" download="bonds_general.csv">אג"ח כללי</a>
+          </div>
+        </details>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
