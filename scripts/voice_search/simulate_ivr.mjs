@@ -2,6 +2,7 @@
 // הרצה: node scripts/voice_search/simulate_ivr.mjs
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
 import { onRequest } from '../../functions/api/ivr-company.js';
 
 const csv = readFileSync(new URL('../../reports/heteriske_audit/heteriske_businesses_with_chp.csv', import.meta.url), 'utf8').replace(/^﻿/, '');
@@ -10,6 +11,8 @@ for (const l of csv.split('\n').slice(1)) {
   const m = l.match(/^(\d+),[^,]*,("(?:[^"]|"")*"|[^,]*),[^,]*,[^,]*,[^,]*,(\d*)/);
   if (m) rows.push({ id: m[1], registrar_name: m[2].replace(/^"|"$/g, '').replace(/""/g, '"'), permit_name: '', chp_number: m[3] });
 }
+// ---- DB: טבלת businesses (DB) - עם visibility; ושיקוף של company-info-db (DB1) עם FTS5 אמיתי ----
+rows.forEach((r, i) => { r.visibility = i % 3 === 0 ? 'פרטי' : ''; r.entity_type = 'company'; });
 const sttRows = new Map();
 const stmt = (sql) => ({
   all: async () => ({ results: rows }),
@@ -19,61 +22,119 @@ const stmt = (sql) => ({
     run: async () => { if (sql.startsWith('INSERT')) sttRows.set(`${a[0]}:${a[1]}`, a[2]); return {}; },
   }),
 });
-const mkEnv = (extra = {}) => ({ IVR_SECRET: 'S', DB: { prepare: stmt }, ...extra });
+
+const sqlite = new DatabaseSync(':memory:');
+sqlite.exec(`
+  CREATE TABLE companies (id TEXT, name TEXT, name_norm TEXT, status TEXT, corp_type TEXT);
+  CREATE TABLE partnerships (id TEXT, name TEXT, name_norm TEXT, status TEXT, ptype TEXT);
+  CREATE TABLE associations (id TEXT, name TEXT, name_norm TEXT, status TEXT, category TEXT);
+  CREATE VIRTUAL TABLE companies_fts USING fts5(id UNINDEXED, name_norm, tokenize='trigram');
+  CREATE VIRTUAL TABLE partnerships_fts USING fts5(id UNINDEXED, name_norm, tokenize='trigram');
+  CREATE VIRTUAL TABLE associations_fts USING fts5(id UNINDEXED, name_norm, tokenize='trigram');
+`);
+const norm = (n) => n.replace(/\([^)]*\)/g, ' ').replace(/[^א-ת0-9A-Za-z ]/g, ' ').replace(/\s+/g, ' ').trim();
+const add = (tbl, id, name, status, sub) => {
+  const col = tbl === 'companies' ? 'corp_type' : tbl === 'partnerships' ? 'ptype' : 'category';
+  sqlite.prepare(`INSERT INTO ${tbl} (id,name,name_norm,status,${col}) VALUES (?,?,?,?,?)`).run(id, name, norm(name), status, sub);
+  sqlite.prepare(`INSERT INTO ${tbl}_fts (id,name_norm) VALUES (?,?)`).run(id, norm(name));
+};
+for (const r of rows) if (r.chp_number) add('companies', r.chp_number, r.registrar_name, 'פעילה', 'פרטית');
+add('companies', '511111111', 'אבגד תעשיות בע"מ', 'פעילה', 'ציבורית');             // בלי היתר עסקה
+add('companies', '512222222', 'אבגד לוגיסטיקה בע"מ', 'פעילה', 'פרטית');
+add('companies', '513333333', 'אבגד ישן בע"מ', 'מחוקה', 'פרטית');
+add('partnerships', '551111111', 'קרן הדר שותפות מוגבלת', 'פעילה', 'שותפות מוגבלת');
+add('associations', '581111111', 'עמותת חסד ואמת (ע"ר)', 'פעילה', 'חינוך');
+for (let i = 0; i < 40; i++) add('companies', String(520000000 + i), `מנורה בטחון ${i} בע"מ`, 'פעילה', 'פרטית');   // הרבה תוצאות
+const D1 = (db) => ({
+  prepare: (sql) => ({
+    bind: (...a) => ({
+      sql, a,
+      all: async () => ({ results: db.prepare(sql).all(...a).map((r) => ({ ...r })) }),
+    }),
+  }),
+  batch: async (stmts) => Promise.all(stmts.map((x) => x.all())),
+});
+const DB1 = D1(sqlite);
+const mkEnv = (extra = {}) => ({ IVR_SECRET: 'S', DB: { prepare: stmt }, DB1, ...extra });
 
 async function call(env, vars) {
   const u = new URL('https://x/api/ivr-company');
   u.searchParams.set('sk', 'S');
-  u.searchParams.set('ApiCallId', 't1');
-  for (const [k, v] of Object.entries(vars)) u.searchParams.set(k, v);
+  u.searchParams.set('ApiCallId', vars.ApiCallId || 't1');
+  for (const [k, v] of Object.entries(vars)) if (k !== 'ApiCallId') u.searchParams.set(k, v);
   return (await onRequest({ request: new Request(u), env })).text();
 }
+const parts = (r) => r.replace(/^read=/, '').split('=')[0].split('.');
+const permitOf = (n) => rows.findIndex((x) => x.chp_number === n);
 
-// 1. ללא הגדרת דיבור: מיד ח.פ. (אין תפריט)
+// 1. ללא זיהוי דיבור: ח.פ. בלבד, בלי תפריט
 let env = mkEnv();
 let r = await call(env, {});
-assert.match(r, /^read=t-.*=h,no,9,5,/); console.log('1a', r);
-r = await call(env, { h: '520018078' });
-assert.match(r, /בנק לאומי לישראל/); assert.match(r, /=kh,/); console.log('1b', r);
-r = await call(env, { h: '520018078', kh: '1' });
-assert.match(r, /^id_list_message=t-נבחר בנק לאומי לישראל.*&go_to_folder=\/5&$/); console.log('1c', r);
-assert.match(await call(env, { h: '123456789' }), /לא נמצא עסק/);
+assert.match(r, /^read=t-הקישו את מספר הח פ.*=h1,no,9,5,/); console.log('1a', r);
+// בנק לאומי (520018078): נמצא ברישום, ויש לו היתר (פרטי/כללי לפי visibility)
+const bl = rows.find((x) => x.chp_number === '520018078');
+r = await call(env, { h1: '520018078' });
+console.log('1b', parts(r));
+assert.equal(parts(r)[0], 't-חברה פרטית'); assert.equal(parts(r)[1], 't-בנק לאומי לישראל');
+assert.equal(parts(r)[2], bl.visibility === 'פרטי' ? 't-קיים היתר עסקה פרטי' : 't-קיים היתר עסקה כללי');
+assert.match(r, /=nx1,no,1,1,7,No,no,no,,1\.2,/);
+// חברה שאין לה היתר עסקה (רק ברישום)
+r = await call(env, { h1: '511111111' });
+console.log('1c', parts(r)); assert.deepEqual(parts(r).slice(0, 3), ['t-חברה ציבורית', 't-אבגד תעשיות', 't-לא קיים היתר עסקה']);
+r = await call(env, { h1: '551111111' }); assert.equal(parts(r)[0], 't-שותפות מוגבלת'); assert.equal(parts(r)[1], 't-קרן הדר');
+r = await call(env, { h1: '581111111' }); assert.equal(parts(r)[0], 't-עמותה'); assert.equal(parts(r)[1], 't-עמותת חסד ואמת');
+assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה לחיפוש נוסף הקישו 1 לסיום הקישו 2=nx1/);
+// nx: 1 -> סבב חדש, 2 -> סיום
+assert.match(await call(env, { h1: '511111111', nx1: '1' }), /=h2,no,9,5,/);
+assert.match(await call(env, { h1: '511111111', nx1: '2' }), /^id_list_message=t-תודה ולהתראות&go_to_folder=\/5&$/);
 assert.equal(await call(env, { hangup: 'yes' }), '');
 assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?sk=bad'); return (await onRequest({ request: new Request(u), env })).text(); })(), /הרשאה/);
 
-// 2. דיבור מוגדר (ימות מחזירה טקסט): תפריט פותח
+// 2. דיבור (ימות מחזירה טקסט): תפריט, ושם לפי דיבור - בכל החברות
 env = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice' });
 r = await call(env, {});
-assert.match(r, /^read=t-מומלץ לחפש לפי ח פ.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m,no,1,1,7,No,no,no,,1\.2,/); console.log('2a', r);
-// 2.1 מסלול ח.פ.
-r = await call(env, { m: '1' });
-assert.match(r, /=h,no,9,5,/);
-r = await call(env, { m: '1', h: '520018078' });
-assert.match(r, /=kh,/);
-assert.match(await call(env, { m: '1', h: '520018078', kh: '1' }), /נבחר בנק לאומי/);
-// ח.פ. לא קיים -> ממשיכים לחיפוש לפי שם
-r = await call(env, { m: '1', h: '111111111' });
-assert.match(r, /^read=t-לא נמצא עסק במספר הזה אמרו את שם העסק=s1,no,voice$/); console.log('2b', r);
-// ח.פ. נמצא אבל נדחה -> לפי שם
-assert.match(await call(env, { m: '1', h: '520018078', kh: '2' }), /אמרו את שם העסק=s1/);
-// 2.2 מסלול שם
-r = await call(env, { m: '2' });
-assert.match(r, /^read=t-אמרו את שם העסק=s1,no,voice$/); console.log('2c', r);
-r = await call(env, { m: '2', s1: 'הבנק לאומי' });
-assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/);
-assert.match(await call(env, { m: '2', s1: 'הבנק לאומי', k1_0: '1' }), /נבחר בנק לאומי/);
-r = await call(env, { m: '2', s1: 'קקקקקק' });
-assert.match(r, /לא נמצא עסק בשם הזה אמרו שוב את שם העסק=s2,no,voice$/);
-// אחרי 3 כשלונות לפי שם -> מציעים ח.פ.
-r = await call(env, { m: '2', s1: 'קקקקקק', s2: 'NONE', s3: 'זזזזזז' });
-assert.match(r, /=h,no,9,5,/); console.log('2d', r);
-// אחרי 3 כשלונות לפי שם וגם ח.פ. שנכשל -> מסיימים
-assert.match(await call(env, { m: '2', s1: 'קקקקקק', s2: 'NONE', s3: 'זזזזזז', h: '111111111' }), /^id_list_message=t-לא נמצא עסק מתאים&go_to_folder=\/5&$/);
-r = await call(env, { m: '2', s1: 'בנק', k1_0: '2' });
-assert.match(r, /=k1_1,/);
-assert.match(await call(env, { m: '2', s1: '/5/8/rec001.wav' }), /לא הוגדר נכון/);
+assert.match(r, /^read=t-מומלץ לחפש לפי ח פ.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m1,no,1,1,7,No,no,no,,1\.2,/); console.log('2a OK');
+assert.match(await call(env, { m1: '1' }), /=h1,no,9,5,/);
+// ח.פ. לא קיים -> לפי שם
+r = await call(env, { m1: '1', h1: '111111111' });
+assert.match(r, /^read=t-לא נמצאה חברה במספר הזה אמרו את שם החברה=s1_1,no,voice$/); console.log('2b', r);
+r = await call(env, { m1: '2' });
+assert.match(r, /^read=t-אמרו את שם החברה=s1_1,no,voice$/);
+// חברה בלי היתר: "אבגד לוגיסטיקה" (נמצאת רק ברישום)
+r = await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה' });
+console.log('2c', parts(r)); assert.deepEqual(parts(r).slice(0, 3), ['t-חברה פרטית', 't-אבגד לוגיסטיקה', 't-לא קיים היתר עסקה']);
+// "אבגד" לבד: 3 תוצאות, כל אחת בשלוש הודעות נפרדות, המחוקה אחרונה ומסומנת
+r = await call(env, { m1: '2', s1_1: 'אבגד' });
+const p = parts(r); console.log('2d', p);
+assert.equal(p.length, 3 * 3 + 1);
+assert.equal(p[p.length - 4], 't-חברה פרטית מחוקה'); assert.equal(p[p.length - 3], 't-אבגד ישן');
+assert.equal(p[p.length - 1], 't-לחיפוש נוסף הקישו 1 לסיום הקישו 2');
+// שגיאות זיהוי: ק<->כ, ח/כ, תחילית ה
+for (const q of ['הבנק לאומי', 'במק לאומי']) {
+  r = await call(env, { m1: '2', s1_1: q });
+  console.log('2e', q, parts(r)[1]);
+}
+assert.equal(parts(await call(env, { m1: '2', s1_1: 'הבנק לאומי' }))[1], 't-בנק לאומי לישראל');
+assert.equal(parts(await call(env, { m1: '2', s1_1: 'חסד ואמת' }))[1], 't-עמותת חסד ואמת');
+// הרבה תוצאות -> מבקשים לדייק (ולא מקריאים)
+r = await call(env, { m1: '2', s1_1: 'מנורה בטחון' });
+assert.match(r, /^read=t-נמצאו חברות רבות אנא אמרו את השם המלא אמרו שוב את שם החברה=s1_2,no,voice$/); console.log('2f', r);
+// לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
+r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
+assert.match(r, /^read=t-לא נמצאה חברה בשם הזה אמרו שוב את שם החברה=s1_2,no,voice$/);
+r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ' });
+assert.match(r, /=h1,no,9,5,/); console.log('2g', r);
+assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה לחיפוש נוסף.*=nx1/);
+assert.match(await call(env, { m1: '2', s1_1: '/6/rec001.wav' }), /לא הוגדר נכון/);
+// חיפוש נוסף: סבב 2 מתחיל מהתפריט
+assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: '1' }), /=m2,no,1,1,/);
 
-// 3. הקלטה + זיהוי חיצוני (Yemot DownloadFile + Azure), עם fetch מדומה
+// 3. בלי DB1: נופלים חזרה לעסקים עם היתר, בלי לקרוס
+const noReg = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice', DB1: undefined });
+r = await call(noReg, { m1: '2', s1_1: 'בנק לאומי' });
+assert.equal(parts(r)[1], 't-בנק לאומי לישראל'); console.log('3 OK');
+
+// 4. הקלטה + זיהוי חיצוני (Yemot DownloadFile + Azure), עם fetch מדומה
 const realFetch = globalThis.fetch;
 const calls = [];
 let heard = 'הבנק לאומי';
@@ -88,16 +149,20 @@ globalThis.fetch = async (url, init = {}) => {
   throw new Error('unexpected ' + url);
 };
 env = mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: '0771:pw' });
-assert.match(await call(env, { ApiCallId: 'abc-1' }), /=m,no,1,1,/);
-r = await call(env, { ApiCallId: 'abc-1', m: '2' });
-assert.match(r, /^read=t-אמרו את שם העסק=s1,no,record,\/6,rabc1_1,no,yes,no$/); console.log('3a', r);
-r = await call(env, { ApiCallId: 'abc-1', m: '2', s1: '/6/rabc1_1.wav' });
-assert.match(r, /=k1_0,/); assert.match(r, /בנק לאומי לישראל/); console.log('3b', r, calls);
+assert.match(await call(env, { ApiCallId: 'abc-1' }), /=m1,no,1,1,/);
+// הגבלת זמן להקלטה: מינימום 1, מקסימום 8 שניות
+r = await call(env, { ApiCallId: 'abc-1', m1: '2' });
+assert.match(r, /^read=t-אמרו את שם החברה=s1_1,no,record,\/6,rabc1_1_1,no,yes,no,1,8$/); console.log('4a', r);
+// ניתן לשינוי / ביטול
+assert.match(await call(mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: 'x:y', IVR_REC_MAX_SEC: '5' }), { ApiCallId: 'abc-1', m1: '2' }), /,no,1,5$/);
+assert.match(await call(mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: 'x:y', IVR_REC_MAX_SEC: '0' }), { ApiCallId: 'abc-1', m1: '2' }), /,no,yes,no$/);
+r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav' });
+assert.equal(parts(r)[1], 't-בנק לאומי לישראל'); console.log('4b', parts(r), calls);
 const n = calls.length;
-r = await call(env, { ApiCallId: 'abc-1', m: '2', s1: '/6/rabc1_1.wav', k1_0: '1' });
-assert.match(r, /נבחר בנק לאומי/); assert.equal(calls.length, n, 'התמלול נשלף מהמטמון ולא חוזר ל-Azure'); console.log('3c', r);
+r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav', nx1: '2' });
+assert.match(r, /תודה ולהתראות/); assert.equal(calls.length, n);
 heard = '';
-r = await call(env, { ApiCallId: 'abc-2', m: '2', s1: '/6/rabc2_1.wav' });
-assert.match(r, /לא הצלחתי להבין אמרו שוב את שם העסק=s2,no,record,\/6,rabc2_2/); console.log('3d', r);
+r = await call(env, { ApiCallId: 'abc-2', m1: '2', s1_1: '/6/rabc2_1_1.wav' });
+assert.match(r, /לא הצלחתי להבין אמרו שוב את שם החברה=s1_2,no,record,\/6,rabc2_1_2/); console.log('4c', r);
 globalThis.fetch = realFetch;
 console.log('OK');
