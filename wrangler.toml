@@ -7,6 +7,12 @@ binding = "DB"
 database_name = "business-registry-db"
 database_id = "61e1a52e-1083-478d-914c-5375d8ed59bb"
 
+# מאגר הרישום (חברות, שותפויות, עמותות) - אותו בסיס נתונים ש-revach משתמש בו. קריאה בלבד מהקוד.
+[[d1_databases]]
+binding = "DB1"
+database_name = "company-info-db"
+database_id = "c1d082fc-c125-4f62-8b33-9b62d5bda2da"
+
 # משתנים רגילים (לא סודות - הקובץ ציבורי). סודות מוגדרים בנפרד:
 #   wrangler pages secret put <שם> --project-name harav-levin
 # שלוחת ימות 6 (functions/api/ivr-company.js):
