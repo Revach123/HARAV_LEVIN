@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from xml.sax.saxutils import escape
@@ -53,9 +54,21 @@ def write_manifest(path, manifest):
         f.write(HEADER + PREFIX + json.dumps(dict(sorted(manifest.items())), ensure_ascii=False, indent=1) + ";\n")
 
 
-def ssml_for(text, voice):
+def ssml_for(text, voice, prons=()):
+    """SSML ל-Azure. prons = [(מילה, IPA)]: כל מילה עטופה ב-<phoneme alphabet='ipa'>."""
+    body = escape(text)
+    if prons:
+        words = sorted((w for w, _ in prons), key=len, reverse=True)
+        ipa = dict(prons)
+        rx = re.compile("(?<![\u05d0-\u05ea])(" + "|".join(re.escape(escape(w)) for w in words) + ")")
+        lookup = {escape(w): v for w, v in ipa.items()}
+        body = rx.sub(lambda m: f"<phoneme alphabet='ipa' ph='{lookup[m.group(1)]}'>{m.group(1)}</phoneme>", body)
     return ("<speak version='1.0' xml:lang='he-IL' xmlns='http://www.w3.org/2001/10/synthesis'>"
-            f"<voice name='{voice}'>{escape(text)}</voice></speak>")
+            f"<voice name='{voice}'>{body}</voice></speak>")
+
+
+def prons_sig(prons):
+    return hashlib.sha1(json.dumps(prons, ensure_ascii=False).encode("utf-8")).hexdigest()[:8] if prons else ""
 
 
 def azure_tts(session, region, key, body, retries=7):
@@ -123,10 +136,17 @@ def main():
     with open(a.phrases, encoding="utf-8") as f:
         data = json.load(f)
     voice, folder = data["voice"], a.folder or data["folder"]
+    prons = [tuple(x) for x in data.get("pronunciations", [])]
+    sig = prons_sig(prons)
     manifest = read_manifest(a.manifest)
 
+    def uses_pron(t):
+        return any(w in t for w, _ in prons)
+
+    # ביטוי מיושן: טקסט/קול השתנו, או (אם יש בו מילה עם הגייה) חתימת ההגיות השתנתה
     todo = [(k, t) for k, t in data["phrases"].items()
-            if not (k in manifest and manifest[k].get("text") == t and manifest[k].get("voice") == voice)]
+            if not (k in manifest and manifest[k].get("text") == t and manifest[k].get("voice") == voice
+                    and (not uses_pron(t) or manifest[k].get("pron", "") == sig))]
     chars = sum(len(t) for _, t in todo)
     print(f"ביטויים: {len(data['phrases'])} | חדשים או ששונו: {len(todo)} | תווים: {chars} | קול: {voice} | שלוחה: {folder}")
     for k, t in todo:
@@ -148,10 +168,18 @@ def main():
     done, rc = 0, 0
     try:
         for k, t in todo:
-            name = file_name(voice, t)
-            wav = azure_tts(session, region, key, ssml_for(t, voice))
+            name = file_name(voice, t) + sig
+            used = sig if uses_pron(t) else ""
+            try:
+                wav = azure_tts(session, region, key, ssml_for(t, voice, prons if used else ()))
+            except RuntimeError as e:
+                if not used:
+                    raise
+                print(f"אזהרה: Azure דחה את ה-SSML עם phoneme עבור «{k}» ({e}); חוזר לטקסט המנוקד.", file=sys.stderr)
+                used = ""
+                wav = azure_tts(session, region, key, ssml_for(t, voice))
             yemot_upload(session, api_key, folder, name, wav)
-            manifest[k] = {"text": t, "voice": voice, "path": f"/{folder}/{name}"}   # f-/99/<name>, בלי סיומת
+            manifest[k] = {"text": t, "voice": voice, "path": f"/{folder}/{name}", "pron": sig if uses_pron(t) else "", "phoneme": bool(used)}
             done += 1
     except YemotAuthError as e:
         print(f"שגיאה: {e}", file=sys.stderr)
