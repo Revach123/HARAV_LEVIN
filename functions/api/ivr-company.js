@@ -229,7 +229,7 @@ function readTapRaw(msgParts, valName, digitsAllowed, opts = {}) {
 // ימות מפרקת הודעות לפי = & , . ואין בה גרשיים בשמות - מנקים מהטקסט המוקרא.
 function ttsClean(s) {
   return String(s || '')
-    .replace(/בע["״]מ/g, 'בערבון מוגבל')
+    .replace(/(^|[^א-ת])בע["״]?מ(?![א-ת])/g, '$1בית עין מם')   // בע"מ מוקרא בראשי תיבות
     .replace(/["'״׳“”]/g, '')
     .replace(/[=&,.\n\r]/g, ' ')
     .replace(/\s+/g, ' ')
