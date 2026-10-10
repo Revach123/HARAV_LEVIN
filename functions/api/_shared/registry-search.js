@@ -131,7 +131,7 @@ export function describe(item, permitOf) {
   const out = [typeLabel(item), speechName(item.name)];
   if (p === 'פרטי') {
     out.push('לעסק זה יש רק היתר עסקה פרטי');
-    out.push('היתר העסקה תקף רק למי שחתם על היתר עסקה פרטי');
+    out.push('ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי');
   } else {
     out.push(p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה');
   }
