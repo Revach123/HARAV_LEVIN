@@ -1,0 +1,103 @@
+{
+ "now_utc": "2026-10-10T17:45:03.370307Z",
+ "sample_day": "2026-10-05",
+ "sample_bond": {
+  "tradeDate": "2026-10-05T00:00:00",
+  "securityId": 1232123,
+  "securityFullTypeCode": "0501",
+  "isin": "IL0012321233",
+  "corporateId": "514956465",
+  "issuerId": 2358,
+  "securityIsIncludedInContinuousIndices": [
+   601,
+   603,
+   710,
+   740,
+   746,
+   737,
+   725,
+   717,
+   715,
+   766
+  ],
+  "securityName": "מור גמל פנ אגחא",
+  "symbol": "מרגפ.ק1",
+  "companySuperSector": "פיננסי",
+  "companySector": "שרותים פיננסיים",
+  "companySubSector": "שרותים פיננסיים",
+  "companyName": "מור גמל פנסיה"
+ },
+ "all_keys": [
+  "companyName",
+  "companySector",
+  "companySubSector",
+  "companySuperSector",
+  "corporateId",
+  "isin",
+  "issuerId",
+  "securityFullTypeCode",
+  "securityId",
+  "securityIsIncludedInContinuousIndices",
+  "securityName",
+  "symbol",
+  "tradeDate"
+ ],
+ "days": {
+  "2026-10-10": {
+   "status": 200,
+   "count": 0
+  },
+  "2026-10-09": {
+   "status": 200,
+   "count": 2220
+  },
+  "2026-10-08": {
+   "status": 200,
+   "count": 2219
+  },
+  "2026-10-07": {
+   "status": 200,
+   "count": 2219
+  },
+  "2026-10-06": {
+   "status": 200,
+   "count": 2220
+  },
+  "2026-10-05": {
+   "status": 200,
+   "count": 2220
+  }
+ },
+ "endpoints": {
+  "/v1/basic-securities/securities-types": {
+   "status": 200,
+   "keys": [
+    "securitiesTypes"
+   ]
+  },
+  "/v1/basic-securities/companies-list": {
+   "status": 200,
+   "keys": [
+    "companiesList"
+   ]
+  },
+  "/v1/basic-securities/trading-code-list": {
+   "status": 200,
+   "keys": [
+    "tradingListCode"
+   ]
+  },
+  "/v1/basic-securities/delisted-securities-list/2026/10": {
+   "status": 200,
+   "keys": [
+    "delistedSecuritiesList"
+   ]
+  },
+  "/v1/basic-securities/illiquid-maintenance-suspension-list": {
+   "status": 200,
+   "keys": [
+    "illiquidMaintenanceAndSuspensionList"
+   ]
+  }
+ }
+}
