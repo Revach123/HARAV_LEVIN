@@ -76,7 +76,7 @@ const permitOf = (n) => rows.findIndex((x) => x.chp_number === n);
 // 1. ללא זיהוי דיבור: ח.פ. בלבד, בלי תפריט
 let env = mkEnv();
 let r = await call(env, {});
-assert.match(r, /^read=t-הקישו את מספר החית פא.*=h1,no,9,5,/); console.log('1a', r);
+assert.match(r, /^read=t-הקישו את מספר החת פא.*=h1,no,9,5,/); console.log('1a', r);
 // בנק לאומי (520018078): נמצא ברישום, ויש לו היתר (פרטי/כללי לפי visibility)
 const bl = rows.find((x) => x.chp_number === '520018078');
 r = await call(env, { h1: '520018078' });
@@ -105,7 +105,7 @@ assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?s
 // 2. דיבור (ימות מחזירה טקסט): תפריט, ושם לפי דיבור - בכל החברות
 env = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice' });
 r = await call(env, {});
-assert.match(r, /^read=t-מומלץ לחפש לפי חית פא.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m1,no,1,1,7,No,no,no,,1\.2,/); console.log('2a OK');
+assert.match(r, /^read=t-מומלץ לחפש לפי חת פא.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m1,no,1,1,7,No,no,no,,1\.2,/); console.log('2a OK');
 assert.match(await call(env, { m1: '1' }), /=h1,no,9,5,/);
 // ח.פ. לא קיים -> לפי שם
 r = await call(env, { m1: '1', h1: '111111111' });
@@ -131,7 +131,7 @@ assert.equal(parts(await call(env, { m1: '2', s1_1: 'הבנק לאומי' }))[1]
 assert.equal(parts(await call(env, { m1: '2', s1_1: 'חסד ואמת' }))[1], 't-עמותת חסד ואמת');
 // הרבה תוצאות -> לא מקריאים; 1 = שם מלא יותר, 2 = ח.פ.
 r = await call(env, { m1: '2', s1_1: 'מנורה בטחון' });
-assert.match(r, /^read=t-הרבה מדי אפשרויות אנא אמרו את השם המלא או חפשו לפי מספר חית פא לאמירת השם המלא הקישו 1 לחיפוש לפי חית פא הקישו 2=t1_1,no,1,1,7,No,no,no,,1\.2,/); console.log('2f', r);
+assert.match(r, /^read=t-הרבה מדי אפשרויות אנא אמרו את השם המלא או חפשו לפי מספר חת פא לאמירת השם המלא הקישו 1 לחיפוש לפי חת פא הקישו 2=t1_1,no,1,1,7,No,no,no,,1\.2,/); console.log('2f', r);
 assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1' }), /^read=t-אמרו שוב את שם החברה=s1_2,no,voice$/);
 assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '2' }), /=h1,no,9,5,/);
 // שם מלא יותר אחרי ההפניה: תוצאה יחידה
@@ -202,8 +202,8 @@ for (const [k, t] of Object.entries(PHRASES)) assert.ok(!/(?<![א-ת])ה?חבר�
 assert.equal(PHRASES.ask1, 'אמרו את שם הַחֶבְרָה');
 // ח.פ. כשמות האותיות, בכל הביטויים; ובתפריט המשפט השני מנוקד במלואו
 for (const [k, t] of Object.entries(PHRASES)) assert.ok(!/(?<![א-ת])ה?ח פ(?![א-ת])/.test(t), `ח פ בלי הגייה ב-${k}`);
-assert.match(PHRASES.menu, /לפי חֵית פֵּא של/);
-assert.match(PHRASES.menu, /מספר הַחֵית פֵּא/);
+assert.match(PHRASES.menu, /לפי חֶת פֵּא של/);
+assert.match(PHRASES.menu, /מספר הַחֶת פֵּא/);
 assert.match(PHRASES.menu, /אִם לֹא, הַקִּישׁוּ 2 לְחִיפּוּשׂ לְפִי שֵׁם הַחֶבְרָה$/);
 assert.equal(PHRASES['type:חברה פרטית'], 'חֶבְרָה פרטית');
 assert.match(await callRaw(mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice' }), { m1: '2' }), /הַחֶבְרָה/);

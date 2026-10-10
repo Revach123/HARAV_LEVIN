@@ -189,3 +189,4 @@ title=חיפוש היתר עסקה חברות
 - הביטויים: `functions/api/_shared/ivr_phrases.js`. שינוי טקסט שם פוסל את הקובץ הישן אוטומטית עד שמופק חדש.
 - הפקה: Actions ואז **ivr-audio** ואז **Run workflow** (קודם `dry_run`, אחר כך בלי). נדרשים secrets בריפו הזה: `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `YEMOT_TTS`. ה-workflow מעלה לימות ורק אז עושה commit ל-`ivr_audio_manifest.js`. גם push ל-`main` שנוגע בביטויים מפעיל אותו (בלי secrets הוא מדלג).
 - מקומית: `node scripts/ivr_audio/dump_phrases.mjs > phrases.json` ואחר כך `python scripts/ivr_audio/build_audio.py --phrases phrases.json [--dry-run]`.
+- הגייה בעייתית ב-Azure: `PRONUNCIATIONS` ב-`ivr_phrases.js` (מילה מנוקדת ואז IPA). `build_audio.py` עוטף אותה ב-`<phoneme alphabet="ipa">`; אם Azure דוחה, הוא חוזר לטקסט המנוקד ומדווח בלוג (`"phoneme": false` במניפסט). כרגע: "חֶבְרָה" / "הַחֶבְרָה".
