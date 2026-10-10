@@ -82,7 +82,7 @@ assert.match(r, /=nx1,no,1,1,7,No,no,no,,1\.2,/);
 const prv = rows.find((x) => x.visibility === 'פרטי' && x.chp_number && x.chp_number !== '520018078');
 r = await call(env, { h1: prv.chp_number });
 assert.equal(parts(r)[2], 't-לעסק זה יש רק היתר עסקה פרטי');
-assert.equal(parts(r)[3], 't-היתר העסקה תקף רק למי שחתם על היתר עסקה פרטי');
+assert.equal(parts(r)[3], 't-ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי');
 assert.equal(parts(r).length, 5); console.log('1b2', parts(r));
 // חברה שאין לה היתר עסקה (רק ברישום)
 r = await call(env, { h1: '511111111' });
