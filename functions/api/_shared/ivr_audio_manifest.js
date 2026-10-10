@@ -4,17 +4,23 @@ export default {
  "ask1": {
   "text": "אמרו את שם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_ac4cd71b1828"
+  "path": "/99/c6_ac4cd71b18286a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "ask2": {
   "text": "אמרו שוב את שם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_97d3ee9ce715"
+  "path": "/99/c6_97d3ee9ce7156a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "askChp": {
-  "text": "הקישו את מספר הַחֵית פֵּא, תשע ספרות, ואחריו סולמית",
+  "text": "הקישו את מספר הַחֶת פֵּא, תשע ספרות, ואחריו סולמית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_c8faa48efa33"
+  "path": "/99/c6_0bda1e78207c6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "baam": {
   "text": "בָּא אַם",
@@ -27,9 +33,11 @@ export default {
   "path": "/99/c6_00f2a0901252"
  },
  "menu": {
-  "text": "מומלץ לחפש לפי חֵית פֵּא של הַחֶבְרָה. במידה שיש לכם את מספר הַחֵית פֵּא, הקישו 1. אִם לֹא, הַקִּישׁוּ 2 לְחִיפּוּשׂ לְפִי שֵׁם הַחֶבְרָה",
+  "text": "מומלץ לחפש לפי חֶת פֵּא של הַחֶבְרָה. במידה שיש לכם את מספר הַחֶת פֵּא, הקישו 1. אִם לֹא, הַקִּישׁוּ 2 לְחִיפּוּשׂ לְפִי שֵׁם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_28e74a214b19"
+  "path": "/99/c6_f6fb4debda346a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "next": {
   "text": "לחיפוש נוסף הקישו 1. לסיום הקישו 2",
@@ -39,7 +47,9 @@ export default {
  "noChp": {
   "text": "לא נמצאה חֶבְרָה במספר הזה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_e4413d1eb319"
+  "path": "/99/c6_e4413d1eb3196a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "noHear": {
   "text": "לא הצלחתי להבין",
@@ -49,12 +59,16 @@ export default {
  "noMatch": {
   "text": "לא נמצאה חֶבְרָה מתאימה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_16f8c130ca3c"
+  "path": "/99/c6_16f8c130ca3c6a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "noName": {
   "text": "לא נמצאה חֶבְרָה בשם הזה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_0347dd27f4aa"
+  "path": "/99/c6_0347dd27f4aa6a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "permit:general": {
   "text": "קיים היתר עסקה כללי",
@@ -77,39 +91,53 @@ export default {
   "path": "/99/c6_b041ab352254"
  },
  "tooMany": {
-  "text": "הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר חֵית פֵּא. לאמירת השם המלא הקישו 1. לחיפוש לפי חֵית פֵּא הקישו 2",
+  "text": "הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר חֶת פֵּא. לאמירת השם המלא הקישו 1. לחיפוש לפי חֶת פֵּא הקישו 2",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_cdc7a5d7c4d4"
+  "path": "/99/c6_4a05e30269876a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:חברה": {
   "text": "חֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_5aa4ef3eeb72"
+  "path": "/99/c6_5aa4ef3eeb726a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:חברה מחוקה": {
   "text": "חֶבְרָה מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_0ae57426fcb5"
+  "path": "/99/c6_0ae57426fcb56a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:חברה פרטית": {
   "text": "חֶבְרָה פרטית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_f7662618e830"
+  "path": "/99/c6_f7662618e8306a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:חברה פרטית מחוקה": {
   "text": "חֶבְרָה פרטית מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_b54857686e69"
+  "path": "/99/c6_b54857686e696a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:חברה ציבורית": {
   "text": "חֶבְרָה ציבורית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_057e4e5b7152"
+  "path": "/99/c6_057e4e5b71526a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:חברה ציבורית מחוקה": {
   "text": "חֶבְרָה ציבורית מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_e9d07a962f3f"
+  "path": "/99/c6_e9d07a962f3f6a4e147f",
+  "pron": "6a4e147f",
+  "phoneme": true
  },
  "type:עמותה": {
   "text": "עמותה",
