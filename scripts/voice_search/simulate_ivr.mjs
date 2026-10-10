@@ -179,9 +179,9 @@ globalThis.fetch = async (url, init = {}) => {
 };
 env = mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: '0771:pw' });
 assert.match(await call(env, { ApiCallId: 'abc-1' }), /=m1,no,1,1,/);
-// הגבלת זמן להקלטה: מינימום 1, מקסימום 8 שניות
+// הגבלת זמן להקלטה: מינימום 1, מקסימום 6 שניות
 r = await call(env, { ApiCallId: 'abc-1', m1: '2' });
-assert.match(r, /^read=t-אמרו את שם החברה=s1_1,no,record,\/6,rabc1_1_1,no,yes,no,1,8$/); console.log('4a', r);
+assert.match(r, /^read=t-אמרו את שם החברה=s1_1,no,record,\/6,rabc1_1_1,no,yes,no,1,6$/); console.log('4a', r);
 // ניתן לשינוי / ביטול
 assert.match(await call(mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: 'x:y', IVR_REC_MAX_SEC: '5' }), { ApiCallId: 'abc-1', m1: '2' }), /,no,1,5$/);
 assert.match(await call(mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: 'x:y', IVR_REC_MAX_SEC: '0' }), { ApiCallId: 'abc-1', m1: '2' }), /,no,yes,no$/);

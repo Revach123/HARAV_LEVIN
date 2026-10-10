@@ -18,7 +18,7 @@ database_id = "c1d082fc-c125-4f62-8b33-9b62d5bda2da"
 # שלוחת ימות 6 (functions/api/ivr-company.js):
 [vars]
 IVR_REC_MIN_SEC = "1"   # הקלטה: מינימום שניות
-IVR_REC_MAX_SEC = "8"   # הקלטה: מקסימום שניות ("0" = בלי הגבלה)
+IVR_REC_MAX_SEC = "6"   # הקלטה: מקסימום שניות ("0" = בלי הגבלה)
 # אופציונלי (ברירות המחדל בקוד): IVR_REC_FOLDER = "/6", IVR_BACK_FOLDER = "/5"
 
 # After setup, run:
