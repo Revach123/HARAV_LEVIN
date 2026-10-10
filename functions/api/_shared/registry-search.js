@@ -107,7 +107,7 @@ export function permitIndex(businesses) {
 }
 
 // ---------------------------------------------------------------------------
-//  תיאור לתוצאה: סוג, שם (בלי בע"מ), מצב היתר
+//  תיאור לתוצאה: סוג, שם (בע"מ נשאר ומוקרא בראשי תיבות), מצב היתר
 // ---------------------------------------------------------------------------
 export function typeLabel(item) {
   const s = String(item.sub || '');
@@ -121,7 +121,6 @@ export function typeLabel(item) {
 export function speechName(name) {
   return String(name || '')
     .replace(/\s*\(\s*ע["״']?ר\s*\)\s*$/, '')           // (ע"ר) בסוף עמותה
-    .replace(/\s*בע["״]?מ\.?\s*$/, '')                   // בע"מ בסוף
     .replace(/\s*שותפות מוגבלת\s*$/, '')                  // הסוג כבר מוקרא לפני השם
     .replace(/[\s.,\-]+$/, '')
     .trim();
@@ -129,8 +128,14 @@ export function speechName(name) {
 
 export function describe(item, permitOf) {
   const p = permitOf(item);
-  const permit = p === 'פרטי' ? 'לעסק זה יש רק היתר עסקה פרטי' : p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה';
-  return [typeLabel(item), speechName(item.name), permit];
+  const out = [typeLabel(item), speechName(item.name)];
+  if (p === 'פרטי') {
+    out.push('לעסק זה יש רק היתר עסקה פרטי');
+    out.push('היתר העסקה תקף רק למי שחתם על היתר עסקה פרטי');
+  } else {
+    out.push(p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה');
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
