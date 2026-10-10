@@ -38,6 +38,16 @@ for (const label of TYPE_LABELS) {
   PHRASES[`type:${label} מחוקה`] = `${label} מחוקה`;
 }
 
+// ניקוד להגייה נכונה (גם ב-Azure וגם ב-TTS של ימות). המפתחות (type:חברה פרטית וכו') נשארים בלי ניקוד.
+// מילה שלמה בלבד: "החברה" -> "הַחֶבְרָה", "חברה" -> "חֶבְרָה".
+const NIQQUD = [
+  [/(?<![א-ת])החברה(?![א-ת])/g, 'הַחֶבְרָה'],
+  [/(?<![א-ת])חברה(?![א-ת])/g, 'חֶבְרָה'],
+];
+for (const k of Object.keys(PHRASES)) {
+  for (const [re, rep] of NIQQUD) PHRASES[k] = PHRASES[k].replace(re, rep);
+}
+
 // ימות מפרקת הודעות לפי = & , . ואין בה גרשיים בשמות - מנקים מהטקסט המוקרא.
 export function ttsClean(s) {
   return String(s || '')
