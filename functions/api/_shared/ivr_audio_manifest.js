@@ -2,14 +2,14 @@
 // {מפתח ביטוי: {text, voice, path}} - path הוא נתיב הקובץ בימות (בלי סיומת).
 export default {
  "ask1": {
-  "text": "אמרו את שם החברה",
+  "text": "אמרו את שם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_96b17d6aff84"
+  "path": "/99/c6_ac4cd71b1828"
  },
  "ask2": {
-  "text": "אמרו שוב את שם החברה",
+  "text": "אמרו שוב את שם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_fa7024a09742"
+  "path": "/99/c6_97d3ee9ce715"
  },
  "askChp": {
   "text": "הקישו את מספר הח פ, תשע ספרות, ואחריו סולמית",
@@ -27,9 +27,9 @@ export default {
   "path": "/99/c6_00f2a0901252"
  },
  "menu": {
-  "text": "מומלץ לחפש לפי ח פ של החברה. במידה שיש לכם את מספר הח פ, הקישו 1. אם לא, הקישו 2 לחיפוש לפי שם החברה",
+  "text": "מומלץ לחפש לפי ח פ של הַחֶבְרָה. במידה שיש לכם את מספר הח פ, הקישו 1. אם לא, הקישו 2 לחיפוש לפי שם הַחֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_ce927ad087cb"
+  "path": "/99/c6_db0132c06cdf"
  },
  "next": {
   "text": "לחיפוש נוסף הקישו 1. לסיום הקישו 2",
@@ -37,9 +37,9 @@ export default {
   "path": "/99/c6_430d980ad66f"
  },
  "noChp": {
-  "text": "לא נמצאה חברה במספר הזה",
+  "text": "לא נמצאה חֶבְרָה במספר הזה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_5b6e3292153d"
+  "path": "/99/c6_e4413d1eb319"
  },
  "noHear": {
   "text": "לא הצלחתי להבין",
@@ -47,14 +47,14 @@ export default {
   "path": "/99/c6_02e40cef4692"
  },
  "noMatch": {
-  "text": "לא נמצאה חברה מתאימה",
+  "text": "לא נמצאה חֶבְרָה מתאימה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_14d6e37c3719"
+  "path": "/99/c6_16f8c130ca3c"
  },
  "noName": {
-  "text": "לא נמצאה חברה בשם הזה",
+  "text": "לא נמצאה חֶבְרָה בשם הזה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_546e32333970"
+  "path": "/99/c6_0347dd27f4aa"
  },
  "permit:general": {
   "text": "קיים היתר עסקה כללי",
@@ -82,34 +82,34 @@ export default {
   "path": "/99/c6_1bad27b91ac3"
  },
  "type:חברה": {
-  "text": "חברה",
+  "text": "חֶבְרָה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_2c936a4a56e4"
+  "path": "/99/c6_5aa4ef3eeb72"
  },
  "type:חברה מחוקה": {
-  "text": "חברה מחוקה",
+  "text": "חֶבְרָה מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_52a7801648aa"
+  "path": "/99/c6_0ae57426fcb5"
  },
  "type:חברה פרטית": {
-  "text": "חברה פרטית",
+  "text": "חֶבְרָה פרטית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_127ff0d5edf5"
+  "path": "/99/c6_f7662618e830"
  },
  "type:חברה פרטית מחוקה": {
-  "text": "חברה פרטית מחוקה",
+  "text": "חֶבְרָה פרטית מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_e33776e7c98a"
+  "path": "/99/c6_b54857686e69"
  },
  "type:חברה ציבורית": {
-  "text": "חברה ציבורית",
+  "text": "חֶבְרָה ציבורית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_1db222d99dab"
+  "path": "/99/c6_057e4e5b7152"
  },
  "type:חברה ציבורית מחוקה": {
-  "text": "חברה ציבורית מחוקה",
+  "text": "חֶבְרָה ציבורית מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_7c520e0325ac"
+  "path": "/99/c6_e9d07a962f3f"
  },
  "type:עמותה": {
   "text": "עמותה",
