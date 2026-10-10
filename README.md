@@ -181,3 +181,11 @@ title=חיפוש היתר עסקה חברות
 - `IVR_BACK_FOLDER` (`/5`) – לאן חוזרים בסיום.
 
 בדיקות מקומיות (בלי ימות): `node --no-warnings scripts/voice_search/simulate_ivr.mjs` ו-`node scripts/voice_search/test_voice_match.mjs`.
+
+### קבצי שמע של Azure לביטויים הקבועים
+
+ההקראה בשלוחה 6 היא כברירת מחדל ב-TTS של ימות (`t-`). לביטויים **הקבועים** (התפריטים, סוג התאגיד, מצב ההיתר, "בָּא אַם") אפשר להפיק קבצי שמע ב-Azure (`he-IL-AvriNeural`) ולהעלות לימות (שלוחה 99); הקוד ישמיע אותם (`f-`) ברגע שהם קיימים, ובלעדיהם נופל ל-TTS. **שמות החברות** נשארים תמיד ב-TTS של ימות (דינמיים).
+
+- הביטויים: `functions/api/_shared/ivr_phrases.js`. שינוי טקסט שם פוסל את הקובץ הישן אוטומטית עד שמופק חדש.
+- הפקה: Actions ואז **ivr-audio** ואז **Run workflow** (קודם `dry_run`, אחר כך בלי). נדרשים secrets בריפו הזה: `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `YEMOT_TTS`. ה-workflow מעלה לימות ורק אז עושה commit ל-`ivr_audio_manifest.js`. גם push ל-`main` שנוגע בביטויים מפעיל אותו (בלי secrets הוא מדלג).
+- מקומית: `node scripts/ivr_audio/dump_phrases.mjs > phrases.json` ואחר כך `python scripts/ivr_audio/build_audio.py --phrases phrases.json [--dry-run]`.

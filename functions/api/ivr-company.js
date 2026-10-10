@@ -26,6 +26,8 @@ import { loadBusinesses } from './_shared/businesses-cache.js';
 import { sttConfigured, transcribeRecording } from './_shared/stt-azure.js';
 import { sttGet, sttPut } from './_shared/stt-cache.js';
 import { MAX_LIST, describe, permitIndex, searchByChp, searchByName } from './_shared/registry-search.js';
+import { ttsClean, unit } from './_shared/ivr_phrases.js';
+import MANIFEST from './_shared/ivr_audio_manifest.js';
 
 const CFG = {
   TOKEN_PARAM: 'sk',       // api_add_0=sk=<secret> בהגדרת השלוחה
@@ -38,8 +40,10 @@ const CFG = {
   REC_MAX_SEC: 8,
 };
 
-const TOO_MANY_MSG = 'הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר ח פ. לאמירת השם המלא הקישו 1. לחיפוש לפי ח פ הקישו 2';
-const MENU_MSG = 'מומלץ לחפש לפי ח פ של החברה. במידה שיש לכם את מספר הח פ, הקישו 1. אם לא, הקישו 2 לחיפוש לפי שם החברה';
+// ביטוי קבוע: קובץ שמע של Azure אם הופק (ivr_audio_manifest.js), אחרת TTS של ימות. הודעה = חלקים מחוברים ב-'.'
+const P = (key) => unit(key, MANIFEST);
+const msg = (...parts) => parts.flat().filter(Boolean).join('.');
+const notes = (keys) => (keys || []).map(P);
 
 export async function onRequest({ request, env }) {
   const raw = await parseYemot(request);
@@ -74,11 +78,11 @@ async function route(ctx) {
     const nx = `nx${r}`;
     if (has(v, nx)) {
       if (v[nx] === '1') continue;                  // חיפוש נוסף -> הסבב הבא
-      return `id_list_message=t-תודה ולהתראות&go_to_folder=${back(env)}&`;
+      return `id_list_message=${P('bye')}&go_to_folder=${back(env)}&`;
     }
     return await round(ctx, r);
   }
-  return `id_list_message=t-תודה ולהתראות&go_to_folder=${back(env)}&`;
+  return `id_list_message=${P('bye')}&go_to_folder=${back(env)}&`;
 }
 
 async function round(ctx, r) {
@@ -89,9 +93,9 @@ async function round(ctx, r) {
 
   // תפריט פותח: 1 = לפי ח.פ. (מומלץ), 2 = לפי שם.
   const mKey = `m${r}`;
-  if (!has(v, mKey)) return readTap(MENU_MSG, mKey, ['1', '2']);
+  if (!has(v, mKey)) return readTapRaw(P('menu'), mKey, ['1', '2']);
 
-  let note = '';
+  let note = [];
   if (v[mKey] === '1') {
     const c = await chpStep(ctx, r, '', true);
     if (c.body) return c.body;
@@ -104,7 +108,7 @@ async function round(ctx, r) {
 
   // כל הניסיונות לפי שם נכשלו: אם עוד לא ניסו ח.פ., מציעים אותו; אחרת מסיימים.
   if (!has(v, `h${r}`)) return (await chpStep(ctx, r, n.note, false)).body;
-  return readNext(r, 'לא נמצאה חברה מתאימה');
+  return readNext(r, ['noMatch']);
 }
 
 // חיפוש לפי ח.פ. מחזיר {body} (פקודה לימות) או {note} (להמשיך לחיפוש לפי שם).
@@ -112,12 +116,12 @@ async function chpStep(ctx, r, note, fallbackToName) {
   const { v, env, rows } = ctx;
   const hKey = `h${r}`;
   if (!has(v, hKey)) {
-    return { body: readTap(note + 'הקישו את מספר הח פ, תשע ספרות, ואחריו סולמית', hKey, null, { max: 9, min: 5 }) };
+    return { body: readTapRaw(msg(notes(note), P('askChp')), hKey, null, { max: 9, min: 5 }) };
   }
   const items = v[hKey] === CFG.EMPTY_VAL ? [] : await searchByChp(env, v[hKey], rows);
   if (items.length) return { body: listing(ctx, r, items) };
-  if (fallbackToName && ctx.voice) return { note: 'לא נמצאה חברה במספר הזה. ' };
-  return { body: readNext(r, 'לא נמצאה חברה במספר הזה') };
+  if (fallbackToName && ctx.voice) return { note: ['noChp'] };
+  return { body: readNext(r, ['noChp']) };
 }
 
 // חיפוש לפי שם (דיבור): עד MAX_SPEECH_ATTEMPTS ניסיונות.
@@ -126,7 +130,7 @@ async function nameStep(ctx, r, note) {
   for (let a = 1; a <= CFG.MAX_SPEECH_ATTEMPTS; a++) {
     const sKey = `s${r}_${a}`;
     if (!has(v, sKey)) {
-      return { body: readSpeech(env, v, r, a, note + (a === 1 ? 'אמרו את שם החברה' : 'אמרו שוב את שם החברה')) };
+      return { body: readSpeech(env, v, r, a, msg(notes(note), P(a === 1 ? 'ask1' : 'ask2'))) };
     }
 
     let spoken = String(v[sKey]);
@@ -134,16 +138,16 @@ async function nameStep(ctx, r, note) {
     else if (looksLikeRecording(spoken)) {
       return { body: `id_list_message=t-זיהוי הדיבור עדיין לא הוגדר נכון&go_to_folder=${back(env)}&` };
     }
-    if (!spoken || spoken === CFG.EMPTY_VAL) { note = 'לא הצלחתי להבין. '; continue; }
+    if (!spoken || spoken === CFG.EMPTY_VAL) { note = ['noHear']; continue; }
 
     const found = await searchByName(env, spoken, rows);
-    if (!found.items.length) { note = 'לא נמצאה חברה בשם הזה. '; continue; }
+    if (!found.items.length) { note = ['noName']; continue; }
     if (found.tooMany) {
       // יותר מ-MAX_LIST תוצאות: לא מקריאים. מציעים שם מלא יותר, או ח.פ.
       const tKey = `t${r}_${a}`;
-      if (!has(v, tKey)) return { body: readTap(TOO_MANY_MSG, tKey, ['1', '2']) };
+      if (!has(v, tKey)) return { body: readTapRaw(P('tooMany'), tKey, ['1', '2']) };
       if (v[tKey] === '2') return { goChp: true };
-      note = '';
+      note = [];
       continue;
     }
     return { body: listing(ctx, r, found.items) };
@@ -158,14 +162,18 @@ async function nameStep(ctx, r, note) {
 function listing(ctx, r, items) {
   const parts = [];
   for (const item of items.slice(0, MAX_LIST)) {
-    for (const piece of describe(item, ctx.permitOf)) parts.push(say(piece));
+    const d = describe(item, ctx.permitOf);
+    parts.push(P(`type:${d.type}`), say(d.name));              // שם החברה: TTS של ימות
+    if (d.baam) parts.push(P('baam'));
+    if (d.permit === 'private') parts.push(P('permit:private'), P('permit:private2'));
+    else parts.push(P(d.permit === 'general' ? 'permit:general' : 'permit:none'));
   }
-  parts.push(say('לחיפוש נוסף הקישו 1. לסיום הקישו 2'));
+  parts.push(P('next'));
   return readTapRaw(parts.join('.'), `nx${r}`, ['1', '2']);
 }
 
-function readNext(r, msg) {
-  return readTap(`${msg}. לחיפוש נוסף הקישו 1. לסיום הקישו 2`, `nx${r}`, ['1', '2']);
+function readNext(r, noteKeys) {
+  return readTapRaw(msg(notes(noteKeys), P('next')), `nx${r}`, ['1', '2']);
 }
 
 // ----------------------------------------------------------------------------
@@ -176,14 +184,14 @@ function readNext(r, msg) {
 // ברירת המחדל כוללת הגבלת זמן (מינימום,מקסימום שניות) כדי שלא ימתינו לדיבור בלי סוף.
 // ניתן לדרוס את כל הזנב ב-env.IVR_VOICE_READ_OPTS; {folder} {file} {min} {max} מוחלפים.
 // מצב טקסט (בלי Azure): הזנב הוא מה שימות מגדירים לקבלת טקסט מזוהה.
-function readSpeech(env, v, r, a, msg) {
+function readSpeech(env, v, r, a, msgParts) {
   const max = intEnv(env.IVR_REC_MAX_SEC, CFG.REC_MAX_SEC);
   const min = intEnv(env.IVR_REC_MIN_SEC, CFG.REC_MIN_SEC);
   const limits = max > 0 ? `,${min},${max}` : '';           // IVR_REC_MAX_SEC=0 -> בלי הגבלה
   const tail = (env.IVR_VOICE_READ_OPTS || `no,record,{folder},{file},no,yes,no${limits}`)
     .replace('{folder}', recFolder(env)).replace('{file}', recFile(v, r, a))
     .replace('{min}', String(min)).replace('{max}', String(max));
-  return `read=${say(msg)}=s${r}_${a},${tail}`;
+  return `read=${msgParts}=s${r}_${a},${tail}`;
 }
 
 const intEnv = (val, dflt) => { const n = parseInt(val, 10); return Number.isFinite(n) ? n : dflt; };
@@ -207,10 +215,6 @@ async function recognize(env, v, r, a, value) {
 }
 
 // כמו readTap ב-ivr.js של revach (אותו סדר פרמטרים שכבר עובד בשלוחות הקיימות).
-function readTap(msg, valName, digitsAllowed, opts = {}) {
-  return readTapRaw(say(msg), valName, digitsAllowed, opts);
-}
-
 function readTapRaw(msgParts, valName, digitsAllowed, opts = {}) {
   const ops = [
     valName, 'no',
@@ -226,15 +230,6 @@ function readTapRaw(msgParts, valName, digitsAllowed, opts = {}) {
 // ----------------------------------------------------------------------------
 //  עזרים
 // ----------------------------------------------------------------------------
-// ימות מפרקת הודעות לפי = & , . ואין בה גרשיים בשמות - מנקים מהטקסט המוקרא.
-function ttsClean(s) {
-  return String(s || '')
-    .replace(/(^|[^א-ת])בע["״]?מ(?![א-ת])/g, '$1בָּא אַם')   // בע"מ מוקרא בראשי תיבות
-    .replace(/["'״׳“”]/g, '')
-    .replace(/[=&,.\n\r]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 const say = (s) => 't-' + ttsClean(s);
 
 const back = (env) => (env && env.IVR_BACK_FOLDER) || CFG.BACK_FOLDER;

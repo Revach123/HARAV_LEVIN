@@ -118,24 +118,20 @@ export function typeLabel(item) {
   return DEFUNCT.test(item.status || '') ? `${label} מחוקה` : label;
 }
 
-export function speechName(name) {
-  return String(name || '')
-    .replace(/\s*\(\s*ע["״']?ר\s*\)\s*$/, '')           // (ע"ר) בסוף עמותה
-    .replace(/\s*שותפות מוגבלת\s*$/, '')                  // הסוג כבר מוקרא לפני השם
-    .replace(/[\s.,\-]+$/, '')
-    .trim();
+// שם להקראה: בלי (ע"ר) ובלי "שותפות מוגבלת" (הסוג מוקרא לפני השם). "בע"מ" בסוף נפרד
+// מהשם (baam) כדי שיושמע בקובץ שמע משלו.
+export function splitName(name) {
+  let n = String(name || '').replace(/\s*\(\s*ע["״']?ר\s*\)\s*$/, '').replace(/\s*שותפות מוגבלת\s*$/, '');
+  const baam = /\s*בע["״]?מ\.?\s*$/.test(n);
+  if (baam) n = n.replace(/\s*בע["״]?מ\.?\s*$/, '');
+  return { name: n.replace(/[\s.,\-]+$/, '').trim(), baam };
 }
 
+/** מה מוקרא לתוצאה: {type, name, baam, permit: 'private' | 'general' | 'none'} */
 export function describe(item, permitOf) {
   const p = permitOf(item);
-  const out = [typeLabel(item), speechName(item.name)];
-  if (p === 'פרטי') {
-    out.push('לעסק זה יש רק היתר עסקה פרטי');
-    out.push('ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי');
-  } else {
-    out.push(p === 'כללי' ? 'קיים היתר עסקה כללי' : 'לא קיים היתר עסקה');
-  }
-  return out;
+  const { name, baam } = splitName(item.name);
+  return { type: typeLabel(item), name, baam, permit: p === 'פרטי' ? 'private' : p === 'כללי' ? 'general' : 'none' };
 }
 
 // ---------------------------------------------------------------------------

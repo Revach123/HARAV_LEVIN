@@ -1,0 +1,58 @@
+// ============================================================================
+//  functions/api/_shared/ivr_phrases.js — הביטויים הקבועים של שלוחה 6 (ivr-company.js)
+//
+//  כל ביטוי קבוע מושמע מקובץ שמע שהופק ב-Azure Speech (f-) כשיש לו קובץ במניפסט
+//  (ivr_audio_manifest.js), ואחרת מהטקסט ב-TTS של ימות (t-) - כמו שהיה. שמות החברות
+//  הם דינמיים, ולכן תמיד ב-TTS של ימות.
+//
+//  scripts/ivr_audio/dump_phrases.mjs מייצא את PHRASES, ו-build_audio.py מייצר ומעלה
+//  קבצים. שינוי טקסט כאן = הקובץ הישן נפסל אוטומטית (השוואת טקסט במניפסט) עד שייווצר חדש.
+// ============================================================================
+
+export const VOICE = 'he-IL-AvriNeural';
+export const AUDIO_FOLDER = '99';            // שלוחת קבצי השמע בימות (כמו revach)
+
+// סוגי תאגיד שמוקראים לפני שם החברה (registry-search.js typeLabel)
+export const TYPE_LABELS = ['חברה פרטית', 'חברה ציבורית', 'חברה', 'שותפות מוגבלת', 'שותפות כללית', 'שותפות', 'עמותה'];
+
+export const PHRASES = {
+  menu:     'מומלץ לחפש לפי ח פ של החברה. במידה שיש לכם את מספר הח פ, הקישו 1. אם לא, הקישו 2 לחיפוש לפי שם החברה',
+  tooMany:  'הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר ח פ. לאמירת השם המלא הקישו 1. לחיפוש לפי ח פ הקישו 2',
+  ask1:     'אמרו את שם החברה',
+  ask2:     'אמרו שוב את שם החברה',
+  askChp:   'הקישו את מספר הח פ, תשע ספרות, ואחריו סולמית',
+  noName:   'לא נמצאה חברה בשם הזה',
+  noChp:    'לא נמצאה חברה במספר הזה',
+  noMatch:  'לא נמצאה חברה מתאימה',
+  noHear:   'לא הצלחתי להבין',
+  next:     'לחיפוש נוסף הקישו 1. לסיום הקישו 2',
+  bye:      'תודה ולהתראות',
+  baam:     'בָּא אַם',                                   // "בע"מ" מוקרא אחרי שם החברה
+  'permit:private': 'לעסק זה יש רק היתר עסקה פרטי',
+  'permit:private2': 'ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי',
+  'permit:general': 'קיים היתר עסקה כללי',
+  'permit:none': 'לא קיים היתר עסקה',
+};
+for (const label of TYPE_LABELS) {
+  PHRASES[`type:${label}`] = label;
+  PHRASES[`type:${label} מחוקה`] = `${label} מחוקה`;
+}
+
+// ימות מפרקת הודעות לפי = & , . ואין בה גרשיים בשמות - מנקים מהטקסט המוקרא.
+export function ttsClean(s) {
+  return String(s || '')
+    .replace(/(^|[^א-ת])בע["״]?מ(?![א-ת])/g, `$1${PHRASES.baam}`)      // בע"מ באמצע טקסט
+    .replace(/["'״׳“”]/g, '')
+    .replace(/[=&,.\n\r]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** חלק הודעה של ימות לביטוי קבוע: f-<נתיב> אם יש קובץ שמע עדכני, אחרת t-<טקסט>. */
+export function unit(key, manifest) {
+  const text = PHRASES[key];
+  if (text == null) throw new Error(`unknown phrase: ${key}`);
+  const m = manifest && manifest[key];
+  if (m && m.path && m.text === text) return `f-${m.path}`;
+  return `t-${ttsClean(text)}`;
+}

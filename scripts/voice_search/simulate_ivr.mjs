@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { onRequest } from '../../functions/api/ivr-company.js';
+import { PHRASES, unit } from '../../functions/api/_shared/ivr_phrases.js';
 
 const csv = readFileSync(new URL('../../reports/heteriske_audit/heteriske_businesses_with_chp.csv', import.meta.url), 'utf8').replace(/^﻿/, '');
 const rows = [];
@@ -64,7 +65,9 @@ async function call(env, vars) {
   for (const [k, v] of Object.entries(vars)) if (k !== 'ApiCallId') u.searchParams.set(k, v);
   return (await onRequest({ request: new Request(u), env })).text();
 }
-const parts = (r) => r.replace(/^read=/, '').split('=')[0].split('.');
+const rawParts = (r) => r.replace(/^read=/, '').split('=')[0].split('.');
+// "בע"מ" מושמע כחלק נפרד אחרי השם; ב-parts() הוא מודבק חזרה לשם כדי לפשט את ההשוואות
+const parts = (r) => rawParts(r).reduce((o, x) => { if (x === 't-בָּא אַם') o[o.length - 1] += ' בָּא אַם'; else o.push(x); return o; }, []);
 const permitOf = (n) => rows.findIndex((x) => x.chp_number === n);
 
 // 1. ללא זיהוי דיבור: ח.פ. בלבד, בלי תפריט
@@ -89,7 +92,7 @@ r = await call(env, { h1: '511111111' });
 console.log('1c', parts(r)); assert.deepEqual(parts(r).slice(0, 3), ['t-חברה ציבורית', 't-אבגד תעשיות בָּא אַם', 't-לא קיים היתר עסקה']);
 r = await call(env, { h1: '551111111' }); assert.equal(parts(r)[0], 't-שותפות מוגבלת'); assert.equal(parts(r)[1], 't-קרן הדר');
 r = await call(env, { h1: '581111111' }); assert.equal(parts(r)[0], 't-עמותה'); assert.equal(parts(r)[1], 't-עמותת חסד ואמת');
-assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה לחיפוש נוסף הקישו 1 לסיום הקישו 2=nx1/);
+assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה\.t-לחיפוש נוסף הקישו 1 לסיום הקישו 2=nx1/);
 // nx: 1 -> סבב חדש, 2 -> סיום
 assert.match(await call(env, { h1: '511111111', nx1: '1' }), /=h2,no,9,5,/);
 assert.match(await call(env, { h1: '511111111', nx1: '2' }), /^id_list_message=t-תודה ולהתראות&go_to_folder=\/5&$/);
@@ -103,7 +106,7 @@ assert.match(r, /^read=t-מומלץ לחפש לפי ח פ.*הקישו 1.*הקי�
 assert.match(await call(env, { m1: '1' }), /=h1,no,9,5,/);
 // ח.פ. לא קיים -> לפי שם
 r = await call(env, { m1: '1', h1: '111111111' });
-assert.match(r, /^read=t-לא נמצאה חברה במספר הזה אמרו את שם החברה=s1_1,no,voice$/); console.log('2b', r);
+assert.match(r, /^read=t-לא נמצאה חברה במספר הזה\.t-אמרו את שם החברה=s1_1,no,voice$/); console.log('2b', r);
 r = await call(env, { m1: '2' });
 assert.match(r, /^read=t-אמרו את שם החברה=s1_1,no,voice$/);
 // חברה בלי היתר: "אבגד לוגיסטיקה" (נמצאת רק ברישום)
@@ -133,13 +136,24 @@ r = await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1', s1_2: '
 assert.equal(parts(r)[1], 't-מנורה בטחון 7 בָּא אַם');
 // לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
-assert.match(r, /^read=t-לא נמצאה חברה בשם הזה אמרו שוב את שם החברה=s1_2,no,voice$/);
+assert.match(r, /^read=t-לא נמצאה חברה בשם הזה\.t-אמרו שוב את שם החברה=s1_2,no,voice$/);
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ' });
 assert.match(r, /=h1,no,9,5,/); console.log('2g', r);
-assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה לחיפוש נוסף.*=nx1/);
+assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
 assert.match(await call(env, { m1: '2', s1_1: '/6/rec001.wav' }), /לא הוגדר נכון/);
 // חיפוש נוסף: סבב 2 מתחיל מהתפריט
 assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: '1' }), /=m2,no,1,1,/);
+
+// "בע"מ" הוא חלק נפרד אחרי שם החברה (קובץ שמע משלו)
+r = await call(mkEnv(), { h1: '520018078' });
+assert.deepEqual(rawParts(r).slice(0, 3), ['t-חברה פרטית', 't-בנק לאומי לישראל', 't-בָּא אַם']);
+// ביטוי קבוע: קובץ שמע כשיש במניפסט ועדכני, אחרת TTS
+const mf = { baam: { text: PHRASES.baam, path: '/99/abc123' }, noHear: { text: 'ישן', path: '/99/old' } };
+assert.equal(unit('baam', mf), 'f-/99/abc123');
+assert.equal(unit('noHear', mf), 't-לא הצלחתי להבין');       // טקסט השתנה -> הקובץ הישן נפסל
+assert.equal(unit('ask1', {}), 't-אמרו את שם החברה');
+assert.equal(unit('type:חברה פרטית מחוקה', {}), 't-חברה פרטית מחוקה');
+assert.throws(() => unit('nope', {}));
 
 // 3. בלי DB1: נופלים חזרה לעסקים עם היתר, בלי לקרוס
 const noReg = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice', DB1: undefined });
@@ -175,6 +189,6 @@ r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav', nx1
 assert.match(r, /תודה ולהתראות/); assert.equal(calls.length, n);
 heard = '';
 r = await call(env, { ApiCallId: 'abc-2', m1: '2', s1_1: '/6/rabc2_1_1.wav' });
-assert.match(r, /לא הצלחתי להבין אמרו שוב את שם החברה=s1_2,no,record,\/6,rabc2_1_2/); console.log('4c', r);
+assert.match(r, /לא הצלחתי להבין\.t-אמרו שוב את שם החברה=s1_2,no,record,\/6,rabc2_1_2/); console.log('4c', r);
 globalThis.fetch = realFetch;
 console.log('OK');
