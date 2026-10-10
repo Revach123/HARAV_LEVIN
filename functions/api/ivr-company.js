@@ -18,7 +18,7 @@
 //  דרישות: env.IVR_SECRET, binding DB (טבלת businesses - מצב היתר העסקה).
 //  מאגר הרישום: binding DB1 = company-info-db (בלעדיו נופלים לטבלת businesses בלבד).
 //  זיהוי חיצוני: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, YEMOT_TOKEN (או YEMOT_TTS).
-//  אופציונלי: IVR_VOICE_READ_OPTS, IVR_REC_FOLDER (ברירת מחדל /6), IVR_REC_MAX_SEC (8),
+//  אופציונלי: IVR_AUDIO_OFF=1 (בלי קבצי שמע של Azure), IVR_VOICE_READ_OPTS, IVR_REC_FOLDER (ברירת מחדל /6), IVR_REC_MAX_SEC (8),
 //             IVR_REC_MIN_SEC (1), IVR_BACK_FOLDER (ברירת מחדל /5).
 // ============================================================================
 
@@ -41,11 +41,14 @@ const CFG = {
 };
 
 // ביטוי קבוע: קובץ שמע של Azure אם הופק (ivr_audio_manifest.js), אחרת TTS של ימות. הודעה = חלקים מחוברים ב-'.'
-const P = (key) => unit(key, MANIFEST);
+// env.IVR_AUDIO_OFF = '1' מכבה את קבצי השמע (הכול ב-TTS של ימות). מוגדר בתחילת כל בקשה (קבוע לכל הבקשות).
+let MF = MANIFEST;
+const P = (key) => unit(key, MF);
 const msg = (...parts) => parts.flat().filter(Boolean).join('.');
 const notes = (keys) => (keys || []).map(P);
 
 export async function onRequest({ request, env }) {
+  MF = String(env.IVR_AUDIO_OFF || '') === '1' ? {} : MANIFEST;
   const raw = await parseYemot(request);
 
   // trim: רווח/שורה חדשה בסוף הסוד (הדבקה בדשבורד או ב-ext.ini) לא אמור לשבור את ההשוואה
