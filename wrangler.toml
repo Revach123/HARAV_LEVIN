@@ -7,6 +7,14 @@ binding = "DB"
 database_name = "business-registry-db"
 database_id = "61e1a52e-1083-478d-914c-5375d8ed59bb"
 
+# משתנים רגילים (לא סודות - הקובץ ציבורי). סודות מוגדרים בנפרד:
+#   wrangler pages secret put <שם> --project-name harav-levin
+# שלוחת ימות 6 (functions/api/ivr-company.js):
+[vars]
+IVR_REC_MIN_SEC = "1"   # הקלטה: מינימום שניות
+IVR_REC_MAX_SEC = "8"   # הקלטה: מקסימום שניות ("0" = בלי הגבלה)
+# אופציונלי (ברירות המחדל בקוד): IVR_REC_FOLDER = "/6", IVR_BACK_FOLDER = "/5"
+
 # After setup, run:
 # npx wrangler d1 create business-registry-db
 # and paste the database_id above
