@@ -1,0 +1,89 @@
+{
+ "summary": {
+  "updated": "2026-10-11T20:08:29.390536Z",
+  "source": "public_api",
+  "businesses": 1207,
+  "numeric_chp": 1202,
+  "found_in_registry": 0,
+  "found_ratio": 0.0,
+  "failed_batches": 15,
+  "datawise_rows": 2220,
+  "datawise_date": "2026-10-09",
+  "bond_companies": 363,
+  "changes": {
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 9
+  },
+  "mode": "dry-run",
+  "statements_applied": 0,
+  "problems": [
+   "registry found ratio 0.00 < 0.85"
+  ]
+ },
+ "changes": [
+  {
+   "id": "mp64mb9xgojz",
+   "chp": "550013098",
+   "field": "tase_has_agch",
+   "old": "אין",
+   "new": "יש"
+  },
+  {
+   "id": "mp64k73198ic",
+   "chp": "512569237",
+   "field": "tase_has_agch",
+   "old": "אין",
+   "new": "יש"
+  },
+  {
+   "id": "mp64kfdlx10d",
+   "chp": "514068980",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64l6dbphi8",
+   "chp": "520007469",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64lihmqy53",
+   "chp": "1863501",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64lu79kwz2",
+   "chp": "520037250",
+   "field": "tase_has_agch",
+   "old": "אין",
+   "new": "יש"
+  },
+  {
+   "id": "mtw7axg8drjm",
+   "chp": "517085874",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "אין"
+  },
+  {
+   "id": "mp64laxzdxl4",
+   "chp": "520043597",
+   "field": "tase_has_agch",
+   "old": "אין",
+   "new": "יש"
+  },
+  {
+   "id": "mp64mewd7qxs",
+   "chp": "514837111",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  }
+ ]
+}
