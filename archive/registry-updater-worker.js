@@ -1,6 +1,6 @@
 // ARCHIVE — עותק של קוד ה-Worker "registry-updater" כפי שנמסר ב-2026-10-11,
 // נשמר לפני מחיקתו מ-Cloudflare. לא רץ מהריפו ואינו נפרס.
-// הסיסמה הקשיחה ב-/run וב-/run-bonds הוחלפה ב-"<REDACTED>" (הריפו ציבורי).
+// הסיסמה הקשיחה ב-/run וב-/run-bonds, ומפתח ה-API של הבורסה, הוחלפו ב-<REDACTED> (הריפו ציבורי).
 //
 // Registry Auto-Updater
 // ─────────────────────────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@
 //   /probe2       — אבחון: מבנה ה-JSON של market-data (זמני)
 
 const TASE_API    = "https://datawise.tase.co.il";
-const TASE_APIKEY = "OpB1TDhiRrF5kbQtjx75Qgcm6Csh31to";
+const TASE_APIKEY = "<TASE_KEY_REDACTED>";
 const BOND_TYPES  = ["03", "05", "11", "36"];
 const BATCH_SIZE  = 40;
 

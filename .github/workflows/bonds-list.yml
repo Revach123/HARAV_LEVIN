@@ -34,6 +34,7 @@ jobs:
       - name: Build bonds lists
         run: python scripts/bonds_list/build_approved_bonds.py
       - name: Commit
+        if: always()
         run: |
           git config user.name  "github-actions"
           git config user.email "actions@github.com"

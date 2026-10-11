@@ -27,6 +27,7 @@ import csv
 import datetime
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -215,7 +216,19 @@ def add_terms(bonds, fetch=fetch_terms):
 
 # ── 3ב. אימות מול datawise הרשמי (Securities Basic, חינמי) ──────────────────
 DATAWISE = "https://datawise.tase.co.il"
-DW_KEY = os.environ.get("TASE_DATAWISE_KEY", "OpB1TDhiRrF5kbQtjx75Qgcm6Csh31to")
+def _datawise_key():
+    key = os.environ.get("TASE_DATAWISE_KEY")
+    if key:
+        return key
+    try:   # ברירת מחדל: המפתח שכבר קיים ב-functions/api/sync-tase.js (בלי עותק נוסף בקוד)
+        with open(os.path.join(ROOT, "functions", "api", "sync-tase.js"), encoding="utf-8") as f:
+            m = re.search(r'TASE_KEY\s*=\s*"([^"]+)"', f.read())
+        return m.group(1) if m else ""
+    except OSError:
+        return ""
+
+
+DW_KEY = _datawise_key()
 DW_HEADERS = {"accept": "application/json", "accept-language": "he-IL", "apikey": DW_KEY,
               "User-Agent": "Mozilla/5.0"}
 MAX_MISSING_ABS, MAX_MISSING_PCT = 5, 0.03   # מעל זה — הריצה נכשלת ולא דורסת פלט
@@ -259,10 +272,15 @@ def cross_check(bonds, approved, dw):
                 and is_bond_type(types.get(str(r.get("securityFullTypeCode")), ""))}
     mine = {b["security_id"] for b in bonds}
     missing, extra = sorted(expected - mine), sorted(mine - expected)
+    by_id = {int(r["securityId"]): r for r in rows}
+    detail = [{"id": i, "name": (by_id[i].get("securityName") or "").strip(),
+               "type": types.get(str(by_id[i].get("securityFullTypeCode")), ""),
+               "code": by_id[i].get("securityFullTypeCode"), "chp": chp_norm(by_id[i].get("corporateId"))}
+              for i in missing[:300]]
     limit = max(MAX_MISSING_ABS, int(MAX_MISSING_PCT * len(expected)))
     return {"status": "ok" if len(missing) <= limit else "too_many_missing",
             "datawise_date": dw_date, "expected": len(expected), "maya": len(mine),
-            "missing_in_maya": missing, "extra_in_maya": extra, "limit": limit}
+            "missing_in_maya": missing, "missing_detail": detail, "extra_in_maya": extra, "limit": limit}
 
 
 # ── 4. היסטוריית ניירות (first_seen) ────────────────────────────────────────
