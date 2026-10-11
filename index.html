@@ -865,16 +865,29 @@ const PUB_COLS = {
     { key:"linkage",       label:"הצמדה"                  },
     { key:"last_price",    label:"שער אחרון",  type:"num"  },
     { key:"change_pct",    label:"שינוי %",    type:"chg"  },
+    { key:"notes",         label:"הערות"                  },
   ],
 };
 
 async function loadPublic() {
   pubLoading = true; pubErr = ""; render();
   try {
-    const r = await fetch(`/api/lists?type=${pubTopic}-${pubLevel}`);
-    const d = await r.json();
-    if (!d.ok) throw new Error(d.error || "error");
-    pubRows = d.rows || [];
+    if (pubTopic === "bonds") {
+      // אג"ח: קבצים סטטיים שנבנים יומית ב-GitHub Actions (בלי D1)
+      const r = await fetch(`/data/bonds_list/bonds_${pubLevel}.json`);
+      if (!r.ok) throw new Error("רשימת האג\"ח לא זמינה (" + r.status + ")");
+      const d = await r.json();
+      pubRows = (d.rows || []).map(x => ({
+        ...x,
+        bond_name: x.security_name, interest: x.annual_interest,
+        maturity_date: x.redemption_date, change_pct: null,
+      }));
+    } else {
+      const r = await fetch(`/api/lists?type=${pubTopic}-${pubLevel}`);
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.error || "error");
+      pubRows = d.rows || [];
+    }
   } catch (e) {
     pubErr = e.message; pubRows = [];
   }
@@ -896,7 +909,15 @@ function setPubSort(c) {
   render();
 }
 function setPubLinkage(v) { pubLinkage = v; render(); }
-function pubExport() { window.location.href = `/api/lists?type=${pubTopic}-${pubLevel}&format=csv`; }
+function pubExport() {
+  if (pubTopic === "bonds") {
+    const a = document.createElement("a");
+    a.href = `/data/bonds_list/bonds_${pubLevel}.csv`; a.download = `bonds_${pubLevel}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    return;
+  }
+  window.location.href = `/api/lists?type=${pubTopic}-${pubLevel}&format=csv`;
+}
 
 // חיפוש — עדכון גוף הטבלה בלבד (לא render מלא, כדי לא לאבד פוקוס)
 function onPubSearch(v) { pubSearch = v; refreshPubBody(); }

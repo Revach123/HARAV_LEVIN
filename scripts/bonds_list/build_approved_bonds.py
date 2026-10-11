@@ -213,6 +213,58 @@ def add_terms(bonds, fetch=fetch_terms):
         })
 
 
+# ── 3ב. אימות מול datawise הרשמי (Securities Basic, חינמי) ──────────────────
+DATAWISE = "https://datawise.tase.co.il"
+DW_KEY = os.environ.get("TASE_DATAWISE_KEY", "OpB1TDhiRrF5kbQtjx75Qgcm6Csh31to")
+DW_HEADERS = {"accept": "application/json", "accept-language": "he-IL", "apikey": DW_KEY,
+              "User-Agent": "Mozilla/5.0"}
+MAX_MISSING_ABS, MAX_MISSING_PCT = 5, 0.03   # מעל זה — הריצה נכשלת ולא דורסת פלט
+
+
+def dw_get(path):
+    req = urllib.request.Request(DATAWISE + path, headers=DW_HEADERS)
+    last = None
+    for _ in range(RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                return json.loads(r.read())
+        except Exception as e:  # noqa: BLE001
+            last = e
+    raise RuntimeError(f"datawise {path}: {last}")
+
+
+def fetch_datawise_securities():
+    """רשימת ניירות של יום המסחר האחרון + מילון סוגים. -> (rows, date, types) או None."""
+    try:
+        types = {str(r["securityFullTypeCode"]): r.get("securityTypeDesc") or ""
+                 for r in dw_get("/v1/basic-securities/securities-types")["securitiesTypes"]["result"]}
+        for d in range(8):
+            dt = datetime.date.today() - datetime.timedelta(days=d)
+            res = dw_get(f"/v1/basic-securities/trade-securities-list/{dt:%Y/%m/%d}")
+            rows = (res.get("tradeSecuritiesList") or {}).get("result") or []
+            if rows:
+                return rows, str(dt), types
+    except RuntimeError as e:
+        print(f"WARNING: datawise unavailable: {e}", file=sys.stderr)
+    return None
+
+
+def cross_check(bonds, approved, dw):
+    """משווה את מה שנמצא במאיה למה ש-datawise מדווח לחברות המאושרות."""
+    if dw is None:
+        return {"status": "datawise_unavailable"}
+    rows, dw_date, types = dw
+    expected = {int(r["securityId"]) for r in rows
+                if chp_norm(r.get("corporateId")) in approved
+                and is_bond_type(types.get(str(r.get("securityFullTypeCode")), ""))}
+    mine = {b["security_id"] for b in bonds}
+    missing, extra = sorted(expected - mine), sorted(mine - expected)
+    limit = max(MAX_MISSING_ABS, int(MAX_MISSING_PCT * len(expected)))
+    return {"status": "ok" if len(missing) <= limit else "too_many_missing",
+            "datawise_date": dw_date, "expected": len(expected), "maya": len(mine),
+            "missing_in_maya": missing, "extra_in_maya": extra, "limit": limit}
+
+
 # ── 4. היסטוריית ניירות (first_seen) ────────────────────────────────────────
 def load_state():
     if os.path.exists(STATE_PATH):
@@ -281,6 +333,14 @@ def main(companies_path=None):
     print(f"maya: {found} companies found, {errors} request errors, {len(bonds)} approved bonds")
     if found < MIN_COMPANIES_FOUND or not bonds:
         raise SystemExit("maya sweep looks partial/blocked - output left untouched")
+
+    check = cross_check(bonds, approved, fetch_datawise_securities())
+    print("datawise check:", {k: (v if not isinstance(v, list) else len(v)) for k, v in check.items()})
+    os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "verification.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": TODAY, **check}, f, ensure_ascii=False, indent=1)
+    if check["status"] == "too_many_missing":
+        raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
     add_terms(bonds)
     state = load_state()
