@@ -1,6 +1,17 @@
 {
  "summary": {
-  "updated": "2026-10-11T20:21:47.064718Z",
+  "recovered_by_single_lookup": 0,
+  "unfound_after_batch": 84,
+  "values_lost": 0,
+  "empty_before": {
+   "registrar_name": 823,
+   "biz_type": 1120
+  },
+  "empty_after": {
+   "registrar_name": 87,
+   "biz_type": 87
+  },
+  "updated": "2026-10-11T20:36:50.161559Z",
   "source": "public_api",
   "businesses": 1207,
   "numeric_chp": 1202,
