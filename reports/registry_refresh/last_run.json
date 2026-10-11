@@ -11,7 +11,7 @@
    "registrar_name": 87,
    "biz_type": 87
   },
-  "updated": "2026-10-11T21:31:04.987958Z",
+  "updated": "2026-10-11T21:37:20.735809Z",
   "source": "d1",
   "businesses": 1207,
   "numeric_chp": 1202,
@@ -31,8 +31,9 @@
    "biz_type": 0,
    "tase_has_agch": 0
   },
-  "mode": "dry-run",
-  "statements_applied": 0,
+  "readback_mismatches": 0,
+  "mode": "applied",
+  "statements_applied": 1,
   "problems": []
  },
  "changes": [
