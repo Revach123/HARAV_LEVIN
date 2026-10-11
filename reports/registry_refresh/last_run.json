@@ -1,6 +1,6 @@
 {
  "summary": {
-  "updated": "2026-10-11T20:10:48.651157Z",
+  "updated": "2026-10-11T20:12:30.651840Z",
   "source": "public_api",
   "businesses": 1207,
   "numeric_chp": 1202,
@@ -15,11 +15,14 @@
    "biz_type": 1033,
    "tase_has_agch": 9
   },
+  "fills_of_empty": {
+   "registrar_name": 736,
+   "biz_type": 1033,
+   "tase_has_agch": 1
+  },
   "mode": "dry-run",
   "statements_applied": 0,
-  "problems": [
-   "too many name changes (740)"
-  ]
+  "problems": []
  },
  "changes": [
   {
