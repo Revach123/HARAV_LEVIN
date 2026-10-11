@@ -134,7 +134,7 @@ class D1:
 
 
 def load_businesses(d1):
-    cols = "id, chp_number, registrar_name, biz_type, tase_has_agch"
+    cols = "id, chp_number, permit_name, registrar_name, entity_type, biz_type, tase_has_agch"
     if d1.can_write:   # מקור אמת: D1 עצמו
         rows = d1.query(f"SELECT {cols} FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
         return rows, "d1"
@@ -284,6 +284,13 @@ def main(apply=False):
         bond_ids = None
 
     changes = compute_changes(businesses, registry, bond_ids)
+    not_found = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name"),
+                  "registrar_name": b.get("registrar_name"), "entity_type": b.get("entity_type"),
+                  "biz_type": b.get("biz_type")}
+                 for b in businesses
+                 if numeric_chp(b.get("chp_number")) and numeric_chp(b["chp_number"]) not in registry]
+    non_numeric = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name")}
+                   for b in businesses if not numeric_chp(b.get("chp_number"))]
     # הגנה: סופרים רק *דריסה* של שם קיים. מילוי שם ריק לא נחשב (זה בדיוק מה שאמור לקרות)
     name_changes = sum(1 for c in changes if c["field"] == "registrar_name" and (c["old"] or "").strip())
     summary = {
@@ -317,7 +324,8 @@ def main(apply=False):
 
     os.makedirs(os.path.dirname(REPORT), exist_ok=True)
     with open(REPORT, "w", encoding="utf-8") as f:
-        json.dump({"summary": summary, "changes": changes[:3000]}, f, ensure_ascii=False, indent=1)
+        json.dump({"summary": summary, "changes": changes[:3000], "not_found": not_found,
+                   "non_numeric_chp": non_numeric}, f, ensure_ascii=False, indent=1)
     print(json.dumps(summary, ensure_ascii=False))
     if problems:
         sys.exit("guards failed: " + "; ".join(problems))
