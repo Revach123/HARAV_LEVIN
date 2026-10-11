@@ -1,0 +1,59 @@
+name: Registry refresh (businesses)
+
+# מחליף את ה-Worker "registry-updater": מרענן שם רשמי + סוג עסק מ-data.gov.il ודגל "יש אג"ח" מ-datawise.
+# ברירת מחדל: בדיקה בלבד (לא כותב ל-D1). כתיבה: הרצה ידנית עם apply=true, ורק אם הוגדרו הסודות
+# CF_ACCOUNT_ID ו-CF_D1_TOKEN (טוקן עם עריכה ל-business-registry-db בלבד).
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "כתיבה ל-D1 (true) או בדיקה בלבד (false)"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "40 2 * * *"
+  push:
+    branches:
+      - claude/serene-pasteur-02932s
+    paths:
+      - .github/workflows/registry-refresh.yml
+      - scripts/registry_refresh/refresh_businesses.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: registry-refresh
+  cancel-in-progress: false
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Refresh businesses
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_D1_TOKEN: ${{ secrets.CF_D1_TOKEN }}
+          APPLY: ${{ (github.event_name == 'workflow_dispatch' && inputs.apply) || github.event_name == 'schedule' }}
+        run: |
+          if [ "$APPLY" = "true" ]; then python scripts/registry_refresh/refresh_businesses.py --apply
+          else python scripts/registry_refresh/refresh_businesses.py; fi
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/registry_refresh
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "registry-refresh: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash
+          git push
