@@ -12,7 +12,7 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
      (או קובץ JSON מקומי עם אותו מבנה, ארגומנט ראשון / COMPANIES_FILE).
   2. סריקת מאיה:   GET maya.tase.co.il/api/v1/companies/{id}/details לכל id
      בטווח; מתוך התגובה נלקחים corporateNo ורשימת "secrities". נשמרות רק
-     חברות שהח"פ שלהן מאושר, ורק ניירות סחירים (isTradable) מסוג אג"ח לפי סיווג Revach (classify.coarse_type, ר' classify.py).
+     חברות שהח"פ שלהן מאושר, ורק ניירות סחירים (isTradable) מסוג אג"ח לפי סיווג Revach (classify.coarse_type, ר' classify.py), בלי ני"ע מסחריים.
   3. תנאי הנייר:   GET api.tase.co.il/api/company/securitydata לכל אג"ח שנשמר
      (פדיון, ריבית, הצמדה, שער, תשואה...).
   4. היסטוריה:     first_seen לכל נייר (state.json) — מתי הופיע לראשונה בסריקה.
@@ -49,6 +49,11 @@ OUT = os.path.join(ROOT, "data", "bonds_list")
 STATE_PATH = os.path.join(OUT, "state.json")
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
+def is_commercial_paper(type_str):
+    """ני"ע מסחריים — לא אג"ח לצורך הרשימה הזאת (החרגה שלנו; coarse_type של Revach כן סופר אותם)."""
+    return "מסחרי" in (type_str or "")
+
+
 # סוגי נכס שנחשבים "אג"ח" — כמו BOND_COARSE ב-Revach (build_bonds_heter_report.py)
 BOND_COARSE = {"אג\"ח קונצרני", "אג\"ח ממשלתי", "אג\"ח להמרה", "מק\"מ"}
 
@@ -165,7 +170,7 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
                 if sec.get("securityId") is None or sec.get("isDeleted") or not sec.get("isTradable"):
                     continue
                 ac = coarse_type(sec.get("securityType"))
-                if ac not in BOND_COARSE:
+                if ac not in BOND_COARSE or is_commercial_paper(sec.get("securityType")):
                     continue
                 bonds.append({
                     "security_id": int(sec["securityId"]),
@@ -268,7 +273,8 @@ def cross_check(bonds, approved, dw):
     expected = {int(r["securityId"]) for r in rows
                 if chp_norm(r.get("corporateId")) in approved
                 and str(r.get("securityFullTypeCode") or "").startswith(BOND_CODE_PREFIXES)
-                and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE}
+                and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE
+                and not is_commercial_paper(types.get(str(r.get("securityFullTypeCode")), ""))}
     mine = {b["security_id"] for b in bonds}
     missing, extra = sorted(expected - mine), sorted(mine - expected)
     by_id = {int(r["securityId"]): r for r in rows}

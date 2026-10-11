@@ -8,8 +8,8 @@ scripts/registry_refresh/refresh_businesses.py
   1. שם רשמי + סוג עסק: לכל עסק עם ח"פ מספרי — שליפה מ-data.gov.il (חברות / שותפויות / עמותות)
      בבאצ'ים (datastore_search עם רשימת מספרים בפילטר; datastore_search_sql כבר מחזיר 404), לא בקשה לעסק.
      עדיפות: חברה > שותפות > עמותה (כמו ב-Worker). מעדכן registrar_name ו-biz_type כשהשתנו.
-  2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך של datawise (Securities Basic) — האם לח"פ
-     יש אג"ח (קוד סוג 03/05/11/36), כמו sync-tase.js וה-Worker.
+  2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך הסחירים של datawise (Securities Basic) — האם לח"פ
+     יש אג"ח סחירה (קוד סוג 03/05/11/36), *בלי ני"ע מסחריים*.
 
 מצבים:
   * ברירת מחדל = בדיקה בלבד (dry-run): לא כותב כלום ל-D1, רק מחשב ושומר דוח.
@@ -208,14 +208,18 @@ def datawise_key():
 
 
 def fetch_bond_corporate_ids():
+    """ח"פים עם אג"ח *סחירה* (datawise כולל רק ניירות סחירים), בלי ני"ע מסחריים."""
     headers = {"accept": "application/json", "accept-language": "he-IL", "apikey": datawise_key()}
+    types = {str(t["securityFullTypeCode"]): t.get("securityTypeDesc") or "" for t in
+             http_json(f"{DATAWISE}/v1/basic-securities/securities-types", headers=headers)["securitiesTypes"]["result"]}
     for d in range(8):
         dt = datetime.date.today() - datetime.timedelta(days=d)
         res = http_json(f"{DATAWISE}/v1/basic-securities/trade-securities-list/{dt:%Y/%m/%d}", headers=headers)
         rows = (res.get("tradeSecuritiesList") or {}).get("result") or []
         if rows:
             ids = {str(r.get("corporateId") or "").strip() for r in rows
-                   if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES}
+                   if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES
+                   and "מסחרי" not in types.get(str(r.get("securityFullTypeCode")), "")}
             ids.discard("")
             return ids, len(rows), str(dt)
     return None, 0, None
