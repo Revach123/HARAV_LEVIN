@@ -1,0 +1,78 @@
+name: ivr-audio
+
+# מייצר ב-Azure Speech קבצי שמע לביטויים הקבועים של שלוחה 6 (functions/api/_shared/ivr_phrases.js),
+# מעלה אותם לשלוחה 99 בימות, ורק אחרי שההעלאה הצליחה עושה commit ל-ivr_audio_manifest.js
+# (כך האתר לא מפנה לקובץ שעוד לא קיים). עד שיש קובץ - ההקראה נשארת ב-TTS של ימות.
+#
+# secrets (ב-Settings של הריפו הזה, Secrets and variables > Actions):
+#   AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, YEMOT_TTS (API KEY של ימות, נשלח ב-header authorization)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "dry-run: רק רשימה (בלי Azure ובלי ימות)"
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - "functions/api/_shared/ivr_phrases.js"
+      - "scripts/ivr_audio/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ivr-audio
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tools
+        run: pip install requests==2.32.3
+
+      - name: Dump phrases
+        run: node scripts/ivr_audio/dump_phrases.mjs > "$RUNNER_TEMP/phrases.json"
+
+      - name: Build audio
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          YEMOT_TTS: ${{ secrets.YEMOT_TTS }}
+          DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          if [ "$DRY" = "true" ]; then
+            python scripts/ivr_audio/build_audio.py --phrases "$RUNNER_TEMP/phrases.json" --dry-run
+          elif [ -z "$AZURE_SPEECH_KEY" ] || [ -z "$YEMOT_TTS" ]; then
+            echo "חסרים secrets (AZURE_SPEECH_KEY / YEMOT_TTS) בריפו הזה - מדלגים. ההקראה נשארת ב-TTS של ימות."
+          else
+            python scripts/ivr_audio/build_audio.py --phrases "$RUNNER_TEMP/phrases.json"
+          fi
+
+      # המניפסט נשמר רק מה שהועלה בפועל. push שנוגע רק במניפסט לא מפעיל שוב את ה-workflow (paths).
+      - name: Commit manifest
+        run: |
+          if git diff --quiet -- functions/api/_shared/ivr_audio_manifest.js; then
+            echo "המניפסט לא השתנה."
+            exit 0
+          fi
+          git config user.name "ivr-audio"
+          git config user.email "ivr-audio@users.noreply.github.com"
+          git add functions/api/_shared/ivr_audio_manifest.js
+          git commit -m "ivr-audio: update audio manifest"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
