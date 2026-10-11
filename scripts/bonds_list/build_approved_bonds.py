@@ -231,6 +231,7 @@ def _datawise_key():
 DW_KEY = _datawise_key()
 DW_HEADERS = {"accept": "application/json", "accept-language": "he-IL", "apikey": DW_KEY,
               "User-Agent": "Mozilla/5.0"}
+BOND_CODE_PREFIXES = ("03", "05", "11", "36")   # אג"ח לפי קוד סוג (כמו sync-tase.js); לא כולל קרנות סל (43)
 MAX_MISSING_ABS, MAX_MISSING_PCT = 5, 0.03   # מעל זה — הריצה נכשלת ולא דורסת פלט
 
 
@@ -269,6 +270,7 @@ def cross_check(bonds, approved, dw):
     rows, dw_date, types = dw
     expected = {int(r["securityId"]) for r in rows
                 if chp_norm(r.get("corporateId")) in approved
+                and str(r.get("securityFullTypeCode") or "").startswith(BOND_CODE_PREFIXES)
                 and is_bond_type(types.get(str(r.get("securityFullTypeCode")), ""))}
     mine = {b["security_id"] for b in bonds}
     missing, extra = sorted(expected - mine), sorted(mine - expected)
