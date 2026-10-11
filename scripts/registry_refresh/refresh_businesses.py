@@ -272,6 +272,25 @@ def main(apply=False):
         for k, v in got.items():
             registry.setdefault(k, v)
         print(f"  {src['kind']}: {len(got)} found, {failed} failed batches")
+    # הזדמנות שנייה (זהה ללוגיקה של ה-Worker): שליפה בודדת לכל ח"פ שהבאץ' לא מצא — כדי לוודא שהשיטה
+    # החדשה לא מחמיצה עסקים שהישנה כן הייתה מוצאת.
+    unfound = [n for n in numerics if n not in registry]
+    recovered = 0
+    for n in unfound:
+        for src in SOURCES:
+            try:
+                q = urllib.parse.quote(json.dumps({src["id"]: str(n)}))
+                one = http_json(f"{GOV_SEARCH}?resource_id={src['resource']}&filters={q}&limit=1")
+            except RuntimeError:
+                continue
+            tmp = {}
+            _records_to_found((one.get("result") or {}).get("records"), src, tmp)
+            if tmp:
+                registry.setdefault(n, next(iter(tmp.values())))
+                recovered += 1
+                break
+            time.sleep(0.3)
+    print(f"  second-chance single lookups: {len(unfound)} tried, {recovered} recovered")
     found_ratio = len(registry) / len(numerics) if numerics else 0
 
     bond_ids, dw_rows, dw_date = None, 0, None
@@ -293,7 +312,16 @@ def main(apply=False):
                    for b in businesses if not numeric_chp(b.get("chp_number"))]
     # הגנה: סופרים רק *דריסה* של שם קיים. מילוי שם ריק לא נחשב (זה בדיוק מה שאמור לקרות)
     name_changes = sum(1 for c in changes if c["field"] == "registrar_name" and (c["old"] or "").strip())
+    lost = sum(1 for c in changes if (c["old"] or "").strip() and not (c["new"] or "").strip())
+    def _empty(field):
+        return sum(1 for b in businesses if not (b.get(field) or "").strip())
+    filled = {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
+              for f in ("registrar_name", "biz_type")}
     summary = {
+        "recovered_by_single_lookup": recovered, "unfound_after_batch": len(unfound),
+        "values_lost": lost,
+        "empty_before": {f: _empty(f) for f in ("registrar_name", "biz_type")},
+        "empty_after": {f: _empty(f) - filled[f] for f in ("registrar_name", "biz_type")},
         "updated": datetime.datetime.utcnow().isoformat() + "Z", "source": source,
         "businesses": len(businesses), "numeric_chp": len(numerics),
         "found_in_registry": len(registry), "found_ratio": round(found_ratio, 3),
@@ -306,6 +334,8 @@ def main(apply=False):
     }
 
     problems = []
+    if lost:
+        problems.append(f"{lost} existing values would be blanked")
     if numerics and found_ratio < MIN_FOUND_RATIO:
         problems.append(f"registry found ratio {found_ratio:.2f} < {MIN_FOUND_RATIO}")
     if name_changes > max(MAX_NAME_CHANGE_ABS, MAX_NAME_CHANGE_PCT * len(businesses)):
@@ -314,8 +344,22 @@ def main(apply=False):
     mode = "dry-run"
     applied = 0
     if apply and d1.can_write and not problems:
+        old_by_id = {}
+        for c in changes:
+            old_by_id.setdefault(c["id"], {})[c["field"]] = c["old"]
+        rollback = [f"UPDATE businesses SET " + ", ".join(f"{f} = {sql_q(v)}" for f, v in fl.items())
+                    + f" WHERE id = {sql_q(i)};" for i, fl in old_by_id.items()]
+        os.makedirs(os.path.dirname(REPORT), exist_ok=True)
+        with open(os.path.join(os.path.dirname(REPORT), "rollback.sql"), "w", encoding="utf-8") as f:
+            f.write("\n".join(rollback))
         applied = apply_updates(d1, build_update_sql(changes))
         mode = "applied"
+        # אימות קריאה-חוזרת: כל ערך חדש נמצא ב-D1
+        after = {r["id"]: r for r in d1.query("SELECT id, registrar_name, biz_type, tase_has_agch FROM businesses")[0]["results"]}
+        bad = [c for c in changes if (after.get(c["id"], {}).get(c["field"]) or "") != (c["new"] or "")]
+        summary["readback_mismatches"] = len(bad)
+        if bad:
+            problems.append(f"{len(bad)} values did not persist after write")
     elif apply and not d1.can_write:
         mode = "dry-run (no CF secrets)"
     elif apply and problems:
