@@ -114,12 +114,18 @@ class D1:
 
     @staticmethod
     def _db_from_wrangler():
+        """מזהה המסד business-registry-db — לפי *שם* המסד (ב-wrangler.toml יש כמה מסדים)."""
         try:
             with open(os.path.join(ROOT, "wrangler.toml"), encoding="utf-8") as f:
-                m = re.search(r'database_id\s*=\s*"([^"]+)"', f.read())
-            return m.group(1) if m else ""
+                text = f.read()
         except OSError:
             return ""
+        for block in text.split("[[d1_databases]]")[1:]:
+            name = re.search(r'database_name\s*=\s*"([^"]+)"', block)
+            ident = re.search(r'database_id\s*=\s*"([^"]+)"', block)
+            if name and ident and name.group(1) == "business-registry-db":
+                return ident.group(1)
+        return ""
 
     @property
     def can_write(self):
