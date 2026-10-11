@@ -18,7 +18,7 @@ scripts/registry_refresh/refresh_businesses.py
 
 הגנות לפני כתיבה (עוצרות בלי לשנות כלום):
   * data.gov.il החזיר פחות מ-85% מהח"פים המספריים (חסימה/הגבלה).
-  * שינוי שמות של יותר מ-15% מהעסקים (לפחות 50) — כנראה נתונים שגויים.
+  * דריסה של שם קיים ביותר מ-15% מהעסקים (לפחות 50) — כנראה נתונים שגויים. מילוי שם ריק לא נספר.
   * רשימת datawise קטנה מ-1000 ניירות.
 לא נכתב שום דבר עבור עסק שלא נמצא (כמו ב-Worker). לא נמחק כלום.
 
@@ -284,7 +284,8 @@ def main(apply=False):
         bond_ids = None
 
     changes = compute_changes(businesses, registry, bond_ids)
-    name_changes = sum(1 for c in changes if c["field"] == "registrar_name")
+    # הגנה: סופרים רק *דריסה* של שם קיים. מילוי שם ריק לא נחשב (זה בדיוק מה שאמור לקרות)
+    name_changes = sum(1 for c in changes if c["field"] == "registrar_name" and (c["old"] or "").strip())
     summary = {
         "updated": datetime.datetime.utcnow().isoformat() + "Z", "source": source,
         "businesses": len(businesses), "numeric_chp": len(numerics),
@@ -293,13 +294,15 @@ def main(apply=False):
         "bond_companies": None if bond_ids is None else len(bond_ids),
         "changes": {f: sum(1 for c in changes if c["field"] == f)
                     for f in ("registrar_name", "biz_type", "tase_has_agch")},
+        "fills_of_empty": {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
+                           for f in ("registrar_name", "biz_type", "tase_has_agch")},
     }
 
     problems = []
     if numerics and found_ratio < MIN_FOUND_RATIO:
         problems.append(f"registry found ratio {found_ratio:.2f} < {MIN_FOUND_RATIO}")
     if name_changes > max(MAX_NAME_CHANGE_ABS, MAX_NAME_CHANGE_PCT * len(businesses)):
-        problems.append(f"too many name changes ({name_changes})")
+        problems.append(f"too many name overwrites ({name_changes})")
 
     mode = "dry-run"
     applied = 0
