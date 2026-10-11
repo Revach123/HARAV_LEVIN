@@ -6,7 +6,7 @@ scripts/registry_refresh/refresh_businesses.py
 עושה את אותן שתי עבודות על טבלת businesses ב-D1 (business-registry-db):
 
   1. שם רשמי + סוג עסק: לכל עסק עם ח"פ מספרי — שליפה מ-data.gov.il (חברות / שותפויות / עמותות)
-     בבאצ'ים גדולים (datastore_search_sql, כמו functions/api/sync-registry.js), לא בקשה לעסק.
+     בבאצ'ים (datastore_search עם רשימת מספרים בפילטר; datastore_search_sql כבר מחזיר 404), לא בקשה לעסק.
      עדיפות: חברה > שותפות > עמותה (כמו ב-Worker). מעדכן registrar_name ו-biz_type כשהשתנו.
   2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך של datawise (Securities Basic) — האם לח"פ
      יש אג"ח (קוד סוג 03/05/11/36), כמו sync-tase.js וה-Worker.
@@ -39,8 +39,8 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 REPORT = os.path.join(ROOT, "reports", "registry_refresh", "last_run.json")
 
 SITE = os.environ.get("HARAV_API", "https://harav-levin.pages.dev")
-GOV_SQL = "https://data.gov.il/api/3/action/datastore_search_sql"
-BATCH = 300
+GOV_SEARCH = "https://data.gov.il/api/3/action/datastore_search"   # datastore_search_sql מחזיר 404
+BATCH = 150
 TIMEOUT, RETRIES = 60, 4
 
 SOURCES = [   # סדר = עדיפות
@@ -90,9 +90,14 @@ def http_json(url, data=None, headers=None):
             if text.lstrip().startswith("<"):
                 raise RuntimeError("HTML response (blocked?)")
             return json.loads(text)
+        except urllib.error.HTTPError as e:
+            last = e
+            if e.code in (400, 404, 405):          # לא יעזור לנסות שוב
+                break
+            time.sleep(3 * (attempt + 1))
         except Exception as e:  # noqa: BLE001
             last = e
-            time.sleep(2 * (attempt + 1))
+            time.sleep(3 * (attempt + 1))
     raise RuntimeError(f"request failed: {url[:80]}: {last}")
 
 
@@ -138,30 +143,42 @@ def load_businesses(d1):
 
 
 # ── data.gov.il ──────────────────────────────────────────────────────────────
-def fetch_source(numbers, source):
-    """-> ({מספר: {name, biz_type}}, batches_failed)"""
-    found, failed = {}, 0
-    cols = [source["id"], source["name"]] + source["extra"]
-    select = ",".join(f'"{c}"' for c in cols)
-    for i in range(0, len(numbers), BATCH):
-        ids = ",".join(str(n) for n in numbers[i:i + BATCH])
-        sql = f'SELECT {select} FROM "{source["resource"]}" WHERE "{source["id"]}" IN ({ids})'
+def _records_to_found(records, source, found):
+    for rec in records or []:
         try:
-            res = http_json(GOV_SQL, {"sql": sql})
+            key = str(int(float(rec.get(source["id"]))))
+        except (TypeError, ValueError):
+            continue
+        name = clean_name(rec.get(source["name"]))
+        if name:
+            found[key] = {"name": name, "biz_type": classify(source, rec)}
+
+
+def fetch_source(numbers, source):
+    """-> ({מספר: {name, biz_type}}, batches_failed).
+    בקשה אחת לכל באץ' (filters עם רשימת מספרים = IN). אם נכשלה — שליפה בודדת לכל מספר, כמו ב-Worker."""
+    found, failed = {}, 0
+    fields = [source["id"], source["name"]] + source["extra"]
+    for i in range(0, len(numbers), BATCH):
+        batch = numbers[i:i + BATCH]
+        try:
+            res = http_json(GOV_SEARCH, {"resource_id": source["resource"], "fields": fields, "limit": len(batch) + 50,
+                                          "filters": {source["id"]: [int(n) for n in batch]}})
             if not res.get("success", True):
                 raise RuntimeError(str(res.get("error"))[:100])
+            _records_to_found((res.get("result") or {}).get("records"), source, found)
         except RuntimeError as e:
             failed += 1
-            print(f"WARNING: {source['kind']} batch {i // BATCH} failed: {e}", file=sys.stderr)
-            continue
-        for rec in (res.get("result") or {}).get("records") or []:
-            try:
-                key = str(int(float(rec.get(source["id"]))))
-            except (TypeError, ValueError):
-                continue
-            name = clean_name(rec.get(source["name"]))
-            if name:
-                found[key] = {"name": name, "biz_type": classify(source, rec)}
+            print(f"WARNING: {source['kind']} batch {i // BATCH} failed ({e}) - falling back to single lookups",
+                  file=sys.stderr)
+            for n in batch:
+                try:
+                    q = urllib.parse.quote(json.dumps({source["id"]: int(n)}))
+                    one = http_json(f"{GOV_SEARCH}?resource_id={source['resource']}&filters={q}&limit=1")
+                    _records_to_found((one.get("result") or {}).get("records"), source, found)
+                except RuntimeError:
+                    pass
+                time.sleep(0.5)
         time.sleep(1)
     return found, failed
 
