@@ -59,6 +59,10 @@
   .badge-no{color:var(--light);font-size:13px}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
   .state.err{color:var(--red)}
+  /* מצב הטמעה (?type=...): בלי כותרת וניווט, כדי שיתמזג בתוך עמוד באתר אחר */
+  body.embed{background:transparent;padding:0}
+  body.embed header, body.embed .nav-primary, body.embed .nav-sub{display:none}
+  body.embed .wrap{max-width:none;padding:0}
   .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
 </style>
 </head>
@@ -233,6 +237,28 @@ function cellFor(col, val) {
 // ── ניווט דו-שלבי ──
 const nav = { topic: "companies", level: "private" };
 const container = document.getElementById("listContainer");
+
+// ?type=companies-private | companies-general | bonds-private | bonds-general
+// כשמועבר type — מצב הטמעה: מציג רשימה אחת בלי כותרת וניווט.
+const VALID = ["companies-private","companies-general","bonds-private","bonds-general"];
+const qType = new URLSearchParams(location.search).get("type");
+if (VALID.includes(qType)) {
+  [nav.topic, nav.level] = qType.split("-");
+  document.body.classList.add("embed");
+} else {
+  // ללא type: ניווט רגיל, והכפתורים מציגים את ברירת המחדל
+  const syncActive = (id, attr, val) => [...document.getElementById(id).children]
+    .forEach(b => b.classList.toggle("active", b.dataset[attr] === val));
+  syncActive("navPrimary","topic",nav.topic); syncActive("navSub","level",nav.level);
+}
+
+// מדווח לעמוד האב את גובה התוכן, כדי שה-iframe יתאים את עצמו (ללא פס גלילה כפול)
+function reportHeight() {
+  if (window.parent === window) return;
+  const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+  window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
+}
+new ResizeObserver(reportHeight).observe(document.body);
 
 function refresh() { mountList(container, `${nav.topic}-${nav.level}`); }
 
