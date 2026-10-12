@@ -11,7 +11,7 @@
    "registrar_name": 87,
    "biz_type": 87
   },
-  "updated": "2026-10-11T21:37:20.735809Z",
+  "updated": "2026-10-12T09:47:31.783020Z",
   "source": "d1",
   "businesses": 1207,
   "numeric_chp": 1202,
@@ -24,7 +24,7 @@
   "changes": {
    "registrar_name": 0,
    "biz_type": 0,
-   "tase_has_agch": 1
+   "tase_has_agch": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -33,18 +33,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64k73198ic",
-   "chp": "512569237",
-   "field": "tase_has_agch",
-   "old": "יש",
-   "new": "אין"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
