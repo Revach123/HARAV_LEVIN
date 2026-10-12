@@ -1,0 +1,2097 @@
+{
+ "A_updated_at_by_day": [
+  {
+   "day": "2026-10-11",
+   "n": 1034
+  },
+  {
+   "day": "2026-05-17",
+   "n": 48
+  },
+  {
+   "day": "2026-05-15",
+   "n": 57
+  },
+  {
+   "day": "2026-05-14",
+   "n": 306
+  }
+ ],
+ "A_total": [
+  {
+   "n": 1445
+  }
+ ],
+ "B_suspect_count": 158,
+ "B_suspects": [
+  {
+   "chp": "2352046",
+   "permit_name": "אג'לן קומרשייל ריט הולדינגס אינק",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514115229",
+   "permit_name": "אוטו קאש שרותי מימון בע\"מ",
+   "registrar_name": "פריסבי מימון בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.50)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1841580",
+   "permit_name": "אול-יר הולדינגס",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "512565730",
+   "permit_name": "מדיקל קומפרישין סיסטם (די.בי.אן.)",
+   "registrar_name": "בלו וייב וואטר קפיטל  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.19)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "513465260",
+   "permit_name": "ספירה ואופק",
+   "registrar_name": "אופק ריזינג בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.40)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500200316",
+   "permit_name": "אופקים - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "513673970",
+   "permit_name": "פנאקסיה מעבדות ישראל, הרודיום השקעות",
+   "registrar_name": "ברק בית השקעות   בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.42)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510905102",
+   "permit_name": "פלשת השקעות",
+   "registrar_name": "אי.בי.אי פתרונות אשראי  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.29)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2185148",
+   "permit_name": "איה ניו יורק",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1957080",
+   "permit_name": "איי איי סי1#,אל.טי.די",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511301665",
+   "permit_name": "מנרב פרויקטים",
+   "registrar_name": "איי סי אר ישראל קנדה ראם החזקות  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.19)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510394637",
+   "permit_name": "מיי סייז, אינק",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511904781",
+   "permit_name": "מנרב תשתיות (1993)",
+   "registrar_name": "איי.סי.אר תשתיות  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.52)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520018383",
+   "permit_name": "נייר חדרה",
+   "registrar_name": "אינפיניה  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.38)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512850108",
+     "name": "נייר חדרה - ניירות כתיבה והדפסה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.48,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "570009852",
+   "permit_name": "קרן מקפת מרכז לפנסיה ותגמולים אגודה שיתופית על שם קופה מרכזית לתגמולים ופנסיה לפקיד",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520041773",
+   "permit_name": "אינפימר",
+   "registrar_name": "אלומות ב.ב. השקעות ובנייה  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.22)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "514933951",
+     "name": "אינפימר טכנולוגיות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.58,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "515358745",
+     "name": "אינפימר ישראל שותף כללי בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.52,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1963039",
+   "permit_name": "אלטיטיוד השקעות",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514148758",
+   "permit_name": "פסגות (פ.ב.ל)",
+   "registrar_name": "אלטשולר שחם אשראי  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.17)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "517227591",
+     "name": "פסגות ג.פ גמל בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.78,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "2624970",
+   "permit_name": "אלעד קנדה ריאלטי אינק.",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520028036",
+   "permit_name": "אלרון תעשיה אלקטרונית",
+   "registrar_name": "אלרון ונצ'רס בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.48)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1983001",
+   "permit_name": "אמ אר אר ת'ירטין",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1981143",
+   "permit_name": "אמ. ג'י. ג'י (בי.וי.אי)",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1840550",
+   "permit_name": "אמ. די. ג'י. ריאל אסטייט גלובל",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512172594",
+     "name": "אמ. אי. די. אר. ריאל אסטייט בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.72,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "514941285",
+   "permit_name": "ג'וניור (נ.ב) מוצרי תינוקות",
+   "registrar_name": "אמונה והתמדה  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.26)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2177996",
+   "permit_name": "אמטראסט אר.אי. לימיטד",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2160207",
+   "permit_name": "אמריקן אקוויטי פרטנרס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2059088",
+   "permit_name": "אנקור הזדמנויות",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1939883",
+   "permit_name": "אנקור פרופרטיס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "481243848",
+   "permit_name": "אס.סי.איי איבן",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515746386",
+     "name": "אס.סי.אס איי.אל  בע\"מ",
+     "status": "מחוסלת עקב מיזוג",
+     "sim_to_permit": 0.73,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "514778695",
+   "permit_name": "ב.ו.ב מדף 24",
+   "registrar_name": "אפי קפיטל התחדשות עירונית   בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.07)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515977908",
+     "name": "אקרו מדף 24  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "516154069",
+   "permit_name": "איסתרא פריפקט",
+   "registrar_name": "אקסטרה קרדיט ופקטורינג  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.31)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1811308",
+   "permit_name": "אקסטל לימיטד",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510609761",
+   "permit_name": "אשדר חברה לבניה",
+   "registrar_name": "אשטרום מגורים יזמות   בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.31)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512861386",
+     "name": "אשרום בניה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.78,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516406386",
+     "name": "אשדר בלגיה  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.78,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "748930",
+   "permit_name": "בורנשטיין קייטררס אינק. (רשומה בדלוואר)",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500226105",
+   "permit_name": "בית שמש - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500237805",
+   "permit_name": "ביתר עילית - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515005502",
+   "permit_name": "וי-פיננסי טכנולגיות",
+   "registrar_name": "בלנדר טכנולוגיות פיננסיות   בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.50)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500261003",
+   "permit_name": "בני ברק - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515185999",
+   "permit_name": "מיכמן בס\"ד",
+   "registrar_name": "בלאקאדג' בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.27)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515140119",
+     "name": "מיכמן נדל\"ן בס\"ד  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.8,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1814237",
+   "permit_name": "ברוקלנד אפריל",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "512084047",
+   "permit_name": "בית אנגל ניהול ואחזקה",
+   "registrar_name": "גבאי ניהול מבנים  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.44)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520044264",
+   "permit_name": "אינטרנט גולד - קווי זהב",
+   "registrar_name": "גולדן אנרג'י פאואר בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.30)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512987140",
+     "name": "אינטרנט גולד אחזקות-טק בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1852623",
+   "permit_name": "ג'י.אפ.איי ריאל אסטייט",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514011360",
+   "permit_name": "משולם פתרונות תשלום",
+   "registrar_name": "גרואו פיימנטס  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.21)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "513800367",
+   "permit_name": "חברת בנק הדואר",
+   "registrar_name": "ד.י. דואר פיננסים בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.32)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "512711789",
+   "permit_name": "גמא ניהול וסליקה בע\"מ",
+   "registrar_name": "הפניקס גמא בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.26)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1888119",
+   "permit_name": "דלשה קפיטל",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1744984",
+   "permit_name": "דה זראסאי גרופ",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520030503",
+   "permit_name": "דקלה סוכנות לביטוח בע\"מ",
+   "registrar_name": "דקלה שירותים משלימים בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.47)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516809555",
+     "name": "נעם דקלה סוכנות לביטוח (2023 ) בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.82,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1427976",
+   "permit_name": "דה לסר גרופ",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510059744",
+   "permit_name": "אמישראגז",
+   "registrar_name": "החברה האמריקאית ישראלית לגז בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.57)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "511386054",
+     "name": "אמישראגז - גז טבעי בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.73,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "510653215",
+     "name": "סניף אמישראגז בנהריה בעמ",
+     "status": "פעילה",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "510607450",
+     "name": "קרן פרדיס - ע\"ש מייסדי אמישראגז  (חל\"צ)",
+     "status": "פעילה",
+     "sim_to_permit": 0.46,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "511474629",
+   "permit_name": "הלמן - אלדובי בית השקעות",
+   "registrar_name": "הפניקס השקעות מתקדמות בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.42)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515246924",
+     "name": "הלמן-אלדובי ניהול בלוקר השקעות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.76,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514016294",
+     "name": "הלמן אלדובי ניהול תיקי השקעות (2007) בע\"מ",
+     "status": "מחוסלת עקב מיזוג",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "520041369",
+   "permit_name": "הפניקס סוכנויות ביטוח 1989 בע\"מ",
+   "registrar_name": "הפניקס ברוקרס בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.40)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515103042",
+   "permit_name": "אוורסט 38 (ש.פ) 2014",
+   "registrar_name": "הפרוייקט במגדיאל 40-42  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.12)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1957081",
+   "permit_name": "הרץ פרופרטיס גרופ",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1938699",
+   "permit_name": "ווטרסטון פרופרטיס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1866231",
+   "permit_name": "וורטון פרופרטיז (בי.וי.איי)",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500265004",
+   "permit_name": "חדרה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "514156421",
+     "name": "מי חדרה בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.8,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512429895",
+     "name": "רב קט חדרה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.67,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "515852242",
+     "name": "גם סטוק חדרה   בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.57,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511114290",
+     "name": "מרכז רכב חדרה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.53,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "513034249",
+     "name": "אמבולנס \"חדרה\" בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.53,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512238619",
+     "name": "מילי חדרה אמינות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.44,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "520041930",
+   "permit_name": "חיון מחשבים",
+   "registrar_name": "חיון טכנולוגיות   בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.42)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512145400",
+     "name": "חיון הפצה - מחשבים בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.83,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "510984271",
+     "name": "חיון מחשבים מעבדות מיקרו (1983) בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.57,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "500240007",
+   "permit_name": "חיפה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "511432072",
+     "name": "אופסליט חיפה בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.53,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511155749",
+     "name": "סלקו חיפה (1986) בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.5,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516271574",
+     "name": "תעבורה ימית חיפה  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.44,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512540444",
+     "name": "מ.ב.ח. מפעלי בשר חיפה בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.42,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511783540",
+     "name": "מאפית אחדות חיפה (93) בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.4,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "513590042",
+     "name": "הפועל חיפה מילניום בע\"מ (חל\"צ)",
+     "status": "פעילה",
+     "sim_to_permit": 0.35,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "515679850",
+   "permit_name": "מ.פ. טופז החזקות",
+   "registrar_name": "טופז את אוניקס בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.44)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515982034",
+   "permit_name": "טריא קהילה פיננסית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515928034",
+     "name": "טריא קהילה פיננסית  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 1.0,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1853213",
+   "permit_name": "טריטופ ריאלטי",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500208319",
+   "permit_name": "ירוחם - מועצה מקומית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500230008",
+   "permit_name": "ירושלים - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500270004",
+   "permit_name": "לוד - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "512544859",
+   "permit_name": "שפע - מועדון לקוחות מכבי לבריאות ואיכות חיים",
+   "registrar_name": "ליבינג אורח חיים בריא בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.26)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511383226",
+   "permit_name": "ליסוב - גרוזנברג 18 בע\"מ",
+   "registrar_name": "ליסוב כלכלית בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.38)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514723493",
+   "permit_name": "אופטיק 55",
+   "registrar_name": "מ.מ סדיה בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.14)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515451052",
+     "name": "בל אופטיק בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "500208749",
+   "permit_name": "מגדל העמק",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "863439895",
+   "permit_name": "ליווינג סטון איימו",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1838682",
+   "permit_name": "לייטסטון אנטרפרייזס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1001171286",
+   "permit_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500237979",
+   "permit_name": "מודיעין עילית - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "514438415",
+     "name": "דפוס מודיעין עילית בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1858676",
+   "permit_name": "מויניאן",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520019753",
+   "permit_name": "בנק דקסיה ישראל",
+   "registrar_name": "מוניציפל בנק  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.25)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511631970",
+   "permit_name": "מור-מאר",
+   "registrar_name": "מור אינסייד  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.50)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512203423",
+     "name": "מור-מאר (אילת) 1995 בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.6,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "501606891",
+   "permit_name": "מושב מגדים ועד מקומי",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500274733",
+   "permit_name": "מטה בנימין - מועצה איזורית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511003485",
+   "permit_name": "יאלון (הרחבה 1983)",
+   "registrar_name": "מיו הלת' בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.20)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "513556688",
+   "permit_name": "תכלית מכשירים פיננסיים",
+   "registrar_name": "מיטב עשיית שוק   בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.19)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "513993980",
+     "name": "תכלית מכשירים מורכבים בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.72,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "514956465",
+   "permit_name": "אינטרגמל קופות גמל ופנסיה",
+   "registrar_name": "מור גמל ופנסיה  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.59)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "570009175",
+   "permit_name": "מירון - מושב עובדים של הפועל המזרחי להתישבות שיתופית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "589902279",
+   "permit_name": "מכבי שירותי בריאות",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2008787",
+   "permit_name": "מליבו אינווסטמנטס אינק.",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1947641",
+   "permit_name": "נובל אסטס (בי.וי.איי)",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500244314",
+   "permit_name": "נחל שורק - מועצה איזורית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515595239",
+   "permit_name": "אוניקס פ. מגורי יוקרה",
+   "registrar_name": "טופז תפעול בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.23)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500202460",
+   "permit_name": "נתיבות - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1921080",
+   "permit_name": "סאות'רן פרופרטיס קפיטל",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "516535754",
+   "permit_name": "י.ג. באטומי אחזקות",
+   "registrar_name": "סאן מול אחזקות השקעות בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.27)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520029133",
+   "permit_name": "אלעזרא החזקות ביטוח בע\"מ",
+   "registrar_name": "הכשרה החזקות ביטוח בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.57)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "513785634",
+     "name": "אלעזרא החזקות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1905761",
+   "permit_name": "נמקו ריאלטי",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510902638",
+   "permit_name": "אלקטרה פאוור סופרגז",
+   "registrar_name": "סופרגז פאוור בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.43)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514403013",
+   "permit_name": "אלקטרה פאוור גז טבעי",
+   "registrar_name": "אלומנרג'י גז טבעי בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.58)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520044389",
+   "permit_name": "נעמן גרופ (נ.ו.)",
+   "registrar_name": "אקסטרה ריטייל גרופ בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.31)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510930787",
+   "permit_name": "מיקרונט",
+   "registrar_name": "ג'ין טכנולוגיות בינה מלאכותית בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.12)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512023847",
+     "name": "מיקרונט מערכות (1994) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.58,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514642883",
+     "name": "מיקרונט עיבוד שבבי מתקדם בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.5,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "500237300",
+   "permit_name": "גבעת זאב - מועצה מקומית",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520036187",
+   "permit_name": "מגה קמעונאות",
+   "registrar_name": "גלובל ריטייל ק.י. (מ.ר.) בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.08)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "475527",
+   "permit_name": "סאטל פרופרטיס לימיטד",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "423293158",
+   "permit_name": "ספירה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "511716532",
+     "name": "ספירה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 1.0,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "515162642",
+     "name": "ספירה סלון בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514411818",
+     "name": "נייטיב ספירה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516140217",
+     "name": "ד\"ר ספירה סיגל  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512151002",
+     "name": "ספירה חניונים בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.59,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512209727",
+     "name": "ספירה שוקי הון בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.59,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "500209242",
+   "permit_name": "ספירה אימוביליר",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "513771444",
+   "permit_name": "אשרנו+A374",
+   "registrar_name": "ספרי גאולה 2006 בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.17)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "34140467",
+   "permit_name": "נאנט רייל אסטייט גרופ אן.וי",
+   "registrar_name": "",
+   "agch": "לא",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520038639",
+   "permit_name": "אונמי שילובים",
+   "registrar_name": "עין שלישית מערכות בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.30)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1863501",
+   "permit_name": "סטרוברי פילדס ריט",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500277009",
+   "permit_name": "עפולה - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511327017",
+   "permit_name": "ב.יאיר חברה קבלנית לעבודות בניה 1988",
+   "registrar_name": "תמיס ג'י. אר. אי. אנ.  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.21)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "512449042",
+     "name": "ב. יאיר (777) חברה קבלנית לעבודות בניה 1997 בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.87,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511623613",
+     "name": "ב. יאיר (555) חברה קבלנית לעבודות בניה 1991 בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.87,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "510611395",
+     "name": "אמצי חברה קבלנית לעבודות בנין בעמ",
+     "status": "חיסול ע~י בימ~ש",
+     "sim_to_permit": 0.72,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "513952044",
+   "permit_name": "יעד שיאן - נדל\"ן",
+   "registrar_name": "ערך - יזמות נדל\"ן   בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.43)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1838863",
+   "permit_name": "ספנסר אקוויטי גרופ",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515927416",
+   "permit_name": "טריא פינטק",
+   "registrar_name": "פארטייק טכנולוגיה פיננסית בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.31)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "512882747",
+   "permit_name": "סולגרין",
+   "registrar_name": "פאוורג'ן סולאר איי  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.45)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "515664175",
+     "name": "סולגרין נ.מ. בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.88,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516125630",
+     "name": "סולגרין מ.א  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.88,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516125952",
+     "name": "סולגרין - סאן    בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.82,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516184249",
+     "name": "שובל סולגרין  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.78,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516109048",
+     "name": "זרחיה סולגרין  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.74,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516278231",
+     "name": "סולגרין הסוללים  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.67,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1938333",
+   "permit_name": "וו.סי.ג'י נכסים",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1940909",
+   "permit_name": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי)",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515166544",
+   "permit_name": "קרדיט שופ",
+   "registrar_name": "פיימנט טכנולוגיות פיננסיות בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.25)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "511464927",
+   "permit_name": "מ.ג.ע.ר",
+   "registrar_name": "אם גרופ בע\"מ",
+   "agch": "",
+   "why": "registry name differs (sim=0.40)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "134106595",
+   "permit_name": "ארחות תורה ארצות הברית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "580403533",
+   "permit_name": "גמ\"ח המרכזי",
+   "registrar_name": "גמ\"ח לבית בישראל (ע\"ר)",
+   "agch": "",
+   "why": "registry name differs (sim=0.36)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "560021594",
+   "permit_name": "פלוריסטם תרפיוטיקס",
+   "registrar_name": "פלורי אינק",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.54)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "510216054",
+   "permit_name": "פז חברת נפט",
+   "registrar_name": "פז קמעונאות ואנרגיה  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.23)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "510213556",
+     "name": "פז חברת נפט שירותי ניהול בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "515291581",
+   "permit_name": "פנינסולה אשראי מסחרי",
+   "registrar_name": "פנינסולה מימון נדל\"ן בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.57)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "33248324",
+   "permit_name": "פלאזה סנטרס אן.וי",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "599000098",
+   "permit_name": "הסתדרות אגודת ישראל בארץ ישראל",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "580242642",
+   "permit_name": "חייל חיים למוצאיהם",
+   "registrar_name": "תלמוד תורה דרכי יעקב -יסדת עוז אופקים (ע\"ר)",
+   "agch": "",
+   "why": "registry name differs (sim=0.26)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1900288",
+   "permit_name": "פסיפיק אוק אסאואר הולדינגס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1946194",
+   "permit_name": "צ'וזן נכסים",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520040346",
+   "permit_name": "ברנד תעשיות",
+   "registrar_name": "קבוצת ברנד (מ.ג)  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.38)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520034505",
+   "permit_name": "מנרב אחזקות",
+   "registrar_name": "קבוצת מנרב  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.57)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "514459973",
+     "name": "מ.א.ה. מנרב-אלקטרה-הדרכה בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.43,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "513605519",
+   "permit_name": "קבוצת חנן מור - אחזקות",
+   "registrar_name": "קבוצת צילו-בלו  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.50)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1886279",
+   "permit_name": "קבוצת קליין אינטרנשיונל",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "570005959",
+   "permit_name": "קופת תגמולים של עובדי עירית חיפה אגודה שיתופית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1920997",
+   "permit_name": "קורנרסטון פרופרטייס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "2100460",
+   "permit_name": "קלקן קפיטל",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "1865427",
+   "permit_name": "קופרליין אמריקאס",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500210349",
+   "permit_name": "קרית מלאכי",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "511147365",
+     "name": "מטיילי קרית מלאכי בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511750994",
+     "name": "ס.ר.י. מתכת קרית מלאכי בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.72,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "510476708",
+     "name": "מוסך אחים קרית מלאכי בעמ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.69,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "513301473",
+     "name": "בית מרקחת קרית מלאכי בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.69,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512882226",
+     "name": "היכלי העיר קרית מלאכי בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.67,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "513773606",
+     "name": "מטיילי קרית מלאכי (2006) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.64,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "514768662",
+   "permit_name": "רותם שני-מנרב עיסקה משותפת",
+   "registrar_name": "קרית שחקים  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.19)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515296986",
+   "permit_name": "אוורסט עין גנים תמ\"א 38",
+   "registrar_name": "קרקע יציבה בעין גנים  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.46)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515863702",
+   "permit_name": "אוניקס חי",
+   "registrar_name": "ר. ח. דקל לבניין  בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.32)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500226402",
+   "permit_name": "ראש העין - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500283007",
+   "permit_name": "ראשון לציון - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "516176104",
+   "permit_name": "רובי מימון",
+   "registrar_name": "רובי ליווי בנייה בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.52)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516529005",
+     "name": "רובי מימון בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 1.0,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "1849766",
+   "permit_name": "רילייטד פורטפוליו מסחרי",
+   "registrar_name": "",
+   "agch": "כן",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500209226",
+   "permit_name": "רכסים - מועצה מקומית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514978097",
+   "permit_name": "דיויד לנדמרק יזמות על שם אופק שלי יזמות",
+   "registrar_name": "רייק אספן בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.15)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516596681",
+     "name": "דיויד לנדמרק יזמות אס.פי.סי  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.74,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "500226501",
+   "permit_name": "רעננה - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "520029505",
+   "permit_name": "רפק תקשורת ותשתיות בע\"מ",
+   "registrar_name": "קבוצת רפק בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.25)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514928399",
+   "permit_name": "שמש רכבים",
+   "registrar_name": "ש.מ.ש. אחזקות ויזמות בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.44)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "515060044",
+   "permit_name": "רציו חיפושי נפט",
+   "registrar_name": "רציו אנרגיות (מימון)  בע\"מ",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.48)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "589906114",
+   "permit_name": "שירותי בריאות כללית",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516724028",
+     "name": "מ.י. שירותי בריאות  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.77,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516285764",
+     "name": "ה.ד.ר. שירותי בריאות  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516471000",
+     "name": "אמל שירותי בריאות  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "517199741",
+     "name": "פארפ שירותי בריאות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.73,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "517386470",
+     "name": "פרחאן שירותי בריאות בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "515455137",
+   "permit_name": "דרך האשראי",
+   "registrar_name": "שלמה מימון בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.22)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516206372",
+     "name": "דרך האשראי (בטוחות א)  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.72,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "550013098",
+   "permit_name": "דלק קידוחים",
+   "registrar_name": "ניו-מד אנרג'י",
+   "agch": "לא",
+   "why": "registry name differs (sim=0.20)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "514909415",
+     "name": "דלק קידוחים (גישור תמר) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514435460",
+     "name": "דלק קידוחים (מימון תמר) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.71,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514700608",
+     "name": "דלק קידוחים (מימון לוויתן) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.65,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514598275",
+     "name": "דלק קידוחים (מימון ים תטיס) בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.65,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "580364131",
+   "permit_name": "כהנא",
+   "registrar_name": "שערי דעת לחינוך הוראה וחסד (ע\"ר)",
+   "agch": "",
+   "why": "registry name differs (sim=0.15)",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "516927472",
+     "name": "גונן כהנא  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.67,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512181736",
+     "name": "יהודה כהנא בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516815024",
+     "name": "אהרן כהנא אחזקות  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.62,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "516517646",
+     "name": "כהנא מערכות  בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.57,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "517146395",
+     "name": "כפיר חי כהנא אחזקות בע\"מ",
+     "status": "מחוסלת מרצון",
+     "sim_to_permit": 0.53,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "517290250",
+     "name": "כהנא שיווק והפצה בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.44,
+     "same_chp_as_db": false
+    }
+   ]
+  },
+  {
+   "chp": "520036732",
+   "permit_name": "תדיראן הולדינגס",
+   "registrar_name": "תדיראן גרופ בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.58)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "500250006",
+   "permit_name": "תל אביב - עירייה",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "514837111",
+   "permit_name": "דלק תמלוגים (2012)",
+   "registrar_name": "תומר תמלוגי אנרגיה (2012)   בע\"מ",
+   "agch": "כן",
+   "why": "registry name differs (sim=0.59)",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "570000745",
+   "permit_name": "תנובה מרכז שיתופי לשיווק תוצרת חקלאית בישראל",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "570025700",
+   "permit_name": "תעשיות מזון תנובה - אגודה שיתופית חקלאית בישראל",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": []
+  },
+  {
+   "chp": "570053512",
+   "permit_name": "תעשיות רהיטים לביא",
+   "registrar_name": "",
+   "agch": "",
+   "why": "not found in registry by chp",
+   "similar_in_registry": [
+    {
+     "kind": "company",
+     "chp": "511809436",
+     "name": "גלס תעשיות רהיטים בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.77,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511475196",
+     "name": "קרן תעשיות רהיטים בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.77,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512131111",
+     "name": "שהב תעשיות רהיטים בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.77,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "514085307",
+     "name": "אלדד תעשיות רהיטים בע\"מ",
+     "status": "פעילה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "512283714",
+     "name": "ג.ב.ש.ר. תעשיות רהיטים בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    },
+    {
+     "kind": "company",
+     "chp": "511516437",
+     "name": "בר-טל - תעשיות רהיטים בע\"מ",
+     "status": "מחוקה",
+     "sim_to_permit": 0.75,
+     "same_chp_as_db": false
+    }
+   ]
+  }
+ ],
+ "C_datawise_day": "2026-10-09",
+ "C_flag_true_to_false_name_search": {
+  "514068980 (ויקטורי)": [
+   {
+    "corporateId": "514068980",
+    "company": "ויקטורי",
+    "security": "ויקטורי",
+    "type": "מניה רגילה",
+    "id": 1123777
+   }
+  ],
+  "520007469 (מנורה מבטחים)": [],
+  "1863501 (סטרוברי)": [
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרברי אנ אגח ד",
+    "type": "אג\"ח קונצרני",
+    "id": 1247543
+   },
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרוברי אנ אפ 2",
+    "type": "אופציה למניה",
+    "id": 1247550
+   },
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרברי אנ אגח ג",
+    "type": "אג\"ח קונצרני",
+    "id": 1241355
+   },
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרוברי אנ אפ 1",
+    "type": "אופציה למניה",
+    "id": 1241363
+   },
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרברי אנ אגח ב",
+    "type": "אג\"ח קונצרני",
+    "id": 1223734
+   },
+   {
+    "corporateId": "842336054",
+    "company": "סטרוברי אינק",
+    "security": "סטרוברי אינק",
+    "type": "מנית ריט",
+    "id": 1205913
+   }
+  ],
+  "514837111 (דלק תמלוגים)": []
+ },
+ "C_revach_old_ids_present_in_datawise_today": {
+  "1177823": false,
+  "1147479": false,
+  "1155522": false,
+  "6390348": false,
+  "1136464": false,
+  "1160241": false,
+  "1168038": false,
+  "1169127": false,
+  "1179340": false,
+  "1182948": false,
+  "1189554": false,
+  "1189877": false,
+  "1192129": false,
+  "1197029": false,
+  "1238500": false,
+  "2260545": false,
+  "5660063": false,
+  "5760251": false,
+  "5760269": false,
+  "7200173": false
+ },
+ "C_delisted_this_month_count": 0,
+ "C_revach_old_ids_in_delisted_this_month": []
+}
