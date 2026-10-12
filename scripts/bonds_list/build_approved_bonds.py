@@ -4,8 +4,9 @@ scripts/bonds_list/build_approved_bonds.py
 
 בונה מחדש בכל הרצה רשימת אג"ח ממאיה (TASE), רק של חברות שבמאגר החברות של
 HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל לשתי רשימות:
-  data/bonds_list/bonds_private.{json,csv}  — חברות עם visibility = "פרטי"
-  data/bonds_list/bonds_general.{json,csv}  — כל השאר
+  data/bonds_list/bonds_private.{json,csv}  — חברות מסומנות visibility = "פרטי" ומאושרות (כן / רק פרטי)
+  data/bonds_list/bonds_general.{json,csv}  — כל המאושרות (כן / רק כללי), כולל חברות מסומנות "פרטי";
+                                              רק "רק פרטי" לא נכנס. (כמו functions/api/lists.js)
 
 שלבים:
   1. מאגר החברות:  GET {HARAV_API}/api/lists?type=companies-all
@@ -314,9 +315,10 @@ def write_lists(bonds):
     def allowed(b, private):
         if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
             return True
-        if private:
+        if private:   # סימון "פרטי" + מאושר (כן / רק פרטי)
             return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי")
-        return (not b["is_private"]) and b["agch_approved"] in ("כן", "רק כללי")
+        # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; רק "רק פרטי" לא נכנס
+        return b["agch_approved"] in ("כן", "רק כללי")
 
     def dump(name, rows, cols):
         rows = [{c: r.get(c, "") for c in cols} for r in rows]
