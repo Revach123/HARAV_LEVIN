@@ -1,0 +1,1 @@
+UPDATE businesses SET tase_has_agch = 'יש' WHERE id = 'mp64kjsuvw8z';

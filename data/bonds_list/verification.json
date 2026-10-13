@@ -1,9 +1,9 @@
 {
- "updated": "2026-10-12",
+ "updated": "2026-10-13",
  "status": "ok",
- "datawise_date": "2026-10-09",
- "expected": 709,
- "maya": 709,
+ "datawise_date": "2026-10-12",
+ "expected": 708,
+ "maya": 708,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
