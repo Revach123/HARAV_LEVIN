@@ -43,7 +43,14 @@
   thead th.sortable:hover{background:#dff0f0}
   thead th .arr{font-size:11px;color:var(--accent-dark);margin-inline-start:4px}
   thead tr.frow td{padding:5px 6px;background:#f6fbfb;border-bottom:1px solid var(--border);font-weight:400}
-  thead tr.frow .fbox{display:flex;flex-direction:column;gap:3px}
+  thead tr.frow .fbtn{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:#fff;color:var(--muted);cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  thead tr.frow .fbtn.on{border-color:var(--accent);color:var(--accent-dark);font-weight:600;background:var(--accent-bg)}
+  .fpop{position:absolute;z-index:60;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:10px 12px;min-width:230px;direction:rtl;font-size:14px;color:var(--navy)}
+  .fprow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .fsym{min-width:72px;font-weight:600}
+  .fprow input{flex:1;min-width:0;box-sizing:border-box;font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--border);border-radius:3px}
+  .fphint{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}
+  .fpclr{background:none;border:none;color:var(--red);font:inherit;font-size:13px;cursor:pointer;padding:0}
   thead tr.frow input, thead tr.frow select{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:#fff;color:var(--navy)}
   .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:3px;min-width:220px;background:var(--bg2)}
   .search:focus{outline:none;border-color:var(--accent)}
@@ -243,6 +250,7 @@ function render(container, state, type, usedSample) {
   });
   thead.appendChild(trh);
   // שורת סינון: רשימה נפתחת לעמודות עם מעט ערכים שונים, אחרת תיבת טקסט (בעמודות מספריות גם > < או טווח 5-7)
+  document.querySelectorAll(".fpop").forEach(x => x.remove());   // חלונות סינון של רינדור קודם (הם נוספים ל-body)
   const frow = el("tr", "frow");
   state.cf = {};
   const selects = [];    // רשימות נפתחות לפי אינדקס עמודה (האפשרויות מתעדכנות לפי מה שנשאר אחרי שאר הסינונים)
@@ -262,27 +270,44 @@ function render(container, state, type, usedSample) {
         inp = el("input"); inp.type = "search"; inp.placeholder = "סינון";
         let tmr; inp.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(() => { state.cf[c.key] = inp.value.trim(); apply(); }, 200); });
       } else {
-        // מספרים ותאריכים: בורר פעולה (גדול מ / קטן מ / בין...) + שדה ערך, בלי צורך להקליש > או < במקלדת.
-        // עדיין אפשר להקליד ידנית: >5  <=3.5  =7  3-4  2028-2030
-        inp = el("div", "fbox");
-        const op = el("select");
-        [["", "מכיל"], [">", "גדול מ"], [">=", "גדול או שווה ל"], ["<", "קטן מ"], ["<=", "קטן או שווה ל"], ["=", "שווה ל"], ["-", "בין"]].forEach(o => op.appendChild(new Option(o[1], o[0])));
-        const i1 = el("input"), i2 = el("input");
-        i1.type = i2.type = "search"; i1.placeholder = kind === "date" ? "תאריך / שנה" : "מספר"; i2.placeholder = "עד"; i2.style.display = "none";
-        i1.title = i2.title = kind === "date" ? "דוגמאות: 2029   03/2028   01/06/2027" : "למשל: 5   3.5";
-        let tmr;
+        // מספרים ותאריכים: לחיצה פותחת חלון קטן - שורה ראשונה "<" (קטן מ), שורה שנייה ">" (גדול מ). אפשר למלא אחד או שניהם.
+        const btn = el("button", "fbtn", "סינון"); btn.type = "button";
+        const pop = el("div", "fpop"); pop.style.display = "none";
+        const mk = (sym, label) => { const row = el("label", "fprow"); row.appendChild(el("span", "fsym", `${sym} ${label}`));
+          const i = el("input"); i.type = "search"; i.placeholder = kind === "date" ? "תאריך / שנה" : "מספר"; row.appendChild(i); return [row, i]; };
+        const [r1, lt] = mk("<", kind === "date" ? "לפני" : "קטן מ"), [r2, gt] = mk(">", kind === "date" ? "אחרי" : "גדול מ");
+        const hint = el("div", "fphint", kind === "date" ? "תאריך: 2029 · 03/2028 · 01/06/2027 (אפשר למלא אחד או שניהם)" : "אפשר למלא אחד או שניהם");
+        const clr = el("button", "fpclr", "נקה"); clr.type = "button";
+        pop.append(r1, r2, hint, clr);
+        document.body.appendChild(pop);
         const upd = () => {
-          i2.style.display = op.value === "-" ? "" : "none";
-          const v1 = i1.value.trim(), v2 = i2.value.trim();
-          let f = "";
-          if (op.value === "-") f = v1 && v2 ? v1 + "-" + v2 : "";
-          else if (/^(>=|<=|>|<|=)/.test(v1) || /^[\d./]+\s*-\s*[\d./]+$/.test(v1)) f = v1;       // הוקלד ידנית
-          else f = v1 ? op.value + v1 : "";
-          clearTimeout(tmr); tmr = setTimeout(() => { state.cf[c.key] = f; apply(); }, 150);
+          const lv = lt.value.trim().replace(/,/g, ""), gv = gt.value.trim().replace(/,/g, "");
+          const f = [gv ? ">" + gv : "", lv ? "<" + lv : ""].filter(Boolean).join(" ");
+          state.cf[c.key] = f;
+          btn.textContent = f ? [gv ? "> " + gv : "", lv ? "< " + lv : ""].filter(Boolean).join("  ") : "סינון";
+          btn.classList.toggle("on", !!f);
+          apply();
         };
-        op.addEventListener("change", upd); i1.addEventListener("input", upd); i2.addEventListener("input", upd);
-        inp.append(op, i1, i2);
-        inp.__reset = () => { op.value = ""; i1.value = ""; i2.value = ""; i2.style.display = "none"; };
+        let tmr; const updSoon = () => { clearTimeout(tmr); tmr = setTimeout(upd, 150); };
+        lt.addEventListener("input", updSoon); gt.addEventListener("input", updSoon);
+        clr.addEventListener("click", () => { lt.value = ""; gt.value = ""; upd(); });
+        const closePop = () => { pop.style.display = "none"; document.body.style.minHeight = ""; if (openPop === closePop) openPop = null; };
+        btn.addEventListener("click", ev => {
+          ev.stopPropagation();
+          if (pop.style.display !== "none") { closePop(); return; }
+          if (openPop) openPop();
+          pop.style.display = "block";
+          const r = btn.getBoundingClientRect(), pw = pop.offsetWidth;
+          pop.style.top = (r.bottom + window.scrollY + 4) + "px";
+          pop.style.left = Math.max(4, Math.min(r.right - pw, document.documentElement.clientWidth - pw - 4)) + "px";
+          document.body.style.minHeight = Math.ceil(r.bottom + window.scrollY + pop.offsetHeight + 16) + "px";   // שה-iframe יתארך מספיק להצגת החלון
+          openPop = closePop; (kind === "date" ? gt : gt).focus();
+        });
+        pop.addEventListener("mousedown", ev => ev.stopPropagation());
+        pop.addEventListener("click", ev => ev.stopPropagation());
+        wrap.addEventListener("scroll", closePop);
+        inp = btn;
+        inp.__reset = () => { lt.value = ""; gt.value = ""; btn.textContent = "סינון"; btn.classList.remove("on"); closePop(); };
       }
     }
     td.appendChild(inp); inputs.push(inp);
@@ -424,6 +449,10 @@ function sortVal(c, r) {
 function matchFilter(c, r, f) {
   if (!f) return true;
   const k = colKind(c), v = plain(c, r);
+  if (k === "number" || k === "date") {                                       // ">5 <9" = שני תנאים יחד
+    const toks = f.match(/(?:>=|<=|>|<|=)\s*[^\s<>=]+/g);
+    if (toks && toks.length > 1 && toks.join("").replace(/\s/g, "") === f.replace(/\s/g, "")) return toks.every(t => matchFilter(c, r, t));
+  }
   if (k.startsWith("rating")) {                                              // "≥X" = דירוג X ומעלה
     if (f.startsWith("≥")) { const rk = ratingRank(k, v), lim = ratingRank(k, f.slice(1)); return v !== "" && rk <= lim && rk !== 999; }
     return String(v) === f;
@@ -551,6 +580,9 @@ new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); post
 // עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
 // ── גלילה לרוחב: סרגל קבוע בתחתית החלון (גרסה 4 של קוד ההטמעה) - ה-iframe מדווח מידות ומיקום גלילה, ועמוד האב שולח חזרה את המיקום
 let parentV5 = false;   // קוד הטמעה 5 מזיז את סרגל הכותרת בעצמו לפי הגלילה; גרסה 4 ומטה צריכה spec חדש בכל גלילה
+let openPop = null;
+document.addEventListener("click", () => { if (openPop) openPop(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && openPop) openPop(); });
 let hscrollWrap = null, lastHs = "", hsPending = false;
 function schedHscroll() { if (hsPending) return; hsPending = true; requestAnimationFrame(() => { hsPending = false; postHscroll(); }); }
 function postHscroll() {
