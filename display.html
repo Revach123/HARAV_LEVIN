@@ -39,10 +39,17 @@
   .list-title{font-size:26px;font-weight:400;line-height:1.4;color:var(--navy)}
   .list-title .cnt{font-size:15px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
   .upd{font-size:14px;color:var(--muted);margin:-.4rem 0 .8rem}
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{background:#dff0f0}
+  thead th .arr{font-size:11px;color:var(--accent-dark);margin-inline-start:4px}
+  thead tr.frow td{padding:5px 6px;background:#f6fbfb;border-bottom:1px solid var(--border);font-weight:400}
+  thead tr.frow input, thead tr.frow select{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:#fff;color:var(--navy)}
   .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:3px;min-width:220px;background:var(--bg2)}
   .search:focus{outline:none;border-color:var(--accent)}
   .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:3px;cursor:pointer;white-space:nowrap;transition:.15s}
   .btn-csv:hover{background:var(--accent-dark)}
+  .btn-clear{background:#fff;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:.5rem .9rem;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-clear:hover{background:#fdecea}
   .head-tools{display:flex;gap:.5rem;align-items:center}
 
   /* ── טבלה ── */
@@ -204,7 +211,9 @@ function render(container, state, type, usedSample) {
     downloadXlsx(type, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
       state.rows.map(r => state.cols.map(c => cellVal(c, r))), state.cols.map(c => c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number")));
   };
-  tools.append(search, csvBtn);
+  const clearBtn = el("button", "btn-clear", "✕ ביטול סינון");
+  clearBtn.style.display = "none";
+  tools.append(clearBtn, search, csvBtn);
   head.append(title, tools);
   container.appendChild(head);
   const upd = el("div","upd"); container.appendChild(upd);
@@ -221,8 +230,39 @@ function render(container, state, type, usedSample) {
   table.appendChild(colgroup);
   const thead = el("thead");
   const trh = el("tr");
-  state.cols.forEach(c => trh.appendChild(el("th", ["num","pct","chg","badge","bonds","yesno"].includes(c.cell) ? "ctr" : null, esc(c.label))));
+  const ths = state.cols.map(c => {
+    const th = el("th", ["num","pct","chg","badge","bonds","yesno"].includes(c.cell) ? "ctr sortable" : "sortable", esc(c.label));
+    th.title = "לחיצה למיון";
+    th.addEventListener("click", () => {
+      state.sort = state.sort && state.sort.key === c.key ? (state.sort.dir === 1 ? { key: c.key, dir: -1 } : null) : { key: c.key, dir: 1 };
+      apply();
+    });
+    trh.appendChild(th);
+    return th;
+  });
   thead.appendChild(trh);
+  // שורת סינון: רשימה נפתחת לעמודות עם מעט ערכים שונים, אחרת תיבת טקסט (בעמודות מספריות גם > < או טווח 5-7)
+  const frow = el("tr", "frow");
+  state.cf = {};
+  const selects = [];    // רשימות נפתחות לפי אינדקס עמודה (האפשרויות מתעדכנות לפי מה שנשאר אחרי שאר הסינונים)
+  const inputs = [];
+  state.cols.forEach(c => {
+    const td = el("td"); frow.appendChild(td);
+    c.__select = false;
+    const vals = [...new Set(state.rows.map(r => String(plain(c, r))))].filter(v => v !== "");
+    let inp;
+    if (vals.length > 1 && vals.length <= 15 && !["pct", "num"].includes(c.cell)) {
+      c.__select = true; inp = el("select"); inp.appendChild(new Option("הכול", ""));
+      vals.sort((a, b) => a.localeCompare(b, "he")).forEach(v => inp.appendChild(new Option(v, v)));
+      inp.addEventListener("change", () => { state.cf[c.key] = inp.value; apply(); });
+      selects[state.cols.indexOf(c)] = inp;
+    } else {
+      inp = el("input"); inp.type = "search"; inp.placeholder = "סינון";
+      let tmr; inp.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(() => { state.cf[c.key] = inp.value.trim(); apply(); }, 200); });
+    }
+    td.appendChild(inp); inputs.push(inp);
+  });
+  thead.appendChild(frow);
   const tbody = el("tbody");
   table.append(thead, tbody);
   wrap.appendChild(table);
@@ -257,17 +297,86 @@ function render(container, state, type, usedSample) {
     title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
   };
 
-  search.addEventListener("input", () => {
+  // סינון (חיפוש כללי + סינון לפי עמודה) ואז מיון
+  const cmpVals = (a, b) => {
+    const ea = a === "" || a == null, eb = b === "" || b == null;
+    if (ea || eb) return ea && eb ? 0 : ea ? 1 : -1;      // ריקים תמיד בסוף
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return String(a).localeCompare(String(b), "he", { numeric: true });
+  };
+  const pass = (r, skipKey) => {
     const q = search.value.trim().toLowerCase();
-    state.filtered = !q ? state.rows : state.rows.filter(r =>
-      state.cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q)));
+    if (q && !state.cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q))) return false;
+    return state.cols.every(c => c.key === skipKey || matchFilter(c, r, state.cf[c.key]));
+  };
+  const apply = () => {
+    let rows = state.rows.filter(r => pass(r));
+    // רשימות הסינון מציגות רק ערכים שעדיין קיימים בשורות שנשארו (לפי שאר הסינונים והחיפוש)
+    selects.forEach((sel, i) => {
+      if (!sel) return;
+      const c = state.cols[i], cur = state.cf[c.key] || "";
+      const vals = [...new Set(state.rows.filter(r => pass(r, c.key)).map(r => String(plain(c, r))))].filter(v => v !== "");
+      if (cur && !vals.includes(cur)) vals.push(cur);
+      vals.sort((a, b) => a.localeCompare(b, "he"));
+      const sig = vals.join("\u0001");
+      if (sel.dataset.sig !== sig) {
+        sel.innerHTML = ""; sel.appendChild(new Option("הכול", ""));
+        vals.forEach(v => sel.appendChild(new Option(v, v)));
+        sel.dataset.sig = sig;
+      }
+      sel.value = cur;
+    });
+    clearBtn.style.display = (search.value.trim() || Object.values(state.cf).some(v => v)) ? "" : "none";
+    if (state.sort) {
+      const c = state.cols.find(x => x.key === state.sort.key), d = state.sort.dir;
+      rows = rows.map((r, i) => [sortVal(c, r), i, r]).sort((x, y) => (cmpVals(x[0], y[0]) * d) || (x[1] - y[1])).map(x => x[2]);
+    }
+    state.filtered = rows;
+    ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && state.sort.key === c.key;
+      th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
     draw();
+    postHeaderSpec();
+  };
+  clearBtn.addEventListener("click", () => {
+    search.value = ""; state.cf = {};
+    inputs.forEach(i => { i.value = ""; });
+    apply();
   });
+  search.addEventListener("input", apply);
 
   draw();
   postHeaderSpec();
 }
 
+// ערך להצגה / סינון / מיון של תא (לפי סוג העמודה)
+function plain(c, r) {
+  const v = r[c.key];
+  if (c.cell === "bonds") return v || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
+  if (c.cell === "yesno") return v === "כן" ? "כן" : "לא";
+  if (c.cell === "pct") { const n = parseFloat(v); return isNaN(n) ? "" : parseFloat(n.toFixed(2)); }
+  return v == null ? "" : v;
+}
+function sortVal(c, r) {
+  const v = plain(c, r);
+  if (typeof v === "number") return v;
+  const d = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(v));
+  if (d) return +(d[3] + d[2] + d[1]);                                   // dd/mm/yyyy -> yyyymmdd
+  if (c.cell === "num" || c.key === "security_id" || c.key === "last_price") { const n = parseFloat(String(v).replace(/,/g, "")); if (!isNaN(n) && /^[\d.,\s-]+$/.test(String(v))) return n; }
+  return v;
+}
+function matchFilter(c, r, f) {
+  if (!f) return true;
+  const v = plain(c, r);
+  if (["pct", "num"].includes(c.cell) && c.key !== "chp_number") {          // > < >= <= ,טווח 5-7
+    const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
+    let m;
+    if ((m = /^(>=|<=|>|<)\s*(-?[\d.]+)$/.exec(f))) { const x = parseFloat(m[2]); if (isNaN(n)) return false; return m[1] === ">" ? n > x : m[1] === "<" ? n < x : m[1] === ">=" ? n >= x : n <= x; }
+    if ((m = /^(-?[\d.]+)\s*-\s*(-?[\d.]+)$/.exec(f))) return !isNaN(n) && n >= parseFloat(m[1]) && n <= parseFloat(m[2]);
+  }
+  if (c.cell !== "pct" && c.cell !== "num" && vals_is_select(c)) return String(v) === f;
+  return String(v).toLowerCase().includes(f.toLowerCase());
+}
+function vals_is_select(c) { return !!c.__select; }
 // תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
 // מספר באותיות עבריות (גימטריה): 22 -> כ"ב, 787 -> תשפ"ז, 15/16 -> ט"ו/ט"ז
 function hebNum(n) {
@@ -399,9 +508,9 @@ function postHeaderSpec() {
   if (window.parent === window) return;
   const table = container.querySelector("table");
   if (!table || !table.tHead) return;
-  const ths = [...table.tHead.querySelectorAll("th")];
+  const ths = [...table.tHead.rows[0].querySelectorAll("th")];
   if (!ths.length) return;
-  const tr = table.getBoundingClientRect(), hr = table.tHead.getBoundingClientRect();
+  const tr = table.getBoundingClientRect(), hr = table.tHead.rows[0].getBoundingClientRect();
   const sl = hscrollWrap ? hscrollWrap.scrollLeft : 0;   // x נשלח כמיקום בגלילה 0; עמוד האב מזיז את הסרגל לפי הגלילה הנוכחית
   const cs = getComputedStyle(ths[0]);
   const spec = {
