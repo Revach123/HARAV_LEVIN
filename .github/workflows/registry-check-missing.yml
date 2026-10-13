@@ -1,0 +1,36 @@
+name: Registry check (missing companies, read-only)
+
+# בדיקה חד-פעמית וידנית: החברות שמופיעות באקסל הישן ואינן במסד — האם הן ברשם הממשלתי?
+# לא כותב ל-D1 ולא משנה את האתר. הפלט: reports/registry_check/missing_companies_report.{csv,json}
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: registry-check-missing
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check missing companies against the registry
+        run: python scripts/registry_check/check_missing.py
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/registry_check
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "registry-check-missing: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash
+          git push
