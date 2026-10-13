@@ -1733,12 +1733,17 @@ async function openBondPicker(bizId) {
   renderBondPicker();
 }
 
-function bpToggle(i, which) {   // which: private | general
+const BP_ON  = "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);";
+const BP_OFF = "background:var(--bg);color:var(--text);border-color:var(--border);";
+function bpToggle(i, which) {   // which: private | general. מעדכן רק את הכפתורים (בלי לטעון מחדש את החלון)
   const r = bpState.rows[i];
   const has = { private: r.scope === "private" || r.scope === "both", general: r.scope === "general" || r.scope === "both" };
   has[which] = !has[which];
   r.scope = has.private && has.general ? "both" : has.private ? "private" : has.general ? "general" : "";
-  renderBondPicker();
+  for (const w of ["private", "general"]) {
+    const el = document.getElementById(`bp-${i}-${w}`);
+    if (el) el.style.cssText = "padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;" + (has[w] ? BP_ON : BP_OFF);
+  }
 }
 
 function bpAddById() {
@@ -1768,12 +1773,15 @@ async function saveBondPicker() {
 }
 
 function renderBondPicker() {
-  document.getElementById("bp-root")?.remove();
+  const old = document.getElementById("bp-root");
+  const keepScroll = old ? (old.querySelector(".bp-list") || {}).scrollTop || 0 : 0;
+  const reopen = !!old;
+  old?.remove();
   const st = bpState; if (!st) return;
-  const btn = (on, label, i, which) => `<button onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;${on ? "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);" : "background:var(--bg);color:var(--text);"}">${label}</button>`;
+  const btn = (on, label, i, which) => `<button id="bp-${i}-${which}" onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;${on ? BP_ON : BP_OFF}">${label}</button>`;
   const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
     ${st.noSnap ? `<p style="color:#b85c00;font-size:13px;">רשימת מאיה עדיין לא נבנתה (תיווצר בריצה הקרובה של bonds-list). אפשר להוסיף אג"ח לפי מספר.</p>` : `<p style="font-size:12px;color:var(--muted);">רשימת מאיה נכון ל-${escHtml(st.updated)}</p>`}
-    <div style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
+    <div class="bp-list" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
       ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r); return `
         <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
           <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
@@ -1786,8 +1794,8 @@ function renderBondPicker() {
       <button class="btn-ghost" onclick="bpAddById()">הוסף</button></div>`;
   const root = document.createElement("div");
   root.id = "bp-root";
-  root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
-    <div class="modal-box" style="max-width:560px;">
+  root.innerHTML = `<div class="modal-overlay" style="${reopen ? "animation:none;" : ""}" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
+    <div class="modal-box" style="max-width:560px;${reopen ? "animation:none;" : ""}">
       <div class="modal-title">בחירת אג"ח מסוימים</div>
       <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
       ${body}
@@ -1797,6 +1805,7 @@ function renderBondPicker() {
       </div>
     </div></div>`;
   document.body.appendChild(root);
+  const list = root.querySelector(".bp-list"); if (list) list.scrollTop = keepScroll;
 }
 
 // שינוי "אישור אג"ח" בטבלת הניהול. "⚙ בחירת אג"ח…" היא פעולה: תמיד פותחת את חלון הבחירה (גם אם החברה כבר במצב
