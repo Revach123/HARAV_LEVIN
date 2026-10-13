@@ -249,15 +249,17 @@ function render(container, state, type, usedSample) {
   state.cols.forEach(c => {
     const td = el("td"); frow.appendChild(td);
     c.__select = false;
+    const kind = colKind(c);
     const vals = [...new Set(state.rows.map(r => String(plain(c, r))))].filter(v => v !== "");
     let inp;
-    if (vals.length > 1 && vals.length <= 15 && !["pct", "num"].includes(c.cell)) {
+    if (kind.startsWith("rating") || (kind === "text" && vals.length > 1 && vals.length <= 15)) {
       c.__select = true; inp = el("select"); inp.appendChild(new Option("הכול", ""));
-      vals.sort((a, b) => a.localeCompare(b, "he")).forEach(v => inp.appendChild(new Option(v, v)));
       inp.addEventListener("change", () => { state.cf[c.key] = inp.value; apply(); });
       selects[state.cols.indexOf(c)] = inp;
     } else {
-      inp = el("input"); inp.type = "search"; inp.placeholder = "סינון";
+      inp = el("input"); inp.type = "search"; inp.placeholder = kind === "text" ? "סינון" : "סינון: > < טווח";
+      if (kind === "number") inp.title = "דוגמאות: >5   <=3.5   =7   3-4";
+      if (kind === "date") inp.title = "דוגמאות: >2029   <=03/2028   2028-2030   01/06/2027-12/2028";
       let tmr; inp.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(() => { state.cf[c.key] = inp.value.trim(); apply(); }, 200); });
     }
     td.appendChild(inp); inputs.push(inp);
@@ -314,14 +316,21 @@ function render(container, state, type, usedSample) {
     // רשימות הסינון מציגות רק ערכים שעדיין קיימים בשורות שנשארו (לפי שאר הסינונים והחיפוש)
     selects.forEach((sel, i) => {
       if (!sel) return;
-      const c = state.cols[i], cur = state.cf[c.key] || "";
-      const vals = [...new Set(state.rows.filter(r => pass(r, c.key)).map(r => String(plain(c, r))))].filter(v => v !== "");
-      if (cur && !vals.includes(cur)) vals.push(cur);
-      vals.sort((a, b) => a.localeCompare(b, "he"));
-      const sig = vals.join("\u0001");
+      const c = state.cols[i], cur = state.cf[c.key] || "", kind = colKind(c);
+      let vals = [...new Set(state.rows.filter(r => pass(r, c.key)).map(r => String(plain(c, r))))].filter(v => v !== "");
+      if (kind.startsWith("rating")) {                      // לפי סדר הדירוג, ולכל דירוג גם "ומעלה"
+        vals.sort((a, b) => ratingRank(kind, a) - ratingRank(kind, b));
+        var opts = []; vals.forEach(v => { opts.push([v, v]); if (ratingRank(kind, v) < LADDER_END[kind.split(":")[1]]) opts.push(["≥" + v, v + " ומעלה"]); });
+      } else {
+        if (cur && !vals.includes(cur)) vals.push(cur);
+        vals.sort((a, b) => a.localeCompare(b, "he"));
+        var opts = vals.map(v => [v, v]);
+      }
+      if (cur && !opts.some(o => o[0] === cur)) opts.push([cur, cur.replace(/^≥/, "") + (cur[0] === "≥" ? " ומעלה" : "")]);
+      const sig = opts.map(o => o[0]).join("\u0001");
       if (sel.dataset.sig !== sig) {
         sel.innerHTML = ""; sel.appendChild(new Option("הכול", ""));
-        vals.forEach(v => sel.appendChild(new Option(v, v)));
+        opts.forEach(o => sel.appendChild(new Option(o[1], o[0])));
         sel.dataset.sig = sig;
       }
       sel.value = cur;
@@ -344,39 +353,73 @@ function render(container, state, type, usedSample) {
   });
   search.addEventListener("input", apply);
 
-  draw();
-  postHeaderSpec();
+  apply();
 }
 
 // ערך להצגה / סינון / מיון של תא (לפי סוג העמודה)
+const RATING_ORDER = {
+  midroog: ["Aaa","Aa1","Aa2","Aa3","A1","A2","A3","Baa1","Baa2","Baa3","Ba1","Ba2","Ba3","B1","B2","B3","Caa1","Caa2","Caa3","Ca","C","P-1","P-2","P-3","NP","WR"],
+  maalot:  ["AAA","AA+","AA","AA-","A+","A","A-","BBB+","BBB","BBB-","BB+","BB","BB-","B+","B","B-","CCC","CC","C","D"],
+};
+const LADDER_END = { midroog: 21, maalot: 20 };   // דירוגי P-1/WR וכד' אינם חלק מהסולם (בלי אפשרות "ומעלה")
+function colKind(c) {
+  if (c.key === "midroog_rating") return "rating:midroog";
+  if (c.key === "maalot_rating") return "rating:maalot";
+  if (c.key === "redemption_date") return "date";
+  if (c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number") || c.key === "security_id" || c.key === "last_price") return "number";
+  return "text";
+}
+function ratingRank(kind, v) {           // 0 = הדירוג הגבוה ביותר; לא מוכר / ריק = בסוף
+  const ord = RATING_ORDER[kind.split(":")[1]];
+  const i = ord.indexOf(String(v).replace(/\.il$/i, "").replace(/^il/i, "").trim());
+  return i < 0 ? 999 : i;
+}
 function plain(c, r) {
   const v = r[c.key];
   if (c.cell === "bonds") return v || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
   if (c.cell === "yesno") return v === "כן" ? "כן" : "לא";
-  if (c.cell === "pct") { const n = parseFloat(v); return isNaN(n) ? "" : parseFloat(n.toFixed(2)); }
+  if (colKind(c) === "number") { const n = parseFloat(String(v ?? "").replace(/,/g, "")); return isNaN(n) ? "" : parseFloat(n.toFixed(2)); }
   return v == null ? "" : v;
 }
+function dateNum(str) {                  // dd/mm/yyyy -> yyyymmdd (או null)
+  const d = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(str).trim());
+  return d ? +(d[3] + d[2].padStart(2, "0") + d[1].padStart(2, "0")) : null;
+}
+function dateBounds(str) {               // dd/mm/yyyy | mm/yyyy | yyyy -> [מוקדם, מאוחר] כ-yyyymmdd
+  str = String(str).trim(); let m;
+  if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str))) { const n = dateNum(str); return [n, n]; }
+  if ((m = /^(\d{1,2})\/(\d{4})$/.exec(str))) { const mm = m[1].padStart(2, "0"); return [+(m[2] + mm + "01"), +(m[2] + mm + "31")]; }
+  if ((m = /^(\d{4})$/.exec(str))) return [+(m[1] + "0101"), +(m[1] + "1231")];
+  return null;
+}
 function sortVal(c, r) {
-  const v = plain(c, r);
-  if (typeof v === "number") return v;
-  const d = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(v));
-  if (d) return +(d[3] + d[2] + d[1]);                                   // dd/mm/yyyy -> yyyymmdd
-  if (c.cell === "num" || c.key === "security_id" || c.key === "last_price") { const n = parseFloat(String(v).replace(/,/g, "")); if (!isNaN(n) && /^[\d.,\s-]+$/.test(String(v))) return n; }
+  const k = colKind(c), v = plain(c, r);
+  if (k.startsWith("rating")) return v === "" ? "" : ratingRank(k, v);
+  if (k === "date") { const n = dateNum(v); return n == null ? "" : n; }
   return v;
 }
 function matchFilter(c, r, f) {
   if (!f) return true;
-  const v = plain(c, r);
-  if (["pct", "num"].includes(c.cell) && c.key !== "chp_number") {          // > < >= <= ,טווח 5-7
-    const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, ""));
-    let m;
-    if ((m = /^(>=|<=|>|<)\s*(-?[\d.]+)$/.exec(f))) { const x = parseFloat(m[2]); if (isNaN(n)) return false; return m[1] === ">" ? n > x : m[1] === "<" ? n < x : m[1] === ">=" ? n >= x : n <= x; }
+  const k = colKind(c), v = plain(c, r);
+  if (k.startsWith("rating")) {                                              // "≥X" = דירוג X ומעלה
+    if (f.startsWith("≥")) { const rk = ratingRank(k, v), lim = ratingRank(k, f.slice(1)); return v !== "" && rk <= lim && rk !== 999; }
+    return String(v) === f;
+  }
+  if (k === "date") {                                                         // > < >= <= = וטווח, למשל 03/2028-2030
+    const n = dateNum(v); let m;
+    if ((m = /^(>=|<=|>|<|=)\s*(.+)$/.exec(f))) { const bd = dateBounds(m[2]); if (!bd) return false; if (n == null) return false;
+      return m[1] === ">" ? n > bd[1] : m[1] === "<" ? n < bd[0] : m[1] === ">=" ? n >= bd[0] : m[1] === "<=" ? n <= bd[1] : (n >= bd[0] && n <= bd[1]); }
+    if ((m = /^(.+?)\s*-\s*(.+)$/.exec(f))) { const b1 = dateBounds(m[1]), b2 = dateBounds(m[2]); if (b1 && b2) return n != null && n >= b1[0] && n <= b2[1]; }
+  }
+  if (k === "number") {                                                       // > < >= <= = וטווח 5-7
+    const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, "")); let m;
+    if ((m = /^(>=|<=|>|<|=)\s*(-?[\d.]+)$/.exec(f))) { const x = parseFloat(m[2]); if (isNaN(n)) return false;
+      return m[1] === ">" ? n > x : m[1] === "<" ? n < x : m[1] === ">=" ? n >= x : m[1] === "<=" ? n <= x : n === x; }
     if ((m = /^(-?[\d.]+)\s*-\s*(-?[\d.]+)$/.exec(f))) return !isNaN(n) && n >= parseFloat(m[1]) && n <= parseFloat(m[2]);
   }
-  if (c.cell !== "pct" && c.cell !== "num" && vals_is_select(c)) return String(v) === f;
+  if (c.__select) return String(v) === f;
   return String(v).toLowerCase().includes(f.toLowerCase());
 }
-function vals_is_select(c) { return !!c.__select; }
 // תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
 // מספר באותיות עבריות (גימטריה): 22 -> כ"ב, 787 -> תשפ"ז, 15/16 -> ט"ו/ט"ז
 function hebNum(n) {
