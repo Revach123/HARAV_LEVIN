@@ -188,6 +188,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* כותרות קבועות (freeze panes) בגלילת העמוד, במחשב. במסך צר הטבלה נגללת לרוחב ולכן נשארת כמו קודם. */
+  @media (min-width: 900px) {
+    .table-wrap { overflow: visible; }
+    thead th, thead th.sortable { position: sticky; top: 56px; z-index: 6; box-shadow: 0 1px 0 var(--border); }
+  }
   thead th:first-child { border-radius: 10px 0 0 0; }
   thead th:last-child  { border-radius: 0 10px 0 0; }
   tbody tr { transition: background .1s; }
@@ -1073,8 +1078,7 @@ function renderLogin() {
 
 // ── ADMIN TABLE ──
 function renderAdminTable() {
-  const sorted = [...businesses].sort((a,b)=>
-    displayName(a).localeCompare(displayName(b),"he"));
+  const sorted = filteredAndSorted();   // לפי החיפוש / המסננים (ברירת מחדל: כל העסקים, לפי שם)
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
@@ -1118,6 +1122,15 @@ function renderAdminTable() {
       </div>
     </div>
     <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
+    <div class="filter-bar">
+      <div class="fb-group" style="flex:1;min-width:200px;">
+        <span class="fb-label">חיפוש</span>
+        <input type="text" id="adm-srch" class="fb-search${search ? " active" : ""}" autocomplete="off"
+          placeholder="🔍 שם, ח.פ., קטגוריה, אזור, הערות…" value="${escHtml(search)}" oninput="onAdminSearch(this.value)">
+      </div>
+      <div class="fb-group" style="justify-content:flex-end;"><span class="fb-label">&nbsp;</span>
+        <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
+    </div>
     <div class="table-wrap">
       <table>
         <colgroup>
@@ -1783,6 +1796,17 @@ function renderBondPicker() {
       </div>
     </div></div>`;
   document.body.appendChild(root);
+}
+
+let admSearchTimer = null;
+function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מחדש אחרי הפסקת הקלדה, עם שמירת הפוקוס
+  search = v;
+  clearTimeout(admSearchTimer);
+  admSearchTimer = setTimeout(() => {
+    render();
+    const el = document.getElementById("adm-srch");
+    if (el) { el.focus(); el.setSelectionRange(v.length, v.length); }
+  }, 250);
 }
 
 async function inlineUpdate(id, field, value) {
