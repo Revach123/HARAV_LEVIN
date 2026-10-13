@@ -46,14 +46,17 @@
 
   /* ── טבלה ── */
   .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
-  table{width:100%;border-collapse:collapse;font-size:16px;min-width:640px}
-  thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border)}
-  tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;white-space:nowrap}
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:16px;min-width:760px}
+  thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
+  tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;overflow-wrap:anywhere}
+  /* פס מפריד בין עמודות (RTL: הגבול בצד שמאל של כל תא, חוץ מהאחרון) */
+  thead th:not(:last-child), tbody td:not(:last-child){border-left:1px solid var(--border)}
   tbody tr:nth-child(even){background:var(--row-alt)}
   tbody tr:hover{background:var(--accent-bg)}
   tbody tr:last-child td{border-bottom:none}
-  .name-cell{white-space:normal;font-weight:500;min-width:150px}
-  .num{font-variant-numeric:tabular-nums;text-align:left;direction:ltr}
+  th.ctr, td.ctr{text-align:center;white-space:nowrap}
+  .name-cell{font-weight:500}
+  .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   .badge-no{color:var(--light);font-size:13px}
@@ -89,21 +92,21 @@ const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same 
 // הגדרת העמודות לכל סוג רשימה
 const COLUMNS = {
   companies: [
-    { key:"permit_name", label:"שם החברה", cell:"name" },
-    { key:"chp_number",  label:'ח"פ',       cell:"num"  },
-    { key:"category",    label:"קטגוריה"                },
-    { key:"region",      label:"אזור"                  },
-    { key:"approved",    label:'אג"ח מאושר', cell:"badge" },
+    { key:"permit_name", label:"שם החברה", cell:"name", w:38 },
+    { key:"chp_number",  label:'ח"פ',       cell:"num",  w:14 },
+    { key:"category",    label:"קטגוריה",              w:22 },
+    { key:"region",      label:"אזור",                 w:12 },
+    { key:"approved",    label:'אג"ח מאושר', cell:"badge", w:14 },
   ],
   bonds: [
-    { key:"bond_name",     label:'אג"ח',     cell:"name" },
-    { key:"symbol",        label:"סימול"                },
-    { key:"company",       label:"חברה",     cell:"name" },
-    { key:"interest",      label:"ריבית %",  cell:"num"  },
-    { key:"maturity_date", label:"מועד פדיון"           },
-    { key:"linkage",       label:"הצמדה"                },
-    { key:"last_price",    label:"שער אחרון", cell:"num" },
-    { key:"change_pct",    label:"שינוי %",  cell:"chg"  },
+    { key:"bond_name",     label:'אג"ח',     cell:"name", w:16 },
+    { key:"symbol",        label:"סימול",               w:10 },
+    { key:"company",       label:"חברה",     cell:"name", w:22 },
+    { key:"interest",      label:"ריבית %",  cell:"num",  w:8  },
+    { key:"maturity_date", label:"מועד פדיון",          w:12 },
+    { key:"linkage",       label:"הצמדה",               w:14 },
+    { key:"last_price",    label:"שער אחרון", cell:"num", w:9 },
+    { key:"change_pct",    label:"שינוי %",  cell:"chg",  w:9  },
   ],
 };
 
@@ -172,9 +175,12 @@ function render(container, state, type, usedSample) {
 
   const wrap = el("div","table-wrap");
   const table = el("table");
+  const colgroup = el("colgroup");
+  state.cols.forEach(c => { const col = el("col"); col.style.width = c.w + "%"; colgroup.appendChild(col); });
+  table.appendChild(colgroup);
   const thead = el("thead");
   const trh = el("tr");
-  state.cols.forEach(c => trh.appendChild(el("th", null, esc(c.label))));
+  state.cols.forEach(c => trh.appendChild(el("th", ["num","chg","badge"].includes(c.cell) ? "ctr" : null, esc(c.label))));
   thead.appendChild(trh);
   const tbody = el("tbody");
   table.append(thead, tbody);
@@ -222,6 +228,7 @@ function cellFor(col, val) {
     return td;
   }
   if (col.cell === "badge") {
+    td.className = "ctr";
     td.innerHTML = Number(val) === 1
       ? '<span class="badge-yes">מאושר ✓</span>'
       : '<span class="badge-no">—</span>';
