@@ -389,6 +389,7 @@ function showDebug() {
 }
 if (window.parent !== window) setTimeout(showDebug, 1500);
 function applySticky() {
+  return;   // הכותרת קבועה בתוך מסגרת הטבלה (position:sticky); התזוזה הישנה לפי הודעות עמוד האב גרמה להיעלמות הכותרות בגלילה מהירה
   const table = container.querySelector("table"); if (!table) return;
   const ths = table.querySelectorAll("thead th");
   let delta = 0;
