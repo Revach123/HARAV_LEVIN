@@ -226,68 +226,19 @@ title=חיפוש היתר עסקה חברות
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
-## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה וסרגל גלילה לרוחב קבוע (במחשב) - גרסה 6
+## הטמעה בוורדפרס: שורה אחת (embed.js)
 
-בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-140; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
-
-**מה חדש בגרסה 6:** כשגוררים את סרגל הגלילה העליון של הטבלה (בתוך ה-iframe), הסרגל הקבוע בעמוד לא מחזיר יותר "הד" של מיקום ישן שגרם למאבק על הגלילה (קפיצות). בבדיקה: 0 הודעות הד במקום 2.
-
-**מה היה בגרסה 5:** גלילה לרוחב חלקה - סרגל הכותרת מוזז בעמוד עצמו מיד עם הגלילה (בלי להמתין להודעות מה-iframe), וכל עוד גוררים את הסרגל הקבוע הוא לא "מתקן" את עצמו מהודעות ישנות. גרסה 4 ממשיכה לעבוד (פחות חלק).
-
-**מה היה בגרסה 4:** סרגל גלילה לרוחב קבוע בתחתית החלון (מופיע רק כשהטבלה רחבה מהמסך והסרגל המקורי בתחתית הטבלה עדיין מחוץ למסך); הוא מסונכרן בשני הכיוונים עם הטבלה.
-
-**איך זה עובד:** ה-iframe שולח לעמוד האב את מבנה שורת הכותרת (טקסטים, מיקומים, עיצוב), והקוד בעמוד בונה ממנה סרגל `position:fixed` אמיתי שמופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET. הסרגל נשלט ישירות ע"י הדפדפן (לא מוזז מתוך ה-iframe), ולכן הוא יציב וללא רעידות.
-הקוד בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד).
+בכל אחד מארבעת הדפים בוורדפרס (בלוק "קוד" / HTML מותאם אישית) מדביקים רק:
 
 ```html
-<iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
-<script>
-(function(){
-var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=140,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
-function build(){
-if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
-bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
-for(var i=0;i!==spec.cells.length;i=i+1){var c=spec.cells[i],d=document.createElement("div");
-d.style.cssText="position:absolute;top:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-sizing:border-box;padding:0 12px";
-d.style.left=c.x0+"px";d.style.width=c.w+"px";d.style.height=spec.h+"px";d.style.lineHeight=spec.h+"px";d.style.textAlign=c.a;
-d.style.color=spec.color;d.style.fontWeight=spec.fw;d.style.fontSize=spec.fs;d.style.borderLeft=c.bl;d.textContent=c.t;bi.appendChild(d);}
-move();
-}
-function move(){if(bi){bi.style.transform="translateX("+(0-cur)+"px)";}}
-function buildSb(){
-if(!sb){sb=document.createElement("div");sb.id="hl-sb";sb.style.cssText="position:fixed;z-index:99;bottom:0;display:none;overflow-x:auto;overflow-y:hidden;direction:rtl;height:18px;background:#f4f7f7";
-sbi=document.createElement("div");sbi.style.height="1px";sb.appendChild(sbi);document.body.appendChild(sb);
-sb.addEventListener("scroll",function(){if(ps!==null){if(Math.sign(Math.abs(sb.scrollLeft-ps)-1)!==1){ps=null;return;}ps=null;}lu=Date.now();cur=sb.scrollLeft;move();f.contentWindow.postMessage({source:"harav-parent",type:"setScroll",left:cur},O);});}
-sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
-if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}move();}
-}
-window.addEventListener("message",function(e){
-if(e.origin!==O){return;}
-var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
-if(d.type==="resize"){f.style.height=d.height+"px";}
-if(d.type==="header"){spec=d;build();f.contentWindow.postMessage({source:"harav-parent",type:"v5"},O);}
-if(d.type==="hscroll"){hs=d;buildSb();}
-});
-function tick(){
-var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
-if(spec){var top=r.top+spec.tableTop;
-var show=Math.sign(OFFSET-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OFFSET)===1;}
-if(show){show=wide;}
-if(show){bar.style.display="block";bar.style.top=OFFSET+"px";bar.style.left=r.left+"px";bar.style.width=r.width+"px";}else{bar.style.display="none";}}
-if(hs){if(sb){var t2=r.top+hs.top,sh=Math.sign(hs.sw-hs.cw-1)===1;
-if(sh){sh=Math.sign(window.innerHeight-40-t2)===1;}
-if(sh){sh=Math.sign(t2+hs.h-window.innerHeight)===1;}
-if(sh){sh=Math.sign(t2+hs.h-OFFSET-80)===1;}
-if(sh){sh=wide;}
-if(sh){sb.style.display="block";sb.style.left=(r.left+hs.x)+"px";}else{sb.style.display="none";}}}
-window.requestAnimationFrame(tick);}
-window.requestAnimationFrame(tick);
-})();
-</script>
+<script src="https://harav-levin.pages.dev/embed.js"></script>
 ```
 
-**אבחון:** `?debug=1` ב-`src` של ה-iframe מציג תג קטן בפינה (`sticky: parent connected ...`) - רק עבור גרסה 2. בגרסה 3 אין צורך בו: מספיק לגלול ולבדוק שסרגל הכותרת נצמד מתחת לתפריט האתר. אחרי שהכול עובד מוחקים את `?debug=1`.
-גרסאות קודמות של הקוד (2 ומטה) ממשיכות לעבוד כמו קודם (תנועה מתוך ה-iframe, פחות יציב).
+כל הקוד יושב בקובץ `embed.js` בריפו, ולכן כל שינוי בו חל מיד על כל הדפים בלי לגעת בוורדפרס. הקוד:
+- יוצר את ה-iframe במקום התג, ובוחר רשימה לפי כתובת הדף: מילה "חוב"/"אגח" = אג"ח (אחרת חברות), מילה "כללי" = כללי (אחרת פרטי). לכפות רשימה: `data-type="bonds-private"` על התג (`companies-private`, `companies-general`, `bonds-private`, `bonds-general`).
+- כותרת טבלה צמודה ברוחב מלא (עוברת לשתי שורות כשצריך) וסרגל גלילה לרוחב צמוד בתחתית החלון, במחשב בלבד (רוחב 992 ומעלה).
+- תאריך עדכון עברי בתת-הכותרת של הדף (אוואדה: `.fusion-page-title-secondary`), מהריצה היומית.
+- `data-offset="140"` = גובה הכותרת הקבועה של האתר בפיקסלים (ברירת מחדל 140).
 
 ## אישור "בחירת אג"ח מסוימים" (אג"ח ספציפיות לחברה)
 
