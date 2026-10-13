@@ -38,6 +38,7 @@
   .list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap}
   .list-title{font-size:26px;font-weight:400;line-height:1.4;color:var(--navy)}
   .list-title .cnt{font-size:15px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
+  .upd{font-size:14px;color:var(--muted);margin:-.4rem 0 .8rem}
   .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:3px;min-width:220px;background:var(--bg2)}
   .search:focus{outline:none;border-color:var(--accent)}
   .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:3px;cursor:pointer;white-space:nowrap;transition:.15s}
@@ -206,6 +207,8 @@ function render(container, state, type, usedSample) {
   tools.append(search, csvBtn);
   head.append(title, tools);
   container.appendChild(head);
+  const upd = el("div","upd"); container.appendChild(upd);
+  updatedText().then(t => { upd.textContent = t; });
 
   const wrap = el("div","table-wrap");
   const table = el("table");
@@ -265,6 +268,20 @@ function render(container, state, type, usedSample) {
   postHeaderSpec();
 }
 
+// תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
+let updatedP = null;
+function updatedText() {
+  if (!updatedP) updatedP = fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : null).then(j => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((j && j.updated) || "");
+      if (!m) return "";
+      const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+      let heb = "";
+      try { heb = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(d); } catch (e) { /* ללא תאריך עברי */ }
+      return `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}` + (heb ? ` (${heb})` : "");
+    }).catch(() => "");
+  return updatedP;
+}
 const NOWRAP_KEYS = new Set(["symbol","redemption_date","security_type","linkage","midroog_rating","maalot_rating","chp_number","category","last_price"]);
 function cellFor(col, val, row) {
   const td = el("td");
