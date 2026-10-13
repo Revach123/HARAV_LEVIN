@@ -240,9 +240,10 @@ function render(container, state, type, usedSample) {
   const trh = el("tr");
   const ths = state.cols.map(c => {
     const th = el("th", ["num","pct","chg","badge","bonds","yesno"].includes(c.cell) ? "ctr sortable" : "sortable", esc(c.label));
-    th.title = "לחיצה למיון";
+    const sortKey = colKind(c).startsWith("rating") ? "__rating" : c.key;   // שתי עמודות הדירוג ממיינות יחד
+    th.title = sortKey === "__rating" ? "מיון משותף לדירוג מידרוג ומעלות" : "לחיצה למיון";
     th.addEventListener("click", () => {
-      state.sort = state.sort && state.sort.key === c.key ? (state.sort.dir === 1 ? { key: c.key, dir: -1 } : null) : { key: c.key, dir: 1 };
+      state.sort = state.sort && state.sort.key === sortKey ? (state.sort.dir === 1 ? { key: sortKey, dir: -1 } : null) : { key: sortKey, dir: 1 };
       apply();
     });
     trh.appendChild(th);
@@ -275,7 +276,7 @@ function render(container, state, type, usedSample) {
         const pop = el("div", "fpop"); pop.style.display = "none";
         const mk = (sym, label) => { const row = el("label", "fprow"); row.appendChild(el("span", "fsym", `${sym} ${label}`));
           const i = el("input"); i.type = "search"; i.placeholder = kind === "date" ? "תאריך / שנה" : "מספר"; row.appendChild(i); return [row, i]; };
-        const [r1, lt] = mk("<", kind === "date" ? "לפני" : "קטן מ"), [r2, gt] = mk(">", kind === "date" ? "אחרי" : "גדול מ");
+        const [r1, lt] = mk("<", kind === "date" ? "לפני" : "פחות מ"), [r2, gt] = mk(">", kind === "date" ? "אחרי" : "יותר מ");
         const hint = el("div", "fphint", kind === "date" ? "תאריך: 2029 · 03/2028 · 01/06/2027 (אפשר למלא אחד או שניהם)" : "אפשר למלא אחד או שניהם");
         const clr = el("button", "fpclr", "נקה"); clr.type = "button";
         pop.append(r1, r2, hint, clr);
@@ -385,11 +386,15 @@ function render(container, state, type, usedSample) {
     });
     clearBtn.style.display = (search.value.trim() || Object.values(state.cf).some(v => v)) ? "" : "none";
     if (state.sort) {
-      const c = state.cols.find(x => x.key === state.sort.key), d = state.sort.dir;
-      rows = rows.map((r, i) => [sortVal(c, r), i, r]).sort((x, y) => (cmpVals(x[0], y[0]) * d) || (x[1] - y[1])).map(x => x[2]);
+      const c = state.cols.find(x => x.key === state.sort.key), d = state.sort.dir, byRating = state.sort.key === "__rating";
+      rows = rows.map((r, i) => [byRating ? combinedRating(r) : sortVal(c, r), i, r]).sort((x, y) => {
+        const ea = x[0] === "" || x[0] == null, eb = y[0] === "" || y[0] == null;
+        if (ea || eb) return ea && eb ? x[1] - y[1] : ea ? 1 : -1;     // ריקים תמיד בסוף, גם במיון יורד
+        return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
+      }).map(x => x[2]);
     }
     state.filtered = rows;
-    ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && state.sort.key === c.key;
+    ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
       th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
     draw();
     postHeaderSpec();
@@ -409,6 +414,13 @@ const RATING_ORDER = {
   midroog: ["Aaa","Aa1","Aa2","Aa3","A1","A2","A3","Baa1","Baa2","Baa3","Ba1","Ba2","Ba3","B1","B2","B3","Caa1","Caa2","Caa3","Ca","C","P-1","P-2","P-3","NP","WR"],
   maalot:  ["AAA","AA+","AA","AA-","A+","A","A-","BBB+","BBB","BBB-","BB+","BB","BB-","B+","B","B-","CCC","CC","C","D"],
 };
+// מיון משותף לשתי עמודות הדירוג (כמו ב-Revach, securities.html): דירוג מידרוג, ואם אין - דירוג מעלות, על סולם אחד (21 = הגבוה ביותר)
+const MIDROOG_RANK = {"Aaa.il":21,"Aa1.il":20,"Aa2.il":19,"Aa3.il":18,"A1.il":17,"A2.il":16,"A3.il":15,"Baa1.il":14,"Baa2.il":13,"Baa3.il":12,"Ba1.il":11,"Ba2.il":10,"Ba3.il":9,"B1.il":8,"B2.il":7,"B3.il":6,"Caa1.il":5,"Caa2.il":4,"Caa3.il":3,"Ca.il":2,"C.il":1};
+const MAALOT_RANK = {"ilAAA":21,"ilAA+":20,"ilAA":19,"ilAA-":18,"ilA+":17,"ilA":16,"ilA-":15,"ilBBB+":14,"ilBBB":13,"ilBBB-":12,"ilBB+":11,"ilBB":10,"ilBB-":9,"ilB+":8,"ilB":7,"ilB-":6,"ilCCC+":5,"ilCCC":4,"ilCCC-":3,"ilCC":2,"ilD":1};
+function combinedRating(r) {            // ערך למיון עולה: הדירוג הטוב ביותר ראשון; ללא דירוג (ריק) תמיד בסוף
+  const rank = MIDROOG_RANK[r.midroog_rating] || MAALOT_RANK[r.maalot_rating] || 0;
+  return rank ? -rank : "";
+}
 const LADDER_END = { midroog: 21, maalot: 20 };   // דירוגי P-1/WR וכד' אינם חלק מהסולם (בלי אפשרות "ומעלה")
 function colKind(c) {
   if (c.key === "midroog_rating") return "rating:midroog";
