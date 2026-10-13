@@ -24,17 +24,14 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const body = await request.json();
-    const { id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details } = body;
+    const { id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, notes_scope, visibility, agch_approved, has_details } = body;
 
     if (!id) return Response.json({ error: "Missing id" }, { status: 400 });
     if (!registrar_name && !permit_name) {
       return Response.json({ error: "At least one name is required" }, { status: 400 });
     }
 
-    await env.DB.prepare(
-      `INSERT INTO businesses (id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    ).bind(
+    const vals = [
       id,
       chp_number     || "",
       entity_type    || "company",
@@ -45,8 +42,20 @@ export async function onRequestPost({ request, env }) {
       notes          || "",
       visibility     || "",
       agch_approved  || "",
-      has_details    ? 1 : 0
-    ).run();
+      has_details    ? 1 : 0,
+    ];
+    try {
+      await env.DB.prepare(
+        `INSERT INTO businesses (id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details, notes_scope)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(...vals, notes_scope || "").run();
+    } catch (e) {
+      if (!/no such column: notes_scope|has no column named notes_scope/i.test(String(e.message))) throw e;
+      await env.DB.prepare(     // העמודה notes_scope עדיין לא נוספה למסד (migrations/0004)
+        `INSERT INTO businesses (id, chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(...vals).run();
+    }
 
     return Response.json({ success: true });
   } catch (e) {

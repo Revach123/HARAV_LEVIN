@@ -107,10 +107,11 @@ def bond_scope(agch, notes_raw):
     return "both"
 
 
-def bond_note(notes_raw):
-    """הערת החברה כשהיא נוגעת לאג"ח (מוצגת כהערה בעמודת אישור האג"ח); אחרת ריק."""
+def bond_note(notes_raw, scope=""):
+    """הערת החברה לתצוגה ברשימת האג"ח. ברירת המחדל: ההערות מוצגות רק ברשימת החברות (חוץ מ"בעלות גוי" ו"בפירוק", שנשארות תמיד).
+    בדף הניהול אפשר לבחור לכל חברה היכן ההערה מוצגת (notes_scope): 'bonds' / 'both' = גם ברשימת האג"ח; ריק / 'companies' = רק בחברות."""
     n = _clean(notes_raw)
-    return n if ('אג"ח' in n or "אגח" in n) else ""
+    return n if (n and (scope or "").strip() in ("bonds", "both") and not is_goyim(n)) else ""
 
 
 def fmt_interest(v):
@@ -225,7 +226,7 @@ def approved_map(companies):
             "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
             "bond_scope": bond_scope(status, c.get("notes")),
-            "bond_note": "; ".join(x for x in ("בפירוק" if reg.startswith("בפרוק") else "", bond_note(c.get("notes"))) if x),
+            "bond_note": "; ".join(x for x in ("בפירוק" if reg.startswith("בפרוק") else "", bond_note(c.get("notes"), c.get("notes_scope"))) if x),
         }
     return out
 
