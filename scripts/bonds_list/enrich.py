@@ -30,6 +30,7 @@ MAYA_CORP_ACTIONS_URL = "https://maya.tase.co.il/api/v1/corporate-actions/events
 MAYA_FILES_BASE = "https://mayafiles.tase.co.il/"
 RATING_EVENT_ID = 206                 # "דוח מיידי על דירוג"
 EVENT_INTEREST_PAYMENT = 7            # "יום תשלום - ריבית"
+CA_VERSION = 2
 EVENT_PARTIAL_REDEMPTION = 9          # "יום תשלום - פדיון חלקי" (אג"ח לשיעורין)
 PAGE_LIMIT = 30                       # ה-API דוחה יותר מ-30
 MAX_RATING_PAGES = 500
@@ -197,17 +198,27 @@ def derive_frequency(dates_iso):
     return None
 
 
-def analyze_company_events(events):
-    """-> ({security_id: [תאריכי תשלום ריבית]}, {security_id של אג"ח לשיעורין})."""
-    pay, partial = {}, set()
+def analyze_company_events(events, samples=None):
+    """-> ({security_id: [תאריכי תשלום ריבית]}, {security_id של אג"ח לשיעורין}).
+    אג"ח נחשבת לשיעורין רק אם יש לה פדיון חלקי של פחות מ-100% או יותר מאירוע פדיון אחד;
+    אירוע בודד של 100% הוא הפדיון הסופי של אג"ח רגילה (בלי זה כמעט כל האג"ח סומנו לשיעורין)."""
+    pay, red = {}, {}
     for ev in events:
         sid, dt, name = ev.get("securityId"), ev.get("date"), ev.get("eventName") or ""
         if sid is None or not dt or "תשלום" not in name:   # אירועי "יום אקס" מתערבבים תחת אותו מזהה
             continue
         if ev.get("eventId") == EVENT_INTEREST_PAYMENT:
             pay.setdefault(int(sid), []).append(dt)
-        elif ev.get("eventId") == EVENT_PARTIAL_REDEMPTION and re.match(r"^\s*[\d.]+\s*%", ev.get("moreInfo") or ""):
-            partial.add(int(sid))
+        elif ev.get("eventId") == EVENT_PARTIAL_REDEMPTION:
+            m = re.match(r"^\s*([\d.]+)\s*%", ev.get("moreInfo") or "")
+            if m:
+                try:
+                    red.setdefault(int(sid), []).append(float(m.group(1)))
+                except ValueError:
+                    continue
+                if samples is not None and len(samples) < 8:
+                    samples.append((int(sid), dt[:10], ev.get("moreInfo")))
+    partial = {sid for sid, pcts in red.items() if len(pcts) > 1 or pcts[0] < 99.99}
     return pay, partial
 
 
@@ -282,6 +293,8 @@ def load_state(path=STATE_PATH):
         s = {}
     for k in ("ratings", "frequencies", "checked", "partial"):
         s.setdefault(k, {} if k in ("ratings", "frequencies") else [])
+    if s.get("ca_version") != CA_VERSION:   # כלל זיהוי אג"ח לשיעורין השתנה - בודקים הכול מחדש
+        s["checked"], s["partial"], s["ca_version"] = [], [], CA_VERSION
     return s
 
 
@@ -342,7 +355,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
         a = (now - datetime.timedelta(days=365 * CA_LOOKBACK_YEARS)).strftime(fmt)
         z = (now + datetime.timedelta(days=365 * CA_LOOKAHEAD_YEARS)).strftime(fmt)
         checked = set(state["checked"]); partial = set(state["partial"])
-        errors, with_events = 0, 0
+        errors, with_events, samples = 0, 0, []
         with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as ex:
             futs = {ex.submit(f["events"], cid, a, z): (cid, sids) for cid, sids in by_company.items()}
             for fut in concurrent.futures.as_completed(futs):
@@ -355,7 +368,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
                         log(f"enrich: WARNING corporate actions failed for company {cid}: {e}")
                     continue                       # לא מסמנים כנבדק - ננסה שוב בריצה הבאה
                 with_events += 1 if events else 0
-                pay, part = analyze_company_events(events)
+                pay, part = analyze_company_events(events, samples)
                 for sid, dates in pay.items():
                     fr = derive_frequency(dates)
                     if fr and str(sid) not in state["frequencies"]:
@@ -363,6 +376,8 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
                 partial.update(str(s) for s in part)
                 checked.update(str(s) for s in sids)
         state["checked"] = sorted(checked); state["partial"] = sorted(partial)
+        for smp in samples:
+            log(f"enrich: sample redemption event {smp}")
         log(f"enrich: companies {len(by_company)}, request errors {errors}, with events {with_events}; frequencies known {len(state['frequencies'])}, amortizing {len(partial)}")
     except Exception as e:  # noqa: BLE001
         log(f"enrich: WARNING corporate actions failed: {e}")
