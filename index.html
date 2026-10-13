@@ -867,12 +867,17 @@ const PUB_COLS = {
   bonds: [
     { key:"bond_name",     label:'שם אג"ח',    type:"name" },
     { key:"symbol",        label:"סימול"                  },
+    { key:"security_id",   label:"מספר נייר",  type:"ltr"  },
+    { key:"security_type", label:"סוג נייר"               },
     { key:"company",       label:"חברה",       type:"name" },
     { key:"is_private",   label:"קיים היתר עסקה פרטי", type:"yesno", generalOnly:true },
     { key:"interest",      label:"ריבית %",    type:"pct"  },
     { key:"maturity_date", label:"מועד פדיון"             },
     { key:"linkage",       label:"הצמדה"                  },
     { key:"last_price",    label:"שער אחרון",  type:"num"  },
+    { key:"ytm_gross",     label:"תשואה לפדיון ברוטו", type:"pct" },   // לא צמוד בלבד
+    { key:"midroog_rating",label:"דירוג מידרוג"           },
+    { key:"maalot_rating", label:"דירוג מעלות"            },
     { key:"annual_yield",  label:"תשואה שנתית", type:"pct"  },   // AnnualYield של הבורסה (כנראה 12 חודשים אחרונים; טרם אומת)
     { key:"notes",         label:"הערות"                  },
   ],

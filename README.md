@@ -222,26 +222,29 @@ title=חיפוש היתר עסקה חברות
 ## סטטוס רשם: מחוסלות מוסתרות, בפירוק מסומנות
 
 - עמודה `businesses.registry_status` (`migrations/0002_registry_status.sql`, מוסיפים פעם אחת ב-D1) נקבעת בריצת `registry-refresh` מהרשם הממשלתי ("סטטוס חברה" / "סטטוס תאגיד"; לעמותות אין סטטוס).
-- סטטוס שמתחיל ב"מחוסל" או ב"חיסול" - החברה לא מוצגת ברשימות החברות ולא נכללת ברשימת האג"ח.
+- סטטוס שמתחיל ב"מחוסל", "חיסול", "מחוק" (מחוקה) או "נגרע" (נגרעה מהמרשם) - החברה לא מוצגת ברשימות החברות ולא נכללת ברשימת האג"ח.
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
 ## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה (במחשב)
 
-בלוק קוד אחד בעמוד (`OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים, או 0 אם אין; הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד):
+בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים (או 0 אם אין). הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד.
+הקוד בכוונה בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד), ובודק את מיקום ה-iframe בכל פריים (עובד גם כשהגלילה היא של אלמנט פנימי באתר ולא של החלון).
 
 ```html
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
-(function(){var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,t=0;
-window.addEventListener("message",function(e){if(e.origin===O&&e.data&&e.data.source==="harav-levin"&&e.data.type==="resize")f.style.height=e.data.height+"px";});
-function send(){t=0;if(f.contentWindow)f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:f.getBoundingClientRect().top,offset:OFFSET,desktop:window.innerWidth>=992},O);}
-function q(){if(!t)t=requestAnimationFrame(send);}
-addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEventListener("load",q);
+(function(){
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,last=null,tick=0;
+window.addEventListener("message",function(e){if(e.origin===O){if(e.data){if(e.data.source==="harav-levin"){if(e.data.type==="resize"){f.style.height=e.data.height+"px";}}}}});
+function send(){var r=f.getBoundingClientRect();var t=Math.round(r.top);tick=tick+1;if(t!==last||tick%60===0){last=t;if(f.contentWindow){f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:t,offset:OFFSET,desktop:Math.floor(window.innerWidth/992)>0},O);}}window.requestAnimationFrame(send);}
+window.requestAnimationFrame(send);
 })();
 </script>
 ```
 
+**אבחון:** מוסיפים `?debug=1` ל-`src` של ה-iframe (`.../display.html?debug=1`). בפינה השמאלית העליונה יופיע תג קטן:
+`sticky: parent connected (...)` = הקוד בעמוד עובד; `sticky: NO messages from the parent page` = הקוד העדכני לא נמצא בעמוד (או שהוא נשבר), צריך להחליף את הבלוק.
 ## אישור "בחירת אג"ח מסוימים" (אג"ח ספציפיות לחברה)
 
 - בדף הניהול, באישור אג"ח: האפשרות **בחירת אג"ח מסוימים** פותחת חלון (וכפתור ⚙ ליד הבחירה) עם אג"ח החברה ממאיה (`data/bonds_list/maya_securities.json`, נבנה יומית), וכפתורי **פרטי / כללי** לכל אג"ח (אפשר שניהם). אפשר גם להוסיף אג"ח לפי מספר נייר.
@@ -250,3 +253,20 @@ addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEv
 - חברה "מאושרת" (כן / רק פרטי / רק כללי) מציגה את כל האג"ח שלה כרגיל; הבחירה הידנית משפיעה על חברות שמסומנות "בחירת אג"ח מסוימים" (או שאינן מאושרות).
 - ברשימת החברות הציבורית החברה מופיעה "יש אג"ח - מאושר (אג"ח מסוימים)".
 - אם הטבלה או ה-endpoint עדיין לא קיימים - bonds-list ממשיך כרגיל בלי אג"ח ידניות; שגיאת רשת/שרת בקריאה (לא 404) עוצרת את הריצה ולא דורסת את הרשימות.
+
+## ⚠ לוגיקה כפולה עם Revach (לזכור לתקן בשני המקומות)
+
+HARAV_LEVIN נשאר עצמאי, ולכן יש קוד שהועתק מהריפו **Revach** (ולהפך). תיקון באחד = לבדוק אם צריך גם בשני:
+
+| כאן (HARAV_LEVIN) | ב-Revach | מה זה |
+|---|---|---|
+| `scripts/bonds_list/classify.py` (`coarse_type`) | `scripts/classify.py` | סיווג סוג נייר (אג"ח קונצרני / ממשלתי / להמרה ...). ני"ע מסחריים נחשבים אג"ח קונצרני בשניהם. |
+| `scripts/bonds_list/enrich.py`: דירוגים (מידרוג, מעלות) | `scripts/securities/fetch_securities.py` (Phase 3, 4) | משיכת דירוגים: אתר מידרוג + דוחות הדירוג ב-Maya (אירוע 206). |
+| `enrich.py`: תדירות ריבית ואג"ח לשיעורין | `fetch_securities.py` (Phase 5) | אירועי חברה ב-Maya: תשלום ריבית (7), פדיון חלקי (9). |
+| `enrich.py`: `gen_coupon_times`, `solve_ytm` | `securities.html` (`genCouponTimes`, `solveYtm2`) | תשואה לפדיון ברוטו. בשניהם מוסיפים ריבית צבורה למחיר (מחיר נקי -> מלא; תוקן גם ב-Revach ב-13.10.2026). |
+| `enrich.py`: `eligible_for_ytm` | `securities.html` (`tryComputeYtm`) | מתי לא מחשבים תשואה. **הבדל מכוון:** כאן רק אג"ח לא צמודות; ב-Revach גם צמודות מדד (שיטה שטרם אומתה). |
+| `scripts/bonds_list/build_approved_bonds.py` (`is_goyim`, הערות "גוי") | `heter_iska_lookup` | זיהוי בעלות גוי לפי הערות החברה. |
+| רשימת "מי מאושר" (`businesses.agch_approved`, `visibility`) | `NOTES_*` ב-Revach | הגדרה כפולה של "מי מאושר". |
+
+הערות על העמודות הנוספות ברשימת האג"ח: `midroog_rating`, `maalot_rating`, `ytm_gross` (תשואה לפדיון ברוטו, לא צמוד בלבד, "המידע בבדיקה").
+מצב הרצה מתמשך נשמר ב-`data/bonds_list/enrich_state.json`. בריצה הראשונה נסרקים דוחות דירוג של 400 יום (`RATINGS_LOOKBACK_DAYS`). אם משהו נכשל, העמודות נשארות ריקות והרשימה נבנית כרגיל.
