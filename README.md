@@ -235,7 +235,6 @@ title=חיפוש היתר עסקה חברות
 
 ```html
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
-<div style="height:1500px">after</div>
 <script>
 (function(){
 var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=150,spec=null,bar=null;
