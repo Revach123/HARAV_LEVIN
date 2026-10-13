@@ -226,25 +226,46 @@ title=חיפוש היתר עסקה חברות
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
-## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה (במחשב)
+## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה יציבה (במחשב) - גרסה 3
 
-בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים (או 0 אם אין). הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד.
-הקוד בכוונה בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד), ובודק את מיקום ה-iframe בכל פריים (עובד גם כשהגלילה היא של אלמנט פנימי באתר ולא של החלון).
+בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-150; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
+
+**איך זה עובד:** ה-iframe שולח לעמוד האב את מבנה שורת הכותרת (טקסטים, מיקומים, עיצוב), והקוד בעמוד בונה ממנה סרגל `position:fixed` אמיתי שמופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET. הסרגל נשלט ישירות ע"י הדפדפן (לא מוזז מתוך ה-iframe), ולכן הוא יציב וללא רעידות.
+הקוד בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד).
 
 ```html
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
 (function(){
-var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,last=null,tick=0;
-window.addEventListener("message",function(e){if(e.origin===O){if(e.data){if(e.data.source==="harav-levin"){if(e.data.type==="resize"){f.style.height=e.data.height+"px";}}}}});
-function send(){var r=f.getBoundingClientRect();var t=Math.round(r.top);tick=tick+1;if(t!==last||tick%60===0){last=t;if(f.contentWindow){f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:t,offset:OFFSET,desktop:Math.floor(window.innerWidth/992)>0},O);}}window.requestAnimationFrame(send);}
-window.requestAnimationFrame(send);
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=150,spec=null,bar=null;
+function build(){
+if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
+bar.innerHTML="";bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
+for(var i=0;i!==spec.cells.length;i=i+1){var c=spec.cells[i],d=document.createElement("div");
+d.style.cssText="position:absolute;top:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;box-sizing:border-box;padding:0 12px";
+d.style.left=c.x+"px";d.style.width=c.w+"px";d.style.height=spec.h+"px";d.style.lineHeight=spec.h+"px";d.style.textAlign=c.a;
+d.style.color=spec.color;d.style.fontWeight=spec.fw;d.style.fontSize=spec.fs;d.style.borderLeft=c.bl;d.textContent=c.t;bar.appendChild(d);}
+}
+window.addEventListener("message",function(e){
+if(e.origin!==O){return;}
+var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
+if(d.type==="resize"){f.style.height=d.height+"px";}
+if(d.type==="header"){spec=d;build();}
+});
+function tick(){
+if(spec){var r=f.getBoundingClientRect();var top=r.top+spec.tableTop;
+var show=Math.sign(OFFSET-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OFFSET)===1;}
+if(show){show=Math.sign(Math.floor(window.innerWidth/992))===1;}
+if(show){bar.style.display="block";bar.style.top=OFFSET+"px";bar.style.left=r.left+"px";bar.style.width=r.width+"px";}else{bar.style.display="none";}}
+window.requestAnimationFrame(tick);}
+window.requestAnimationFrame(tick);
 })();
 </script>
 ```
 
-**אבחון:** מוסיפים `?debug=1` ל-`src` של ה-iframe (`.../display.html?debug=1`). בפינה השמאלית העליונה יופיע תג קטן:
-`sticky: parent connected (...)` = הקוד בעמוד עובד; `sticky: NO messages from the parent page` = הקוד העדכני לא נמצא בעמוד (או שהוא נשבר), צריך להחליף את הבלוק.
+**אבחון:** `?debug=1` ב-`src` של ה-iframe מציג תג קטן בפינה (`sticky: parent connected ...`) - רק עבור גרסה 2. בגרסה 3 אין צורך בו: מספיק לגלול ולבדוק שסרגל הכותרת נצמד מתחת לתפריט האתר. אחרי שהכול עובד מוחקים את `?debug=1`.
+גרסאות קודמות של הקוד (2 ומטה) ממשיכות לעבוד כמו קודם (תנועה מתוך ה-iframe, פחות יציב).
+
 ## אישור "בחירת אג"ח מסוימים" (אג"ח ספציפיות לחברה)
 
 - בדף הניהול, באישור אג"ח: האפשרות **בחירת אג"ח מסוימים** פותחת חלון (וכפתור ⚙ ליד הבחירה) עם אג"ח החברה ממאיה (`data/bonds_list/maya_securities.json`, נבנה יומית), וכפתורי **פרטי / כללי** לכל אג"ח (אפשר שניהם). אפשר גם להוסיף אג"ח לפי מספר נייר.

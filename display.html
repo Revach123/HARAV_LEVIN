@@ -244,6 +244,7 @@ function render(container, state, type, usedSample) {
   });
 
   draw();
+  postHeaderSpec();
 }
 
 function cellFor(col, val, row) {
@@ -316,7 +317,34 @@ function reportHeight() {
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
 }
-new ResizeObserver(() => { reportHeight(); applySticky(); }).observe(document.body);
+new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); }).observe(document.body);
+
+// ── כותרת קבועה יציבה (גרסה 3): ה-iframe שולח לעמוד האב את מבנה שורת הכותרת, ועמוד האב בונה ממנה סרגל position:fixed
+// "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.
+// עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
+let lastSpec = "";
+function postHeaderSpec() {
+  if (window.parent === window) return;
+  const table = container.querySelector("table");
+  if (!table || !table.tHead) return;
+  const ths = [...table.tHead.querySelectorAll("th")];
+  if (!ths.length) return;
+  const tr = table.getBoundingClientRect(), hr = table.tHead.getBoundingClientRect();
+  const cs = getComputedStyle(ths[0]);
+  const spec = {
+    source: "harav-levin", type: "header",
+    tableTop: Math.round(tr.top + window.scrollY), tableH: Math.round(tr.height), h: Math.round(hr.height),
+    bg: cs.backgroundColor, color: cs.color, fw: cs.fontWeight, fs: cs.fontSize,
+    border: cs.borderBottomWidth + " solid " + cs.borderBottomColor,
+    cells: ths.map(th => { const r = th.getBoundingClientRect(), c = getComputedStyle(th);
+      return { t: th.textContent.trim(), x: Math.round(r.left), w: Math.round(r.width), a: c.textAlign,
+               bl: c.borderLeftWidth + " solid " + c.borderLeftColor, pad: c.paddingRight }; }),
+  };
+  const key = JSON.stringify(spec);
+  if (key === lastSpec) return;
+  lastSpec = key;
+  window.parent.postMessage(spec, "*");
+}
 
 // ── כותרת קבועה (freeze panes) במחשב ──
 // ה-iframe מתארך לפי התוכן והגלילה היא של עמוד האב, ולכן עמוד האב שולח לכאן את מיקום ה-iframe ביחס לחלון
