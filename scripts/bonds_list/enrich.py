@@ -94,6 +94,22 @@ def fetch_rating_reports(from_iso, to_iso):
     return out
 
 
+def fetch_reports_chunked(fetch, from_dt, to_dt, step_days=30, log=print):
+    """חיפוש דוחות דירוג בחלונות של step_days ימים (חיפוש רחב אחד נכשל ב-HTTP 400 בעומק העימוד בריצה האמיתית הראשונה).
+    -> (דוחות, כל החלונות הצליחו?). חלון שנכשל לא מפיל את האחרים, אבל אז לא מקדמים את נקודת הביקורת."""
+    fmt = "%Y-%m-%dT%H:%M:%S.000Z"
+    out, ok, cur = [], True, from_dt
+    while cur < to_dt:
+        nxt = min(cur + datetime.timedelta(days=step_days), to_dt)
+        try:
+            out.extend(fetch(cur.strftime(fmt), nxt.strftime(fmt)))
+        except Exception as e:  # noqa: BLE001
+            ok = False
+            log(f"enrich: WARNING rating reports window {cur.date()}..{nxt.date()} failed: {e}")
+        cur = nxt
+    return out, ok
+
+
 def download_attachment(rel_url):
     try:
         return _request(MAYA_FILES_BASE + rel_url, headers={"Referer": "https://maya.tase.co.il/"}, timeout=20, raw=True)
@@ -295,12 +311,15 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
         else:
             from_dt = now - datetime.timedelta(days=RATINGS_LOOKBACK_DEFAULT)
         fmt = "%Y-%m-%dT%H:%M:%S.000Z"
-        reports = f["reports"](from_dt.strftime(fmt), now.strftime(fmt))
+        reports, all_ok = fetch_reports_chunked(f["reports"], from_dt, now, log=log)
         for (agency, sid), v in agency_ratings_from_reports(reports, f["download"]).items():
             old = state["ratings"].get(f"{agency}:{sid}")
             if not old or v["date"] >= old.get("date", ""):
                 state["ratings"][f"{agency}:{sid}"] = v
-        state["ratings_checked_through"] = now.strftime(fmt)
+        if all_ok:
+            state["ratings_checked_through"] = now.strftime(fmt)
+        else:
+            log("enrich: checkpoint not advanced (some windows failed)")
         log(f"enrich: {len(reports)} rating reports processed")
     except Exception as e:  # noqa: BLE001
         log(f"enrich: WARNING rating reports failed (checkpoint not advanced): {e}")
@@ -315,14 +334,19 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
         a = (now - datetime.timedelta(days=365 * CA_LOOKBACK_YEARS)).strftime(fmt)
         z = (now + datetime.timedelta(days=365 * CA_LOOKAHEAD_YEARS)).strftime(fmt)
         checked = set(state["checked"]); partial = set(state["partial"])
+        errors, with_events = 0, 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=WORKERS) as ex:
             futs = {ex.submit(f["events"], cid, a, z): (cid, sids) for cid, sids in by_company.items()}
             for fut in concurrent.futures.as_completed(futs):
                 cid, sids = futs[fut]
                 try:
                     events = fut.result()
-                except Exception:  # noqa: BLE001
+                except Exception as e:  # noqa: BLE001
+                    errors += 1
+                    if errors <= 3:
+                        log(f"enrich: WARNING corporate actions failed for company {cid}: {e}")
                     continue                       # לא מסמנים כנבדק - ננסה שוב בריצה הבאה
+                with_events += 1 if events else 0
                 pay, part = analyze_company_events(events)
                 for sid, dates in pay.items():
                     fr = derive_frequency(dates)
@@ -331,7 +355,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
                 partial.update(str(s) for s in part)
                 checked.update(str(s) for s in sids)
         state["checked"] = sorted(checked); state["partial"] = sorted(partial)
-        log(f"enrich: companies checked {len(by_company)}, frequencies known {len(state['frequencies'])}, amortizing {len(partial)}")
+        log(f"enrich: companies {len(by_company)}, request errors {errors}, with events {with_events}; frequencies known {len(state['frequencies'])}, amortizing {len(partial)}")
     except Exception as e:  # noqa: BLE001
         log(f"enrich: WARNING corporate actions failed: {e}")
 
