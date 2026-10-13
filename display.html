@@ -54,7 +54,10 @@
   tbody tr:nth-child(even){background:var(--row-alt)}
   tbody tr:hover{background:var(--accent-bg)}
   tbody tr:last-child td{border-bottom:none}
-  th.ctr, td.ctr{text-align:center;white-space:nowrap}
+  th.ctr{text-align:center}
+  td.ctr{text-align:center;white-space:nowrap}
+  thead th{white-space:normal;line-height:1.25;vertical-align:middle}
+  td.nw{white-space:nowrap;overflow-wrap:normal}
   .name-cell{font-weight:500}
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
@@ -99,30 +102,30 @@ const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same 
 // הגדרת העמודות לכל סוג רשימה
 const COLUMNS = {
   companies: [
-    { key:"permit_name",        label:"שם החברה",            cell:"name",  w:28 },
-    { key:"chp_number",         label:'ח"פ',                 cell:"num",   w:12 },
-    { key:"category",           label:"קטגוריה",                         w:14 },
-    { key:"region",             label:"אזור",                            w:8  },
-    { key:"has_private_permit", label:"קיים היתר עסקה פרטי", cell:"yesno", w:14, generalOnly:true },
-    { key:"bonds_status",       label:'אג"ח',                cell:"bonds", w:20 },
-    { key:"notes",              label:"הערות",                           w:22 },
+    { key:"permit_name", px:240,        label:"שם החברה",            cell:"name",  w:28 },
+    { key:"chp_number", px:110,         label:'ח"פ',                 cell:"num",   w:12 },
+    { key:"category", px:125,           label:"קטגוריה",                         w:14 },
+    { key:"region", px:85,             label:"אזור",                            w:8  },
+    { key:"has_private_permit", px:125, label:"קיים היתר עסקה פרטי", cell:"yesno", w:14, generalOnly:true },
+    { key:"bonds_status", px:215,       label:'אג"ח',                cell:"bonds", w:20 },
+    { key:"notes", px:230,              label:"הערות",                           w:22 },
   ],
   bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
-    { key:"security_name",  label:'אג"ח',                 cell:"name",  w:15 },
-    { key:"symbol",         label:"סימול",                                w:8  },
-    { key:"security_id",    label:"מספר נייר",            cell:"num",   w:8  },
-    { key:"security_type",  label:"סוג נייר",                             w:10 },
-    { key:"company",        label:"חברה",                 cell:"name",  w:19 },
-    { key:"is_private",     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
-    { key:"annual_interest",label:"ריבית %",              cell:"pct",   w:7  },
-    { key:"redemption_date",label:"מועד פדיון",                           w:10 },
-    { key:"linkage",        label:"הצמדה",                                w:12 },
-    { key:"last_price",     label:"שער אחרון",            cell:"num",   w:8  },
+    { key:"security_name", px:165,  label:'אג"ח',                 cell:"name",  w:15 },
+    { key:"symbol", px:115,         label:"סימול",                                w:8  },
+    { key:"security_id", px:110,    label:"מספר נייר",            cell:"num",   w:8  },
+    { key:"security_type", px:120,  label:"סוג נייר",                             w:10 },
+    { key:"company", px:200,        label:"חברה",                 cell:"name",  w:19 },
+    { key:"is_private", px:125,     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
+    { key:"annual_interest", px:85,label:"ריבית %",              cell:"pct",   w:7  },
+    { key:"redemption_date", px:120,label:"מועד פדיון",                           w:10 },
+    { key:"linkage", px:160,        label:"הצמדה",                                w:12 },
+    { key:"last_price", px:95,     label:"שער אחרון",            cell:"num",   w:8  },
     // השדה AnnualYield של הבורסה: כנראה תשואה ל-12 החודשים האחרונים / מתחילת שנה (טרם אומת)
-    { key:"ytm_gross",      label:"תשואה לפדיון ברוטו",   cell:"pct",   w:9  },   // לא צמוד בלבד (scripts/bonds_list/enrich.py)
-    { key:"midroog_rating", label:"דירוג מידרוג",                         w:8  },
-    { key:"maalot_rating",  label:"דירוג מעלות",                          w:8  },
-    { key:"annual_yield",   label:"תשואה שנתית",          cell:"pct",   w:9  },
+    { key:"ytm_gross", px:120,      label:"תשואה לפדיון ברוטו",   cell:"pct",   w:9  },   // לא צמוד בלבד (scripts/bonds_list/enrich.py)
+    { key:"midroog_rating", px:115, label:"דירוג מידרוג",                         w:8  },
+    { key:"maalot_rating", px:115,  label:"דירוג מעלות",                          w:8  },
+    { key:"annual_yield", px:105,   label:"תשואה שנתית",          cell:"pct",   w:9  },
     { key:"notes",          label:"הערות",                                w:14 },
   ],
 };
@@ -209,7 +212,7 @@ function render(container, state, type, usedSample) {
   const colgroup = el("colgroup");
   // רוחב עמודה מינימלי בפיקסלים (c.w * 11, לפחות 70). הטבלה לא מתכווצת מתחת לסכום, ובמקום זה יש גלילה לרוחב;
   // כשיש מקום, הרוחב העודף מתחלק לפי היחס.
-  const colPx = state.cols.map(c => Math.max(70, Math.round(c.w * 11)));
+  const colPx = state.cols.map(c => c.px || Math.max(70, Math.round(c.w * 11)));
   state.cols.forEach((c, i) => { const col = el("col"); col.style.width = colPx[i] + "px"; colgroup.appendChild(col); });
   table.style.minWidth = colPx.reduce((a, b) => a + b, 0) + "px";
   table.appendChild(colgroup);
@@ -261,8 +264,10 @@ function render(container, state, type, usedSample) {
   postHeaderSpec();
 }
 
+const NOWRAP_KEYS = new Set(["symbol","redemption_date","security_type","linkage","midroog_rating","maalot_rating","chp_number","category","last_price"]);
 function cellFor(col, val, row) {
   const td = el("td");
+  if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
   if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
   if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
   if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
