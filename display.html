@@ -59,6 +59,8 @@
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
+  .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
+  .bonds-none{color:var(--muted);font-size:15px}
   .badge-no{color:var(--light);font-size:13px}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
   .state.err{color:var(--red)}
@@ -92,11 +94,11 @@ const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same 
 // הגדרת העמודות לכל סוג רשימה
 const COLUMNS = {
   companies: [
-    { key:"permit_name", label:"שם החברה", cell:"name", w:38 },
-    { key:"chp_number",  label:'ח"פ',       cell:"num",  w:14 },
-    { key:"category",    label:"קטגוריה",              w:22 },
-    { key:"region",      label:"אזור",                 w:12 },
-    { key:"approved",    label:'אג"ח מאושר', cell:"badge", w:14 },
+    { key:"permit_name", label:"שם החברה", cell:"name", w:32 },
+    { key:"chp_number",  label:'ח"פ',       cell:"num",  w:13 },
+    { key:"category",    label:"קטגוריה",              w:18 },
+    { key:"region",      label:"אזור",                 w:10 },
+    { key:"bonds_status", label:'אג"ח',     cell:"bonds", w:27 },
   ],
   bonds: [
     { key:"bond_name",     label:'אג"ח',     cell:"name", w:16 },
@@ -120,12 +122,12 @@ const SAMPLE = {
     {bond_name:"אמות אגח ד",symbol:"אמת.ק4",company:"אמות השקעות בע\"מ",interest:"3.20",maturity_date:"02/07/2028",linkage:"מדד המחירים לצרכן",last_price:121.19,change_pct:0.04},
   ],
   "companies-private": [
-    {permit_name:"אאורה השקעות בע\"מ",chp_number:"520038274",category:"נדל\"ן",region:"מרכז",approved:1},
-    {permit_name:"א. לוי השקעות ובנין בע\"מ",chp_number:"520041096",category:"נדל\"ן",region:"מרכז",approved:1},
+    {permit_name:"אאורה השקעות בע\"מ",chp_number:"520038274",category:"נדל\"ן",region:"מרכז",bonds_status:'יש אג"ח - מאושר'},
+    {permit_name:"א. לוי השקעות ובנין בע\"מ",chp_number:"520041096",category:"נדל\"ן",region:"מרכז",bonds_status:'יש אג"ח - לא מאושר'},
   ],
   "companies-general": [
-    {permit_name:"אמות השקעות בע\"מ",chp_number:"520037649",category:"נדל\"ן",region:"מרכז",approved:1},
-    {permit_name:"חברה כללית לדוגמה",chp_number:"510000000",category:"מסחר",region:"צפון",approved:0},
+    {permit_name:"אמות השקעות בע\"מ",chp_number:"520037649",category:"נדל\"ן",region:"מרכז",bonds_status:'יש אג"ח - מאושר'},
+    {permit_name:"חברה כללית לדוגמה",chp_number:"510000000",category:"מסחר",region:"צפון",bonds_status:'אין אג"ח'},
   ],
 };
 
@@ -180,7 +182,7 @@ function render(container, state, type, usedSample) {
   table.appendChild(colgroup);
   const thead = el("thead");
   const trh = el("tr");
-  state.cols.forEach(c => trh.appendChild(el("th", ["num","chg","badge"].includes(c.cell) ? "ctr" : null, esc(c.label))));
+  state.cols.forEach(c => trh.appendChild(el("th", ["num","chg","badge","bonds"].includes(c.cell) ? "ctr" : null, esc(c.label))));
   thead.appendChild(trh);
   const tbody = el("tbody");
   table.append(thead, tbody);
@@ -198,7 +200,7 @@ function render(container, state, type, usedSample) {
     }
     for (const row of state.filtered) {
       const tr = el("tr");
-      for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key]));
+      for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key], row));
       tbody.appendChild(tr);
     }
     title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
@@ -214,7 +216,7 @@ function render(container, state, type, usedSample) {
   draw();
 }
 
-function cellFor(col, val) {
+function cellFor(col, val, row) {
   const td = el("td");
   if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
   if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
@@ -225,6 +227,16 @@ function cellFor(col, val) {
     if (n > 0) td.classList.add("up");
     else if (n < 0) td.classList.add("down");
     td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+    return td;
+  }
+  if (col.cell === "bonds") {
+    // אין אג"ח (טקסט פשוט) | יש אג"ח - מאושר (ירוק ✓) | יש אג"ח - לא מאושר (אדום ✕)
+    // תאימות לאחור: אם ה-API הישן שלח רק approved (0/1)
+    const st = val || (row && Number(row.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
+    td.className = "ctr";
+    if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
+    else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
+    else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';
     return td;
   }
   if (col.cell === "badge") {

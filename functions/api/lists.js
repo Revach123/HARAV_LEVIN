@@ -62,15 +62,22 @@ export async function onRequestGet(context) {
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
-      const approvedExpr = isPrivate
-        ? "CASE WHEN agch_approved IN ('כן','רק פרטי') THEN 1 ELSE 0 END"
-        : "CASE WHEN agch_approved IN ('כן','רק כללי') THEN 1 ELSE 0 END";
+      const approvedCond = isPrivate
+        ? "agch_approved IN ('כן','רק פרטי')"
+        : "agch_approved IN ('כן','רק כללי')";
+      const approvedExpr = `CASE WHEN ${approvedCond} THEN 1 ELSE 0 END`;
+      // מצב אג"ח: אין אג"ח / יש אג"ח - מאושר / יש אג"ח - לא מאושר
+      // (tase_has_agch = "יש" מהבורסה; מאושר גובר גם אם הדגל מהבורסה לא עודכן)
+      const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
+                                    WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
+                                    ELSE 'אין אג"ח' END`;
       const visClause = isPrivate
         ? "visibility = 'פרטי'"
         : "COALESCE(visibility,'') <> 'פרטי'";
       sql = `
         SELECT permit_name, chp_number, category, region,
-               ${approvedExpr} AS approved
+               ${approvedExpr} AS approved,
+               ${bondsStatusExpr} AS bonds_status
         FROM businesses
         WHERE ${visClause}
         ORDER BY permit_name`;
