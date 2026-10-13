@@ -7,44 +7,46 @@
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
-    --navy:#1a3a5c; --navy2:#1e4570; --gold:#c9a227;
-    --bg:#f7f7f5; --bg2:#fff; --border:#e0ddd8;
-    --text:#1a1a1a; --muted:#6b6b6b; --light:#a0a0a0;
-    --red:#c0392b; --green:#1e7e4a; --green-bg:#edf7f1; --green-border:#a8d9bc;
+    --navy:#274d5c; --navy2:#1c3a47;
+    --accent:#33a799; --accent-dark:#2b8e82; --accent-bg:#eaf6f4; --accent-border:#b9e3de;
+    --bg:#ffffff; --bg2:#ffffff; --border:#dfe7e8; --row-alt:#f6fafa;
+    --text:#2b3b42; --muted:#6a7c82; --light:#a6b4b8;
+    --red:#c0392b;
   }
-  body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;padding:0 0 3rem}
+  body{font-family:'Heebo','Assistant','Rubik','Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;padding:0 0 3rem}
   .wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
 
-  /* ── ניווט: שורה אחת של ארבע לשוניות ── */
-  .nav-tabs{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+  /* ── ניווט: שורה אחת, באותו סגנון של תפריט האתר ── */
+  .nav-tabs{display:flex;gap:0;margin-bottom:1.5rem;flex-wrap:wrap;border-bottom:1px solid var(--border)}
   .nav-tabs button{
-    flex:1;min-width:150px;padding:.75rem 1rem;font-size:15px;font-weight:600;font-family:inherit;
-    background:var(--bg2);color:var(--navy);border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s
+    flex:1;min-width:150px;padding:.9rem 1rem;font-size:15px;font-weight:700;font-family:inherit;
+    background:transparent;color:var(--navy);border:none;border-top:3px solid transparent;cursor:pointer;transition:.15s
   }
-  .nav-tabs button:hover{border-color:var(--navy)}
-  .nav-tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .nav-tabs button:hover{color:var(--accent-dark)}
+  .nav-tabs button.active{color:var(--accent-dark);border-top-color:var(--accent);background:var(--accent-bg)}
 
   /* ── בקרות ── */
   .list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap}
-  .list-title{font-size:17px;font-weight:600;color:var(--navy)}
+  .list-title{font-size:18px;font-weight:700;color:var(--navy)}
   .list-title .cnt{font-size:13px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
-  .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:8px;min-width:220px;background:var(--bg2)}
-  .search:focus{outline:none;border-color:var(--navy)}
-  .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;transition:.15s}
-  .btn-csv:hover{background:var(--navy2)}
+  .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:3px;min-width:220px;background:var(--bg2)}
+  .search:focus{outline:none;border-color:var(--accent)}
+  .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:3px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .btn-csv:hover{background:var(--accent-dark)}
   .head-tools{display:flex;gap:.5rem;align-items:center}
 
   /* ── טבלה ── */
-  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:10px}
+  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
   table{width:100%;border-collapse:collapse;font-size:14px;min-width:640px}
-  thead th{background:#f0efec;color:var(--navy);font-weight:600;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border)}
-  tbody td{padding:9px 12px;border-bottom:1px solid #f0efec;white-space:nowrap}
-  tbody tr:hover{background:#faf9f7}
+  thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;white-space:nowrap;border-bottom:1px solid var(--border)}
+  tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;white-space:nowrap}
+  tbody tr:nth-child(even){background:var(--row-alt)}
+  tbody tr:hover{background:var(--accent-bg)}
   tbody tr:last-child td{border-bottom:none}
   .name-cell{white-space:normal;font-weight:500;min-width:150px}
   .num{font-variant-numeric:tabular-nums;text-align:left;direction:ltr}
-  .up{color:var(--green)} .down{color:var(--red)}
-  .badge-yes{display:inline-block;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600}
+  .up{color:var(--accent-dark)} .down{color:var(--red)}
+  .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   .badge-no{color:var(--light);font-size:13px}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
   .state.err{color:var(--red)}
