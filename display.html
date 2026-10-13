@@ -264,6 +264,7 @@ function cellFor(col, val, row) {
     td.className = "ctr";
     if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
     else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
+    else if (st.includes("מסוימים"))      td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span><div class="bond-note">אג"ח מסוימים</div>';
     else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';
     if (row && row.bonds_note) td.innerHTML += `<div class="bond-note">${esc(row.bonds_note)}</div>`;   // הערה על אישור האג"ח
     return td;
