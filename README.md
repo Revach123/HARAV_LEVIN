@@ -250,3 +250,20 @@ addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEv
 - חברה "מאושרת" (כן / רק פרטי / רק כללי) מציגה את כל האג"ח שלה כרגיל; הבחירה הידנית משפיעה על חברות שמסומנות "בחירת אג"ח מסוימים" (או שאינן מאושרות).
 - ברשימת החברות הציבורית החברה מופיעה "יש אג"ח - מאושר (אג"ח מסוימים)".
 - אם הטבלה או ה-endpoint עדיין לא קיימים - bonds-list ממשיך כרגיל בלי אג"ח ידניות; שגיאת רשת/שרת בקריאה (לא 404) עוצרת את הריצה ולא דורסת את הרשימות.
+
+## ⚠ לוגיקה כפולה עם Revach (לזכור לתקן בשני המקומות)
+
+HARAV_LEVIN נשאר עצמאי, ולכן יש קוד שהועתק מהריפו **Revach** (ולהפך). תיקון באחד = לבדוק אם צריך גם בשני:
+
+| כאן (HARAV_LEVIN) | ב-Revach | מה זה |
+|---|---|---|
+| `scripts/bonds_list/classify.py` (`coarse_type`) | `scripts/classify.py` | סיווג סוג נייר (אג"ח קונצרני / ממשלתי / להמרה ...). ני"ע מסחריים נחשבים אג"ח קונצרני בשניהם. |
+| `scripts/bonds_list/enrich.py`: דירוגים (מידרוג, מעלות) | `scripts/securities/fetch_securities.py` (Phase 3, 4) | משיכת דירוגים: אתר מידרוג + דוחות הדירוג ב-Maya (אירוע 206). |
+| `enrich.py`: תדירות ריבית ואג"ח לשיעורין | `fetch_securities.py` (Phase 5) | אירועי חברה ב-Maya: תשלום ריבית (7), פדיון חלקי (9). |
+| `enrich.py`: `gen_coupon_times`, `solve_ytm` | `securities.html` (`genCouponTimes`, `solveYtm2`) | תשואה לפדיון ברוטו. **הבדל מכוון:** כאן מוסיפים ריבית צבורה למחיר (מחיר מלא), ב-Revach לא (מחיר נקי), ולכן שם התשואה מוטה כלפי מעלה. |
+| `enrich.py`: `eligible_for_ytm` | `securities.html` (`tryComputeYtm`) | מתי לא מחשבים תשואה. **הבדל מכוון:** כאן רק אג"ח לא צמודות; ב-Revach גם צמודות מדד (שיטה שטרם אומתה). |
+| `scripts/bonds_list/build_approved_bonds.py` (`is_goyim`, הערות "גוי") | `heter_iska_lookup` | זיהוי בעלות גוי לפי הערות החברה. |
+| רשימת "מי מאושר" (`businesses.agch_approved`, `visibility`) | `NOTES_*` ב-Revach | הגדרה כפולה של "מי מאושר". |
+
+הערות על העמודות הנוספות ברשימת האג"ח: `midroog_rating`, `maalot_rating`, `ytm_gross` (תשואה לפדיון ברוטו, לא צמוד בלבד, "המידע בבדיקה").
+מצב הרצה מתמשך נשמר ב-`data/bonds_list/enrich_state.json`. בריצה הראשונה נסרקים דוחות דירוג של 400 יום (`RATINGS_LOOKBACK_DAYS`). אם משהו נכשל, העמודות נשארות ריקות והרשימה נבנית כרגיל.
