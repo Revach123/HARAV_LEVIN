@@ -1320,6 +1320,17 @@ function renderForm() {
         </datalist>
       </div>
 
+      <div class="field">
+        <label>היכן להציג את ההערה</label>
+        <select id="f-notes-scope">
+          <option value="" ${!b.notes_scope?"selected":""}>ברירת מחדל: רק ברשימת החברות</option>
+          <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק ברשימת החברות</option>
+          <option value="bonds" ${b.notes_scope==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
+          <option value="both" ${b.notes_scope==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>
+        </select>
+        <div style="font-size:12px;color:var(--light);margin-top:4px;">"בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד. אם לא התבצעה ההרצה של migrations/0004 - הבחירה לא תישמר.</div>
+      </div>
+
       <p class="error-msg" id="form-err"></p>
       <button class="btn-primary" onclick="doSave()" ${saving?"disabled":""}>
         ${saving ? "שומר..." : (isEdit ? "שמור שינויים" : "הוסף עסק")}
@@ -1989,6 +2000,7 @@ async function doSave() {
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),
     notes:          (document.getElementById("f-notes")?.value     || "").trim(),
+    notes_scope:    (document.getElementById("f-notes-scope")?.value || "").trim(),
     biz_type:       (document.getElementById("f-biztype")?.value   || "").trim(),
     visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
     agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),

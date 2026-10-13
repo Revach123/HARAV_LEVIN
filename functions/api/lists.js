@@ -56,7 +56,7 @@ export async function onRequestGet(context) {
   const format = (params.get("format") || "").toLowerCase();
 
   try {
-    let sql, sqlNoStatus;
+    let sql, sqlVariants = [];
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
@@ -81,15 +81,19 @@ export async function onRequestGet(context) {
             AND COALESCE(notes,'') NOT LIKE '%אג"ח%' AND COALESCE(notes,'') NOT LIKE '%אגח%'))`;
       // הערה על אישור האג"ח (מוצגת בעמודת האג"ח): הערות שמזכירות אג"ח
       const isBondNote = `(COALESCE(notes,'') LIKE '%אג"ח%' OR COALESCE(notes,'') LIKE '%אגח%')`;
-      const bondsNoteExpr = `CASE WHEN ${isBondNote} THEN TRIM(REPLACE(notes, char(160), ' ')) ELSE '' END`;
+      const bondsNoteExprBase = `CASE WHEN ${isBondNote} THEN TRIM(REPLACE(notes, char(160), ' ')) ELSE '' END`;
       // שאר ההערות: פתוחות לציבור (עמודת "הערות")
-      const notesExpr = `CASE WHEN ${isBondNote} THEN '' ELSE TRIM(REPLACE(COALESCE(notes,''), char(160), ' ')) END`;
+      const notesExprBase = `CASE WHEN ${isBondNote} THEN '' ELSE TRIM(REPLACE(COALESCE(notes,''), char(160), ' ')) END`;
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
       const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
       // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות/מחוקות (מחוסלת.../חיסול.../מחוקה/נגרעה מהמרשם) לא מוצגות;
       // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
-      const build = (withStatus) => {
+      // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
+      const build = (withStatus, withScope) => {
+        const hideNote = withScope ? `COALESCE(notes_scope,'') = 'bonds'` : `0`;
+        const bondsNoteExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${bondsNoteExprBase} END`;
+        const notesExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${notesExprBase} END`;
         const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%' AND COALESCE(registry_status,'') NOT LIKE 'מחוק%' AND COALESCE(registry_status,'') NOT LIKE 'נגרע%'` : "";
         const notesOut = withStatus
           ? `CASE WHEN COALESCE(registry_status,'') LIKE 'בפרוק%'
@@ -107,8 +111,8 @@ export async function onRequestGet(context) {
         WHERE ${whereClause} ${liquidated}
         ORDER BY permit_name`;
       };
-      sql = build(true);
-      sqlNoStatus = build(false);
+      sql = build(true, true);
+      sqlVariants = [build(true, false), build(false, true), build(false, false)];   // כשעמודה עדיין לא קיימת במסד (registry_status / notes_scope)
     }
 
 
@@ -127,12 +131,17 @@ export async function onRequestGet(context) {
     }
 
     let results;
+    const missingCol = e => /no such column: (registry_status|notes_scope)/i.test(String(e.message));
     try {
       ({ results } = await env.DB.prepare(sql).all());
     } catch (e) {
-      if (sqlNoStatus && /no such column: registry_status/i.test(String(e.message))) {
-        ({ results } = await env.DB.prepare(sqlNoStatus).all());   // העמודה עדיין לא נוספה למסד
-      } else throw e;
+      if (!sqlVariants.length || !missingCol(e)) throw e;
+      let last = e;
+      for (const v of sqlVariants) {      // עמודה שעדיין לא נוספה למסד: מנסים בלעדיה
+        try { ({ results } = await env.DB.prepare(v).all()); last = null; break; }
+        catch (e2) { if (!missingCol(e2)) throw e2; last = e2; }
+      }
+      if (last) throw last;
     }
 
     if (format === "csv") {

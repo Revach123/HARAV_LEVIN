@@ -14,14 +14,9 @@ export async function onRequestPut({ request, env, params }) {
   try {
     const id = params.id;
     const body = await request.json();
-    const { chp_number, entity_type, registrar_name, permit_name, category, region, notes, visibility, agch_approved, has_details } = body;
+    const { chp_number, entity_type, registrar_name, permit_name, category, region, notes, notes_scope, visibility, agch_approved, has_details } = body;
 
-    const result = await env.DB.prepare(
-      `UPDATE businesses
-       SET chp_number=?, entity_type=?, registrar_name=?, permit_name=?, category=?, region=?, notes=?, visibility=?, agch_approved=?, has_details=?,
-           updated_at=datetime('now')
-       WHERE id=?`
-    ).bind(
+    const vals = [
       chp_number     || "",
       entity_type    || "company",
       registrar_name || "",
@@ -32,8 +27,24 @@ export async function onRequestPut({ request, env, params }) {
       visibility     || "",
       agch_approved  || "",
       has_details    ? 1 : 0,
-      id
-    ).run();
+    ];
+    let result;
+    try {
+      result = await env.DB.prepare(
+        `UPDATE businesses
+         SET chp_number=?, entity_type=?, registrar_name=?, permit_name=?, category=?, region=?, notes=?, visibility=?, agch_approved=?, has_details=?,
+             notes_scope=?, updated_at=datetime('now')
+         WHERE id=?`
+      ).bind(...vals, notes_scope || "", id).run();
+    } catch (e) {
+      if (!/no such column: notes_scope/i.test(String(e.message))) throw e;
+      result = await env.DB.prepare(     // העמודה notes_scope עדיין לא נוספה למסד (migrations/0004)
+        `UPDATE businesses
+         SET chp_number=?, entity_type=?, registrar_name=?, permit_name=?, category=?, region=?, notes=?, visibility=?, agch_approved=?, has_details=?,
+             updated_at=datetime('now')
+         WHERE id=?`
+      ).bind(...vals, id).run();
+    }
 
     if (result.changes === 0) {
       return Response.json({ error: "Business not found" }, { status: 404 });
