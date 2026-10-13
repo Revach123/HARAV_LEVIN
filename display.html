@@ -227,10 +227,11 @@ function render(container, state, type, usedSample) {
   const topBar = el("div","hscroll-top"), topInner = el("div");
   topBar.appendChild(topInner);
   let syncing = false;
-  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); };
+  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); postHscroll(); };
   topBar.addEventListener("scroll", syncFrom(topBar, wrap));
   wrap.addEventListener("scroll", syncFrom(wrap, topBar));
-  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; };
+  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; postHscroll(); };
+  hscrollWrap = wrap;
   new ResizeObserver(updateTop).observe(wrap);
   container.appendChild(topBar);
   container.appendChild(wrap);
@@ -336,11 +337,27 @@ function reportHeight() {
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
 }
-new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); }).observe(document.body);
+new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); postHscroll(); }).observe(document.body);
 
 // ── כותרת קבועה יציבה (גרסה 3): ה-iframe שולח לעמוד האב את מבנה שורת הכותרת, ועמוד האב בונה ממנה סרגל position:fixed
 // "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.
 // עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
+// ── גלילה לרוחב: סרגל קבוע בתחתית החלון (גרסה 4 של קוד ההטמעה) - ה-iframe מדווח מידות ומיקום גלילה, ועמוד האב שולח חזרה את המיקום
+let hscrollWrap = null, lastHs = "";
+function postHscroll() {
+  if (window.parent === window || !hscrollWrap) return;
+  const t = hscrollWrap.querySelector("table"); if (!t) return;
+  const r = hscrollWrap.getBoundingClientRect();
+  const m = { source: "harav-levin", type: "hscroll", sw: t.scrollWidth, cw: hscrollWrap.clientWidth, left: Math.round(hscrollWrap.scrollLeft),
+              x: Math.round(r.left), top: Math.round(r.top + window.scrollY), h: Math.round(r.height) };
+  const k = JSON.stringify(m); if (k === lastHs) return; lastHs = k;
+  window.parent.postMessage(m, "*");
+}
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setScroll" || !hscrollWrap) return;
+  if (Math.abs(hscrollWrap.scrollLeft - d.left) > 1) hscrollWrap.scrollLeft = d.left;
+});
 let lastSpec = "";
 function postHeaderSpec() {
   if (window.parent === window) return;
