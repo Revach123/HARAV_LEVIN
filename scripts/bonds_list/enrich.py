@@ -18,6 +18,7 @@ import datetime
 import json
 import os
 import re
+import urllib.error
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -34,7 +35,8 @@ PAGE_LIMIT = 30                       # ה-API דוחה יותר מ-30
 MAX_RATING_PAGES = 500
 RATINGS_LOOKBACK_DEFAULT = int(os.environ.get("RATINGS_LOOKBACK_DAYS", "400"))   # ריצה ראשונה (בלי נקודת ביקורת): backfill מלא
 RATINGS_OVERLAP_DAYS = 2
-CA_LOOKBACK_YEARS, CA_LOOKAHEAD_YEARS, CA_MAX_PAGES = 6, 30, 20
+# הבדיקה (probe-maya, 13.10.2026): toDate של +30 שנה נדחה ב-HTTP 400 ("Error occured while trying to bind input to model"); +10 שנה עובד.
+CA_LOOKBACK_YEARS, CA_LOOKAHEAD_YEARS, CA_MAX_PAGES = 3, 10, 20
 WORKERS = 8
 RETRIES = 3
 
@@ -53,6 +55,12 @@ def _request(url, body=None, headers=None, timeout=30, raw=False):
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 payload = r.read()
             return payload if raw else json.loads(payload)
+        except urllib.error.HTTPError as e:
+            try:
+                body_txt = e.read().decode("utf-8", "replace")[:200]
+            except Exception:  # noqa: BLE001
+                body_txt = ""
+            last = f"{e} {body_txt}"
         except Exception as e:  # noqa: BLE001
             last = e
     raise RuntimeError(f"{url[:70]}: {last}")
