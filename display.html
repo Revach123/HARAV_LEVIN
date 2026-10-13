@@ -60,6 +60,7 @@
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
+  .bond-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:normal;line-height:1.3}
   .bonds-none{color:var(--muted);font-size:15px}
   .badge-no{color:var(--light);font-size:13px}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
@@ -102,15 +103,16 @@ const COLUMNS = {
     { key:"bonds_status",       label:'אג"ח',                cell:"bonds", w:24 },
   ],
   bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
-    // (בכוונה בלי annual_yield: לא אומת מה השדה מייצג, והערכים לא נראים כתשואה לפדיון)
-    { key:"security_name",  label:'אג"ח',                 cell:"name",  w:16 },
-    { key:"symbol",         label:"סימול",                                w:9  },
-    { key:"company",        label:"חברה",                 cell:"name",  w:20 },
+    { key:"security_name",  label:'אג"ח',                 cell:"name",  w:15 },
+    { key:"symbol",         label:"סימול",                                w:8  },
+    { key:"company",        label:"חברה",                 cell:"name",  w:19 },
     { key:"is_private",     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
-    { key:"annual_interest",label:"ריבית %",              cell:"num",   w:8  },
-    { key:"redemption_date",label:"מועד פדיון",                           w:11 },
-    { key:"linkage",        label:"הצמדה",                                w:13 },
-    { key:"last_price",     label:"שער אחרון",            cell:"num",   w:11 },
+    { key:"annual_interest",label:"ריבית %",              cell:"pct",   w:7  },
+    { key:"redemption_date",label:"מועד פדיון",                           w:10 },
+    { key:"linkage",        label:"הצמדה",                                w:12 },
+    { key:"last_price",     label:"שער אחרון",            cell:"num",   w:8  },
+    // השדה AnnualYield של הבורסה: כנראה תשואה ל-12 החודשים האחרונים / מתחילת שנה (טרם אומת)
+    { key:"annual_yield",   label:"תשואה שנתית",          cell:"pct",   w:9  },
   ],
 };
 
@@ -133,6 +135,8 @@ const SAMPLE = {
 };
 
 const el = (t, c, h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+// עד 2 ספרות אחרי הנקודה, בלי אפסים מיותרים (8.13420 -> 8.13, 3.50000 -> 3.5)
+const fmtPct = v => { if (v === null || v === undefined || v === "") return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
 // ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
@@ -197,7 +201,7 @@ function render(container, state, type, usedSample) {
   table.appendChild(colgroup);
   const thead = el("thead");
   const trh = el("tr");
-  state.cols.forEach(c => trh.appendChild(el("th", ["num","chg","badge","bonds","yesno"].includes(c.cell) ? "ctr" : null, esc(c.label))));
+  state.cols.forEach(c => trh.appendChild(el("th", ["num","pct","chg","badge","bonds","yesno"].includes(c.cell) ? "ctr" : null, esc(c.label))));
   thead.appendChild(trh);
   const tbody = el("tbody");
   table.append(thead, tbody);
@@ -235,6 +239,7 @@ function cellFor(col, val, row) {
   const td = el("td");
   if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
   if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
   if (col.cell === "chg")  {
     td.className = "num";
     if (val == null || val === "") { td.textContent = ""; return td; }
@@ -257,6 +262,7 @@ function cellFor(col, val, row) {
     if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
     else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
     else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';
+    if (row && row.bonds_note) td.innerHTML += `<div class="bond-note">${esc(row.bonds_note)}</div>`;   // הערה על אישור האג"ח
     return td;
   }
   if (col.cell === "badge") {

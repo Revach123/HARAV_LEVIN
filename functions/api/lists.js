@@ -69,19 +69,25 @@ export async function onRequestGet(context) {
       const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
                                     WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
                                     ELSE 'אין אג"ח' END`;
-      // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי')
-      const hasPrivateExpr = `CASE WHEN visibility = 'פרטי' THEN 'כן' ELSE 'לא' END`;
-      // סימון מפורש "רק פרטי": agch_approved = 'רק פרטי', או הערה שכתוב בה "רק ... פרטי" (למשל "מאושר רק לאג"ח פרטי בלבד")
-      const onlyPrivateExplicit = `(COALESCE(agch_approved,'') = 'רק פרטי'
-                                    OR (COALESCE(notes,'') LIKE '%רק%' AND COALESCE(notes,'') LIKE '%פרטי%'))`;
+      // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי'), או "רק פרטי" במפורש
+      const hasPrivateExpr = `CASE WHEN COALESCE(visibility,'') IN ('פרטי','רק פרטי') THEN 'כן' ELSE 'לא' END`;
+      // "רק פרטי" על החברה עצמה (היתר העסקה): visibility = 'רק פרטי', או הערה שכתוב בה במפורש "רק פרטי"/"פרטי בלבד".
+      // הערות שנוגעות לאג"ח (למשל "מאושר רק לאג"ח פרטי בלבד") הן על אישור האג"ח ולא על החברה, ולכן לא נספרות כאן.
+      const onlyPrivateExplicit = `(COALESCE(visibility,'') = 'רק פרטי'
+        OR ((COALESCE(notes,'') LIKE '%רק פרטי%' OR COALESCE(notes,'') LIKE '%פרטי בלבד%')
+            AND COALESCE(notes,'') NOT LIKE '%אג"ח%' AND COALESCE(notes,'') NOT LIKE '%אגח%'))`;
+      // הערה על אישור האג"ח (מוצגת בעמודת האג"ח): הערות שמזכירות אג"ח
+      const bondsNoteExpr = `CASE WHEN COALESCE(notes,'') LIKE '%אג"ח%' OR COALESCE(notes,'') LIKE '%אגח%'
+                                  THEN REPLACE(notes, char(160), ' ') ELSE '' END`;
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
-      const whereClause = isPrivate ? "visibility = 'פרטי'" : `NOT ${onlyPrivateExplicit}`;
+      const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
       sql = `
         SELECT permit_name, chp_number, category, region,
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
-               ${bondsStatusExpr} AS bonds_status
+               ${bondsStatusExpr} AS bonds_status,
+               ${bondsNoteExpr} AS bonds_note
         FROM businesses
         WHERE ${whereClause}
         ORDER BY permit_name`;
