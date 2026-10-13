@@ -11,20 +11,20 @@
    "registrar_name": 87,
    "biz_type": 87
   },
-  "updated": "2026-10-12T09:47:31.783020Z",
+  "updated": "2026-10-13T09:48:21.836708Z",
   "source": "d1",
   "businesses": 1207,
   "numeric_chp": 1202,
   "found_in_registry": 1118,
   "found_ratio": 0.93,
   "failed_batches": 0,
-  "datawise_rows": 2220,
-  "datawise_date": "2026-10-09",
-  "bond_companies": 362,
+  "datawise_rows": 2218,
+  "datawise_date": "2026-10-12",
+  "bond_companies": 361,
   "changes": {
    "registrar_name": 0,
    "biz_type": 0,
-   "tase_has_agch": 0
+   "tase_has_agch": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -33,10 +33,18 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mp64kjsuvw8z",
+   "chp": "520044314",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
