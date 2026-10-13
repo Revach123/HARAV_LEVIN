@@ -208,7 +208,7 @@ function render(container, state, type, usedSample) {
   head.append(title, tools);
   container.appendChild(head);
   const upd = el("div","upd"); container.appendChild(upd);
-  updatedText().then(t => { upd.textContent = t; });
+  updatedText().then(t => { upd.textContent = t; if (t && window.parent !== window) window.parent.postMessage({ source: "harav-levin", type: "updated", text: t }, "*"); });
 
   const wrap = el("div","table-wrap");
   const table = el("table");
@@ -375,6 +375,7 @@ function postHscroll() {
 window.addEventListener("message", e => {
   const d = e.data;
   if (e.source === window.parent && d && d.source === "harav-parent" && d.type === "v5") parentV5 = true;
+  if (e.source === window.parent && d && d.source === "harav-parent" && d.type === "updShown") document.querySelectorAll(".upd").forEach(u => { u.style.display = "none"; });   // עמוד האב הציג את התאריך בתת-הכותרת
   if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setScroll" || !hscrollWrap) return;
   if (Math.abs(hscrollWrap.scrollLeft - d.left) > 1) hscrollWrap.scrollLeft = d.left;
 });
