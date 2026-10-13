@@ -227,7 +227,7 @@ function render(container, state, type, usedSample) {
   const topBar = el("div","hscroll-top"), topInner = el("div");
   topBar.appendChild(topInner);
   let syncing = false;
-  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); postHscroll(); };
+  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; if (!parentV5) postHeaderSpec(); schedHscroll(); };
   topBar.addEventListener("scroll", syncFrom(topBar, wrap));
   wrap.addEventListener("scroll", syncFrom(wrap, topBar));
   const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; postHscroll(); };
@@ -343,7 +343,9 @@ new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); post
 // "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.
 // עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
 // ── גלילה לרוחב: סרגל קבוע בתחתית החלון (גרסה 4 של קוד ההטמעה) - ה-iframe מדווח מידות ומיקום גלילה, ועמוד האב שולח חזרה את המיקום
-let hscrollWrap = null, lastHs = "";
+let parentV5 = false;   // קוד הטמעה 5 מזיז את סרגל הכותרת בעצמו לפי הגלילה; גרסה 4 ומטה צריכה spec חדש בכל גלילה
+let hscrollWrap = null, lastHs = "", hsPending = false;
+function schedHscroll() { if (hsPending) return; hsPending = true; requestAnimationFrame(() => { hsPending = false; postHscroll(); }); }
 function postHscroll() {
   if (window.parent === window || !hscrollWrap) return;
   const t = hscrollWrap.querySelector("table"); if (!t) return;
@@ -355,6 +357,7 @@ function postHscroll() {
 }
 window.addEventListener("message", e => {
   const d = e.data;
+  if (e.source === window.parent && d && d.source === "harav-parent" && d.type === "v5") parentV5 = true;
   if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setScroll" || !hscrollWrap) return;
   if (Math.abs(hscrollWrap.scrollLeft - d.left) > 1) hscrollWrap.scrollLeft = d.left;
 });
@@ -366,6 +369,7 @@ function postHeaderSpec() {
   const ths = [...table.tHead.querySelectorAll("th")];
   if (!ths.length) return;
   const tr = table.getBoundingClientRect(), hr = table.tHead.getBoundingClientRect();
+  const sl = hscrollWrap ? hscrollWrap.scrollLeft : 0;   // x נשלח כמיקום בגלילה 0; עמוד האב מזיז את הסרגל לפי הגלילה הנוכחית
   const cs = getComputedStyle(ths[0]);
   const spec = {
     source: "harav-levin", type: "header",
@@ -373,7 +377,7 @@ function postHeaderSpec() {
     bg: cs.backgroundColor, color: cs.color, fw: cs.fontWeight, fs: cs.fontSize,
     border: cs.borderBottomWidth + " solid " + cs.borderBottomColor,
     cells: ths.map(th => { const r = th.getBoundingClientRect(), c = getComputedStyle(th);
-      return { t: th.textContent.trim(), x: Math.round(r.left), w: Math.round(r.width), a: c.textAlign,
+      return { t: th.textContent.trim(), x: Math.round(r.left), x0: Math.round(r.left + sl), w: Math.round(r.width), a: c.textAlign,
                bl: c.borderLeftWidth + " solid " + c.borderLeftColor, pad: c.paddingRight }; }),
   };
   const key = JSON.stringify(spec);
