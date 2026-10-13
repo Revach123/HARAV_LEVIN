@@ -1176,16 +1176,16 @@ function renderAdminTable() {
                   b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
                 }</td>
                 <td style="text-align:center;">
-                  <select onchange="inlineUpdate('${b.id}','agch_approved',this.value).then(ok => ok && this.value===BOND_PICK && openBondPicker('${b.id}'))"
+                  <select onchange="agchChange('${b.id}', this)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.agch_approved?"selected":""}>—</option>
                     <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
                     <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
                     <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
                     <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
-                    <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים</option>
+                    <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>אג"ח מסוימים</option>
+                    <option value="__pick__">⚙ בחירת אג"ח…</option>
                   </select>
-                  ${b.agch_approved===BOND_PICK ? `<button class="act-btn" onclick="openBondPicker('${b.id}')" title="בחירת אג&quot;ח">⚙</button>` : ""}
                 </td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
@@ -1298,6 +1298,7 @@ function renderForm() {
             <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
             <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים (נבחרות בחלון נפרד)</option>
           </select>
+          ${b.id && b.agch_approved===BOND_PICK ? `<button type="button" class="btn-ghost" style="margin-top:6px;" onclick="openBondPicker('${b.id}')">⚙ פתיחת חלון בחירת האג"ח</button>` : ""}
         </div>
       </div>
 
@@ -1796,6 +1797,26 @@ function renderBondPicker() {
       </div>
     </div></div>`;
   document.body.appendChild(root);
+}
+
+// שינוי "אישור אג"ח" בטבלת הניהול. "⚙ בחירת אג"ח…" היא פעולה: תמיד פותחת את חלון הבחירה (גם אם החברה כבר במצב
+// "אג"ח מסוימים"), ומעבירה את החברה למצב הזה אם עוד לא; הבחירה בתפריט עצמה חוזרת לערך הנוכחי.
+async function agchChange(id, sel) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  if (sel.value === "__pick__") {
+    if (biz.agch_approved !== BOND_PICK) {
+      const ok = await inlineUpdate(id, "agch_approved", BOND_PICK);
+      if (!ok) { sel.value = biz.agch_approved || ""; return; }
+      render();
+    } else {
+      sel.value = BOND_PICK;
+    }
+    openBondPicker(id);
+    return;
+  }
+  const ok = await inlineUpdate(id, "agch_approved", sel.value);
+  if (ok && sel.value === BOND_PICK) openBondPicker(id);
 }
 
 let admSearchTimer = null;
