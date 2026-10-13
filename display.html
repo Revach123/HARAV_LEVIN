@@ -297,7 +297,7 @@ function updatedText() {
     }).catch(() => "");
   return updatedP;
 }
-const NOWRAP_KEYS = new Set(["symbol","redemption_date","security_type","linkage","midroog_rating","maalot_rating","chp_number","category","last_price"]);
+const NOWRAP_KEYS = new Set(["symbol","redemption_date","midroog_rating","maalot_rating","chp_number","last_price"]);   // שאר העמודות (סוג נייר, הצמדה, קטגוריה...) מתפצלות לשתי שורות כשצריך
 function cellFor(col, val, row) {
   const td = el("td");
   if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
