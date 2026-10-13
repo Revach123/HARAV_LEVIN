@@ -218,3 +218,26 @@ title=חיפוש היתר עסקה חברות
 - עמודת "הערות" (`notes`) מוצגת לציבור (הערות על אג"ח נשארות בעמודת האג"ח, לא בהערות) ברשימות החברות והאג"ח, ב-`display.html` ובתצוגה הציבורית ב-`index.html`.
 - הכפתור "ייצוא לאקסל" בתצוגה הציבורית מוריד קובץ `.xlsx` אמיתי כטבלת Excel (מסננים, כותרת קפואה, מימין לשמאל), נבנה בדפדפן על ידי `xlsx-lite.js` (ללא ספריות חיצוניות). ייצואי ה-CSV של מסך הניהול נשארו CSV.
 - בניהול ובטופס העריכה: ערך `visibility` נבחר מתוך "יש גם פרטי" (`פרטי`) או "רק פרטי".
+
+## סטטוס רשם: מחוסלות מוסתרות, בפירוק מסומנות
+
+- עמודה `businesses.registry_status` (`migrations/0002_registry_status.sql`, מוסיפים פעם אחת ב-D1) נקבעת בריצת `registry-refresh` מהרשם הממשלתי ("סטטוס חברה" / "סטטוס תאגיד"; לעמותות אין סטטוס).
+- סטטוס שמתחיל ב"מחוסל" או ב"חיסול" - החברה לא מוצגת ברשימות החברות ולא נכללת ברשימת האג"ח.
+- סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
+- הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
+- כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
+## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה (במחשב)
+
+בלוק קוד אחד בעמוד (`OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים, או 0 אם אין; הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד):
+
+```html
+<iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
+<script>
+(function(){var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,t=0;
+window.addEventListener("message",function(e){if(e.origin===O&&e.data&&e.data.source==="harav-levin"&&e.data.type==="resize")f.style.height=e.data.height+"px";});
+function send(){t=0;if(f.contentWindow)f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:f.getBoundingClientRect().top,offset:OFFSET,desktop:window.innerWidth>=992},O);}
+function q(){if(!t)t=requestAnimationFrame(send);}
+addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEventListener("load",q);
+})();
+</script>
+```
