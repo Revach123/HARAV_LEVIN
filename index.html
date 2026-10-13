@@ -1081,14 +1081,13 @@ function renderAdminTable() {
           <summary class="btn-ghost">🗄️ צפה במסד הנתונים ▾</summary>
           <div class="dbmenu-items">
             <a href="/admin-view.html?type=companies-all" target="_blank">רשם החברות</a>
-            <a href="/admin-view.html?type=bonds-all" target="_blank">נתוני אג"ח מלאים</a>
+            <a href="/admin-view.html?type=bonds-all" target="_blank">אג"ח מאושרות (פרטי + כללי)</a>
           </div>
         </details>
         <details class="dbmenu">
           <summary class="btn-ghost">📤 ייצוא מסד נתונים ל-CSV ▾</summary>
           <div class="dbmenu-items">
             <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
-            <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
           </div>
         </details>
         <details class="dbmenu">
@@ -1750,22 +1749,17 @@ async function runTaseSync() {
   status.innerHTML = "מושך נתוני אג\"ח מהבורסה — אנא המתן...";
   try {
     const res = await apiFetch("/sync-tase", { method: "POST" });
-    const { dateUsed, taseTotal, bondCompanies, dbChecked, withBonds, updated } = res;
     status.style.background = "#edf7f1";
     status.innerHTML = `
-      ✅ אג"ח בורסה עודכן &nbsp;|&nbsp;
-      תאריך נתונים: <strong>${dateUsed}</strong> &nbsp;|&nbsp;
-      ניירות בבורסה: <strong>${taseTotal}</strong> &nbsp;|&nbsp;
-      חברות עם אג"ח: <strong>${bondCompanies}</strong> &nbsp;|&nbsp;
-      נמצאו ברשימה שלנו: <strong>${withBonds}</strong> &nbsp;|&nbsp;
-      עודכנו: <strong>${updated}</strong>
+      ✅ ${res.message}
+      &nbsp;|&nbsp; <a href="${res.runsUrl}" target="_blank" rel="noopener">מעקב אחרי הריצה ב-GitHub</a>
     `;
-    await loadBusinesses();
   } catch(e) {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
   }
-  btn.disabled = false; btn.textContent = "📈 עדכן אג\"ח מבורסה";
+  // לא להפעיל שוב מיד: הריצה נמשכת כמה דקות (ויש בה נעילה נגד ריצות מקבילות)
+  setTimeout(() => { btn.disabled = false; btn.textContent = "📈 עדכן אג\"ח מבורסה"; }, 60000);
 }
 
 function copyRegToPermit() {

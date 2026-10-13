@@ -217,6 +217,20 @@ def add_terms(bonds, fetch=fetch_terms):
         })
 
 
+def drop_empty_terms(bonds):
+    """נייר בלי שום תנאי (אין שער, ריבית או מועד פדיון) = כנראה כבר לא נסחר (נפדה/נמחק) ומאיה עוד מציגה אותו.
+    לא מפרסמים אותו. מוחזר (נשארים, הוסרו)."""
+    kept, dropped = [], []
+    for b in bonds:
+        has_terms = any(b.get(k) not in ("", None) for k in ("redemption_date", "annual_interest", "last_price"))
+        (kept if has_terms else dropped).append(b)
+    return kept, dropped
+
+
+# מגן: אם הרבה ניירות "ריקים" בבת אחת, כנראה שליפת התנאים נכשלה (לא שהם באמת נפדו) - לא דורסים את הפלט.
+MAX_DROPPED_ABS, MAX_DROPPED_PCT = 5, 0.02
+
+
 # ── 3ב. אימות מול datawise הרשמי (Securities Basic, חינמי) ──────────────────
 DATAWISE = "https://datawise.tase.co.il"
 def _datawise_key():
@@ -368,6 +382,16 @@ def main(companies_path=None):
         raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
     add_terms(bonds)
+    total_before = len(bonds)
+    bonds, dropped = drop_empty_terms(bonds)
+    if len(dropped) > max(MAX_DROPPED_ABS, int(MAX_DROPPED_PCT * total_before)):
+        raise SystemExit(f"{len(dropped)}/{total_before} bonds came back without terms - terms fetch looks partial, bond lists left untouched")
+    if dropped:
+        print(f"dropped {len(dropped)} bond(s) without any terms:", [(b['security_id'], b['company']) for b in dropped])
+    check["dropped_no_terms"] = [{"security_id": b["security_id"], "security_name": " ".join(str(b["security_name"]).split()),
+                                  "company": b["company"], "chp_number": b["chp_number"]} for b in dropped]
+    with open(os.path.join(OUT, "verification.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": TODAY, **check}, f, ensure_ascii=False, indent=1)
     state = load_state()
     apply_first_seen(bonds, state)
     counts = write_lists(bonds)

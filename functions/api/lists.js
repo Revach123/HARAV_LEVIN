@@ -3,11 +3,9 @@
 //   סינון (ציבורי):
 //     /api/lists?type=companies-private
 //     /api/lists?type=companies-general
-//     /api/lists?type=bonds-private
-//     /api/lists?type=bonds-general
 //   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
 //     /api/lists?type=companies-all
-//     /api/lists?type=bonds-all
+//   אג"ח: לא כאן. קבצים סטטיים /data/bonds_list/bonds_{private,general,all}.{json,csv} (נבנים יומית ממאיה).
 //   פורמט:
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
@@ -83,29 +81,15 @@ export async function onRequestGet(context) {
         ORDER BY permit_name`;
     }
 
-    else if (type === "bonds-private" || type === "bonds-general") {
-      const isPrivate = type === "bonds-private";
-      const approvedClause = isPrivate
-        ? "biz.agch_approved IN ('כן','רק פרטי')"
-        : "biz.agch_approved IN ('כן','רק כללי')";
-      const visClause = isPrivate ? "AND biz.visibility = 'פרטי'" : "";
-      sql = `
-        SELECT b.security_id, b.bond_name, b.symbol,
-               biz.permit_name AS company, b.corporate_id,
-               b.last_price, b.change_pct, b.interest, b.maturity_date,
-               b.linkage, b.base_index, b.turnover_kils, b.market_cap_kils
-        FROM bonds b
-        JOIN businesses biz ON biz.chp_number = b.corporate_id
-        WHERE ${approvedClause} ${visClause}
-        ORDER BY biz.permit_name, b.bond_name`;
-    }
 
     // ── ייצוא גולמי מלא ──
     else if (type === "companies-all") {
       sql = `SELECT * FROM businesses ORDER BY permit_name`;
     }
-    else if (type === "bonds-all") {
-      sql = `SELECT * FROM bonds ORDER BY company_full_name, bond_name`;
+    // אג"ח: רשימה אחת בלבד - קבצים סטטיים שנבנים כל יום מדף החברה במאיה (scripts/bonds_list), בלי טבלת bonds.
+    else if (type.startsWith("bonds-")) {
+      return json({ ok: false, error: "moved", type,
+        message: 'רשימת האג"ח היא קבצים סטטיים: /data/bonds_list/bonds_private|bonds_general|bonds_all (.json / .csv)' }, 410);
     }
 
     else {

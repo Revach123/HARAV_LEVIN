@@ -1,8 +1,17 @@
-// POST /api/sync-tase  — updates tase_has_agch for all businesses
+// POST /api/sync-tase — הכפתור "עדכן אג"ח מבורסה" בדף הניהול.
+//
+// לא מחשב כלום בעצמו (היה כאן עותק של הלוגיקה, בלי החרגת ני"ע מסחריים, שסתר את הריצה היומית).
+// מפעיל את אותה ריצה בדיוק של הריצה היומית: workflow "registry-refresh" ב-GitHub Actions
+// (scripts/registry_refresh/refresh_businesses.py), עם כתיבה ל-D1 (apply=true). כל שינוי בלוגיקה נעשה
+// במקום אחד, ומשפיע על הריצה היומית ועל הכפתור בשווה.
+//
+// דרישות:
+//   env.ADMIN_PASSWORD         - כמו שאר נתיבי הניהול
+//   env.GITHUB_DISPATCH_TOKEN  - מפתח GitHub (fine-grained, רק הריפו הזה, הרשאה Actions: Read and write)
+//     wrangler pages secret put GITHUB_DISPATCH_TOKEN --project-name harav-levin   (ואז פריסה מחדש)
 
-const TASE_API   = "https://datawise.tase.co.il";
-const TASE_KEY   = "OpB1TDhiRrF5kbQtjx75Qgcm6Csh31to";
-const BOND_TYPES = ["03", "05", "11", "36"];
+const GH = { owner: "Revach123", repo: "HARAV_LEVIN", workflow: "registry-refresh.yml", ref: "main" };
+const RUNS_URL = `https://github.com/${GH.owner}/${GH.repo}/actions/workflows/${GH.workflow}`;
 
 function isAuthed(request, env) {
   return (request.headers.get("Authorization") || "").replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
@@ -12,79 +21,38 @@ export async function onRequestPost({ request, env }) {
   if (!isAuthed(request, env)) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  // 1. Fetch bond company IDs from TASE
-  let bondIds = null;
-  let dateUsed = null;
-  let taseTotal = 0;
-
-  for (let d = 0; d <= 7; d++) {
-    const dt    = new Date();
-    dt.setDate(dt.getDate() - d);
-    const year  = dt.getFullYear();
-    const month = String(dt.getMonth() + 1).padStart(2, "0");
-    const day   = String(dt.getDate()).padStart(2, "0");
-
-    try {
-      const res  = await fetch(
-        `${TASE_API}/v1/basic-securities/trade-securities-list/${year}/${month}/${day}`,
-        { headers: { accept: "application/json", "accept-language": "he-IL", apikey: TASE_KEY } }
-      );
-
-      if (!res.ok) continue;
-
-      const json = await res.json();
-      const list = json?.tradeSecuritiesList?.result;
-      if (!list?.length) continue;
-
-      taseTotal = list.length;
-      bondIds   = new Set(
-        list
-          .filter(s => BOND_TYPES.includes(String(s.securityFullTypeCode || "").slice(0, 2)))
-          .map(s => String(s.corporateId || "").trim())
-          .filter(Boolean)
-      );
-      dateUsed = `${year}-${month}-${day}`;
-      break;
-    } catch (e) {
-      continue;
-    }
+  if (!env.GITHUB_DISPATCH_TOKEN) {
+    // הממשק מציג את השדה error כטקסט (apiFetch), לכן ההסבר בעברית נמצא בו
+    return Response.json({
+      code: "missing_secret",
+      error: "לא הוגדר GITHUB_DISPATCH_TOKEN ב-Cloudflare Pages (ר' הערה בראש functions/api/sync-tase.js). הריצה היומית ממשיכה כרגיל.",
+    }, { status: 500 });
   }
 
-  if (!bondIds) {
-    return Response.json({ error: "לא הצלחנו לקבל נתונים מהבורסה" }, { status: 502 });
+  let res;
+  try {
+    res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/actions/workflows/${GH.workflow}/dispatches`, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "harav-levin-admin",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ ref: GH.ref, inputs: { apply: "true" } }),
+    });
+  } catch (e) {
+    return Response.json({ code: "github_unreachable", error: `לא ניתן להגיע ל-GitHub: ${e.message}` }, { status: 502 });
   }
 
-  // 2. Get all businesses with registration numbers
-  const { results } = await env.DB.prepare(
-    `SELECT id, chp_number, tase_has_agch FROM businesses
-     WHERE chp_number IS NOT NULL AND chp_number != ''`
-  ).all();
-
-  // 3. Update each business
-  let updated = 0;
-  let withBonds = 0;
-
-  for (const biz of results) {
-    const hasAgch  = bondIds.has(String(biz.chp_number).trim()) ? "יש" : "אין";
-    const prevAgch = (biz.tase_has_agch || "").trim();
-    if (hasAgch === "יש") withBonds++;
-
-    if (hasAgch !== prevAgch) {
-      await env.DB.prepare(
-        `UPDATE businesses SET tase_has_agch = ?, updated_at = datetime('now') WHERE id = ?`
-      ).bind(hasAgch, biz.id).run();
-      updated++;
-    }
+  if (res.status !== 204) {
+    const text = (await res.text()).slice(0, 200);
+    return Response.json({ code: "github_rejected", status: res.status, error: `GitHub דחה את ההפעלה (${res.status}): ${text}` }, { status: 502 });
   }
-
   return Response.json({
-    success:      true,
-    dateUsed,
-    taseTotal,
-    bondCompanies: bondIds.size,
-    dbChecked:    results.length,
-    withBonds,
-    updated,
+    triggered: true,
+    message: "הופעלה אותה ריצה של הריצה היומית. היא נמשכת כ-6 דקות; אחריה רענן את הרשימה.",
+    runsUrl: RUNS_URL,
   });
 }
