@@ -281,6 +281,13 @@ def eligible_for_ytm(b, partial_ids):
     st = b.get("security_type") or ""
     if re.search(r"גלובלי|להמרה|מובנות", st):
         return False
+    if re.search(r"דולר|אירו|\$|€", b.get("security_name") or ""):    # מט"ח מסומן כ"לא צמוד" והמחיר באגורות של מטבע אחר
+        return False
+    try:
+        if not 50 <= float(b.get("last_price")) <= 200:                # מחוץ לטווח סביר = כנראה מט"ח / נתון שגוי
+            return False
+    except (TypeError, ValueError):
+        return False
     return True
 
 
@@ -399,7 +406,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
             continue
         if fr and d and d > today and price > 0 and eligible_for_ytm(b, partial_ids):
             y = solve_ytm(price, coupon, fr, gen_coupon_times(d, fr, today))
-            if y is not None:
+            if y is not None and -10 <= y <= 60:
                 b["ytm_gross"] = round(y, 2)
                 ytm_n += 1
     log(f"enrich: ytm computed for {ytm_n}/{len(bonds)}; midroog {sum(1 for b in bonds if b['midroog_rating'])}, maalot {sum(1 for b in bonds if b['maalot_rating'])}")
