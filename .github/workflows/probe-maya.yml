@@ -1,0 +1,16 @@
+name: Probe Maya corporate actions (read-only, manual)
+
+# בדיקה חד-פעמית: למה בקשת אירועי חברה (scripts/bonds_list/enrich.py) מחזירה 400. לא כותב לשום מקום.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/probe/probe_corp_actions.py 121 208
