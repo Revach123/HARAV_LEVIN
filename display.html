@@ -13,9 +13,6 @@
     --red:#c0392b; --green:#1e7e4a; --green-bg:#edf7f1; --green-border:#a8d9bc;
   }
   body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.5;padding:0 0 3rem}
-  header{background:var(--navy);color:#fff;height:56px;display:flex;align-items:center;padding:0 1.5rem;position:sticky;top:0;z-index:20}
-  header h1{font-size:18px;font-weight:600}
-  header h1 .gold{color:var(--gold)}
   .wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
 
   /* ── ניווט דו-שלבי ── */
@@ -61,14 +58,12 @@
   .state.err{color:var(--red)}
   /* מצב הטמעה (?type=...): בלי כותרת וניווט, כדי שיתמזג בתוך עמוד באתר אחר */
   body.embed{background:transparent;padding:0}
-  body.embed header, body.embed .nav-primary, body.embed .nav-sub{display:none}
+  body.embed .nav-primary, body.embed .nav-sub{display:none}
   body.embed .wrap{max-width:none;padding:0}
   .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
 </style>
 </head>
 <body>
-<header><h1>הון כשר · <span class="gold">אג"ח ומורשים</span></h1></header>
-
 <div class="wrap">
   <div class="nav-primary" id="navPrimary">
     <button data-topic="companies" class="active">חברות מורשות</button>
