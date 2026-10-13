@@ -269,6 +269,15 @@ function render(container, state, type, usedSample) {
 }
 
 // תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
+// מספר באותיות עבריות (גימטריה): 22 -> כ"ב, 787 -> תשפ"ז, 15/16 -> ט"ו/ט"ז
+function hebNum(n) {
+  const H = ["", "ק", "ר", "ש", "ת"], T = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"], U = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+  let out = "";
+  while (n >= 400) { out += "ת"; n -= 400; }
+  out += H[Math.floor(n / 100)]; n %= 100;
+  if (n === 15) out += "טו"; else if (n === 16) out += "טז"; else out += T[Math.floor(n / 10)] + U[n % 10];
+  return out.length > 1 ? out.slice(0, -1) + '"' + out.slice(-1) : out + "'";
+}
 let updatedP = null;
 function updatedText() {
   if (!updatedP) updatedP = fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" })
@@ -277,8 +286,14 @@ function updatedText() {
       if (!m) return "";
       const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
       let heb = "";
-      try { heb = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(d); } catch (e) { /* ללא תאריך עברי */ }
-      return `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}` + (heb ? ` (${heb})` : "");
+      try {
+        const parts = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).formatToParts(d);
+        const get = t => (parts.find(p => p.type === t) || {}).value || "";
+        const day = parseInt(get("day"), 10), yr = parseInt(get("year") || get("relatedYear"), 10);
+        const month = get("month").replace(/^ב(?=[א-ת])/, "");
+        if (day && yr && month) heb = `${hebNum(day)} ${month} ${hebNum(yr % 1000)}`;
+      } catch (e) { /* ללא תאריך עברי */ }
+      return heb ? `עודכן לאחרונה: ${heb}` : `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`;
     }).catch(() => "");
   return updatedP;
 }
