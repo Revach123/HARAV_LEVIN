@@ -1,0 +1,66 @@
+{
+ "summary": {
+  "scope": "bonds",
+  "recovered_by_single_lookup": 0,
+  "unfound_after_batch": 0,
+  "values_lost": 0,
+  "empty_before": {
+   "registrar_name": 88,
+   "biz_type": 88
+  },
+  "empty_after": {
+   "registrar_name": 88,
+   "biz_type": 88
+  },
+  "updated": "2026-10-13T12:17:31.573099Z",
+  "source": "d1",
+  "businesses": 1208,
+  "numeric_chp": 1203,
+  "found_in_registry": 0,
+  "found_ratio": 0.0,
+  "failed_batches": 0,
+  "datawise_rows": 2218,
+  "datawise_date": "2026-10-12",
+  "bond_companies": 361,
+  "changes": {
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 1
+  },
+  "fills_of_empty": {
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 1
+  },
+  "mode": "dry-run",
+  "statements_applied": 0,
+  "problems": []
+ },
+ "changes": [
+  {
+   "id": "6709d1cb5ce2",
+   "chp": "513136176",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "אין"
+  }
+ ],
+ "not_found": [],
+ "non_numeric_chp": [
+  {
+   "id": "5849/99",
+   "chp": "5849/99",
+   "permit_name": "קופת חולים מאוחדת"
+  },
+  {
+   "id": "mp64m1itd2mn",
+   "chp": "5849/99",
+   "permit_name": "קופת חולים מאוחדת"
+  },
+  {
+   "id": "mp64m23q4g6l",
+   "chp": "NV1239114",
+   "permit_name": "קרדן אן. וי."
+  }
+ ]
+}
