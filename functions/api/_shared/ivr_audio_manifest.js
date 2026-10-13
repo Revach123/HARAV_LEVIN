@@ -70,6 +70,13 @@ export default {
   "pron": "6a4e147f",
   "phoneme": true
  },
+ "permit:alsoPrivate": {
+  "text": "קיים גם היתר עסקה פרטי",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_ac11b92db0fb6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
  "permit:general": {
   "text": "קיים היתר עסקה כללי",
   "voice": "he-IL-AvriNeural",
