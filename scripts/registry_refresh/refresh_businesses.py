@@ -9,7 +9,7 @@ scripts/registry_refresh/refresh_businesses.py
      בבאצ'ים (datastore_search עם רשימת מספרים בפילטר; datastore_search_sql כבר מחזיר 404), לא בקשה לעסק.
      עדיפות: חברה > שותפות > עמותה (כמו ב-Worker). מעדכן registrar_name ו-biz_type כשהשתנו.
   2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך הסחירים של datawise (Securities Basic) — האם לח"פ
-     יש אג"ח סחירה (קוד סוג 03/05/11/36), *בלי ני"ע מסחריים*.
+     יש אג"ח סחירה (קוד סוג 03/05/11/36), *כולל ני"ע מסחריים*.
 
 מצבים:
   * ברירת מחדל = בדיקה בלבד (dry-run): לא כותב כלום ל-D1, רק מחשב ושומר דוח.
@@ -224,7 +224,7 @@ def datawise_key():
 
 
 def fetch_bond_corporate_ids():
-    """ח"פים עם אג"ח *סחירה* (datawise כולל רק ניירות סחירים), בלי ני"ע מסחריים."""
+    """ח"פים עם אג"ח *סחירה* (datawise כולל רק ניירות סחירים), כולל ני"ע מסחריים."""
     headers = {"accept": "application/json", "accept-language": "he-IL", "apikey": datawise_key()}
     types = {str(t["securityFullTypeCode"]): t.get("securityTypeDesc") or "" for t in
              http_json(f"{DATAWISE}/v1/basic-securities/securities-types", headers=headers)["securitiesTypes"]["result"]}
@@ -235,7 +235,7 @@ def fetch_bond_corporate_ids():
         if rows:
             ids = {str(r.get("corporateId") or "").strip() for r in rows
                    if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES
-                   and "מסחרי" not in types.get(str(r.get("securityFullTypeCode")), "")}
+                   }
             ids.discard("")
             return ids, len(rows), str(dt)
     return None, 0, None
@@ -243,7 +243,7 @@ def fetch_bond_corporate_ids():
 
 # ── חישוב השינויים ───────────────────────────────────────────────────────────
 def is_liquidated(status):
-    return str(status or "").startswith(("מחוסל", "חיסול"))
+    return str(status or "").startswith(("מחוסל", "חיסול", "מחוק", "נגרע"))
 
 
 def compute_changes(businesses, registry, bond_ids):

@@ -13,7 +13,7 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
      (או קובץ JSON מקומי עם אותו מבנה, ארגומנט ראשון / COMPANIES_FILE).
   2. סריקת מאיה:   GET maya.tase.co.il/api/v1/companies/{id}/details לכל id
      בטווח; מתוך התגובה נלקחים corporateNo ורשימת "secrities". נשמרות רק
-     חברות שהח"פ שלהן מאושר, ורק ניירות סחירים (isTradable) מסוג אג"ח לפי סיווג Revach (classify.coarse_type, ר' classify.py), בלי ני"ע מסחריים.
+     חברות שהח"פ שלהן מאושר, ורק ניירות סחירים (isTradable) מסוג אג"ח לפי סיווג Revach (classify.coarse_type, ר' classify.py), כולל ני"ע מסחריים.
   3. תנאי הנייר:   GET api.tase.co.il/api/company/securitydata לכל אג"ח שנשמר
      (פדיון, ריבית, הצמדה, שער, תשואה...).
   4. היסטוריה:     first_seen לכל נייר (state.json) — מתי הופיע לראשונה בסריקה.
@@ -53,9 +53,7 @@ STATE_PATH = os.path.join(OUT, "state.json")
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
 SELECTIVE = 'בחירת אג"ח מסוימים'   # אישור לאג"ח מסוימות בלבד: נבחרות בדף הניהול ונשמרות בטבלה approved_bonds
 MANUAL_SCOPES = {"private", "general", "both"}
-def is_commercial_paper(type_str):
-    """ני"ע מסחריים — לא אג"ח לצורך הרשימה הזאת (החרגה שלנו; coarse_type של Revach כן סופר אותם)."""
-    return "מסחרי" in (type_str or "")
+# ני"ע מסחריים נכללים ברשימה (כמו ב-Revach ובקובץ ה-Excel הישן): coarse_type מסווג אותם כאג"ח קונצרני.
 
 
 # סוגי נכס שנחשבים "אג"ח" — כמו BOND_COARSE ב-Revach (build_bonds_heter_report.py)
@@ -216,7 +214,7 @@ def approved_map(companies):
         if not k or status not in APPROVED:
             continue
         reg = (c.get("registry_status") or "").strip()      # נקבע ע"י registry-refresh
-        if reg.startswith(("מחוסל", "חיסול")):               # חברה מחוסלת - לא ברשימת האג"ח
+        if reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע")):               # חברה מחוסלת - לא ברשימת האג"ח
             continue
         if k in out:
             continue
@@ -263,7 +261,7 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID, manual=None, names=
                 if sec.get("securityId") is None or sec.get("isDeleted") or not sec.get("isTradable"):
                     continue
                 ac = coarse_type(sec.get("securityType"))
-                if ac not in BOND_COARSE or is_commercial_paper(sec.get("securityType")):
+                if ac not in BOND_COARSE:
                     continue
                 sid = int(sec["securityId"])
                 name = (sec.get("securityName") or "").strip()
@@ -404,8 +402,7 @@ def cross_check(bonds, approved, dw):
     expected = {int(r["securityId"]) for r in rows
                 if chp_norm(r.get("corporateId")) in approved
                 and str(r.get("securityFullTypeCode") or "").startswith(BOND_CODE_PREFIXES)
-                and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE
-                and not is_commercial_paper(types.get(str(r.get("securityFullTypeCode")), ""))}
+                and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE}
     mine = {b["security_id"] for b in bonds if not b.get("manual")}
     missing, extra = sorted(expected - mine), sorted(mine - expected)
     by_id = {int(r["securityId"]): r for r in rows}

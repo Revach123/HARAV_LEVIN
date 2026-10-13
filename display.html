@@ -107,6 +107,8 @@ const COLUMNS = {
   bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
     { key:"security_name",  label:'אג"ח',                 cell:"name",  w:15 },
     { key:"symbol",         label:"סימול",                                w:8  },
+    { key:"security_id",    label:"מספר נייר",            cell:"num",   w:8  },
+    { key:"security_type",  label:"סוג נייר",                             w:10 },
     { key:"company",        label:"חברה",                 cell:"name",  w:19 },
     { key:"is_private",     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
     { key:"annual_interest",label:"ריבית %",              cell:"pct",   w:7  },
