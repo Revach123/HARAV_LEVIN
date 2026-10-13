@@ -279,12 +279,17 @@ def _datawise_key():
     key = os.environ.get("TASE_DATAWISE_KEY")
     if key:
         return key
-    try:   # ברירת מחדל: המפתח שכבר קיים ב-functions/api/sync-tase.js (בלי עותק נוסף בקוד)
-        with open(os.path.join(ROOT, "functions", "api", "sync-tase.js"), encoding="utf-8") as f:
-            m = re.search(r'TASE_KEY\s*=\s*"([^"]+)"', f.read())
-        return m.group(1) if m else ""
-    except OSError:
-        return ""
+    # ברירת מחדל: המפתח שכבר קיים בקוד של הפרויקט (בלי עותק נוסף). sync-tase.js כבר לא מכיל מפתח,
+    # ולכן קוראים מ-debug-tase.js; עדיף להגדיר Secret בשם TASE_DATAWISE_KEY.
+    for name in ("sync-tase.js", "debug-tase.js"):
+        try:
+            with open(os.path.join(ROOT, "functions", "api", name), encoding="utf-8") as fh:
+                m = re.search(r'TASE_KEY\s*=\s*"([^"]+)"', fh.read())
+        except OSError:
+            continue
+        if m:
+            return m.group(1)
+    return ""
 
 
 DW_KEY = _datawise_key()
