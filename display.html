@@ -307,7 +307,34 @@ function reportHeight() {
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
 }
-new ResizeObserver(reportHeight).observe(document.body);
+new ResizeObserver(() => { reportHeight(); applySticky(); }).observe(document.body);
+
+// ── כותרת קבועה (freeze panes) במחשב ──
+// ה-iframe מתארך לפי התוכן והגלילה היא של עמוד האב, ולכן עמוד האב שולח לכאן את מיקום ה-iframe ביחס לחלון
+// (top), וכאן מזיזים את שורת הכותרת כך שתישאר צמודה לחלק העליון של החלון (offset = גובה כותרת קבועה של האתר, אם יש).
+let stick = { top: 0, offset: 0, on: false };
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "scroll") return;
+  stick = { top: Number(d.top) || 0, offset: Number(d.offset) || 0, on: !!d.desktop };
+  applySticky();
+});
+function applySticky() {
+  const table = container.querySelector("table"); if (!table) return;
+  const ths = table.querySelectorAll("thead th");
+  let delta = 0;
+  if (stick.on) {
+    const headBottom = table.tHead.offsetHeight;
+    const natural = stick.top + table.getBoundingClientRect().top;      // מיקום הכותרת (הטבעי) ביחס לחלון
+    delta = Math.max(0, Math.min(stick.offset - natural, table.offsetHeight - headBottom - 2));
+  }
+  ths.forEach(th => {
+    th.style.transform = delta ? `translateY(${delta}px)` : "";
+    th.style.position = delta ? "relative" : "";
+    th.style.zIndex = delta ? "2" : "";
+    th.style.boxShadow = delta ? "0 2px 3px -1px rgba(0,0,0,.18)" : "";
+  });
+}
 
 refresh(); // טעינה ראשונית
 </script>

@@ -226,3 +226,18 @@ title=חיפוש היתר עסקה חברות
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
+## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה (במחשב)
+
+בלוק קוד אחד בעמוד (`OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים, או 0 אם אין; הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד):
+
+```html
+<iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
+<script>
+(function(){var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,t=0;
+window.addEventListener("message",function(e){if(e.origin===O&&e.data&&e.data.source==="harav-levin"&&e.data.type==="resize")f.style.height=e.data.height+"px";});
+function send(){t=0;if(f.contentWindow)f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:f.getBoundingClientRect().top,offset:OFFSET,desktop:window.innerWidth>=992},O);}
+function q(){if(!t)t=requestAnimationFrame(send);}
+addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEventListener("load",q);
+})();
+</script>
+```
