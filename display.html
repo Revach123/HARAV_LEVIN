@@ -67,9 +67,9 @@
   .state.err{color:var(--red)}
   /* בתוך iframe: רקע שקוף, בלי פס גלילה פנימי (הגובה מדווח לעמוד האב) */
   html.embed{overflow:hidden}
-  /* עמוד עצמאי (לא בתוך iframe): כותרת קבועה בגלילת העמוד, בלי תלות בעמוד אב */
-  html:not(.embed) .table-wrap{overflow:visible}
-  html:not(.embed) thead th{position:sticky;top:0;z-index:5;box-shadow:0 1px 0 var(--border)}
+  /* גלילה לרוחב: סרגל גלילה נוסף מעל הטבלה (הסרגל התחתון נמצא בסוף הטבלה הארוכה ולכן לא נראה) */
+  .hscroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:3px;display:none}
+  .hscroll-top div{height:1px}
   body.embed{background:transparent;padding:0}
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
@@ -207,8 +207,11 @@ function render(container, state, type, usedSample) {
   const wrap = el("div","table-wrap");
   const table = el("table");
   const colgroup = el("colgroup");
-  const wTotal = state.cols.reduce((a, c) => a + c.w, 0);
-  state.cols.forEach(c => { const col = el("col"); col.style.width = (c.w * 100 / wTotal) + "%"; colgroup.appendChild(col); });
+  // רוחב עמודה מינימלי בפיקסלים (c.w * 11, לפחות 70). הטבלה לא מתכווצת מתחת לסכום, ובמקום זה יש גלילה לרוחב;
+  // כשיש מקום, הרוחב העודף מתחלק לפי היחס.
+  const colPx = state.cols.map(c => Math.max(70, Math.round(c.w * 11)));
+  state.cols.forEach((c, i) => { const col = el("col"); col.style.width = colPx[i] + "px"; colgroup.appendChild(col); });
+  table.style.minWidth = colPx.reduce((a, b) => a + b, 0) + "px";
   table.appendChild(colgroup);
   const thead = el("thead");
   const trh = el("tr");
@@ -217,7 +220,18 @@ function render(container, state, type, usedSample) {
   const tbody = el("tbody");
   table.append(thead, tbody);
   wrap.appendChild(table);
+  // סרגל גלילה לרוחב עליון, מסונכרן עם הטבלה (מוצג רק כשיש גלילה לרוחב)
+  const topBar = el("div","hscroll-top"), topInner = el("div");
+  topBar.appendChild(topInner);
+  let syncing = false;
+  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); };
+  topBar.addEventListener("scroll", syncFrom(topBar, wrap));
+  wrap.addEventListener("scroll", syncFrom(wrap, topBar));
+  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; };
+  new ResizeObserver(updateTop).observe(wrap);
+  container.appendChild(topBar);
   container.appendChild(wrap);
+  updateTop();
 
   const draw = () => {
     tbody.innerHTML = "";
