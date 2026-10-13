@@ -63,7 +63,6 @@
   .bond-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:normal;line-height:1.3}
   .bonds-none{color:var(--muted);font-size:15px}
   .badge-no{color:var(--light);font-size:13px}
-  .foot-note{font-size:12px;color:var(--muted);margin-top:.5rem}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
   .state.err{color:var(--red)}
   /* בתוך iframe: רקע שקוף, בלי פס גלילה פנימי (הגובה מדווח לעמוד האב) */
@@ -219,10 +218,6 @@ function render(container, state, type, usedSample) {
   table.append(thead, tbody);
   wrap.appendChild(table);
   container.appendChild(wrap);
-  if (state.topic === "bonds") {
-    container.appendChild(el("div","foot-note",
-      'תשואה לפדיון ברוטו: מחושבת לאג"ח לא צמודות בלבד, לפי המחיר האחרון (לפני מס); המידע בבדיקה ועלול להכיל אי-דיוקים.'));
-  }
 
   const draw = () => {
     tbody.innerHTML = "";
