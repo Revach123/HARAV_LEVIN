@@ -49,9 +49,9 @@ TIMEOUT, RETRIES = 60, 4
 
 SOURCES = [   # סדר = עדיפות
     {"kind": "company", "resource": "f004176c-b85f-4542-8901-7b3176f9a054",
-     "id": "מספר חברה", "name": "שם חברה", "extra": ["סוג תאגיד", "מגבלות"]},
+     "id": "מספר חברה", "name": "שם חברה", "extra": ["סוג תאגיד", "מגבלות"], "status": "סטטוס חברה"},
     {"kind": "partnership", "resource": "139aa193-fabb-4f6b-a71b-0bb40fd73eb2",
-     "id": "מספר שותפות", "name": "שם שותפות", "extra": []},
+     "id": "מספר שותפות", "name": "שם שותפות", "extra": [], "status": "סטטוס תאגיד"},
     {"kind": "association", "resource": "be5b7935-3922-45d4-9638-08871b17ec95",
      "id": "מספר עמותה", "name": "שם עמותה בעברית", "extra": []},
 ]
@@ -146,7 +146,13 @@ class D1:
 def load_businesses(d1):
     cols = "id, chp_number, permit_name, registrar_name, entity_type, biz_type, tase_has_agch"
     if d1.can_write:   # מקור אמת: D1 עצמו
-        rows = d1.query(f"SELECT {cols} FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
+        try:   # registry_status = עמודה שנוספה בנפרד (migrations/0002); אם עוד לא קיימת - בלי עדכון סטטוס
+            rows = d1.query(f"SELECT {cols}, registry_status FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
+        except RuntimeError as e:
+            if "registry_status" not in str(e):
+                raise
+            print("WARNING: column registry_status missing in D1 - registry status will not be updated", file=sys.stderr)
+            rows = d1.query(f"SELECT {cols} FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
         return rows, "d1"
     rows = http_json(f"{SITE}/api/businesses")   # GET ציבורי — מספיק לבדיקה
     return [r for r in rows if str(r.get("chp_number") or "").strip()], "public_api"
@@ -161,14 +167,15 @@ def _records_to_found(records, source, found):
             continue
         name = clean_name(rec.get(source["name"]))
         if name:
-            found[key] = {"name": name, "biz_type": classify(source, rec)}
+            status = str(rec.get(source.get("status") or "") or "").replace("~", '"').strip()
+            found[key] = {"name": name, "biz_type": classify(source, rec), "status": status}
 
 
 def fetch_source(numbers, source):
     """-> ({מספר: {name, biz_type}}, batches_failed).
     בקשה אחת לכל באץ' (filters עם רשימת מספרים = IN). אם נכשלה — שליפה בודדת לכל מספר, כמו ב-Worker."""
     found, failed = {}, 0
-    fields = [source["id"], source["name"]] + source["extra"]
+    fields = [source["id"], source["name"]] + source["extra"] + ([source["status"]] if source.get("status") else [])
     for i in range(0, len(numbers), BATCH):
         batch = numbers[i:i + BATCH]
         try:
@@ -235,12 +242,19 @@ def fetch_bond_corporate_ids():
 
 
 # ── חישוב השינויים ───────────────────────────────────────────────────────────
+def is_liquidated(status):
+    return str(status or "").startswith(("מחוסל", "חיסול"))
+
+
 def compute_changes(businesses, registry, bond_ids):
     changes = []
     for b in businesses:
         key = numeric_chp(b.get("chp_number"))
         info = registry.get(key) if key else None
         if info:
+            if "registry_status" in b and info.get("status") and info["status"] != (b.get("registry_status") or "").strip():
+                changes.append({"id": b["id"], "chp": b["chp_number"], "field": "registry_status",
+                                "old": b.get("registry_status"), "new": info["status"]})
             if info["name"] != (b.get("registrar_name") or "").strip():
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "registrar_name",
                                 "old": b.get("registrar_name"), "new": info["name"]})
@@ -347,6 +361,14 @@ def main(apply=False, scope="all"):
         return sum(1 for b in businesses if not (b.get(field) or "").strip())
     filled = {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
               for f in ("registrar_name", "biz_type")}
+    status_counts = {}
+    for b in businesses:
+        key = numeric_chp(b.get("chp_number"))
+        st = ((registry.get(key) or {}).get("status") if key else None) or (b.get("registry_status") or "")
+        label = "מחוסלת/חיסול" if is_liquidated(st) else ("בפירוק" if st.startswith("בפרוק") else ("פעילה" if st else "לא ידוע"))
+        status_counts[label] = status_counts.get(label, 0) + 1
+    newly_liquidated = sum(1 for c in changes if c["field"] == "registry_status" and (c["old"] or "").strip()
+                           and not is_liquidated(c["old"]) and is_liquidated(c["new"]))
     summary = {
         "scope": scope, "recovered_by_single_lookup": recovered, "unfound_after_batch": len(unfound),
         "values_lost": lost,
@@ -358,9 +380,10 @@ def main(apply=False, scope="all"):
         "failed_batches": failed_batches, "datawise_rows": dw_rows, "datawise_date": dw_date,
         "bond_companies": None if bond_ids is None else len(bond_ids),
         "changes": {f: sum(1 for c in changes if c["field"] == f)
-                    for f in ("registrar_name", "biz_type", "tase_has_agch")},
+                    for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status")},
         "fills_of_empty": {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
-                           for f in ("registrar_name", "biz_type", "tase_has_agch")},
+                           for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status")},
+        "registry_status_counts": status_counts,
     }
 
     problems = []
@@ -368,6 +391,9 @@ def main(apply=False, scope="all"):
         problems.append(f"{lost} existing values would be blanked")
     if do_names and numerics and found_ratio < MIN_FOUND_RATIO:
         problems.append(f"registry found ratio {found_ratio:.2f} < {MIN_FOUND_RATIO}")
+    # הגנה: חברות שהיו מוצגות והפכו פתאום למחוסלות (נעלמות מהרשימות) - מעל סף חריג עוצרות את הכתיבה.
+    if newly_liquidated > max(10, 0.03 * len(businesses)):
+        problems.append(f"too many businesses became liquidated ({newly_liquidated})")
     if name_changes > max(MAX_NAME_CHANGE_ABS, MAX_NAME_CHANGE_PCT * len(businesses)):
         problems.append(f"too many name overwrites ({name_changes})")
 
@@ -385,7 +411,8 @@ def main(apply=False, scope="all"):
         applied = apply_updates(d1, build_update_sql(changes))
         mode = "applied"
         # אימות קריאה-חוזרת: כל ערך חדש נמצא ב-D1
-        after = {r["id"]: r for r in d1.query("SELECT id, registrar_name, biz_type, tase_has_agch FROM businesses")[0]["results"]}
+        status_col = ", registry_status" if any("registry_status" in b for b in businesses) else ""
+        after = {r["id"]: r for r in d1.query(f"SELECT id, registrar_name, biz_type, tase_has_agch{status_col} FROM businesses")[0]["results"]}
         bad = [c for c in changes if (after.get(c["id"], {}).get(c["field"]) or "") != (c["new"] or "")]
         summary["readback_mismatches"] = len(bad)
         if bad:

@@ -56,7 +56,7 @@ export async function onRequestGet(context) {
   const format = (params.get("format") || "").toLowerCase();
 
   try {
-    let sql;
+    let sql, sqlNoStatus;
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
@@ -84,16 +84,28 @@ export async function onRequestGet(context) {
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
       const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
-      sql = `
+      // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות (מחוסלת.../חיסול...) לא מוצגות;
+      // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
+      const build = (withStatus) => {
+        const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%'` : "";
+        const notesOut = withStatus
+          ? `CASE WHEN COALESCE(registry_status,'') LIKE 'בפרוק%'
+                  THEN 'בפירוק' || CASE WHEN ${notesExpr} != '' THEN '; ' || ${notesExpr} ELSE '' END
+                  ELSE ${notesExpr} END`
+          : notesExpr;
+        return `
         SELECT permit_name, chp_number, category, region,
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
                ${bondsNoteExpr} AS bonds_note,
-               ${notesExpr} AS notes
+               ${notesOut} AS notes
         FROM businesses
-        WHERE ${whereClause}
+        WHERE ${whereClause} ${liquidated}
         ORDER BY permit_name`;
+      };
+      sql = build(true);
+      sqlNoStatus = build(false);
     }
 
 
@@ -111,7 +123,14 @@ export async function onRequestGet(context) {
       return json({ ok: false, error: "unknown_type", type }, 400);
     }
 
-    const { results } = await env.DB.prepare(sql).all();
+    let results;
+    try {
+      ({ results } = await env.DB.prepare(sql).all());
+    } catch (e) {
+      if (sqlNoStatus && /no such column: registry_status/i.test(String(e.message))) {
+        ({ results } = await env.DB.prepare(sqlNoStatus).all());   // העמודה עדיין לא נוספה למסד
+      } else throw e;
+    }
 
     if (format === "csv") {
       return csvResponse(results, type);

@@ -171,6 +171,9 @@ def approved_map(companies):
         status = (c.get("agch_approved") or "").strip()
         if not k or status not in APPROVED:
             continue
+        reg = (c.get("registry_status") or "").strip()      # נקבע ע"י registry-refresh
+        if reg.startswith(("מחוסל", "חיסול")):               # חברה מחוסלת - לא ברשימת האג"ח
+            continue
         if k in out:
             continue
         out[k] = {
@@ -179,7 +182,7 @@ def approved_map(companies):
             "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
             "bond_scope": bond_scope(status, c.get("notes")),
-            "bond_note": bond_note(c.get("notes")),
+            "bond_note": "; ".join(x for x in ("בפירוק" if reg.startswith("בפרוק") else "", bond_note(c.get("notes"))) if x),
         }
     return out
 
