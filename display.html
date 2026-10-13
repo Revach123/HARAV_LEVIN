@@ -45,7 +45,7 @@
   .head-tools{display:flex;gap:.5rem;align-items:center}
 
   /* ── טבלה ── */
-  .table-wrap{overflow:auto;max-height:80vh;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
+  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
   table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:16px;min-width:760px}
   thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
   tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;overflow-wrap:anywhere}
@@ -56,7 +56,7 @@
   tbody tr:last-child td{border-bottom:none}
   th.ctr{text-align:center}
   td.ctr{text-align:center;white-space:nowrap}
-  thead th{white-space:normal;line-height:1.25;vertical-align:middle;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 var(--border)}
+  thead th{white-space:normal;line-height:1.25;vertical-align:middle}
   td.nw{white-space:nowrap;overflow-wrap:normal}
   .name-cell{font-weight:500}
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
@@ -73,8 +73,6 @@
   /* גלילה לרוחב: סרגל גלילה נוסף מעל הטבלה (הסרגל התחתון נמצא בסוף הטבלה הארוכה ולכן לא נראה) */
   .hscroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:3px;display:none}
   .hscroll-top div{height:1px}
-  /* בהטמעה: הטבלה גוללת בתוך מסגרת בגובה קבוע, כך שסרגל הגלילה לרוחב והכותרת תמיד בטווח הראייה */
-  body.embed .table-wrap{max-height:620px}
   body.embed{background:transparent;padding:0}
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
@@ -229,11 +227,13 @@ function render(container, state, type, usedSample) {
   const topBar = el("div","hscroll-top"), topInner = el("div");
   topBar.appendChild(topInner);
   let syncing = false;
-  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); };
+  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; postHeaderSpec(); postHscroll(); };
   topBar.addEventListener("scroll", syncFrom(topBar, wrap));
   wrap.addEventListener("scroll", syncFrom(wrap, topBar));
-  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; };
+  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; postHscroll(); };
+  hscrollWrap = wrap;
   new ResizeObserver(updateTop).observe(wrap);
+  container.appendChild(topBar);
   container.appendChild(wrap);
   updateTop();
 
@@ -337,14 +337,29 @@ function reportHeight() {
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
 }
-new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); }).observe(document.body);
+new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); postHscroll(); }).observe(document.body);
 
 // ── כותרת קבועה יציבה (גרסה 3): ה-iframe שולח לעמוד האב את מבנה שורת הכותרת, ועמוד האב בונה ממנה סרגל position:fixed
 // "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.
 // עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
+// ── גלילה לרוחב: סרגל קבוע בתחתית החלון (גרסה 4 של קוד ההטמעה) - ה-iframe מדווח מידות ומיקום גלילה, ועמוד האב שולח חזרה את המיקום
+let hscrollWrap = null, lastHs = "";
+function postHscroll() {
+  if (window.parent === window || !hscrollWrap) return;
+  const t = hscrollWrap.querySelector("table"); if (!t) return;
+  const r = hscrollWrap.getBoundingClientRect();
+  const m = { source: "harav-levin", type: "hscroll", sw: t.scrollWidth, cw: hscrollWrap.clientWidth, left: Math.round(hscrollWrap.scrollLeft),
+              x: Math.round(r.left), top: Math.round(r.top + window.scrollY), h: Math.round(r.height) };
+  const k = JSON.stringify(m); if (k === lastHs) return; lastHs = k;
+  window.parent.postMessage(m, "*");
+}
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setScroll" || !hscrollWrap) return;
+  if (Math.abs(hscrollWrap.scrollLeft - d.left) > 1) hscrollWrap.scrollLeft = d.left;
+});
 let lastSpec = "";
 function postHeaderSpec() {
-  return;   // הכותרת קבועה כעת בתוך מסגרת הטבלה (position:sticky), בלי סרגל מצד עמוד האב
   if (window.parent === window) return;
   const table = container.querySelector("table");
   if (!table || !table.tHead) return;
@@ -389,7 +404,6 @@ function showDebug() {
 }
 if (window.parent !== window) setTimeout(showDebug, 1500);
 function applySticky() {
-  return;   // הכותרת קבועה בתוך מסגרת הטבלה (position:sticky); התזוזה הישנה לפי הודעות עמוד האב גרמה להיעלמות הכותרות בגלילה מהירה
   const table = container.querySelector("table"); if (!table) return;
   const ths = table.querySelectorAll("thead th");
   let delta = 0;

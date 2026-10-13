@@ -226,9 +226,11 @@ title=חיפוש היתר עסקה חברות
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
-## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה יציבה (במחשב) - גרסה 3
+## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה וסרגל גלילה לרוחב קבוע (במחשב) - גרסה 4
 
 בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-150; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
+
+**מה חדש בגרסה 4:** סרגל גלילה לרוחב קבוע בתחתית החלון (מופיע רק כשהטבלה רחבה מהמסך והסרגל המקורי בתחתית הטבלה עדיין מחוץ למסך); הוא מסונכרן בשני הכיוונים עם הטבלה.
 
 **איך זה עובד:** ה-iframe שולח לעמוד האב את מבנה שורת הכותרת (טקסטים, מיקומים, עיצוב), והקוד בעמוד בונה ממנה סרגל `position:fixed` אמיתי שמופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET. הסרגל נשלט ישירות ע"י הדפדפן (לא מוזז מתוך ה-iframe), ולכן הוא יציב וללא רעידות.
 הקוד בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד).
@@ -237,7 +239,7 @@ title=חיפוש היתר עסקה חברות
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
 (function(){
-var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=150,spec=null,bar=null;
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=150,spec=null,bar=null,hs=null,sb=null,sbi=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -246,17 +248,32 @@ d.style.cssText="position:absolute;top:0;overflow:hidden;white-space:nowrap;text
 d.style.left=c.x+"px";d.style.width=c.w+"px";d.style.height=spec.h+"px";d.style.lineHeight=spec.h+"px";d.style.textAlign=c.a;
 d.style.color=spec.color;d.style.fontWeight=spec.fw;d.style.fontSize=spec.fs;d.style.borderLeft=c.bl;d.textContent=c.t;bar.appendChild(d);}
 }
+function buildSb(){
+if(!sb){sb=document.createElement("div");sb.id="hl-sb";sb.style.cssText="position:fixed;z-index:99;bottom:0;display:none;overflow-x:auto;overflow-y:hidden;direction:rtl;height:18px;background:#f4f7f7";
+sbi=document.createElement("div");sbi.style.height="1px";sb.appendChild(sbi);document.body.appendChild(sb);
+sb.addEventListener("scroll",function(){if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){f.contentWindow.postMessage({source:"harav-parent",type:"setScroll",left:sb.scrollLeft},O);}});}
+sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
+if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){sb.scrollLeft=hs.left;}
+}
 window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
 var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
 if(d.type==="resize"){f.style.height=d.height+"px";}
 if(d.type==="header"){spec=d;build();}
+if(d.type==="hscroll"){hs=d;buildSb();}
 });
 function tick(){
-if(spec){var r=f.getBoundingClientRect();var top=r.top+spec.tableTop;
+var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
+if(spec){var top=r.top+spec.tableTop;
 var show=Math.sign(OFFSET-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OFFSET)===1;}
-if(show){show=Math.sign(Math.floor(window.innerWidth/992))===1;}
+if(show){show=wide;}
 if(show){bar.style.display="block";bar.style.top=OFFSET+"px";bar.style.left=r.left+"px";bar.style.width=r.width+"px";}else{bar.style.display="none";}}
+if(hs){if(sb){var t2=r.top+hs.top,sh=Math.sign(hs.sw-hs.cw-1)===1;
+if(sh){sh=Math.sign(window.innerHeight-40-t2)===1;}
+if(sh){sh=Math.sign(t2+hs.h-window.innerHeight)===1;}
+if(sh){sh=Math.sign(t2+hs.h-OFFSET-80)===1;}
+if(sh){sh=wide;}
+if(sh){sb.style.display="block";sb.style.left=(r.left+hs.x)+"px";}else{sb.style.display="none";}}}
 window.requestAnimationFrame(tick);}
 window.requestAnimationFrame(tick);
 })();
