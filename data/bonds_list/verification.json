@@ -1,5 +1,12 @@
 {
  "updated": "2026-10-13",
- "status": "datawise_unavailable",
+ "status": "ok",
+ "datawise_date": "2026-10-12",
+ "expected": 708,
+ "maya": 708,
+ "missing_in_maya": [],
+ "missing_detail": [],
+ "extra_in_maya": [],
+ "limit": 21,
  "dropped_no_terms": []
 }
