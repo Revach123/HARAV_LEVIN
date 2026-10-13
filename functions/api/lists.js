@@ -63,10 +63,13 @@ export async function onRequestGet(context) {
       const approvedCond = isPrivate
         ? "agch_approved IN ('כן','רק פרטי')"
         : "agch_approved IN ('כן','רק כללי')";
-      const approvedExpr = `CASE WHEN ${approvedCond} THEN 1 ELSE 0 END`;
+      // "בחירת אג"ח מסוימים": החברה מאושרת רק לאג"ח שנבחרו ידנית (approved_bonds) - מוצגת כמאושרת, האג"ח עצמן ברשימת האג"ח
+      const selective = `agch_approved = 'בחירת אג"ח מסוימים'`;
+      const approvedExpr = `CASE WHEN ${approvedCond} OR ${selective} THEN 1 ELSE 0 END`;
       // מצב אג"ח: אין אג"ח / יש אג"ח - מאושר / יש אג"ח - לא מאושר
       // (tase_has_agch = "יש" מהבורסה; מאושר גובר גם אם הדגל מהבורסה לא עודכן)
       const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
+                                    WHEN ${selective} THEN 'יש אג"ח - מאושר (אג"ח מסוימים)'
                                     WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
                                     ELSE 'אין אג"ח' END`;
       // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי'), או "רק פרטי" במפורש

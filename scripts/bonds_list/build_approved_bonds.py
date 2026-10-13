@@ -51,6 +51,8 @@ OUT = os.path.join(ROOT, "data", "bonds_list")
 STATE_PATH = os.path.join(OUT, "state.json")
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
+SELECTIVE = 'בחירת אג"ח מסוימים'   # אישור לאג"ח מסוימות בלבד: נבחרות בדף הניהול ונשמרות בטבלה approved_bonds
+MANUAL_SCOPES = {"private", "general", "both"}
 def is_commercial_paper(type_str):
     """ני"ע מסחריים — לא אג"ח לצורך הרשימה הזאת (החרגה שלנו; coarse_type של Revach כן סופר אותם)."""
     return "מסחרי" in (type_str or "")
@@ -163,6 +165,48 @@ def load_companies(path=None):
     return raw
 
 
+def load_manual_bonds(path=None):
+    """אג"ח שנבחרו ידנית בדף הניהול (טבלת approved_bonds): {ח"פ: {security_id: scope}}.
+    404 / טבלה שעוד לא קיימת = אין אג"ח ידניות. כל שגיאה אחרת עוצרת את הריצה (לא להפיל בשקט אג"ח שנבחרו)."""
+    path = path or os.environ.get("MANUAL_BONDS_FILE")
+    if path:
+        with open(path, encoding="utf-8") as f:
+            raw = json.load(f)
+    else:
+        try:
+            raw = get_json(f"{HARAV_API}/api/approved-bonds", referer=HARAV_API)
+        except RuntimeError as e:
+            if "404" in str(e):
+                print("manual bonds: endpoint not deployed yet - none")
+                return {}
+            raise SystemExit(f"cannot load manual bonds list ({e}) - bond lists left untouched")
+    if isinstance(raw, dict):
+        if raw.get("ok") is False:
+            raise SystemExit(f"manual bonds API error: {raw.get('error')} - bond lists left untouched")
+        raw = raw.get("rows", [])
+    out = {}
+    for r in raw:
+        k, scope = chp_norm(r.get("chp_number")), (r.get("scope") or "").strip()
+        try:
+            sid = int(r.get("security_id"))
+        except (TypeError, ValueError):
+            continue
+        if k and scope in MANUAL_SCOPES:
+            out.setdefault(k, {})[sid] = scope
+    return out
+
+
+def company_names(companies):
+    """ח"פ -> שם להצגה, רק לחברות שאינן מחוסלות/מחוקות (לא מציגים אג"ח ידניות של חברה כזו)."""
+    out = {}
+    for c in companies:
+        k = chp_norm(c.get("chp_number"))
+        reg = (c.get("registry_status") or "").strip()
+        if k and k not in out and not reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע")):
+            out[k] = c.get("permit_name") or c.get("registrar_name") or ""
+    return out
+
+
 def approved_map(companies):
     """chp -> {company, agch_approved, is_private}. ח"פ כפול: מועדפת השורה המאושרת."""
     out = {}
@@ -195,8 +239,11 @@ def fetch_company(cid):
         return cid, "error"
 
 
-def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
-    """מחזיר (bonds, companies_found, errors). bonds: רשימת dict בסיסיים לכל אג"ח."""
+def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID, manual=None, names=None, snapshot=None):
+    """מחזיר (bonds, companies_found, errors). bonds: רשימת dict בסיסיים לכל אג"ח.
+    manual = {ח"פ: {security_id: scope}} - אג"ח שנבחרו ידנית; נכללות רק אם עדיין קיימות במאיה (סחירות, לא נמחקו).
+    snapshot (dict, ממולא במקום) = {ח"פ: [אג"ח במאיה]} לכל החברות - מקור הרשימה בחלון "בחירת אג"ח מסוימים"."""
+    manual, names = manual or {}, names or {}
     bonds, found, errors = [], 0, 0
     with concurrent.futures.ThreadPoolExecutor(WORKERS) as ex:
         for cid, body in ex.map(fetch, range(1, max_id + 1)):
@@ -208,31 +255,50 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
             found += 1
             k = chp_norm(body.get("corporateNo"))
             info = approved.get(k)
-            if not info:
+            picks = manual.get(k) or {}
+            if not info and not picks and snapshot is None:
                 continue
+            listed = []
             for sec in body.get("secrities") or []:
                 if sec.get("securityId") is None or sec.get("isDeleted") or not sec.get("isTradable"):
                     continue
                 ac = coarse_type(sec.get("securityType"))
                 if ac not in BOND_COARSE or is_commercial_paper(sec.get("securityType")):
                     continue
-                bonds.append({
-                    "security_id": int(sec["securityId"]),
-                    "security_name": (sec.get("securityName") or "").strip(),
-                    "symbol": sec.get("symbol") or "",
-                    "isin": sec.get("isin") or "",
-                    "security_type": sec.get("securityType") or "",
-                    "asset_class": ac,
-                    "issuer_name": info["company"],
-                    "company": info["company"],
-                    "chp_number": k,
-                    "notes": "; ".join(x for x in (GOYIM_NOTE if info["goyim"] else "", info["bond_note"]) if x),
-                    "goyim": info["goyim"],
-                    "bond_scope": info["bond_scope"],
-                    "agch_approved": info["agch_approved"],
-                    "is_private": info["is_private"],
-                    "is_tradable": sec.get("isTradable"),
-                })
+                sid = int(sec["securityId"])
+                name = (sec.get("securityName") or "").strip()
+                listed.append({"security_id": sid, "name": name, "symbol": sec.get("symbol") or "",
+                               "type": sec.get("securityType") or ""})
+                if info:
+                    bonds.append({
+                        "security_id": sid,
+                        "security_name": name,
+                        "symbol": sec.get("symbol") or "",
+                        "isin": sec.get("isin") or "",
+                        "security_type": sec.get("securityType") or "",
+                        "asset_class": ac,
+                        "issuer_name": info["company"],
+                        "company": info["company"],
+                        "chp_number": k,
+                        "notes": "; ".join(x for x in (GOYIM_NOTE if info["goyim"] else "", info["bond_note"]) if x),
+                        "goyim": info["goyim"],
+                        "bond_scope": info["bond_scope"],
+                        "agch_approved": info["agch_approved"],
+                        "is_private": info["is_private"],
+                        "is_tradable": sec.get("isTradable"),
+                    })
+                elif sid in picks and k in names:
+                    company = names[k]
+                    bonds.append({
+                        "security_id": sid, "security_name": name, "symbol": sec.get("symbol") or "",
+                        "isin": sec.get("isin") or "", "security_type": sec.get("securityType") or "",
+                        "asset_class": ac, "issuer_name": company, "company": company, "chp_number": k,
+                        "notes": "", "goyim": False, "bond_scope": "both", "agch_approved": SELECTIVE,
+                        "is_private": picks[sid] in ("private", "both"),
+                        "manual": True, "manual_scope": picks[sid], "is_tradable": sec.get("isTradable"),
+                    })
+            if snapshot is not None and k and listed:
+                snapshot.setdefault(k, []).extend(listed)
     return bonds, found, errors
 
 
@@ -340,7 +406,7 @@ def cross_check(bonds, approved, dw):
                 and str(r.get("securityFullTypeCode") or "").startswith(BOND_CODE_PREFIXES)
                 and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE
                 and not is_commercial_paper(types.get(str(r.get("securityFullTypeCode")), ""))}
-    mine = {b["security_id"] for b in bonds}
+    mine = {b["security_id"] for b in bonds if not b.get("manual")}
     missing, extra = sorted(expected - mine), sorted(mine - expected)
     by_id = {int(r["securityId"]): r for r in rows}
     detail = [{"id": i, "name": (by_id[i].get("securityName") or "").strip(),
@@ -377,6 +443,8 @@ def write_lists(bonds):
         return r
 
     def allowed(b, private):
+        if b.get("manual"):                 # אג"ח שנבחרה ידנית: לפי הבחירה (פרטי / כללי / שניהם)
+            return b["manual_scope"] in (("private", "both") if private else ("general", "both"))
         if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
             return True
         scope = b.get("bond_scope", "both")   # האם האישור לאג"ח הוא גם לכללי וגם לפרטי
@@ -419,8 +487,11 @@ def main(companies_path=None):
     if not approved:
         raise SystemExit("no approved companies - refusing to overwrite output")
 
-    bonds, found, errors = sweep_maya(approved)
-    print(f"maya: {found} companies found, {errors} request errors, {len(bonds)} approved bonds")
+    manual = load_manual_bonds()
+    print(f"manual bond picks: {sum(len(v) for v in manual.values())} bonds in {len(manual)} companies")
+    snapshot = {}
+    bonds, found, errors = sweep_maya(approved, manual=manual, names=company_names(companies), snapshot=snapshot)
+    print(f"maya: {found} companies found, {errors} request errors, {len(bonds)} bonds ({sum(1 for b in bonds if b.get('manual'))} picked manually)")
     if found < MIN_COMPANIES_FOUND or not bonds:
         raise SystemExit("maya sweep looks partial/blocked - output left untouched")
 
@@ -432,6 +503,8 @@ def main(companies_path=None):
     if check["status"] == "too_many_missing":
         raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
+    with open(os.path.join(OUT, "maya_securities.json"), "w", encoding="utf-8") as f:   # מקור חלון הבחירה בדף הניהול
+        json.dump({"updated": TODAY, "companies": snapshot}, f, ensure_ascii=False, separators=(",", ":"))
     add_terms(bonds)
     total_before = len(bonds)
     bonds, dropped = drop_empty_terms(bonds)

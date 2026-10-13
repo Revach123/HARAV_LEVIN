@@ -188,6 +188,11 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* כותרות קבועות (freeze panes) בגלילת העמוד, במחשב. במסך צר הטבלה נגללת לרוחב ולכן נשארת כמו קודם. */
+  @media (min-width: 900px) {
+    .table-wrap { overflow: visible; }
+    thead th, thead th.sortable { position: sticky; top: 56px; z-index: 6; box-shadow: 0 1px 0 var(--border); }
+  }
   thead th:first-child { border-radius: 10px 0 0 0; }
   thead th:last-child  { border-radius: 0 10px 0 0; }
   tbody tr { transition: background .1s; }
@@ -1073,8 +1078,7 @@ function renderLogin() {
 
 // ── ADMIN TABLE ──
 function renderAdminTable() {
-  const sorted = [...businesses].sort((a,b)=>
-    displayName(a).localeCompare(displayName(b),"he"));
+  const sorted = filteredAndSorted();   // לפי החיפוש / המסננים (ברירת מחדל: כל העסקים, לפי שם)
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
@@ -1118,6 +1122,15 @@ function renderAdminTable() {
       </div>
     </div>
     <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
+    <div class="filter-bar">
+      <div class="fb-group" style="flex:1;min-width:200px;">
+        <span class="fb-label">חיפוש</span>
+        <input type="text" id="adm-srch" class="fb-search${search ? " active" : ""}" autocomplete="off"
+          placeholder="🔍 שם, ח.פ., קטגוריה, אזור, הערות…" value="${escHtml(search)}" oninput="onAdminSearch(this.value)">
+      </div>
+      <div class="fb-group" style="justify-content:flex-end;"><span class="fb-label">&nbsp;</span>
+        <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
+    </div>
     <div class="table-wrap">
       <table>
         <colgroup>
@@ -1163,14 +1176,16 @@ function renderAdminTable() {
                   b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
                 }</td>
                 <td style="text-align:center;">
-                  <select onchange="inlineUpdate('${b.id}','agch_approved',this.value)"
+                  <select onchange="inlineUpdate('${b.id}','agch_approved',this.value).then(ok => ok && this.value===BOND_PICK && openBondPicker('${b.id}'))"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.agch_approved?"selected":""}>—</option>
                     <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
                     <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
                     <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
                     <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+                    <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים</option>
                   </select>
+                  ${b.agch_approved===BOND_PICK ? `<button class="act-btn" onclick="openBondPicker('${b.id}')" title="בחירת אג&quot;ח">⚙</button>` : ""}
                 </td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
@@ -1281,6 +1296,7 @@ function renderForm() {
             <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
             <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
             <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+            <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים (נבחרות בחלון נפרד)</option>
           </select>
         </div>
       </div>
@@ -1679,6 +1695,120 @@ async function doLookup() {
   }
 }
 
+const BOND_PICK = 'בחירת אג"ח מסוימים';
+
+// ─────────────────────────────────────────────
+//  בחירת אג"ח מסוימים (חלון קטן): הרשימה מהמאיה (נבנית יומית ב-bonds-list), פרטי / כללי לכל אג"ח,
+//  ושמירה בטבלה approved_bonds. אג"ח שנשמרה ונעלמה ממאיה נשארת שמורה, ולא מוצגת ברשימת האג"ח.
+// ─────────────────────────────────────────────
+let bpState = null;   // {biz, rows:[{id,name,symbol,inMaya,scope,saved}], updated}
+
+async function openBondPicker(bizId) {
+  const biz = businesses.find(b => b.id === bizId);
+  if (!biz) return;
+  const chp = String(biz.chp_number || "").trim();
+  bpState = { biz, rows: [], updated: "", loading: true, error: "" };
+  renderBondPicker();
+  if (!chp) { bpState.loading = false; bpState.error = "לחברה אין ח.פ."; return renderBondPicker(); }
+  try {
+    const [snap, saved] = await Promise.all([
+      fetch("/data/bonds_list/maya_securities.json").then(r => r.ok ? r.json() : null).catch(() => null),
+      apiFetch("/approved-bonds?chp=" + encodeURIComponent(chp)),
+    ]);
+    const norm = x => String(x || "").replace(/^0+/, "");
+    const inMaya = snap ? ((snap.companies || {})[norm(chp)] || (snap.companies || {})[chp] || []) : [];
+    const savedBy = new Map((saved.rows || []).map(r => [Number(r.security_id), r]));
+    const rows = inMaya.map(m => ({ id: m.security_id, name: m.name, symbol: m.symbol, inMaya: true,
+                                    scope: (savedBy.get(m.security_id) || {}).scope || "", saved: savedBy.has(m.security_id) }));
+    const seen = new Set(rows.map(r => r.id));
+    for (const r of saved.rows || []) {
+      if (!seen.has(Number(r.security_id))) rows.push({ id: Number(r.security_id), name: r.bond_name, symbol: r.symbol, inMaya: false, scope: r.scope, saved: true });
+    }
+    bpState.rows = rows; bpState.updated = snap ? snap.updated : ""; bpState.noSnap = !snap;
+  } catch (e) {
+    bpState.error = e.message === "Unauthorized" ? "נדרשת התחברות" : "שגיאה בטעינה: " + e.message;
+  }
+  bpState.loading = false;
+  renderBondPicker();
+}
+
+function bpToggle(i, which) {   // which: private | general
+  const r = bpState.rows[i];
+  const has = { private: r.scope === "private" || r.scope === "both", general: r.scope === "general" || r.scope === "both" };
+  has[which] = !has[which];
+  r.scope = has.private && has.general ? "both" : has.private ? "private" : has.general ? "general" : "";
+  renderBondPicker();
+}
+
+function bpAddById() {
+  const el = document.getElementById("bp-add-id");
+  const id = parseInt(el.value, 10);
+  if (!Number.isInteger(id) || id <= 0) { showStatus("מספר אג\"ח לא תקין"); return; }
+  if (!bpState.rows.some(r => r.id === id)) bpState.rows.push({ id, name: "אג\"ח מספר " + id, symbol: "", inMaya: false, scope: "both", saved: false, added: true });
+  renderBondPicker();
+}
+
+function bpRemove(i) { bpState.rows[i].remove = true; renderBondPicker(); }
+function closeBondPicker() { bpState = null; document.getElementById("bp-root")?.remove(); }
+
+async function saveBondPicker() {
+  const st = bpState; if (!st) return;
+  const items = st.rows.filter(r => !r.remove && r.scope).map(r => ({ security_id: r.id, bond_name: r.name, symbol: r.symbol, scope: r.scope }));
+  // מחיקה מפורשת בלבד: אג"ח שהיא במאיה והוסרה ממנה הסימון, או שהוסרה ידנית. אג"ח שנעלמה ממאיה לא נמחקת.
+  const remove = st.rows.filter(r => r.saved && (r.remove || (r.inMaya && !r.scope))).map(r => r.id);
+  try {
+    await apiFetch("/approved-bonds", { method: "PUT", body: JSON.stringify({ chp: String(st.biz.chp_number).trim(), items, remove }) });
+    showStatus("נשמר ✓ (הרשימה תתעדכן בריצה הבאה של bonds-list)");
+    closeBondPicker();
+  } catch (e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    showStatus("שגיאה בשמירה: " + e.message);
+  }
+}
+
+function renderBondPicker() {
+  document.getElementById("bp-root")?.remove();
+  const st = bpState; if (!st) return;
+  const btn = (on, label, i, which) => `<button onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-size:12px;${on ? "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);" : "background:var(--bg);color:var(--text);"}">${label}</button>`;
+  const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
+    ${st.noSnap ? `<p style="color:#b85c00;font-size:13px;">רשימת מאיה עדיין לא נבנתה (תיווצר בריצה הקרובה של bonds-list). אפשר להוסיף אג"ח לפי מספר.</p>` : `<p style="font-size:12px;color:var(--muted);">רשימת מאיה נכון ל-${escHtml(st.updated)}</p>`}
+    <div style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
+      ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r); return `
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
+          <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
+            <div style="font-size:11px;color:var(--muted);">מס' ${r.id}${r.symbol ? " · " + escHtml(r.symbol) : ""}${r.inMaya ? "" : " · לא קיימת כרגע במאיה (נשמרת, לא מוצגת ברשימה)"}</div></div>
+          <div style="white-space:nowrap;">${btn(r.scope === "private" || r.scope === "both", "פרטי", i, "private")} ${btn(r.scope === "general" || r.scope === "both", "כללי", i, "general")}
+            ${!r.inMaya ? `<button onclick="bpRemove(${i})" title="הסרה מהרשימה השמורה" style="border:none;background:none;cursor:pointer;">🗑</button>` : ""}</div>
+        </div>`; }).join("") || '<div style="padding:14px;text-align:center;color:var(--light);">אין אג"ח לחברה</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px;"><input id="bp-add-id" type="number" placeholder="הוספה לפי מספר אג&quot;ח" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;direction:ltr;">
+      <button class="btn-ghost" onclick="bpAddById()">הוסף</button></div>`;
+  const root = document.createElement("div");
+  root.id = "bp-root";
+  root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
+    <div class="modal-box" style="max-width:560px;">
+      <div class="modal-title">בחירת אג"ח מסוימים</div>
+      <div class="modal-biz-name">${escHtml(displayName(st.biz))} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
+      ${body}
+      <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeBondPicker()">ביטול</button>
+        <button class="btn-primary" onclick="saveBondPicker()" ${st.loading || st.error ? "disabled" : ""}>שמירה</button>
+      </div>
+    </div></div>`;
+  document.body.appendChild(root);
+}
+
+let admSearchTimer = null;
+function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מחדש אחרי הפסקת הקלדה, עם שמירת הפוקוס
+  search = v;
+  clearTimeout(admSearchTimer);
+  admSearchTimer = setTimeout(() => {
+    render();
+    const el = document.getElementById("adm-srch");
+    if (el) { el.focus(); el.setSelectionRange(v.length, v.length); }
+  }, 250);
+}
+
 async function inlineUpdate(id, field, value) {
   const biz = businesses.find(b => b.id === id);
   if (!biz) return;
@@ -1687,9 +1817,11 @@ async function inlineUpdate(id, field, value) {
     await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
     businesses = businesses.map(b => b.id === id ? updated : b);
     showStatus("עודכן ✓");
+    return true;
   } catch(e) {
-    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    if (e.message === "Unauthorized") { handleUnauth(); return false; }
     showStatus("שגיאה בשמירה"); render();
+    return false;
   }
 }
 
@@ -2112,7 +2244,7 @@ function exportCsv(allRows = false) {
       b.category       || "",
       b.biz_type       || "",
       b.visibility     || "",
-      b.agch_approved === "כן" ? "מאושר" : b.agch_approved === "לא" ? "לא מאושר" : "",
+      b.agch_approved === "כן" ? "מאושר" : b.agch_approved === "לא" ? "לא מאושר" : b.agch_approved === BOND_PICK ? "אג\"ח מסוימים" : "",
       b.tase_has_agch  || "",
       b.notes          || "",
     ].map(csvCell).join(",")),
