@@ -69,15 +69,21 @@ export async function onRequestGet(context) {
       const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
                                     WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
                                     ELSE 'אין אג"ח' END`;
-      const visClause = isPrivate
-        ? "visibility = 'פרטי'"
-        : "COALESCE(visibility,'') <> 'פרטי'";
+      // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי')
+      const hasPrivateExpr = `CASE WHEN visibility = 'פרטי' THEN 'כן' ELSE 'לא' END`;
+      // סימון מפורש "רק פרטי": agch_approved = 'רק פרטי', או הערה שכתוב בה "רק ... פרטי" (למשל "מאושר רק לאג"ח פרטי בלבד")
+      const onlyPrivateExplicit = `(COALESCE(agch_approved,'') = 'רק פרטי'
+                                    OR (COALESCE(notes,'') LIKE '%רק%' AND COALESCE(notes,'') LIKE '%פרטי%'))`;
+      // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
+      // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
+      const whereClause = isPrivate ? "visibility = 'פרטי'" : `NOT ${onlyPrivateExplicit}`;
       sql = `
         SELECT permit_name, chp_number, category, region,
+               ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status
         FROM businesses
-        WHERE ${visClause}
+        WHERE ${whereClause}
         ORDER BY permit_name`;
     }
 

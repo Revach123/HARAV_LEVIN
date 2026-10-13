@@ -22,6 +22,10 @@ scripts/registry_refresh/refresh_businesses.py
   * רשימת datawise קטנה מ-1000 ניירות.
 לא נכתב שום דבר עבור עסק שלא נמצא (כמו ב-Worker). לא נמחק כלום.
 
+--scope: מה לעדכן. all (ברירת מחדל, כמו הריצה היומית) = שם רשמי + סוג עסק + דגל אג"ח; bonds = דגל אג"ח בלבד (קצר, מספר שניות
+  מול datawise, לעדכון ידני מדף הניהול); names = שם רשמי + סוג עסק בלבד. אותה לוגיקה בדיוק בכל המצבים (אותן פונקציות).
+  ריצה חלקית כותבת דוח משלה (last_run_<scope>.json, rollback_<scope>.sql) כדי לא לדרוס את הדוח של הריצה המלאה.
+
 פלט: reports/registry_refresh/last_run.json — סיכום + רשימת השינויים (ערך ישן/חדש) לשחזור.
 """
 import argparse
@@ -269,48 +273,57 @@ def apply_updates(d1, stmts, max_bytes=60000):
 
 
 # ── main ─────────────────────────────────────────────────────────────────────
-def main(apply=False):
+def main(apply=False, scope="all"):
+    do_names = scope in ("all", "names")
+    do_bonds = scope in ("all", "bonds")
+    report = REPORT if scope == "all" else REPORT.replace("last_run.json", f"last_run_{scope}.json")
+    rollback_name = "rollback.sql" if scope == "all" else f"rollback_{scope}.sql"
     d1 = D1()
     businesses, source = load_businesses(d1)
     numerics = sorted({numeric_chp(b["chp_number"]) for b in businesses if numeric_chp(b["chp_number"])}, key=int)
     print(f"businesses with chp: {len(businesses)} (numeric ח\"פ: {len(numerics)}) from {source}")
 
     registry, failed_batches = {}, 0
-    for src in SOURCES:    # עדיפות: ראשון מנצח
-        got, failed = fetch_source(numerics, src)
-        failed_batches += failed
-        for k, v in got.items():
-            registry.setdefault(k, v)
-        print(f"  {src['kind']}: {len(got)} found, {failed} failed batches")
-    # הזדמנות שנייה (זהה ללוגיקה של ה-Worker): שליפה בודדת לכל ח"פ שהבאץ' לא מצא — כדי לוודא שהשיטה
-    # החדשה לא מחמיצה עסקים שהישנה כן הייתה מוצאת.
-    unfound = [n for n in numerics if n not in registry]
-    recovered = 0
-    for n in unfound:
-        for src in SOURCES:
-            try:
-                q = urllib.parse.quote(json.dumps({src["id"]: str(n)}))
-                one = http_json(f"{GOV_SEARCH}?resource_id={src['resource']}&filters={q}&limit=1")
-            except RuntimeError:
-                continue
-            tmp = {}
-            _records_to_found((one.get("result") or {}).get("records"), src, tmp)
-            if tmp:
-                registry.setdefault(n, next(iter(tmp.values())))
-                recovered += 1
-                break
-            time.sleep(0.3)
-    print(f"  second-chance single lookups: {len(unfound)} tried, {recovered} recovered")
+    unfound, recovered = [], 0
+    if do_names:
+        for src in SOURCES:    # עדיפות: ראשון מנצח
+            got, failed = fetch_source(numerics, src)
+            failed_batches += failed
+            for k, v in got.items():
+                registry.setdefault(k, v)
+            print(f"  {src['kind']}: {len(got)} found, {failed} failed batches")
+        # הזדמנות שנייה (זהה ללוגיקה של ה-Worker): שליפה בודדת לכל ח"פ שהבאץ' לא מצא — כדי לוודא שהשיטה
+        # החדשה לא מחמיצה עסקים שהישנה כן הייתה מוצאת.
+        unfound = [n for n in numerics if n not in registry]
+        recovered = 0
+        for n in unfound:
+            for src in SOURCES:
+                try:
+                    q = urllib.parse.quote(json.dumps({src["id"]: str(n)}))
+                    one = http_json(f"{GOV_SEARCH}?resource_id={src['resource']}&filters={q}&limit=1")
+                except RuntimeError:
+                    continue
+                tmp = {}
+                _records_to_found((one.get("result") or {}).get("records"), src, tmp)
+                if tmp:
+                    registry.setdefault(n, next(iter(tmp.values())))
+                    recovered += 1
+                    break
+                time.sleep(0.3)
+        print(f"  second-chance single lookups: {len(unfound)} tried, {recovered} recovered")
     found_ratio = len(registry) / len(numerics) if numerics else 0
 
     bond_ids, dw_rows, dw_date = None, 0, None
-    try:
-        bond_ids, dw_rows, dw_date = fetch_bond_corporate_ids()
-    except RuntimeError as e:
-        print(f"WARNING: datawise unavailable: {e}", file=sys.stderr)
-    if bond_ids is not None and dw_rows < MIN_DATAWISE_ROWS:
-        print(f"WARNING: datawise list too small ({dw_rows}) - skipping tase_has_agch", file=sys.stderr)
-        bond_ids = None
+    if do_bonds:
+        try:
+            bond_ids, dw_rows, dw_date = fetch_bond_corporate_ids()
+        except RuntimeError as e:
+            print(f"WARNING: datawise unavailable: {e}", file=sys.stderr)
+        if bond_ids is not None and dw_rows < MIN_DATAWISE_ROWS:
+            print(f"WARNING: datawise list too small ({dw_rows}) - skipping tase_has_agch", file=sys.stderr)
+            bond_ids = None
+    if scope == "bonds" and bond_ids is None:
+        sys.exit("datawise unavailable or too small - nothing was updated")
 
     changes = compute_changes(businesses, registry, bond_ids)
     not_found = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name"),
@@ -318,6 +331,8 @@ def main(apply=False):
                   "biz_type": b.get("biz_type")}
                  for b in businesses
                  if numeric_chp(b.get("chp_number")) and numeric_chp(b["chp_number"]) not in registry]
+    if not do_names:
+        not_found = []
     non_numeric = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name")}
                    for b in businesses if not numeric_chp(b.get("chp_number"))]
     # הגנה: סופרים רק *דריסה* של שם קיים. מילוי שם ריק לא נחשב (זה בדיוק מה שאמור לקרות)
@@ -328,7 +343,7 @@ def main(apply=False):
     filled = {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
               for f in ("registrar_name", "biz_type")}
     summary = {
-        "recovered_by_single_lookup": recovered, "unfound_after_batch": len(unfound),
+        "scope": scope, "recovered_by_single_lookup": recovered, "unfound_after_batch": len(unfound),
         "values_lost": lost,
         "empty_before": {f: _empty(f) for f in ("registrar_name", "biz_type")},
         "empty_after": {f: _empty(f) - filled[f] for f in ("registrar_name", "biz_type")},
@@ -346,7 +361,7 @@ def main(apply=False):
     problems = []
     if lost:
         problems.append(f"{lost} existing values would be blanked")
-    if numerics and found_ratio < MIN_FOUND_RATIO:
+    if do_names and numerics and found_ratio < MIN_FOUND_RATIO:
         problems.append(f"registry found ratio {found_ratio:.2f} < {MIN_FOUND_RATIO}")
     if name_changes > max(MAX_NAME_CHANGE_ABS, MAX_NAME_CHANGE_PCT * len(businesses)):
         problems.append(f"too many name overwrites ({name_changes})")
@@ -359,8 +374,8 @@ def main(apply=False):
             old_by_id.setdefault(c["id"], {})[c["field"]] = c["old"]
         rollback = [f"UPDATE businesses SET " + ", ".join(f"{f} = {sql_q(v)}" for f, v in fl.items())
                     + f" WHERE id = {sql_q(i)};" for i, fl in old_by_id.items()]
-        os.makedirs(os.path.dirname(REPORT), exist_ok=True)
-        with open(os.path.join(os.path.dirname(REPORT), "rollback.sql"), "w", encoding="utf-8") as f:
+        os.makedirs(os.path.dirname(report), exist_ok=True)
+        with open(os.path.join(os.path.dirname(report), rollback_name), "w", encoding="utf-8") as f:
             f.write("\n".join(rollback))
         applied = apply_updates(d1, build_update_sql(changes))
         mode = "applied"
@@ -376,8 +391,8 @@ def main(apply=False):
         mode = "blocked by guards"
     summary.update({"mode": mode, "statements_applied": applied, "problems": problems})
 
-    os.makedirs(os.path.dirname(REPORT), exist_ok=True)
-    with open(REPORT, "w", encoding="utf-8") as f:
+    os.makedirs(os.path.dirname(report), exist_ok=True)
+    with open(report, "w", encoding="utf-8") as f:
         json.dump({"summary": summary, "changes": changes[:3000], "not_found": not_found,
                    "non_numeric_chp": non_numeric}, f, ensure_ascii=False, indent=1)
     print(json.dumps(summary, ensure_ascii=False))
@@ -388,4 +403,7 @@ def main(apply=False):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true", help="כתיבה ל-D1 (דורש סודות Cloudflare)")
-    main(ap.parse_args().apply)
+    ap.add_argument("--scope", choices=("all", "bonds", "names"), default="all",
+                    help="all = הכול (ברירת מחדל); bonds = דגל אג\"ח בלבד (קצר); names = שם וסוג בלבד")
+    args = ap.parse_args()
+    main(args.apply, args.scope)

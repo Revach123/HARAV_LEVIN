@@ -5,12 +5,20 @@
 // (scripts/registry_refresh/refresh_businesses.py), עם כתיבה ל-D1 (apply=true). כל שינוי בלוגיקה נעשה
 // במקום אחד, ומשפיע על הריצה היומית ועל הכפתור בשווה.
 //
+// scope (בגוף הבקשה, JSON): "bonds" (ברירת מחדל, קצר: דגל אג"ח בלבד) | "all" (הכול, כמו הריצה היומית) | "names".
+//
 // דרישות:
 //   env.ADMIN_PASSWORD         - כמו שאר נתיבי הניהול
 //   env.GITHUB_DISPATCH_TOKEN  - מפתח GitHub (fine-grained, רק הריפו הזה, הרשאה Actions: Read and write)
 //     wrangler pages secret put GITHUB_DISPATCH_TOKEN --project-name harav-levin   (ואז פריסה מחדש)
 
 const GH = { owner: "Revach123", repo: "HARAV_LEVIN", workflow: "registry-refresh.yml", ref: "main" };
+const SCOPES = ["bonds", "all", "names"];
+const SCOPE_MESSAGE = {
+  bonds: "הופעל עדכון דגל האג\"ח בלבד (קצר, כדקה-שתיים). אחריו רענן את הרשימה.",
+  all: "הופעל עדכון מלא (שמות, סוגים ודגל אג\"ח), אותה ריצה של הריצה היומית. נמשך כ-6 דקות; אחריו רענן את הרשימה.",
+  names: "הופעל עדכון שמות וסוגים בלבד (כ-6 דקות). אחריו רענן את הרשימה.",
+};
 const RUNS_URL = `https://github.com/${GH.owner}/${GH.repo}/actions/workflows/${GH.workflow}`;
 
 function isAuthed(request, env) {
@@ -29,6 +37,15 @@ export async function onRequestPost({ request, env }) {
     }, { status: 500 });
   }
 
+  let scope = "bonds";
+  try {
+    const body = await request.json();
+    if (body && body.scope !== undefined) scope = String(body.scope);
+  } catch { /* בלי גוף = ברירת המחדל */ }
+  if (!SCOPES.includes(scope)) {
+    return Response.json({ code: "bad_scope", error: `scope לא חוקי: ${scope}` }, { status: 400 });
+  }
+
   let res;
   try {
     res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}/actions/workflows/${GH.workflow}/dispatches`, {
@@ -40,7 +57,7 @@ export async function onRequestPost({ request, env }) {
         "User-Agent": "harav-levin-admin",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ref: GH.ref, inputs: { apply: "true" } }),
+      body: JSON.stringify({ ref: GH.ref, inputs: { apply: "true", scope } }),
     });
   } catch (e) {
     return Response.json({ code: "github_unreachable", error: `לא ניתן להגיע ל-GitHub: ${e.message}` }, { status: 502 });
@@ -52,7 +69,8 @@ export async function onRequestPost({ request, env }) {
   }
   return Response.json({
     triggered: true,
-    message: "הופעלה אותה ריצה של הריצה היומית. היא נמשכת כ-6 דקות; אחריה רענן את הרשימה.",
+    scope,
+    message: SCOPE_MESSAGE[scope],
     runsUrl: RUNS_URL,
   });
 }

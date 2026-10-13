@@ -199,6 +199,10 @@ title=חיפוש היתר עסקה חברות
   (`bonds-list`, `scripts/bonds_list/build_approved_bonds.py`) מדף החברה במאיה, רק לחברות מאושרות, רק ני"ע סחירים,
   בלי ני"ע מסחריים ובלי ניירות שאין להם שום תנאי (שער / ריבית / פדיון). ה-API (`/api/lists`) כבר לא מגיש אג"ח (410).
   האתר, דף הניהול ו-`display.html` (WordPress) קוראים את אותם קבצים.
-- **ריצה יומית אחת לשמות, סוגים ודגל "יש אג"ח":** workflow `registry-refresh`. הכפתור "עדכן אג"ח מבורסה" לא מחשב כלום
-  בעצמו, הוא מפעיל את אותה ריצה (`apply=true`). נדרש מפתח: `wrangler pages secret put GITHUB_DISPATCH_TOKEN --project-name harav-levin`
-  (fine-grained token, הריפו הזה בלבד, הרשאה Actions: Read and write), ואז פריסה מחדש.
+- **ריצה יומית אחת לשמות, סוגים ודגל "יש אג"ח":** workflow `registry-refresh` (`--scope all`). בדף הניהול שני כפתורים, שניהם מפעילים
+  את אותו סקריפט בלי עותק של הלוגיקה: "עדכן אג"ח מבורסה" = `--scope bonds` (קצר, רק הדגל) ו"עדכון מלא" = `--scope all`
+  (כמו הריצה היומית, כ-6 דקות). ריצה חלקית כותבת דוח נפרד (`last_run_<scope>.json`). נדרש מפתח:
+  `wrangler pages secret put GITHUB_DISPATCH_TOKEN --project-name harav-levin` (fine-grained token, הריפו הזה בלבד, הרשאה
+  Actions: Read and write), ואז פריסה מחדש.
+- **הרשימה הכללית (חברות ואג"ח):** כוללת גם עסקים עם היתר עסקה פרטי, חוץ ממי שמסומן במפורש "רק פרטי"
+  (`agch_approved = 'רק פרטי'` או הערה שבה כתוב "רק ... פרטי"). עמודה "קיים היתר עסקה פרטי" מראה מי מהם.

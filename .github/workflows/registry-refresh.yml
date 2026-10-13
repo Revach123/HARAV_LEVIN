@@ -11,6 +11,11 @@ on:
         description: "כתיבה ל-D1 (true) או בדיקה בלבד (false)"
         type: boolean
         default: false
+      scope:
+        description: "מה לעדכן: all = שמות + סוגים + דגל אג\"ח (כמו הריצה היומית, כ-6 דקות); bonds = דגל אג\"ח בלבד (קצר); names = שמות וסוגים בלבד"
+        type: choice
+        options: [all, bonds, names]
+        default: all
   schedule:
     - cron: "40 2 * * *"
   push:
@@ -44,9 +49,10 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_D1_TOKEN: ${{ secrets.CF_D1_TOKEN }}
           APPLY: ${{ (github.event_name == 'workflow_dispatch' && inputs.apply) || github.event_name == 'schedule' }}
+          SCOPE: ${{ inputs.scope || 'all' }}   # בריצה מתוזמנת (schedule) אין inputs, לכן all
         run: |
-          if [ "$APPLY" = "true" ]; then python scripts/registry_refresh/refresh_businesses.py --apply
-          else python scripts/registry_refresh/refresh_businesses.py; fi
+          if [ "$APPLY" = "true" ]; then python scripts/registry_refresh/refresh_businesses.py --apply --scope "$SCOPE"
+          else python scripts/registry_refresh/refresh_businesses.py --scope "$SCOPE"; fi
       - name: Commit report
         if: always()
         run: |
