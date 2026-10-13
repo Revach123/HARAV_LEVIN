@@ -26,6 +26,7 @@ HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל ל
 import concurrent.futures
 import csv
 import datetime
+import decimal
 import json
 import os
 import re
@@ -88,6 +89,43 @@ def is_goyim(notes_raw):
     return (notes_raw or "").strip().replace("\xa0", " ") in NOTES_GOYIM
 
 
+def _clean(text):
+    """רווחים רגילים בלבד (כולל NBSP), בלי כפילויות."""
+    return " ".join(str(text or "").split())
+
+
+def bond_scope(agch, notes_raw):
+    """לאילו רשימות מאושרות אג"ח החברה: both | private_only | general_only.
+    מהשדה "אישור אג"ח" ('רק פרטי' / 'רק כללי'), או מהערה מפורשת כמו "מאושר רק לאג"ח פרטי בלבד".
+    זה נוגע לאישור האג"ח בלבד, לא להיתר העסקה של החברה."""
+    n = _clean(notes_raw)
+    if agch == "רק פרטי" or 'לאג"ח פרטי בלבד' in n or 'רק לאג"ח פרטי' in n:
+        return "private_only"
+    if agch == "רק כללי" or 'לאג"ח כללי בלבד' in n or 'רק לאג"ח כללי' in n:
+        return "general_only"
+    return "both"
+
+
+def bond_note(notes_raw):
+    """הערת החברה כשהיא נוגעת לאג"ח (מוצגת כהערה בעמודת אישור האג"ח); אחרת ריק."""
+    n = _clean(notes_raw)
+    return n if ('אג"ח' in n or "אגח" in n) else ""
+
+
+def fmt_interest(v):
+    """ריבית לתצוגה: עד 2 ספרות אחרי הנקודה, בלי אפסים מיותרים (8.13420 -> 8.13, 9.49000 -> 9.49, 3.50000 -> 3.5)."""
+    if v in ("", None):
+        return ""
+    try:
+        q = decimal.Decimal(str(v)).quantize(decimal.Decimal("0.01"), rounding=decimal.ROUND_HALF_UP)
+    except decimal.InvalidOperation:
+        return v
+    t = f"{q:f}"
+    if "." in t:
+        t = t.rstrip("0").rstrip(".")
+    return "0" if t in ("-0", "") else t
+
+
 def http_get(url, accept="application/json", referer="https://market.tase.co.il/"):
     req = urllib.request.Request(url, headers={
         "User-Agent": "Mozilla/5.0", "Accept": accept, "Referer": referer})
@@ -140,6 +178,8 @@ def approved_map(companies):
             "agch_approved": status,
             "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
+            "bond_scope": bond_scope(status, c.get("notes")),
+            "bond_note": bond_note(c.get("notes")),
         }
     return out
 
@@ -183,8 +223,9 @@ def sweep_maya(approved, fetch=fetch_company, max_id=MAX_ID):
                     "issuer_name": info["company"],
                     "company": info["company"],
                     "chp_number": k,
-                    "notes": GOYIM_NOTE if info["goyim"] else "",
+                    "notes": "; ".join(x for x in (GOYIM_NOTE if info["goyim"] else "", info["bond_note"]) if x),
                     "goyim": info["goyim"],
+                    "bond_scope": info["bond_scope"],
                     "agch_approved": info["agch_approved"],
                     "is_private": info["is_private"],
                     "is_tradable": sec.get("isTradable"),
@@ -208,13 +249,28 @@ def add_terms(bonds, fetch=fetch_terms):
         last = d.get("LastRate")
         b.update({
             "redemption_date": d.get("RedemptionDate") or "",
-            "annual_interest": "" if d.get("AnnualInterest") in (None, "") else d.get("AnnualInterest"),
+            "annual_interest": fmt_interest(d.get("AnnualInterest")),
             "linkage": d.get("Linkage") or "",
             "linkage_type": d.get("LinkageType") or "",
             "last_price": last if last not in (None, "") else (d.get("BaseRate") or ""),
+            # "תשואה שנתית" לפי הבורסה (כנראה 12 חודשים אחרונים / מתחילת שנה; ההגדרה המדויקת טרם אומתה)
             "annual_yield": "" if d.get("AnnualYield") is None else d.get("AnnualYield"),
             "base_indices": "" if d.get("BaseIndices") is None else d.get("BaseIndices"),
         })
+
+
+def drop_empty_terms(bonds):
+    """נייר בלי שום תנאי (אין שער, ריבית או מועד פדיון) = כנראה כבר לא נסחר (נפדה/נמחק) ומאיה עוד מציגה אותו.
+    לא מפרסמים אותו. מוחזר (נשארים, הוסרו)."""
+    kept, dropped = [], []
+    for b in bonds:
+        has_terms = any(b.get(k) not in ("", None) for k in ("redemption_date", "annual_interest", "last_price"))
+        (kept if has_terms else dropped).append(b)
+    return kept, dropped
+
+
+# מגן: אם הרבה ניירות "ריקים" בבת אחת, כנראה שליפת התנאים נכשלה (לא שהם באמת נפדו) - לא דורסים את הפלט.
+MAX_DROPPED_ABS, MAX_DROPPED_PCT = 5, 0.02
 
 
 # ── 3ב. אימות מול datawise הרשמי (Securities Basic, חינמי) ──────────────────
@@ -315,10 +371,11 @@ def write_lists(bonds):
     def allowed(b, private):
         if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
             return True
-        if private:   # סימון "פרטי" + מאושר (כן / רק פרטי)
-            return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי")
-        # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; רק "רק פרטי" לא נכנס
-        return b["agch_approved"] in ("כן", "רק כללי")
+        scope = b.get("bond_scope", "both")   # האם האישור לאג"ח הוא גם לכללי וגם לפרטי
+        if private:   # סימון "פרטי" + מאושר (כן / רק פרטי), ולא אישור "רק כללי"
+            return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי") and scope != "general_only"
+        # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; "רק פרטי" (בשדה האישור או בהערה מפורשת) לא נכנס
+        return b["agch_approved"] in ("כן", "רק כללי") and scope != "private_only"
 
     def dump(name, rows, cols):
         rows = [{c: r.get(c, "") for c in cols} for r in rows]
@@ -368,6 +425,16 @@ def main(companies_path=None):
         raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
     add_terms(bonds)
+    total_before = len(bonds)
+    bonds, dropped = drop_empty_terms(bonds)
+    if len(dropped) > max(MAX_DROPPED_ABS, int(MAX_DROPPED_PCT * total_before)):
+        raise SystemExit(f"{len(dropped)}/{total_before} bonds came back without terms - terms fetch looks partial, bond lists left untouched")
+    if dropped:
+        print(f"dropped {len(dropped)} bond(s) without any terms:", [(b['security_id'], b['company']) for b in dropped])
+    check["dropped_no_terms"] = [{"security_id": b["security_id"], "security_name": " ".join(str(b["security_name"]).split()),
+                                  "company": b["company"], "chp_number": b["chp_number"]} for b in dropped]
+    with open(os.path.join(OUT, "verification.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": TODAY, **check}, f, ensure_ascii=False, indent=1)
     state = load_state()
     apply_first_seen(bonds, state)
     counts = write_lists(bonds)

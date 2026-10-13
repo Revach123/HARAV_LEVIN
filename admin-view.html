@@ -53,7 +53,7 @@
 <div class="wrap">
   <div class="nav" id="nav">
     <button data-type="companies-all" class="active">רשם החברות</button>
-    <button data-type="bonds-all">נתוני אג"ח מלאים</button>
+    <button data-type="bonds-all">אג"ח מאושרות (פרטי + כללי)</button>
   </div>
   <div id="container"></div>
 </div>
@@ -61,7 +61,7 @@
 <script>
 const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same site
 
-const LABELS = { companies: "רשם החברות", bonds: 'נתוני אג"ח מלאים' };
+const LABELS = { companies: "רשם החברות", bonds: 'אג"ח מאושרות (פרטי + כללי)' };
 
 const el = (t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
 const looksNum = v => v !== "" && v != null && !isNaN(Number(v));
@@ -73,7 +73,9 @@ async function load(type) {
   const container = document.getElementById("container");
   container.innerHTML = '<div class="state">טוען…</div>';
   try {
-    const res = await fetch(`${API_BASE}/api/lists?type=${type}`);
+    // אג"ח: הקבצים הסטטיים של מאיה (רשימה אחת); חברות: ה-API
+    const url = type.startsWith("bonds") ? `${API_BASE}/data/bonds_list/bonds_all.json` : `${API_BASE}/api/lists?type=${type}`;
+    const res = await fetch(url);
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || "error");
     state.rows = data.rows || [];
@@ -96,7 +98,9 @@ function render() {
   const tools = el("div","tools");
   const search = el("input","search"); search.type="search"; search.placeholder="חיפוש בכל העמודות…";
   const csv = el("button","btn-csv","⬇ ייצוא CSV");
-  csv.onclick = ()=>{ window.location.href = `${API_BASE}/api/lists?type=${state.type}&format=csv`; };
+  csv.onclick = ()=>{ window.location.href = state.type.startsWith("bonds")
+    ? `${API_BASE}/data/bonds_list/bonds_all.csv`
+    : `${API_BASE}/api/lists?type=${state.type}&format=csv`; };
   tools.append(search, csv);
   bar.append(info, tools);
   container.appendChild(bar);

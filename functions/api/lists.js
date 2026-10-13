@@ -3,11 +3,9 @@
 //   סינון (ציבורי):
 //     /api/lists?type=companies-private
 //     /api/lists?type=companies-general
-//     /api/lists?type=bonds-private
-//     /api/lists?type=bonds-general
 //   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
 //     /api/lists?type=companies-all
-//     /api/lists?type=bonds-all
+//   אג"ח: לא כאן. קבצים סטטיים /data/bonds_list/bonds_{private,general,all}.{json,csv} (נבנים יומית ממאיה).
 //   פורמט:
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
@@ -62,43 +60,48 @@ export async function onRequestGet(context) {
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
-      const approvedExpr = isPrivate
-        ? "CASE WHEN agch_approved IN ('כן','רק פרטי') THEN 1 ELSE 0 END"
-        : "CASE WHEN agch_approved IN ('כן','רק כללי') THEN 1 ELSE 0 END";
-      const visClause = isPrivate
-        ? "visibility = 'פרטי'"
-        : "COALESCE(visibility,'') <> 'פרטי'";
+      const approvedCond = isPrivate
+        ? "agch_approved IN ('כן','רק פרטי')"
+        : "agch_approved IN ('כן','רק כללי')";
+      const approvedExpr = `CASE WHEN ${approvedCond} THEN 1 ELSE 0 END`;
+      // מצב אג"ח: אין אג"ח / יש אג"ח - מאושר / יש אג"ח - לא מאושר
+      // (tase_has_agch = "יש" מהבורסה; מאושר גובר גם אם הדגל מהבורסה לא עודכן)
+      const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
+                                    WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
+                                    ELSE 'אין אג"ח' END`;
+      // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי'), או "רק פרטי" במפורש
+      const hasPrivateExpr = `CASE WHEN COALESCE(visibility,'') IN ('פרטי','רק פרטי') THEN 'כן' ELSE 'לא' END`;
+      // "רק פרטי" על החברה עצמה (היתר העסקה): visibility = 'רק פרטי', או הערה שכתוב בה במפורש "רק פרטי"/"פרטי בלבד".
+      // הערות שנוגעות לאג"ח (למשל "מאושר רק לאג"ח פרטי בלבד") הן על אישור האג"ח ולא על החברה, ולכן לא נספרות כאן.
+      const onlyPrivateExplicit = `(COALESCE(visibility,'') = 'רק פרטי'
+        OR ((COALESCE(notes,'') LIKE '%רק פרטי%' OR COALESCE(notes,'') LIKE '%פרטי בלבד%')
+            AND COALESCE(notes,'') NOT LIKE '%אג"ח%' AND COALESCE(notes,'') NOT LIKE '%אגח%'))`;
+      // הערה על אישור האג"ח (מוצגת בעמודת האג"ח): הערות שמזכירות אג"ח
+      const bondsNoteExpr = `CASE WHEN COALESCE(notes,'') LIKE '%אג"ח%' OR COALESCE(notes,'') LIKE '%אגח%'
+                                  THEN REPLACE(notes, char(160), ' ') ELSE '' END`;
+      // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
+      // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
+      const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
       sql = `
         SELECT permit_name, chp_number, category, region,
-               ${approvedExpr} AS approved
+               ${hasPrivateExpr} AS has_private_permit,
+               ${approvedExpr} AS approved,
+               ${bondsStatusExpr} AS bonds_status,
+               ${bondsNoteExpr} AS bonds_note
         FROM businesses
-        WHERE ${visClause}
+        WHERE ${whereClause}
         ORDER BY permit_name`;
     }
 
-    else if (type === "bonds-private" || type === "bonds-general") {
-      const isPrivate = type === "bonds-private";
-      const approvedClause = isPrivate
-        ? "biz.agch_approved IN ('כן','רק פרטי')"
-        : "biz.agch_approved IN ('כן','רק כללי')";
-      const visClause = isPrivate ? "AND biz.visibility = 'פרטי'" : "";
-      sql = `
-        SELECT b.security_id, b.bond_name, b.symbol,
-               biz.permit_name AS company, b.corporate_id,
-               b.last_price, b.change_pct, b.interest, b.maturity_date,
-               b.linkage, b.base_index, b.turnover_kils, b.market_cap_kils
-        FROM bonds b
-        JOIN businesses biz ON biz.chp_number = b.corporate_id
-        WHERE ${approvedClause} ${visClause}
-        ORDER BY biz.permit_name, b.bond_name`;
-    }
 
     // ── ייצוא גולמי מלא ──
     else if (type === "companies-all") {
       sql = `SELECT * FROM businesses ORDER BY permit_name`;
     }
-    else if (type === "bonds-all") {
-      sql = `SELECT * FROM bonds ORDER BY company_full_name, bond_name`;
+    // אג"ח: רשימה אחת בלבד - קבצים סטטיים שנבנים כל יום מדף החברה במאיה (scripts/bonds_list), בלי טבלת bonds.
+    else if (type.startsWith("bonds-")) {
+      return json({ ok: false, error: "moved", type,
+        message: 'רשימת האג"ח היא קבצים סטטיים: /data/bonds_list/bonds_private|bonds_general|bonds_all (.json / .csv)' }, 410);
     }
 
     else {

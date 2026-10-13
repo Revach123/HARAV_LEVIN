@@ -854,20 +854,27 @@ const PUB_COLS = {
     { key:"chp_number",  label:'ח"פ',             type:"ltr"  },
     { key:"category",    label:"קטגוריה"                       },
     { key:"region",      label:"אזור"                         },
+    { key:"has_private_permit", label:"קיים היתר עסקה פרטי", type:"yesno", generalOnly:true },
     { key:"approved",    label:'מאושר לאג"ח',      type:"badge"},
   ],
   bonds: [
     { key:"bond_name",     label:'שם אג"ח',    type:"name" },
     { key:"symbol",        label:"סימול"                  },
     { key:"company",       label:"חברה",       type:"name" },
-    { key:"interest",      label:"ריבית %",    type:"num"  },
+    { key:"is_private",   label:"קיים היתר עסקה פרטי", type:"yesno", generalOnly:true },
+    { key:"interest",      label:"ריבית %",    type:"pct"  },
     { key:"maturity_date", label:"מועד פדיון"             },
     { key:"linkage",       label:"הצמדה"                  },
     { key:"last_price",    label:"שער אחרון",  type:"num"  },
-    { key:"change_pct",    label:"שינוי %",    type:"chg"  },
+    { key:"annual_yield",  label:"תשואה שנתית", type:"pct"  },   // AnnualYield של הבורסה (כנראה 12 חודשים אחרונים; טרם אומת)
     { key:"notes",         label:"הערות"                  },
   ],
 };
+
+// העמודות המוצגות: עמודות generalOnly (קיים היתר עסקה פרטי) רק בלשונית הכללית
+// עד 2 ספרות אחרי הנקודה, בלי אפסים מיותרים (8.13420 -> 8.13)
+const fmtPct = v => { if (v === null || v === undefined || v === "") return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
+const pubCols = () => PUB_COLS[pubTopic].filter(c => !c.generalOnly || pubLevel === "general");
 
 async function loadPublic() {
   pubLoading = true; pubErr = ""; render();
@@ -924,7 +931,7 @@ function onPubSearch(v) { pubSearch = v; refreshPubBody(); }
 
 function pubViewRows() {
   let rows = pubRows.slice();
-  const cols = PUB_COLS[pubTopic];
+  const cols = pubCols();
   const q = pubSearch.trim().toLowerCase();
   if (q) rows = rows.filter(r => cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q)));
   if (pubTopic === "bonds" && pubLinkage) rows = rows.filter(r => (r.linkage || "") === pubLinkage);
@@ -943,29 +950,37 @@ function pubViewRows() {
 
 function pubCell(col, row) {
   const v = row[col.key];
-  if (col.type === "badge")
-    return Number(v) === 1
+  if (col.type === "badge") {
+    const note = row.bonds_note ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.3;">${escHtml(row.bonds_note)}</div>` : "";  // הערה על אישור האג"ח
+    return (Number(v) === 1
       ? '<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600;">מאושר ✓</span>'
-      : '<span style="color:var(--light);">—</span>';
+      : '<span style="color:var(--light);">—</span>') + note;
+  }
   if (col.type === "chg") {
     if (v == null || v === "") return "";
     const n = Number(v);
     const col2 = n > 0 ? "var(--green)" : n < 0 ? "var(--red)" : "var(--muted)";
     return `<span style="color:${col2};">${n > 0 ? "+" : ""}${n.toFixed(2)}%</span>`;
   }
+  if (col.type === "pct")
+    return escHtml(fmtPct(v)) || "—";
+  if (col.type === "yesno")
+    return v === "כן"
+      ? '<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600;">כן</span>'
+      : '<span style="color:var(--light);">לא</span>';
   if (col.type === "ltr")
     return `<span style="direction:ltr;">${escHtml(v == null ? "" : String(v)) || "—"}</span>`;
   return escHtml(v == null ? "" : String(v)) || "—";
 }
 
 function pubBodyHtml() {
-  const cols = PUB_COLS[pubTopic];
+  const cols = pubCols();
   const rows = pubViewRows();
   if (pubLoading) return `<tr class="empty-row"><td colspan="${cols.length}">טוען…</td></tr>`;
   if (pubErr)     return `<tr class="empty-row"><td colspan="${cols.length}" style="color:var(--red);">שגיאה: ${escHtml(pubErr)}</td></tr>`;
   if (!rows.length) return `<tr class="empty-row"><td colspan="${cols.length}">לא נמצאו תוצאות</td></tr>`;
   return rows.map(r => `<tr>${cols.map(c => {
-    const cls = c.type === "name" ? ' class="biz-name"' : c.type === "num" || c.type === "chg" ? ' style="direction:ltr;font-variant-numeric:tabular-nums;"' : "";
+    const cls = c.type === "name" ? ' class="biz-name"' : c.type === "num" || c.type === "pct" || c.type === "chg" ? ' style="direction:ltr;font-variant-numeric:tabular-nums;"' : "";
     return `<td${cls}>${pubCell(c, r)}</td>`;
   }).join("")}</tr>`).join("");
 }
@@ -990,7 +1005,7 @@ function pubBtn(active, label, onclick, big) {
 }
 
 function renderTable() {
-  const cols = PUB_COLS[pubTopic];
+  const cols = pubCols();
   const linkages = pubTopic === "bonds"
     ? [...new Set(pubRows.map(r => r.linkage).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"))
     : [];
@@ -998,7 +1013,7 @@ function renderTable() {
   const th = (c) => {
     const active = pubSortCol === c.key;
     const icon = active ? (pubSortDir > 0 ? "▲" : "▼") : "⇅";
-    const alignNum = (c.type === "num" || c.type === "chg") ? "direction:ltr;" : "";
+    const alignNum = (c.type === "num" || c.type === "pct" || c.type === "chg") ? "direction:ltr;" : "";
     return `<th class="sortable${active ? " sort-active" : ""}" onclick="setPubSort('${c.key}')" style="${alignNum}">${escHtml(c.label)}<span class="sort-icon">${icon}</span></th>`;
   };
 
@@ -1065,7 +1080,8 @@ function renderAdminTable() {
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <button class="btn-ghost" onclick="runRegistrySync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
-        <button class="btn-ghost" onclick="runTaseSync()" id="tase-btn">📈 עדכן אג"ח מבורסה</button>
+        <button class="btn-ghost" onclick="runTaseSync('bonds')" id="tase-btn" title="קצר: מעדכן רק את הדגל &quot;יש אג&quot;ח&quot;">📈 עדכן אג"ח מבורסה</button>
+        <button class="btn-ghost" onclick="runTaseSync('all')" id="tase-full-btn" title="אותה ריצה של הריצה היומית: שמות, סוגים ואג&quot;ח (כ-6 דקות)">🔄 עדכון מלא</button>
         <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
         <button class="btn-ghost" onclick="exportCsv(true)" title="ייצוא כל הנתונים לCSV">📤 ייצוא CSV</button>
         <style>
@@ -1081,14 +1097,13 @@ function renderAdminTable() {
           <summary class="btn-ghost">🗄️ צפה במסד הנתונים ▾</summary>
           <div class="dbmenu-items">
             <a href="/admin-view.html?type=companies-all" target="_blank">רשם החברות</a>
-            <a href="/admin-view.html?type=bonds-all" target="_blank">נתוני אג"ח מלאים</a>
+            <a href="/admin-view.html?type=bonds-all" target="_blank">אג"ח מאושרות (פרטי + כללי)</a>
           </div>
         </details>
         <details class="dbmenu">
           <summary class="btn-ghost">📤 ייצוא מסד נתונים ל-CSV ▾</summary>
           <div class="dbmenu-items">
             <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
-            <a href="/api/lists?type=bonds-all&format=csv">נתוני אג"ח מלאים</a>
           </div>
         </details>
         <details class="dbmenu">
@@ -1741,31 +1756,28 @@ async function runRegistrySync() {
   btn.textContent = "🔄 עדכן שמות מרשם";
   render();
 }
-async function runTaseSync() {
-  const btn    = document.getElementById("tase-btn");
+async function runTaseSync(scope = "bonds") {
+  const btns   = ["tase-btn", "tase-full-btn"].map(id => document.getElementById(id)).filter(Boolean);
+  const btn    = document.getElementById(scope === "all" ? "tase-full-btn" : "tase-btn");
   const status = document.getElementById("sync-status");
   if (!btn || !status) return;
-  btn.disabled = true; btn.textContent = "⏳ מושך מבורסה...";
+  const labels = btns.map(b => b.textContent);
+  btns.forEach(b => b.disabled = true); btn.textContent = "⏳ מפעיל...";
   status.style.display = "block"; status.style.background = "var(--bg2)";
-  status.innerHTML = "מושך נתוני אג\"ח מהבורסה — אנא המתן...";
+  status.innerHTML = scope === "all" ? "מפעיל עדכון מלא — אנא המתן..." : "מפעיל עדכון אג\"ח מבורסה — אנא המתן...";
   try {
-    const res = await apiFetch("/sync-tase", { method: "POST" });
-    const { dateUsed, taseTotal, bondCompanies, dbChecked, withBonds, updated } = res;
+    const res = await apiFetch("/sync-tase", { method: "POST", body: JSON.stringify({ scope }) });
     status.style.background = "#edf7f1";
     status.innerHTML = `
-      ✅ אג"ח בורסה עודכן &nbsp;|&nbsp;
-      תאריך נתונים: <strong>${dateUsed}</strong> &nbsp;|&nbsp;
-      ניירות בבורסה: <strong>${taseTotal}</strong> &nbsp;|&nbsp;
-      חברות עם אג"ח: <strong>${bondCompanies}</strong> &nbsp;|&nbsp;
-      נמצאו ברשימה שלנו: <strong>${withBonds}</strong> &nbsp;|&nbsp;
-      עודכנו: <strong>${updated}</strong>
+      ✅ ${res.message}
+      &nbsp;|&nbsp; <a href="${res.runsUrl}" target="_blank" rel="noopener">מעקב אחרי הריצה ב-GitHub</a>
     `;
-    await loadBusinesses();
   } catch(e) {
     status.style.background = "#fdf0ef";
     status.innerHTML = `❌ שגיאה: ${e.message}`;
   }
-  btn.disabled = false; btn.textContent = "📈 עדכן אג\"ח מבורסה";
+  // לא להפעיל שוב מיד: הריצה נמשכת (ויש בה נעילה נגד ריצות מקבילות)
+  setTimeout(() => { btns.forEach((b, i) => { b.disabled = false; b.textContent = labels[i]; }); }, 60000);
 }
 
 function copyRegToPermit() {

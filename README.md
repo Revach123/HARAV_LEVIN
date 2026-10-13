@@ -190,3 +190,24 @@ title=חיפוש היתר עסקה חברות
 - הפקה: Actions ואז **ivr-audio** ואז **Run workflow** (קודם `dry_run`, אחר כך בלי). נדרשים secrets בריפו הזה: `AZURE_SPEECH_KEY`, `AZURE_SPEECH_REGION`, `YEMOT_TTS`. ה-workflow מעלה לימות ורק אז עושה commit ל-`ivr_audio_manifest.js`. גם push ל-`main` שנוגע בביטויים מפעיל אותו (בלי secrets הוא מדלג).
 - מקומית: `node scripts/ivr_audio/dump_phrases.mjs > phrases.json` ואחר כך `python scripts/ivr_audio/build_audio.py --phrases phrases.json [--dry-run]`.
 - הגייה בעייתית ב-Azure: `PRONUNCIATIONS` ב-`ivr_phrases.js` (מילה מנוקדת ואז IPA). `build_audio.py` עוטף אותה ב-`<phoneme alphabet="ipa">`; אם Azure דוחה, הוא חוזר לטקסט המנוקד ומדווח בלוג (`"phoneme": false` במניפסט). כרגע: "חֶבְרָה" / "הַחֶבְרָה".
+
+---
+
+## רשימות האג"ח וכפתור "עדכן אג"ח מבורסה"
+
+- **רשימת אג"ח אחת:** הקבצים `data/bonds_list/bonds_{private,general,all}.{json,csv}`. נבנים כל יום ב-GitHub Actions
+  (`bonds-list`, `scripts/bonds_list/build_approved_bonds.py`) מדף החברה במאיה, רק לחברות מאושרות, רק ני"ע סחירים,
+  בלי ני"ע מסחריים ובלי ניירות שאין להם שום תנאי (שער / ריבית / פדיון). ה-API (`/api/lists`) כבר לא מגיש אג"ח (410).
+  האתר, דף הניהול ו-`display.html` (WordPress) קוראים את אותם קבצים.
+- **ריצה יומית אחת לשמות, סוגים ודגל "יש אג"ח":** workflow `registry-refresh` (`--scope all`). בדף הניהול שני כפתורים, שניהם מפעילים
+  את אותו סקריפט בלי עותק של הלוגיקה: "עדכן אג"ח מבורסה" = `--scope bonds` (קצר, רק הדגל) ו"עדכון מלא" = `--scope all`
+  (כמו הריצה היומית, כ-6 דקות). ריצה חלקית כותבת דוח נפרד (`last_run_<scope>.json`). נדרש מפתח:
+  `wrangler pages secret put GITHUB_DISPATCH_TOKEN --project-name harav-levin` (fine-grained token, הריפו הזה בלבד, הרשאה
+  Actions: Read and write), ואז פריסה מחדש.
+- **הרשימה הכללית (חברות ואג"ח):** כוללת גם עסקים עם היתר עסקה פרטי, חוץ ממי שמסומן במפורש "רק פרטי"
+  (`agch_approved = 'רק פרטי'` או הערה שבה כתוב "רק ... פרטי"). עמודה "קיים היתר עסקה פרטי" מראה מי מהם.
+- **אישור אג"ח לפרטי / כללי:** התהליך שבונה את רשימת האג"ח בודק אם האישור הוא רק לפרטי או רק לכללי (שדה "אישור אג"ח", או הערה מפורשת כמו
+  "מאושר רק לאג"ח פרטי בלבד"). אישור "רק פרטי" לא נכנס לרשימה הכללית. הערה על אג"ח מוצגת כהערה בעמודת אישור האג"ח.
+  זה שונה מ"רק פרטי" על היתר העסקה של החברה עצמה (`visibility = 'רק פרטי'`), שקובע אם החברה נשארת מחוץ לרשימת החברות הכללית.
+- **ריבית** נשמרת ומוצגת עם עד 2 ספרות אחרי הנקודה, בלי אפסים מיותרים. **תשואה שנתית** = השדה `annual_yield` של הבורסה (כנראה 12 חודשים אחרונים; טרם אומת).
+
