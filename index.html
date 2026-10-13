@@ -1788,7 +1788,7 @@ function renderBondPicker() {
   root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
     <div class="modal-box" style="max-width:560px;">
       <div class="modal-title">בחירת אג"ח מסוימים</div>
-      <div class="modal-biz-name">${escHtml(displayName(st.biz))} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
+      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
       ${body}
       <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn-ghost" onclick="closeBondPicker()">ביטול</button>
