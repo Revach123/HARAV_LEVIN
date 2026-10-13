@@ -45,7 +45,7 @@
   .head-tools{display:flex;gap:.5rem;align-items:center}
 
   /* ── טבלה ── */
-  .table-wrap{overflow:auto;max-height:80vh;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
+  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
   table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:16px;min-width:760px}
   thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
   tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;overflow-wrap:anywhere}
@@ -56,7 +56,7 @@
   tbody tr:last-child td{border-bottom:none}
   th.ctr{text-align:center}
   td.ctr{text-align:center;white-space:nowrap}
-  thead th{white-space:normal;line-height:1.25;vertical-align:middle;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 var(--border)}
+  thead th{white-space:normal;line-height:1.25;vertical-align:middle}
   td.nw{white-space:nowrap;overflow-wrap:normal}
   .name-cell{font-weight:500}
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
@@ -73,8 +73,6 @@
   /* גלילה לרוחב: סרגל גלילה נוסף מעל הטבלה (הסרגל התחתון נמצא בסוף הטבלה הארוכה ולכן לא נראה) */
   .hscroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:3px;display:none}
   .hscroll-top div{height:1px}
-  /* בהטמעה: הטבלה גוללת בתוך מסגרת בגובה קבוע, כך שסרגל הגלילה לרוחב והכותרת תמיד בטווח הראייה */
-  body.embed .table-wrap{max-height:620px}
   body.embed{background:transparent;padding:0}
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
@@ -234,6 +232,7 @@ function render(container, state, type, usedSample) {
   wrap.addEventListener("scroll", syncFrom(wrap, topBar));
   const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; };
   new ResizeObserver(updateTop).observe(wrap);
+  container.appendChild(topBar);
   container.appendChild(wrap);
   updateTop();
 
@@ -344,7 +343,6 @@ new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); }).o
 // עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
 let lastSpec = "";
 function postHeaderSpec() {
-  return;   // הכותרת קבועה כעת בתוך מסגרת הטבלה (position:sticky), בלי סרגל מצד עמוד האב
   if (window.parent === window) return;
   const table = container.querySelector("table");
   if (!table || !table.tHead) return;
