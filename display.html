@@ -86,6 +86,7 @@
   <div id="listContainer"></div>
 </div>
 
+<script src="xlsx-lite.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 //  CONFIG — לשנות לכתובת האתר בעת הטמעה באתר אחר
@@ -100,7 +101,8 @@ const COLUMNS = {
     { key:"category",           label:"קטגוריה",                         w:14 },
     { key:"region",             label:"אזור",                            w:8  },
     { key:"has_private_permit", label:"קיים היתר עסקה פרטי", cell:"yesno", w:14, generalOnly:true },
-    { key:"bonds_status",       label:'אג"ח',                cell:"bonds", w:24 },
+    { key:"bonds_status",       label:'אג"ח',                cell:"bonds", w:20 },
+    { key:"notes",              label:"הערות",                           w:22 },
   ],
   bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
     { key:"security_name",  label:'אג"ח',                 cell:"name",  w:15 },
@@ -113,6 +115,7 @@ const COLUMNS = {
     { key:"last_price",     label:"שער אחרון",            cell:"num",   w:8  },
     // השדה AnnualYield של הבורסה: כנראה תשואה ל-12 החודשים האחרונים / מתחילת שנה (טרם אומת)
     { key:"annual_yield",   label:"תשואה שנתית",          cell:"pct",   w:9  },
+    { key:"notes",          label:"הערות",                                w:14 },
   ],
 };
 
@@ -183,11 +186,11 @@ function render(container, state, type, usedSample) {
   title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
   const tools = el("div","head-tools");
   const search = el("input","search"); search.type="search"; search.placeholder="חיפוש…";
-  const csvBtn = el("button","btn-csv","⬇ ייצוא CSV");
-  csvBtn.onclick = () => {
-    window.location.href = state.topic === "bonds"
-      ? `${API_BASE}/data/bonds_list/bonds_${type.split("-")[1]}.csv`
-      : `${API_BASE}/api/lists?type=${type}&format=csv`;
+  const csvBtn = el("button","btn-csv","⬇ ייצוא לאקסל");
+  csvBtn.onclick = () => {   // קובץ Excel כטבלה: כל השורות של הרשימה, עם העמודות המוצגות
+    const cellVal = (c, r) => c.cell === "bonds" ? (r[c.key] || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח')) : (c.cell === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2))) : (r[c.key] ?? ""));
+    downloadXlsx(type, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
+      state.rows.map(r => state.cols.map(c => cellVal(c, r))), state.cols.map(c => c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number")));
   };
   tools.append(search, csvBtn);
   head.append(title, tools);

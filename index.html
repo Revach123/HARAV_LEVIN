@@ -711,6 +711,7 @@
 
 <div id="status-bar"></div>
 
+<script src="xlsx-lite.js"></script>
 <script>
 // ─────────────────────────────────────────────
 //  STATE
@@ -856,6 +857,7 @@ const PUB_COLS = {
     { key:"region",      label:"אזור"                         },
     { key:"has_private_permit", label:"קיים היתר עסקה פרטי", type:"yesno", generalOnly:true },
     { key:"approved",    label:'מאושר לאג"ח',      type:"badge"},
+    { key:"notes",       label:"הערות"                         },
   ],
   bonds: [
     { key:"bond_name",     label:'שם אג"ח',    type:"name" },
@@ -916,14 +918,12 @@ function setPubSort(c) {
   render();
 }
 function setPubLinkage(v) { pubLinkage = v; render(); }
-function pubExport() {
-  if (pubTopic === "bonds") {
-    const a = document.createElement("a");
-    a.href = `/data/bonds_list/bonds_${pubLevel}.csv`; a.download = `bonds_${pubLevel}.csv`;
-    document.body.appendChild(a); a.click(); a.remove();
-    return;
-  }
-  window.location.href = `/api/lists?type=${pubTopic}-${pubLevel}&format=csv`;
+function pubExport() {   // קובץ Excel כטבלה: כל שורות הרשימה, עם העמודות המוצגות
+  const cols = pubCols();
+  const val = (c, r) => c.type === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2)))
+    : c.type === "badge" ? ((Number(r[c.key]) === 1 ? "מאושר" : "") + (r.bonds_note ? (Number(r[c.key]) === 1 ? " — " : "") + r.bonds_note : "")) : (r[c.key] ?? "");
+  downloadXlsx(`${pubTopic}-${pubLevel}`, pubTopic === "bonds" ? "איגרות חוב" : "חברות", cols.map(c => c.label),
+    pubRows.map(r => cols.map(c => val(c, r))), cols.map(c => c.type === "pct" || c.type === "num"));
 }
 
 // חיפוש — עדכון גוף הטבלה בלבד (לא render מלא, כדי לא לאבד פוקוס)
@@ -1043,7 +1043,7 @@ function renderTable() {
       </div>` : ""}
       <div class="fb-group" style="justify-content:flex-end;">
         <span class="fb-label">&nbsp;</span>
-        <button class="btn-ghost" onclick="pubExport()" style="height:34px;font-size:12px;">📤 ייצוא CSV</button>
+        <button class="btn-ghost" onclick="pubExport()" style="height:34px;font-size:12px;">📤 ייצוא לאקסל</button>
       </div>
     </div>
 
@@ -1154,7 +1154,8 @@ function renderAdminTable() {
                   <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.visibility?"selected":""}>—</option>
-                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>                    
+                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
+                    <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
                   </select>
                 </td>
                 <td style="text-align:center;font-size:13px;">${
@@ -1268,7 +1269,8 @@ function renderForm() {
           <label>פרטי / כללי</label>
           <select id="f-visibility" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
             <option value=""   ${!b.visibility?"selected":""}>— לא מוגדר —</option>
-            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>פרטי</option>            
+            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
+                    <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
           </select>
         </div>
         <div class="field">
