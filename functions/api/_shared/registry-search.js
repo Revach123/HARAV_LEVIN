@@ -90,14 +90,18 @@ async function registryCandidates(db, query) {
 // ---------------------------------------------------------------------------
 //  היתרי עסקה (טבלת businesses)
 // ---------------------------------------------------------------------------
-// כמו lists.js: visibility = 'פרטי' = עסק שיש לו *רק* היתר עסקה פרטי (מופיע רק ברשימה הפרטית);
-// כל ערך אחר = היתר כללי. אם לאותו עסק כמה שורות והאחת מהן כללית - הוא כללי.
+// כמו lists.js: visibility = 'רק פרטי' = עסק שיש לו *רק* היתר עסקה פרטי (מופיע רק ברשימה הפרטית);
+// 'פרטי' = יש לו גם היתר עסקה פרטי (נוסף על הכללי); ריק = היתר כללי בלבד.
+// אם לאותו עסק כמה שורות: 'פרטי' באחת מהן = "כללי וגם פרטי"; אחרת ריק באחת מהן = "כללי";
+// 'רק פרטי' מוקרא רק כשכל השורות כאלה.
 export function permitIndex(businesses) {
   const byChp = new Map(), byName = new Map();
   const put = (map, key, vis) => {
     if (!key) return;
-    const kind = vis === 'פרטי' ? 'פרטי' : 'כללי';
-    if (map.get(key) !== 'כללי') map.set(key, kind);
+    const kind = vis === 'רק פרטי' ? 'רק פרטי' : vis === 'פרטי' ? 'כללי+פרטי' : 'כללי';
+    const prev = map.get(key);
+    const rank = { 'רק פרטי': 0, 'כללי': 1, 'כללי+פרטי': 2 };
+    if (prev === undefined || rank[kind] > rank[prev]) map.set(key, kind);
   };
   for (const b of businesses) {
     put(byChp, digitsOnly(b.chp_number), b.visibility);
@@ -127,11 +131,11 @@ export function splitName(name) {
   return { name: n.replace(/[\s.,\-]+$/, '').trim(), baam };
 }
 
-/** מה מוקרא לתוצאה: {type, name, baam, permit: 'private' | 'general' | 'none'} */
+/** מה מוקרא לתוצאה: {type, name, baam, permit: 'private' (רק פרטי) | 'both' (כללי וגם פרטי) | 'general' | 'none'} */
 export function describe(item, permitOf) {
   const p = permitOf(item);
   const { name, baam } = splitName(item.name);
-  return { type: typeLabel(item), name, baam, permit: p === 'פרטי' ? 'private' : p === 'כללי' ? 'general' : 'none' };
+  return { type: typeLabel(item), name, baam, permit: p === 'רק פרטי' ? 'private' : p === 'כללי+פרטי' ? 'both' : p === 'כללי' ? 'general' : 'none' };
 }
 
 // ---------------------------------------------------------------------------

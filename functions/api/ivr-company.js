@@ -6,7 +6,7 @@
 //
 //  מחפשת בכל מאגר הרישום (חברות, שותפויות, עמותות) - ראו _shared/registry-search.js.
 //  לכל תוצאה מקריאים: סוג (חברה פרטית/ציבורית, שותפות מוגבלת, עמותה...), שם (בלי בע"מ),
-//  ומצב היתר העסקה (פרטי / כללי / לא קיים). כל התוצאות מוקראות ברצף, כל אחת בהודעה נפרדת.
+//  ומצב היתר העסקה (רק פרטי / כללי / כללי וגם פרטי / לא קיים). כל התוצאות מוקראות ברצף, כל אחת בהודעה נפרדת.
 //
 //  זרימה (בלי מצב בשרת - הכול נגזר מהמשתנים שימות מחזירה בכל קריאה). כל "סבב" חיפוש
 //  מקבל מספר r, והמשתנים שלו נושאים אותו כסיומת:
@@ -169,6 +169,7 @@ function listing(ctx, r, items) {
     parts.push(P(`type:${d.type}`), say(d.name));              // שם החברה: TTS של ימות
     if (d.baam) parts.push(P('baam'));
     if (d.permit === 'private') parts.push(P('permit:private'), P('permit:private2'));
+    else if (d.permit === 'both') parts.push(P('permit:general'), P('permit:alsoPrivate'));
     else parts.push(P(d.permit === 'general' ? 'permit:general' : 'permit:none'));
   }
   parts.push(P('next'));

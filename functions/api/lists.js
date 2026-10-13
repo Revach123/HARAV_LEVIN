@@ -76,9 +76,8 @@ export async function onRequestGet(context) {
       const onlyPrivateExplicit = `(COALESCE(visibility,'') = 'רק פרטי'
         OR ((COALESCE(notes,'') LIKE '%רק פרטי%' OR COALESCE(notes,'') LIKE '%פרטי בלבד%')
             AND COALESCE(notes,'') NOT LIKE '%אג"ח%' AND COALESCE(notes,'') NOT LIKE '%אגח%'))`;
-      // הערה על אישור האג"ח (מוצגת בעמודת האג"ח): הערות שמזכירות אג"ח
-      const bondsNoteExpr = `CASE WHEN COALESCE(notes,'') LIKE '%אג"ח%' OR COALESCE(notes,'') LIKE '%אגח%'
-                                  THEN REPLACE(notes, char(160), ' ') ELSE '' END`;
+      // הערות: פתוחות לציבור (מוצגות בעמודת "הערות")
+      const notesExpr = `TRIM(REPLACE(COALESCE(notes,''), char(160), ' '))`;
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
       const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
@@ -87,7 +86,7 @@ export async function onRequestGet(context) {
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
-               ${bondsNoteExpr} AS bonds_note
+               ${notesExpr} AS notes
         FROM businesses
         WHERE ${whereClause}
         ORDER BY permit_name`;

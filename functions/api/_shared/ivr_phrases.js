@@ -31,6 +31,7 @@ export const PHRASES = {
   'permit:private': 'לעסק זה יש רק היתר עסקה פרטי',
   'permit:private2': 'ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי',
   'permit:general': 'קיים היתר עסקה כללי',
+  'permit:alsoPrivate': 'וקיים גם היתר עסקה פרטי',
   'permit:none': 'לא קיים היתר עסקה',
 };
 for (const label of TYPE_LABELS) {
