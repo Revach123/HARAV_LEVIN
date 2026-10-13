@@ -322,12 +322,23 @@ new ResizeObserver(() => { reportHeight(); applySticky(); }).observe(document.bo
 // ה-iframe מתארך לפי התוכן והגלילה היא של עמוד האב, ולכן עמוד האב שולח לכאן את מיקום ה-iframe ביחס לחלון
 // (top), וכאן מזיזים את שורת הכותרת כך שתישאר צמודה לחלק העליון של החלון (offset = גובה כותרת קבועה של האתר, אם יש).
 let stick = { top: 0, offset: 0, on: false };
+let stickMsgs = 0;
 window.addEventListener("message", e => {
   const d = e.data;
   if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "scroll") return;
+  stickMsgs++;
   stick = { top: Number(d.top) || 0, offset: Number(d.offset) || 0, on: !!d.desktop };
   applySticky();
+  showDebug();
 });
+// ?debug=1 ב-src של ה-iframe: תג אבחון קטן בפינה - האם עמוד האב שולח את מיקום הגלילה (כותרת קבועה דורשת את קוד ה-iframe העדכני בעמוד)
+function showDebug() {
+  if (new URLSearchParams(location.search).get("debug") !== "1") return;
+  let el = document.getElementById("stick-debug");
+  if (!el) { el = document.createElement("div"); el.id = "stick-debug"; el.style.cssText = "position:fixed;top:4px;left:4px;z-index:99;font:12px sans-serif;background:#fff8e6;border:1px solid #eadfb0;padding:3px 8px;direction:ltr"; document.body.appendChild(el); }
+  el.textContent = stickMsgs ? `sticky: parent connected (${stickMsgs} msgs, top=${Math.round(stick.top)}, desktop=${stick.on})` : "sticky: NO messages from the parent page (update the embed code)";
+}
+if (window.parent !== window) setTimeout(showDebug, 1500);
 function applySticky() {
   const table = container.querySelector("table"); if (!table) return;
   const ths = table.querySelectorAll("thead th");

@@ -228,20 +228,23 @@ title=חיפוש היתר עסקה חברות
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
 ## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה (במחשב)
 
-בלוק קוד אחד בעמוד (`OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים, או 0 אם אין; הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד):
+בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה כותרת עליונה קבועה של האתר בפיקסלים (או 0 אם אין). הכותרת הקבועה פעילה ברוחב חלון של 992 פיקסלים ומעלה בלבד.
+הקוד בכוונה בלי התווים `&`, `<`, `>` בתוך הסקריפט (וורדפרס / Avada מקודדים אותם ושוברים את הקוד), ובודק את מיקום ה-iframe בכל פריים (עובד גם כשהגלילה היא של אלמנט פנימי באתר ולא של החלון).
 
 ```html
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
-(function(){var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,t=0;
-window.addEventListener("message",function(e){if(e.origin===O&&e.data&&e.data.source==="harav-levin"&&e.data.type==="resize")f.style.height=e.data.height+"px";});
-function send(){t=0;if(f.contentWindow)f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:f.getBoundingClientRect().top,offset:OFFSET,desktop:window.innerWidth>=992},O);}
-function q(){if(!t)t=requestAnimationFrame(send);}
-addEventListener("scroll",q,{passive:true});addEventListener("resize",q);f.addEventListener("load",q);
+(function(){
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=0,last=null,tick=0;
+window.addEventListener("message",function(e){if(e.origin===O){if(e.data){if(e.data.source==="harav-levin"){if(e.data.type==="resize"){f.style.height=e.data.height+"px";}}}}});
+function send(){var r=f.getBoundingClientRect();var t=Math.round(r.top);tick=tick+1;if(t!==last||tick%60===0){last=t;if(f.contentWindow){f.contentWindow.postMessage({source:"harav-parent",type:"scroll",top:t,offset:OFFSET,desktop:Math.floor(window.innerWidth/992)>0},O);}}window.requestAnimationFrame(send);}
+window.requestAnimationFrame(send);
 })();
 </script>
 ```
 
+**אבחון:** מוסיפים `?debug=1` ל-`src` של ה-iframe (`.../display.html?debug=1`). בפינה השמאלית העליונה יופיע תג קטן:
+`sticky: parent connected (...)` = הקוד בעמוד עובד; `sticky: NO messages from the parent page` = הקוד העדכני לא נמצא בעמוד (או שהוא נשבר), צריך להחליף את הבלוק.
 ## אישור "בחירת אג"ח מסוימים" (אג"ח ספציפיות לחברה)
 
 - בדף הניהול, באישור אג"ח: האפשרות **בחירת אג"ח מסוימים** פותחת חלון (וכפתור ⚙ ליד הבחירה) עם אג"ח החברה ממאיה (`data/bonds_list/maya_securities.json`, נבנה יומית), וכפתורי **פרטי / כללי** לכל אג"ח (אפשר שניהם). אפשר גם להוסיף אג"ח לפי מספר נייר.
