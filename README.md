@@ -226,11 +226,13 @@ title=חיפוש היתר עסקה חברות
 - סטטוס שמתחיל ב"בפרוק" - החברה נשארת, ובעמודת ההערות (וברשימת האג"ח) מופיע "בפירוק".
 - הגנה: אם יותר מ-10 חברות (או 3%) שהיו מוצגות הופכות למחוסלות בריצה אחת - הכתיבה נעצרת.
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
-## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה וסרגל גלילה לרוחב קבוע (במחשב) - גרסה 5
+## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה וסרגל גלילה לרוחב קבוע (במחשב) - גרסה 6
 
 בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-140; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
 
-**מה חדש בגרסה 5:** גלילה לרוחב חלקה - סרגל הכותרת מוזז בעמוד עצמו מיד עם הגלילה (בלי להמתין להודעות מה-iframe), וכל עוד גוררים את הסרגל הקבוע הוא לא "מתקן" את עצמו מהודעות ישנות. גרסה 4 ממשיכה לעבוד (פחות חלק).
+**מה חדש בגרסה 6:** כשגוררים את סרגל הגלילה העליון של הטבלה (בתוך ה-iframe), הסרגל הקבוע בעמוד לא מחזיר יותר "הד" של מיקום ישן שגרם למאבק על הגלילה (קפיצות). בבדיקה: 0 הודעות הד במקום 2.
+
+**מה היה בגרסה 5:** גלילה לרוחב חלקה - סרגל הכותרת מוזז בעמוד עצמו מיד עם הגלילה (בלי להמתין להודעות מה-iframe), וכל עוד גוררים את הסרגל הקבוע הוא לא "מתקן" את עצמו מהודעות ישנות. גרסה 4 ממשיכה לעבוד (פחות חלק).
 
 **מה היה בגרסה 4:** סרגל גלילה לרוחב קבוע בתחתית החלון (מופיע רק כשהטבלה רחבה מהמסך והסרגל המקורי בתחתית הטבלה עדיין מחוץ למסך); הוא מסונכרן בשני הכיוונים עם הטבלה.
 
@@ -241,7 +243,7 @@ title=חיפוש היתר עסקה חברות
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
 (function(){
-var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=140,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0;
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=140,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -255,9 +257,9 @@ function move(){if(bi){bi.style.transform="translateX("+(0-cur)+"px)";}}
 function buildSb(){
 if(!sb){sb=document.createElement("div");sb.id="hl-sb";sb.style.cssText="position:fixed;z-index:99;bottom:0;display:none;overflow-x:auto;overflow-y:hidden;direction:rtl;height:18px;background:#f4f7f7";
 sbi=document.createElement("div");sbi.style.height="1px";sb.appendChild(sbi);document.body.appendChild(sb);
-sb.addEventListener("scroll",function(){lu=Date.now();cur=sb.scrollLeft;move();f.contentWindow.postMessage({source:"harav-parent",type:"setScroll",left:cur},O);});}
+sb.addEventListener("scroll",function(){if(ps!==null){if(Math.sign(Math.abs(sb.scrollLeft-ps)-1)!==1){ps=null;return;}ps=null;}lu=Date.now();cur=sb.scrollLeft;move();f.contentWindow.postMessage({source:"harav-parent",type:"setScroll",left:cur},O);});}
 sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
-if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){sb.scrollLeft=hs.left;}move();}
+if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}move();}
 }
 window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
