@@ -60,6 +60,7 @@
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
+  .bond-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:normal;line-height:1.3}
   .bonds-none{color:var(--muted);font-size:15px}
   .badge-no{color:var(--light);font-size:13px}
   .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
@@ -264,6 +265,7 @@ function cellFor(col, val, row) {
     if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
     else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
     else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';
+    if (row && row.bonds_note) td.innerHTML += `<div class="bond-note">${esc(row.bonds_note)}</div>`;   // הערה על אישור האג"ח
     return td;
   }
   if (col.cell === "badge") {

@@ -921,7 +921,7 @@ function setPubLinkage(v) { pubLinkage = v; render(); }
 function pubExport() {   // קובץ Excel כטבלה: כל שורות הרשימה, עם העמודות המוצגות
   const cols = pubCols();
   const val = (c, r) => c.type === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2)))
-    : c.type === "badge" ? (Number(r[c.key]) === 1 ? "מאושר" : "") : (r[c.key] ?? "");
+    : c.type === "badge" ? ((Number(r[c.key]) === 1 ? "מאושר" : "") + (r.bonds_note ? (Number(r[c.key]) === 1 ? " — " : "") + r.bonds_note : "")) : (r[c.key] ?? "");
   downloadXlsx(`${pubTopic}-${pubLevel}`, pubTopic === "bonds" ? "איגרות חוב" : "חברות", cols.map(c => c.label),
     pubRows.map(r => cols.map(c => val(c, r))), cols.map(c => c.type === "pct" || c.type === "num"));
 }
@@ -951,9 +951,10 @@ function pubViewRows() {
 function pubCell(col, row) {
   const v = row[col.key];
   if (col.type === "badge") {
+    const note = row.bonds_note ? `<div style="font-size:12px;color:var(--muted);margin-top:3px;line-height:1.3;">${escHtml(row.bonds_note)}</div>` : "";  // הערה על אישור האג"ח
     return (Number(v) === 1
       ? '<span style="background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);border-radius:6px;padding:1px 9px;font-size:12px;font-weight:600;">מאושר ✓</span>'
-      : '<span style="color:var(--light);">—</span>');
+      : '<span style="color:var(--light);">—</span>') + note;
   }
   if (col.type === "chg") {
     if (v == null || v === "") return "";

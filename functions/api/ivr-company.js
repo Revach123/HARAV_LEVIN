@@ -169,7 +169,7 @@ function listing(ctx, r, items) {
     parts.push(P(`type:${d.type}`), say(d.name));              // שם החברה: TTS של ימות
     if (d.baam) parts.push(P('baam'));
     if (d.permit === 'private') parts.push(P('permit:private'), P('permit:private2'));
-    else if (d.permit === 'both') parts.push(P('permit:general'), P('permit:alsoPrivate'));
+    else if (d.permit === 'both') parts.push(P('permit:alsoPrivate'));
     else parts.push(P(d.permit === 'general' ? 'permit:general' : 'permit:none'));
   }
   parts.push(P('next'));
