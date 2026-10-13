@@ -228,7 +228,7 @@ title=חיפוש היתר עסקה חברות
 - כל עוד העמודה לא קיימת במסד, הכול ממשיך לעבוד בלי סינון.
 ## הטמעה בוורדפרס: iframe + גובה אוטומטי + כותרת קבועה וסרגל גלילה לרוחב קבוע (במחשב) - גרסה 4
 
-בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-150; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
+בלוק קוד אחד בעמוד (HTML מותאם אישית). `OFFSET` = גובה הכותרת הקבועה של האתר בפיקסלים (באתר iska.co.il נמדד כ-140; 0 אם אין כותרת קבועה). פעיל ברוחב חלון של 992 פיקסלים ומעלה בלבד.
 
 **מה חדש בגרסה 4:** סרגל גלילה לרוחב קבוע בתחתית החלון (מופיע רק כשהטבלה רחבה מהמסך והסרגל המקורי בתחתית הטבלה עדיין מחוץ למסך); הוא מסונכרן בשני הכיוונים עם הטבלה.
 
@@ -239,7 +239,7 @@ title=חיפוש היתר עסקה חברות
 <iframe id="hl-frame" src="https://harav-levin.pages.dev/display.html" style="width:100%;height:700px;border:0" scrolling="no"></iframe>
 <script>
 (function(){
-var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=150,spec=null,bar=null,hs=null,sb=null,sbi=null;
+var f=document.getElementById("hl-frame"),O="https://harav-levin.pages.dev",OFFSET=140,spec=null,bar=null,hs=null,sb=null,sbi=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
