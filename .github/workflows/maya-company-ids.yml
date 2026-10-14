@@ -1,0 +1,36 @@
+name: Maya company ids (weekly)
+
+# מפת ח.פ. -> מזהה חברה במאיה, מסריקת דפי החברה (כ-4 דקות). משמשת את העשרת האג"ח (תשואה לפדיון).
+# הבנייה היומית והמהירה קוראות את data/bonds_list/maya_company_ids.json ולא סורקות; הן מרעננות רק כשהקובץ חסר/ישן או שחסר מזהה לחברה.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "15 2 * * 0"      # אחת לשבוע, ראשון 02:15 UTC (לפני הבנייה היומית)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bonds-list
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/bonds_list/company_ids.py
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/bonds_list/maya_company_ids.json
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "maya-company-ids: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push

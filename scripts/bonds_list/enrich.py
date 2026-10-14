@@ -314,7 +314,7 @@ def save_state(state, path=STATE_PATH):
 
 
 # ── הרצה ─────────────────────────────────────────────────────────────────────
-def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
+def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None, recheck_all=False):
     """מוסיף לכל אג"ח: midroog_rating, maalot_rating, ytm_gross (ריק כשלא ניתן). לא זורק חריגות."""
     f = {"midroog": fetch_midroog, "reports": fetch_rating_reports, "download": download_attachment,
          "events": fetch_corporate_actions}
@@ -355,9 +355,11 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
     # 2. תדירות ריבית / אג"ח לשיעורין - לפי חברה (id של Maya), רק לחברות עם נייר שטרם נבדק
     try:
         by_company = {}
+        done = set(state["checked"])
         for b in bonds:
-            if b.get("maya_company_id") and str(b["security_id"]) not in set(state["checked"]):
+            if b.get("maya_company_id") and (recheck_all or str(b["security_id"]) not in done):
                 by_company.setdefault(b["maya_company_id"], set()).add(b["security_id"])
+        t0 = datetime.datetime.now()
         fmt = "%Y-%m-%dT%H:%M:%S.000Z"
         a = (now - datetime.timedelta(days=365 * CA_LOOKBACK_YEARS)).strftime(fmt)
         z = (now + datetime.timedelta(days=365 * CA_LOOKAHEAD_YEARS)).strftime(fmt)
@@ -378,14 +380,16 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None):
                 pay, part = analyze_company_events(events, samples)
                 for sid, dates in pay.items():
                     fr = derive_frequency(dates)
-                    if fr and str(sid) not in state["frequencies"]:
-                        state["frequencies"][str(sid)] = fr
+                    if fr and (recheck_all or str(sid) not in state["frequencies"]):
+                        state["frequencies"][str(sid)] = fr         # בדיקה מחדש: מתעדכן גם כשהלוח השתנה
+                if recheck_all:
+                    partial.difference_update(str(x) for x in sids)  # סימון שיעורין נבנה מחדש לניירות שנבדקו
                 partial.update(str(s) for s in part)
                 checked.update(str(s) for s in sids)
         state["checked"] = sorted(checked); state["partial"] = sorted(partial)
         for smp in samples:
             log(f"enrich: sample redemption event {smp}")
-        log(f"enrich: companies {len(by_company)}, request errors {errors}, with events {with_events}; frequencies known {len(state['frequencies'])}, amortizing {len(partial)}")
+        log(f"enrich: {'recheck all' if recheck_all else 'new only'}, {(datetime.datetime.now() - t0).total_seconds():.0f}s; companies {len(by_company)}, request errors {errors}, with events {with_events}; frequencies known {len(state['frequencies'])}, amortizing {len(partial)}")
     except Exception as e:  # noqa: BLE001
         log(f"enrich: WARNING corporate actions failed: {e}")
 

@@ -51,6 +51,7 @@ MIN_COMPANIES_FOUND = 1000   # מתחת לזה הסריקה נחשבת חסומ�
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 OUT = os.path.join(ROOT, "data", "bonds_list")
 STATE_PATH = os.path.join(OUT, "state.json")
+INTERNAL_PATH = os.path.join(OUT, "bonds_internal.json")
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
 SELECTIVE = 'בחירת אג"ח מסוימים'   # אישור לאג"ח מסוימות בלבד: נבחרות בדף הניהול ונשמרות בטבלה approved_bonds
@@ -483,6 +484,49 @@ def write_lists(bonds):
     return counts
 
 
+def bond_rows_by_chp(dw_rows, types):
+    """אג"ח סחירות מרשימת הניירות של datawise, לפי ח.פ. המנפיק: {ח"פ: [(שורה, סוג)]}."""
+    out = {}
+    for r in dw_rows:
+        code = str(r.get("securityFullTypeCode") or "")
+        if r.get("securityId") is None or not code.startswith(BOND_CODE_PREFIXES):
+            continue
+        stype = types.get(code, "")
+        if coarse_type(stype) not in BOND_COARSE:
+            continue
+        k = chp_norm(r.get("corporateId"))
+        if k:
+            out.setdefault(k, []).append((r, stype))
+    return out
+
+
+def desired_rows(k, items, approved, manual, names):
+    """השורות הרצויות לחברה: חברה מאושרת רגילה = כל האג"ח שלה; אחרת רק הבחירות הידניות (אם החברה במאגר)."""
+    info, picks = approved.get(k), manual.get(k) or {}
+    out = []
+    for r, stype in items:
+        sid = int(r["securityId"])
+        base = {"security_id": sid, "security_name": (r.get("securityName") or "").strip(), "symbol": r.get("symbol") or "",
+                "isin": r.get("isin") or "", "security_type": stype, "asset_class": coarse_type(stype),
+                "chp_number": k, "is_tradable": True}
+        if info:
+            out.append({**base, "issuer_name": info["company"], "company": info["company"],
+                        "notes": "; ".join(x for x in (GOYIM_NOTE if info["goyim"] else "", info["bond_note"]) if x),
+                        "goyim": info["goyim"], "bond_scope": info["bond_scope"], "agch_approved": info["agch_approved"],
+                        "is_private": info["is_private"]})
+        elif sid in picks and k in names:
+            out.append({**base, "issuer_name": names[k], "company": names[k], "notes": "", "goyim": False, "bond_scope": "both",
+                        "agch_approved": SELECTIVE, "is_private": picks[sid] in ("private", "both"),
+                        "manual": True, "manual_scope": picks[sid]})
+    return out
+
+
+def snapshot_from_datawise(by_chp):
+    """מקור חלון הבחירה: כל האג"ח הסחירות של כל חברה, לפי datawise."""
+    return {k: [{"security_id": int(r["securityId"]), "name": (r.get("securityName") or "").strip(),
+                 "symbol": r.get("symbol") or "", "type": stype} for r, stype in items] for k, items in by_chp.items()}
+
+
 def add_market_bonds(bonds, approved, manual, names, snapshot, dw, ids_fn=None):
     """אג"ח שבנתוני המסחר של הבורסה ולא בדף החברה במאיה: נוספות כמו אג"ח רגילות של חברה מאושרת (או שנבחרה ידנית),
     וגם לחלון הבחירה. החברה והסוג נלקחים מרשימת ניירות datawise לפי מספר הנייר. -> (שורות חדשות, דגימה)."""
@@ -566,22 +610,29 @@ def main(companies_path=None):
 
     manual = load_manual_bonds()
     print(f"manual bond picks: {sum(len(v) for v in manual.values())} bonds in {len(manual)} companies")
-    snapshot = {}
-    bonds, found, errors = sweep_maya(approved, manual=manual, names=company_names(companies), snapshot=snapshot)
-    print(f"maya: {found} companies found, {errors} request errors, {len(bonds)} bonds ({sum(1 for b in bonds if b.get('manual'))} picked manually)")
-    if found < MIN_COMPANIES_FOUND or not bonds:
-        raise SystemExit("maya sweep looks partial/blocked - output left untouched")
-
     dw = fetch_datawise_securities()
-    try:   # אג"ח מנתוני המסחר שאינן בדף החברה (לא מפיל את הבנייה)
-        market_rows, market_sample = add_market_bonds(bonds, approved, manual, company_names(companies), snapshot, dw)
-        bonds = bonds + market_rows
-        print(f"market data: {market_sample.get('ids_found', 0)} ids, {len(market_rows)} bonds added", market_sample.get("error", ""))
-        os.makedirs(OUT, exist_ok=True)
-        with open(os.path.join(OUT, "market_data_sample.json"), "w", encoding="utf-8") as f:
-            json.dump(market_sample, f, ensure_ascii=False, indent=1, default=str)
-    except Exception as e:  # noqa: BLE001
-        print(f"WARNING: market data step failed, skipped: {e}", file=sys.stderr)
+    if not dw:
+        raise SystemExit("datawise securities list unavailable - output left untouched")
+    dw_rows, _dw_date, dw_types = dw
+    by_chp = bond_rows_by_chp(dw_rows, dw_types)
+    names = company_names(companies)
+    bonds = []
+    for k in sorted(set(approved) | set(manual)):
+        bonds.extend(desired_rows(k, by_chp.get(k, []), approved, manual, names))
+    print(f"datawise: {len(dw_rows)} securities, {sum(len(v) for v in by_chp.values())} bonds in {len(by_chp)} companies; "
+          f"{len(bonds)} bonds for approved/picked companies ({sum(1 for x in bonds if x.get('manual'))} picked manually)")
+    prev = None
+    if os.path.exists(INTERNAL_PATH):
+        with open(INTERNAL_PATH, encoding="utf-8") as f:
+            prev = len(json.load(f).get("regular") or [])
+    if not bonds or (prev and len(bonds) < 0.8 * prev):
+        raise SystemExit(f"bond count looks wrong ({len(bonds)} vs previous {prev}) - output left untouched")
+    snapshot = snapshot_from_datawise(by_chp)
+    import company_ids      # כאן ולא בראש הקובץ: company_ids מייבא את הקובץ הזה
+    cid_map = company_ids.get_ids({x["chp_number"] for x in bonds})     # מזהי חברה במאיה (להעשרה): מהמפה, לא מסריקה
+    for x in bonds:
+        x["maya_company_id"] = cid_map.get(x["chp_number"])
+
     check = cross_check(bonds, approved, dw)
     print("datawise check:", {k: (v if not isinstance(v, list) else len(v)) for k, v in check.items()})
     os.makedirs(OUT, exist_ok=True)
@@ -600,7 +651,7 @@ def main(companies_path=None):
     add_terms(bonds)
     try:   # דירוגים + תשואה לפדיון (enrich.py, לוגיקה כפולה מ-Revach). כשל לא מפיל את הרשימה: העמודות נשארות ריקות.
         import enrich
-        enrich.enrich(bonds)
+        enrich.enrich(bonds, recheck_all=True)      # בנייה מלאה: בדיקה מחדש של כל החברות (לוחות סילוקין משתנים)
     except Exception as e:  # noqa: BLE001
         print(f"WARNING: enrich failed, ratings/yield columns left empty: {e}", file=sys.stderr)
     total_before = len(bonds)
@@ -615,6 +666,8 @@ def main(companies_path=None):
         json.dump({"updated": TODAY, **check}, f, ensure_ascii=False, indent=1)
     state = load_state()
     apply_first_seen(bonds, state)
+    with open(INTERNAL_PATH, "w", encoding="utf-8") as f:    # בסיס לבנייה המהירה (fast_build.py): הרשימה הרגילה המלאה, עם השדות הפנימיים
+        json.dump({"updated": TODAY, "regular": bonds}, f, ensure_ascii=False, separators=(",", ":"), default=str)
     bonds = bonds + offering_bonds       # הנפקות: אחרי ההעשרה והסינון (אין להן תנאים מהבורסה)
     counts = write_lists(bonds)
     os.makedirs(OUT, exist_ok=True)
