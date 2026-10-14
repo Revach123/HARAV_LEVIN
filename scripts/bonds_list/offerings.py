@@ -79,12 +79,23 @@ def build(upcoming_raw, open_raw, trade_rows, our_companies, types, prefixes, bo
     for name, chp in our_companies or []:
         if chp and norm_name(name):
             by_name.setdefault(norm_name(name), chp_norm(chp))
+    def lookup(name):
+        """התאמה מדויקת; אחרת שם מקוצר (בורסה) שהוא תחילת שם של חברה אחת בלבד (לפחות 5 תווים)."""
+        n = norm_name(name)
+        if n in by_name:
+            return by_name[n]
+        if len(n) >= 5:
+            hits = {chp for k, chp in by_name.items() if k.startswith(n)}
+            if len(hits) == 1:
+                return hits.pop()
+        return ""
+
     up = parse_upcoming(upcoming_raw, bond_coarse)
     op = parse_open(open_raw, types, prefixes, bond_coarse)
     for o in up:
-        o["chp_number"] = by_name.get(norm_name(o["company_name"]), "")
+        o["chp_number"] = lookup(o["company_name"])
     for o in op:
-        o["chp_number"] = by_issuer.get(str(o["issuer_id"]).strip(), "") or by_name.get(norm_name(o["issuer_name"]), "")
+        o["chp_number"] = by_issuer.get(str(o["issuer_id"]).strip(), "") or lookup(o["issuer_name"])
     companies = {}
     for status, items, name_key in ((STATUS_UPCOMING, up, "company_name"), (STATUS_OPEN, op, "issuer_name")):
         for o in items:
