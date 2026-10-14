@@ -31,23 +31,41 @@ const sameName = (a, b) => {
   const [s, l] = x.length <= y.length ? [x, y] : [y, x];
   return s.length >= 20 && l.startsWith(s);
 };
-// הנפקות עתידיות/פתוחות (data/bonds_list/offerings.json, נבנה יומית): ח"פ -> "open" | "upcoming". כשל = אין הנפקות.
+// הנפקות עתידיות/פתוחות (data/bonds_list/offerings.json, נבנה יומית): ח"פ -> "open" | "upcoming".
+// הנפקה בלי ח.פ. (חברה חדשה שעוד לא נכנסה לבנייה, או שם מקוצר) מותאמת לפי שם: מילות השם המקוצר הן תחילת שם של חברה אחת בלבד.
+// כשל = אין הנפקות.
 async function loadOfferings(request, env) {
   try {
-    const res = await (env.ASSETS ? env.ASSETS.fetch(new URL("/data/bonds_list/offerings.json", request.url)) : fetch(new URL("/data/bonds_list/offerings.json", request.url)));
-    if (!res.ok) return new Map();
+    const url = new URL("/data/bonds_list/offerings.json", request.url);
+    const res = await (env.ASSETS ? env.ASSETS.fetch(url) : fetch(url));
+    if (!res.ok) return { byChp: new Map(), byName: [] };
     const d = await res.json();
-    const m = new Map();
-    for (const c of d.companies || []) m.set(String(c.chp_number), (c.statuses || []).includes("בהנפקה") ? "open" : "upcoming");
-    return m;
-  } catch { return new Map(); }
+    const byChp = new Map(), byName = [];
+    const add = (chp, name, kind) => {
+      if (chp) { const k = String(chp); if (byChp.get(k) !== "open") byChp.set(k, kind); }
+      else if (name) byName.push({ name, kind });
+    };
+    for (const o of d.open || []) add(o.chp_number, o.issuer_name, "open");
+    for (const o of d.upcoming || []) add(o.chp_number, o.company_name, "upcoming");
+    return { byChp, byName };
+  } catch { return { byChp: new Map(), byName: [] }; }
 }
 
-function withRegistrarNames(rows, offerings = new Map()) {
+const nameWords = n => String(n || "").toLowerCase().replace(/בע"?מ|בע״מ|בע''מ/g, " ").split(/\s+/).map(w => w.replace(/[^0-9a-z\u0590-\u05ff]/g, "")).filter(Boolean);
+const startsWithWords = (full, short) => { const f = nameWords(full), w = short; return w.length > 0 && f.length >= w.length && w.every((v, i) => f[i] === v); };
+
+function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) {
+  // הנפקות בלי ח.פ.: מותאמות לשורה רק אם הן תחילת שם של שורה אחת בלבד
+  const byRow = new Map();
+  for (const o of offerings.byName) {
+    const w = nameWords(o.name);
+    const hit = rows.filter(r => startsWithWords(r._registrar, w) || startsWithWords(r.permit_name, w));
+    if (hit.length === 1) { const cur = byRow.get(hit[0]); if (cur !== "open") byRow.set(hit[0], o.kind); }
+  }
   const out = rows.map(r => {
     const { _registrar, _bonds_note_all, ...rest } = r;
     // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית), והערת אישור האג"ח חוזרת להופיע
-    const off = rest.bonds_status === 'אין אג"ח' ? offerings.get(String(rest.chp_number || "").trim()) : "";
+    const off = rest.bonds_status === 'אין אג"ח' ? (offerings.byChp.get(String(rest.chp_number || "").trim()) || byRow.get(r)) : "";
     if (off) { rest.bonds_status = off === "open" ? 'יש אג"ח בהנפקה' : 'יש אג"ח בהנפקה עתידית'; rest.bonds_note = _bonds_note_all || ""; }
     const reg = String(_registrar || "").replace(/\s+/g, " ").trim();
     const permit = String(r.permit_name || "").replace(/\s+/g, " ").trim();
