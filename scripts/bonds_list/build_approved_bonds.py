@@ -72,7 +72,6 @@ COLUMNS = [
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
     "first_seen",
-    "offering_status",   # offerings.py: "בהנפקה" / "הנפקה עתידית" (ריק = נייר רגיל)
     "midroog_rating", "maalot_rating", "ytm_gross",   # enrich.py: דירוגים + תשואה ברוטו לפדיון (לא צמוד בלבד)
 ]
 
@@ -483,18 +482,34 @@ def write_lists(bonds):
     return counts
 
 
-def collect_offerings(dw, approved, manual, names, companies):
-    """הנפקות עתידיות ופתוחות -> (offerings.json, שורות לרשימת האג"ח). כשל לא מפיל את הבנייה (אין הנפקות ברשימה)."""
+OFFERINGS_STATE_PATH = os.path.join(OUT, "offerings_state.json")
+
+
+def collect_offerings(dw, approved, manual, names, companies, regular_ids=frozenset()):
+    """הנפקות עתידיות ופתוחות -> (offerings.json, שורות לרשימת האג"ח).
+    זיכרון: הנפקה שנעלמה מהבורסה נשארת 3 ימים (offerings_state.json), עד שהאג"ח ברשימה הרגילה. כשל בשליפה לא מפיל
+    את הבנייה: נשארות רק הנפקות מהזיכרון."""
     empty = {"upcoming": [], "open": [], "companies": [], "unmatched": []}
+    state = {}
+    if os.path.exists(OFFERINGS_STATE_PATH):
+        with open(OFFERINGS_STATE_PATH, encoding="utf-8") as f:
+            state = json.load(f)
     try:
         up_raw, op_raw = dw_get("/v1/tase-offering/upcoming"), dw_get("/v1/tase-offering/open")
         rows, _date, types = dw if dw else ([], "", {})
         ours = [((c.get("registrar_name") or c.get("permit_name") or ""), c.get("chp_number")) for c in companies]
         data = offerings.build(up_raw, op_raw, rows, ours, types, BOND_CODE_PREFIXES, BOND_COARSE, chp_norm)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: offerings fetch failed, using remembered offerings only: {e}", file=sys.stderr)
+        data = dict(empty)
+    try:
+        data, state = offerings.apply_memory(data, state, TODAY, set(regular_ids))
         bonds = offerings.bond_rows(data, approved, manual, names, SELECTIVE, GOYIM_NOTE, TODAY)
     except Exception as e:  # noqa: BLE001
         print(f"WARNING: offerings failed, no offering bonds this run: {e}", file=sys.stderr)
         return empty, []
+    with open(OFFERINGS_STATE_PATH, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=1, sort_keys=True)
     with open(os.path.join(OUT, "offerings.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": TODAY, **data}, f, ensure_ascii=False, indent=1)
     print(f"offerings: upcoming={len(data['upcoming'])}, open={len(data['open'])}, "
@@ -526,7 +541,8 @@ def main(companies_path=None):
     if check["status"] == "too_many_missing":
         raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
-    offering_data, offering_bonds = collect_offerings(dw, approved, manual, company_names(companies), companies)
+    offering_data, offering_bonds = collect_offerings(dw, approved, manual, company_names(companies), companies,
+                                                      {int(x['security_id']) for v in snapshot.values() for x in v})
     for chp, entries in offerings.snapshot_entries(offering_data).items():   # הנפקות פתוחות גם בחלון הבחירה
         have = {e["security_id"] for e in snapshot.get(chp, [])}
         snapshot.setdefault(chp, []).extend(e for e in entries if e["security_id"] not in have)

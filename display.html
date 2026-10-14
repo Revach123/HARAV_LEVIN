@@ -134,7 +134,6 @@ const COLUMNS = {
     { key:"symbol", px:115,         label:"סימול",                                w:8  },
     { key:"security_id", px:110,    label:"מספר נייר",            cell:"num",   w:8  },
     { key:"security_type", px:120,  label:"סוג נייר",                             w:10 },
-    { key:"offering_status", px:110, label:"הנפקה",               cell:"offer", w:9  },
     { key:"company", px:200,        label:"חברה",                 cell:"name",  w:19 },
     { key:"is_private", px:125,     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
     { key:"annual_interest", px:85,label:"ריבית %",              cell:"pct",   w:7  },
@@ -531,11 +530,6 @@ function cellFor(col, val, row) {
     if (n > 0) td.classList.add("up");
     else if (n < 0) td.classList.add("down");
     td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
-    return td;
-  }
-  if (col.cell === "offer") {   // בהנפקה / הנפקה עתידית (ריק = נייר רגיל)
-    td.className = "ctr";
-    td.innerHTML = val ? `<span class="badge-offer">${esc(val)}</span>` : "";
     return td;
   }
   if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא
