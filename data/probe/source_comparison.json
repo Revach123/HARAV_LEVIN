@@ -1,0 +1,1764 @@
+{
+ "sizes": {
+  "maya": 1034,
+  "datawise": 1035,
+  "market": 929
+ },
+ "intersections": {
+  "M&D": 1034,
+  "M&K": 928,
+  "D&K": 929,
+  "all3": 928
+ },
+ "only_datawise_not_maya": {
+  "count": 1,
+  "approved_companies": 0,
+  "rows": [
+   {
+    "security_id": 1248434,
+    "name": "אביעד ריב אגח א",
+    "type": "אג\"ח מובנות",
+    "chp": "517352274",
+    "company": "אביעד ריביות בע\"מ",
+    "approved": false
+   }
+  ]
+ },
+ "only_maya_not_datawise": {
+  "count": 0,
+  "approved_companies": 0,
+  "rows": []
+ },
+ "market_not_maya": {
+  "count": 1,
+  "approved_companies": 0,
+  "rows": [
+   {
+    "security_id": 1248434,
+    "name": "אביעד ריב אגח א",
+    "type": "אג\"ח מובנות",
+    "chp": "517352274",
+    "company": "אביעד ריביות בע\"מ",
+    "approved": false
+   }
+  ]
+ },
+ "market_not_datawise": {
+  "count": 0,
+  "approved_companies": 0,
+  "rows": []
+ },
+ "maya_not_market": {
+  "count": 106,
+  "approved_companies": 53,
+  "rows": [
+   {
+    "security_id": 1090281,
+    "name": "נתיבים אגח א-רמ",
+    "type": "אג\"ח מובנות",
+    "chp": "513502229",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1100908,
+    "name": "מקורות אגח 6-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520010869",
+    "company": "מקורות חברת מים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1101567,
+    "name": "אלון דלק אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520041690",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1103084,
+    "name": "נתיביגז אגחא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "513436394",
+    "company": "נתיבי הגז הטבעי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1124346,
+    "name": "מקורות אגח 8-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520010869",
+    "company": "מקורות חברת מים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1125509,
+    "name": "נתיביגז אגחג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "513436394",
+    "company": "נתיבי הגז הטבעי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1138825,
+    "name": "ביט ישיראגיא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520044439",
+    "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1138999,
+    "name": "מת\"ם אגח א -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "510687403",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1140276,
+    "name": "רפאל אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520042185",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1140284,
+    "name": "רפאל אגח ד-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520042185",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167212,
+    "name": "אורמת אגח 4 -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "880326081",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167782,
+    "name": "לוויתן אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516223864",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167790,
+    "name": "לוויתן אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516223864",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1168087,
+    "name": "תשת אנרג אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027293",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1168483,
+    "name": "אנרג'יקס אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "513901371",
+    "company": "אנרג'יקס - אנרגיות מתחדשות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1169648,
+    "name": "פטרוטקס אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "550222764",
+    "company": "פטרוטקס",
+    "approved": true
+   },
+   {
+    "security_id": 1169721,
+    "name": "פתאל החזקאג 1-ס",
+    "type": "אג\"ח להמרה",
+    "chp": "512607888",
+    "company": "פתאל החזקות (1998) בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1172956,
+    "name": "אלומיי אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "520039868",
+    "company": "אלומיי קפיטל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1173673,
+    "name": "אנרגיש אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1173681,
+    "name": "אנרגיש אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1181627,
+    "name": "נאוויטס פט אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "550263107",
+    "company": "נאוויטס פטרוליום",
+    "approved": false
+   },
+   {
+    "security_id": 1181676,
+    "name": "מצלאוי-ס אג ז",
+    "type": "אג\"ח להמרה",
+    "chp": "512726712",
+    "company": "מצלאוי חברה לבנין בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1181783,
+    "name": "י.ח.ק אגח ב -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "550016091",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1182559,
+    "name": "מירלנד אג ט-ש",
+    "type": "אג\"ח להמרה",
+    "chp": "HE153919",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1187335,
+    "name": "רש\"ת אגח א-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "500102868",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1187343,
+    "name": "רש\"ת אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "500102868",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1192087,
+    "name": "דיסקונטאגח ק1רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520007030",
+    "company": "בנק דיסקונט לישראל בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1193499,
+    "name": "כלל ביטוח אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "520036120",
+    "company": "כלל החזקות עסקי ביטוח בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1195577,
+    "name": "איילון אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520030677",
+    "company": "איילון אחזקות",
+    "approved": true
+   },
+   {
+    "security_id": 1196849,
+    "name": "עוגן אגחב-רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "516556545",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197128,
+    "name": "איסתא אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "520042763",
+    "company": "איסתא ליינס חברת הנסיעות של הסטודנטים בישראל",
+    "approved": true
+   },
+   {
+    "security_id": 1197144,
+    "name": "אנרגיש אגח 5-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197748,
+    "name": "סופרין אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "515361442",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197953,
+    "name": "מקס איט הת ד-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "512905423",
+    "company": "מקס איט פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1198035,
+    "name": "נופר אנרג אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "514599943",
+    "company": "ע.י. נופר אנרג'י בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1198142,
+    "name": "ג'י סיטי אג יז",
+    "type": "אג\"ח להמרה",
+    "chp": "520033234",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1198340,
+    "name": "מ.ישיר אגח16-רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "516100120",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1198787,
+    "name": "אגד אגח 1-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516041118",
+    "company": "אגד חברה לתחבורה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1199686,
+    "name": "גפן מגורים אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "512781386",
+    "company": "גפן מגורים והתחדשות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1204767,
+    "name": "ישראייר אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "510291750",
+    "company": "ישראייר גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1205897,
+    "name": "לאומי אגח 2-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1207489,
+    "name": "ארבה אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "515333128",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1208453,
+    "name": "גב-יםנגב אגב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "514189596",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1208818,
+    "name": "מימוןמשכ אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516100153",
+    "company": "מימון ישיר נדל\"ן ומשכנתאות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1209824,
+    "name": "רב בריח אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "514160530",
+    "company": "רב בריח (08) תעשיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1210244,
+    "name": "ביט ישיראגיב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520044439",
+    "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1210442,
+    "name": "מודיעין אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "550012405",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1211747,
+    "name": "פועלים אגח 1-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1211887,
+    "name": "עלמדב אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "2624970",
+    "company": "אלעד קנדה ריאלטי אינק.",
+    "approved": false
+   },
+   {
+    "security_id": 1214964,
+    "name": "ג'נרישן קפ אגחד",
+    "type": "אג\"ח להמרה",
+    "chp": "515846558",
+    "company": "ג'נריישן קפיטל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1215029,
+    "name": "לאומי אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1215193,
+    "name": "מכלול נד אגח2רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1215268,
+    "name": "ממון משהנ אג1רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517014023",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1215300,
+    "name": "קרן שמש אגחא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "540333101",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1216274,
+    "name": "קרדיטו אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516804499",
+    "company": "קרדיטו הנפקות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218130,
+    "name": "אנלייט אנ אג ח",
+    "type": "אג\"ח להמרה",
+    "chp": "520041146",
+    "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218205,
+    "name": "גילת טלקום אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "520041674",
+    "company": "גילת טלקום גלובל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218650,
+    "name": "יסודות אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "515099018",
+    "company": "ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1220326,
+    "name": "שמן נדלן אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "520023474",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1221928,
+    "name": "לאומי אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1223031,
+    "name": "אוטונומוס אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "520044298",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1223536,
+    "name": "מת\"ם אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "510687403",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1224617,
+    "name": "מיה דינמיקס אג1",
+    "type": "אג\"ח להמרה",
+    "chp": "520039900",
+    "company": "מיה דיינמיקס מוטורס בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1224815,
+    "name": "הראלבט אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520004078",
+    "company": "הראל חברה לביטוח בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225010,
+    "name": "מקס איט הת ו-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "512905423",
+    "company": "מקס איט פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225366,
+    "name": "מכלול נד אגח3רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1225770,
+    "name": "מידאס אג 2",
+    "type": "אג\"ח להמרה",
+    "chp": "520039496",
+    "company": "מידאס השקעות בנדל\"ן בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225788,
+    "name": "ממון מש2 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112074",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1225796,
+    "name": "ממון מש2 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112074",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1227545,
+    "name": "פועלים אגח 2-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1228337,
+    "name": "ישראכרט אגחג-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "510706153",
+    "company": "ישראכרט בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1230705,
+    "name": "ארגו פרופ אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "70252750",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1231463,
+    "name": "וויי בוקס אג ז",
+    "type": "אג\"ח להמרה",
+    "chp": "520038688",
+    "company": "וויי - בוקס נדל\"ן בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1231927,
+    "name": "מכלול נד אגח4רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1233808,
+    "name": "מזרחיטפ 2036$רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "520000522",
+    "company": "בנק מזרחי טפחות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1233816,
+    "name": "פועלים 2033$-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234335,
+    "name": "לאומי2031Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1234384,
+    "name": "פועלים 2029$-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234632,
+    "name": "הפניקס אגח 7",
+    "type": "אג\"ח להמרה",
+    "chp": "520017450",
+    "company": "הפניקס פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1234848,
+    "name": "מזרחיטפ אג$ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000522",
+    "company": "בנק מזרחי טפחות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234988,
+    "name": "חשמל דולר2038רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1235969,
+    "name": "מטריקס אג 2",
+    "type": "אג\"ח להמרה",
+    "chp": "520039413",
+    "company": "מטריקס אי. טי. בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1236801,
+    "name": "ממון מש3 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112686",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1236819,
+    "name": "ממון מש3 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112686",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1237809,
+    "name": "לאומי אגח 5-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1238518,
+    "name": "אלומה אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "516214871",
+    "company": "אלומה קרן תשתיות (2020) בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1241678,
+    "name": "לאומי $ 2036 רמ",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243179,
+    "name": "אייסיאל אגחח-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027830",
+    "company": "איי.סי.אל גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243336,
+    "name": "כלל תעשאג יז-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520021874",
+    "company": "כלל תעשיות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1243377,
+    "name": "לאומי2029$בכ רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243385,
+    "name": "לאומי2033$בכ רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243658,
+    "name": "דיסק 2031Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520007030",
+    "company": "בנק דיסקונט לישראל בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1243781,
+    "name": "ממון מש4 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517182549",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1243799,
+    "name": "ממון מש4 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517182549",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1246305,
+    "name": "לאומי2029Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1246560,
+    "name": "גילת $ אג1-רמ",
+    "type": "אג\"ח להמרה",
+    "chp": "520038936",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 2810331,
+    "name": "אייסיאל אגחו-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027830",
+    "company": "איי.סי.אל גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 3180361,
+    "name": "לידר אגח ח- רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520037664",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 4730180,
+    "name": "לוזון קב אג ט",
+    "type": "אג\"ח להמרה",
+    "chp": "520039660",
+    "company": "קבוצת עמוס לוזון יזמות ואנרגיה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000186,
+    "name": "חשמל צמוד2029רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000244,
+    "name": "חשמל דולר2028רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000400,
+    "name": "חשמל דולר2032רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6040679,
+    "name": "לאומי $ 2033 רמ",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6040687,
+    "name": "לאומי2027$בכ רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6620470,
+    "name": "פועלים $1COCOרמ",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 7200249,
+    "name": "אנלייט אנר אג ג",
+    "type": "אג\"ח להמרה",
+    "chp": "520041146",
+    "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+    "approved": true
+   }
+  ]
+ },
+ "datawise_not_market": {
+  "count": 106,
+  "approved_companies": 53,
+  "rows": [
+   {
+    "security_id": 1090281,
+    "name": "נתיבים אגח א-רמ",
+    "type": "אג\"ח מובנות",
+    "chp": "513502229",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1100908,
+    "name": "מקורות אגח 6-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520010869",
+    "company": "מקורות חברת מים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1101567,
+    "name": "אלון דלק אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520041690",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1103084,
+    "name": "נתיביגז אגחא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "513436394",
+    "company": "נתיבי הגז הטבעי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1124346,
+    "name": "מקורות אגח 8-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520010869",
+    "company": "מקורות חברת מים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1125509,
+    "name": "נתיביגז אגחג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "513436394",
+    "company": "נתיבי הגז הטבעי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1138825,
+    "name": "ביט ישיראגיא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520044439",
+    "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1138999,
+    "name": "מת\"ם אגח א -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "510687403",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1140276,
+    "name": "רפאל אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520042185",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1140284,
+    "name": "רפאל אגח ד-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520042185",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167212,
+    "name": "אורמת אגח 4 -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "880326081",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167782,
+    "name": "לוויתן אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516223864",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1167790,
+    "name": "לוויתן אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516223864",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1168087,
+    "name": "תשת אנרג אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027293",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1168483,
+    "name": "אנרג'יקס אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "513901371",
+    "company": "אנרג'יקס - אנרגיות מתחדשות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1169648,
+    "name": "פטרוטקס אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "550222764",
+    "company": "פטרוטקס",
+    "approved": true
+   },
+   {
+    "security_id": 1169721,
+    "name": "פתאל החזקאג 1-ס",
+    "type": "אג\"ח להמרה",
+    "chp": "512607888",
+    "company": "פתאל החזקות (1998) בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1172956,
+    "name": "אלומיי אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "520039868",
+    "company": "אלומיי קפיטל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1173673,
+    "name": "אנרגיש אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1173681,
+    "name": "אנרגיש אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1181627,
+    "name": "נאוויטס פט אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "550263107",
+    "company": "נאוויטס פטרוליום",
+    "approved": false
+   },
+   {
+    "security_id": 1181676,
+    "name": "מצלאוי-ס אג ז",
+    "type": "אג\"ח להמרה",
+    "chp": "512726712",
+    "company": "מצלאוי חברה לבנין בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1181783,
+    "name": "י.ח.ק אגח ב -רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "550016091",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1182559,
+    "name": "מירלנד אג ט-ש",
+    "type": "אג\"ח להמרה",
+    "chp": "HE153919",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1187335,
+    "name": "רש\"ת אגח א-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "500102868",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1187343,
+    "name": "רש\"ת אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "500102868",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1192087,
+    "name": "דיסקונטאגח ק1רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520007030",
+    "company": "בנק דיסקונט לישראל בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1193499,
+    "name": "כלל ביטוח אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "520036120",
+    "company": "כלל החזקות עסקי ביטוח בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1195577,
+    "name": "איילון אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520030677",
+    "company": "איילון אחזקות",
+    "approved": true
+   },
+   {
+    "security_id": 1196849,
+    "name": "עוגן אגחב-רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "516556545",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197128,
+    "name": "איסתא אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "520042763",
+    "company": "איסתא ליינס חברת הנסיעות של הסטודנטים בישראל",
+    "approved": true
+   },
+   {
+    "security_id": 1197144,
+    "name": "אנרגיש אגח 5-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516301843",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197748,
+    "name": "סופרין אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "515361442",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1197953,
+    "name": "מקס איט הת ד-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "512905423",
+    "company": "מקס איט פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1198035,
+    "name": "נופר אנרג אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "514599943",
+    "company": "ע.י. נופר אנרג'י בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1198142,
+    "name": "ג'י סיטי אג יז",
+    "type": "אג\"ח להמרה",
+    "chp": "520033234",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1198340,
+    "name": "מ.ישיר אגח16-רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "516100120",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1198787,
+    "name": "אגד אגח 1-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516041118",
+    "company": "אגד חברה לתחבורה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1199686,
+    "name": "גפן מגורים אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "512781386",
+    "company": "גפן מגורים והתחדשות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1204767,
+    "name": "ישראייר אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "510291750",
+    "company": "ישראייר גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1205897,
+    "name": "לאומי אגח 2-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1207489,
+    "name": "ארבה אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "515333128",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1208453,
+    "name": "גב-יםנגב אגב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "514189596",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1208818,
+    "name": "מימוןמשכ אגא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516100153",
+    "company": "מימון ישיר נדל\"ן ומשכנתאות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1209824,
+    "name": "רב בריח אג א",
+    "type": "אג\"ח להמרה",
+    "chp": "514160530",
+    "company": "רב בריח (08) תעשיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1210244,
+    "name": "ביט ישיראגיב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520044439",
+    "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1210442,
+    "name": "מודיעין אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "550012405",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1211747,
+    "name": "פועלים אגח 1-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1211887,
+    "name": "עלמדב אגח ג-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "2624970",
+    "company": "אלעד קנדה ריאלטי אינק.",
+    "approved": false
+   },
+   {
+    "security_id": 1214964,
+    "name": "ג'נרישן קפ אגחד",
+    "type": "אג\"ח להמרה",
+    "chp": "515846558",
+    "company": "ג'נריישן קפיטל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1215029,
+    "name": "לאומי אגח 3-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1215193,
+    "name": "מכלול נד אגח2רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1215268,
+    "name": "ממון משהנ אג1רמ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517014023",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1215300,
+    "name": "קרן שמש אגחא-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "540333101",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1216274,
+    "name": "קרדיטו אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "516804499",
+    "company": "קרדיטו הנפקות בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218130,
+    "name": "אנלייט אנ אג ח",
+    "type": "אג\"ח להמרה",
+    "chp": "520041146",
+    "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218205,
+    "name": "גילת טלקום אג ד",
+    "type": "אג\"ח להמרה",
+    "chp": "520041674",
+    "company": "גילת טלקום גלובל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1218650,
+    "name": "יסודות אג ב",
+    "type": "אג\"ח להמרה",
+    "chp": "515099018",
+    "company": "ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1220326,
+    "name": "שמן נדלן אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "520023474",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1221928,
+    "name": "לאומי אגח 4-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1223031,
+    "name": "אוטונומוס אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "520044298",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1223536,
+    "name": "מת\"ם אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "510687403",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1224617,
+    "name": "מיה דינמיקס אג1",
+    "type": "אג\"ח להמרה",
+    "chp": "520039900",
+    "company": "מיה דיינמיקס מוטורס בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1224815,
+    "name": "הראלבט אגח ב-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520004078",
+    "company": "הראל חברה לביטוח בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225010,
+    "name": "מקס איט הת ו-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "512905423",
+    "company": "מקס איט פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225366,
+    "name": "מכלול נד אגח3רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1225770,
+    "name": "מידאס אג 2",
+    "type": "אג\"ח להמרה",
+    "chp": "520039496",
+    "company": "מידאס השקעות בנדל\"ן בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1225788,
+    "name": "ממון מש2 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112074",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1225796,
+    "name": "ממון מש2 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112074",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1227545,
+    "name": "פועלים אגח 2-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1228337,
+    "name": "ישראכרט אגחג-רמ",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "510706153",
+    "company": "ישראכרט בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1230705,
+    "name": "ארגו פרופ אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "70252750",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1231463,
+    "name": "וויי בוקס אג ז",
+    "type": "אג\"ח להמרה",
+    "chp": "520038688",
+    "company": "וויי - בוקס נדל\"ן בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1231927,
+    "name": "מכלול נד אגח4רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "515759777",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1233808,
+    "name": "מזרחיטפ $ 2036ר",
+    "type": "אגח הוני ניתן למחיקה",
+    "chp": "520000522",
+    "company": "בנק מזרחי טפחות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1233816,
+    "name": "פועלים $ 2033-ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234335,
+    "name": "לאומי2031Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1234384,
+    "name": "פועלים $ 2029-ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234632,
+    "name": "הפניקס אגח 7",
+    "type": "אג\"ח להמרה",
+    "chp": "520017450",
+    "company": "הפניקס פיננסים בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1234848,
+    "name": "מזרחיטפ אגב$ -ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000522",
+    "company": "בנק מזרחי טפחות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1234988,
+    "name": "חשמל דולר2038רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1235969,
+    "name": "מטריקס אג 2",
+    "type": "אג\"ח להמרה",
+    "chp": "520039413",
+    "company": "מטריקס אי. טי. בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1236801,
+    "name": "ממון מש3 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112686",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1236819,
+    "name": "ממון מש3 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517112686",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1237809,
+    "name": "לאומי אגח 5-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1238518,
+    "name": "אלומה אג 1",
+    "type": "אג\"ח להמרה",
+    "chp": "516214871",
+    "company": "אלומה קרן תשתיות (2020) בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1241678,
+    "name": "לאומי 2036 $203",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243179,
+    "name": "אייסיאל אגחח-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027830",
+    "company": "איי.סי.אל גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243336,
+    "name": "כלל תעשאג יז-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520021874",
+    "company": "כלל תעשיות בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1243377,
+    "name": "לאומי$ 2029בכ ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243385,
+    "name": "לאומי$ 2033בכ ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1243658,
+    "name": "דיסק 2031Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520007030",
+    "company": "בנק דיסקונט לישראל בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 1243781,
+    "name": "ממון מש4 אג א-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517182549",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1243799,
+    "name": "ממון מש4 אג ב-מ",
+    "type": "אג\"ח מרובה פדיונות",
+    "chp": "517182549",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 1246305,
+    "name": "לאומי2029Eמג רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 1246560,
+    "name": "גילת $ אג1-רמ",
+    "type": "אג\"ח להמרה",
+    "chp": "520038936",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 2810331,
+    "name": "אייסיאל אגחו-רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520027830",
+    "company": "איי.סי.אל גרופ בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 3180361,
+    "name": "לידר אגח ח- רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520037664",
+    "company": "",
+    "approved": false
+   },
+   {
+    "security_id": 4730180,
+    "name": "לוזון קב אג ט",
+    "type": "אג\"ח להמרה",
+    "chp": "520039660",
+    "company": "קבוצת עמוס לוזון יזמות ואנרגיה בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000186,
+    "name": "חשמל צמוד2029רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000244,
+    "name": "חשמל דולר2028רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6000400,
+    "name": "חשמל דולר2032רמ",
+    "type": "אג\"ח קונצרני",
+    "chp": "520000472",
+    "company": "חברת החשמל לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6040679,
+    "name": "לאומי 2033 $203",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6040687,
+    "name": "לאומי$ 2027בכ ר",
+    "type": "אג\"ח קונצרני",
+    "chp": "520018078",
+    "company": "בנק לאומי לישראל בע\"מ",
+    "approved": true
+   },
+   {
+    "security_id": 6620470,
+    "name": "פועלים 1COCOרמ$",
+    "type": "אגח הוני ניתן להמרה",
+    "chp": "520000118",
+    "company": "בנק הפועלים בע\"מ",
+    "approved": false
+   },
+   {
+    "security_id": 7200249,
+    "name": "אנלייט אנר אג ג",
+    "type": "אג\"ח להמרה",
+    "chp": "520041146",
+    "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+    "approved": true
+   }
+  ]
+ },
+ "example_1248434": {
+  "maya": false,
+  "datawise": true,
+  "market": true
+ }
+}
