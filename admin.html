@@ -790,7 +790,9 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
-  .idx-box { margin-inline-start:auto; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
+  .idx-row { display:flex; margin:10px 0; }
+  .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
+  .idx-sub { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-head { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-pie { display:flex; gap:12px; align-items:center; }
   .idx-line i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-inline-end:6px; }
@@ -1006,7 +1008,6 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
-      ${idxBoxHtml()}
     </div>
     <div class="chg-bar">
       <button class="btn-ghost" onclick="undoLast()" ${changeLog.some(e=>!e.undone) ? "" : "disabled"}>↩ ביטול שינוי אחרון</button>
@@ -1461,7 +1462,7 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div><div class="idx-row" id="idx-row">${idxBoxHtml()}</div>`;
 }
 
 function renderHome() {
@@ -2138,7 +2139,7 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
 }
 
 // ── כיסוי מדד: כמה אחוז מחברות המדד (ברירת מחדל ת"א-SME60) יש להן היתר עסקה, וכמה היתר פרטי ──
-let idxBonds = null; let idxSel = "tb60"; const idxCache = {}; let idxLoading = "";
+let idxBonds = null, idxMarket = null; const idxCache = {}; let idxLoading = false;
 // עוגה בתוך עוגה: טבעת חיצונית = אחוז עם היתר עסקה, טבעת פנימית = אחוז עם היתר פרטי (מתוך כלל המדד)
 function idxPie(permit, priv, note1, note2) {
   const ring = (r, w, pct, color) => { const c = 2 * Math.PI * r; return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="#e6ecec" stroke-width="${w}"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="${w}" stroke-dasharray="${(c * Math.min(pct, 100) / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/>`; };
@@ -2147,42 +2148,37 @@ function idxPie(permit, priv, note1, note2) {
     <div class="idx-line" style="margin-top:6px;"><i style="background:#1fa59a"></i><b>${priv}%</b> עם היתר פרטי<br><span>${note2}</span></div></div></div>`;
 }
 function idxBoxHtml() {
-  const sel = `<select onchange="idxPick(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">${[["tb60","תל בונד 60 (אג\"ח)"],["147","ת\"א-SME60"],["137","ת\"א-125"],["143","ת\"א-90"],["142","ת\"א-35"]].map(([v,l]) => `<option value="${v}" ${v===idxSel?"selected":""}>${l}</option>`).join("")}</select>`;
-  const d = idxCache[idxSel];
+  const d = idxCache.tb60;
   let body;
-  if (!d) { body = `<span style="color:var(--muted);font-size:12px;">${idxLoading === idxSel ? "טוען…" : ""}</span>`; if (idxLoading !== idxSel) idxLoad(idxSel); }
+  if (!d) { body = `<span style="color:var(--muted);font-size:12px;">${idxLoading ? "טוען…" : ""}</span>`; if (!idxLoading) idxLoad(); }
   else if (d.error) body = `<span style="color:var(--red);font-size:12px;">${escHtml(d.error)}</span>`;
-  else if (d.securities) {        // מדד אג"ח: לפי משקל הנייר במדד, והבדיקה לפי מספר האג"ח מול רשימת האג"ח המאושרות
-    const appr = new Map((idxBonds?.rows || []).map(r => [String(r.security_id), r.list || ""]));
+  else {
+    const appr = new Map((idxBonds?.rows || []).map(r => [String(r.security_id), r.list || ""]));       // מספר אג"ח -> רשימה (כללי / פרטי / כללי+פרטי)
     const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
     const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
-    body = idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח, לפי משקל`, `${prv.length} אג"ח`);
+    body = `<div class="idx-sub">תל בונד 60 (לפי משקל הנייר במדד)</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`);
+    const m = idxMarket;
+    if (m && m.totalValue) {       // כלל האג"ח הקונצרניות בבורסה, לפי שווי שוק
+      const sv = ids => ids.reduce((a, i) => a + (m.values[i] || 0), 0), ids = [...appr.keys()].filter(i => m.values[i]), pids = ids.filter(i => /פרטי/.test(appr.get(i)));
+      const p2 = v => Math.round(v * 1000 / m.totalValue) / 10;
+      body += `<div class="idx-sub" style="margin-top:10px;">כלל האג"ח הקונצרניות (לפי שווי שוק)</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`);
+    }
   }
-  else {
-    const total = d.companies.length, tw = d.companies.reduce((x, c) => x + (c.weight || 0), 0) || 1;      // מדד מניות: לפי משקל החברה במדד
-    const hits = d.companies.map(c => c.hp ? existingBiz(c.hp) : []);
-    const idxs = hits.map((l, i) => i).filter(i => hits[i].length), pidx = idxs.filter(i => hits[i].some(b => b.visibility === "פרטי" || b.visibility === "רק פרטי"));
-    const pc = l => Math.round(l.reduce((x, i) => x + (d.companies[i].weight || 0), 0) * 1000 / tw) / 10;
-    body = idxPie(pc(idxs), pc(pidx), `${idxs.length} מתוך ${total} חברות, לפי משקל`, `${pidx.length} חברות`);
-  }
-  return `<div class="idx-box"><div class="idx-head">חברות במדד ${sel}</div>${body}</div>`;
+  return `<div class="idx-box">${body}</div>`;
 }
-async function idxLoad(id) {
-  idxLoading = id;
+async function idxLoad() {
+  idxLoading = true;
   try {
-    if (id === "tb60") {      // תל בונד 60: נשאב יומית ישירות מהבורסה אל data/index_coverage (workflow: index-coverage)
-      const [r, rb] = await Promise.all([fetch("/data/index_coverage/telbond60.json"), idxBonds ? null : fetch("/data/bonds_list/bonds_all.json")]);
-      if (!r.ok) throw new Error("telbond60 " + r.status);
-      if (rb && rb.ok) idxBonds = await rb.json();
-      idxCache[id] = await r.json();
-    } else idxCache[id] = await apiFetch("/index-companies?id=" + id);
-  }
-  catch (e) { idxCache[id] = { error: "לא ניתן לטעון את רשימת המדד" }; }
-  idxLoading = "";
-  if (view === "admin") render();
+    const [r, rb, rm] = await Promise.all([fetch("/data/index_coverage/telbond60.json"), idxBonds ? null : fetch("/data/bonds_list/bonds_all.json"), fetch("/data/index_coverage/bonds_market.json").catch(() => null)]);
+    if (!r.ok) throw new Error("telbond60 " + r.status);
+    if (rb && rb.ok) idxBonds = await rb.json();
+    if (rm && rm.ok) idxMarket = await rm.json();
+    idxCache.tb60 = await r.json();
+  } catch (e) { idxCache.tb60 = { error: "לא ניתן לטעון את נתוני המדד" }; }
+  idxLoading = false;
+  const row = document.getElementById("idx-row"); if (row) row.innerHTML = idxBoxHtml();      // מעדכן רק את התיבה (בלי לרנדר מחדש ולאבד הקלדה)
 }
-function idxPick(v) { idxSel = v; render(); }
 
 // ── יומן שינויים: כל הוספה / מחיקה / עדכון נרשמים, ואפשר לבטל שינוי מסוים או לחזור אחורה ──
 let changeLog = []; let chgSeq = 0;
