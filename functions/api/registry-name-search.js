@@ -69,7 +69,7 @@ export async function onRequestGet({ request, env }) {
     });
     if (errors.length === tables.length) return Response.json({ error: errors.join(" | ") }, { status: 500 });
     const results = rows
-      .map(r => ({ id: r.id, name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || "") }))
+      .map(r => ({ id: String(r.id), name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || "") }))
       .sort((a, b) => (a.defunct - b.defunct) || (a.name || "").localeCompare(b.name || "", "he"))
       .slice(0, 20);
     return Response.json({ results, more: rows.length > 20, errors, ms: Date.now() - t0 });
