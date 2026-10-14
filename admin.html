@@ -765,15 +765,13 @@
   .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
   /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
-  .chp-split { display:grid; grid-template-columns:1.5fr 1fr; gap:16px; align-items:stretch; }
-  .chp-split .side-chp h3 { font-size:15px; color:var(--navy); margin:0 0 10px; }
-  .side-nochp { display:flex; }
+  .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .big-nochp { width:100%; min-height:150px; font-family:inherit; font-size:21px; font-weight:700; color:var(--navy); background:#fff; border:2px dashed var(--border); border-radius:8px; cursor:pointer; transition:.15s; padding:12px; }
   .big-nochp:hover { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); }
   .big-nochp .ico { display:block; font-size:30px; margin-bottom:6px; }
   .big-nochp small { display:block; font-size:13px; font-weight:400; color:var(--muted); margin-top:4px; }
   .nochp-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px; color:var(--navy); }
-  @media (max-width:700px) { .chp-split { grid-template-columns:1fr; } }
+  @media (max-width:700px) { .chp-choice { grid-template-columns:1fr; } }
   .ns-item { display:block; width:100%; text-align:right; padding:7px 10px; margin-top:4px; background:#fff; border:1px solid var(--border); border-radius:4px; cursor:pointer; font-family:inherit; font-size:13px; color:var(--text); }
   .ns-item:hover { border-color:var(--accent); background:var(--accent-bg); }
   .ns-item b { color:var(--navy); }
@@ -1100,27 +1098,31 @@ function renderForm() {
       </div>
 
       <div class="lookup-box" id="lookup-box">
-        <div class="chp-split" id="chp-split" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "")}">
-          <div class="side-chp">
-            <h3>עסק עם ח.פ.</h3>
-            <div class="lookup-row" id="chp-row">
-              <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
-              <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
-                ${chpLoading ? "מחפש..." : "חפש ברשם"}
-              </button>
-            </div>
-            <div id="name-search-wrap" style="margin-top:10px;">
-              <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
-                style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
-              <div id="ns-out"></div>
-            </div>
-            <div id="lookup-out">${lookupOutHtml()}</div>
+        <div class="chp-choice" id="chp-choice" style="${(!isEdit && !noChp && !chpPicked) ? "" : "display:none;"}">
+          <button type="button" class="big-nochp" onclick="pickChp()"><span class="ico">🔢</span>עסק עם ח.פ.<small>חיפוש ברשם לפי מספר או לפי שם</small></button>
+          <button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>
+        </div>
+        <div id="chp-area" style="${(noChp || (!isEdit && !chpPicked)) ? "display:none;" : ""}">
+          <div class="nochp-bar" style="margin-bottom:8px;">
+            <b>עסק עם ח.פ.</b>
+            ${!isEdit ? `<button type="button" class="btn-ghost" onclick="toggleNoChp()">עסק בלי ח.פ.</button>` : ""}
           </div>
-          ${!isEdit ? `<div class="side-nochp"><button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button></div>` : ""}
+          <div class="lookup-row" id="chp-row">
+            <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
+            <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
+              ${chpLoading ? "מחפש..." : "חפש ברשם"}
+            </button>
+          </div>
+          <div id="name-search-wrap" style="margin-top:10px;">
+            <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
+              style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
+            <div id="ns-out"></div>
+          </div>
+          <div id="lookup-out">${lookupOutHtml()}</div>
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
-          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש ח.פ.</button>
+          <button type="button" class="btn-ghost" onclick="toggleNoChp()">עסק עם ח.פ.</button>
         </div>
       </div>
 
@@ -1602,6 +1604,7 @@ function bindEvents() {
     let lt;
     chpEl.addEventListener("input", e => {
       editBiz = { ...(editBiz || {}), chp_number: e.target.value };
+      chpPicked = true;
       updateFormGate();
       const n = e.target.value.trim();
       clearTimeout(lt);
@@ -1666,7 +1669,7 @@ async function doLogin() {
   }
 }
 
-let noChp = false;   // "אין ח.פ." (עסק בלי מספר רישום): שם הרשם ניתן להקלדה ידנית
+let noChp = false, chpPicked = false;   // "אין ח.פ." (עסק בלי מספר רישום): שם הרשם ניתן להקלדה ידנית
 // בהוספת עסק: עד שמקלידים ח.פ. או לוחצים "אין ח.פ." שאר הטופס מוסתר; כשיש ח.פ. שם הרשם נמשך מהרשם ולא ניתן לעריכה
 function updateFormGate() {
   const rest = document.getElementById("form-rest"); if (!rest) return;
@@ -1678,24 +1681,34 @@ function updateFormGate() {
   if (reg) { reg.readOnly = lock; reg.style.background = lock ? "#eef3f3" : ""; }
   if (hint) hint.textContent = lock ? "(נמשך מהרשם, לא ניתן לעריכה)" : "(ללא ח.פ. - מקלידים ידנית)";
 }
+function showChpPart() {                          // מציג את החלק המתאים: בחירה / אזור ח.פ. / פס "בלי ח.פ."
+  const isEdit = !!editBiz?.id;
+  const set = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? "" : "none"; };
+  set("chp-choice", !isEdit && !noChp && !chpPicked);
+  set("chp-area", !noChp && (isEdit || chpPicked));
+  set("nochp-bar", noChp);
+  updateFormGate();
+}
+function pickChp() {                              // "עסק עם ח.פ.": פותח את אזור המספר והחיפוש
+  chpPicked = true; showChpPart();
+  document.getElementById("chp")?.focus();
+}
 function toggleNoChp() {
   noChp = !noChp;
   const chpEl = document.getElementById("chp"), out = document.getElementById("lookup-out");
-  if (noChp) {                                   // מנקים את המספר ופותחים את שם הרשם להקלדה
+  if (noChp) {                                   // "עסק בלי ח.פ.": מנקים את המספר ופותחים את שם הרשם להקלדה
     if (chpEl) { chpEl.value = ""; chpEl.disabled = true; }
     editBiz = { ...(editBiz || {}), chp_number: "" };
     chpResult = null; chpError = ""; lookupSeq++; lastAutoNumber = "";
     if (out) out.innerHTML = "";
     formDirty = true;
-  } else {
-    if (chpEl) { chpEl.disabled = false; chpEl.focus(); }
+  } else {                                       // חזרה ל"עסק עם ח.פ."
+    chpPicked = true;
+    if (chpEl) { chpEl.disabled = false; }
     if (out) out.innerHTML = lookupOutHtml();
   }
-  // "עסק בלי ח.פ.": מסתירים את כל אזור המספר והחיפוש (נשאר פס קטן עם "יש ח.פ." וההמשך); חוזרים = שני הצדדים שוב
-  const split = document.getElementById("chp-split"), bar = document.getElementById("nochp-bar");
-  if (split) split.style.display = noChp ? "none" : "";
-  if (bar) bar.style.display = noChp ? "" : "none";
-  updateFormGate();
+  showChpPart();
+  if (!noChp) document.getElementById("chp")?.focus();
 }
 
 let formReturn = "admin";
@@ -1704,6 +1717,7 @@ function openForm(id) {
   formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
+  chpPicked = false;
   noChp = !!id && !(editBiz.chp_number || "").trim();      // עסק קיים בלי ח.פ. = שם הרשם ניתן לעריכה
   chpResult = null; chpError = "";
   setView("form");
