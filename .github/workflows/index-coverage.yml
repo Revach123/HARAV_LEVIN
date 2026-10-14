@@ -1,0 +1,35 @@
+name: Index coverage (Tel Bond 60)
+
+# שואב כל יום את הרכב מדד תל בונד 60 (חברות מנפיקות לפי ח.פ.) ישירות מהבורסה:
+#   data/index_coverage/telbond60.json   - לתיבת "כיסוי מדד" בדף הניהול
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "50 3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build Tel Bond 60 companies
+        env:
+          TASE_DATAWISE_KEY: ${{ secrets.TASE_DATAWISE_KEY }}
+        run: python scripts/index_info/build_telbond60.py
+      - name: Commit
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/index_coverage
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "index-coverage: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash
+          git push

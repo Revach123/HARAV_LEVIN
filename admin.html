@@ -2136,13 +2136,20 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
 }
 
 // ── כיסוי מדד: כמה אחוז מחברות המדד (ברירת מחדל ת"א-SME60) יש להן היתר עסקה, וכמה היתר פרטי ──
-let idxSel = "147"; const idxCache = {}; let idxLoading = "";
+let idxBonds = null; let idxSel = "tb60"; const idxCache = {}; let idxLoading = "";
 function idxBoxHtml() {
-  const sel = `<select onchange="idxPick(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">${[["147","ת\"א-SME60"],["137","ת\"א-125"],["143","ת\"א-90"],["142","ת\"א-35"]].map(([v,l]) => `<option value="${v}" ${v===idxSel?"selected":""}>${l}</option>`).join("")}</select>`;
+  const sel = `<select onchange="idxPick(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">${[["tb60","תל בונד 60 (אג\"ח)"],["147","ת\"א-SME60"],["137","ת\"א-125"],["143","ת\"א-90"],["142","ת\"א-35"]].map(([v,l]) => `<option value="${v}" ${v===idxSel?"selected":""}>${l}</option>`).join("")}</select>`;
   const d = idxCache[idxSel];
   let body;
   if (!d) { body = `<span style="color:var(--muted);font-size:12px;">${idxLoading === idxSel ? "טוען…" : ""}</span>`; if (idxLoading !== idxSel) idxLoad(idxSel); }
   else if (d.error) body = `<span style="color:var(--red);font-size:12px;">${escHtml(d.error)}</span>`;
+  else if (d.securities) {        // מדד אג"ח: לפי משקל הנייר במדד, והבדיקה לפי מספר האג"ח מול רשימת האג"ח המאושרות
+    const appr = new Map((idxBonds?.rows || []).map(r => [String(r.security_id), r.list || ""]));
+    const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
+    const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
+    const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
+    body = `<div class="idx-line"><b>${pc(wsum(hit))}%</b> עם היתר עסקה <span>(${hit.length} מתוך ${d.securities.length} אג"ח, לפי משקל)</span></div><div class="idx-line"><b>${pc(wsum(prv))}%</b> עם היתר פרטי <span>(${prv.length} אג"ח)</span></div>`;
+  }
   else {
     const total = d.companies.length;
     const hits = d.companies.map(c => c.hp ? existingBiz(c.hp) : []);
@@ -2154,7 +2161,14 @@ function idxBoxHtml() {
 }
 async function idxLoad(id) {
   idxLoading = id;
-  try { idxCache[id] = await apiFetch("/index-companies?id=" + id); }
+  try {
+    if (id === "tb60") {      // תל בונד 60: נשאב יומית ישירות מהבורסה אל data/index_coverage (workflow: index-coverage)
+      const [r, rb] = await Promise.all([fetch("/data/index_coverage/telbond60.json"), idxBonds ? null : fetch("/data/bonds_list/bonds_all.json")]);
+      if (!r.ok) throw new Error("telbond60 " + r.status);
+      if (rb && rb.ok) idxBonds = await rb.json();
+      idxCache[id] = await r.json();
+    } else idxCache[id] = await apiFetch("/index-companies?id=" + id);
+  }
   catch (e) { idxCache[id] = { error: "לא ניתן לטעון את רשימת המדד" }; }
   idxLoading = "";
   if (view === "admin") render();
