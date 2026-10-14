@@ -1147,7 +1147,7 @@ function renderForm() {
         <label>שם בהיתר עסקה <span style="color:var(--red)">*</span></label>
         <div class="permit-choice" id="permit-choice">
           <button type="button" id="pc-reg" class="pc-btn ${permitMode === "reg" ? "on" : ""}" onclick="permitPick('reg')">שם מהרשם<small id="pc-reg-name">${escHtml(b.registrar_name||"")}</small></button>
-          <button type="button" id="pc-other" class="pc-btn ${permitMode === "other" ? "on" : ""}" onclick="permitPick('other')">הקלדת שם אחר<small>שם ההיתר שונה מהרשם</small></button>
+          <button type="button" id="pc-other" class="pc-btn ${permitMode === "other" ? "on" : ""}" onclick="permitPick('other')">הקלדת שם אחר<small>שם בהיתר עסקה שונה מהשם ברשם</small></button>
         </div>
         <div id="permit-input-wrap" style="margin-top:8px;${permitMode === "other" ? "" : "display:none;"}">
           <input type="text" id="f-permit" value="${permitMode === "other" ? escHtml(b.permit_name||"") : ""}" autocomplete="off">
