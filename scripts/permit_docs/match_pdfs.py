@@ -49,15 +49,56 @@ def norm(s):
 
 
 def title_core(t):
-    """שם פוסט -> שם החברה: מוריד סיומות של סדרת אג"ח ('אג"ח א'', 'לאג"ח בלבד')."""
-    t = re.sub(r"\s+ל?אג[\"״]?ח\s+בלבד\s*$", "", t or "")
+    """שם פוסט -> שם החברה: מוריד סיומות של סדרת אג"ח ('אג"ח א'', 'לאג"ח בלבד', 'לאג"ח פרטי בלבד')."""
+    t = re.sub(r"\s+ל?אג[\"״]?ח\s+(פרטי\s+|כללי\s+)?בלבד\s*$", "", t or "")
     t = re.sub(r"\s+אג[\"״]?ח\s+\S{1,3}\s*$", "", t)
     return t.strip()
 
 
-def sim(a, b):
-    a, b = norm(title_core(a)), norm(b)
-    return difflib.SequenceMatcher(None, a, b).ratio() if a and b else 0.0
+def title_variants(t):
+    """כמה קריאות אפשריות של שם הפוסט: בלי קידומת 'רישום להיתר עיסקא', לפני/אחרי 'על שם', ותוכן סוגריים."""
+    base = title_core(t)
+    base = re.sub(r"^\s*(רישום\s+)?(ל?היתר\s+עי?סקא)\s*(פרטי|כללי)?\s*", "", base)
+    base = re.sub(r"\s*\((ע[\"״]ר|נוסח[^)]*)\)\s*", " ", base).strip()
+    out = [base]
+    m = re.split(r"\s+על שם\s+", base, maxsplit=1)
+    if len(m) == 2:
+        out += [m[0], m[1]]
+    out += re.findall(r"\(([^)]{4,})\)", base)
+    nop = re.sub(r"\([^)]*\)", " ", base).strip()
+    if nop and nop != base:
+        out.append(nop)
+    seen, res = set(), []
+    for v in out:
+        v = re.sub(r"^\s*על שם\s+", "", v).strip()
+        if v and norm(v) not in seen:
+            seen.add(norm(v)); res.append(v)
+    return res
+
+
+def _ratio(a, b, cut=0.8):
+    sm = difflib.SequenceMatcher(None, a, b)
+    if sm.real_quick_ratio() < cut or sm.quick_ratio() < cut:
+        return 0.0
+    return sm.ratio()
+
+
+def sim(title, name):
+    """דמיון בין שם פוסט לשם עסק: המקסימום מבין הקריאות האפשריות; הכלה מלאה של מילים (2+) נחשבת 0.9."""
+    nb = norm(name)
+    if not nb:
+        return 0.0
+    best = 0.0
+    nbt = set(nb.split())
+    for v in title_variants(title):
+        nv = norm(v)
+        if not nv:
+            continue
+        best = max(best, _ratio(nv, nb))
+        vt = nv.split()
+        if len(vt) >= 2 and set(vt) <= nbt:
+            best = max(best, 0.9)
+    return best
 
 
 def pdf_text(path):
@@ -92,6 +133,9 @@ def local_path(uploads, guid):
     return os.path.join(uploads, *m.group(1).split("/")) if m else ""
 
 
+_RANK_CACHE = {}
+
+
 def classify(text, title, by_hp, names):
     """-> (hp, business, confidence, reason, candidates)"""
     cands = []
@@ -118,7 +162,10 @@ def classify(text, title, by_hp, names):
         return h, b, "סביר", f"ח.פ. תקין במסמך אך השם לא תואם (דמיון {t:.2f})", cands
     if len(scored) > 1:
         return "", None, "לבדיקה ידנית", "כמה ח.פ. של עסקים שלנו במסמך: " + ", ".join(s[0] for s in scored), cands
-    ranked = sorted(((sim(title, nm), nm, b) for nm, b in names), key=lambda x: -x[0])
+    key = (title, id(names))
+    if key not in _RANK_CACHE:
+        _RANK_CACHE[key] = sorted(((sim(title, nm), nm, b) for nm, b in names), key=lambda x: -x[0])[:5]
+    ranked = _RANK_CACHE[key]
     best = ranked[0] if ranked else (0, "", None)
     others = {id(x[2]) for x in ranked[1:] if x[0] >= best[0] - 0.03 and x[2] is not best[2]}      # עסק אחר עם שם כמעט זהה = עמימות
     if best[0] >= 0.97 and not others:
@@ -182,7 +229,20 @@ def main():
                         (b or {}).get("id", ""), ((b or {}).get("registrar_name") or (b or {}).get("permit_name") or ""), " ".join(cands[:6]), chars])
             if i % 50 == 0:
                 print(f"{i}/{len(atts)}", stats, flush=True)
-    print("סיום:", stats, "->", a.out)
+    # כותרות אמיתיות (לא קודים כמו SD / ER) שלא נמצאה להן חברה: מועמדות להוספה למאגר
+    miss = {}
+    with open(a.out, encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f):
+            t = r["post_title"].strip()
+            if r["confidence"] == "לבדיקה ידנית" and not re.fullmatch(r"[A-Za-z]{1,6}", t):
+                miss.setdefault(t, []).append(r["file"])
+    mp = os.path.splitext(a.out)[0] + "_חסרים_במאגר.csv"
+    with open(mp, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["post_title", "files", "example_file"])
+        for t, fl in sorted(miss.items()):
+            w.writerow([t, len(fl), fl[0]])
+    print("סיום:", stats, "->", a.out, "|", len(miss), "כותרות ללא חברה ->", mp)
 
 
 if __name__ == "__main__":
