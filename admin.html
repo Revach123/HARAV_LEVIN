@@ -2069,16 +2069,18 @@ function bpOfferingRows(off, biz, chp, savedBy, seen) {
 
 const BP_ON  = "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);";
 const BP_OFF = "background:var(--bg);color:var(--text);border-color:var(--border);";
-function bpToggle(i, which) {   // which: private | general. מעדכן רק את הכפתורים (בלי לטעון מחדש את החלון)
+// כפתורי הבחירה: "פרטי" = פרטי + כללי (שניהם, "כללי" מסומן אוטומטית), "כללי" = כללי בלבד, "רק פרטי" = פרטי בלבד. לחיצה שנייה מבטלת.
+const BP_SCOPE_OF = { private: "both", general: "general", only: "private" };
+const bpOn = (scope, which) => which === "private" ? scope === "both" : which === "general" ? (scope === "general" || scope === "both") : scope === "private";
+function bpToggle(i, which) {   // מעדכן רק את הכפתורים (בלי לטעון מחדש את החלון)
   const r = bpState.rows[i];
-  const has = { private: r.scope === "private" || r.scope === "both", general: r.scope === "general" || r.scope === "both" };
-  has[which] = !has[which];
-  r.scope = has.private && has.general ? "both" : has.private ? "private" : has.general ? "general" : "";
-  for (const w of ["private", "general"]) {
+  r.scope = r.scope === BP_SCOPE_OF[which] ? "" : BP_SCOPE_OF[which];
+  for (const w of ["private", "general", "only"]) {
     const el = document.getElementById(`bp-${i}-${w}`);
-    if (el) el.style.cssText = "padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;" + (has[w] ? BP_ON : BP_OFF);
+    if (el) el.style.cssText = bpBtnStyle(w) + (bpOn(r.scope, w) ? BP_ON : BP_OFF);
   }
 }
+const bpBtnStyle = w => w === "only" ? "padding:2px 8px;border-radius:6px;border:1px solid;cursor:pointer;font-size:11px;" : "padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;";
 
 function bpAddById() {
   const el = document.getElementById("bp-add-id");
@@ -2114,7 +2116,7 @@ function renderBondPicker() {
   const reopen = !!old;
   old?.remove();
   const st = bpState; if (!st) return;
-  const btn = (on, label, i, which) => `<button id="bp-${i}-${which}" onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;${on ? BP_ON : BP_OFF}">${label}</button>`;
+  const btn = (on, label, i, which) => `<button id="bp-${i}-${which}" onclick="bpToggle(${i},'${which}')" style="${bpBtnStyle(which)}${on ? BP_ON : BP_OFF}">${label}</button>`;
   const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
     ${st.liveErr ? `<p style="font-size:12px;color:#b85c00;">בדיקה בזמן אמת מול הבורסה לא זמינה (${escHtml(st.liveErr)}). מוצגת רק הרשימה השמורה.</p>` : ""}
     ${st.live ? `<p style="font-size:12px;color:var(--muted);">החברה חדשה: האג"ח נשלפו עכשיו מהבורסה${st.live !== true ? " (נכון ל-" + escHtml(st.live) + ")" : ""}</p>` : ""}
@@ -2126,7 +2128,7 @@ function renderBondPicker() {
         <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
           <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
             <div style="font-size:11px;color:var(--muted);">מס' ${r.id}${r.symbol ? " · " + escHtml(r.symbol) : ""}${r.inMaya ? "" : " · לא קיימת כרגע במאיה (נשמרת, לא מוצגת ברשימה)"}</div></div>
-          <div style="white-space:nowrap;">${btn(r.scope === "private" || r.scope === "both", "פרטי", i, "private")} ${btn(r.scope === "general" || r.scope === "both", "כללי", i, "general")}
+          <div style="white-space:nowrap;">${btn(bpOn(r.scope, "private"), "פרטי", i, "private")} ${btn(bpOn(r.scope, "general"), "כללי", i, "general")} ${btn(bpOn(r.scope, "only"), "רק פרטי", i, "only")}
             ${!r.inMaya ? `<button onclick="bpRemove(${i})" title="הסרה מהרשימה השמורה" style="border:none;background:none;cursor:pointer;">🗑</button>` : ""}</div>
         </div>`; }).join("") || '<div style="padding:14px;text-align:center;color:var(--light);">אין אג"ח לחברה</div>'}
     </div>
