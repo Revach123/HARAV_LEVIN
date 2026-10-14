@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -747,9 +749,12 @@
   }
   body { font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif; background:#ffffff; font-size:16px; }
   button, input, select, textarea { font-family: inherit; }
-  header { background: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
-  header h1 { font-size: 20px; font-weight: 700; }
-  #admin-toggle { border-radius: 4px; }
+  header { background: #fff; color: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--navy); }
+  .logo-link { display: flex; align-items: center; text-decoration: none; }
+  #site-logo { height: 44px; width: auto; display: block; }
+  #admin-toggle { border-radius: 4px; background: var(--navy); color: #fff; border: 1px solid var(--navy); }
+  #admin-toggle:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
   .btn-primary, .btn-add, .lookup-row button { border-radius: 4px; font-weight: 700; }
   .btn-primary:hover, .btn-add:hover, .lookup-row button:hover { background: var(--accent-dark); }
   .btn-ghost { border-radius: 4px; }
@@ -771,6 +776,10 @@
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
   /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
   .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .big-card { text-align:center; background:#fff; border:2px dashed var(--border); border-radius:8px; padding:16px 18px; min-height:150px; }
+  .big-card .ico { display:block; font-size:30px; margin-bottom:4px; }
+  .big-card > b { display:block; font-size:21px; color:var(--navy); margin-bottom:12px; }
+  .big-card:focus-within { border-color:var(--accent); }
   .big-nochp { width:100%; min-height:150px; font-family:inherit; font-size:21px; font-weight:700; color:var(--navy); background:#fff; border:2px dashed var(--border); border-radius:8px; cursor:pointer; transition:.15s; padding:12px; }
   .big-nochp:hover { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); }
   .big-nochp .ico { display:block; font-size:30px; margin-bottom:6px; }
@@ -792,7 +801,7 @@
 
 <header>
   <div>
-    <h1>מכון להיתר עסקה למהדרין</h1>
+    <a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a>
   </div>
   <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
 </header>
@@ -1103,33 +1112,29 @@ function renderForm() {
       </div>
 
       <div class="lookup-box" id="lookup-box">
-        <div class="chp-choice" id="chp-choice" style="${(!isEdit && !noChp && !chpPicked) ? "" : "display:none;"}">
-          <button type="button" class="big-nochp" onclick="pickChp()"><span class="ico">🔢</span>עסק עם ח.פ.<small>חיפוש ברשם לפי מספר או לפי שם</small></button>
-          <button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>
-        </div>
-        <div id="chp-area" style="${(noChp || (!isEdit && !chpPicked)) ? "display:none;" : ""}">
-          <div class="nochp-bar" style="margin-bottom:8px;">
-            <b>עסק עם ח.פ.</b>
-            ${!isEdit ? `<button type="button" class="btn-ghost" onclick="toggleNoChp()">עסק בלי ח.פ.</button>` : ""}
+        <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "")}">
+          <div class="big-card">
+            <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
+            <div class="lookup-row" id="chp-row">
+              <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
+              <span id="chp-spin" class="spin" style="display:none;"></span>
+            </div>
+            <div id="name-search-wrap" style="margin-top:8px;">
+              <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
+                style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
+              <div id="ns-out" style="text-align:right;"></div>
+            </div>
+            <div id="lookup-out" style="text-align:right;">${lookupOutHtml()}</div>
           </div>
-          <div class="lookup-row" id="chp-row">
-            <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה) - החיפוש ברשם אוטומטי" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
-            <span id="chp-spin" class="spin" style="display:none;"></span>
-          </div>
-          <div id="name-search-wrap" style="margin-top:10px;">
-            <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
-              style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
-            <div id="ns-out"></div>
-          </div>
-          <div id="lookup-out">${lookupOutHtml()}</div>
+          ${!isEdit ? `<button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>` : ""}
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
-          <button type="button" class="btn-ghost" onclick="toggleNoChp()">עסק עם ח.פ.</button>
+          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש ח.פ.</button>
         </div>
       </div>
 
-      <div id="form-rest" style="${(isEdit || noChp || (b.chp_number||"").trim()) ? "" : "display:none;"}">
+      <div id="form-rest" style="${(isEdit || noChp || chpResult) ? "" : "display:none;"}">
       <div class="field">
         <label>שם ברשם הרשמי <span id="reg-hint" style="color:var(--light)">(${(b.chp_number||"").trim() && !noChp ? "נמשך מהרשם, לא ניתן לעריכה" : "ללא ח.פ. - מקלידים ידנית"})</span></label>
         <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם כפי שרשום בגוף הממשלתי" ${(b.chp_number||"").trim() && !noChp ? "readonly" : ""}>
@@ -1613,7 +1618,6 @@ function bindEvents() {
     let lt;
     chpEl.addEventListener("input", e => {
       editBiz = { ...(editBiz || {}), chp_number: e.target.value };
-      chpPicked = true;
       updateFormGate();
       const n = e.target.value.trim();
       clearTimeout(lt);
@@ -1678,29 +1682,23 @@ async function doLogin() {
   }
 }
 
-let noChp = false, chpPicked = false;   // "אין ח.פ." (עסק בלי מספר רישום): שם הרשם ניתן להקלדה ידנית
+let noChp = false;   // "אין ח.פ." (עסק בלי מספר רישום): שם הרשם ניתן להקלדה ידנית
 // בהוספת עסק: עד שמקלידים ח.פ. או לוחצים "אין ח.פ." שאר הטופס מוסתר; כשיש ח.פ. שם הרשם נמשך מהרשם ולא ניתן לעריכה
 function updateFormGate() {
   const rest = document.getElementById("form-rest"); if (!rest) return;
   const chp = (document.getElementById("chp")?.value || "").trim();
   const isEdit = !!editBiz?.id;
-  rest.style.display = (isEdit || noChp || chp) ? "" : "none";
+  rest.style.display = (isEdit || noChp || chpResult) ? "" : "none";       // שאר הטופס נפתח רק אחרי שהחברה זוהתה ברשם (או "בלי ח.פ.")
   const reg = document.getElementById("f-reg"), hint = document.getElementById("reg-hint");
   const lock = !!chp && !noChp;
   if (reg) { reg.readOnly = lock; reg.style.background = lock ? "#eef3f3" : ""; }
   if (hint) hint.textContent = lock ? "(נמשך מהרשם, לא ניתן לעריכה)" : "(ללא ח.פ. - מקלידים ידנית)";
 }
-function showChpPart() {                          // מציג את החלק המתאים: בחירה / אזור ח.פ. / פס "בלי ח.פ."
-  const isEdit = !!editBiz?.id;
+function showChpPart() {                          // מציג את החלק המתאים: שני הכרטיסים / פס "בלי ח.פ."
   const set = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? "" : "none"; };
-  set("chp-choice", !isEdit && !noChp && !chpPicked);
-  set("chp-area", !noChp && (isEdit || chpPicked));
+  set("chp-choice", !noChp);
   set("nochp-bar", noChp);
   updateFormGate();
-}
-function pickChp() {                              // "עסק עם ח.פ.": פותח את אזור המספר והחיפוש
-  chpPicked = true; showChpPart();
-  document.getElementById("chp")?.focus();
 }
 function toggleNoChp() {
   noChp = !noChp;
@@ -1712,7 +1710,6 @@ function toggleNoChp() {
     if (out) out.innerHTML = "";
     formDirty = true;
   } else {                                       // חזרה ל"עסק עם ח.פ."
-    chpPicked = true;
     if (chpEl) { chpEl.disabled = false; }
     if (out) out.innerHTML = lookupOutHtml();
   }
@@ -1726,7 +1723,6 @@ function openForm(id) {
   formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
-  chpPicked = false;
   noChp = !!id && !(editBiz.chp_number || "").trim();      // עסק קיים בלי ח.פ. = שם הרשם ניתן לעריכה
   chpResult = null; chpError = "";
   setView("form");
@@ -1826,7 +1822,7 @@ async function doLookup(auto) {
   const seq = ++lookupSeq;
   const out = () => document.getElementById("lookup-out");
   const spin = document.getElementById("chp-spin");
-  if (auto) { chpResult = null; chpError = ""; if (spin) spin.style.display = ""; if (out()) out().innerHTML = `<div class="lookup-loading"><span class="spin"></span> מחפש ברשם…</div>`; }
+  if (auto) { chpResult = null; chpError = ""; if (spin) spin.style.display = ""; if (out()) out().innerHTML = `<div class="lookup-loading"><span class="spin"></span> מחפש ברשם…</div>`; updateFormGate(); }
   else { chpLoading = true; chpError = ""; chpResult = null; render(); }
   let res = null, err = "";
   try {
@@ -1839,7 +1835,7 @@ async function doLookup(auto) {
   }
   chpResult = res; chpError = err; chpLoading = false;
   if (spin) spin.style.display = "none";
-  if (auto) { if (out()) out().innerHTML = lookupOutHtml(); } else render();
+  if (auto) { if (out()) out().innerHTML = lookupOutHtml(); updateFormGate(); } else render();
   if (chpResult) {
     const regEl = document.getElementById("f-reg");
     if (regEl) regEl.value = chpResult.name;     // כשיש ח.פ. השם נשלט ע"י הרשם (לא ניתן לעריכה)
