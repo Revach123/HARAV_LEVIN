@@ -40,11 +40,22 @@ def load_businesses():
         return []
     with open(A.businesses, encoding="utf-8") as f:
         data = json.load(f)
+    docs = {}
+    for r in read_csv(A.final):
+        d = docs.setdefault(r.get("business_id"), {"general": 0, "private": 0, "unknown": 0})
+        t = (r.get("doc_type_clean") or r.get("doc_type") or "").rstrip("?")
+        d["general" if t == "כללי" else "private" if t == "פרטי" else "unknown"] += 1
+    vis = {"": "רק כללי", "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי"}
     out = []
     for b in data:
+        v = b.get("visibility") or ""
         out.append({"id": b.get("id"), "name": b.get("registrar_name") or b.get("permit_name") or "",
+                    "registrar_name": b.get("registrar_name") or "",
                     "permit_name": b.get("permit_name") or "", "chp": str(b.get("chp_number") or ""),
-                    "visibility": b.get("visibility") or ""})
+                    "visibility": vis.get(v, v), "entity_type": b.get("entity_type") or "",
+                    "category": b.get("category") or "", "region": b.get("region") or "",
+                    "notes": b.get("notes") or "", "agch": b.get("agch_approved") or "",
+                    "docs": docs.get(b.get("id"), {"general": 0, "private": 0, "unknown": 0})})
     return out
 
 
