@@ -2151,11 +2151,11 @@ function idxBoxHtml() {
     body = `<div class="idx-line"><b>${pc(wsum(hit))}%</b> עם היתר עסקה <span>(${hit.length} מתוך ${d.securities.length} אג"ח, לפי משקל)</span></div><div class="idx-line"><b>${pc(wsum(prv))}%</b> עם היתר פרטי <span>(${prv.length} אג"ח)</span></div>`;
   }
   else {
-    const total = d.companies.length;
+    const total = d.companies.length, tw = d.companies.reduce((x, c) => x + (c.weight || 0), 0) || 1;      // מדד מניות: לפי משקל החברה במדד
     const hits = d.companies.map(c => c.hp ? existingBiz(c.hp) : []);
-    const withP = hits.filter(l => l.length).length, priv = hits.filter(l => l.some(b => b.visibility === "פרטי" || b.visibility === "רק פרטי")).length;
-    const pc = n => total ? Math.round(n * 1000 / total) / 10 : 0;
-    body = `<div class="idx-line"><b>${pc(withP)}%</b> עם היתר עסקה <span>(${withP} מתוך ${total})</span></div><div class="idx-line"><b>${pc(priv)}%</b> עם היתר פרטי <span>(${priv} מתוך ${total})</span></div>`;
+    const idxs = hits.map((l, i) => i).filter(i => hits[i].length), pidx = idxs.filter(i => hits[i].some(b => b.visibility === "פרטי" || b.visibility === "רק פרטי"));
+    const pc = l => Math.round(l.reduce((x, i) => x + (d.companies[i].weight || 0), 0) * 1000 / tw) / 10;
+    body = `<div class="idx-line"><b>${pc(idxs)}%</b> עם היתר עסקה <span>(${idxs.length} מתוך ${total} חברות, לפי משקל)</span></div><div class="idx-line"><b>${pc(pidx)}%</b> עם היתר פרטי <span>(${pidx.length} חברות)</span></div>`;
   }
   return `<div class="idx-box"><div class="idx-head">חברות במדד ${sel}</div>${body}</div>`;
 }
