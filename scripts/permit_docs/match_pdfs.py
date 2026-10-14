@@ -203,7 +203,7 @@ def main():
     if a.limit:
         atts = atts[:a.limit]
 
-    cols = ["attachment_id", "file", "post_title", "confidence", "reason", "hp", "business_id", "business_name", "hp_candidates", "text_chars"]
+    cols = ["attachment_id", "file", "post_title", "confidence", "reason", "hp", "business_id", "business_name", "hp_candidates", "text_chars", "post_type", "post_status"]
     stats = {}
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
@@ -226,7 +226,8 @@ def main():
                     hp, b, conf, reason, cands = classify(text, title, by_hp, names)
             stats[conf] = stats.get(conf, 0) + 1
             w.writerow([r.get("ID"), os.path.basename(path) if path else r.get("guid"), title, conf, reason, hp,
-                        (b or {}).get("id", ""), ((b or {}).get("registrar_name") or (b or {}).get("permit_name") or ""), " ".join(cands[:6]), chars])
+                        (b or {}).get("id", ""), ((b or {}).get("registrar_name") or (b or {}).get("permit_name") or ""), " ".join(cands[:6]), chars,
+                        posts.get(r.get("post_parent", ""), {}).get("post_type", ""), posts.get(r.get("post_parent", ""), {}).get("post_status", "")])
             if i % 50 == 0:
                 print(f"{i}/{len(atts)}", stats, flush=True)
     # כותרות אמיתיות (לא קודים כמו SD / ER) שלא נמצאה להן חברה: מועמדות להוספה למאגר
