@@ -21,28 +21,11 @@ function normB(s) {
 }
 const ftsPhrase = (w) => `"${w.replace(/"/g, '""')}"`;
 
-// אבחון (?diag=1): האם הטבלאות והאינדקסים קיימים ואיזה שלב נכשל. בלי COUNT(*) (סריקה מלאה = מיליוני rows_read).
-async function diagnose(db) {
-  const steps = [];
-  const run = async (name, fn) => {
-    const t = Date.now();
-    try { const r = await fn(); steps.push({ step: name, ok: true, ms: Date.now() - t, info: r }); }
-    catch (e) { steps.push({ step: name, ok: false, ms: Date.now() - t, error: String(e.message || e) }); }
-  };
-  await run("tables", async () => (await db.prepare("SELECT name FROM sqlite_master WHERE name IN ('companies','companies_fts','partnerships','partnerships_fts','associations','associations_fts') ORDER BY name").all()).results.map(r => r.name));
-  await run("companies sample", async () => (await db.prepare("SELECT id, name, name_norm FROM companies LIMIT 2").all()).results);
-  await run("companies_fts match", async () => (await db.prepare("SELECT c.id, c.name FROM companies_fts f JOIN companies c ON c.id=f.id WHERE companies_fts MATCH ? LIMIT 3").bind('"פוקס"').all()).results);
-  await run("partnerships_fts match", async () => (await db.prepare("SELECT c.id, c.name FROM partnerships_fts f JOIN partnerships c ON c.id=f.id WHERE partnerships_fts MATCH ? LIMIT 2").bind('"מוגבלת"').all()).results);
-  await run("associations_fts match", async () => (await db.prepare("SELECT c.id, c.name FROM associations_fts f JOIN associations c ON c.id=f.id WHERE associations_fts MATCH ? LIMIT 2").bind('"עמותה"').all()).results);
-  return Response.json({ bound: true, steps });
-}
-
 export async function onRequestGet({ request, env }) {
   const t0 = Date.now();
   if (!isAuthed(request, env)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   if (!env.DB1) return Response.json({ error: "DB1 (company-info-db) לא מחובר לפרויקט" }, { status: 503 });
   const url = new URL(request.url);
-  if (url.searchParams.get("diag")) return diagnose(env.DB1);
   const q = (url.searchParams.get("q") || "").trim();
   if (q.length < 3) return Response.json({ results: [] });
   try {
