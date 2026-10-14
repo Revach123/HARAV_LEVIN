@@ -82,10 +82,12 @@ def main():
             if t.strip():
                 text += t
                 src.append("PDF")
-        op = os.path.join(a.ocr_dir, f"{r['attachment_id']}.txt")
-        if os.path.exists(op):
-            text += "\n" + open(op, encoding="utf-8").read()
-            src.append("OCR")
+        for od in a.ocr_dir.split(","):        # אפשר כמה תיקיות OCR (עמוד ראשון + עמודים נוספים)
+            op = os.path.join(od.strip(), f"{r['attachment_id']}.txt")
+            if os.path.exists(op):
+                text += "\n" + open(op, encoding="utf-8").read()
+                if "OCR" not in src:
+                    src.append("OCR")
         ntext = m.norm(text)
         hps = hp_candidates(text)
         data.append({"r": r, "text": text, "src": "+".join(src) or "אין", "hps": hps, "nm": doc_name_matches(ntext, names) if ntext else {}})
