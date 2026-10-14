@@ -1630,11 +1630,13 @@ function bindEvents() {
   const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
 
   on("srch",     "input",  e => { search        = e.target.value; render(); });
-  on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
-  on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
-  on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
-  on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
-  on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
+  if (view !== "form") {     // מסנני הרשימה. בטופס אותם מזהים (f-cat / f-region / f-biztype / f-agch) הם שדות הטופס: חיבור המסננים אליהם גרם ל-render מחדש שמחק את מה שהוקלד
+    on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
+    on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
+    on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
+    on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
+    on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
+  }
   on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
   if (view === "form") {
     updateFormGate(); bindNameSearch();
