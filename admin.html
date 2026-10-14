@@ -1,0 +1,2192 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ניהול · מכון להיתר עסקה למהדרין</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #1a3a5c;
+    --navy2:  #1e4570;
+    --gold:   #c9a227;
+    --bg:     #f7f7f5;
+    --bg2:    #ffffff;
+    --border: #e0ddd8;
+    --text:   #1a1a1a;
+    --muted:  #6b6b6b;
+    --light:  #a0a0a0;
+    --red:    #c0392b;
+    --green:  #1e7e4a;
+    --green-bg: #edf7f1;
+    --green-border: #a8d9bc;
+    --danger-bg: #fdf0ef;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+  }
+  header h1 { font-size: 17px; font-weight: 500; letter-spacing: .01em; }
+  header small { font-size: 12px; opacity: .65; margin-right: 10px; }
+  #admin-toggle {
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  #admin-toggle:hover { background: rgba(255,255,255,.2); }
+
+  /* ── MAIN ── */
+  main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: .6rem;
+    align-items: center;
+  }
+  .filter-bar .fb-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .filter-bar .fb-label {
+    font-size: 10px;
+    color: var(--light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding-right: 2px;
+  }
+  .filter-bar select, .filter-bar input {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg2);
+    font-size: 13px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+    height: 34px;
+  }
+  .filter-bar select:focus, .filter-bar input:focus { border-color: var(--navy); }
+  .filter-bar select.active, .filter-bar input.active {
+    border-color: var(--navy);
+    background: #eef3f9;
+    color: var(--navy);
+    font-weight: 500;
+  }
+  .fb-search { flex: 1; min-width: 200px; }
+  .clear-filters {
+    padding: 6px 12px;
+    background: none;
+    border: 1px solid #f0b0aa;
+    border-radius: 7px;
+    font-size: 12px;
+    color: var(--red);
+    cursor: pointer;
+    height: 34px;
+    white-space: nowrap;
+    transition: background .15s;
+    align-self: flex-end;
+  }
+  .clear-filters:hover { background: var(--danger-bg); }
+
+  /* ── SORTABLE HEADERS ── */
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-left: 22px;
+  }
+  thead th.sortable:hover { color: var(--navy); }
+  thead th.sort-active { color: var(--navy); font-weight: 600; }
+  .sort-icon {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    opacity: .5;
+  }
+  thead th.sort-active .sort-icon { opacity: 1; color: var(--navy); }
+
+  /* ── CONTROLS (keep for compat) ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .controls input, .controls select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg2);
+    font-size: 14px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .controls input { flex: 1; min-width: 200px; }
+  .controls input:focus, .controls select:focus { border-color: var(--navy); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px; table-layout: fixed; }
+  col.c-num      { width: 36px; }
+  col.c-name     { width: 200px; }
+  col.c-name-lg  { width: 240px; }
+  col.c-chp      { width: 96px; }
+  col.c-cat      { width: 110px; }
+  col.c-biztype  { width: 170px; }
+  col.c-region   { width: 75px; }
+  col.c-vis      { width: 65px; }
+  col.c-agch-combined { width: 150px; }
+  col.c-tase     { width: 76px; }
+  col.c-agch     { width: 80px; }
+  col.c-notes    { width: auto; }
+  col.c-actions  { width: 70px; }
+  thead th {
+    text-align: right;
+    padding: 11px 14px;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    background: var(--bg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* כותרות קבועות (freeze panes) בגלילת העמוד, במחשב. במסך צר הטבלה נגללת לרוחב ולכן נשארת כמו קודם. */
+  @media (min-width: 900px) {
+    .table-wrap { overflow: visible; }
+    thead th, thead th.sortable { position: sticky; top: 56px; z-index: 6; box-shadow: 0 1px 0 var(--border); }
+  }
+  thead th:first-child { border-radius: 10px 0 0 0; }
+  thead th:last-child  { border-radius: 0 10px 0 0; }
+  tbody tr { transition: background .1s; }
+  tbody tr:hover { background: #f0f0ee; }
+  tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  td { padding: 11px 14px; vertical-align: middle; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  td.notes-cell, td.biz-name { white-space: nowrap; }
+  td.num { color: var(--light); font-size: 12px; width: 36px; }
+  td.biz-name { font-weight: 500; }
+  td.biz-name .permit { color: var(--muted); font-weight: 400; font-size: 13px; }
+  td.cat-cell span {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    background: #eef0f5;
+    color: var(--muted);
+  }
+  td.notes-cell { color: var(--light); font-size: 12px; }
+  .empty-row td { text-align: center; padding: 2.5rem; color: var(--light); }
+
+  /* ── DELETE MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInOverlay .15s ease;
+  }
+  @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--bg2);
+    border-radius: 14px;
+    padding: 2rem;
+    width: 100%;
+    max-width: 420px;
+    margin: 1rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    animation: slideUpModal .18s ease;
+  }
+  @keyframes slideUpModal { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-icon { font-size: 2.2rem; text-align: center; margin-bottom: .75rem; }
+  .modal-title { font-size: 17px; font-weight: 600; text-align: center; margin-bottom: .4rem; }
+  .modal-biz-name {
+    text-align: center;
+    font-size: 14px;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin: .75rem 0 1.1rem;
+    word-break: break-word;
+  }
+  .modal-instruction { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .modal-instruction strong { color: var(--red); font-family: monospace; }
+  .modal-input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    direction: ltr;
+    text-align: center;
+    outline: none;
+    transition: border-color .15s;
+    letter-spacing: .06em;
+  }
+  .modal-input:focus { border-color: var(--red); }
+  .modal-input.confirmed { border-color: var(--red); background: #fff5f5; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1.1rem; }
+  .modal-actions .cancel {
+    flex: 1; padding: 10px; background: none;
+    border: 1px solid var(--border); border-radius: 8px;
+    font-size: 14px; color: var(--muted); cursor: pointer;
+    transition: border-color .15s;
+  }
+  .modal-actions .cancel:hover { border-color: var(--navy); color: var(--navy); }
+  .modal-actions .confirm-del {
+    flex: 1; padding: 10px; background: var(--red);
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: #fff; cursor: pointer;
+    opacity: .4; transition: opacity .15s;
+    pointer-events: none;
+  }
+  .modal-actions .confirm-del.ready { opacity: 1; pointer-events: auto; }
+  .modal-actions .confirm-del.ready:hover { background: #a93226; }
+
+  /* ── ACTION BUTTONS (admin table) ── */
+  .act-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    transition: background .15s;
+    color: var(--muted);
+  }
+  .act-btn:hover { background: var(--bg); }
+  .act-btn.del { color: var(--red); }
+  .confirm-row td { background: var(--danger-bg) !important; }
+  .confirm-btns { display: flex; align-items: center; gap: 6px; justify-content: center; }
+  .confirm-btns .yes {
+    background: var(--red); color: #fff;
+    border: none; padding: 4px 10px;
+    border-radius: 5px; cursor: pointer; font-size: 13px;
+  }
+  .confirm-btns .no {
+    background: none; border: 1px solid var(--border);
+    padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* ── PANEL (login / form) ── */
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 520px;
+    margin: 2rem auto;
+  }
+  .panel h2 { font-size: 18px; font-weight: 500; margin-bottom: 1.5rem; }
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .panel-header h2 { margin: 0; }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 1.1rem; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+  .field input {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 14px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus { border-color: var(--navy); background: #fff; }
+  .field input.ltr { direction: ltr; text-align: left; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ── LOOKUP BOX ── */
+  .lookup-box {
+    background: #f0f4f8;
+    border: 1px solid #c8d8ea;
+    border-radius: 9px;
+    padding: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+  .lookup-box p.lbl { font-size: 12px; font-weight: 500; color: var(--navy); margin-bottom: 10px; }
+  .lookup-row { display: flex; gap: 8px; }
+  .lookup-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 14px;
+    direction: ltr;
+    text-align: left;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .lookup-row input:focus { border-color: var(--navy); }
+  .lookup-row button {
+    padding: 9px 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .lookup-row button:hover { background: var(--navy2); }
+  .lookup-row button:disabled { opacity: .55; cursor: default; }
+  .lookup-result {
+    margin-top: 10px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 7px;
+    padding: 10px 14px;
+  }
+  .lookup-result .found-name { font-size: 15px; font-weight: 500; margin: 3px 0; }
+  .lookup-result .found-meta { font-size: 12px; color: var(--muted); }
+  .lookup-error { color: var(--red); font-size: 13px; margin-top: 8px; }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    width: 100%;
+    padding: 11px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+    margin-top: .5rem;
+  }
+  .btn-primary:hover { background: var(--navy2); }
+  .btn-primary:disabled { opacity: .55; cursor: default; }
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .btn-ghost:hover { border-color: var(--navy); color: var(--navy); }
+  .btn-add {
+    padding: 8px 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-add:hover { background: var(--navy2); }
+  .btn-danger {
+    padding: 8px 16px;
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-danger:hover { background: #a93226; }
+  .btn-danger:disabled { opacity: .55; cursor: default; }
+
+  /* ── ADMIN BAR ── */
+  .admin-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-bar h2 { font-size: 16px; font-weight: 500; color: var(--muted); }
+
+  /* ── ERROR ── */
+  .error-msg { color: var(--red); font-size: 13px; margin: 6px 0; min-height: 20px; }
+
+  /* ── STATUS BAR ── */
+  #status-bar {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+    z-index: 99;
+  }
+  #status-bar.show { opacity: 1; }
+
+  /* ── COUNT BADGE ── */
+  .count { font-size: 13px; color: var(--muted); }
+
+  /* ── LOADING SPINNER ── */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  /* ════════════════════════════════════════════
+     CSV IMPORT STYLES
+  ════════════════════════════════════════════ */
+
+  .csv-panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 860px;
+    margin: 1.5rem auto;
+  }
+  .csv-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    padding-bottom: 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .csv-panel-header h2 { font-size: 18px; font-weight: 500; }
+
+  /* Drop Zone */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    background: var(--bg);
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--navy);
+    background: #f0f4f8;
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-zone .dz-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .drop-zone .dz-title { font-size: 15px; font-weight: 500; color: var(--navy); margin-bottom: .3rem; }
+  .drop-zone .dz-sub { font-size: 13px; color: var(--muted); }
+  .drop-zone .dz-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 8px 20px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Column mapping */
+  .mapping-section { margin-bottom: 1.5rem; }
+  .mapping-section h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: .9rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .mapping-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .mapping-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mapping-row label { font-size: 12px; color: var(--muted); }
+  .mapping-row select {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 13px;
+    color: var(--text);
+    direction: rtl;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .mapping-row select:focus { border-color: var(--navy); }
+  .mapping-row select.mapped { border-color: var(--green); background: var(--green-bg); }
+
+  /* Preview table */
+  .preview-section { margin-bottom: 1.5rem; }
+  .preview-section h3 {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+  .preview-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .preview-wrap table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .preview-wrap thead th {
+    padding: 8px 12px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  .preview-wrap tbody tr:not(:last-child) td { border-bottom: 1px solid var(--border); }
+  .preview-wrap tbody tr:hover { background: #f5f5f3; }
+  .preview-wrap td { padding: 8px 12px; }
+
+  /* Confirm box */
+  .confirm-import-box {
+    background: #fff8e6;
+    border: 1px solid #f0d070;
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+    font-size: 14px;
+  }
+  .confirm-import-box strong { color: var(--red); }
+  .confirm-import-box .ci-count { color: var(--green); font-weight: 500; }
+
+  /* Progress */
+  .progress-wrap { margin: 1.5rem 0; }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 20px;
+    height: 10px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--navy);
+    border-radius: 20px;
+    transition: width .15s;
+  }
+  .progress-phase {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+    text-align: center;
+  }
+
+  /* Done summary */
+  .done-box {
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .done-box .done-icon { font-size: 2.5rem; margin-bottom: .5rem; }
+  .done-box h3 { font-size: 17px; font-weight: 500; color: var(--green); margin-bottom: .4rem; }
+  .done-box p { font-size: 14px; color: var(--muted); }
+  .done-error-box {
+    background: var(--danger-bg);
+    border: 1px solid #f0b0aa;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-top: .75rem;
+    font-size: 13px;
+    color: var(--red);
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.75rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .step {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--light);
+    background: var(--bg);
+    text-align: center;
+    border-left: 1px solid var(--border);
+    transition: all .2s;
+  }
+  .step:last-child { border-left: none; }
+  .step.active { background: var(--navy); color: #fff; font-weight: 500; }
+  .step.done { background: var(--green-bg); color: var(--green); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>מכון להיתר עסקה למהדרין</h1>
+  </div>
+  <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
+</header>
+
+<main>
+  <div id="app"><div class="loading">טוען נתונים...</div></div>
+</main>
+
+<!-- Delete confirmation modal -->
+<div id="delete-modal" style="display:none;"></div>
+
+<div id="status-bar"></div>
+
+<script src="xlsx-lite.js"></script>
+<script>
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let businesses = [];
+let isAdmin    = false;
+let adminToken = "";
+let view       = "login";
+let search     = "";
+let filterCat  = "";
+let filterRegion   = "";
+let filterBizType  = "";
+let filterVis      = "";
+let filterAgch     = "";   // "" | "אין" | "מאושר" | "לא מאושר" | "יש"
+let sortCol    = "name";   // name | chp | category | region | biz_type | visibility | agch | notes
+let sortDir    = "asc";    // asc | desc
+let editBiz    = null;
+let deleteId   = null;
+let chpResult  = null;
+let chpError   = "";
+let chpLoading = false;
+let saving     = false;
+
+// CSV import state
+let csvStep       = "upload";   // upload | preview | importing | done
+let csvHeaders    = [];
+let csvRows       = [];         // array of arrays (raw)
+let csvColMap     = {};         // fieldKey → colIndex (or -1)
+let csvProgress   = 0;
+let csvTotal      = 0;
+let csvPhase      = "";
+let csvErrors     = [];
+let csvImported   = 0;
+let csvDeleted    = 0;
+
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+
+// ─────────────────────────────────────────────
+//  FIELD DEFINITIONS FOR CSV MAPPING
+// ─────────────────────────────────────────────
+const CSV_FIELDS = [
+  { key: "chp_number",     label: "ח.פ. / מספר רישום",  aliases: ["חפ","ח.פ","ח.פ.","chp","chp_number","מספר רישום","מספר תאגיד","ס.מ.","ס\"מ"] },
+  { key: "registrar_name", label: "שם ברשם הרשמי",       aliases: ["שם ברשם","שם רשמי","registrar_name","registrar","שם תאגיד","שם החברה","שם חברה / שותפות רשמי","שם חברה","שם שותפות"] },
+  { key: "permit_name",    label: "שם בהיתר עסקה",       aliases: ["שם בהיתר","היתר","permit_name","permit","שם עסק","שם","היתר עסקה על שם","היתר עסקה"] },
+  { key: "category",       label: "קטגוריה",              aliases: ["קטגוריה","category","ענף","סוג","עיסוק","תחום עיסוק"] },
+  { key: "region",         label: "אזור",                 aliases: ["אזור","region","מחוז"] },
+  { key: "visibility",     label: "פרטי / כללי",          aliases: ["פרטי/כללי","פרטי כללי","visibility","היתר עסקה חברה"] },
+  { key: "agch_approved",  label: "אישור אג\"ח",          aliases: ["אישור אגח","אישור אג\"ח","agch_approved","אגח מאושר","היתר עסקה אגח","היתר עסקה אג\"ח"] },
+  { key: "tase_has_agch",  label: "אג\"ח בורסה",          aliases: ["אגח בורסה","אג\"ח בורסה","tase_has_agch","בורסה"] },
+  { key: "biz_type",       label: "סוג עסק",              aliases: ["סוג עסק","entity_type","biz_type","סוג החברה","סוג תאגיד","סוג"] },
+  { key: "notes",          label: "הערות",                aliases: ["הערות","notes","remarks","הערה"] },
+];
+
+// ─────────────────────────────────────────────
+//  API HELPERS
+// ─────────────────────────────────────────────
+async function apiFetch(path, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
+  const res = await fetch("/api" + path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || res.statusText);
+  }
+  return res.json();
+}
+
+async function loadBusinesses() {
+  businesses = await apiFetch("/businesses");
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  DISPLAY NAME
+// ─────────────────────────────────────────────
+function displayName(b, asHTML = false) {
+  const r = (b.registrar_name || "").trim();
+  const p = (b.permit_name    || "").trim();
+  if (r && p && r !== p) {
+    return asHTML
+      ? `${escHtml(r)} <span class="permit">(${escHtml(p)})</span>`
+      : `${r} (${p})`;
+  }
+  return escHtml(r || p || "—");
+}
+
+// Combined אג"ח status label for public table
+function agchLabel(b) {
+  const has  = (b.tase_has_agch  || "").trim();
+  const appr = (b.agch_approved  || "").trim();
+  if (has !== "יש") {
+    return `<span style="color:var(--light);">אין אג"ח</span>`;
+  }
+  if (appr === "כן") {
+    return `<span style="color:var(--green);font-weight:500;">יש אג"ח · מאושר</span>`;
+  }
+  if (appr === "לא") {
+    return `<span style="color:#b85c00;font-weight:500;">יש אג"ח · לא מאושר</span>`;
+  }
+  return `<span style="color:var(--muted);">יש אג"ח</span>`;
+}
+
+function escHtml(s) {
+  return (s || "")
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = document.getElementById("app");
+  if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
+  else if (view === "login")      app.innerHTML = renderLogin();
+  else if (view === "admin")      app.innerHTML = renderAdminTable();
+  else if (view === "form")       app.innerHTML = renderForm();
+  else if (view === "csv-import") app.innerHTML = renderCsvImport();
+  bindEvents();
+  document.getElementById("admin-toggle").textContent =
+    isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
+}
+
+// ── TABLE (public) — combined view ──
+// ── LOGIN ──
+function renderLogin() {
+  return `
+    <div class="panel" style="max-width:340px;">
+      <h2>כניסת מנהל</h2>
+      <div class="field">
+        <label>סיסמה</label>
+        <input id="pwd" type="password" class="ltr" placeholder="הכנס סיסמה" autocomplete="current-password">
+      </div>
+      <p class="error-msg" id="login-err"></p>
+      <button class="btn-primary" onclick="doLogin()">כניסה</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" onclick="location.href='/'">חזרה</button>
+    </div>`;
+}
+
+// ── ADMIN TABLE ──
+function renderAdminTable() {
+  const sorted = filteredAndSorted();   // לפי החיפוש / המסננים (ברירת מחדל: כל העסקים, לפי שם)
+  return `
+    <div class="admin-bar">
+      <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn-ghost" onclick="runRegistrySync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
+        <button class="btn-ghost" onclick="runTaseSync('bonds')" id="tase-btn" title="קצר: מעדכן רק את הדגל &quot;יש אג&quot;ח&quot;">📈 עדכן אג"ח מבורסה</button>
+        <button class="btn-ghost" onclick="runTaseSync('all')" id="tase-full-btn" title="אותה ריצה של הריצה היומית: שמות, סוגים ואג&quot;ח (כ-6 דקות)">🔄 עדכון מלא</button>
+        <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
+        <button class="btn-ghost" onclick="exportCsv(true)" title="ייצוא כל הנתונים לCSV">📤 ייצוא CSV</button>
+        <style>
+          .dbmenu{position:relative;display:inline-block}
+          .dbmenu>summary{list-style:none;cursor:pointer}
+          .dbmenu>summary::-webkit-details-marker{display:none}
+          .dbmenu[open]>summary{outline:2px solid var(--navy,#1a3a5c)}
+          .dbmenu-items{position:absolute;top:calc(100% + 4px);right:0;z-index:100;background:#fff;border:1px solid var(--border,#e0ddd8);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:190px;overflow:hidden}
+          .dbmenu-items a{display:block;padding:9px 14px;font-size:13px;color:#1a3a5c;text-decoration:none;white-space:nowrap}
+          .dbmenu-items a:hover{background:#f0efec}
+        </style>
+        <details class="dbmenu">
+          <summary class="btn-ghost">📤 ייצוא מסד נתונים ל-CSV ▾</summary>
+          <div class="dbmenu-items">
+            <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
+          </div>
+        </details>
+        <details class="dbmenu">
+          <summary class="btn-ghost">📥 רשימות אג"ח מאושרות (מאיה) ▾</summary>
+          <div class="dbmenu-items">
+            <a href="/data/bonds_list/bonds_all.csv" download="bonds_all.csv">רשימה ממוזגת (פרטי + כללי)</a>
+            <a href="/data/bonds_list/bonds_private.csv" download="bonds_private.csv">אג"ח פרטי</a>
+            <a href="/data/bonds_list/bonds_general.csv" download="bonds_general.csv">אג"ח כללי</a>
+          </div>
+        </details>
+        <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
+      </div>
+    </div>
+    <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
+    <div class="filter-bar">
+      <div class="fb-group" style="flex:1;min-width:200px;">
+        <span class="fb-label">חיפוש</span>
+        <input type="text" id="adm-srch" class="fb-search${search ? " active" : ""}" autocomplete="off"
+          placeholder="🔍 שם, ח.פ., קטגוריה, אזור, הערות…" value="${escHtml(search)}" oninput="onAdminSearch(this.value)">
+      </div>
+      <div class="fb-group" style="justify-content:flex-end;"><span class="fb-label">&nbsp;</span>
+        <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col class="c-name">
+          <col class="c-chp">
+          <col class="c-cat">
+          <col class="c-biztype">
+          <col class="c-vis">
+          <col class="c-tase">
+          <col class="c-agch">
+          <col class="c-actions">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>שם עסק</th>
+            <th>ח.פ.</th>
+            <th>קטגוריה</th>
+            <th>סוג עסק</th>
+            <th style="text-align:center;">פרטי/כללי</th>
+            <th style="text-align:center;">אג"ח בורסה</th>
+            <th style="text-align:center;">אישור אג"ח</th>
+            <th style="text-align:center;">פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sorted.map(b => {
+            return `
+              <tr>
+                <td class="biz-name">${displayName(b,true)}</td>
+                <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
+                <td>${escHtml(b.category)||"—"}</td>
+                <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
+                <td style="text-align:center;">
+                  <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
+                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value=""   ${!b.visibility?"selected":""}>—</option>
+                    <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
+                    <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
+                  </select>
+                </td>
+                <td style="text-align:center;font-size:13px;">${
+                  b.tase_has_agch === "יש" ? `<span style="color:var(--green);font-weight:500;">✓ יש</span>` :
+                  b.tase_has_agch === "אין" ? `<span style="color:var(--light);font-size:12px;">אין</span>` : "—"
+                }</td>
+                <td style="text-align:center;">
+                  <select onchange="agchChange('${b.id}', this)"
+                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value=""   ${!b.agch_approved?"selected":""}>—</option>
+                    <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
+                    <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+                    <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
+                    <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+                    <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>אג"ח מסוימים</option>
+                    <option value="__pick__">⚙ בחירת אג"ח…</option>
+                  </select>
+                </td>
+                <td style="text-align:center;white-space:nowrap;">
+                  <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
+                  <button class="act-btn del" onclick="preDelete('${b.id}')" title="מחיקה">🗑</button>
+                </td>
+              </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── FORM (add / edit) ──
+function renderForm() {
+  const b = editBiz || {};
+  const isEdit = !!b.id;
+  return `
+    <div class="panel">
+      <div class="panel-header">
+        <h2>${isEdit ? "עריכת עסק" : "הוספת עסק חדש"}</h2>
+        <button class="btn-ghost" onclick="setView('admin')">ביטול</button>
+      </div>
+
+      <div class="lookup-box">
+        <p class="lbl">שאיבה מהרשם הרשמי — מחפש אוטומטית בכל הרשמים</p>
+        <div class="lookup-row">
+          <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}">
+          <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
+            ${chpLoading ? "מחפש..." : "חפש ברשם"}
+          </button>
+        </div>
+        <p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>
+        ${chpResult ? `
+          <div class="lookup-result">
+            <div style="font-size:11px;color:var(--muted);">נמצא ברשם:</div>
+            <div class="found-name">${escHtml(chpResult.name)}</div>
+            <div class="found-meta">${escHtml(chpResult.type)} · ${escHtml(chpResult.status)}</div>
+          </div>` : ""}
+      </div>
+
+      <div class="field">
+        <label>שם ברשם הרשמי <span style="color:var(--light)">(מתמלא אוטומטית, ניתן לערוך)</span></label>
+        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם כפי שרשום בגוף הממשלתי">
+      </div>
+
+      <div class="field">
+        <label>שם בהיתר עסקה <span style="color:var(--light)">(אם שונה מהרשם — יוצג בסוגריים)</span></label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="f-permit" value="${escHtml(b.permit_name||"")}" placeholder="השם המופיע בהיתר העסקה" style="flex:1;">
+          <button type="button" onclick="copyRegToPermit()" title="העתק מהרשם" style="padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg2);cursor:pointer;font-size:12px;color:var(--muted);white-space:nowrap;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--navy)'" onmouseout="this.style.borderColor='var(--border)'">
+            העתק מהרשם ↑
+          </button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>קטגוריה</label>
+          <input type="text" id="f-cat" value="${escHtml(b.category||"")}"
+            placeholder="קטגוריה" list="cat-list" autocomplete="off">
+          <datalist id="cat-list">
+            ${[...new Set(businesses.map(b=>b.category).filter(Boolean))]
+              .sort((a,c)=>a.localeCompare(c,"he"))
+              .map(n=>`<option value="${escHtml(n)}">`)
+              .join("")}
+          </datalist>
+        </div>
+        <div class="field">
+          <label>אזור</label>
+          <input type="text" id="f-region" value="${escHtml(b.region||"")}"
+            placeholder="אזור" list="region-list" autocomplete="off">
+          <datalist id="region-list">
+            ${[...new Set(businesses.map(b=>b.region).filter(Boolean))]
+              .sort((a,c)=>a.localeCompare(c,"he"))
+              .map(n=>`<option value="${escHtml(n)}">`)
+              .join("")}
+          </datalist>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>סוג עסק</label>
+        <input type="text" id="f-biztype" value="${escHtml(b.biz_type||"")}"
+          placeholder="חברה פרטית - בע&quot;מ, עמותה, שותפות..."
+          list="biztype-list" autocomplete="off">
+        <datalist id="biztype-list">
+          ${[...new Set(businesses.map(b=>b.biz_type).filter(Boolean))]
+            .sort((a,c)=>a.localeCompare(c,"he"))
+            .map(n=>`<option value="${escHtml(n)}">`)
+            .join("")}
+        </datalist>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>פרטי / כללי</label>
+          <select id="f-visibility" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+            <option value=""   ${!b.visibility?"selected":""}>— לא מוגדר —</option>
+            <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
+                    <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>אישור לאג"ח</label>
+          <select id="f-agch" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+            <option value=""   ${!b.agch_approved?"selected":""}>— לא מוגדר —</option>
+            <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
+            <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+            <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
+            <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+            <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים (נבחרות בחלון נפרד)</option>
+          </select>
+          ${b.id && b.agch_approved===BOND_PICK ? `<button type="button" class="btn-ghost" style="margin-top:6px;" onclick="openBondPicker('${b.id}')">⚙ פתיחת חלון בחירת האג"ח</button>` : ""}
+        </div>
+      </div>
+
+      <div class="field">
+        <label>הערות</label>
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}"
+          placeholder='בחר מהרשימה או הקלד הערה חדשה'
+          list="notes-list" autocomplete="off">
+        <datalist id="notes-list">
+          ${[...new Set(businesses.map(b=>b.notes).filter(Boolean))]
+            .sort((a,c)=>a.localeCompare(c,"he"))
+            .map(n=>`<option value="${escHtml(n)}">`)
+            .join("")}
+        </datalist>
+      </div>
+
+      <div class="field">
+        <label>היכן להציג את ההערה</label>
+        <select id="f-notes-scope">
+          <option value="" ${!b.notes_scope?"selected":""}>ברירת מחדל: רק ברשימת החברות</option>
+          <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק ברשימת החברות</option>
+          <option value="bonds" ${b.notes_scope==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
+          <option value="both" ${b.notes_scope==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>
+        </select>
+        <div style="font-size:12px;color:var(--light);margin-top:4px;">"בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד. אם לא התבצעה ההרצה של migrations/0004 - הבחירה לא תישמר.</div>
+      </div>
+
+      <p class="error-msg" id="form-err"></p>
+      <button class="btn-primary" onclick="doSave()" ${saving?"disabled":""}>
+        ${saving ? "שומר..." : (isEdit ? "שמור שינויים" : "הוסף עסק")}
+      </button>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+//  CSV IMPORT VIEW
+// ════════════════════════════════════════════
+function renderCsvImport() {
+  const stepLabels = ["העלאת קובץ", "מיפוי עמודות", "ייבוא", "סיום"];
+  const stepIndex  = { upload: 0, preview: 1, importing: 2, done: 3 };
+  const curStep    = stepIndex[csvStep] ?? 0;
+
+  const stepsHtml = stepLabels.map((lbl, i) => {
+    const cls = i < curStep ? "done" : i === curStep ? "active" : "";
+    return `<div class="step ${cls}">${i < curStep ? "✓ " : ""}${lbl}</div>`;
+  }).join("");
+
+  let body = "";
+
+  // ── STEP 1: Upload ──
+  if (csvStep === "upload") {
+    body = `
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-file-input').click()">
+        <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display:none">
+        <div class="dz-icon">📄</div>
+        <div class="dz-title">גרור קובץ CSV לכאן</div>
+        <div class="dz-sub">או לחץ לבחירת קובץ</div>
+        <div class="dz-btn">בחר קובץ CSV</div>
+      </div>
+      <div style="margin-top:1rem;padding:12px 16px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+        <p style="font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px;">📋 עמודות נתמכות (לפי שם הכותרת בקובץ):</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${CSV_FIELDS.map(f=>`
+            <span style="font-size:12px;padding:3px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:20px;color:var(--muted);">
+              ${f.label}
+            </span>`).join("")}
+        </div>
+        <p style="font-size:12px;color:var(--light);margin-top:8px;">הקובץ יכול להכיל כותרות בעברית או באנגלית — המערכת מזהה אוטומטית.</p>
+      </div>`;
+  }
+
+  // ── STEP 2: Preview + Mapping ──
+  else if (csvStep === "preview") {
+    const colOptions  = (selVal) => `
+      <option value="-1" ${selVal===-1?"selected":""}>— לא למפות —</option>
+      ${csvHeaders.map((h,i) => `<option value="${i}" ${selVal===i?"selected":""}>${escHtml(h)}</option>`).join("")}`;
+
+    body = `
+      <div class="mapping-section">
+        <h3>מיפוי עמודות — ${csvHeaders.length} עמודות זוהו, ${csvRows.length} שורות נתונים</h3>
+        <div class="mapping-grid">
+          ${CSV_FIELDS.map(f => {
+            const val = csvColMap[f.key] ?? -1;
+            return `
+              <div class="mapping-row">
+                <label>${f.label}</label>
+                <select id="map-${f.key}" onchange="updateColMap('${f.key}',this.value)" class="${val>=0?'mapped':''}">
+                  ${colOptions(val)}
+                </select>
+              </div>`;
+          }).join("")}
+        </div>
+      </div>
+
+      <div class="preview-section">
+        <h3>תצוגה מקדימה — ${Math.min(20,csvRows.length)} שורות ראשונות מתוך ${csvRows.length}</h3>
+        ${(() => {
+          const previewRows   = csvRows.slice(0, 20);
+          const mappedFields  = CSV_FIELDS.filter(f => (csvColMap[f.key]??-1) >= 0);
+          // detect duplicate chp within the file
+          const chpIdx = csvColMap["chp_number"] ?? -1;
+          const chpCounts = {};
+          if (chpIdx >= 0) {
+            csvRows.forEach(r => {
+              const v = (r[chpIdx]||"").trim();
+              if (v) chpCounts[v] = (chpCounts[v]||0) + 1;
+            });
+          }
+          // existing chp numbers
+          const existingChp = new Set(businesses.map(b=>(b.chp_number||"").trim()).filter(Boolean));
+          const dupInFile   = Object.values(chpCounts).some(c=>c>1);
+          const dupWarning  = dupInFile
+            ? `<div style="margin-bottom:.75rem;padding:8px 12px;background:#fff3cd;border:1px solid #f0c040;border-radius:7px;font-size:13px;color:#7a5800;">⚠️ זוהו ח.פ. כפולים בקובץ (מודגשים באדום) — רק הרשומה הראשונה תיובא</div>`
+            : "";
+          // col width map
+          const colWidths = {
+            chp_number:     "90px",  registrar_name: "200px",
+            permit_name:    "180px", category:       "110px",
+            region:         "75px",  visibility:     "68px",
+            agch_approved:  "90px",  tase_has_agch:  "80px",
+            biz_type:       "150px", notes:          "auto",
+          };
+          const seenChp = new Set();
+          return dupWarning + `
+          <div class="preview-wrap" style="max-height:360px;">
+            <table style="table-layout:fixed;min-width:600px;">
+              <colgroup>
+                <col style="width:32px;">
+                ${mappedFields.map(f=>`<col style="width:${colWidths[f.key]||'120px'};">`).join("")}
+              </colgroup>
+              <thead>
+                <tr>
+                  <th style="text-align:center;padding:8px 6px;">#</th>
+                  ${mappedFields.map(f=>`<th style="padding:8px 12px;">${f.label}</th>`).join("")}
+                </tr>
+              </thead>
+              <tbody>
+                ${previewRows.map((row, i) => {
+                  const chpVal = chpIdx >= 0 ? (row[chpIdx]||"").trim() : "";
+                  const isDupInFile = chpVal && chpCounts[chpVal] > 1 && seenChp.has(chpVal);
+                  const isExisting  = chpVal && existingChp.has(chpVal);
+                  if (chpVal) seenChp.add(chpVal);
+                  const rowStyle = isDupInFile
+                    ? 'background:#fdf0ef;'
+                    : isExisting ? 'background:#fff8e6;' : '';
+                  const badge = isDupInFile
+                    ? `<span style="font-size:10px;color:var(--red);margin-right:4px;">כפול</span>`
+                    : isExisting
+                    ? `<span style="font-size:10px;color:#9a7010;margin-right:4px;">קיים</span>`
+                    : "";
+                  return `<tr style="${rowStyle}">
+                    <td style="text-align:center;color:var(--light);font-size:11px;padding:7px 4px;">${i+1}</td>
+                    ${mappedFields.map((f,fi) => {
+                      const val = escHtml(row[csvColMap[f.key]] || "");
+                      const isChp = f.key === "chp_number";
+                      return `<td style="padding:7px 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${isChp?"direction:ltr;text-align:right;font-size:12px;":"font-size:13px;"}">
+                        ${isChp ? badge : ""}${val||"—"}
+                      </td>`;
+                    }).join("")}
+                  </tr>`;
+                }).join("")}
+              </tbody>
+            </table>
+          </div>`;
+        })()}
+      </div>
+
+      <div class="confirm-import-box">
+        ⚠️ פעולה זו תמחק את כל <strong>${businesses.length} העסקים הקיימים</strong> ותייבא
+        <span class="ci-count">${csvRows.length} עסקים חדשים</span> מהקובץ. לא ניתן לבטל פעולה זו.
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="csvStep='upload';render()">← חזור</button>
+        <button class="btn-danger" onclick="startImport()">
+          🗑 מחק ${businesses.length} קיימים וייבא ${csvRows.length} חדשים
+        </button>
+      </div>`;
+  }
+
+  // ── STEP 3: Importing ──
+  else if (csvStep === "importing") {
+    const pct = csvTotal > 0 ? Math.round((csvProgress / csvTotal) * 100) : 0;
+    body = `
+      <div style="text-align:center;padding:1rem 0 0.5rem;">
+        <div style="font-size:1.8rem;margin-bottom:.5rem;">⏳</div>
+        <p style="font-size:15px;font-weight:500;margin-bottom:.3rem;">מייבא נתונים...</p>
+        <p style="font-size:13px;color:var(--muted);">אנא המתן, אל תסגור את הדף</p>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>${csvPhase}</span>
+          <span>${csvProgress} / ${csvTotal}</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="progress-phase">${pct}% הושלם</div>
+      </div>`;
+  }
+
+  // ── STEP 4: Done ──
+  else if (csvStep === "done") {
+    body = `
+      <div class="done-box">
+        <div class="done-icon">✅</div>
+        <h3>הייבוא הושלם בהצלחה</h3>
+        <p>נמחקו <strong>${csvDeleted}</strong> עסקים קיימים · יובאו <strong>${csvImported}</strong> עסקים חדשים</p>
+      </div>
+      ${csvErrors.length > 0 ? `
+        <div class="done-error-box">
+          <strong>שגיאות (${csvErrors.length}):</strong><br>
+          ${csvErrors.map(e=>escHtml(e)).join("<br>")}
+        </div>` : ""}
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:1rem;">
+        <button class="btn-primary" style="width:auto;padding:10px 28px;" onclick="finishImport()">חזור לניהול</button>
+      </div>`;
+  }
+
+  return `
+    <div class="csv-panel">
+      <div class="csv-panel-header">
+        <h2>📥 ייבוא עסקים מ-CSV</h2>
+        ${csvStep !== "importing" ? `<button class="btn-ghost" onclick="setView('admin')">✕ ביטול</button>` : ""}
+      </div>
+      <div class="steps">${stepsHtml}</div>
+      ${body}
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  BIND EVENTS
+// ─────────────────────────────────────────────
+function bindEvents() {
+  const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
+
+  on("srch",     "input",  e => { search        = e.target.value; render(); });
+  on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
+  on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
+  on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
+  on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
+  on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
+  on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
+
+  // שמירת ח.פ. שמוקלד בזמן אמת כדי שלא יאבד בעת render מחדש
+  const chpEl = document.getElementById("chp");
+  if (chpEl) chpEl.addEventListener("input", e => {
+    editBiz = { ...(editBiz || {}), chp_number: e.target.value };
+  });
+
+  // CSV drag-drop
+  const dz = document.getElementById("drop-zone");
+  if (dz) {
+    dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("drag-over"); });
+    dz.addEventListener("dragleave", () => dz.classList.remove("drag-over"));
+    dz.addEventListener("drop", e => {
+      e.preventDefault();
+      dz.classList.remove("drag-over");
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleCsvFile(file);
+    });
+  }
+  const fi = document.getElementById("csv-file-input");
+  if (fi) fi.addEventListener("change", e => {
+    const file = e.target.files?.[0];
+    if (file) handleCsvFile(file);
+  });
+
+  // Auto-focus
+  const pwd = document.getElementById("pwd");
+  if (pwd) setTimeout(() => pwd.focus(), 40);
+}
+
+// ─────────────────────────────────────────────
+//  ACTIONS
+// ─────────────────────────────────────────────
+function setView(v) {
+  view = v;
+  if (v !== "csv-import") {
+    csvStep = "upload"; csvHeaders = []; csvRows = []; csvColMap = {};
+    csvErrors = []; csvImported = 0; csvDeleted = 0;
+  }
+  chpResult = null; chpError = "";
+  render();
+}
+
+function toggleAdmin() {
+  if (isAdmin) { isAdmin = false; adminToken = ""; location.href = "/"; }   // יציאה = חזרה לאתר הציבורי
+  else setView("login");
+}
+
+async function doLogin() {
+  const pwd = document.getElementById("pwd")?.value || "";
+  adminToken = pwd;
+  try {
+    await apiFetch("/businesses");
+    isAdmin = true; setView("admin");
+  } catch {
+    isAdmin = true; setView("admin");
+  }
+}
+
+function openForm(id) {
+  editBiz = id ? businesses.find(b => b.id === id) || {} : {};
+  chpResult = null; chpError = "";
+  setView("form");
+}
+
+function preDelete(id) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  showDeleteModal(id, displayName(biz));
+}
+
+function cancelDelete() {
+  deleteId = null;
+  const modal = document.getElementById("delete-modal");
+  if (modal) modal.style.display = "none";
+}
+
+function showDeleteModal(id, name) {
+  deleteId = id;
+  const modal = document.getElementById("delete-modal");
+  if (!modal) return;
+  modal.style.display = "block";
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="handleOverlayClick(event)">
+      <div class="modal-box">
+        <div class="modal-icon">🗑️</div>
+        <div class="modal-title">מחיקת עסק</div>
+        <div class="modal-biz-name">${escHtml(name)}</div>
+        <p class="modal-instruction">להמשך המחיקה, הקלד <strong>מחק</strong> בתיבה:</p>
+        <input
+          class="modal-input"
+          id="delete-confirm-input"
+          type="text"
+          placeholder="הקלד מחק לאישור"
+          autocomplete="off"
+          oninput="onDeleteInput(this)"
+          onkeydown="if(event.key==='Enter') tryConfirmDelete()"
+        >
+        <div class="modal-actions">
+          <button class="cancel" onclick="cancelDelete()">ביטול</button>
+          <button class="confirm-del" id="delete-confirm-btn" onclick="tryConfirmDelete()">מחק לצמיתות</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(() => document.getElementById("delete-confirm-input")?.focus(), 60);
+}
+
+function handleOverlayClick(e) {
+  if (e.target.classList.contains("modal-overlay")) cancelDelete();
+}
+
+function onDeleteInput(el) {
+  const btn = document.getElementById("delete-confirm-btn");
+  const ready = el.value.trim() === "מחק";
+  el.classList.toggle("confirmed", ready);
+  if (btn) btn.classList.toggle("ready", ready);
+}
+
+async function tryConfirmDelete() {
+  const input = document.getElementById("delete-confirm-input");
+  if (!input || input.value.trim() !== "מחק") return;
+  await confirmDelete(deleteId);
+}
+
+async function confirmDelete(id) {
+  try {
+    await apiFetch(`/businesses/${id}`, { method: "DELETE" });
+    businesses = businesses.filter(b => b.id !== id);
+    deleteId = null;
+    const modal = document.getElementById("delete-modal");
+    if (modal) modal.style.display = "none";
+    showStatus("נמחק בהצלחה");
+    render();
+  } catch(e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    alert("שגיאה במחיקה: " + e.message);
+  }
+}
+
+async function doLookup() {
+  const number = (document.getElementById("chp")?.value || "").trim();
+  if (!number) { chpError = "הכנס מספר רישום"; render(); return; }
+  // שמור את הח.פ. שהוקלד ב-editBiz כדי שלא יתנקה בעת רנדור מחדש
+  editBiz = { ...(editBiz || {}), chp_number: number };
+  chpLoading = true; chpError = ""; chpResult = null; render();
+  try {
+    const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
+    if (res.found) chpResult = res;
+    else chpError = "לא נמצא תאגיד עם מספר זה בשום רשם";
+  } catch(e) {
+    chpError = "שגיאת חיבור לרשם הרשמי";
+  }
+  chpLoading = false; render();
+  if (chpResult) {
+    const regEl = document.getElementById("f-reg");
+    if (regEl) regEl.value = chpResult.name;
+    // מלא סוג עסק אוטומטית אם הגיע מהרשם
+    if (chpResult.bizType) {
+      const btEl = document.getElementById("f-biztype");
+      if (btEl) btEl.value = chpResult.bizType;
+      editBiz = { ...(editBiz || {}), biz_type: chpResult.bizType };
+    }
+  }
+}
+
+const BOND_PICK = 'בחירת אג"ח מסוימים';
+
+// ─────────────────────────────────────────────
+//  בחירת אג"ח מסוימים (חלון קטן): הרשימה מהמאיה (נבנית יומית ב-bonds-list), פרטי / כללי לכל אג"ח,
+//  ושמירה בטבלה approved_bonds. אג"ח שנשמרה ונעלמה ממאיה נשארת שמורה, ולא מוצגת ברשימת האג"ח.
+// ─────────────────────────────────────────────
+let bpState = null;   // {biz, rows:[{id,name,symbol,inMaya,scope,saved}], updated}
+
+async function openBondPicker(bizId) {
+  const biz = businesses.find(b => b.id === bizId);
+  if (!biz) return;
+  const chp = String(biz.chp_number || "").trim();
+  bpState = { biz, rows: [], updated: "", loading: true, error: "" };
+  renderBondPicker();
+  if (!chp) { bpState.loading = false; bpState.error = "לחברה אין ח.פ."; return renderBondPicker(); }
+  try {
+    const [snap, saved] = await Promise.all([
+      fetch("/data/bonds_list/maya_securities.json").then(r => r.ok ? r.json() : null).catch(() => null),
+      apiFetch("/approved-bonds?chp=" + encodeURIComponent(chp)),
+    ]);
+    const norm = x => String(x || "").replace(/^0+/, "");
+    const inMaya = snap ? ((snap.companies || {})[norm(chp)] || (snap.companies || {})[chp] || []) : [];
+    const savedBy = new Map((saved.rows || []).map(r => [Number(r.security_id), r]));
+    const rows = inMaya.map(m => ({ id: m.security_id, name: m.name, symbol: m.symbol, inMaya: true,
+                                    scope: (savedBy.get(m.security_id) || {}).scope || "", saved: savedBy.has(m.security_id) }));
+    const seen = new Set(rows.map(r => r.id));
+    for (const r of saved.rows || []) {
+      if (!seen.has(Number(r.security_id))) rows.push({ id: Number(r.security_id), name: r.bond_name, symbol: r.symbol, inMaya: false, scope: r.scope, saved: true });
+    }
+    bpState.rows = rows; bpState.updated = snap ? snap.updated : ""; bpState.noSnap = !snap;
+  } catch (e) {
+    bpState.error = e.message === "Unauthorized" ? "נדרשת התחברות" : "שגיאה בטעינה: " + e.message;
+  }
+  bpState.loading = false;
+  renderBondPicker();
+}
+
+const BP_ON  = "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);";
+const BP_OFF = "background:var(--bg);color:var(--text);border-color:var(--border);";
+function bpToggle(i, which) {   // which: private | general. מעדכן רק את הכפתורים (בלי לטעון מחדש את החלון)
+  const r = bpState.rows[i];
+  const has = { private: r.scope === "private" || r.scope === "both", general: r.scope === "general" || r.scope === "both" };
+  has[which] = !has[which];
+  r.scope = has.private && has.general ? "both" : has.private ? "private" : has.general ? "general" : "";
+  for (const w of ["private", "general"]) {
+    const el = document.getElementById(`bp-${i}-${w}`);
+    if (el) el.style.cssText = "padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;" + (has[w] ? BP_ON : BP_OFF);
+  }
+}
+
+function bpAddById() {
+  const el = document.getElementById("bp-add-id");
+  const id = parseInt(el.value, 10);
+  if (!Number.isInteger(id) || id <= 0) { showStatus("מספר אג\"ח לא תקין"); return; }
+  if (!bpState.rows.some(r => r.id === id)) bpState.rows.push({ id, name: "אג\"ח מספר " + id, symbol: "", inMaya: false, scope: "both", saved: false, added: true });
+  renderBondPicker();
+}
+
+function bpRemove(i) { bpState.rows[i].remove = true; renderBondPicker(); }
+function closeBondPicker() { bpState = null; document.getElementById("bp-root")?.remove(); }
+
+async function saveBondPicker() {
+  const st = bpState; if (!st) return;
+  const items = st.rows.filter(r => !r.remove && r.scope).map(r => ({ security_id: r.id, bond_name: r.name, symbol: r.symbol, scope: r.scope }));
+  // מחיקה מפורשת בלבד: אג"ח שהיא במאיה והוסרה ממנה הסימון, או שהוסרה ידנית. אג"ח שנעלמה ממאיה לא נמחקת.
+  const remove = st.rows.filter(r => r.saved && (r.remove || (r.inMaya && !r.scope))).map(r => r.id);
+  try {
+    await apiFetch("/approved-bonds", { method: "PUT", body: JSON.stringify({ chp: String(st.biz.chp_number).trim(), items, remove }) });
+    showStatus("נשמר ✓ (הרשימה תתעדכן בריצה הבאה של bonds-list)");
+    closeBondPicker();
+  } catch (e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    showStatus("שגיאה בשמירה: " + e.message);
+  }
+}
+
+function renderBondPicker() {
+  const old = document.getElementById("bp-root");
+  const keepScroll = old ? (old.querySelector(".bp-list") || {}).scrollTop || 0 : 0;
+  const reopen = !!old;
+  old?.remove();
+  const st = bpState; if (!st) return;
+  const btn = (on, label, i, which) => `<button id="bp-${i}-${which}" onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;${on ? BP_ON : BP_OFF}">${label}</button>`;
+  const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
+    ${st.noSnap ? `<p style="color:#b85c00;font-size:13px;">רשימת מאיה עדיין לא נבנתה (תיווצר בריצה הקרובה של bonds-list). אפשר להוסיף אג"ח לפי מספר.</p>` : `<p style="font-size:12px;color:var(--muted);">רשימת מאיה נכון ל-${escHtml(st.updated)}</p>`}
+    <div class="bp-list" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
+      ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r); return `
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
+          <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
+            <div style="font-size:11px;color:var(--muted);">מס' ${r.id}${r.symbol ? " · " + escHtml(r.symbol) : ""}${r.inMaya ? "" : " · לא קיימת כרגע במאיה (נשמרת, לא מוצגת ברשימה)"}</div></div>
+          <div style="white-space:nowrap;">${btn(r.scope === "private" || r.scope === "both", "פרטי", i, "private")} ${btn(r.scope === "general" || r.scope === "both", "כללי", i, "general")}
+            ${!r.inMaya ? `<button onclick="bpRemove(${i})" title="הסרה מהרשימה השמורה" style="border:none;background:none;cursor:pointer;">🗑</button>` : ""}</div>
+        </div>`; }).join("") || '<div style="padding:14px;text-align:center;color:var(--light);">אין אג"ח לחברה</div>'}
+    </div>
+    <div style="display:flex;gap:6px;margin-top:10px;"><input id="bp-add-id" type="number" placeholder="הוספה לפי מספר אג&quot;ח" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;direction:ltr;">
+      <button class="btn-ghost" onclick="bpAddById()">הוסף</button></div>`;
+  const root = document.createElement("div");
+  root.id = "bp-root";
+  root.innerHTML = `<div class="modal-overlay" style="${reopen ? "animation:none;" : ""}" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
+    <div class="modal-box" style="max-width:560px;${reopen ? "animation:none;" : ""}">
+      <div class="modal-title">בחירת אג"ח מסוימים</div>
+      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
+      ${body}
+      <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeBondPicker()">ביטול</button>
+        <button class="btn-primary" onclick="saveBondPicker()" ${st.loading || st.error ? "disabled" : ""}>שמירה</button>
+      </div>
+    </div></div>`;
+  document.body.appendChild(root);
+  const list = root.querySelector(".bp-list"); if (list) list.scrollTop = keepScroll;
+}
+
+// שינוי "אישור אג"ח" בטבלת הניהול. "⚙ בחירת אג"ח…" היא פעולה: תמיד פותחת את חלון הבחירה (גם אם החברה כבר במצב
+// "אג"ח מסוימים"), ומעבירה את החברה למצב הזה אם עוד לא; הבחירה בתפריט עצמה חוזרת לערך הנוכחי.
+async function agchChange(id, sel) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  if (sel.value === "__pick__") {
+    if (biz.agch_approved !== BOND_PICK) {
+      const ok = await inlineUpdate(id, "agch_approved", BOND_PICK);
+      if (!ok) { sel.value = biz.agch_approved || ""; return; }
+      render();
+    } else {
+      sel.value = BOND_PICK;
+    }
+    openBondPicker(id);
+    return;
+  }
+  const ok = await inlineUpdate(id, "agch_approved", sel.value);
+  if (ok && sel.value === BOND_PICK) openBondPicker(id);
+}
+
+let admSearchTimer = null;
+function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מחדש אחרי הפסקת הקלדה, עם שמירת הפוקוס
+  search = v;
+  clearTimeout(admSearchTimer);
+  admSearchTimer = setTimeout(() => {
+    render();
+    const el = document.getElementById("adm-srch");
+    if (el) { el.focus(); el.setSelectionRange(v.length, v.length); }
+  }, 250);
+}
+
+async function inlineUpdate(id, field, value) {
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  const updated = { ...biz, [field]: value };
+  try {
+    await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
+    businesses = businesses.map(b => b.id === id ? updated : b);
+    showStatus("עודכן ✓");
+    return true;
+  } catch(e) {
+    if (e.message === "Unauthorized") { handleUnauth(); return false; }
+    showStatus("שגיאה בשמירה"); render();
+    return false;
+  }
+}
+
+// החלף את הפונקציה runRegistrySync הקיימת בזו:
+
+async function runRegistrySync() {
+  const btn    = document.getElementById("sync-btn");
+  const status = document.getElementById("sync-status");
+  if (!btn || !status) return;
+
+  btn.disabled = true;
+  btn.textContent = "⏳ מסנכרן...";
+  status.style.display  = "block";
+  status.style.background = "var(--bg2)";
+  status.innerHTML = "מתחיל סנכרון...";
+
+  const withChp   = businesses.filter(b => b.chp_number);
+  const total     = withChp.length;
+  let processed   = 0;
+  let updated     = 0;
+  let errors      = 0;
+  const CONCURRENCY = 5;   // 5 בקשות במקביל
+
+  for (let i = 0; i < withChp.length; i += CONCURRENCY) {
+    const batch = withChp.slice(i, i + CONCURRENCY);
+
+    await Promise.all(batch.map(async (biz) => {
+      try {
+        const res = await apiFetch(`/lookup?number=${encodeURIComponent(biz.chp_number)}`);
+
+        if (res.found) {
+          const newName = (res.name    || "").trim();
+          const newType = (res.bizType || "").trim();
+
+          const nameChanged = newName && newName !== (biz.registrar_name || "").trim();
+          const typeChanged = newType && newType !== (biz.biz_type       || "").trim();
+
+          if (nameChanged || typeChanged) {
+            const updatedBiz = {
+              ...biz,
+              registrar_name: nameChanged ? newName : biz.registrar_name,
+              biz_type:       typeChanged ? newType : biz.biz_type,
+            };
+            await apiFetch(`/businesses/${biz.id}`, {
+              method: "PUT",
+              body:   JSON.stringify(updatedBiz),
+            });
+            businesses = businesses.map(b => b.id === biz.id ? updatedBiz : b);
+            updated++;
+          }
+        }
+      } catch(e) {
+        errors++;
+        console.warn(`Lookup failed (${biz.chp_number}):`, e.message);
+      }
+
+      processed++;
+      const pct = Math.round((processed / total) * 100);
+      status.innerHTML = `⏳ ${pct}% — עברו ${processed}/${total} · עודכנו: <strong>${updated}</strong>`;
+    }));
+  }
+
+  status.style.background = "#edf7f1";
+  status.innerHTML = `✅ סנכרון הושלם — עודכנו <strong>${updated}</strong> מתוך <strong>${total}</strong> עסקים${errors ? ` · שגיאות: ${errors}` : ""}`;
+  btn.disabled    = false;
+  btn.textContent = "🔄 עדכן שמות מרשם";
+  render();
+}
+async function runTaseSync(scope = "bonds") {
+  const btns   = ["tase-btn", "tase-full-btn"].map(id => document.getElementById(id)).filter(Boolean);
+  const btn    = document.getElementById(scope === "all" ? "tase-full-btn" : "tase-btn");
+  const status = document.getElementById("sync-status");
+  if (!btn || !status) return;
+  const labels = btns.map(b => b.textContent);
+  btns.forEach(b => b.disabled = true); btn.textContent = "⏳ מפעיל...";
+  status.style.display = "block"; status.style.background = "var(--bg2)";
+  status.innerHTML = scope === "all" ? "מפעיל עדכון מלא — אנא המתן..." : "מפעיל עדכון אג\"ח מבורסה — אנא המתן...";
+  try {
+    const res = await apiFetch("/sync-tase", { method: "POST", body: JSON.stringify({ scope }) });
+    status.style.background = "#edf7f1";
+    status.innerHTML = `
+      ✅ ${res.message}
+      &nbsp;|&nbsp; <a href="${res.runsUrl}" target="_blank" rel="noopener">מעקב אחרי הריצה ב-GitHub</a>
+    `;
+  } catch(e) {
+    status.style.background = "#fdf0ef";
+    status.innerHTML = `❌ שגיאה: ${e.message}`;
+  }
+  // לא להפעיל שוב מיד: הריצה נמשכת (ויש בה נעילה נגד ריצות מקבילות)
+  setTimeout(() => { btns.forEach((b, i) => { b.disabled = false; b.textContent = labels[i]; }); }, 60000);
+}
+
+function copyRegToPermit() {
+  const reg = document.getElementById("f-reg");
+  const permit = document.getElementById("f-permit");
+  if (reg && permit && reg.value.trim()) {
+    permit.value = reg.value.trim();
+    permit.focus();
+    permit.style.borderColor = "var(--navy)";
+    setTimeout(() => permit.style.borderColor = "", 1000);
+  }
+}
+
+async function doSave() {
+  const regName    = (document.getElementById("f-reg")?.value    || "").trim();
+  const permitName = (document.getElementById("f-permit")?.value || "").trim();
+  const errEl = document.getElementById("form-err");
+  if (!regName && !permitName) {
+    if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
+    return;
+  }
+  const chpVal = (document.getElementById("chp")?.value || "").trim();
+  // ── Duplicate ח.פ. check ──
+  if (chpVal) {
+    const duplicate = businesses.find(b =>
+      (b.chp_number || "").trim() === chpVal && b.id !== editBiz?.id
+    );
+    if (duplicate) {
+      if (errEl) errEl.textContent =
+        `ח.פ. ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
+      return;
+    }
+  }
+  const payload = {
+    id:             editBiz?.id || uid(),
+    chp_number:     (document.getElementById("chp")?.value         || "").trim(),
+    entity_type:    (document.getElementById("entity-type")?.value || "company").trim(),
+    registrar_name: regName,
+    permit_name:    permitName,
+    category:       (document.getElementById("f-cat")?.value       || "").trim(),
+    region:         (document.getElementById("f-region")?.value    || "").trim(),
+    notes:          (document.getElementById("f-notes")?.value     || "").trim(),
+    notes_scope:    (document.getElementById("f-notes-scope")?.value || "").trim(),
+    biz_type:       (document.getElementById("f-biztype")?.value   || "").trim(),
+    visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
+    agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),
+    has_details:    0,
+  };
+  saving = true; render();
+  try {
+    const isEdit = !!editBiz?.id;
+    if (isEdit) {
+      await apiFetch(`/businesses/${payload.id}`, { method: "PUT",  body: JSON.stringify(payload) });
+      businesses = businesses.map(b => b.id === payload.id ? { ...b, ...payload } : b);
+    } else {
+      await apiFetch("/businesses", { method: "POST", body: JSON.stringify(payload) });
+      businesses = [...businesses, payload];
+    }
+    showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
+    saving = false; setView("admin");
+  } catch(e) {
+    saving = false;
+    if (e.message === "Unauthorized") { handleUnauth(); return; }
+    const errEl2 = document.getElementById("form-err");
+    if (errEl2) errEl2.textContent = "שגיאה: " + e.message;
+    render();
+  }
+}
+
+function handleUnauth() {
+  isAdmin = false; adminToken = ""; saving = false;
+  alert("הסיסמה שגויה — בקשה נדחתה");
+  setView("login");
+}
+
+// ════════════════════════════════════════════
+//  CSV IMPORT LOGIC
+// ════════════════════════════════════════════
+
+function openCsvImport() {
+  csvStep = "upload"; csvHeaders = []; csvRows = [];
+  csvColMap = {}; csvErrors = []; csvImported = 0; csvDeleted = 0;
+  view = "csv-import";
+  render();
+}
+
+// Parse CSV (handles quoted fields, commas inside quotes, \r\n and \n)
+function parseCsv(text) {
+  // Normalize line endings
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const result = [];
+
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let cur = "";
+    let inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuote) {
+        if (ch === '"' && line[i+1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQuote = false; }
+        else { cur += ch; }
+      } else {
+        if (ch === '"') { inQuote = true; }
+        else if (ch === ',') { row.push(cur.trim()); cur = ""; }
+        else { cur += ch; }
+      }
+    }
+    row.push(cur.trim());
+    result.push(row);
+  }
+  return result;
+}
+
+// Auto-detect which column maps to which field
+function autoDetectMapping(headers) {
+  const map = {};
+  for (const field of CSV_FIELDS) {
+    map[field.key] = -1;
+    for (let i = 0; i < headers.length; i++) {
+      const h = headers[i].trim().toLowerCase().replace(/['"]/g,"");
+      for (const alias of field.aliases) {
+        if (h === alias.toLowerCase().replace(/['"]/g,"") || h.includes(alias.toLowerCase())) {
+          map[field.key] = i;
+          break;
+        }
+      }
+      if (map[field.key] >= 0) break;
+    }
+  }
+  return map;
+}
+
+function handleCsvFile(file) {
+  if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+    alert("אנא בחר קובץ CSV בלבד");
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    let text = e.target.result;
+    // Strip BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+
+    const parsed = parseCsv(text);
+    if (parsed.length < 2) {
+      alert("הקובץ ריק או מכיל שורה אחת בלבד");
+      return;
+    }
+    csvHeaders = parsed[0];
+    csvRows    = parsed.slice(1).filter(r => r.some(c => c.trim()));
+    csvColMap  = autoDetectMapping(csvHeaders);
+    csvStep    = "preview";
+    render();
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+function updateColMap(fieldKey, value) {
+  csvColMap[fieldKey] = parseInt(value, 10);
+  // Update the select's 'mapped' class visually
+  const sel = document.getElementById(`map-${fieldKey}`);
+  if (sel) sel.className = parseInt(value) >= 0 ? "mapped" : "";
+  // Re-render preview table only (lightweight update)
+  const previewSection = document.querySelector(".preview-section");
+  if (previewSection) {
+    const previewRows = csvRows.slice(0, 8);
+    const mappedFields = CSV_FIELDS.filter(f => (csvColMap[f.key]??-1) >= 0);
+    previewSection.querySelector("table").innerHTML = `
+      <thead><tr>${mappedFields.map(f=>`<th>${f.label}</th>`).join("")}</tr></thead>
+      <tbody>
+        ${previewRows.map(row=>`
+          <tr>${mappedFields.map(f=>`<td>${escHtml(row[csvColMap[f.key]]||"")}</td>`).join("")}</tr>
+        `).join("")}
+      </tbody>`;
+  }
+}
+
+// Normalize agch_approved values from CSV → system values
+function normalizeAgch(val) {
+  const v = (val || "").trim();
+  if (v === "מאושר"  || v === "כן" || v === "yes" || v === "true" || v === "1") return "כן";
+  if (v === "לא מאושר" || v === "לא" || v === "no"  || v === "false"|| v === "0") return "לא";
+  if (v === "רק פרטי" || v === "פרטי בלבד" || v === "רק-פרטי") return "רק פרטי";
+  if (v === "רק כללי" || v === "כללי בלבד" || v === "רק-כללי") return "רק כללי";
+  return "";
+}
+async function startImport() {
+  // Validate at least a name field is mapped
+  const hasName = (csvColMap["registrar_name"]??-1) >= 0 || (csvColMap["permit_name"]??-1) >= 0;
+  if (!hasName) {
+    alert("חובה למפות לפחות את עמודת 'שם ברשם הרשמי' או 'שם בהיתר עסקה'");
+    return;
+  }
+
+  csvStep    = "importing";
+  csvErrors  = [];
+  csvImported = 0;
+  csvDeleted  = 0;
+
+  const existingIds = businesses.map(b => b.id);
+  csvTotal    = existingIds.length + csvRows.length;
+  csvProgress = 0;
+  csvPhase    = "מוחק עסקים קיימים...";
+  render();
+
+  // ── PHASE 1: Delete all existing ──
+  for (const id of existingIds) {
+    try {
+      await apiFetch(`/businesses/${id}`, { method: "DELETE" });
+      csvDeleted++;
+    } catch(e) {
+      csvErrors.push(`שגיאה במחיקת ${id}: ${e.message}`);
+    }
+    csvProgress++;
+    updateProgressUI();
+  }
+
+  // Clear local cache
+  businesses = [];
+
+  // ── PHASE 2: Import new rows ──
+  csvPhase = "מייבא שורות חדשות...";
+  updateProgressUI();
+
+  for (let i = 0; i < csvRows.length; i++) {
+    const row = csvRows[i];
+    const get = (key) => {
+      const idx = csvColMap[key] ?? -1;
+      return idx >= 0 ? (row[idx] || "").trim() : "";
+    };
+
+    const regName    = get("registrar_name");
+    const permitName = get("permit_name");
+
+    if (!regName && !permitName) {
+      csvErrors.push(`שורה ${i+2}: חסר שם — דולגה`);
+      csvProgress++;
+      updateProgressUI();
+      continue;
+    }
+
+    // ── Duplicate ח.פ. check within import ──
+    const chpVal = get("chp_number");
+    if (chpVal && businesses.some(b => (b.chp_number||"").trim() === chpVal)) {
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ח.פ. ${chpVal} כבר קיים — דולגה`);
+      csvProgress++;
+      updateProgressUI();
+      continue;
+    }
+
+    const payload = {
+      id:             uid(),
+      chp_number:     get("chp_number"),
+      registrar_name: regName,
+      permit_name:    permitName,
+      category:       get("category"),
+      region:         get("region"),
+      visibility:     get("visibility"),
+      agch_approved:  normalizeAgch(get("agch_approved")),
+      tase_has_agch:  get("tase_has_agch"),
+      biz_type:       get("biz_type"),
+      notes:          get("notes"),
+      has_details:    0,
+    };
+
+    try {
+      await apiFetch("/businesses", { method: "POST", body: JSON.stringify(payload) });
+      businesses = [...businesses, payload];
+      csvImported++;
+    } catch(e) {
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ${e.message}`);
+    }
+
+    csvProgress++;
+    updateProgressUI();
+  }
+
+  csvStep = "done";
+  render();
+}
+
+function updateProgressUI() {
+  const fill  = document.querySelector(".progress-bar-fill");
+  const label = document.querySelector(".progress-label span:last-child");
+  const phase = document.querySelector(".progress-phase");
+  const pct   = csvTotal > 0 ? Math.round((csvProgress / csvTotal) * 100) : 0;
+  if (fill)  fill.style.width = pct + "%";
+  if (label) label.textContent = `${csvProgress} / ${csvTotal}`;
+  if (phase) phase.textContent = pct + "% הושלם";
+  const phaseEl = document.querySelector(".progress-label span:first-child");
+  if (phaseEl) phaseEl.textContent = csvPhase;
+}
+
+function finishImport() {
+  showStatus(`✅ יובאו ${csvImported} עסקים בהצלחה`);
+  setView("admin");
+}
+
+// ─────────────────────────────────────────────
+//  CSV EXPORT
+// ─────────────────────────────────────────────
+function exportCsv(allRows = false) {
+  const rows = allRows ? businesses : filtered();
+  if (!rows.length) { showStatus("אין נתונים לייצוא"); return; }
+
+  const HEADERS = [
+    "מספר תאגיד",
+    "שם חברה / שותפות רשמי",
+    "היתר עסקה על שם",
+    "עיסוק",
+    "סוג עסק",
+    "היתר עסקה חברה",
+    "היתר עסקה אגח",
+    "אג\"ח בורסה",
+    "הערות",
+  ];
+
+  const csvCell = (v) => {
+    const s = (v || "").toString().replace(/"/g, '""');
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s}"` : s;
+  };
+
+  const lines = [
+    HEADERS.map(csvCell).join(","),
+    ...rows.map(b => [
+      b.chp_number     || "",
+      b.registrar_name || "",
+      b.permit_name    || "",
+      b.category       || "",
+      b.biz_type       || "",
+      b.visibility     || "",
+      b.agch_approved === "כן" ? "מאושר" : b.agch_approved === "לא" ? "לא מאושר" : b.agch_approved === BOND_PICK ? "אג\"ח מסוימים" : "",
+      b.tase_has_agch  || "",
+      b.notes          || "",
+    ].map(csvCell).join(",")),
+  ];
+
+  // UTF-8 BOM for Hebrew Excel compatibility
+  const bom     = "\uFEFF";
+  const content = bom + lines.join("\r\n");
+  const blob    = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const url     = URL.createObjectURL(blob);
+  const a       = document.createElement("a");
+  const date    = new Date().toISOString().slice(0,10);
+  a.href        = url;
+  a.download    = `עסקים-מורשים-${date}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showStatus(`✅ יוצאו ${rows.length} שורות`);
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+function uniqueCats() {
+  return [...new Set(businesses.map(b=>b.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"he"));
+}
+
+function setSort(col) {
+  if (sortCol === col) sortDir = sortDir === "asc" ? "desc" : "asc";
+  else { sortCol = col; sortDir = "asc"; }
+  render();
+}
+
+function clearFilters() {
+  search = ""; filterCat = ""; filterRegion = "";
+  filterBizType = ""; filterVis = ""; filterAgch = "";
+  render();
+}
+
+function agchSortKey(b) {
+  if ((b.tase_has_agch||"") !== "יש") return 0;
+  if ((b.agch_approved||"") === "כן")  return 2;
+  if ((b.agch_approved||"") === "לא")  return 1;
+  return 1;
+}
+
+function filteredAndSorted() {
+  const q = search.trim().toLowerCase();
+
+  // Filter
+  let rows = businesses.filter(b => {
+    if (q) {
+      const name = displayName(b).toLowerCase();
+      const hits = name.includes(q)
+        || (b.category   ||"").toLowerCase().includes(q)
+        || (b.region     ||"").toLowerCase().includes(q)
+        || (b.chp_number ||"").toLowerCase().includes(q)
+        || (b.notes      ||"").toLowerCase().includes(q)
+        || (b.biz_type   ||"").toLowerCase().includes(q);
+      if (!hits) return false;
+    }
+    if (filterCat     && b.category    !== filterCat)     return false;
+    if (filterRegion  && b.region      !== filterRegion)  return false;
+    if (filterBizType && b.biz_type    !== filterBizType) return false;
+    if (filterVis     && b.visibility  !== filterVis)     return false;
+    if (filterAgch) {
+      const has  = (b.tase_has_agch||"").trim();
+      const appr = (b.agch_approved||"").trim();
+      if (filterAgch === "אין"      && has === "יש")                 return false;
+      if (filterAgch === "אין"      && has !== "יש")                 {} // keep
+      else if (filterAgch === "מאושר"   && !(has === "יש" && appr === "כן")) return false;
+      else if (filterAgch === "לא מאושר" && !(has === "יש" && appr === "לא")) return false;
+      else if (filterAgch === "יש"      && has !== "יש")             return false;
+    }
+    return true;
+  });
+
+  // Sort
+  const he = (a, b) => (a||"").localeCompare(b||"", "he");
+  rows.sort((a, b) => {
+    let cmp = 0;
+    switch (sortCol) {
+      case "num":        cmp = 0; break;
+      case "chp":        cmp = (a.chp_number||"").localeCompare(b.chp_number||""); break;
+      case "name":       cmp = he(displayName(a), displayName(b)); break;
+      case "category":   cmp = he(a.category,   b.category);   break;
+      case "region":     cmp = he(a.region,      b.region);     break;
+      case "biz_type":   cmp = he(a.biz_type,    b.biz_type);   break;
+      case "visibility": cmp = he(a.visibility,  b.visibility); break;
+      case "agch":       cmp = agchSortKey(a) - agchSortKey(b); break;
+      case "notes":      cmp = he(a.notes,       b.notes);      break;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  return rows;
+}
+
+// keep old filtered() for CSV export
+function filtered() { return filteredAndSorted(); }
+
+function showStatus(msg) {
+  const el = document.getElementById("status-bar");
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+// סגירת dropdown של מסד הנתונים בלחיצה בחוץ
+document.addEventListener("click", (e) => {
+  document.querySelectorAll("details.dbmenu[open]").forEach((d) => {
+    if (!d.contains(e.target)) d.removeAttribute("open");
+  });
+});
+
+// עמוד הניהול נפתח במסך כניסה
+render();
+
+loadBusinesses().catch(() => {
+  document.getElementById("app").innerHTML =
+    `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
+});
+</script>
+</body>
+</html>
