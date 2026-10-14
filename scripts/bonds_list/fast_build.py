@@ -86,6 +86,9 @@ def main(chp_arg=""):
     regular2 = keep + updated + new
     b.stabilize_names(regular2)
 
+    if os.environ.get("REFRESH_OFFERINGS") == "1":     # ריצת הנפקות קצרה (שעתית): מושכת הנפקות עתידיות/פתוחות מחדש, כולל זיכרון 3 ימים
+        regular_ids = {int(r["securityId"]) for items in by_chp.values() for r, _t in items}
+        b.collect_offerings(dw, approved, manual, names, companies, regular_ids)
     offering_bonds = []
     off_path = os.path.join(b.OUT, "offerings.json")
     off = None

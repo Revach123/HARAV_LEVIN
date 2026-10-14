@@ -1,0 +1,39 @@
+name: Offerings refresh (hourly)
+
+# ריצה קצרה (כחצי דקה): מושכת מחדש הנפקות עתידיות ופתוחות (datawise) ומעדכנת את offerings.json ואת שורות ההנפקה ברשימת האג"ח,
+# כדי שהסטטוס "יש אג"ח בהנפקה" לא יתעכב עד הבנייה היומית. לא סורקת כלום ולא נוגעת באג"ח הרגילות.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "10 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bonds-list
+  cancel-in-progress: false
+
+jobs:
+  offerings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Refresh offerings
+        env:
+          REFRESH_OFFERINGS: "1"
+        run: python scripts/bonds_list/fast_build.py
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/bonds_list
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "offerings-refresh: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push
