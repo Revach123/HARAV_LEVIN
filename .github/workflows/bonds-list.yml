@@ -19,6 +19,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: bonds-list      # שמירות רצופות בחלון הבחירה: ריצה אחת בכל פעם, השאר ממתינות
+  cancel-in-progress: false
+
 env:
   PYTHONUNBUFFERED: "1"
 

@@ -2048,8 +2048,10 @@ async function saveBondPicker() {
   // מחיקה מפורשת בלבד: אג"ח שהיא במאיה והוסרה ממנה הסימון, או שהוסרה ידנית. אג"ח שנעלמה ממאיה לא נמחקת.
   const remove = st.rows.filter(r => r.saved && (r.remove || (r.inMaya && !r.scope))).map(r => r.id);
   try {
-    await apiFetch("/approved-bonds", { method: "PUT", body: JSON.stringify({ chp: String(st.biz.chp_number).trim(), items, remove }) });
-    showStatus("נשמר ✓ (הרשימה תתעדכן בריצה הבאה של bonds-list)");
+    const resp = await apiFetch("/approved-bonds", { method: "PUT", body: JSON.stringify({ chp: String(st.biz.chp_number).trim(), items, remove }) });
+    showStatus(resp && resp.refresh && resp.refresh.triggered
+      ? "נשמר ✓ הרשימה נבנית עכשיו; האג\"ח יופיעו בעוד כ-6 דקות"
+      : "נשמר ✓ (לא ניתן להפעיל בנייה מיידית - הרשימה תתעדכן בריצה הבאה של bonds-list)");
     closeBondPicker();
   } catch (e) {
     if (e.message === "Unauthorized") { handleUnauth(); return; }
