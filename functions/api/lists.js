@@ -84,15 +84,14 @@ export async function onRequestGet(context) {
       const approvedCond = isPrivate
         ? "agch_approved IN ('כן','רק פרטי')"
         : "agch_approved IN ('כן','רק כללי')";
-      // "בחירת אג"ח מסוימים": החברה מאושרת רק לאג"ח שנבחרו ידנית (approved_bonds) - מוצגת כמאושרת, האג"ח עצמן ברשימת האג"ח
+      // כלל אחד: חברה בלי אג"ח (לפי הבורסה, tase_has_agch) = "אין אג"ח" - גם אם סומנה כמאושרת.
+      // חברה עם אג"ח = "יש אג"ח - מאושר" או "יש אג"ח - לא מאושר". "בחירת אג"ח מסוימים" רק קובע איזו אג"ח מאושרת (ברשימת האג"ח), והסטטוס כאן נקבע באותו כלל.
       const selective = `agch_approved = 'בחירת אג"ח מסוימים'`;
-      const approvedExpr = `CASE WHEN ${approvedCond} OR ${selective} THEN 1 ELSE 0 END`;
-      // מצב אג"ח: אין אג"ח / יש אג"ח - מאושר / יש אג"ח - לא מאושר
-      // (tase_has_agch = "יש" מהבורסה; מאושר גובר גם אם הדגל מהבורסה לא עודכן)
-      const bondsStatusExpr = `CASE WHEN ${approvedCond} THEN 'יש אג"ח - מאושר'
-                                    WHEN ${selective} THEN 'יש אג"ח - מאושר (אג"ח מסוימים)'
-                                    WHEN tase_has_agch = 'יש' THEN 'יש אג"ח - לא מאושר'
-                                    ELSE 'אין אג"ח' END`;
+      const hasBonds = `COALESCE(tase_has_agch,'') = 'יש'`;
+      const approvedExpr = `CASE WHEN ${hasBonds} AND (${approvedCond} OR ${selective}) THEN 1 ELSE 0 END`;
+      const bondsStatusExpr = `CASE WHEN NOT (${hasBonds}) THEN 'אין אג"ח'
+                                    WHEN ${approvedCond} OR ${selective} THEN 'יש אג"ח - מאושר'
+                                    ELSE 'יש אג"ח - לא מאושר' END`;
       // "קיים היתר עסקה פרטי": העסק מסומן פרטי (visibility = 'פרטי'), או "רק פרטי" במפורש
       const hasPrivateExpr = `CASE WHEN COALESCE(visibility,'') IN ('פרטי','רק פרטי') THEN 'כן' ELSE 'לא' END`;
       // "רק פרטי" על החברה עצמה (היתר העסקה): visibility = 'רק פרטי', או הערה שכתוב בה במפורש "רק פרטי"/"פרטי בלבד".
