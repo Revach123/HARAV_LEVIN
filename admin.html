@@ -793,8 +793,9 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
-  .idx-row { display:flex; margin:10px 0; }
+  .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
+  .idx-box { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
   .idx-sub { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-head { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-pie { display:flex; gap:12px; align-items:center; }
@@ -1466,11 +1467,11 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div><div class="idx-row" id="idx-row">${idxBoxHtml()}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
 }
 
 function renderHome() {
-  return `
+  return `<div class="idx-row" id="idx-row">${idxBoxHtml()}</div>
     <div class="home-grid">
       <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
@@ -2187,12 +2188,12 @@ function idxBoxHtml() {
     const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
     const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
-    body = `<div class="idx-sub">תל בונד 60 (לפי משקל הנייר במדד)</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`);
+    body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60 (לפי משקל הנייר במדד)</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
     const m = idxMarket;
     if (m && m.totalValue) {       // כלל האג"ח הקונצרניות בבורסה, לפי שווי שוק
       const sv = ids => ids.reduce((a, i) => a + (m.values[i] || 0), 0), ids = [...appr.keys()].filter(i => m.values[i]), pids = ids.filter(i => /פרטי/.test(appr.get(i)));
       const p2 = v => Math.round(v * 1000 / m.totalValue) / 10;
-      body += `<div class="idx-sub" style="margin-top:10px;">כלל האג"ח הקונצרניות (לפי שווי שוק)</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`);
+      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח הקונצרניות (לפי שווי שוק)</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
     }
   }
   return `<div class="idx-box">${body}</div>`;
