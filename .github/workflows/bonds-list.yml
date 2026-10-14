@@ -6,7 +6,16 @@ name: Bonds list (approved companies)
 #   data/bonds_list/bonds_general.{json,csv}
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'full (ברירת מחדל) או fast (בנייה מהירה לבחירה ידנית, כדקה)'
+        required: false
+        default: 'full'
+      chp:
+        description: 'ח.פ. של החברה שנבחרו לה אג"ח (לבנייה המהירה)'
+        required: false
+        default: ''
   schedule:
     - cron: "30 3 * * *"
   push:
@@ -36,7 +45,15 @@ jobs:
         with:
           python-version: "3.11"
       - name: Build bonds lists
-        run: python scripts/bonds_list/build_approved_bonds.py
+        env:
+          MODE: ${{ inputs.mode }}
+          CHP: ${{ inputs.chp }}
+        run: |
+          if [ "$MODE" = "fast" ]; then
+            python scripts/bonds_list/fast_build.py "$CHP"
+          else
+            python scripts/bonds_list/build_approved_bonds.py
+          fi
       - name: Commit
         if: always()
         run: |

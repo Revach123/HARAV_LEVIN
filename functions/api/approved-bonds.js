@@ -10,7 +10,7 @@ const isAuthed = (request, env) => checkAdmin(request, env);
 
 // אחרי שמירת בחירה: מפעיל מיד את בניית רשימת האג"ח (workflow bonds-list), כדי שהאג"ח הנבחרות יופיעו בלי לחכות לריצה היומית.
 // דורש env.GITHUB_DISPATCH_TOKEN (אותו סוד של sync-tase.js). בלעדיו - הבחירה נשמרת והרשימה תתעדכן בריצה הבאה.
-async function triggerBondsBuild(env) {
+async function triggerBondsBuild(env, chp) {
   if (!env.GITHUB_DISPATCH_TOKEN) return { triggered: false, reason: "missing_secret" };
   try {
     const res = await fetch("https://api.github.com/repos/Revach123/HARAV_LEVIN/actions/workflows/bonds-list.yml/dispatches", {
@@ -22,7 +22,7 @@ async function triggerBondsBuild(env) {
         "User-Agent": "harav-levin-admin",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ ref: "main" }),
+      body: JSON.stringify({ ref: "main", inputs: { mode: "fast", chp: String(chp || "") } }),   // בנייה מהירה (כדקה); אם אין בסיס, היא עוברת לבנייה מלאה
     });
     return res.status === 204 ? { triggered: true } : { triggered: false, reason: `github_${res.status}` };
   } catch { return { triggered: false, reason: "github_unreachable" }; }
@@ -67,7 +67,7 @@ export async function onRequestPut({ request, env }) {
       if (Number.isInteger(sid) && sid > 0) stmts.push(env.DB.prepare("DELETE FROM approved_bonds WHERE security_id = ? AND chp_number = ?").bind(sid, chp));
     }
     if (stmts.length) await env.DB.batch(stmts);
-    const refresh = stmts.length ? await triggerBondsBuild(env) : { triggered: false, reason: "no_changes" };
+    const refresh = stmts.length ? await triggerBondsBuild(env, chp) : { triggered: false, reason: "no_changes" };
     return Response.json({ success: true, saved: items.length, removed: remove.length, refresh });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

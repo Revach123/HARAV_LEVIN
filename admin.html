@@ -2008,6 +2008,16 @@ async function openBondPicker(bizId) {
     const savedBy = new Map((saved.rows || []).map(r => [Number(r.security_id), r]));
     const rows = inMaya.map(m => ({ id: m.security_id, name: m.name, symbol: m.symbol, inMaya: true,
                                     scope: (savedBy.get(m.security_id) || {}).scope || "", saved: savedBy.has(m.security_id) }));
+    if (!rows.length) {     // חברה שעוד לא נכנסה לקובץ שנבנה (חברה חדשה): האג"ח הסחירות שלה בזמן אמת מהבורסה (datawise)
+      try {
+        const live = await apiFetch("/company-bonds?chp=" + encodeURIComponent(chp));
+        if (live && live.ok) {
+          for (const m of live.rows || []) rows.push({ id: m.security_id, name: m.name, symbol: m.symbol, inMaya: true,
+            scope: (savedBy.get(m.security_id) || {}).scope || "", saved: savedBy.has(m.security_id) });
+          bpState.live = live.date || true;
+        }
+      } catch (e) { if (e.message === "Unauthorized") throw e; }
+    }
     const seen = new Set(rows.map(r => r.id));
     for (const r of saved.rows || []) {
       if (!seen.has(Number(r.security_id))) rows.push({ id: Number(r.security_id), name: r.bond_name, symbol: r.symbol, inMaya: false, scope: r.scope, saved: true });
@@ -2089,7 +2099,7 @@ async function saveBondPicker() {
   try {
     const resp = await apiFetch("/approved-bonds", { method: "PUT", body: JSON.stringify({ chp: String(st.biz.chp_number).trim(), items, remove }) });
     showStatus(resp && resp.refresh && resp.refresh.triggered
-      ? "נשמר ✓ הרשימה נבנית עכשיו; האג\"ח יופיעו בעוד כ-6 דקות"
+      ? "נשמר ✓ הרשימה נבנית עכשיו; האג\"ח יופיעו בעוד כדקה-שתיים"
       : "נשמר ✓ (לא ניתן להפעיל בנייה מיידית - הרשימה תתעדכן בריצה הבאה של bonds-list)");
     closeBondPicker();
   } catch (e) {
@@ -2106,6 +2116,7 @@ function renderBondPicker() {
   const st = bpState; if (!st) return;
   const btn = (on, label, i, which) => `<button id="bp-${i}-${which}" onclick="bpToggle(${i},'${which}')" style="padding:3px 12px;border-radius:6px;border:1px solid;cursor:pointer;font-size:12px;${on ? BP_ON : BP_OFF}">${label}</button>`;
   const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
+    ${st.live ? `<p style="font-size:12px;color:var(--muted);">החברה חדשה: האג"ח נשלפו עכשיו מהבורסה${st.live !== true ? " (נכון ל-" + escHtml(st.live) + ")" : ""}</p>` : ""}
     ${st.noSnap ? `<p style="color:#b85c00;font-size:13px;">רשימת מאיה עדיין לא נבנתה (תיווצר בריצה הקרובה של bonds-list). אפשר להוסיף אג"ח לפי מספר.</p>` : `<p style="font-size:12px;color:var(--muted);">רשימת מאיה נכון ל-${escHtml(st.updated)}</p>`}
     <div class="bp-list" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
       ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r);
