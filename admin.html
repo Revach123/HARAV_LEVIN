@@ -1201,12 +1201,15 @@ function renderForm() {
         <label>סוג עסק</label>
         <input type="text" id="f-biztype" value="${escHtml(b.biz_type||"")}"
           placeholder="חברה פרטית - בע&quot;מ, עמותה, שותפות..."
-          list="biztype-list" autocomplete="off">
+          list="${noChp ? "biztype-list-nochp" : "biztype-list"}" autocomplete="off">
         <datalist id="biztype-list">
           ${[...new Set(businesses.map(b=>b.biz_type).filter(Boolean))]
             .sort((a,c)=>a.localeCompare(c,"he"))
             .map(n=>`<option value="${escHtml(n)}">`)
             .join("")}
+        </datalist>
+        <datalist id="biztype-list-nochp">
+          ${["עוסק מורשה","עוסק פטור","שותפות לא רשומה","יחיד"].map(n=>`<option value="${n}">`).join("")}
         </datalist>
       </div>
 
@@ -1750,7 +1753,7 @@ function updateFormGate() {
     if (ag.value === BOND_PICK) bb?.click();
   }); }
   const bt = document.getElementById("f-biztype");      // סוג עסק: כשמופיע ברשם - לא ניתן לבחירה
-  if (bt) { const l = lock && !!bt.value.trim(); bt.readOnly = l; bt.style.background = l ? "#eef3f3" : ""; if (l) bt.removeAttribute("list"); else bt.setAttribute("list", "biztype-list"); }
+  if (bt) { const l = lock && !!bt.value.trim(); bt.readOnly = l; bt.style.background = l ? "#eef3f3" : ""; if (l) bt.removeAttribute("list"); else bt.setAttribute("list", noChp ? "biztype-list-nochp" : "biztype-list"); bt.placeholder = noChp ? "עוסק מורשה, עוסק פטור..." : "חברה פרטית - בע\"מ, עמותה, שותפות..."; }
   const rf = document.getElementById("reg-field"), pcb = document.getElementById("permit-choice"), pw = document.getElementById("permit-input-wrap"), pf = document.getElementById("f-permit");
   if (noChp) {                       // עסק בלי ח.פ.: שם אחד בלבד (נשמר גם כשם הרשם)
     if (permitMode !== "other") { permitMode = "other"; if (pf && !pf.value.trim()) pf.value = (reg?.value || "").trim(); }
