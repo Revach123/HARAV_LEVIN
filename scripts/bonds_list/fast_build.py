@@ -84,6 +84,7 @@ def main(chp_arg=""):
     state = b.load_state()
     b.apply_first_seen(new, state)
     regular2 = keep + updated + new
+    b.stabilize_names(regular2)
 
     offering_bonds = []
     off_path = os.path.join(b.OUT, "offerings.json")

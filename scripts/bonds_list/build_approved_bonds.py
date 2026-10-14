@@ -52,6 +52,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 OUT = os.path.join(ROOT, "data", "bonds_list")
 STATE_PATH = os.path.join(OUT, "state.json")
 INTERNAL_PATH = os.path.join(OUT, "bonds_internal.json")
+NAMES_PATH = os.path.join(OUT, "names_seen.json")   # שם וסימול ראשונים של כל נייר: שמות ב-datawise מקוצרים לפעמים (ני"ע "-רמ"), אז שם שכבר נראה נשמר
 
 APPROVED = {"כן", "רק פרטי", "רק כללי"}
 SELECTIVE = 'בחירת אג"ח מסוימים'   # אישור לאג"ח מסוימות בלבד: נבחרות בדף הניהול ונשמרות בטבלה approved_bonds
@@ -521,6 +522,22 @@ def desired_rows(k, items, approved, manual, names):
     return out
 
 
+def stabilize_names(rows):
+    """שם וסימול של נייר שכבר נראה נשארים כפי שנשמרו (names_seen.json); נייר חדש נרשם עם השם מ-datawise."""
+    seen = {}
+    if os.path.exists(NAMES_PATH):
+        with open(NAMES_PATH, encoding="utf-8") as f:
+            seen = json.load(f)
+    for r in rows:
+        k = str(r["security_id"])
+        if k in seen:
+            r["security_name"], r["symbol"] = seen[k]
+        else:
+            seen[k] = [r["security_name"], r["symbol"]]
+    with open(NAMES_PATH, "w", encoding="utf-8") as f:
+        json.dump(seen, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+
+
 def snapshot_from_datawise(by_chp):
     """מקור חלון הבחירה: כל האג"ח הסחירות של כל חברה, לפי datawise."""
     return {k: [{"security_id": int(r["securityId"]), "name": (r.get("securityName") or "").strip(),
@@ -627,6 +644,7 @@ def main(companies_path=None):
             prev = len(json.load(f).get("regular") or [])
     if not bonds or (prev and len(bonds) < 0.8 * prev):
         raise SystemExit(f"bond count looks wrong ({len(bonds)} vs previous {prev}) - output left untouched")
+    stabilize_names(bonds)
     snapshot = snapshot_from_datawise(by_chp)
     import company_ids      # כאן ולא בראש הקובץ: company_ids מייבא את הקובץ הזה
     cid_map = company_ids.get_ids({x["chp_number"] for x in bonds})     # מזהי חברה במאיה (להעשרה): מהמפה, לא מסריקה
