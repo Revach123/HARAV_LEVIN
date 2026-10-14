@@ -1,13 +1,11 @@
+import { checkAdmin } from "../_shared/auth.js";
 // PUT    /api/businesses/:id   → update (admin only)
 // DELETE /api/businesses/:id   → delete (admin only)
 
-function isAuthed(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
-}
+const isAuthed = (request, env) => checkAdmin(request, env);
 
 export async function onRequestPut({ request, env, params }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAuthed(request, env))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -56,7 +54,7 @@ export async function onRequestPut({ request, env, params }) {
 }
 
 export async function onRequestDelete({ request, env, params }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAuthed(request, env))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

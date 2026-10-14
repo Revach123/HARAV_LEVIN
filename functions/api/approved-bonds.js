@@ -1,3 +1,4 @@
+import { checkAdmin } from "./_shared/auth.js";
 // אג"ח שנבחרו ידנית (אישור "בחירת אג"ח מסוימים"). טבלה: approved_bonds (migrations/0003).
 //   GET  /api/approved-bonds[?chp=ח"פ]   → {ok, rows}   (פתוח; נקרא גם ע"י בניית רשימת האג"ח)
 //   PUT  /api/approved-bonds             → ניהול בלבד. גוף: {chp, items:[{security_id, bond_name, symbol, scope}], remove:[security_id]}
@@ -5,9 +6,7 @@
 
 const SCOPES = ["private", "general", "both"];
 
-function isAuthed(request, env) {
-  return (request.headers.get("Authorization") || "").replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
-}
+const isAuthed = (request, env) => checkAdmin(request, env);
 
 export async function onRequestGet({ request, env }) {
   const chp = (new URL(request.url).searchParams.get("chp") || "").trim();
@@ -24,7 +23,7 @@ export async function onRequestGet({ request, env }) {
 }
 
 export async function onRequestPut({ request, env }) {
-  if (!isAuthed(request, env)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await isAuthed(request, env))) return Response.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const body = await request.json();
     const chp = String(body.chp || "").trim();

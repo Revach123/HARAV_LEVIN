@@ -1,10 +1,8 @@
+import { checkAdmin } from "./_shared/auth.js";
 // GET  /api/businesses        → list all (public)
 // POST /api/businesses        → create new (admin only)
 
-function isAuthed(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
-}
+const isAuthed = (request, env) => checkAdmin(request, env);
 
 export async function onRequestGet({ env }) {
   try {
@@ -18,7 +16,7 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAuthed(request, env))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
