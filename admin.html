@@ -1630,11 +1630,13 @@ function bindEvents() {
   const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
 
   on("srch",     "input",  e => { search        = e.target.value; render(); });
-  on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
-  on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
-  on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
-  on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
-  on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
+  if (view !== "form") {     // מסנני הרשימה. בטופס אותם מזהים (f-cat / f-region / f-biztype / f-agch) הם שדות הטופס: חיבור המסננים אליהם גרם ל-render מחדש שמחק את מה שהוקלד
+    on("f-cat",    "change", e => { filterCat     = e.target.value; render(); });
+    on("f-region", "change", e => { filterRegion  = e.target.value; render(); });
+    on("f-biztype","change", e => { filterBizType = e.target.value; render(); });
+    on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
+    on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
+  }
   on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
   if (view === "form") {
     updateFormGate(); bindNameSearch();
@@ -1779,9 +1781,6 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   const v = (document.getElementById("f-permit")?.value || "").trim();
   const ok = isEdit || permitMode === "reg" || (permitMode === "other" && v.length >= (noChp ? 1 : 4));
   w.classList.toggle("locked", !ok);
-  let msg = document.getElementById("permit-lock-msg");     // הסבר כשהחלק התחתון של הטופס נעול
-  if (!msg) { msg = document.createElement("div"); msg.id = "permit-lock-msg"; msg.style.cssText = "color:var(--red);font-size:13px;margin-top:6px;"; document.getElementById("permit-field")?.appendChild(msg); }
-  msg.textContent = ok ? "" : (permitMode === "other" ? `יש להקליד שם בהיתר עסקה (לפחות ${noChp ? 1 : 4} תווים) כדי להמשיך` : "יש לבחור שם בהיתר עסקה: שם מהרשם או שם אחר כדי להמשיך");
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
   const hint = document.getElementById("permit-hint"); if (hint) hint.style.color = (permitMode === "other" && v.length < 4 && v.length > 0) ? "var(--red)" : "var(--light)";
@@ -1824,7 +1823,7 @@ function openForm(id) {
   formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
-  { const p = (editBiz.permit_name || "").trim(), r = (editBiz.registrar_name || "").trim(); permitMode = !id ? "reg" : (!p || p === r) ? "reg" : "other"; }   // עסק חדש: ברירת מחדל שם מהרשם (שם בהיתר = שם ברשם)
+  { const p = (editBiz.permit_name || "").trim(), r = (editBiz.registrar_name || "").trim(); permitMode = !id ? "" : (!p || p === r) ? "reg" : "other"; }
   noChp = !!id && !(editBiz.chp_number || "").trim();      // עסק קיים בלי ח.פ. = שם הרשם ניתן לעריכה
   chpResult = null; chpError = "";
   setView("form");
