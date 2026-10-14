@@ -20,7 +20,33 @@ export async function checkPassword(token, env) {
   return !!env.ADMIN_PASSWORD && same(token, env.ADMIN_PASSWORD);
 }
 
-export const checkAdmin = (request, env) => checkPassword((request.headers.get("Authorization") || "").replace("Bearer ", ""), env);
+// ── כניסה לפי IP (בלי סיסמה) ──
+// IP מורשה = OWNER_IPS (משתנה סביבה, רשימה מופרדת בפסיקים, כמו ב-revach) + IP אחד נוסף שנרשם אוטומטית:
+// מי שמקליד סיסמה נכונה ראשון מ-IP שאינו ברשימה, ה-IP שלו נרשם (פעם אחת בלבד).
+export const clientIp = request => request.headers.get("CF-Connecting-IP") || "";
+async function storedIps(env) {
+  try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = 'trusted_ips'").first(); return r ? JSON.parse(r.value) : []; }
+  catch { return []; }
+}
+export async function isTrustedIp(request, env) {
+  const ip = clientIp(request); if (!ip) return false;
+  const owner = (env.OWNER_IPS || "").split(",").map(x => x.trim()).filter(Boolean);
+  return owner.includes(ip) || (await storedIps(env)).includes(ip);
+}
+// נקרא אחרי הקלדת סיסמה נכונה: אם אין עדיין IP נוסף רשום וה-IP הזה לא מורשה - רושם אותו. מחזיר true אם נרשם עכשיו.
+export async function registerFirstIp(request, env) {
+  const ip = clientIp(request);
+  if (!ip || await isTrustedIp(request, env)) return false;
+  if ((await storedIps(env)).length) return false;
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
+    await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('trusted_ips', ?)").bind(JSON.stringify([ip])).run();
+    return true;
+  } catch { return false; }
+}
+
+export const checkAdmin = async (request, env) =>
+  (await checkPassword((request.headers.get("Authorization") || "").replace("Bearer ", ""), env)) || (await isTrustedIp(request, env));
 
 export async function setPassword(env, pw) {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
