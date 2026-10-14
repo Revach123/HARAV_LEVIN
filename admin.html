@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/favicon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -747,9 +749,12 @@
   }
   body { font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif; background:#ffffff; font-size:16px; }
   button, input, select, textarea { font-family: inherit; }
-  header { background: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
-  header h1 { font-size: 20px; font-weight: 700; }
-  #admin-toggle { border-radius: 4px; }
+  header { background: #fff; color: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--navy); }
+  .logo-link { display: flex; align-items: center; text-decoration: none; }
+  #site-logo { height: 44px; width: auto; display: block; }
+  #admin-toggle { border-radius: 4px; background: var(--navy); color: #fff; border: 1px solid var(--navy); }
+  #admin-toggle:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
   .btn-primary, .btn-add, .lookup-row button { border-radius: 4px; font-weight: 700; }
   .btn-primary:hover, .btn-add:hover, .lookup-row button:hover { background: var(--accent-dark); }
   .btn-ghost { border-radius: 4px; }
@@ -796,7 +801,7 @@
 
 <header>
   <div>
-    <h1>מכון להיתר עסקה למהדרין</h1>
+    <a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a>
   </div>
   <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
 </header>
