@@ -381,7 +381,12 @@
     margin-bottom: 1.25rem;
   }
   .lookup-box p.lbl { font-size: 12px; font-weight: 500; color: var(--navy); margin-bottom: 10px; }
-  .lookup-row { display: flex; gap: 8px; }
+  .lookup-row { display: flex; gap: 8px; position: relative; align-items: center; }
+  .lookup-row .spin { position: absolute; right: 12px; }
+  #chp { padding-right: 38px; }
+  .spin { width: 16px; height: 16px; border: 2px solid var(--accent-border); border-top-color: var(--accent); border-radius: 50%; display: inline-block; animation: hlspin .7s linear infinite; vertical-align: middle; }
+  @keyframes hlspin { to { transform: rotate(360deg); } }
+  .lookup-loading { display:flex; align-items:center; gap:8px; color: var(--muted); font-size: 13px; margin-top: 8px; }
   .lookup-row input {
     flex: 1;
     padding: 9px 12px;
@@ -1108,10 +1113,8 @@ function renderForm() {
             ${!isEdit ? `<button type="button" class="btn-ghost" onclick="toggleNoChp()">עסק בלי ח.פ.</button>` : ""}
           </div>
           <div class="lookup-row" id="chp-row">
-            <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
-            <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
-              ${chpLoading ? "מחפש..." : "חפש ברשם"}
-            </button>
+            <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה) - החיפוש ברשם אוטומטי" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
+            <span id="chp-spin" class="spin" style="display:none;"></span>
           </div>
           <div id="name-search-wrap" style="margin-top:10px;">
             <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
@@ -1563,12 +1566,18 @@ function bindNameSearch() {
     tm = setTimeout(async () => {
       const seq = ++nsSeq;
       out.innerHTML = `<div class="gs-info" style="margin:6px 0;">מחפש…</div>`;
-      let d;
-      try { d = await apiFetch(`/registry-name-search?q=${encodeURIComponent(q)}`); }
-      catch (e) { if (seq === nsSeq) out.innerHTML = `<div class="gs-info" style="margin:6px 0;color:var(--red);">${/503|לא מחובר/.test(e.message) ? "החיפוש לפי שם לא זמין (המאגר לא מחובר)" : "שגיאה בחיפוש"}</div>`; return; }
+      let d, errMsg = "";
+      const ac = new AbortController(), tmo = setTimeout(() => ac.abort(), 10000);
+      try { d = await apiFetch(`/registry-name-search?q=${encodeURIComponent(q)}`, { signal: ac.signal }); }
+      catch (e) {
+        errMsg = e.name === "AbortError" ? "החיפוש לא הגיב תוך 10 שניות" : /Unauthorized/.test(e.message) ? "הסיסמה שגויה - התחבר מחדש" : /503|לא מחובר/.test(e.message) ? "החיפוש לפי שם לא זמין (המאגר לא מחובר לפרויקט)" : "שגיאה בחיפוש: " + e.message;
+      }
+      clearTimeout(tmo);
+      if (seq !== nsSeq) return;
+      if (errMsg) { out.innerHTML = `<div class="gs-info" style="margin:6px 0;color:var(--red);">${escHtml(errMsg)}</div>`; return; }
       if (seq !== nsSeq) return;
       const rs = d.results || [];
-      out.innerHTML = rs.length
+      out.innerHTML = d.hint ? `<div class="gs-info" style="margin:6px 0;">${escHtml(d.hint)}</div>` : rs.length
         ? rs.map(r => `<button type="button" class="ns-item ${r.defunct ? "defunct" : ""}" data-id="${escHtml(r.id)}"><b>${escHtml(r.name)}</b> <span class="m">· ${escHtml(r.type)} · ח.פ. ${escHtml(r.id)}${r.status ? " · " + escHtml(r.status) : ""}</span></button>`).join("") + (d.more ? `<div class="gs-info" style="margin:6px 0;">יש עוד תוצאות - דייק את החיפוש</div>` : "")
         : `<div class="gs-info" style="margin:6px 0;">לא נמצאו חברות בשם הזה</div>`;
       out.querySelectorAll(".ns-item").forEach(b => b.addEventListener("click", () => {
@@ -1608,7 +1617,7 @@ function bindEvents() {
       updateFormGate();
       const n = e.target.value.trim();
       clearTimeout(lt);
-      if (/^\d{8,9}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, 500);   // מספר שלם: חיפוש ברשם אוטומטי
+      if (/^\d{7,10}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, 450);   // מ-7 ספרות: חיפוש ברשם אוטומטי
     });
   }
 
@@ -1816,15 +1825,20 @@ async function doLookup(auto) {
   editBiz = { ...(editBiz || {}), chp_number: number };
   const seq = ++lookupSeq;
   const out = () => document.getElementById("lookup-out");
-  if (auto) { chpResult = null; chpError = ""; if (out()) out().innerHTML = `<p class="lookup-error" style="color:var(--muted)">מחפש ברשם…</p>`; }
+  const spin = document.getElementById("chp-spin");
+  if (auto) { chpResult = null; chpError = ""; if (spin) spin.style.display = ""; if (out()) out().innerHTML = `<div class="lookup-loading"><span class="spin"></span> מחפש ברשם…</div>`; }
   else { chpLoading = true; chpError = ""; chpResult = null; render(); }
   let res = null, err = "";
   try {
     res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
     if (!res.found) { err = "לא נמצא תאגיד עם מספר זה בשום רשם. לעסק בלי ח.פ. - לחץ \"אין ח.פ.\""; res = null; }
   } catch(e) { err = "שגיאת חיבור לרשם הרשמי"; }
-  if (seq !== lookupSeq || (document.getElementById("chp")?.value || "").trim() !== number) return;   // הוקלד מספר אחר בינתיים
+  if (seq !== lookupSeq || (document.getElementById("chp")?.value || "").trim() !== number) {   // הוקלד מספר אחר בינתיים
+    if (seq === lookupSeq) { if (spin) spin.style.display = "none"; if (auto && out()) out().innerHTML = ""; }
+    return;
+  }
   chpResult = res; chpError = err; chpLoading = false;
+  if (spin) spin.style.display = "none";
   if (auto) { if (out()) out().innerHTML = lookupOutHtml(); } else render();
   if (chpResult) {
     const regEl = document.getElementById("f-reg");
