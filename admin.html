@@ -764,6 +764,11 @@
   .scard .badge-t.bond { background: #dff0f0; color: var(--navy); }
   .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
+  .admin-tabs { display:flex; gap:0; margin:0 0 1.2rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .admin-tabs button { flex:1; min-width:150px; padding:.8rem 1rem; font-size:17px; font-weight:700; font-family:inherit; background:transparent; color:var(--navy); border:none; border-top:3px solid transparent; cursor:pointer; transition:.15s; }
+  .admin-tabs button:hover { color:var(--accent-dark); }
+  .admin-tabs button.active { color:var(--accent-dark); border-top-color:var(--accent); background:var(--accent-bg); }
 </style>
 </head>
 <body>
@@ -901,10 +906,10 @@ function render() {
   if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "home")       app.innerHTML = renderHome();
-  else if (view === "search")     app.innerHTML = renderSearch();
-  else if (view === "admin")      app.innerHTML = renderAdminTable();
-  else if (view === "form")       app.innerHTML = renderForm();
-  else if (view === "csv-import") app.innerHTML = renderCsvImport();
+  else if (view === "search")     app.innerHTML = adminTabs() + renderSearch();
+  else if (view === "admin")      app.innerHTML = adminTabs() + renderAdminTable();
+  else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
+  else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   bindEvents();
   document.getElementById("admin-toggle").textContent =
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
@@ -1408,6 +1413,13 @@ function renderCsvImport() {
 // ════════════════════════════════════════════
 //  מסך ראשי + חיפוש במאגר (חברות + אג"ח, חיפוש מקורב)
 // ════════════════════════════════════════════
+// שלוש האפשרויות בראש כל מסך: הוספת עסק / עדכון עסק קיים / חיפוש במאגר
+function adminTabs() {
+  const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
+  const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
+}
+
 function renderHome() {
   return `
     <div class="home-grid">
