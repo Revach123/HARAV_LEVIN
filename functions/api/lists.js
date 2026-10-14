@@ -112,7 +112,7 @@ export async function onRequestGet(context) {
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
       const build = (withStatus, withScope) => {
         const hideNote = withScope ? `COALESCE(notes_scope,'') = 'bonds'` : `0`;
-        const bondsNoteExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${bondsNoteExprBase} END`;
+        const bondsNoteExpr = `CASE WHEN ${hideNote} OR NOT (${hasBonds}) THEN '' ELSE ${bondsNoteExprBase} END`;   // חברה בלי אג"ח: אין הערת אישור אג"ח
         const notesExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${notesExprBase} END`;
         const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%' AND COALESCE(registry_status,'') NOT LIKE 'מחוק%' AND COALESCE(registry_status,'') NOT LIKE 'נגרע%'` : "";
         const notesOut = withStatus
