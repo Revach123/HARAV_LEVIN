@@ -45,5 +45,6 @@ jobs:
           git add data/bonds_list
           git diff --staged --quiet && echo "אין שינויים" && exit 0
           git commit -m "bonds-list: $(date -u +%FT%TZ)"
-          git pull --rebase --autostash
+          # הקבצים ב-data/bonds_list נבנים מחדש במלואם בכל ריצה: בהתנגשות עם ריצה אחרת (מצב/העשרה) גוברת הגרסה החדשה
+          git pull --rebase --autostash -X theirs
           git push
