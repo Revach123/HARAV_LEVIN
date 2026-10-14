@@ -1721,12 +1721,14 @@ function saveToken(t) { try { t ? localStorage.setItem("adm_tok", t) : localStor
 function loadToken() { try { return localStorage.getItem("adm_tok") || ""; } catch { return ""; } }
 async function doLogin() {
   const pwd = document.getElementById("pwd")?.value || "";
-  adminToken = pwd; saveToken(pwd);
+  adminToken = pwd;
   try {
-    await apiFetch("/businesses");
-    isAdmin = true; setView("home");
-  } catch {
-    isAdmin = true; setView("home");
+    await apiFetch("/login", { method: "POST", body: JSON.stringify({ password: pwd }) });      // בודק את הסיסמה; הראשון (מלבד הבעלים) נרשם לפי IP
+    saveToken(pwd); isAdmin = true; setView("home");
+  } catch (e) {
+    adminToken = "";
+    const el = document.getElementById("login-err");
+    if (el) el.textContent = e.message === "Unauthorized" ? "סיסמה שגויה" : "שגיאת חיבור, נסה שוב";
   }
 }
 
@@ -2152,18 +2154,18 @@ function openChangePassword() {
   const root = document.createElement("div"); root.id = "pw-root";
   const f = (id, label) => `<div class="field"><label>${label}</label><input type="password" id="${id}" autocomplete="off"></div>`;
   root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))this.parentNode.remove()"><div class="modal-box" style="max-width:380px;text-align:right;">
-    <div class="modal-title">שינוי סיסמה</div>${f("pw-cur", "סיסמה נוכחית")}${f("pw-new", "סיסמה חדשה (לפחות 6 תווים)")}${f("pw-new2", "סיסמה חדשה שוב")}
+    <div class="modal-title">שינוי סיסמה</div>${adminToken ? f("pw-cur", "סיסמה נוכחית") : ""}${f("pw-new", "סיסמה חדשה (לפחות 4 תווים)")}${f("pw-new2", "סיסמה חדשה שוב")}
     <p class="error-msg" id="pw-err"></p>
     <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn-ghost" onclick="document.getElementById('pw-root').remove()">ביטול</button><button class="btn-primary" onclick="doChangePassword()" style="width:auto;padding:8px 22px;">שמור סיסמה</button></div></div></div>`;
   document.body.appendChild(root);
-  document.getElementById("pw-cur").focus();
+  (document.getElementById("pw-cur") || document.getElementById("pw-new")).focus();
 }
 async function doChangePassword() {
   const v = id => document.getElementById(id).value, err = m => { document.getElementById("pw-err").textContent = m; };
-  if (v("pw-new").length < 6) return err("הסיסמה החדשה קצרה מדי (לפחות 6 תווים)");
+  if (v("pw-new").length < 4) return err("הסיסמה החדשה קצרה מדי (לפחות 4 תווים)");
   if (v("pw-new") !== v("pw-new2")) return err("הסיסמאות החדשות לא זהות");
   try {
-    await apiFetch("/change-password", { method: "POST", body: JSON.stringify({ current: v("pw-cur"), next: v("pw-new") }) });
+    await apiFetch("/change-password", { method: "POST", body: JSON.stringify({ current: document.getElementById("pw-cur") ? v("pw-cur") : "", next: v("pw-new") }) });
     adminToken = v("pw-new").trim(); if (loadToken()) saveToken(adminToken);
     document.getElementById("pw-root").remove(); showStatus("הסיסמה שונתה ✓");
   } catch (e) { err(e.message === "Unauthorized" ? "הסיסמה הנוכחית שגויה" : e.message); }
@@ -2817,6 +2819,8 @@ document.addEventListener("click", (e) => {
 
 // עמוד הניהול נפתח במסך כניסה (או ישר לתפריט, אם הסיסמה נשמרה במכשיר הזה)
 { const t = loadToken(); if (t) { adminToken = t; isAdmin = true; view = "home"; } }
+// IP מורשה (הבעלים, או הראשון שהקליד סיסמה): נכנס בלי סיסמה
+if (!isAdmin) fetch("/api/login", { cache: "no-store" }).then(r => r.json()).then(d => { if (d.trusted && !isAdmin) { isAdmin = true; adminToken = ""; view = "home"; render(); } }).catch(() => {});
 ["input", "change"].forEach(ev => document.getElementById("app").addEventListener(ev, () => { if (view === "form") formDirty = true; }, true));   // סימון שינויים שלא נשמרו בטופס
 render();
 
