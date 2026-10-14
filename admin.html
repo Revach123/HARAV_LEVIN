@@ -1661,6 +1661,13 @@ function bindEvents() {
       updateFormGate();
       const n = e.target.value.trim();
       clearTimeout(lt);
+      if (/^\d{9}$/.test(n) && !chpCheckDigitOk(n)) {       // מספר לא תקין: מציגים מיד, בלי חיפוש ברשם
+        clearTimeout(pt); lookupSeq++; chpResult = null; chpError = ""; lastAutoNumber = "";
+        const ns0 = document.getElementById("ns-out"); if (ns0) ns0.innerHTML = "";
+        const sp = document.getElementById("chp-spin"); if (sp) sp.style.display = "none";
+        const lo0 = document.getElementById("lookup-out"); if (lo0) lo0.innerHTML = lookupOutHtml();
+        updateFormGate(); return;
+      }
       if (!chpResult) { const lo = document.getElementById("lookup-out"); if (lo && !/^\d{7,10}$/.test(n)) lo.innerHTML = lookupOutHtml(); }
       const ns = document.getElementById("ns-out");
       if (/^\d{3,8}$/.test(n)) { clearTimeout(pt); pt = setTimeout(() => registrySearchInto(n), 300); }            // תחילת מספר: רשימת חברות שהמספר שלהן מתחיל כך
@@ -1906,7 +1913,7 @@ function chpCheckDigitOk(n) {
 }
 function lookupOutHtml() {
   const typed = (document.getElementById("chp")?.value || "").trim();
-  const bad = !noChp && !chpCheckDigitOk(typed) ? "המספר אינו תקין" : "";
+  const bad = !noChp && !chpCheckDigitOk(typed) ? "מספר לא תקין" : "";
   return `<p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>${bad ? `<p class="lookup-error">⚠ ${bad}</p>` : ""}
     ${chpResult ? `
       <div class="lookup-result" ${!editBiz?.id && chpDuplicates().length ? `style="cursor:pointer;" onclick="openFormSkip('${chpDuplicates()[0].id}')"` : ""}>
