@@ -33,6 +33,9 @@ jobs:
           python-version: "3.11"
       - name: Build bonds lists
         run: python scripts/bonds_list/build_approved_bonds.py
+      - name: Offerings (upcoming and open bond issues)
+        continue-on-error: true
+        run: python scripts/bonds_list/offerings.py
       - name: Commit
         if: always()
         run: |
