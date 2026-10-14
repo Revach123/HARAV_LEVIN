@@ -20,7 +20,8 @@ import match_pdfs as m  # noqa: E402
 
 P_TYPES = {"privet_ducuments", "company"}
 G_TYPES = {"main_ducuments"}
-KEY = re.compile(r"פרטי|פרטנ|פרטית|פרטיים")
+# מילה שלמה בלבד (עם אותיות שימוש כמו ה/ו/ב/ל/מ/ש/כ בהתחלה), כדי לא לתפוס "פרטים" / "פרטיו" וכו'
+KEY = re.compile(r"^[והבלמשכ]{0,3}(פרטי|פרטית|פרטיים|פרטיות|פרטני|פרטנית|פרטניים|פרטניות)$")
 WIN = 12          # מילים לפני ואחרי מילת המפתח
 
 
@@ -34,7 +35,7 @@ def windows(text):
     ws = tokens(text)
     out = []
     for i, w in enumerate(ws):
-        if KEY.search(w):
+        if KEY.match(w):
             out.append(" ".join(ws[max(0, i - WIN): i + WIN + 1]))
     return out
 
