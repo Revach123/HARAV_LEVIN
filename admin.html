@@ -975,18 +975,22 @@ function renderAdminTable() {
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td>
-                  <input type="text" value="${escHtml(b.notes||"")}" placeholder="הערה"
-                    onchange="inlineUpdate('${b.id}','notes',this.value.trim())"
+                  <input type="text" value="${escHtml(pendingNotes[b.id] ?? b.notes ?? "")}" placeholder="הערה"
+                    onchange="noteInline('${b.id}', this.value)"
                     style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">
                 </td>
-                <td>
-                  <select onchange="inlineUpdate('${b.id}','notes_scope',this.value)" title="באיזו רשימה מוצגת ההערה"
-                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
-                    <option value=""          ${!b.notes_scope?"selected":""}>ברירת מחדל</option>
-                    <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק חברות</option>
-                    <option value="bonds"     ${b.notes_scope==="bonds"?"selected":""}>רק אג"ח</option>
-                    <option value="both"      ${b.notes_scope==="both"?"selected":""}>שתיהן</option>
-                  </select>
+                <td>${(() => {
+                  const hasNote = (pendingNotes[b.id] ?? b.notes ?? "").trim() !== "";
+                  if (!hasNote) return "";                                           // בלי הערה - אין מה לבחור
+                  const waiting = pendingNotes[b.id] !== undefined && !b.notes_scope;      // הערה חדשה: חובה לבחור
+                  const sc = waiting ? "" : (b.notes_scope || "companies");              // הערה ישנה בלי בחירה = חברות
+                  return `<select onchange="noteScopeChange('${b.id}',this.value)" title="באיזו רשימה מוצגת ההערה"
+                    style="padding:4px 6px;border:1px solid ${waiting?"var(--red)":"var(--border)"};border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value="" ${!sc?"selected":""} disabled>— בחר —</option>
+                    <option value="companies" ${sc==="companies"?"selected":""}>רק חברות</option>
+                    <option value="bonds"     ${sc==="bonds"?"selected":""}>רק אג"ח</option>
+                    <option value="both"      ${sc==="both"?"selected":""}>שתיהן</option>
+                  </select>`; })()}
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
@@ -1130,7 +1134,7 @@ function renderForm() {
 
       <div class="field">
         <label>הערות</label>
-        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}"
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" oninput="document.getElementById('f-notes-scope-wrap').style.display = this.value.trim() ? '' : 'none'"
           placeholder='בחר מהרשימה או הקלד הערה חדשה'
           list="notes-list" autocomplete="off">
         <datalist id="notes-list">
@@ -1141,15 +1145,16 @@ function renderForm() {
         </datalist>
       </div>
 
-      <div class="field">
-        <label>היכן להציג את ההערה</label>
+      <div class="field" id="f-notes-scope-wrap" style="${(b.notes||"").trim() ? "" : "display:none;"}">
+        <label>היכן להציג את ההערה <span style="color:var(--red)">*</span></label>
         <select id="f-notes-scope">
-          <option value="" ${!b.notes_scope?"selected":""}>ברירת מחדל: רק ברשימת החברות</option>
-          <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק ברשימת החברות</option>
-          <option value="bonds" ${b.notes_scope==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
-          <option value="both" ${b.notes_scope==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>
+          ${(() => { const sc = b.notes_scope || ((b.notes||"").trim() ? "companies" : "");   // הערה קיימת בלי בחירה = מוצגת בחברות
+            return `<option value="" ${!sc?"selected":""} disabled>— בחר —</option>
+          <option value="companies" ${sc==="companies"?"selected":""}>רק ברשימת החברות</option>
+          <option value="bonds" ${sc==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
+          <option value="both" ${sc==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>`; })()}
         </select>
-        <div style="font-size:12px;color:var(--light);margin-top:4px;">"בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד. אם לא התבצעה ההרצה של migrations/0004 - הבחירה לא תישמר.</div>
+        <div style="font-size:12px;color:var(--light);margin-top:4px;">חובה לבחור כשיש הערה. "בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד.</div>
       </div>
 
       <p class="error-msg" id="form-err"></p>
@@ -1792,10 +1797,11 @@ function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מ
   }, 250);
 }
 
-async function inlineUpdate(id, field, value) {
+async function inlineUpdate(id, field, value) { return inlineUpdateMany(id, { [field]: value }); }
+async function inlineUpdateMany(id, fields) {
   const biz = businesses.find(b => b.id === id);
   if (!biz) return;
-  const updated = { ...biz, [field]: value };
+  const updated = { ...biz, ...fields };
   try {
     await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
     businesses = businesses.map(b => b.id === id ? updated : b);
@@ -1805,6 +1811,29 @@ async function inlineUpdate(id, field, value) {
     if (e.message === "Unauthorized") { handleUnauth(); return false; }
     showStatus("שגיאה בשמירה"); render();
     return false;
+  }
+}
+
+// הערות בטבלה: הערה חדשה נשמרת רק אחרי שנבחר היכן להציג אותה (pendingNotes = הערות שממתינות לבחירה)
+const pendingNotes = {};
+async function noteInline(id, raw) {
+  const v = (raw || "").trim();
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  if (!v) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: "", notes_scope: "" }); render(); return; }
+  if (biz.notes_scope) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v }); return; }
+  if ((biz.notes || "").trim()) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: "companies" }); return; }   // הערה ישנה בלי בחירה = חברות
+  pendingNotes[id] = v;                        // הערה חדשה: ממתינה לבחירה
+  showStatus("בחר היכן להציג את ההערה");
+  render();
+}
+async function noteScopeChange(id, scope) {
+  if (pendingNotes[id] !== undefined) {
+    const v = pendingNotes[id]; delete pendingNotes[id];
+    await inlineUpdateMany(id, { notes: v, notes_scope: scope });
+    render();
+  } else {
+    await inlineUpdateMany(id, { notes_scope: scope });
   }
 }
 
@@ -1916,6 +1945,10 @@ async function doSave() {
     if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
     return;
   }
+  if ((document.getElementById("f-notes")?.value || "").trim() && !(document.getElementById("f-notes-scope")?.value || "")) {
+    if (errEl) errEl.textContent = "יש לבחור היכן להציג את ההערה";
+    return;
+  }
   const chpVal = (document.getElementById("chp")?.value || "").trim();
   // ── Duplicate ח.פ. check ──
   if (chpVal) {
@@ -1937,7 +1970,7 @@ async function doSave() {
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),
     notes:          (document.getElementById("f-notes")?.value     || "").trim(),
-    notes_scope:    (document.getElementById("f-notes-scope")?.value || "").trim(),
+    notes_scope:    (document.getElementById("f-notes")?.value || "").trim() ? (document.getElementById("f-notes-scope")?.value || "").trim() : "",
     biz_type:       (document.getElementById("f-biztype")?.value   || "").trim(),
     visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
     agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),
@@ -2159,6 +2192,7 @@ async function startImport() {
       tase_has_agch:  get("tase_has_agch"),
       biz_type:       get("biz_type"),
       notes:          get("notes"),
+      notes_scope:    get("notes") ? "companies" : "",
       has_details:    0,
     };
 
