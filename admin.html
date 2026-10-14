@@ -62,7 +62,7 @@
   #admin-toggle:hover { background: rgba(255,255,255,.2); }
 
   /* ── MAIN ── */
-  main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+  main { max-width: 1900px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
 
   /* ── FILTER BAR ── */
   .filter-bar {
@@ -164,18 +164,20 @@
   .table-wrap { overflow-x: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px; table-layout: fixed; }
   col.c-num      { width: 36px; }
-  col.c-name     { width: 200px; }
+  col.c-name     { width: 170px; }
   col.c-name-lg  { width: 240px; }
-  col.c-chp      { width: 96px; }
-  col.c-cat      { width: 110px; }
-  col.c-biztype  { width: 170px; }
-  col.c-region   { width: 75px; }
+  col.c-chp      { width: 90px; }
+  col.c-cat      { width: 90px; }
+  col.c-biztype  { width: 100px; }
+  col.c-region   { width: 60px; }
   col.c-vis      { width: 65px; }
   col.c-agch-combined { width: 150px; }
-  col.c-tase     { width: 76px; }
+  col.c-tase     { width: 64px; }
   col.c-agch     { width: 80px; }
-  col.c-notes    { width: auto; }
-  col.c-actions  { width: 70px; }
+  col.c-notes    { width: 190px; }
+  col.c-nscope   { width: 112px; }
+  col.c-regst    { width: 90px; }
+  col.c-actions  { width: 66px; }
   thead th {
     text-align: right;
     padding: 11px 14px;
@@ -911,6 +913,10 @@ function renderAdminTable() {
           <col class="c-chp">
           <col class="c-cat">
           <col class="c-biztype">
+          <col class="c-region">
+          <col class="c-notes">
+          <col class="c-nscope">
+          <col class="c-regst">
           <col class="c-vis">
           <col class="c-tase">
           <col class="c-agch">
@@ -922,6 +928,10 @@ function renderAdminTable() {
             <th>ח.פ.</th>
             <th>קטגוריה</th>
             <th>סוג עסק</th>
+            <th>אזור</th>
+            <th>הערות (עריכה ישירה)</th>
+            <th>היכן להציג</th>
+            <th>סטטוס ברשם</th>
             <th style="text-align:center;">פרטי/כללי</th>
             <th style="text-align:center;">אג"ח בורסה</th>
             <th style="text-align:center;">אישור אג"ח</th>
@@ -936,6 +946,22 @@ function renderAdminTable() {
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
+                <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
+                <td>
+                  <input type="text" value="${escHtml(b.notes||"")}" placeholder="הערה"
+                    onchange="inlineUpdate('${b.id}','notes',this.value.trim())"
+                    style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">
+                </td>
+                <td>
+                  <select onchange="inlineUpdate('${b.id}','notes_scope',this.value)" title="באיזו רשימה מוצגת ההערה"
+                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value=""          ${!b.notes_scope?"selected":""}>ברירת מחדל</option>
+                    <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק חברות</option>
+                    <option value="bonds"     ${b.notes_scope==="bonds"?"selected":""}>רק אג"ח</option>
+                    <option value="both"      ${b.notes_scope==="both"?"selected":""}>שתיהן</option>
+                  </select>
+                </td>
+                <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
                   <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
