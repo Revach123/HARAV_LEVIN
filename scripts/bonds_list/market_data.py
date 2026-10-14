@@ -97,3 +97,24 @@ def fetch_ids(post_fn=post):
     sample["ids_found"] = len(ids)
     sample["pages"] = page
     return ids, sample
+
+
+def fetch_items(post_fn=post):
+    """כמו fetch_ids, אבל מחזיר {מספר נייר: רשומה} (לבדיקות והשוואת מקורות)."""
+    items_by_id, total, page = {}, 0, 1
+    while page <= MAX_PAGES:
+        d = post_fn({"dType": "1", "cl1": "2", "cl2": "0", "TotalRec": total or 1, "pageNum": page, "lang": "0"})
+        items = _items(d)
+        if not items:
+            break
+        total = total or _total(d)
+        new = 0
+        for i in items:
+            sid = security_id(i)
+            if sid and sid not in items_by_id:
+                items_by_id[sid] = i
+                new += 1
+        if not new or (total and len(items_by_id) >= total):
+            break
+        page += 1
+    return items_by_id
