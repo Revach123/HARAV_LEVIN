@@ -790,6 +790,9 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
+  .idx-box { margin-inline-start:auto; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
+  .idx-head { font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .idx-line span { color:var(--muted); font-size:12px; }
   .chg-bar { display:flex; gap:8px; margin-bottom:10px; }
   .chg-bar .btn-ghost:disabled { opacity:.4; cursor:default; }
   .lg-row { padding:9px 4px; border-bottom:1px solid #edf2f2; }
@@ -1001,6 +1004,7 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
+      ${idxBoxHtml()}
     </div>
     <div class="chg-bar">
       <button class="btn-ghost" onclick="undoLast()" ${changeLog.some(e=>!e.undone) ? "" : "disabled"}>↩ ביטול שינוי אחרון</button>
@@ -2130,6 +2134,32 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
   await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
   render();
 }
+
+// ── כיסוי מדד: כמה אחוז מחברות המדד (ברירת מחדל ת"א-SME60) יש להן היתר עסקה, וכמה היתר פרטי ──
+let idxSel = "147"; const idxCache = {}; let idxLoading = "";
+function idxBoxHtml() {
+  const sel = `<select onchange="idxPick(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">${[["147","ת\"א-SME60"],["137","ת\"א-125"],["143","ת\"א-90"],["142","ת\"א-35"]].map(([v,l]) => `<option value="${v}" ${v===idxSel?"selected":""}>${l}</option>`).join("")}</select>`;
+  const d = idxCache[idxSel];
+  let body;
+  if (!d) { body = `<span style="color:var(--muted);font-size:12px;">${idxLoading === idxSel ? "טוען…" : ""}</span>`; if (idxLoading !== idxSel) idxLoad(idxSel); }
+  else if (d.error) body = `<span style="color:var(--red);font-size:12px;">${escHtml(d.error)}</span>`;
+  else {
+    const total = d.companies.length;
+    const hits = d.companies.map(c => c.hp ? existingBiz(c.hp) : []);
+    const withP = hits.filter(l => l.length).length, priv = hits.filter(l => l.some(b => b.visibility === "פרטי" || b.visibility === "רק פרטי")).length;
+    const pc = n => total ? Math.round(n * 1000 / total) / 10 : 0;
+    body = `<div class="idx-line"><b>${pc(withP)}%</b> עם היתר עסקה <span>(${withP} מתוך ${total})</span></div><div class="idx-line"><b>${pc(priv)}%</b> עם היתר פרטי <span>(${priv} מתוך ${total})</span></div>`;
+  }
+  return `<div class="idx-box"><div class="idx-head">חברות במדד ${sel}</div>${body}</div>`;
+}
+async function idxLoad(id) {
+  idxLoading = id;
+  try { idxCache[id] = await apiFetch("/index-companies?id=" + id); }
+  catch (e) { idxCache[id] = { error: "לא ניתן לטעון את רשימת המדד" }; }
+  idxLoading = "";
+  if (view === "admin") render();
+}
+function idxPick(v) { idxSel = v; render(); }
 
 // ── יומן שינויים: כל הוספה / מחיקה / עדכון נרשמים, ואפשר לבטל שינוי מסוים או לחזור אחורה ──
 let changeLog = []; let chgSeq = 0;
