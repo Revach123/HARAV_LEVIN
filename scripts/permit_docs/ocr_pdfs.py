@@ -62,6 +62,7 @@ def work(job):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True)
+    ap.add_argument("--attachments", required=True, help="attachments.csv (לזיהוי הקובץ המדויק לפי מזהה; יש קבצים בשם זהה בתיקיות שונות)")
     ap.add_argument("--uploads", required=True)
     ap.add_argument("--out-dir", default="ocr_text")
     ap.add_argument("--tesseract", default=TESS_DEFAULT if os.name == "nt" else "tesseract")
@@ -70,16 +71,17 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
-    index = {}
-    for d, _, files in os.walk(a.uploads):
-        for f in files:
-            if f.lower().endswith(".pdf"):
-                index.setdefault(f, os.path.join(d, f))
-    rows = [r for r in m.read_csv(a.results) if int(r.get("text_chars") or 0) < 15 and r["file"] in index]
+    guid = {r["ID"]: r.get("guid", "") for r in m.read_csv(a.attachments)}
+    path_of = {}
+    for r in m.read_csv(a.results):
+        p = m.local_path(a.uploads, guid.get(r["attachment_id"], ""))
+        if p and os.path.exists(p):
+            path_of[r["attachment_id"]] = p
+    rows = [r for r in m.read_csv(a.results) if int(r.get("text_chars") or 0) < 200 and r["attachment_id"] in path_of]
     if a.limit:
         rows = rows[:a.limit]
     os.makedirs(a.out_dir, exist_ok=True)
-    jobs = [(r["attachment_id"], index[r["file"]], a.out_dir, a.tesseract, a.dpi) for r in rows]
+    jobs = [(r["attachment_id"], path_of[r["attachment_id"]], a.out_dir, a.tesseract, a.dpi) for r in rows]
     stats = {}
     with Pool(a.workers) as pool:
         for i, (aid, st) in enumerate(pool.imap_unordered(work, jobs), 1):

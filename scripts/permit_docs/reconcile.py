@@ -49,6 +49,7 @@ def doc_name_matches(ntext, names):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True)
+    ap.add_argument("--attachments", required=True, help="attachments.csv (לזיהוי הקובץ המדויק לפי מזהה)")
     ap.add_argument("--uploads", required=True)
     ap.add_argument("--businesses", required=True)
     ap.add_argument("--ocr-dir", default="ocr_text")
@@ -64,47 +65,64 @@ def main():
         if d:
             by_hp.setdefault(d.zfill(9), []).append(b)
     names = [(n, b) for b in biz for n in {(b.get("registrar_name") or "").strip(), (b.get("permit_name") or "").strip()} if n]
-    index = {}
-    for d, _, files in os.walk(a.uploads):
-        for f in files:
-            if f.lower().endswith(".pdf"):
-                index.setdefault(f, os.path.join(d, f))
+    guid = {r["ID"]: r.get("guid", "") for r in m.read_csv(a.attachments)}
 
     rows = m.read_csv(a.results)
     if a.limit:
         rows = rows[:a.limit]
+    nm_label = lambda bid: (by_id[bid].get("registrar_name") or by_id[bid].get("permit_name") or "")
+
+    # שלב 1: טקסט (PDF + OCR) וחילוץ ח.פ. ושמות לכל קובץ
+    data = []
+    for r in rows:
+        p = m.local_path(a.uploads, guid.get(r["attachment_id"], ""))
+        text, src = "", []
+        if p and os.path.exists(p) and int(r.get("text_chars") or 0) >= 15:
+            t = m.pdf_text(p)
+            if t.strip():
+                text += t
+                src.append("PDF")
+        op = os.path.join(a.ocr_dir, f"{r['attachment_id']}.txt")
+        if os.path.exists(op):
+            text += "\n" + open(op, encoding="utf-8").read()
+            src.append("OCR")
+        ntext = m.norm(text)
+        hps = hp_candidates(text)
+        data.append({"r": r, "text": text, "src": "+".join(src) or "אין", "hps": hps, "nm": doc_name_matches(ntext, names) if ntext else {}})
+
+    # שמות שמופיעים בחלק גדול מהמסמכים (למשל שם המכון בכותרת / בתחתית) לא מוכיחים כלום
+    with_text = [d for d in data if d["text"].strip()]
+    freq = {}
+    for d in with_text:
+        for bid in d["nm"]:
+            freq[bid] = freq.get(bid, 0) + 1
+    limit = max(15, int(0.04 * len(with_text)))
+    stop = {bid for bid, c in freq.items() if c > limit}
+    if stop:
+        print("שמות שהוסרו כי מופיעים ביותר מדי מסמכים:", ", ".join(f"{nm_label(b)} ({freq[b]})" for b in stop))
+
     cols = ["attachment_id", "file", "doc_type", "post_type", "post_title", "status", "sources", "business_id", "business_name", "hp",
-            "title_business", "doc_hps_in_db", "doc_hps_not_in_db", "doc_name_matches", "text_source", "text_chars", "note"]
+            "title_business", "title_differs", "doc_hps_in_db", "doc_hps_not_in_db", "doc_name_matches", "text_source", "text_chars", "note"]
     stats = {}
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(cols)
-        for i, r in enumerate(rows, 1):
-            text, src = "", "אין"
-            if int(r.get("text_chars") or 0) >= 15 and r["file"] in index:
-                text, src = m.pdf_text(index[r["file"]]), "PDF"
-            else:
-                p = os.path.join(a.ocr_dir, f"{r['attachment_id']}.txt")
-                if os.path.exists(p):
-                    text, src = open(p, encoding="utf-8").read(), "OCR"
-            ntext = m.norm(text)
+        for d in data:
+            r, text, src, hps = d["r"], d["text"], d["src"], d["hps"]
+            nm = {k: v for k, v in d["nm"].items() if k not in stop}
             votes = {}                                  # business id -> set of sources
-            # T: שם הפוסט
             t = m.classify("", r["post_title"], {}, names)
-            tb = t[1]
-            if tb and t[2] in ("ודאי (לפי שם)", "סביר"):
+            tb = t[1] if t[2] in ("ודאי (לפי שם)", "סביר") else None
+            if tb:
                 votes.setdefault(tb["id"], set()).add("T")
-            # H: ח.פ. בקובץ
-            hps = hp_candidates(text)
             in_db = [h for h in hps if h in by_hp]
             for h in in_db:
                 for b in by_hp[h]:
                     votes.setdefault(b["id"], set()).add("H")
-            # N: שם עסק בטקסט
-            nm = doc_name_matches(ntext, names) if ntext else {}
             for bid in nm:
                 votes.setdefault(bid, set()).add("N")
 
+            differs = ""
             if not votes:
                 status, bid, srcs, note = "לא זוהה", "", "", ("אין טקסט בקובץ (דורש OCR)" if src == "אין" else "")
             else:
@@ -113,21 +131,22 @@ def main():
                 strong = [k for k, v in ranked if len(v) == len(topv)]
                 if len(topv) >= 2 and len(strong) == 1:
                     status, bid, srcs, note = "מאומת", top, "+".join(sorted(topv)), ""
-                    if len(ranked) > 1:
-                        note = "יש גם עסקים נוספים עם תמיכה חלשה יותר: " + ", ".join(by_id[k].get("registrar_name", "") or by_id[k].get("permit_name", "") for k, _ in ranked[1:3])
+                    if tb and tb["id"] != top:
+                        status, differs = "מאומת - שם הפוסט שונה", "כן"
+                        note = f"שם הפוסט מצביע על: {nm_label(tb['id'])}"
+                    elif len(ranked) > 1:
+                        note = "יש גם עסקים נוספים עם תמיכה חלשה יותר: " + ", ".join(nm_label(k) for k, _ in ranked[1:3])
                 elif len(ranked) == 1:
                     status, bid, srcs, note = "מקור יחיד", top, "+".join(sorted(topv)), "מקור אחד בלבד"
                 else:
                     status, bid, srcs = "סתירה", "", ""
-                    note = "; ".join(f"{(by_id[k].get('registrar_name') or by_id[k].get('permit_name') or '')} ({'+'.join(sorted(v))})" for k, v in ranked[:4])
+                    note = "; ".join(f"{nm_label(k)} ({'+'.join(sorted(v))})" for k, v in ranked[:4])
             b = by_id.get(bid) if bid else None
             stats[status] = stats.get(status, 0) + 1
             w.writerow([r["attachment_id"], r["file"], TYPE.get(r.get("post_type"), "?"), r.get("post_type", ""), r["post_title"], status, srcs, bid,
                         ((b or {}).get("registrar_name") or (b or {}).get("permit_name") or ""), (b or {}).get("chp_number", ""),
-                        (tb or {}).get("registrar_name", "") if tb else "", " ".join(in_db), " ".join(h for h in hps if h not in by_hp),
-                        " | ".join((v[0].get("registrar_name") or v[0].get("permit_name") or "") for v in list(nm.values())[:4]), src, len(text.strip()), note])
-            if i % 200 == 0:
-                print(f"{i}/{len(rows)}", stats, flush=True)
+                        (tb or {}).get("registrar_name", "") if tb else "", differs, " ".join(in_db), " ".join(h for h in hps if h not in by_hp),
+                        " | ".join(nm_label(k) for k in list(nm)[:4]), src, len(text.strip()), note])
     print("סיום:", stats, "->", a.out)
 
 
