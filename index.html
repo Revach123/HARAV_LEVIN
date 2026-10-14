@@ -708,6 +708,7 @@
 </header>
 
 <main>
+  <div id="pub-host" style="display:none;"></div>
   <div id="app"><div class="loading">טוען נתונים...</div></div>
 </main>
 
@@ -830,7 +831,11 @@ function escHtml(s) {
 // ─────────────────────────────────────────────
 function render() {
   const app = document.getElementById("app");
-  if      (view === "table")      app.innerHTML = renderTable();
+  // התצוגה הציבורית = display.html בדיוק (אותו חלון שמוטמע באתר), דרך embed.js; כאן נשאר רק הקישור לניהול
+  const host = document.getElementById("pub-host");
+  host.style.display = view === "table" ? "" : "none";
+  const h1 = document.querySelector("header h1"); if (h1) h1.style.display = view === "table" ? "none" : "";
+  if      (view === "table")      { app.innerHTML = ""; startPublic(host); }
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "admin")      app.innerHTML = renderAdminTable();
   else if (view === "form")       app.innerHTML = renderForm();
@@ -888,7 +893,17 @@ const PUB_COLS = {
 const fmtPct = v => { if (v === null || v === undefined || v === "") return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
 const pubCols = () => PUB_COLS[pubTopic].filter(c => !c.generalOnly || pubLevel === "general");
 
+let publicStarted = false;
+function startPublic(host) {              // טוען את embed.js פעם אחת: הוא יוצר את ה-iframe של display.html בתוך host
+  if (publicStarted) return;
+  publicStarted = true;
+  const sc = document.createElement("script");
+  sc.src = "embed.js"; sc.setAttribute("data-offset", "56");   // 56 = גובה הכותרת הקבועה של דף זה
+  host.appendChild(sc);
+}
+
 async function loadPublic() {
+  render(); return;                       // התצוגה הציבורית עברה ל-display.html; הקוד הישן למטה נשאר כגיבוי בלבד
   pubLoading = true; pubErr = ""; render();
   try {
     if (pubTopic === "bonds") {

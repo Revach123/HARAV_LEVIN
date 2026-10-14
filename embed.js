@@ -48,6 +48,7 @@ if(d.type==="hscroll"){hs=d;buildSb();}
 if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"harav-parent",type:"updShown"},O);}}
 });
 function tick(){
+if(!f.offsetWidth){if(bar){bar.style.display="none";}if(sb){sb.style.display="none";}window.requestAnimationFrame(tick);return;}
 var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
 if(spec){var top=r.top+spec.tableTop;
 var show=Math.sign(OFFSET-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OFFSET)===1;}
