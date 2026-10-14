@@ -77,7 +77,7 @@ async function fetchVariants(db, variants, shorts) {
   return { rows: [...rows.values()], truncated };
 }
 
-async function registryCandidates(db, query) {
+export async function registryCandidates(db, query) {
   const words = normalize(query).split(' ').filter(Boolean);
   const { tier1, tier2 } = variantSets(words);
   if (!tier1.length) return { rows: [], truncated: false };
