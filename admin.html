@@ -174,10 +174,10 @@
   col.c-agch-combined { width: 150px; }
   col.c-tase     { width: 64px; }
   col.c-agch     { width: 80px; }
-  col.c-notes    { width: 190px; }
+  col.c-notes    { width: 170px; }
   col.c-nscope   { width: 112px; }
   col.c-regst    { width: 90px; }
-  col.c-actions  { width: 66px; }
+  col.c-actions  { width: 92px; }
   thead th {
     text-align: right;
     padding: 11px 14px;
@@ -873,7 +873,7 @@ function displayName(b, asHTML = false) {
       ? `${escHtml(r)} <span class="permit">(${escHtml(p)})</span>`
       : `${r} (${p})`;
   }
-  return escHtml(r || p || "—");
+  return asHTML ? escHtml(r || p || "—") : (r || p || "—");   // בלי asHTML = טקסט רגיל (מי שמכניס ל-HTML מצפין בעצמו)
 }
 
 // Combined אג"ח status label for public table
@@ -1083,24 +1083,16 @@ function renderForm() {
     <div class="panel">
       <div class="panel-header">
         <h2>${isEdit ? "עריכת עסק" : "הוספת עסק חדש"}</h2>
-        <button class="btn-ghost" onclick="setView(formReturn)">ביטול</button>
       </div>
 
       <div class="lookup-box">
-        <p class="lbl">שאיבה מהרשם הרשמי — מחפש אוטומטית בכל הרשמים</p>
         <div class="lookup-row">
           <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}">
           <button id="lookup-btn" onclick="doLookup()" ${chpLoading?"disabled":""}>
             ${chpLoading ? "מחפש..." : "חפש ברשם"}
           </button>
         </div>
-        <p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>
-        ${chpResult ? `
-          <div class="lookup-result">
-            <div style="font-size:11px;color:var(--muted);">נמצא ברשם:</div>
-            <div class="found-name">${escHtml(chpResult.name)}</div>
-            <div class="found-meta">${escHtml(chpResult.type)} · ${escHtml(chpResult.status)}</div>
-          </div>` : ""}
+        <div id="lookup-out">${lookupOutHtml()}</div>
       </div>
 
       <div class="field">
@@ -1543,9 +1535,15 @@ function bindEvents() {
 
   // שמירת ח.פ. שמוקלד בזמן אמת כדי שלא יאבד בעת render מחדש
   const chpEl = document.getElementById("chp");
-  if (chpEl) chpEl.addEventListener("input", e => {
-    editBiz = { ...(editBiz || {}), chp_number: e.target.value };
-  });
+  if (chpEl) {
+    let lt;
+    chpEl.addEventListener("input", e => {
+      editBiz = { ...(editBiz || {}), chp_number: e.target.value };
+      const n = e.target.value.trim();
+      clearTimeout(lt);
+      if (/^\d{8,9}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, 500);   // מספר שלם: חיפוש ברשם אוטומטי
+    });
+  }
 
   // CSV drag-drop
   const dz = document.getElementById("drop-zone");
@@ -1573,7 +1571,12 @@ function bindEvents() {
 // ─────────────────────────────────────────────
 //  ACTIONS
 // ─────────────────────────────────────────────
+let formDirty = false;
+const confirmLeave = () => confirm("השינויים שעשית לא נשמרו. לעזוב את העמוד בכל זאת?");
+window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
 function setView(v) {
+  if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
+  if (v === "form" && view !== "form") formDirty = false;
   view = v;
   if (v !== "csv-import") {
     csvStep = "upload"; csvHeaders = []; csvRows = []; csvColMap = {};
@@ -1584,7 +1587,7 @@ function setView(v) {
 }
 
 function toggleAdmin() {
-  if (isAdmin) { isAdmin = false; adminToken = ""; location.href = "/"; }   // יציאה = חזרה לאתר הציבורי
+  if (isAdmin) { if (view === "form" && formDirty && !confirmLeave()) return; isAdmin = false; adminToken = ""; location.href = "/"; }   // יציאה = חזרה לאתר הציבורי
   else setView("login");
 }
 
@@ -1601,6 +1604,8 @@ async function doLogin() {
 
 let formReturn = "admin";
 function openForm(id) {
+  if (view === "form" && formDirty && !confirmLeave()) return;
+  formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
   chpResult = null; chpError = "";
@@ -1681,29 +1686,43 @@ async function confirmDelete(id) {
   }
 }
 
-async function doLookup() {
+function lookupOutHtml() {
+  return `<p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>
+    ${chpResult ? `
+      <div class="lookup-result">
+        <div style="font-size:11px;color:var(--muted);">נמצא ברשם:</div>
+        <div class="found-name">${escHtml(chpResult.name)}</div>
+        <div class="found-meta">${escHtml(chpResult.type)} · ${escHtml(chpResult.status)}</div>
+      </div>` : ""}`;
+}
+
+let lookupSeq = 0, lastAutoNumber = "";
+// auto = חיפוש אוטומטי תוך כדי הקלדה (כשהמספר שלם): מעדכן רק את אזור התוצאה, בלי רינדור מחדש, כדי לא לאבד שדות שכבר מולאו
+async function doLookup(auto) {
   const number = (document.getElementById("chp")?.value || "").trim();
-  if (!number) { chpError = "הכנס מספר רישום"; render(); return; }
-  // שמור את הח.פ. שהוקלד ב-editBiz כדי שלא יתנקה בעת רנדור מחדש
+  if (!number) { if (!auto) { chpError = "הכנס מספר רישום"; render(); } return; }
   editBiz = { ...(editBiz || {}), chp_number: number };
-  chpLoading = true; chpError = ""; chpResult = null; render();
+  const seq = ++lookupSeq;
+  const out = () => document.getElementById("lookup-out");
+  if (auto) { chpResult = null; chpError = ""; if (out()) out().innerHTML = `<p class="lookup-error" style="color:var(--muted)">מחפש ברשם…</p>`; }
+  else { chpLoading = true; chpError = ""; chpResult = null; render(); }
+  let res = null, err = "";
   try {
-    const res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
-    if (res.found) chpResult = res;
-    else chpError = "לא נמצא תאגיד עם מספר זה בשום רשם";
-  } catch(e) {
-    chpError = "שגיאת חיבור לרשם הרשמי";
-  }
-  chpLoading = false; render();
+    res = await apiFetch(`/lookup?number=${encodeURIComponent(number)}`);
+    if (!res.found) { err = "לא נמצא תאגיד עם מספר זה בשום רשם"; res = null; }
+  } catch(e) { err = "שגיאת חיבור לרשם הרשמי"; }
+  if (seq !== lookupSeq || (document.getElementById("chp")?.value || "").trim() !== number) return;   // הוקלד מספר אחר בינתיים
+  chpResult = res; chpError = err; chpLoading = false;
+  if (auto) { if (out()) out().innerHTML = lookupOutHtml(); } else render();
   if (chpResult) {
     const regEl = document.getElementById("f-reg");
-    if (regEl) regEl.value = chpResult.name;
-    // מלא סוג עסק אוטומטית אם הגיע מהרשם
+    if (regEl && (!auto || !regEl.value.trim())) regEl.value = chpResult.name;     // בחיפוש אוטומטי לא דורסים שם שכבר הוקלד
     if (chpResult.bizType) {
       const btEl = document.getElementById("f-biztype");
-      if (btEl) btEl.value = chpResult.bizType;
+      if (btEl && (!auto || !btEl.value.trim())) btEl.value = chpResult.bizType;
       editBiz = { ...(editBiz || {}), biz_type: chpResult.bizType };
     }
+    formDirty = true;
   }
 }
 
@@ -2040,7 +2059,7 @@ async function doSave() {
       businesses = [...businesses, payload];
     }
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
-    saving = false; setView(formReturn);
+    saving = false; formDirty = false; setView(formReturn);
   } catch(e) {
     saving = false;
     if (e.message === "Unauthorized") { handleUnauth(); return; }
@@ -2437,6 +2456,7 @@ document.addEventListener("click", (e) => {
 });
 
 // עמוד הניהול נפתח במסך כניסה
+["input", "change"].forEach(ev => document.getElementById("app").addEventListener(ev, () => { if (view === "form") formDirty = true; }, true));   // סימון שינויים שלא נשמרו בטופס
 render();
 
 loadBusinesses().catch(() => {
