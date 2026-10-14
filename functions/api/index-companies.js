@@ -16,7 +16,9 @@ export async function onRequestGet({ request }) {
     for (const it of d.items || []) {
       const hp = String(it.hp || "").replace(/\D/g, "").replace(/^0+/, "");
       const key = hp || "n:" + (it.fullName || it.name);
-      if (!seen.has(key)) seen.set(key, { hp, name: it.fullName || it.name || "" });
+      const w = Number(it.weight) || 0;
+      if (!seen.has(key)) seen.set(key, { hp, name: it.fullName || it.name || "", weight: 0 });
+      seen.get(key).weight += w;       // משקל החברה במדד = סכום משקלי ניירותיה
     }
     return new Response(JSON.stringify({ id, name: ALLOWED[id], tradeDate: d.tradeDate || "", companies: [...seen.values()] }),
       { headers: { ...CORS, "Content-Type": "application/json; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
