@@ -166,20 +166,20 @@
   .table-wrap { overflow-x: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px; table-layout: fixed; }
   col.c-num      { width: 36px; }
-  col.c-name     { width: 170px; }
+  col.c-name     { width: 150px; }
   col.c-name-lg  { width: 240px; }
-  col.c-chp      { width: 90px; }
-  col.c-cat      { width: 90px; }
-  col.c-biztype  { width: 100px; }
-  col.c-region   { width: 60px; }
-  col.c-vis      { width: 65px; }
+  col.c-chp      { width: 80px; }
+  col.c-cat      { width: 80px; }
+  col.c-biztype  { width: 80px; }
+  col.c-region   { width: 50px; }
+  col.c-vis      { width: 108px; }
   col.c-agch-combined { width: 150px; }
-  col.c-tase     { width: 64px; }
-  col.c-agch     { width: 80px; }
-  col.c-notes    { width: 170px; }
-  col.c-nscope   { width: 112px; }
-  col.c-regst    { width: 90px; }
-  col.c-actions  { width: 92px; }
+  col.c-tase     { width: 62px; }
+  col.c-agch     { width: 108px; }
+  col.c-notes    { width: 150px; }
+  col.c-nscope   { width: 175px; }
+  col.c-regst    { width: 80px; }
+  col.c-actions  { width: 140px; }
   thead th {
     text-align: right;
     padding: 11px 14px;
@@ -187,10 +187,10 @@
     font-size: 12px;
     color: var(--muted);
     border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    white-space: normal;          /* כותרות בשתי שורות כשצריך */
+    line-height: 1.25;
     background: var(--bg);
     overflow: hidden;
-    text-overflow: ellipsis;
   }
   /* כותרות קבועות (freeze panes) בגלילת העמוד, במחשב. במסך צר הטבלה נגללת לרוחב ולכן נשארת כמו קודם. */
   @media (min-width: 900px) {
@@ -789,6 +789,12 @@
   .permit-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
+  tr.row-dirty td { background:#fff8e6; }
+  .row-save, .row-del { font-family:inherit; font-size:12px; padding:4px 10px; border-radius:5px; border:1px solid var(--border); background:#fff; cursor:pointer; }
+  .row-save { border-color:var(--accent); color:var(--accent-dark); font-weight:700; }
+  .row-save:disabled { opacity:.35; cursor:default; border-color:var(--border); color:var(--muted); font-weight:400; }
+  .row-del { color:var(--red); }
   .sc-btns { display:inline-flex; gap:4px; flex-wrap:wrap; }
   .sc-b { font-family:inherit; font-size:12px; color:var(--text); background:#fff; border:1px solid var(--border); border-radius:5px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
   .sc-b.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); font-weight:700; }
@@ -988,6 +994,7 @@ function renderAdminTable() {
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
     </div>
+    <div style="margin-bottom:10px;"><button class="btn-primary" id="save-all-btn" onclick="saveAllRows()" ${dirtyIds().length ? "" : "disabled"} style="width:auto;padding:9px 22px;">שמירת כל השינויים${dirtyIds().length ? ` (${dirtyIds().length})` : ""}</button></div>
     <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
     <div class="filter-bar">
       <div class="fb-group" style="flex:1;min-width:200px;">
@@ -999,7 +1006,7 @@ function renderAdminTable() {
         <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
     </div>
     <div class="table-wrap">
-      <table>
+      <table class="admin-tbl">
         <colgroup>
           <col class="c-name">
           <col class="c-chp">
@@ -1022,7 +1029,7 @@ function renderAdminTable() {
             <th>סוג עסק</th>
             <th>אזור</th>
             <th>הערות (עריכה ישירה)</th>
-            <th>היכן להציג</th>
+            <th>היכן להציג ההערה</th>
             <th>סטטוס ברשם</th>
             <th style="text-align:center;">פרטי/כללי</th>
             <th style="text-align:center;">אג"ח בורסה</th>
@@ -1031,30 +1038,29 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${sorted.map(b => {
+          ${sorted.map(b0 => {
+            const b = effBiz(b0), dirty = isDirty(b0.id);
             return `
-              <tr>
+              <tr class="${dirty ? "row-dirty" : ""}">
                 <td class="biz-name">${displayName(b,true)}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td>
-                  <input type="text" value="${escHtml(pendingNotes[b.id] ?? b.notes ?? "")}" placeholder="הערה"
+                  <input type="text" value="${escHtml(b.notes ?? "")}" placeholder="הערה"
                     onchange="noteInline('${b.id}', this.value)"
                     style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">
                 </td>
                 <td>${(() => {
-                  const hasNote = (pendingNotes[b.id] ?? b.notes ?? "").trim() !== "";
-                  if (!hasNote) return "";                                           // בלי הערה - אין מה לבחור
-                  const waiting = pendingNotes[b.id] !== undefined && !b.notes_scope;      // הערה חדשה: חובה לבחור
-                  const sc = waiting ? "" : (b.notes_scope || "companies");              // הערה ישנה בלי בחירה = חברות
+                  if (!(b.notes || "").trim()) return "";                              // בלי הערה - אין מה לבחור
+                  const sc = b.notes_scope || ((b0.notes || "").trim() ? "companies" : "");   // הערה ישנה בלי בחירה = חברות
                   const bt = (v, l) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="noteScopeChange('${b.id}','${v}')">${l}</button>`;
-                  return `<span class="sc-btns ${waiting?"need":""}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}
+                  return `<span class="sc-btns ${sc?"":"need"}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
-                  <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
+                  <select onchange="draftSet('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.visibility?"selected":""}>רק כללי</option>
                     <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
@@ -1078,8 +1084,8 @@ function renderAdminTable() {
                   </select>
                 </td>
                 <td style="text-align:center;white-space:nowrap;">
-                  <button class="act-btn" onclick="openForm('${b.id}')" title="עריכה">✏️</button>
-                  <button class="act-btn del" onclick="preDelete('${b.id}')" title="מחיקה">🗑</button>
+                  <button class="row-save" onclick="saveRow('${b.id}')" ${dirty ? "" : "disabled"}>שמור</button>
+                  <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
               </tr>`;
           }).join("")}
@@ -2053,22 +2059,10 @@ function renderBondPicker() {
 
 // שינוי "אישור אג"ח" בטבלת הניהול. "⚙ בחירת אג"ח…" היא פעולה: תמיד פותחת את חלון הבחירה (גם אם החברה כבר במצב
 // "אג"ח מסוימים"), ומעבירה את החברה למצב הזה אם עוד לא; הבחירה בתפריט עצמה חוזרת לערך הנוכחי.
-async function agchChange(id, sel) {
-  const biz = businesses.find(b => b.id === id);
-  if (!biz) return;
-  if (sel.value === "__pick__") {
-    if (biz.agch_approved !== BOND_PICK) {
-      const ok = await inlineUpdate(id, "agch_approved", BOND_PICK);
-      if (!ok) { sel.value = biz.agch_approved || ""; return; }
-      render();
-    } else {
-      sel.value = BOND_PICK;
-    }
-    openBondPicker(id);
-    return;
-  }
-  const ok = await inlineUpdate(id, "agch_approved", sel.value);
-  if (ok && sel.value === BOND_PICK) openBondPicker(id);
+function agchChange(id, sel) {
+  if (sel.value === "__pick__") { draftSet(id, "agch_approved", BOND_PICK); openBondPicker(id); return; }
+  draftSet(id, "agch_approved", sel.value);
+  if (sel.value === BOND_PICK) openBondPicker(id);
 }
 
 let admSearchTimer = null;
@@ -2099,27 +2093,42 @@ async function inlineUpdateMany(id, fields) {
   }
 }
 
-// הערות בטבלה: הערה חדשה נשמרת רק אחרי שנבחר היכן להציג אותה (pendingNotes = הערות שממתינות לבחירה)
-const pendingNotes = {};
-async function noteInline(id, raw) {
-  const v = (raw || "").trim();
-  const biz = businesses.find(b => b.id === id);
-  if (!biz) return;
-  if (!v) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: "", notes_scope: "" }); render(); return; }
-  if (biz.notes_scope) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v }); return; }
-  if ((biz.notes || "").trim()) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: "companies" }); return; }   // הערה ישנה בלי בחירה = חברות
-  pendingNotes[id] = v;                        // הערה חדשה: ממתינה לבחירה
-  showStatus("בחר היכן להציג את ההערה");
+// טבלת העדכון: שינויים בשורות נשמרים כטיוטה (drafts) עד "שמור" בשורה או "שמירת כל השינויים"; הטיוטות לא הולכות לאיבוד בחיפוש / סינון / מיון
+const drafts = {};
+const draftFields = ["notes", "notes_scope", "visibility", "agch_approved"];
+const effBiz = b => ({ ...b, ...(drafts[b.id] || {}) });
+const isDirty = id => { const d = drafts[id], b = businesses.find(x => x.id === id); return !!d && !!b && draftFields.some(f => f in d && (d[f] ?? "") !== (b[f] ?? "")); };
+const dirtyIds = () => Object.keys(drafts).filter(isDirty);
+function draftSet(id, field, value) {
+  (drafts[id] = drafts[id] || {})[field] = value;
   render();
 }
-async function noteScopeChange(id, scope) {
-  if (pendingNotes[id] !== undefined) {
-    const v = pendingNotes[id]; delete pendingNotes[id];
-    await inlineUpdateMany(id, { notes: v, notes_scope: scope });
-    render();
-  } else {
-    await inlineUpdateMany(id, { notes_scope: scope });
-  }
+function noteInline(id, raw) {
+  const v = (raw || "").trim();
+  const biz = businesses.find(b => b.id === id); if (!biz) return;
+  const d = drafts[id] = drafts[id] || {};
+  d.notes = v;
+  if (!v) d.notes_scope = "";
+  else if (!(d.notes_scope ?? biz.notes_scope)) d.notes_scope = (biz.notes || "").trim() ? "companies" : "";   // הערה ישנה בלי בחירה = חברות; חדשה = חובה לבחור
+  render();
+}
+function noteScopeChange(id, scope) { draftSet(id, "notes_scope", scope); }
+async function saveRow(id, quiet) {
+  const biz = businesses.find(b => b.id === id), d = drafts[id];
+  if (!biz || !d) return true;
+  const eff = effBiz(biz);
+  if ((eff.notes || "").trim() && !eff.notes_scope && !(biz.notes || "").trim()) { if (!quiet) showStatus("בחר היכן להציג את ההערה"); return false; }
+  if ((eff.notes || "").trim() && !eff.notes_scope) d.notes_scope = "companies";
+  const ok = await inlineUpdateMany(id, Object.fromEntries(draftFields.filter(f => f in d).map(f => [f, d[f]])));
+  if (ok) { delete drafts[id]; if (!quiet) { showStatus("נשמר ✓"); render(); } }
+  return !!ok;
+}
+async function saveAllRows() {
+  const ids = dirtyIds(); if (!ids.length) return;
+  let ok = 0, fail = 0;
+  for (const id of ids) { if (await saveRow(id, true)) ok++; else fail++; }
+  render();
+  showStatus(fail ? `נשמרו ${ok}, ${fail} לא נשמרו (חסרה בחירה היכן להציג הערה)` : `נשמרו ${ok} שורות ✓`);
 }
 
 // החלף את הפונקציה runRegistrySync הקיימת בזו:
