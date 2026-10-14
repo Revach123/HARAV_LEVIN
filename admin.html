@@ -1673,7 +1673,7 @@ function bindEvents() {
       if (/^\d{3,8}$/.test(n)) { clearTimeout(pt); pt = setTimeout(() => registrySearchInto(n), 300); }            // תחילת מספר: רשימת חברות שהמספר שלהן מתחיל כך
       else if (ns && !/^\d{9,10}$/.test(n)) { clearTimeout(pt); ns.innerHTML = ""; }
       if (/^\d{9,10}$/.test(n)) { clearTimeout(pt); if (ns) ns.innerHTML = ""; }
-      if (/^\d{7,10}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, 450);   // מ-7 ספרות: חיפוש ברשם אוטומטי
+      if (/^\d{7,10}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, n.length >= 9 ? 0 : 450);   // מ-7 ספרות: חיפוש ברשם אוטומטי
     });
   }
 
