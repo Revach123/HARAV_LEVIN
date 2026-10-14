@@ -149,7 +149,7 @@ def classify(text, title, by_hp, names):
     for h in in_db:
         for b in by_hp[h][:1]:
             nm = [norm(b.get("registrar_name")), norm(b.get("permit_name"))]
-            in_text = any(x and len(x) >= 4 and x in ntext for x in nm)
+            in_text = any(x and len(x) >= 4 and (x in ntext or x[::-1] in ntext) for x in nm)      # גם טקסט שנקרא הפוך (RTL)
             scored.append((h, b, in_text, max(sim(title, b.get("registrar_name")), sim(title, b.get("permit_name")))))
     good = [s for s in scored if s[2] or s[3] >= 0.6]
     if len(good) == 1:
