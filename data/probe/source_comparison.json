@@ -331,7 +331,465 @@
      2250
     ]
    }
-  ]
+  ],
+  "companies_list": {
+   "error": "",
+   "size": 696,
+   "for_companies_with_bonds": {
+    "companies": 363,
+    "in_companies_list": 339,
+    "missing_from_companies_list": 24,
+    "issuerId_equals_maya_id": 339,
+    "issuerId_differs_from_maya_id": 0,
+    "differ_examples": [],
+    "missing_examples": [
+     {
+      "chp": "2624970",
+      "company": "אלעד קנדה ריאלטי אינק.",
+      "approved": false,
+      "maya": [
+       1753
+      ]
+     },
+     {
+      "chp": "500102868",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2388
+      ]
+     },
+     {
+      "chp": "510687403",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1666
+      ]
+     },
+     {
+      "chp": "513502229",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1191
+      ]
+     },
+     {
+      "chp": "514189596",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1755
+      ]
+     },
+     {
+      "chp": "515759777",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2439
+      ]
+     },
+     {
+      "chp": "516041118",
+      "company": "אגד חברה לתחבורה בע\"מ",
+      "approved": true,
+      "maya": [
+       2422
+      ]
+     },
+     {
+      "chp": "516100120",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2424
+      ]
+     },
+     {
+      "chp": "516100153",
+      "company": "מימון ישיר נדל\"ן ומשכנתאות בע\"מ",
+      "approved": true,
+      "maya": [
+       2445
+      ]
+     },
+     {
+      "chp": "516223864",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1808
+      ]
+     },
+     {
+      "chp": "516301843",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1882
+      ]
+     },
+     {
+      "chp": "516556545",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2419
+      ]
+     },
+     {
+      "chp": "517014023",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2460
+      ]
+     },
+     {
+      "chp": "517112074",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2499
+      ]
+     },
+     {
+      "chp": "517112686",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2539
+      ]
+     },
+     {
+      "chp": "517182549",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2579
+      ]
+     },
+     {
+      "chp": "520004078",
+      "company": "הראל חברה לביטוח בע\"מ",
+      "approved": true,
+      "maya": [
+       1175
+      ]
+     },
+     {
+      "chp": "520021874",
+      "company": "כלל תעשיות בע\"מ",
+      "approved": false,
+      "maya": [
+       608
+      ]
+     },
+     {
+      "chp": "520037664",
+      "company": "",
+      "approved": false,
+      "maya": [
+       318
+      ]
+     },
+     {
+      "chp": "520041690",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2202
+      ]
+     },
+     {
+      "chp": "520042185",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1315
+      ]
+     },
+     {
+      "chp": "520044439",
+      "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+      "approved": true,
+      "maya": [
+       1089
+      ]
+     },
+     {
+      "chp": "540333101",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2462
+      ]
+     },
+     {
+      "chp": "550016091",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1721
+      ]
+     }
+    ],
+    "missing_approved": 4
+   },
+   "for_all_maya_companies": {
+    "companies": 1809,
+    "in_companies_list": 696,
+    "missing_from_companies_list": 1113,
+    "issuerId_equals_maya_id": 696,
+    "issuerId_differs_from_maya_id": 0,
+    "differ_examples": [],
+    "missing_examples": [
+     {
+      "chp": "13-0435685",
+      "company": "",
+      "approved": false,
+      "maya": [
+       2023
+      ]
+     },
+     {
+      "chp": "13-3861628",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1579
+      ]
+     },
+     {
+      "chp": "1421915",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1578
+      ]
+     },
+     {
+      "chp": "14582",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1764
+      ]
+     },
+     {
+      "chp": "1487918",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1727
+      ]
+     },
+     {
+      "chp": "1504619",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1702
+      ]
+     },
+     {
+      "chp": "1522277",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1607
+      ]
+     },
+     {
+      "chp": "167089",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1379
+      ]
+     },
+     {
+      "chp": "170995",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1371
+      ]
+     },
+     {
+      "chp": "1814237",
+      "company": "ברוקלנד אפריל",
+      "approved": true,
+      "maya": [
+       1617
+      ]
+     },
+     {
+      "chp": "1841580",
+      "company": "אול-יר הולדינגס",
+      "approved": false,
+      "maya": [
+       1631
+      ]
+     },
+     {
+      "chp": "1849766",
+      "company": "רילייטד פורטפוליו מסחרי",
+      "approved": true,
+      "maya": [
+       1638
+      ]
+     },
+     {
+      "chp": "1852627",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1642
+      ]
+     },
+     {
+      "chp": "1853213",
+      "company": "טריטופ ריאלטי",
+      "approved": false,
+      "maya": [
+       1640
+      ]
+     },
+     {
+      "chp": "1858676",
+      "company": "מויניאן",
+      "approved": true,
+      "maya": [
+       1643
+      ]
+     },
+     {
+      "chp": "1860069",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1646
+      ]
+     },
+     {
+      "chp": "1863501",
+      "company": "סטרוברי פילדס ריט",
+      "approved": true,
+      "maya": [
+       1654
+      ]
+     },
+     {
+      "chp": "1866231",
+      "company": "וורטון פרופרטיז (בי.וי.איי)",
+      "approved": false,
+      "maya": [
+       1645
+      ]
+     },
+     {
+      "chp": "1886279",
+      "company": "קבוצת קליין אינטרנשיונל",
+      "approved": true,
+      "maya": [
+       1658
+      ]
+     },
+     {
+      "chp": "1886281",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1653
+      ]
+     },
+     {
+      "chp": "1888119",
+      "company": "דלשה קפיטל",
+      "approved": true,
+      "maya": [
+       1659
+      ]
+     },
+     {
+      "chp": "191945",
+      "company": "",
+      "approved": false,
+      "maya": [
+       1488
+      ]
+     },
+     {
+      "chp": "1920997",
+      "company": "קורנרסטון פרופרטייס",
+      "approved": true,
+      "maya": [
+       1673
+      ]
+     },
+     {
+      "chp": "1921080",
+      "company": "סאות'רן פרופרטיס קפיטל",
+      "approved": false,
+      "maya": [
+       1670
+      ]
+     },
+     {
+      "chp": "1938333",
+      "company": "וו.סי.ג'י נכסים",
+      "approved": true,
+      "maya": [
+       1685
+      ]
+     },
+     {
+      "chp": "1938699",
+      "company": "ווטרסטון פרופרטיס",
+      "approved": true,
+      "maya": [
+       1681
+      ]
+     },
+     {
+      "chp": "1940909",
+      "company": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי)",
+      "approved": true,
+      "maya": [
+       1695
+      ]
+     },
+     {
+      "chp": "1946194",
+      "company": "צ'וזן נכסים",
+      "approved": false,
+      "maya": [
+       1698
+      ]
+     },
+     {
+      "chp": "1947641",
+      "company": "נובל אסטס (בי.וי.איי)",
+      "approved": true,
+      "maya": [
+       1699
+      ]
+     },
+     {
+      "chp": "1957080",
+      "company": "איי איי סי1#,אל.טי.די",
+      "approved": false,
+      "maya": [
+       1711
+      ]
+     }
+    ],
+    "missing_approved": 60
+   }
+  }
  },
  "sizes": {
   "maya": 1034,
