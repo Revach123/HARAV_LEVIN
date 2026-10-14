@@ -1,0 +1,187 @@
+# -*- coding: utf-8 -*-
+"""
+דשבורד בדיקה ידנית של היתרי עיסקא (מקומי, קריאה בלבד מול האתר והמאגר).
+  מציג רק קבצים שסומנו "לבדיקה ידנית" (needs_review = כן) ב-סופי_מאוחד.csv.
+  למעלה השאלה עם כפתורי בחירה מהירה, למטה קובץ ה-PDF, ולמטה כפתור "הבא".
+  התשובות נשמרות רק בקובץ מקומי: החלטות_בדיקה.csv  (לא נכתב כלום למאגר ולא לאתר, ולא משייכים כלום).
+  הנתונים נקראים מחדש מהקבצים בכל רענון - אפשר להריץ שוב את run_all ולרענן בלי לאבד תשובות.
+
+הרצה מתיקיית האתר:  python review_server.py     ואז לפתוח  http://localhost:8765
+"""
+import argparse
+import csv
+import json
+import os
+import re
+import sys
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+LOCK = threading.Lock()
+A = None
+DEC_COLS = ["attachment_id", "file", "type_answer", "company_id", "company_name", "company_special", "note", "time"]
+
+
+def read_csv(path):
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8-sig", newline="") as f:
+        return list(csv.DictReader(f))
+
+
+def mtime(*paths):
+    return max([os.path.getmtime(p) for p in paths if os.path.exists(p)] or [0])
+
+
+def load_businesses():
+    if not os.path.exists(A.businesses):
+        return []
+    with open(A.businesses, encoding="utf-8") as f:
+        data = json.load(f)
+    out = []
+    for b in data:
+        out.append({"id": b.get("id"), "name": b.get("registrar_name") or b.get("permit_name") or "",
+                    "permit_name": b.get("permit_name") or "", "chp": str(b.get("chp_number") or ""),
+                    "visibility": b.get("visibility") or ""})
+    return out
+
+
+def build_items():
+    rows = read_csv(A.final)
+    biz = load_businesses()
+    by_id = {b["id"]: b for b in biz}
+    by_chp = {b["chp"]: b for b in biz if b["chp"]}
+    by_name = {}
+    for b in biz:
+        for n in (b["name"], b["permit_name"]):
+            if n:
+                by_name.setdefault(n.strip(), b)
+    items = []
+    for r in rows:
+        if r.get("needs_review") != "כן":
+            continue
+        cands, seen = [], set()
+
+        def add(b, why):
+            if b and b["id"] not in seen:
+                seen.add(b["id"])
+                cands.append({"id": b["id"], "name": b["name"], "chp": b["chp"], "why": why})
+        add(by_id.get(r.get("business_id")), "החברה שזוהתה")
+        tb = (r.get("title_business") or "").strip()
+        if tb:
+            add(by_name.get(tb), "לפי שם הפוסט")
+        for hp in re.findall(r"\d{8,9}", r.get("doc_hps_in_db") or ""):
+            add(by_chp.get(hp), "ח.פ. בתוך הקובץ")
+        reasons = [x.strip() for x in (r.get("review_reasons") or "").split("|") if x.strip()]
+        ask_type = any("כללי/פרטי" in x for x in reasons)
+        ask_company = any(x.startswith("שיוך לחברה") or "שם הפוסט שונה" in x for x in reasons)
+        items.append({
+            "aid": r["attachment_id"], "file": r.get("file", ""), "reasons": reasons,
+            "ask_type": ask_type, "ask_company": ask_company,
+            "doc_type": r.get("doc_type_clean") or r.get("doc_type") or "",
+            "text_check": r.get("text_check", ""), "status": r.get("status", ""),
+            "post_title": r.get("post_title", ""), "note": r.get("note", ""),
+            "doc_name_matches": r.get("doc_name_matches", ""), "doc_hps_not_in_db": r.get("doc_hps_not_in_db", ""),
+            "linked_in": r.get("linked_in", ""), "cands": cands,
+        })
+    return items
+
+
+def decisions():
+    return {r["attachment_id"]: r for r in read_csv(A.decisions)}
+
+
+def save_decision(d):
+    with LOCK:
+        cur = decisions()
+        from datetime import datetime
+        d["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur[d["attachment_id"]] = {k: d.get(k, "") for k in DEC_COLS}
+        tmp = A.decisions + ".tmp"
+        with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=DEC_COLS)
+            w.writeheader()
+            w.writerows(cur.values())
+        os.replace(tmp, A.decisions)
+
+
+def pdf_path(aid):
+    for r in read_csv(A.attachments):
+        if r.get("ID") == aid:
+            m = re.search(r"wp-content/uploads/(.+)$", r.get("guid") or "")
+            if m:
+                p = os.path.join(A.uploads, *m.group(1).split("/"))
+                return p if os.path.exists(p) else None
+    return None
+
+
+class H(BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def send(self, code, body, ctype="application/json; charset=utf-8", extra=None):
+        if isinstance(body, str):
+            body = body.encode("utf-8")
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        u = urlparse(self.path)
+        if u.path in ("/", "/index.html"):
+            with open(os.path.join(HERE, "review.html"), encoding="utf-8") as f:
+                return self.send(200, f.read(), "text/html; charset=utf-8")
+        if u.path == "/api/items":
+            return self.send(200, json.dumps({"mtime": mtime(A.final, A.businesses), "items": build_items(),
+                                              "decisions": decisions()}, ensure_ascii=False))
+        if u.path == "/api/mtime":
+            return self.send(200, json.dumps({"mtime": mtime(A.final, A.businesses)}))
+        if u.path == "/api/businesses":
+            return self.send(200, json.dumps(load_businesses(), ensure_ascii=False))
+        if u.path == "/pdf":
+            aid = parse_qs(u.query).get("id", [""])[0]
+            p = pdf_path(aid)
+            if not p:
+                return self.send(404, "הקובץ לא נמצא בתיקיית ההעלאות", "text/plain; charset=utf-8")
+            with open(p, "rb") as f:
+                return self.send(200, f.read(), "application/pdf", {"Content-Disposition": "inline"})
+        self.send(404, "not found", "text/plain")
+
+    def do_POST(self):
+        if urlparse(self.path).path == "/api/answer":
+            n = int(self.headers.get("Content-Length") or 0)
+            d = json.loads(self.rfile.read(n).decode("utf-8"))
+            if not d.get("attachment_id"):
+                return self.send(400, "{}")
+            save_decision(d)
+            return self.send(200, '{"ok":true}')
+        self.send(404, "{}")
+
+
+def main():
+    global A
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--final", default="סופי_מאוחד.csv")
+    ap.add_argument("--businesses", default="businesses.json")
+    ap.add_argument("--attachments", default="attachments.csv")
+    ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
+    ap.add_argument("--decisions", default="החלטות_בדיקה.csv")
+    ap.add_argument("--port", type=int, default=8765)
+    A = ap.parse_args()
+    srv = ThreadingHTTPServer(("127.0.0.1", A.port), H)
+    print(f"הדשבורד פועל: http://localhost:{A.port}   (לעצירה: Ctrl+C)")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())
