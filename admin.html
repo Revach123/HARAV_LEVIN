@@ -1197,7 +1197,7 @@ function renderForm() {
         </div>
       </div>
 
-      <div class="field">
+      <div class="field" style="display:none;">   <!-- סוג עסק: מגיע אוטומטית מהרשם, לא מוצג בטופס (השדה נשאר לצורך השמירה) -->
         <label>סוג עסק</label>
         <input type="text" id="f-biztype" value="${escHtml(b.biz_type||"")}"
           placeholder="חברה פרטית - בע&quot;מ, עמותה, שותפות..."
@@ -1794,6 +1794,7 @@ function toggleNoChp() {
   if (noChp) {                                   // "עסק בלי ח.פ.": מנקים את המספר ופותחים את שם הרשם להקלדה
     if (chpEl) { chpEl.value = ""; chpEl.disabled = true; }
     editBiz = { ...(editBiz || {}), chp_number: "" };
+    { const bt = document.getElementById("f-biztype"); if (bt && !editBiz?.id) bt.value = ""; }
     chpResult = null; chpError = ""; lookupSeq++; lastAutoNumber = "";
     if (out) out.innerHTML = "";
     formDirty = true;
