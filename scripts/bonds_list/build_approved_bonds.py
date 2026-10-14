@@ -37,6 +37,7 @@ import urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from classify import coarse_type  # noqa: E402  (עותק של Revach)
 import offerings  # noqa: E402
+import market_data  # noqa: E402
 
 HARAV_API = os.environ.get("HARAV_API", "https://harav-levin.pages.dev")
 MAYA_URL = "https://maya.tase.co.il/api/v1/companies/{id}/details"
@@ -482,6 +483,45 @@ def write_lists(bonds):
     return counts
 
 
+def add_market_bonds(bonds, approved, manual, names, snapshot, dw, ids_fn=None):
+    """אג"ח שבנתוני המסחר של הבורסה ולא בדף החברה במאיה: נוספות כמו אג"ח רגילות של חברה מאושרת (או שנבחרה ידנית),
+    וגם לחלון הבחירה. החברה והסוג נלקחים מרשימת ניירות datawise לפי מספר הנייר. -> (שורות חדשות, דגימה)."""
+    ids, sample = (ids_fn or market_data.fetch_ids)()
+    if not ids or not dw:
+        return [], sample
+    rows, _d, types = dw
+    by_sid = {int(r["securityId"]): r for r in rows if r.get("securityId") is not None}
+    have = {x["security_id"] for x in bonds} | {int(e["security_id"]) for v in snapshot.values() for e in v}
+    out = []
+    for sid in ids:
+        r = by_sid.get(sid)
+        code = str((r or {}).get("securityFullTypeCode") or "")
+        if sid in have or not r or not code.startswith(BOND_CODE_PREFIXES):
+            continue
+        stype = types.get(code, "")
+        ac = coarse_type(stype)
+        if ac not in BOND_COARSE:
+            continue
+        k = chp_norm(r.get("corporateId"))
+        name = (r.get("securityName") or "").strip()
+        if k:
+            snapshot.setdefault(k, []).append({"security_id": sid, "name": name, "symbol": r.get("symbol") or "", "type": stype})
+        info, picks = approved.get(k), (manual.get(k) or {})
+        base = {"security_id": sid, "security_name": name, "symbol": r.get("symbol") or "", "isin": r.get("isin") or "",
+                "security_type": stype, "asset_class": ac, "chp_number": k, "maya_company_id": None, "is_tradable": True}
+        if info:
+            out.append({**base, "issuer_name": info["company"], "company": info["company"],
+                        "notes": "; ".join(x for x in (GOYIM_NOTE if info["goyim"] else "", info["bond_note"]) if x),
+                        "goyim": info["goyim"], "bond_scope": info["bond_scope"], "agch_approved": info["agch_approved"],
+                        "is_private": info["is_private"]})
+        elif sid in picks and k in names:
+            out.append({**base, "issuer_name": names[k], "company": names[k], "notes": "", "goyim": False, "bond_scope": "both",
+                        "agch_approved": SELECTIVE, "is_private": picks[sid] in ("private", "both"),
+                        "manual": True, "manual_scope": picks[sid]})
+    sample["added_to_lists"] = len(out)
+    return out, sample
+
+
 OFFERINGS_STATE_PATH = os.path.join(OUT, "offerings_state.json")
 
 
@@ -533,6 +573,15 @@ def main(companies_path=None):
         raise SystemExit("maya sweep looks partial/blocked - output left untouched")
 
     dw = fetch_datawise_securities()
+    try:   # אג"ח מנתוני המסחר שאינן בדף החברה (לא מפיל את הבנייה)
+        market_rows, market_sample = add_market_bonds(bonds, approved, manual, company_names(companies), snapshot, dw)
+        bonds = bonds + market_rows
+        print(f"market data: {market_sample.get('ids_found', 0)} ids, {len(market_rows)} bonds added", market_sample.get("error", ""))
+        os.makedirs(OUT, exist_ok=True)
+        with open(os.path.join(OUT, "market_data_sample.json"), "w", encoding="utf-8") as f:
+            json.dump(market_sample, f, ensure_ascii=False, indent=1, default=str)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: market data step failed, skipped: {e}", file=sys.stderr)
     check = cross_check(bonds, approved, dw)
     print("datawise check:", {k: (v if not isinstance(v, list) else len(v)) for k, v in check.items()})
     os.makedirs(OUT, exist_ok=True)
