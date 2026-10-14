@@ -31,6 +31,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -376,12 +377,14 @@ MAX_MISSING_ABS, MAX_MISSING_PCT = 5, 0.03   # מעל זה — הריצה נכש
 def dw_get(path):
     req = urllib.request.Request(DATAWISE + path, headers=DW_HEADERS)
     last = None
-    for _ in range(RETRIES):
+    for i in range(RETRIES + 2):
         try:
             with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
                 return json.loads(r.read())
         except Exception as e:  # noqa: BLE001
             last = e
+            if i < RETRIES + 1:
+                time.sleep(3 * (i + 1))     # 403/429 חולפים אצל datawise: ממתינים ומנסים שוב (3, 6, 9, 12 שניות)
     raise RuntimeError(f"datawise {path}: {last}")
 
 
