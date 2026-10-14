@@ -1155,14 +1155,14 @@ function renderForm() {
       </div>
 
       <div id="form-rest" style="${(isEdit || noChp || (chpResult && !chpDuplicates().length)) ? "" : "display:none;"}">
-      <div class="field">
+      <div class="field" id="reg-field">
         <label>שם ברשם הרשמי <span id="reg-hint" style="color:var(--light)">${(b.chp_number||"").trim() && !noChp ? "(נמשך מהרשם, לא ניתן לעריכה)" : ""}</span></label>
         <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" ${(b.chp_number||"").trim() && !noChp ? "readonly" : ""}>
       </div>
 
       <div class="field" id="permit-field">
         <label>שם בהיתר עסקה <span style="color:var(--red)">*</span></label>
-        <div class="permit-choice">
+        <div class="permit-choice" id="permit-choice">
           <button type="button" id="pc-reg" class="pc-btn ${permitMode === "reg" ? "on" : ""}" onclick="permitPick('reg')">שם מהרשם<small id="pc-reg-name">${escHtml(b.registrar_name||"")}</small></button>
           <button type="button" id="pc-other" class="pc-btn ${permitMode === "other" ? "on" : ""}" onclick="permitPick('other')">הקלדת שם אחר<small>שם ההיתר שונה מהרשם</small></button>
         </div>
@@ -1745,6 +1745,14 @@ function updateFormGate() {
   }); }
   const bt = document.getElementById("f-biztype");      // סוג עסק: כשמופיע ברשם - לא ניתן לבחירה
   if (bt) { const l = lock && !!bt.value.trim(); bt.readOnly = l; bt.style.background = l ? "#eef3f3" : ""; if (l) bt.removeAttribute("list"); else bt.setAttribute("list", "biztype-list"); }
+  const rf = document.getElementById("reg-field"), pcb = document.getElementById("permit-choice"), pw = document.getElementById("permit-input-wrap"), pf = document.getElementById("f-permit");
+  if (noChp) {                       // עסק בלי ח.פ.: שם אחד בלבד (נשמר גם כשם הרשם)
+    if (permitMode !== "other") { permitMode = "other"; if (pf && !pf.value.trim()) pf.value = (reg?.value || "").trim(); }
+    if (rf) rf.style.display = "none"; if (pcb) pcb.style.display = "none"; if (pw) pw.style.display = "";
+  } else {
+    if (rf) rf.style.display = ""; if (pcb) pcb.style.display = "";
+    if (pw) pw.style.display = permitMode === "other" ? "" : "none";
+  }
   updatePermitGate();
 }
 function showChpPart() {                          // מציג את החלק המתאים: שני הכרטיסים / פס "בלי ח.פ."
@@ -1898,7 +1906,7 @@ function chpCheckDigitOk(n) {
 }
 function lookupOutHtml() {
   const typed = (document.getElementById("chp")?.value || "").trim();
-  const bad = !noChp && !chpCheckDigitOk(typed) ? "ספרת הביקורת של המספר אינה תקינה - בדוק אם הוקלד נכון" : "";
+  const bad = !noChp && !chpCheckDigitOk(typed) ? "המספר אינו תקין" : "";
   return `<p class="lookup-error">${chpError ? "⚠ "+escHtml(chpError) : ""}</p>${bad ? `<p class="lookup-error">⚠ ${bad}</p>` : ""}
     ${chpResult ? `
       <div class="lookup-result" ${!editBiz?.id && chpDuplicates().length ? `style="cursor:pointer;" onclick="openFormSkip('${chpDuplicates()[0].id}')"` : ""}>
@@ -2227,8 +2235,9 @@ async function runTaseSync(scope = "bonds") {
 
 
 async function doSave() {
-  const regName    = (document.getElementById("f-reg")?.value    || "").trim();
+  let regName    = (document.getElementById("f-reg")?.value    || "").trim();
   let permitName = (document.getElementById("f-permit")?.value || "").trim();
+  if (noChp) regName = permitName;                                     // בלי ח.פ.: שם אחד, נשמר בשני השדות
   if (permitMode === "reg") permitName = regName;                      // "שם מהרשם"
   else if (!editBiz?.id && permitName.length < 4) { const e0 = document.getElementById("form-err"); if (e0) e0.textContent = "יש לבחור שם להיתר עסקה: שם מהרשם, או שם אחר (4 תווים לפחות)"; return; }
   const errEl = document.getElementById("form-err");
