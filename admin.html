@@ -792,6 +792,8 @@
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
   .idx-box { margin-inline-start:auto; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
   .idx-head { font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .idx-pie { display:flex; gap:12px; align-items:center; }
+  .idx-line i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-inline-end:6px; }
   .idx-line span { color:var(--muted); font-size:12px; }
   .chg-bar { display:flex; gap:8px; margin-bottom:10px; }
   .chg-bar .btn-ghost:disabled { opacity:.4; cursor:default; }
@@ -2137,6 +2139,13 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
 
 // ── כיסוי מדד: כמה אחוז מחברות המדד (ברירת מחדל ת"א-SME60) יש להן היתר עסקה, וכמה היתר פרטי ──
 let idxBonds = null; let idxSel = "tb60"; const idxCache = {}; let idxLoading = "";
+// עוגה בתוך עוגה: טבעת חיצונית = אחוז עם היתר עסקה, טבעת פנימית = אחוז עם היתר פרטי (מתוך כלל המדד)
+function idxPie(permit, priv, note1, note2) {
+  const ring = (r, w, pct, color) => { const c = 2 * Math.PI * r; return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="#e6ecec" stroke-width="${w}"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="${w}" stroke-dasharray="${(c * Math.min(pct, 100) / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/>`; };
+  return `<div class="idx-pie"><svg viewBox="0 0 100 100" width="96" height="96">${ring(42, 13, permit, "#274d5b")}${ring(25, 13, priv, "#1fa59a")}</svg>
+    <div><div class="idx-line"><i style="background:#274d5b"></i><b>${permit}%</b> עם היתר עסקה<br><span>${note1}</span></div>
+    <div class="idx-line" style="margin-top:6px;"><i style="background:#1fa59a"></i><b>${priv}%</b> עם היתר פרטי<br><span>${note2}</span></div></div></div>`;
+}
 function idxBoxHtml() {
   const sel = `<select onchange="idxPick(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">${[["tb60","תל בונד 60 (אג\"ח)"],["147","ת\"א-SME60"],["137","ת\"א-125"],["143","ת\"א-90"],["142","ת\"א-35"]].map(([v,l]) => `<option value="${v}" ${v===idxSel?"selected":""}>${l}</option>`).join("")}</select>`;
   const d = idxCache[idxSel];
@@ -2148,14 +2157,14 @@ function idxBoxHtml() {
     const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
     const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
-    body = `<div class="idx-line"><b>${pc(wsum(hit))}%</b> עם היתר עסקה <span>(${hit.length} מתוך ${d.securities.length} אג"ח, לפי משקל)</span></div><div class="idx-line"><b>${pc(wsum(prv))}%</b> עם היתר פרטי <span>(${prv.length} אג"ח)</span></div>`;
+    body = idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח, לפי משקל`, `${prv.length} אג"ח`);
   }
   else {
     const total = d.companies.length, tw = d.companies.reduce((x, c) => x + (c.weight || 0), 0) || 1;      // מדד מניות: לפי משקל החברה במדד
     const hits = d.companies.map(c => c.hp ? existingBiz(c.hp) : []);
     const idxs = hits.map((l, i) => i).filter(i => hits[i].length), pidx = idxs.filter(i => hits[i].some(b => b.visibility === "פרטי" || b.visibility === "רק פרטי"));
     const pc = l => Math.round(l.reduce((x, i) => x + (d.companies[i].weight || 0), 0) * 1000 / tw) / 10;
-    body = `<div class="idx-line"><b>${pc(idxs)}%</b> עם היתר עסקה <span>(${idxs.length} מתוך ${total} חברות, לפי משקל)</span></div><div class="idx-line"><b>${pc(pidx)}%</b> עם היתר פרטי <span>(${pidx.length} חברות)</span></div>`;
+    body = idxPie(pc(idxs), pc(pidx), `${idxs.length} מתוך ${total} חברות, לפי משקל`, `${pidx.length} חברות`);
   }
   return `<div class="idx-box"><div class="idx-head">חברות במדד ${sel}</div>${body}</div>`;
 }
