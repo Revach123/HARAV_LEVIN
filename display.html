@@ -576,6 +576,7 @@ const tabs = document.getElementById("navTabs");
 function refresh() {
   [...tabs.children].forEach(b => b.classList.toggle("active", b.dataset.type === current));
   mountList(container, current);
+  postNavSpec();
 }
 tabs.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -589,7 +590,32 @@ function reportHeight() {
   const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
   window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
 }
-new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); postHscroll(); }).observe(document.body);
+new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); postHscroll(); postNavSpec(); }).observe(document.body);
+
+// ── לשוניות הניווט (חברות/אג"ח, פרטי/כללי) נשארות צמודות בגלילה: ה-iframe שולח לעמוד האב את מבנה הלשוניות (embed.js בונה מהן סרגל
+// position:fixed, כמו כותרת הטבלה), ולחיצה בסרגל חוזרת לכאן כהודעה setType.
+let lastNav = "";
+function postNavSpec() {
+  if (window.parent === window || params.get("nav") === "0") return;
+  const r = tabs.getBoundingClientRect(); if (!r.height) return;
+  const bs = getComputedStyle(document.body), cs = getComputedStyle(tabs);
+  const spec = {
+    source: "harav-levin", type: "nav", top: Math.round(r.top + window.scrollY), h: Math.round(r.height),
+    contentH: Math.ceil(document.documentElement.getBoundingClientRect().height),
+    bg: /rgba\(0, 0, 0, 0\)|transparent/.test(bs.backgroundColor) ? "#fff" : bs.backgroundColor,
+    border: cs.borderBottomWidth + " solid " + cs.borderBottomColor,
+    tabs: [...tabs.children].map(b => { const c = getComputedStyle(b);
+      return { t: b.textContent.trim(), type: b.dataset.type, on: b.classList.contains("active"), color: c.color, bg: c.backgroundColor,
+               fw: c.fontWeight, fs: c.fontSize, bt: c.borderTopWidth + " solid " + c.borderTopColor }; }),
+  };
+  const key = JSON.stringify(spec); if (key === lastNav) return; lastNav = key;
+  window.parent.postMessage(spec, "*");
+}
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setType" || !VALID.includes(d.value)) return;
+  current = d.value; refresh();
+});
 
 // ── כותרת קבועה יציבה (גרסה 3): ה-iframe שולח לעמוד האב את מבנה שורת הכותרת, ועמוד האב בונה ממנה סרגל position:fixed
 // "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.

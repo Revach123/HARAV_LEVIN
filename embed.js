@@ -10,7 +10,7 @@ var f=document.getElementById("hl-frame");
 if(!f){f=document.createElement("iframe");f.id="hl-frame";f.style.cssText="width:100%;height:700px;border:0";f.setAttribute("scrolling","no");if(sc&&sc.parentNode){sc.parentNode.insertBefore(f,sc);}else{document.body.appendChild(f);}}
 var P=decodeURIComponent(location.pathname),TY=(sc&&sc.getAttribute("data-type"))||(((P.indexOf("חוב")!==-1||P.indexOf("אגח")!==-1)?"bonds":"companies")+"-"+(P.indexOf("כללי")!==-1?"general":"private"));
 f.src=O+"/display.html?type="+TY;
-var OFFSET=Number(sc&&sc.getAttribute("data-offset"))||140,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
+var OFFSET=Number(sc&&sc.getAttribute("data-offset"))||140,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -20,6 +20,16 @@ d.style.left=c.x0+"px";d.style.width=c.w+"px";d.style.height=spec.h+"px";d.style
 t.style.cssText="white-space:normal;line-height:1.25;overflow-wrap:anywhere;max-width:100%";t.style.textAlign=c.a;
 d.style.color=spec.color;d.style.fontWeight=spec.fw;d.style.fontSize=spec.fs;d.style.borderLeft=c.bl;t.textContent=c.t;d.appendChild(t);bi.appendChild(d);}
 move();
+}
+function buildNav(){
+if(!nbar){nbar=document.createElement("div");nbar.id="hl-nav";nbar.style.cssText="position:fixed;z-index:100;display:none;direction:rtl;box-sizing:border-box;display:none";document.body.appendChild(nbar);}
+nbar.innerHTML="";nbar.style.background=nav.bg;nbar.style.borderBottom=nav.border;nbar.style.height=nav.h+"px";nbar.style.display="none";nbar.style.flexWrap="nowrap";
+for(var i=0;i!==nav.tabs.length;i=i+1){var c=nav.tabs[i],b=document.createElement("button");b.type="button";b.textContent=c.t;
+b.style.cssText="flex:1;min-width:0;border:0;cursor:pointer;font-family:inherit;padding:0 .5rem;box-sizing:border-box;height:100%;overflow:hidden;white-space:normal;line-height:1.2";
+b.style.color=c.color;b.style.background=c.bg;b.style.fontWeight=c.fw;b.style.fontSize=c.fs;b.style.borderTop=c.bt;
+b.setAttribute("data-type",c.type);nbar.appendChild(b);}
+nbar.onclick=function(e){var el=e.target;while(el&&el!==nbar&&!el.getAttribute("data-type")){el=el.parentNode;}
+if(el&&el!==nbar){f.contentWindow.postMessage({source:"harav-parent",type:"setType",value:el.getAttribute("data-type")},O);}};
 }
 function setUpd(t){
 var tb=document.querySelector(".fusion-page-title-bar");if(!tb){return false;}
@@ -43,6 +53,7 @@ window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
 var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
 if(d.type==="resize"){f.style.height=d.height+"px";}
+if(d.type==="nav"){nav=d;buildNav();}
 if(d.type==="header"){spec=d;build();f.contentWindow.postMessage({source:"harav-parent",type:"v5"},O);}
 if(d.type==="hscroll"){hs=d;buildSb();}
 if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"harav-parent",type:"updShown"},O);}}
@@ -50,10 +61,14 @@ if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"h
 function tick(){
 if(!f.offsetWidth){if(bar){bar.style.display="none";}if(sb){sb.style.display="none";}window.requestAnimationFrame(tick);return;}
 var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
+var OH=OFFSET;
+if(nav&&nbar){var nt=r.top+nav.top,non=Math.sign(OFFSET-nt)===1;if(non){non=Math.sign(nt+nav.contentH-nav.h-OFFSET)===1;}
+if(non){non=wide;}
+if(non){nbar.style.display="flex";nbar.style.top=OFFSET+"px";nbar.style.left=r.left+"px";nbar.style.width=r.width+"px";OH=OFFSET+nav.h;}else{nbar.style.display="none";}}
 if(spec){var top=r.top+spec.tableTop;
-var show=Math.sign(OFFSET-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OFFSET)===1;}
+var show=Math.sign(OH-top)===1;if(show){show=Math.sign(top+spec.tableH-spec.h-OH)===1;}
 if(show){show=wide;}
-if(show){bar.style.display="block";bar.style.top=OFFSET+"px";bar.style.left=r.left+"px";bar.style.width=r.width+"px";}else{bar.style.display="none";}}
+if(show){bar.style.display="block";bar.style.top=OH+"px";bar.style.left=r.left+"px";bar.style.width=r.width+"px";}else{bar.style.display="none";}}
 if(hs){if(sb){var t2=r.top+hs.top,sh=Math.sign(hs.sw-hs.cw-1)===1;
 if(sh){sh=Math.sign(window.innerHeight-40-t2)===1;}
 if(sh){sh=Math.sign(t2+hs.h-window.innerHeight)===1;}
