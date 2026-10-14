@@ -55,6 +55,8 @@ def main():
     ap.add_argument("--ocr-dir", default="ocr_text")
     ap.add_argument("--out", default="private_wording.csv")
     ap.add_argument("--check-out", default="type_check.csv")
+    ap.add_argument("--sig-private-min", type=float, default=0.03, help="נוסח נחשב 'נוסח פרטי' אם הוא מופיע בלפחות שיעור זה מהמסמכים הפרטיים")
+    ap.add_argument("--sig-general-max", type=float, default=0.01, help="...ובלא יותר משיעור זה מהכלליים")
     ap.add_argument("--similar", type=float, default=0.72, help="סף דמיון לקיבוץ משפטים / התאמה")
     a = ap.parse_args()
 
@@ -108,8 +110,8 @@ def main():
     for c in clusters[:6]:
         print(f"   ב-{len(c['P'])}/{len(P)} פרטיים, ב-{len(c['G'])}/{len(G)} כלליים:  ...{c['rep']}...")
 
-    # נוסח פרטי = נוסחים שנמצאים ב-15%+ מהפרטיים ובפחות מ-5% מהכלליים
-    sig = [c["rep"] for c in clusters if len(c["P"]) / len(P) >= 0.15 and len(c["G"]) / max(1, len(G)) < 0.05]
+    # נוסח פרטי = נוסחים שנמצאים בשיעור מינימלי מהפרטיים ובשיעור קטן מאוד מהכלליים
+    sig = [c["rep"] for c in clusters if len(c["P"]) / len(P) >= a.sig_private_min and len(c["G"]) / max(1, len(G)) <= a.sig_general_max]
     print(f"נוסחי היתר פרטי מבדילים: {len(sig)}")
     bad, ok = [], 0
     for d in docs:
