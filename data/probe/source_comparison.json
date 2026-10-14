@@ -1,4 +1,338 @@
 {
+ "company_id_check": {
+  "datawise_companies": 363,
+  "market_items_without_CompanyId": 0,
+  "companies_with_market_CompanyId": 323,
+  "companies_with_maya_id_from_sweep": 1809,
+  "agree_with_maya_sweep": 323,
+  "differ_from_maya_sweep": 0,
+  "differ_examples": [],
+  "companies_without_market_CompanyId": 40,
+  "of_which_approved": 13,
+  "of_which_maya_id_known": 40,
+  "examples_without": [
+   {
+    "chp": "2624970",
+    "company": "אלעד קנדה ריאלטי אינק.",
+    "approved": false,
+    "maya_ids": [
+     1753
+    ]
+   },
+   {
+    "chp": "500102868",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2388
+    ]
+   },
+   {
+    "chp": "510291750",
+    "company": "ישראייר גרופ בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1238
+    ]
+   },
+   {
+    "chp": "510687403",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1666
+    ]
+   },
+   {
+    "chp": "512781386",
+    "company": "גפן מגורים והתחדשות בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1532
+    ]
+   },
+   {
+    "chp": "513502229",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1191
+    ]
+   },
+   {
+    "chp": "514160530",
+    "company": "רב בריח (08) תעשיות בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1949
+    ]
+   },
+   {
+    "chp": "514189596",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1755
+    ]
+   },
+   {
+    "chp": "515099018",
+    "company": "ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     2386
+    ]
+   },
+   {
+    "chp": "515333128",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1975
+    ]
+   },
+   {
+    "chp": "515759777",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2439
+    ]
+   },
+   {
+    "chp": "516041118",
+    "company": "אגד חברה לתחבורה בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     2422
+    ]
+   },
+   {
+    "chp": "516100120",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2424
+    ]
+   },
+   {
+    "chp": "516100153",
+    "company": "מימון ישיר נדל\"ן ומשכנתאות בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     2445
+    ]
+   },
+   {
+    "chp": "516214871",
+    "company": "אלומה קרן תשתיות (2020) בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1978
+    ]
+   },
+   {
+    "chp": "516223864",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1808
+    ]
+   },
+   {
+    "chp": "516301843",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1882
+    ]
+   },
+   {
+    "chp": "516556545",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2419
+    ]
+   },
+   {
+    "chp": "517014023",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2460
+    ]
+   },
+   {
+    "chp": "517112074",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2499
+    ]
+   },
+   {
+    "chp": "517112686",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2539
+    ]
+   },
+   {
+    "chp": "517182549",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2579
+    ]
+   },
+   {
+    "chp": "520000522",
+    "company": "בנק מזרחי טפחות בע\"מ",
+    "approved": false,
+    "maya_ids": [
+     695
+    ]
+   },
+   {
+    "chp": "520004078",
+    "company": "הראל חברה לביטוח בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1175
+    ]
+   },
+   {
+    "chp": "520007030",
+    "company": "בנק דיסקונט לישראל בע\"מ",
+    "approved": false,
+    "maya_ids": [
+     691
+    ]
+   },
+   {
+    "chp": "520021874",
+    "company": "כלל תעשיות בע\"מ",
+    "approved": false,
+    "maya_ids": [
+     608
+    ]
+   },
+   {
+    "chp": "520023474",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     634
+    ]
+   },
+   {
+    "chp": "520037664",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     318
+    ]
+   },
+   {
+    "chp": "520038936",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2030
+    ]
+   },
+   {
+    "chp": "520039900",
+    "company": "מיה דיינמיקס מוטורס בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     494
+    ]
+   },
+   {
+    "chp": "520041674",
+    "company": "גילת טלקום גלובל בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1006
+    ]
+   },
+   {
+    "chp": "520041690",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2202
+    ]
+   },
+   {
+    "chp": "520042185",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1315
+    ]
+   },
+   {
+    "chp": "520042763",
+    "company": "איסתא ליינס חברת הנסיעות של הסטודנטים בישראל",
+    "approved": true,
+    "maya_ids": [
+     1036
+    ]
+   },
+   {
+    "chp": "520044298",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1082
+    ]
+   },
+   {
+    "chp": "520044439",
+    "company": "ביטוח ישיר - השקעות פיננסיות בע\"מ",
+    "approved": true,
+    "maya_ids": [
+     1089
+    ]
+   },
+   {
+    "chp": "540333101",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2462
+    ]
+   },
+   {
+    "chp": "550016091",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     1721
+    ]
+   },
+   {
+    "chp": "550222764",
+    "company": "פטרוטקס",
+    "approved": true,
+    "maya_ids": [
+     1369
+    ]
+   },
+   {
+    "chp": "880326081",
+    "company": "",
+    "approved": false,
+    "maya_ids": [
+     2250
+    ]
+   }
+  ]
+ },
  "sizes": {
   "maya": 1034,
   "datawise": 1035,
