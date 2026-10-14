@@ -1476,7 +1476,7 @@ function renderSearch() {
       <h2>חיפוש במאגר</h2>
       <button class="btn-ghost" onclick="setView('home')">🏠 תפריט ראשי</button>
     </div>
-    <div class="gs-box"><input id="gs" type="search" placeholder="שם, ח.פ., מספר נייר, הערה... (מתקן שגיאות כתיב)" value="${escHtml(gsQuery)}" autocomplete="off"></div>
+    <div class="gs-box"><input id="gs" type="search" placeholder="שם, ח.פ., מספר נייר, הערה..." value="${escHtml(gsQuery)}" autocomplete="off"></div>
     <div id="gs-results"></div>`;
 }
 
@@ -1544,7 +1544,7 @@ function gsCard(rec, kind, tokens) {
 function runGlobalSearch() {
   const out = document.getElementById("gs-results"); if (!out) return;
   const tokens = gsNorm(gsQuery).split(" ").filter(Boolean);
-  if (!tokens.length) { out.innerHTML = `<p class="gs-info">הקלד מילה או מספר. החיפוש כולל את כל השדות של החברות והאג"ח, ומתקן שגיאות כתיב קלות.</p>`; return; }
+  if (!tokens.length) { out.innerHTML = ""; return; }
   const rank = (arr, kind) => arr.map(r => [gsMatch(r, tokens), r]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).map(x => x[1]);
   const biz = rank(businesses, "biz"), bonds = gsBonds ? rank(gsBonds, "bond") : [];
   const LIM = 60;
