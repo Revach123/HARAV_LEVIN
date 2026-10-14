@@ -1,6 +1,6 @@
 {
  "updated": "2026-10-14",
- "count": 668,
+ "count": 684,
  "columns": [
   "security_id",
   "security_name",
@@ -23,6 +23,7 @@
   "base_indices",
   "is_tradable",
   "first_seen",
+  "offering_status",
   "midroog_rating",
   "maalot_rating",
   "ytm_gross"
@@ -50,6 +51,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -76,6 +78,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -102,6 +105,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -128,6 +132,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -154,6 +159,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -180,6 +186,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -206,6 +213,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -232,6 +240,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -258,6 +267,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -284,6 +294,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -310,6 +321,7 @@
    "base_indices": 107.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -336,6 +348,7 @@
    "base_indices": 104.8,
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -362,6 +375,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -388,6 +402,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -414,7 +429,35 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - אג'לן קומרשייל ריט הולדינגס אינק",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "אג'לן קומרשייל ריט הולדינגס אינק",
+   "company": "אג'לן קומרשייל ריט הולדינגס אינק",
+   "chp_number": "2352046",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
   },
@@ -440,6 +483,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": 5.37
@@ -466,6 +510,7 @@
    "base_indices": 104.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -492,6 +537,7 @@
    "base_indices": 100.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -518,6 +564,7 @@
    "base_indices": 100.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -544,6 +591,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -570,6 +618,7 @@
    "base_indices": 106.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -596,6 +645,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -622,6 +672,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -648,6 +699,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 7.7
@@ -674,6 +726,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -700,6 +753,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -726,6 +780,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -752,6 +807,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -778,6 +834,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -804,6 +861,7 @@
    "base_indices": 100.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -830,6 +888,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -856,6 +915,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -882,6 +942,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -908,6 +969,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -934,6 +996,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -960,6 +1023,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -986,6 +1050,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1012,6 +1077,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1038,6 +1104,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1064,6 +1131,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1090,6 +1158,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1116,6 +1185,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -1142,6 +1212,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1168,6 +1239,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1194,6 +1266,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": 6.33
@@ -1220,6 +1293,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1246,6 +1320,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1272,6 +1347,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1298,6 +1374,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1324,6 +1401,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1350,6 +1428,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1376,6 +1455,7 @@
    "base_indices": 101.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1402,6 +1482,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1428,6 +1509,7 @@
    "base_indices": 107.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1454,6 +1536,7 @@
    "base_indices": 108.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1480,6 +1563,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -1506,6 +1590,7 @@
    "base_indices": 100.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -1532,6 +1617,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1558,6 +1644,7 @@
    "base_indices": 3.6255,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -1584,6 +1671,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -1610,6 +1698,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -1636,6 +1725,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -1662,6 +1752,7 @@
    "base_indices": 106.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -1688,6 +1779,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1714,6 +1806,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1740,6 +1833,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1766,6 +1860,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - אלון רבוע כחול ישראל בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "אלון רבוע כחול ישראל בע\"מ",
+   "company": "אלון רבוע כחול ישראל בע\"מ",
+   "chp_number": "520042847",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1792,6 +1914,7 @@
    "base_indices": 102.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1818,6 +1941,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1844,6 +1968,7 @@
    "base_indices": 104.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1870,6 +1995,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1896,6 +2022,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1922,6 +2049,7 @@
    "base_indices": 107.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1948,6 +2076,7 @@
    "base_indices": 104.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -1974,6 +2103,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2000,6 +2130,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2026,6 +2157,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2052,6 +2184,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2078,6 +2211,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -2104,6 +2238,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2130,6 +2265,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2156,6 +2292,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2182,6 +2319,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2208,6 +2346,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2234,6 +2373,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2260,6 +2400,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -2286,6 +2427,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -2312,6 +2454,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2338,6 +2481,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2364,6 +2508,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2390,6 +2535,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -2416,6 +2562,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -2442,6 +2589,7 @@
    "base_indices": 101.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2468,6 +2616,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2494,6 +2643,7 @@
    "base_indices": 106.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -2520,6 +2670,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2546,6 +2697,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2572,6 +2724,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2598,6 +2751,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": 9.49
@@ -2624,6 +2778,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2650,6 +2805,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": 7.19
@@ -2676,6 +2832,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": 7.6
@@ -2702,6 +2859,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2728,6 +2886,7 @@
    "base_indices": 101.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2754,6 +2913,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2780,6 +2940,7 @@
    "base_indices": 99.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2806,6 +2967,7 @@
    "base_indices": 105.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2832,6 +2994,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -2858,6 +3021,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -2884,6 +3048,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 5.44
@@ -2910,6 +3075,7 @@
    "base_indices": 104.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2936,6 +3102,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2962,6 +3129,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": 6.0
@@ -2988,6 +3156,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": 7.17
@@ -3014,6 +3183,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3040,6 +3210,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "A2.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": 7200249,
+   "security_name": "אנלייט אנר אג ג",
+   "symbol": "אנלט.ה3",
+   "isin": "IL0072002491",
+   "security_type": "אג\"ח להמרה",
+   "asset_class": "אג\"ח להמרה",
+   "issuer_name": "אנלייט אנרגיה מתחדשת בע\"מ",
+   "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+   "chp_number": "520041146",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "",
+   "redemption_date": "01/09/2028",
+   "annual_interest": "0.75",
+   "linkage": "לא צמוד",
+   "linkage_type": "",
+   "last_price": 112.8,
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": true,
+   "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3066,6 +3264,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -3092,6 +3291,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3118,6 +3318,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3144,6 +3345,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -3170,6 +3372,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3196,6 +3399,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -3222,6 +3426,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -3248,6 +3453,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -3274,6 +3480,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3300,6 +3507,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3326,6 +3534,7 @@
    "base_indices": 105.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3352,6 +3561,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3378,6 +3588,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3404,6 +3615,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3430,6 +3642,7 @@
    "base_indices": 104.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3456,6 +3669,7 @@
    "base_indices": 107.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3482,6 +3696,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3508,6 +3723,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3534,6 +3750,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3560,6 +3777,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3586,6 +3804,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -3612,6 +3831,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3638,6 +3858,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3664,6 +3885,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3690,6 +3912,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3716,6 +3939,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3742,6 +3966,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3768,6 +3993,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3794,6 +4020,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3820,6 +4047,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3846,6 +4074,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3872,6 +4101,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3898,6 +4128,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3924,6 +4155,7 @@
    "base_indices": 108.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3950,6 +4182,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -3976,6 +4209,7 @@
    "base_indices": 99.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -4002,6 +4236,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -4028,6 +4263,7 @@
    "base_indices": 100.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -4054,6 +4290,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -4080,6 +4317,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -4106,6 +4344,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4132,6 +4371,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4158,6 +4398,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4184,6 +4425,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4210,6 +4452,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4236,6 +4479,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4262,6 +4506,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4288,6 +4533,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4314,6 +4560,7 @@
    "base_indices": 100.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4340,6 +4587,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4366,6 +4614,7 @@
    "base_indices": 100.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4392,6 +4641,7 @@
    "base_indices": 100.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4418,6 +4668,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4444,6 +4695,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4470,6 +4722,7 @@
    "base_indices": 101.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4496,6 +4749,7 @@
    "base_indices": 100.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4522,6 +4776,7 @@
    "base_indices": 100.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4548,6 +4803,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4574,6 +4830,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4600,6 +4857,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4626,6 +4884,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4652,6 +4911,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4678,6 +4938,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -4704,6 +4965,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4730,6 +4992,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4756,6 +5019,7 @@
    "base_indices": 105.8,
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4782,6 +5046,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4808,6 +5073,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4834,6 +5100,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4860,6 +5127,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4886,6 +5154,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4912,6 +5181,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4938,6 +5208,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4964,6 +5235,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -4990,6 +5262,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5016,6 +5289,7 @@
    "base_indices": 108.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5042,6 +5316,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5068,6 +5343,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5094,6 +5370,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5120,6 +5397,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5146,6 +5424,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5172,6 +5451,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5198,6 +5478,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5224,6 +5505,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5250,6 +5532,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5276,6 +5559,7 @@
    "base_indices": 101.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -5302,6 +5586,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -5328,6 +5613,7 @@
    "base_indices": 108.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -5354,6 +5640,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5380,6 +5667,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5406,6 +5694,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5432,6 +5721,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5458,6 +5748,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5484,6 +5775,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - ג'י טי נדל\"ן בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "ג'י טי נדל\"ן בע\"מ",
+   "company": "ג'י טי נדל\"ן בע\"מ",
+   "chp_number": "515763894",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5510,6 +5829,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5536,6 +5856,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5562,6 +5883,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5588,6 +5910,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5614,6 +5937,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilCCC",
    "ytm_gross": ""
@@ -5640,6 +5964,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - ג'נריישן קפיטל בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "ג'נריישן קפיטל בע\"מ",
+   "company": "ג'נריישן קפיטל בע\"מ",
+   "chp_number": "515846558",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5666,6 +6018,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -5692,6 +6045,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -5718,6 +6072,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -5744,6 +6099,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5770,6 +6126,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5796,6 +6153,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5822,6 +6180,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5848,6 +6207,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5874,6 +6234,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -5900,6 +6261,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5926,6 +6288,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5952,6 +6315,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -5978,6 +6342,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -6004,6 +6369,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -6030,6 +6396,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6056,6 +6423,7 @@
    "base_indices": 3.615,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6082,6 +6450,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6108,6 +6477,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6134,6 +6504,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6160,6 +6531,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - גשם למשתכן בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "גשם למשתכן בע\"מ",
+   "company": "גשם למשתכן בע\"מ",
+   "chp_number": "515541415",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6186,6 +6585,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6212,6 +6612,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6238,6 +6639,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -6264,6 +6666,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -6290,6 +6693,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -6316,6 +6720,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6342,6 +6747,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6368,6 +6774,7 @@
    "base_indices": 100.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6394,6 +6801,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6420,6 +6828,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6446,6 +6855,7 @@
    "base_indices": 104.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -6472,6 +6882,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6498,6 +6909,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6524,6 +6936,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6550,6 +6963,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6576,6 +6990,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6602,6 +7017,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -6628,6 +7044,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6654,6 +7071,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6680,6 +7098,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -6706,6 +7125,7 @@
    "base_indices": 107.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -6732,6 +7152,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6758,6 +7179,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6784,6 +7206,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6810,6 +7233,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6836,6 +7260,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6862,6 +7287,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -6888,6 +7314,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -6914,7 +7341,35 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - החברה לישראל בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "החברה לישראל בע\"מ",
+   "company": "החברה לישראל בע\"מ",
+   "chp_number": "520028010",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
   },
@@ -6940,6 +7395,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -6966,6 +7422,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -6992,6 +7449,7 @@
    "base_indices": 106.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7018,6 +7476,7 @@
    "base_indices": 107.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7044,6 +7503,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7070,7 +7530,62 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa2.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - הפניקס גיוסי הון (2009) בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "הפניקס גיוסי הון (2009) בע\"מ",
+   "company": "הפניקס גיוסי הון (2009) בע\"מ",
+   "chp_number": "514290345",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - הפניקס גיוסי הון (2009) בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "הפניקס גיוסי הון (2009) בע\"מ",
+   "company": "הפניקס גיוסי הון (2009) בע\"מ",
+   "chp_number": "514290345",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
   },
@@ -7096,6 +7611,7 @@
    "base_indices": 98.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7122,6 +7638,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.4
@@ -7148,6 +7665,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": 4.31
@@ -7174,6 +7692,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.09
@@ -7200,6 +7719,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -7226,6 +7746,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.96
@@ -7252,6 +7773,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7278,6 +7800,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7304,6 +7827,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7330,6 +7854,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7356,6 +7881,7 @@
    "base_indices": 100.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7382,6 +7908,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7408,6 +7935,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7434,6 +7962,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.79
@@ -7460,6 +7989,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.7
@@ -7486,6 +8016,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.69
@@ -7512,6 +8043,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.77
@@ -7538,6 +8070,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.66
@@ -7564,6 +8097,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 2.25
@@ -7590,6 +8124,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": 3.82
@@ -7616,6 +8151,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.04
@@ -7642,6 +8178,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.62
@@ -7668,6 +8205,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.69
@@ -7694,6 +8232,7 @@
    "base_indices": 102.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -7720,6 +8259,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 4.7
@@ -7746,6 +8286,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 5.43
@@ -7772,6 +8313,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7798,6 +8340,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7824,6 +8367,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7850,6 +8394,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7876,6 +8421,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7902,6 +8448,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7928,6 +8475,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7954,6 +8502,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7980,6 +8529,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8006,6 +8556,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8032,6 +8583,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8058,6 +8610,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8084,6 +8637,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8110,6 +8664,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8136,6 +8691,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8162,6 +8718,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8188,6 +8745,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8214,6 +8772,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8240,6 +8799,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": 2.68
@@ -8266,6 +8826,7 @@
    "base_indices": 103.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -8292,6 +8853,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -8318,6 +8880,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -8344,6 +8907,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -8370,6 +8934,7 @@
    "base_indices": 100.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -8396,6 +8961,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -8422,6 +8988,7 @@
    "base_indices": 107.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -8448,6 +9015,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8474,6 +9042,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8500,6 +9069,7 @@
    "base_indices": 99.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8526,6 +9096,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8552,6 +9123,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8578,6 +9150,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8604,6 +9177,7 @@
    "base_indices": 104.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8630,6 +9204,7 @@
    "base_indices": 104.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8656,6 +9231,7 @@
    "base_indices": 102.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8682,6 +9258,7 @@
    "base_indices": 102.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8708,6 +9285,7 @@
    "base_indices": 103.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8734,6 +9312,7 @@
    "base_indices": 103.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8760,6 +9339,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8786,6 +9366,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8812,6 +9393,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8838,6 +9420,7 @@
    "base_indices": 101.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -8864,6 +9447,7 @@
    "base_indices": 3.34,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8890,6 +9474,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8916,6 +9501,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8942,6 +9528,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8968,6 +9555,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8994,6 +9582,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9020,6 +9609,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9046,6 +9636,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9072,6 +9663,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9098,6 +9690,7 @@
    "base_indices": 101.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -9124,6 +9717,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -9150,6 +9744,7 @@
    "base_indices": 107.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -9176,6 +9771,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -9202,6 +9798,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9228,6 +9825,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9254,6 +9852,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -9280,6 +9879,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9306,6 +9906,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9332,6 +9933,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9358,6 +9960,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9384,6 +9987,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9410,6 +10014,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9436,6 +10041,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9462,6 +10068,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9488,6 +10095,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -9514,6 +10122,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -9540,6 +10149,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -9566,6 +10176,7 @@
    "base_indices": 99.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9592,6 +10203,7 @@
    "base_indices": 100.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9618,6 +10230,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9644,6 +10257,7 @@
    "base_indices": 101.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9670,6 +10284,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9696,6 +10311,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9722,6 +10338,7 @@
    "base_indices": 108.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9748,6 +10365,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9774,6 +10392,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9800,6 +10419,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -9826,6 +10446,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9852,6 +10473,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -9878,6 +10500,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -9904,6 +10527,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9930,6 +10554,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 5.57
@@ -9956,6 +10581,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -9982,6 +10608,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -10008,6 +10635,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10034,6 +10662,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10060,6 +10689,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10086,6 +10716,7 @@
    "base_indices": 102.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10112,6 +10743,7 @@
    "base_indices": 99.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10138,6 +10770,7 @@
    "base_indices": 100.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10164,6 +10797,7 @@
    "base_indices": 100.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10190,6 +10824,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10216,6 +10851,7 @@
    "base_indices": 102.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10242,6 +10878,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10268,6 +10905,7 @@
    "base_indices": 99.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10294,6 +10932,7 @@
    "base_indices": 100.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10320,6 +10959,7 @@
    "base_indices": 100.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10346,6 +10986,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10372,6 +11013,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10398,6 +11040,7 @@
    "base_indices": 107.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -10424,8 +11067,36 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - מגוריט ישראל בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "מגוריט ישראל בע\"מ",
+   "company": "מגוריט ישראל בע\"מ",
+   "chp_number": "515434074",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
+   "maalot_rating": "ilBBB+",
    "ytm_gross": ""
   },
   {
@@ -10450,6 +11121,7 @@
    "base_indices": 100.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -10476,6 +11148,7 @@
    "base_indices": 103.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -10502,6 +11175,7 @@
    "base_indices": 105.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -10528,6 +11202,7 @@
    "base_indices": 108.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -10554,6 +11229,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10580,6 +11256,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -10606,6 +11283,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10632,6 +11310,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10658,6 +11337,7 @@
    "base_indices": 103.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10684,6 +11364,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10710,6 +11391,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10736,6 +11418,7 @@
    "base_indices": 108.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10762,6 +11445,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10788,6 +11472,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10814,6 +11499,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10840,6 +11526,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10866,6 +11553,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10892,6 +11580,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10918,6 +11607,7 @@
    "base_indices": 108.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10944,6 +11634,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10970,7 +11661,35 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - מיכל פקדונות",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "מיכל פקדונות",
+   "company": "מיכל פקדונות",
+   "chp_number": "517207239",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
   },
@@ -10996,6 +11715,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11022,6 +11742,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11048,6 +11769,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11074,6 +11796,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11100,6 +11823,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -11126,6 +11850,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -11152,6 +11877,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11178,6 +11904,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11204,6 +11931,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11230,6 +11958,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11256,6 +11985,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11282,6 +12012,7 @@
    "base_indices": 107.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11308,6 +12039,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11334,6 +12066,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11360,6 +12093,7 @@
    "base_indices": 107.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11386,6 +12120,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11412,6 +12147,7 @@
    "base_indices": 108.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11438,6 +12174,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11464,6 +12201,7 @@
    "base_indices": 101.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11490,6 +12228,7 @@
    "base_indices": 98.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11516,6 +12255,7 @@
    "base_indices": 99.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11542,6 +12282,7 @@
    "base_indices": 100.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11568,6 +12309,7 @@
    "base_indices": 100.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11594,6 +12336,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11620,6 +12363,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -11646,6 +12390,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11672,6 +12417,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": 3.59
@@ -11698,6 +12444,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": 3.72
@@ -11724,6 +12471,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": 4.55
@@ -11750,6 +12498,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": 4.66
@@ -11776,6 +12525,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": 4.98
@@ -11802,6 +12552,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11828,6 +12579,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11854,6 +12606,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11880,6 +12633,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11906,6 +12660,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11932,6 +12687,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח להמרה - מצלאוי חברה לבנין בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח להמרה",
+   "asset_class": "אג\"ח להמרה",
+   "issuer_name": "מצלאוי חברה לבנין בע\"מ",
+   "company": "מצלאוי חברה לבנין בע\"מ",
+   "chp_number": "512726712",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11958,6 +12741,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11984,6 +12768,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12010,6 +12795,7 @@
    "base_indices": 101.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12036,6 +12822,7 @@
    "base_indices": 101.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12062,6 +12849,7 @@
    "base_indices": 102.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12088,6 +12876,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12114,6 +12903,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12140,6 +12930,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": 5.35
@@ -12166,6 +12957,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12192,6 +12984,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12218,6 +13011,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12244,6 +13038,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12270,6 +13065,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12296,6 +13092,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12322,6 +13119,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12348,6 +13146,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12374,6 +13173,7 @@
    "base_indices": 102.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12400,6 +13200,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -12426,6 +13227,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12452,6 +13254,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12478,6 +13281,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12504,6 +13308,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -12530,6 +13335,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 5.3
@@ -12556,6 +13362,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -12582,6 +13389,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": 5.47
@@ -12608,6 +13416,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": 5.18
@@ -12634,6 +13443,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12660,6 +13470,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12686,6 +13497,7 @@
    "base_indices": 102.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12712,6 +13524,7 @@
    "base_indices": 104.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -12738,6 +13551,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12764,6 +13578,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12790,6 +13605,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12816,6 +13632,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12842,6 +13659,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12868,6 +13686,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12894,6 +13713,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12920,6 +13740,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12946,6 +13767,7 @@
    "base_indices": 3.765,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12972,6 +13794,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12998,6 +13821,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-11",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13024,6 +13848,34 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - סולאיר אנרגיות מתחדשות בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "סולאיר אנרגיות מתחדשות בע\"מ",
+   "company": "סולאיר אנרגיות מתחדשות בע\"מ",
+   "chp_number": "516046307",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13050,6 +13902,7 @@
    "base_indices": 102.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13076,6 +13929,7 @@
    "base_indices": 0.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13102,6 +13956,7 @@
    "base_indices": 104.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13128,6 +13983,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13154,6 +14010,7 @@
    "base_indices": 99.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -13180,6 +14037,7 @@
    "base_indices": 100.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -13206,6 +14064,7 @@
    "base_indices": 105.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -13232,6 +14091,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13258,6 +14118,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13284,6 +14145,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13310,6 +14172,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13336,6 +14199,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13362,6 +14226,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13388,6 +14253,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13414,6 +14280,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13440,6 +14307,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13466,6 +14334,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13492,6 +14361,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -13518,6 +14388,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -13544,6 +14415,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -13570,6 +14442,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -13596,6 +14469,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -13622,6 +14496,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13648,6 +14523,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13674,6 +14550,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13700,7 +14577,35 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+   "company": "ע.ע. יסודות איתנים ייזום ובניה בע\"מ",
+   "chp_number": "515099018",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
   },
@@ -13726,6 +14631,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13752,6 +14658,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 4.95
@@ -13778,6 +14685,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -13804,6 +14712,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13830,6 +14739,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13856,6 +14766,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13882,6 +14793,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13908,6 +14820,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13934,6 +14847,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13960,6 +14874,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -13986,6 +14901,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14012,6 +14928,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -14038,6 +14955,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -14064,6 +14982,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14090,6 +15009,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14116,6 +15036,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14142,6 +15063,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -14168,6 +15090,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -14194,6 +15117,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -14220,6 +15144,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14246,6 +15171,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14272,6 +15198,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14298,6 +15225,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14324,6 +15252,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14350,6 +15279,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14376,6 +15306,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-14",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14402,6 +15333,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Aa3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14428,6 +15360,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "P-1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14454,6 +15387,34 @@
    "base_indices": 3.377,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - פנטהאוז - חב' לבנין והשקעות בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "פנטהאוז - חב' לבנין והשקעות בע\"מ",
+   "company": "פנטהאוז - חב' לבנין והשקעות בע\"מ",
+   "chp_number": "511400723",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14480,6 +15441,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14506,6 +15468,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilB",
    "ytm_gross": ""
@@ -14532,6 +15495,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilB",
    "ytm_gross": ""
@@ -14558,6 +15522,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": 4.12
@@ -14584,6 +15549,7 @@
    "base_indices": 102.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14610,6 +15576,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14636,6 +15603,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14662,6 +15630,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14688,6 +15657,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14714,6 +15684,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14740,6 +15711,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14766,6 +15738,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14792,6 +15765,7 @@
    "base_indices": 105.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14818,6 +15792,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14844,6 +15819,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14870,6 +15846,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14896,6 +15873,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14922,6 +15900,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14948,6 +15927,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14974,6 +15954,7 @@
    "base_indices": 101.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15000,6 +15981,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15026,6 +16008,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15052,6 +16035,7 @@
    "base_indices": 102.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15078,6 +16062,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15104,6 +16089,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15130,6 +16116,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15156,6 +16143,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15182,6 +16170,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -15208,6 +16197,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -15234,6 +16224,7 @@
    "base_indices": 104.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA",
    "ytm_gross": ""
@@ -15260,6 +16251,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15286,6 +16278,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15312,6 +16305,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15338,6 +16332,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15364,6 +16359,7 @@
    "base_indices": 105.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15390,6 +16386,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15416,6 +16413,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -15442,6 +16440,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15468,6 +16467,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15494,6 +16494,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15520,6 +16521,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15546,6 +16548,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15572,6 +16575,7 @@
    "base_indices": 98.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15598,6 +16602,7 @@
    "base_indices": 101.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15624,6 +16629,7 @@
    "base_indices": 101.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15650,6 +16656,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA+",
    "ytm_gross": ""
@@ -15676,6 +16683,7 @@
    "base_indices": 101.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA+",
    "ytm_gross": ""
@@ -15702,6 +16710,7 @@
    "base_indices": 107.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15728,6 +16737,7 @@
    "base_indices": 103.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15754,6 +16764,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15780,6 +16791,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15806,6 +16818,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15832,6 +16845,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15858,6 +16872,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15884,6 +16899,7 @@
    "base_indices": 105.1,
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "A1.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15910,6 +16926,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "Baa2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15936,6 +16953,7 @@
    "base_indices": 102.4,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -15962,6 +16980,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -15988,6 +17007,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16014,6 +17034,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16040,6 +17061,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16066,6 +17088,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16092,6 +17115,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16118,6 +17142,7 @@
    "base_indices": 103.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -16144,6 +17169,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -16170,6 +17196,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -16196,6 +17223,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -16222,6 +17250,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
    "ytm_gross": ""
@@ -16248,6 +17277,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16274,6 +17304,7 @@
    "base_indices": 99.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -16300,6 +17331,7 @@
    "base_indices": 99.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -16326,6 +17358,7 @@
    "base_indices": 100.2,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -16352,6 +17385,7 @@
    "base_indices": 100.0,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -16378,6 +17412,7 @@
    "base_indices": 108.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilAA",
    "ytm_gross": ""
@@ -16404,6 +17439,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16430,6 +17466,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16456,6 +17493,7 @@
    "base_indices": 108.8,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16482,6 +17520,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A3.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16508,6 +17547,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16534,6 +17574,7 @@
    "base_indices": 100.9,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -16560,6 +17601,7 @@
    "base_indices": 108.7,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -16586,6 +17628,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16612,6 +17655,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16638,6 +17682,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16664,6 +17709,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16690,6 +17736,7 @@
    "base_indices": 101.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "ilAAA",
    "ytm_gross": ""
@@ -16716,6 +17763,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16742,6 +17790,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16768,6 +17817,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16794,6 +17844,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16820,6 +17871,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16846,6 +17898,7 @@
    "base_indices": 104.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16872,6 +17925,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16898,6 +17952,7 @@
    "base_indices": 100.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -16924,6 +17979,7 @@
    "base_indices": 102.3,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -16950,6 +18006,7 @@
    "base_indices": 101.5,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -16976,6 +18033,7 @@
    "base_indices": 103.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17002,6 +18060,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "A2.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17028,6 +18087,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17054,6 +18114,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17080,6 +18141,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17106,6 +18168,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "ilAA+",
    "ytm_gross": ""
@@ -17132,8 +18195,36 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "Aa1.il",
    "maalot_rating": "ilAA+",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - שטרן ורסנו הנדסה בע\"מ",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "שטרן ורסנו הנדסה בע\"מ",
+   "company": "שטרן ורסנו הנדסה בע\"מ",
+   "chp_number": "512084336",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "הנפקה עתידית",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-14",
+   "offering_status": "הנפקה עתידית",
+   "midroog_rating": "",
+   "maalot_rating": "",
    "ytm_gross": ""
   },
   {
@@ -17158,6 +18249,7 @@
    "base_indices": 99.6,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -17184,6 +18276,7 @@
    "base_indices": 100.1,
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -17210,6 +18303,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -17236,6 +18330,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17262,6 +18357,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17288,6 +18384,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17314,6 +18411,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "ilA+",
    "ytm_gross": ""
@@ -17340,6 +18438,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "WR",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17366,6 +18465,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-08",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17392,6 +18492,7 @@
    "base_indices": "",
    "is_tradable": true,
    "first_seen": "2026-10-13",
+   "offering_status": "",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
