@@ -42,15 +42,18 @@ def ocr_page(doc, i, tesseract, dpi):
 
 
 def work(job):
-    aid, path, out_dir, tesseract, dpi = job
+    aid, path, out_dir, tesseract, dpi, prange = job
     dest = os.path.join(out_dir, f"{aid}.txt")
     if os.path.exists(dest):
         return aid, "קיים"
     try:
         doc = fitz.open(path)
-        text = ocr_page(doc, 0, tesseract, dpi)
-        if len(doc) > 1 and not has_valid_hp(text):
-            text += "\n" + ocr_page(doc, 1, tesseract, dpi)
+        if prange:      # מצב עמודים נוספים: קוראים רק את הטווח שנבחר (למשל 2-6), בלי העמוד הראשון
+            text = "\n".join(ocr_page(doc, i, tesseract, dpi) for i in range(prange[0] - 1, min(prange[1], len(doc))))
+        else:
+            text = ocr_page(doc, 0, tesseract, dpi)
+            if len(doc) > 1 and not has_valid_hp(text):
+                text += "\n" + ocr_page(doc, 1, tesseract, dpi)
         doc.close()
     except Exception as e:  # noqa: BLE001
         return aid, f"נכשל: {e}"
@@ -69,6 +72,9 @@ def main():
     ap.add_argument("--dpi", type=int, default=200)
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--pages-range", default="", help="למשל 2-6: לקרוא רק את העמודים האלה (לבדיקת נוסח שנמצא בהמשך המסמך), ולכתוב ל---out-dir נפרד")
+    ap.add_argument("--post-types", default="", help="לעבד רק קבצים מסוגי תוכן אלה (מופרדים בפסיק), למשל privet_ducuments,company")
+    ap.add_argument("--sample-per-type", type=int, default=0, help="לעבד רק N קבצים מכל סוג תוכן (דגימה)")
     a = ap.parse_args()
 
     guid = {r["ID"]: r.get("guid", "") for r in m.read_csv(a.attachments)}
@@ -78,10 +84,25 @@ def main():
         if p and os.path.exists(p):
             path_of[r["attachment_id"]] = p
     rows = [r for r in m.read_csv(a.results) if int(r.get("text_chars") or 0) < 200 and r["attachment_id"] in path_of]
+    if a.post_types:
+        wanted = {x.strip() for x in a.post_types.split(",")}
+        rows = [r for r in rows if r.get("post_type") in wanted]
+    if a.sample_per_type:
+        seen, keep = {}, []
+        for r in rows:
+            k = r.get("post_type", "")
+            if seen.get(k, 0) < a.sample_per_type:
+                seen[k] = seen.get(k, 0) + 1
+                keep.append(r)
+        rows = keep
+    prange = None
+    if a.pages_range:
+        lo, hi = a.pages_range.split("-")
+        prange = (int(lo), int(hi))
     if a.limit:
         rows = rows[:a.limit]
     os.makedirs(a.out_dir, exist_ok=True)
-    jobs = [(r["attachment_id"], path_of[r["attachment_id"]], a.out_dir, a.tesseract, a.dpi) for r in rows]
+    jobs = [(r["attachment_id"], path_of[r["attachment_id"]], a.out_dir, a.tesseract, a.dpi, prange) for r in rows]
     stats = {}
     with Pool(a.workers) as pool:
         for i, (aid, st) in enumerate(pool.imap_unordered(work, jobs), 1):
