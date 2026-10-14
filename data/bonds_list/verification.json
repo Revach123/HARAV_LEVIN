@@ -10,6 +10,12 @@
  "limit": 22,
  "dropped_no_terms": [
   {
+   "security_id": 7200249,
+   "security_name": "אנלייט אנר אג ג",
+   "company": "אנלייט אנרגיה מתחדשת בע\"מ",
+   "chp_number": "520041146"
+  },
+  {
    "security_id": 1142231,
    "security_name": "אפי נכסים אגח ח",
    "company": "אפי נכסים בע\"מ",

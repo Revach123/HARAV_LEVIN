@@ -1,0 +1,783 @@
+{
+ "updated": "2026-10-14",
+ "upcoming": [
+  {
+   "id": 10358,
+   "maya_report_id": 1774418,
+   "company_name": "אינטרגאמא",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774418",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520034380"
+  },
+  {
+   "id": 10300,
+   "maya_report_id": 1768243,
+   "company_name": "חברה לישראל",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1768243",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520028010"
+  },
+  {
+   "id": 10339,
+   "maya_report_id": 1772082,
+   "company_name": "חג'ג' נדל\"ן",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1772082",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520033309"
+  },
+  {
+   "id": 10369,
+   "maya_report_id": 1775421,
+   "company_name": "קרדן נדל\"ן",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775421",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520041005"
+  },
+  {
+   "id": 10329,
+   "maya_report_id": 1771206,
+   "company_name": "מצלאוי",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1771206",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח להמרה",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "512726712"
+  },
+  {
+   "id": 10368,
+   "maya_report_id": 1775393,
+   "company_name": "הפניקס גיוסי הו",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775393",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    },
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "514290345"
+  },
+  {
+   "id": 10353,
+   "maya_report_id": 1774235,
+   "company_name": "מגדלי ים תיכון",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "512719485"
+  },
+  {
+   "id": 10370,
+   "maya_report_id": 1775592,
+   "company_name": "מגוריט",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775592",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": "ilBBB+",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515434074"
+  },
+  {
+   "id": 10364,
+   "maya_report_id": 1775147,
+   "company_name": "ג'נריישן קפיטל",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774937",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515846558"
+  },
+  {
+   "id": 10361,
+   "maya_report_id": 1774751,
+   "company_name": "סולאיר",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774751",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "516046307"
+  },
+  {
+   "id": 10366,
+   "maya_report_id": 1775203,
+   "company_name": "דיפלומט",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775200",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "510400740"
+  },
+  {
+   "id": 10128,
+   "maya_report_id": 1748228,
+   "company_name": "בוליגו",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1748228",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח להמרה",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "514766195"
+  },
+  {
+   "id": 10371,
+   "maya_report_id": 1775683,
+   "company_name": "אלון רבוע כחול",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775683",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520042847"
+  },
+  {
+   "id": 10121,
+   "maya_report_id": 1747128,
+   "company_name": "יסודות איתנים",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 2,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1747128",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1745355",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515099018"
+  },
+  {
+   "id": 10316,
+   "maya_report_id": 1769535,
+   "company_name": "סטרוברי אינק",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1769535",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1769528",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "842336054"
+  },
+  {
+   "id": 10237,
+   "maya_report_id": 1762252,
+   "company_name": "גשם למשתכן",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1762252",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1762252",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1757347",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515541415"
+  },
+  {
+   "id": 9973,
+   "maya_report_id": 1738858,
+   "company_name": "ג'י טי נדל\"ן",
+   "is_new_company": false,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "טיוטת תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1675171",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1738858",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515763894"
+  },
+  {
+   "id": 10259,
+   "maya_report_id": 1763959,
+   "company_name": "אג'לן",
+   "is_new_company": false,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תיקון תשקיף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1763959",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1668196",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1666571",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "2352046"
+  },
+  {
+   "id": 10131,
+   "maya_report_id": 1748370,
+   "company_name": "פרשקובסקי גרופ",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1748370",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח להמרה",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "510925043"
+  },
+  {
+   "id": 10319,
+   "maya_report_id": 1770386,
+   "company_name": "י.ע.ז יזמות",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 2,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1770386",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1758892",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "515125862"
+  },
+  {
+   "id": 10225,
+   "maya_report_id": 1759263,
+   "company_name": "פנטהאוז",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 3,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1683500",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1759263",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1680579",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "511400723"
+  },
+  {
+   "id": 10372,
+   "maya_report_id": 1775870,
+   "company_name": "אי.אס.איי",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775870",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "514481233"
+  },
+  {
+   "id": 10355,
+   "maya_report_id": 1774331,
+   "company_name": "מיכל פקדונות",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1774331",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": "517207239"
+  },
+  {
+   "id": 10227,
+   "maya_report_id": 1759697,
+   "company_name": "איגל פרופרטיז",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1744890",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1759697",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1749157",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": "A3.il"
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10356,
+   "maya_report_id": 1774345,
+   "company_name": "סלדן",
+   "is_new_company": true,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1755705",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10118,
+   "maya_report_id": 1746861,
+   "company_name": "ניצנים",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תיקון תשקיף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1746861",
+   "link_trust_indenture": null,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1746865",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10243,
+   "maya_report_id": 1763095,
+   "company_name": "שטרן ורסנו",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תיקון תשקיף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1763095",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1761254",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1755178",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10289,
+   "maya_report_id": 1767283,
+   "company_name": "נגה נכסים",
+   "is_new_company": true,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1767283",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1763439",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1763440",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10296,
+   "maya_report_id": 1768132,
+   "company_name": "פישר ברדרס פרופ",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1767253",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1768132",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1763315",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": "ilAA-",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10287,
+   "maya_report_id": 1767223,
+   "company_name": "עמרם את נידם",
+   "is_new_company": true,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1767223",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  }
+ ],
+ "open": [],
+ "companies": [
+  {
+   "chp_number": "2352046",
+   "name": "אג'לן",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "510400740",
+   "name": "דיפלומט",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "510925043",
+   "name": "פרשקובסקי גרופ",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "511400723",
+   "name": "פנטהאוז",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "512719485",
+   "name": "מגדלי ים תיכון",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "512726712",
+   "name": "מצלאוי",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "514290345",
+   "name": "הפניקס גיוסי הו",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "514481233",
+   "name": "אי.אס.איי",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "514766195",
+   "name": "בוליגו",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515099018",
+   "name": "יסודות איתנים",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515125862",
+   "name": "י.ע.ז יזמות",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515434074",
+   "name": "מגוריט",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515541415",
+   "name": "גשם למשתכן",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515763894",
+   "name": "ג'י טי נדל\"ן",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "515846558",
+   "name": "ג'נריישן קפיטל",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "516046307",
+   "name": "סולאיר",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "517207239",
+   "name": "מיכל פקדונות",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "520028010",
+   "name": "חברה לישראל",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "520033309",
+   "name": "חג'ג' נדל\"ן",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "520034380",
+   "name": "אינטרגאמא",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "520041005",
+   "name": "קרדן נדל\"ן",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "520042847",
+   "name": "אלון רבוע כחול",
+   "statuses": [
+    "עתידית"
+   ]
+  },
+  {
+   "chp_number": "842336054",
+   "name": "סטרוברי אינק",
+   "statuses": [
+    "עתידית"
+   ]
+  }
+ ],
+ "unmatched": [
+  "איגל פרופרטיז",
+  "סלדן",
+  "ניצנים",
+  "שטרן ורסנו",
+  "נגה נכסים",
+  "פישר ברדרס פרופ",
+  "עמרם את נידם"
+ ]
+}
