@@ -67,13 +67,36 @@ async function searchSource(source, number) {
   };
 }
 
-export async function onRequestGet({ request }) {
+// קודם המאגר המקומי (DB1 = company-info-db, עותק שבועי של הרשמים): מהיר, ולא תלוי ב-data.gov.il. אם אין שם - עוברים לרשם החי.
+async function searchRegistryDb(db, number) {
+  if (!db || !/^\d{1,12}$/.test(number)) return null;
+  const id = Number(number);
+  const [c, p, a] = await Promise.allSettled([
+    db.prepare("SELECT name,status,corp_type,restrictions FROM companies WHERE id=? LIMIT 1").bind(id).first(),
+    db.prepare("SELECT name,status,ptype FROM partnerships WHERE id=? LIMIT 1").bind(id).first(),
+    db.prepare("SELECT name,status,category FROM associations WHERE id=? LIMIT 1").bind(id).first(),
+  ]);
+  const row = (x) => (x.status === "fulfilled" && x.value && cleanName(x.value.name) ? x.value : null);
+  if (row(c)) {
+    const r = c.value;
+    const isPublic = String(r.corp_type || "").includes("ציבורית");
+    const lim = String(r.restrictions || "").includes("לא מוגבלת") ? "לא מוגבלת" : 'בע"מ';
+    return { found: true, entityType: "company", name: cleanName(r.name), bizType: `${isPublic ? "חברה ציבורית" : "חברה פרטית"} - ${lim}`, type: r.corp_type || "", status: r.status || "" };
+  }
+  if (row(p)) return { found: true, entityType: "partnership", name: cleanName(p.value.name), bizType: 'שותפות - לא בע"מ', type: p.value.ptype || "", status: p.value.status || "" };
+  if (row(a)) return { found: true, entityType: "association", name: cleanName(a.value.name), bizType: "עמותה רשומה", type: a.value.category || "", status: a.value.status || "" };
+  return null;
+}
+
+export async function onRequestGet({ request, env }) {
   const url    = new URL(request.url);
   const number = (url.searchParams.get("number") || "").trim();
   if (!number) {
     return Response.json({ error: "Missing number parameter" }, { status: 400 });
   }
   try {
+    const local = await searchRegistryDb(env && env.DB1, number).catch(() => null);
+    if (local) return Response.json(local);
     // שלושת הרשמים נשאלים במקביל; מחזירים ברגע שהראשון מוצא (בלי להמתין לאיטי מביניהם)
     const found = await new Promise(resolve => {
       let pending = SOURCES.length;

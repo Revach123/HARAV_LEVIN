@@ -31,8 +31,9 @@ export async function onRequestGet({ request, env }) {
   try {
     const db = env.DB1, tables = Object.keys(SUB);
     let stmts;
-    if (/^\d+$/.test(q)) {                                   // מספר: התחלה של מספר התאגיד
-      stmts = tables.map(t => db.prepare(`SELECT id,name,status,${SUB[t]} AS sub FROM ${t} WHERE id LIKE ? LIMIT ${PER_TABLE}`).bind(q + "%"));
+    if (/^\d+$/.test(q)) {                                   // תחילת מספר תאגיד: טווח על המפתח המספרי (אינדקס) - לא LIKE (סריקה מלאה)
+      const k = Math.min(q.length, 9), lo = Number(q.slice(0, k)) * 10 ** (9 - k), hi = (Number(q.slice(0, k)) + 1) * 10 ** (9 - k);
+      stmts = tables.map(t => db.prepare(`SELECT id,name,status,${SUB[t]} AS sub FROM ${t} WHERE id >= ? AND id < ? ORDER BY id LIMIT ${PER_TABLE}`).bind(lo, hi));
     } else {
       const words = normB(q).split(" ").filter(Boolean);
       const long = words.filter(w => w.length >= 3), short = words.filter(w => w.length < 3);
