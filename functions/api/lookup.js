@@ -74,10 +74,14 @@ export async function onRequestGet({ request }) {
     return Response.json({ error: "Missing number parameter" }, { status: 400 });
   }
   try {
-    const results = await Promise.all(
-      SOURCES.map(s => searchSource(s, number).catch(() => null))
-    );
-    const found = results.find(r => r !== null);
+    // שלושת הרשמים נשאלים במקביל; מחזירים ברגע שהראשון מוצא (בלי להמתין לאיטי מביניהם)
+    const found = await new Promise(resolve => {
+      let pending = SOURCES.length;
+      SOURCES.forEach(s => searchSource(s, number).catch(() => null).then(r => {
+        if (r) resolve(r);
+        else if (--pending === 0) resolve(null);
+      }));
+    });
     if (found) return Response.json(found);
     return Response.json({ found: false });
   } catch (e) {
