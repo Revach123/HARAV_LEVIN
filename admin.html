@@ -932,8 +932,10 @@ async function apiFetch(path, opts = {}) {
   return res.json();
 }
 
+let bizLoaded = false, adminDeferred = false;
 async function loadBusinesses() {
   businesses = await apiFetch("/businesses");
+  bizLoaded = true;
   render();
 }
 
@@ -982,7 +984,7 @@ function render() {
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "home")       app.innerHTML = renderHome();
   else if (view === "search")     app.innerHTML = adminTabs() + renderSearch();
-  else if (view === "admin")      app.innerHTML = adminTabs() + renderAdminTable();
+  else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
   else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   bindEvents();
@@ -1708,6 +1710,11 @@ function setView(v) {
     csvErrors = []; csvImported = 0; csvDeleted = 0;
   }
   chpResult = null; chpError = "";
+  if (v === "admin" && bizLoaded) {        // הטבלה גדולה: קודם מציגים מיד את החלון עם מחוון טעינה, ואז בונים את הטבלה
+    adminDeferred = true; render();
+    requestAnimationFrame(() => setTimeout(() => { adminDeferred = false; if (view === "admin") render(); }, 0));
+    return;
+  }
   render();
 }
 

@@ -20,35 +20,34 @@ export async function checkPassword(token, env) {
   return !!env.ADMIN_PASSWORD && same(token, env.ADMIN_PASSWORD);
 }
 
-// ── כניסה לפי IP (בלי סיסמה) ──
-// שני האנשים הראשונים שמקלידים סיסמה נכונה נרשמים לפי ה-IP שלהם, ומכאן נכנסים בלי סיסמה.
-// (אפשר גם להוסיף ידנית בלי הגבלה דרך המשתנה OWNER_IPS - רשימה מופרדת בפסיקים.)
-const MAX_REGISTERED = 2;
-export const clientIp = request => request.headers.get("CF-Connecting-IP") || "";
-async function storedIps(env) {
-  try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = 'trusted_ips'").first(); return r ? JSON.parse(r.value) : []; }
+// ── כניסה בלי סיסמה לפי מכשיר (לא לפי IP: ברשת סלולרית / משותפת הרבה אנשים חולקים IP) ──
+// שני האנשים הראשונים שמקלידים סיסמה נכונה מקבלים עוגיית מכשיר אקראית (HttpOnly); בשרת נשמרת רק הצפנה שלה (SHA-256).
+// מי שיש לו עוגייה כזו נכנס בלי סיסמה.
+const MAX_DEVICES = 2, COOKIE = "adm_dev";
+async function storedDevices(env) {
+  try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = 'trusted_devices'").first(); return r ? JSON.parse(r.value) : []; }
   catch { return []; }
 }
-export async function isTrustedIp(request, env) {
-  const ip = clientIp(request); if (!ip) return false;
-  const owner = (env.OWNER_IPS || "").split(",").map(x => x.trim()).filter(Boolean);
-  return owner.includes(ip) || (await storedIps(env)).includes(ip);
+const deviceCookie = request => { const m = (request.headers.get("Cookie") || "").match(new RegExp("(?:^|;\\s*)" + COOKIE + "=([0-9a-f]{64})")); return m ? m[1] : ""; };
+export async function isTrustedDevice(request, env) {
+  const c = deviceCookie(request); if (!c) return false;
+  return (await storedDevices(env)).includes(await sha(c));
 }
-// נקרא אחרי הקלדת סיסמה נכונה: אם נרשמו פחות משני IP וה-IP הזה לא מורשה - רושם אותו. מחזיר true אם נרשם עכשיו.
-export async function registerFirstIp(request, env) {
-  const ip = clientIp(request);
-  if (!ip || await isTrustedIp(request, env)) return false;
-  const list = await storedIps(env);
-  if (list.length >= MAX_REGISTERED) return false;
+// אחרי סיסמה נכונה: אם המכשיר לא מורשה ויש מקום (עד שניים) - רושם אותו. מחזיר כותרת Set-Cookie, או null.
+export async function registerDevice(request, env) {
+  if (await isTrustedDevice(request, env)) return null;
+  const list = await storedDevices(env);
+  if (list.length >= MAX_DEVICES) return null;
+  const token = hex(crypto.getRandomValues(new Uint8Array(32)));
   try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
-    await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('trusted_ips', ?)").bind(JSON.stringify([...list, ip])).run();
-    return true;
-  } catch { return false; }
+    await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('trusted_devices', ?)").bind(JSON.stringify([...list, await sha(token)])).run();
+  } catch { return null; }
+  return `${COOKIE}=${token}; Path=/; Max-Age=31536000; HttpOnly; Secure; SameSite=Lax`;
 }
 
 export const checkAdmin = async (request, env) =>
-  (await checkPassword((request.headers.get("Authorization") || "").replace("Bearer ", ""), env)) || (await isTrustedIp(request, env));
+  (await checkPassword((request.headers.get("Authorization") || "").replace("Bearer ", ""), env)) || (await isTrustedDevice(request, env));
 
 export async function setPassword(env, pw) {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
