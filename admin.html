@@ -2012,12 +2012,49 @@ async function openBondPicker(bizId) {
     for (const r of saved.rows || []) {
       if (!seen.has(Number(r.security_id))) rows.push({ id: Number(r.security_id), name: r.bond_name, symbol: r.symbol, inMaya: false, scope: r.scope, saved: true });
     }
+    const off = await fetch("/data/bonds_list/offerings.json").then(r => r.ok ? r.json() : null).catch(() => null);
+    if (off) rows.push(...bpOfferingRows(off, bpState.biz, chp, savedBy, new Set(rows.map(r => r.id))));
     bpState.rows = rows; bpState.updated = snap ? snap.updated : ""; bpState.noSnap = !snap;
   } catch (e) {
     bpState.error = e.message === "Unauthorized" ? "נדרשת התחברות" : "שגיאה בטעינה: " + e.message;
   }
   bpState.loading = false;
   renderBondPicker();
+}
+
+// הנפקות (עתידיות/פתוחות) בחלון הבחירה, גם לחברה חדשה שעוד לא נכנסה לבנייה: לפי ח.פ., או לפי שם הנפקה (מקוצר) שהוא תחילת השם של החברה הזו בלבד
+function bpWords(n) { return String(n || "").toLowerCase().replace(/בע"?מ|בע״מ|בע''מ/g, " ").split(/\s+/).map(w => w.replace(/[^0-9a-z\u0590-\u05ff]/g, "")).filter(Boolean); }
+function bpNameMatches(offName, biz) {
+  const w = bpWords(offName); if (!w.length) return false;
+  const lead = n => { const x = bpWords(n); return x.length >= w.length && w.every((v, i) => x[i] === v); };
+  if (!lead(biz.registrar_name) && !lead(biz.permit_name)) return false;
+  return !businesses.some(b => b.id !== biz.id && (lead(b.registrar_name) || lead(b.permit_name)));
+}
+function bpOfferingRows(off, biz, chp, savedBy, seen) {
+  const norm = x => String(x || "").replace(/^0+/, "");
+  const mine = (oc, name) => oc ? norm(oc) === norm(chp) : bpNameMatches(name, biz);
+  const out = [];
+  for (const o of off.open || []) {
+    if (!mine(o.chp_number, o.issuer_name)) continue;
+    for (const sec of o.securities || []) {
+      const id = Number(sec.security_id); if (!id || seen.has(id)) continue; seen.add(id);
+      out.push({ id, name: `${String(sec.security_name || "").replace(/\s+/g, " ").trim()} (בהנפקה)`, symbol: "", inMaya: true,
+                 scope: (savedBy.get(id) || {}).scope || "", saved: savedBy.has(id) });
+    }
+  }
+  for (const o of off.upcoming || []) {
+    if (!mine(o.chp_number, o.company_name)) continue;
+    (o.securities || []).forEach((sec, i) => {
+      const pid = 900000000000 + Number(o.id) * 100 + i;
+      if (sec.name && Number.isFinite(pid) && !seen.has(pid)) { seen.add(pid);
+        out.push({ id: pid, name: `${sec.name} (הנפקה עתידית)`, symbol: "", inMaya: true, scope: (savedBy.get(pid) || {}).scope || "", saved: savedBy.has(pid) });
+      } else if (!sec.name) {
+        out.push({ info: true, name: `${sec.security_type || 'אג"ח'} - הנפקה עתידית${o.draft_title ? " (" + o.draft_title + ")" : ""}`,
+                   link: o.link_prospectus || o.link_trust_indenture || "" });
+      }
+    });
+  }
+  return out;
 }
 
 const BP_ON  = "background:var(--navy,#274d5b);color:#fff;border-color:var(--navy,#274d5b);";
@@ -2071,7 +2108,9 @@ function renderBondPicker() {
   const body = st.loading ? "<p>טוען…</p>" : st.error ? `<p style="color:var(--red);">${escHtml(st.error)}</p>` : `
     ${st.noSnap ? `<p style="color:#b85c00;font-size:13px;">רשימת מאיה עדיין לא נבנתה (תיווצר בריצה הקרובה של bonds-list). אפשר להוסיף אג"ח לפי מספר.</p>` : `<p style="font-size:12px;color:var(--muted);">רשימת מאיה נכון ל-${escHtml(st.updated)}</p>`}
     <div class="bp-list" style="max-height:46vh;overflow:auto;border:1px solid var(--border);border-radius:8px;">
-      ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r); return `
+      ${st.rows.filter(r => !r.remove).map((r) => { const i = st.rows.indexOf(r);
+        if (r.info) return `<div style="padding:7px 10px;border-bottom:1px solid #edf2f2;font-size:13px;color:var(--muted);">${escHtml(r.name)} · אין עדיין מספר נייר או שם אג"ח (לא ניתן לבחירה)${r.link ? ` · <a href="${escHtml(r.link)}" target="_blank" rel="noopener">מסמך</a>` : ""}</div>`;
+        return `
         <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
           <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
             <div style="font-size:11px;color:var(--muted);">מס' ${r.id}${r.symbol ? " · " + escHtml(r.symbol) : ""}${r.inMaya ? "" : " · לא קיימת כרגע במאיה (נשמרת, לא מוצגת ברשימה)"}</div></div>
