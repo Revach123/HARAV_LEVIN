@@ -31,9 +31,24 @@ const sameName = (a, b) => {
   const [s, l] = x.length <= y.length ? [x, y] : [y, x];
   return s.length >= 20 && l.startsWith(s);
 };
-function withRegistrarNames(rows) {
+// הנפקות עתידיות/פתוחות (data/bonds_list/offerings.json, נבנה יומית): ח"פ -> "open" | "upcoming". כשל = אין הנפקות.
+async function loadOfferings(request, env) {
+  try {
+    const res = await (env.ASSETS ? env.ASSETS.fetch(new URL("/data/bonds_list/offerings.json", request.url)) : fetch(new URL("/data/bonds_list/offerings.json", request.url)));
+    if (!res.ok) return new Map();
+    const d = await res.json();
+    const m = new Map();
+    for (const c of d.companies || []) m.set(String(c.chp_number), (c.statuses || []).includes("בהנפקה") ? "open" : "upcoming");
+    return m;
+  } catch { return new Map(); }
+}
+
+function withRegistrarNames(rows, offerings = new Map()) {
   const out = rows.map(r => {
-    const { _registrar, ...rest } = r;
+    const { _registrar, _bonds_note_all, ...rest } = r;
+    // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית), והערת אישור האג"ח חוזרת להופיע
+    const off = rest.bonds_status === 'אין אג"ח' ? offerings.get(String(rest.chp_number || "").trim()) : "";
+    if (off) { rest.bonds_status = off === "open" ? 'יש אג"ח בהנפקה' : 'יש אג"ח בהנפקה עתידית'; rest.bonds_note = _bonds_note_all || ""; }
     const reg = String(_registrar || "").replace(/\s+/g, " ").trim();
     const permit = String(r.permit_name || "").replace(/\s+/g, " ").trim();
     let name = permit;
@@ -112,6 +127,7 @@ export async function onRequestGet(context) {
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
       const build = (withStatus, withScope) => {
         const hideNote = withScope ? `COALESCE(notes_scope,'') = 'bonds'` : `0`;
+        const bondsNoteAll = `CASE WHEN ${hideNote} THEN '' ELSE ${bondsNoteExprBase} END`;
         const bondsNoteExpr = `CASE WHEN ${hideNote} OR NOT (${hasBonds}) THEN '' ELSE ${bondsNoteExprBase} END`;   // חברה בלי אג"ח: אין הערת אישור אג"ח
         const notesExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${notesExprBase} END`;
         const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%' AND COALESCE(registry_status,'') NOT LIKE 'מחוק%' AND COALESCE(registry_status,'') NOT LIKE 'נגרע%'` : "";
@@ -126,6 +142,7 @@ export async function onRequestGet(context) {
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
                ${bondsNoteExpr} AS bonds_note,
+               ${bondsNoteAll} AS _bonds_note_all,
                ${notesOut} AS notes
         FROM businesses
         WHERE ${whereClause} ${liquidated}
@@ -164,7 +181,7 @@ export async function onRequestGet(context) {
       if (last) throw last;
     }
 
-    if (type === "companies-private" || type === "companies-general") results = withRegistrarNames(results);
+    if (type === "companies-private" || type === "companies-general") results = withRegistrarNames(results, await loadOfferings(request, env));
 
     if (format === "csv") {
       return csvResponse(results, type);

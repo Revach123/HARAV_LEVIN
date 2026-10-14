@@ -36,6 +36,7 @@ import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from classify import coarse_type  # noqa: E402  (עותק של Revach)
+import offerings  # noqa: E402
 
 HARAV_API = os.environ.get("HARAV_API", "https://harav-levin.pages.dev")
 MAYA_URL = "https://maya.tase.co.il/api/v1/companies/{id}/details"
@@ -71,6 +72,7 @@ COLUMNS = [
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
     "first_seen",
+    "offering_status",   # offerings.py: "בהנפקה" / "הנפקה עתידית" (ריק = נייר רגיל)
     "midroog_rating", "maalot_rating", "ytm_gross",   # enrich.py: דירוגים + תשואה ברוטו לפדיון (לא צמוד בלבד)
 ]
 
@@ -464,6 +466,7 @@ def write_lists(bonds):
             w.writerows(rows)
 
     key = lambda r: (r["company"], r["security_name"], str(r["security_id"]))  # noqa: E731
+    bid = lambda r: r["security_id"] or r.get("_key")   # noqa: E731  (הנפקה עתידית: אין מספר נייר)
     os.makedirs(OUT, exist_ok=True)
     counts, merged = {}, {}
     for name, private in (("private", True), ("general", False)):
@@ -471,13 +474,32 @@ def write_lists(bonds):
         counts[name] = len(rows)
         dump(f"bonds_{name}", rows, COLUMNS)
         for r in rows:
-            merged.setdefault(r["security_id"], []).append("פרטי" if private else "כללי")
+            merged.setdefault(bid(r), []).append("פרטי" if private else "כללי")
     # רשימה ממוזגת: נייר אחד בשורה אחת, עמודת list = פרטי / כללי / פרטי+כללי
-    by_id = {b["security_id"]: b for b in bonds}
+    by_id = {bid(b): b for b in bonds}
     all_rows = sorted((view(by_id[i], "+".join(sorted(l))) for i, l in merged.items()), key=key)
     counts["all"] = len(all_rows)
     dump("bonds_all", all_rows, COLUMNS + ["list"])
     return counts
+
+
+def collect_offerings(dw, approved, manual, names, companies):
+    """הנפקות עתידיות ופתוחות -> (offerings.json, שורות לרשימת האג"ח). כשל לא מפיל את הבנייה (אין הנפקות ברשימה)."""
+    empty = {"upcoming": [], "open": [], "companies": [], "unmatched": []}
+    try:
+        up_raw, op_raw = dw_get("/v1/tase-offering/upcoming"), dw_get("/v1/tase-offering/open")
+        rows, _date, types = dw if dw else ([], "", {})
+        ours = [((c.get("registrar_name") or c.get("permit_name") or ""), c.get("chp_number")) for c in companies]
+        data = offerings.build(up_raw, op_raw, rows, ours, types, BOND_CODE_PREFIXES, BOND_COARSE, chp_norm)
+        bonds = offerings.bond_rows(data, approved, manual, names, SELECTIVE, GOYIM_NOTE, TODAY)
+    except Exception as e:  # noqa: BLE001
+        print(f"WARNING: offerings failed, no offering bonds this run: {e}", file=sys.stderr)
+        return empty, []
+    with open(os.path.join(OUT, "offerings.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": TODAY, **data}, f, ensure_ascii=False, indent=1)
+    print(f"offerings: upcoming={len(data['upcoming'])}, open={len(data['open'])}, "
+          f"companies={len(data['companies'])}, unmatched={len(data['unmatched'])}, bond rows={len(bonds)}")
+    return data, bonds
 
 
 def main(companies_path=None):
@@ -495,7 +517,8 @@ def main(companies_path=None):
     if found < MIN_COMPANIES_FOUND or not bonds:
         raise SystemExit("maya sweep looks partial/blocked - output left untouched")
 
-    check = cross_check(bonds, approved, fetch_datawise_securities())
+    dw = fetch_datawise_securities()
+    check = cross_check(bonds, approved, dw)
     print("datawise check:", {k: (v if not isinstance(v, list) else len(v)) for k, v in check.items()})
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "verification.json"), "w", encoding="utf-8") as f:
@@ -503,6 +526,10 @@ def main(companies_path=None):
     if check["status"] == "too_many_missing":
         raise SystemExit("datawise cross-check failed - bond lists left untouched")
 
+    offering_data, offering_bonds = collect_offerings(dw, approved, manual, company_names(companies), companies)
+    for chp, entries in offerings.snapshot_entries(offering_data).items():   # הנפקות פתוחות גם בחלון הבחירה
+        have = {e["security_id"] for e in snapshot.get(chp, [])}
+        snapshot.setdefault(chp, []).extend(e for e in entries if e["security_id"] not in have)
     with open(os.path.join(OUT, "maya_securities.json"), "w", encoding="utf-8") as f:   # מקור חלון הבחירה בדף הניהול
         json.dump({"updated": TODAY, "companies": snapshot}, f, ensure_ascii=False, separators=(",", ":"))
     add_terms(bonds)
@@ -523,6 +550,7 @@ def main(companies_path=None):
         json.dump({"updated": TODAY, **check}, f, ensure_ascii=False, indent=1)
     state = load_state()
     apply_first_seen(bonds, state)
+    bonds = bonds + offering_bonds       # הנפקות: אחרי ההעשרה והסינון (אין להן תנאים מהבורסה)
     counts = write_lists(bonds)
     os.makedirs(OUT, exist_ok=True)
     with open(STATE_PATH, "w", encoding="utf-8") as f:
