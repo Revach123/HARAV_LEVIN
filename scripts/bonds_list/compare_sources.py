@@ -21,8 +21,17 @@ def main():
     companies = b.load_companies()
     approved = b.approved_map(companies)
     names = b.company_names(companies)
-    snapshot = {}
-    _bonds, found, errors = b.sweep_maya(approved, snapshot=snapshot)
+    snapshot, cid_by_chp = {}, {}
+
+    def fetch(cid):                      # כמו fetch_company, ושומר גם את מזהה החברה במאיה לכל ח.פ.
+        c, body = b.fetch_company(cid)
+        if body and body != "error":
+            k = b.chp_norm(body.get("corporateNo"))
+            if k:
+                cid_by_chp.setdefault(k, set()).add(cid)
+        return c, body
+
+    _bonds, found, errors = b.sweep_maya(approved, fetch=fetch, snapshot=snapshot)
     print(f"maya: {found} companies, {errors} errors")
     M = {}
     for chp, items in snapshot.items():
@@ -60,7 +69,26 @@ def main():
         return {"count": len(ids), "approved_companies": sum(1 for i in ids if info(i, *srcs).get("approved")),
                 "rows": [info(i, *srcs) for i in ids[:CAP]]}
 
-    res = {"sizes": {"maya": len(M), "datawise": len(D), "market": len(K)},
+    # מזהה החברה במאיה (CompanyId בנתוני המסחר) מול מזהה החברה בסריקת מאיה, לכל ח.פ.
+    market_cids = {}
+    for sid, x in K.items():
+        chp = (D.get(sid) or M.get(sid) or {}).get("chp", "")
+        if chp and x.get("maya_company_id") not in (None, ""):
+            market_cids.setdefault(chp, set()).add(int(x["maya_company_id"]))
+    d_chps = {x["chp"] for x in D.values() if x["chp"]}
+    no_cid_in_items = [sid for sid, x in K.items() if x.get("maya_company_id") in (None, "")]
+    agree = [k for k in d_chps if k in market_cids and k in cid_by_chp and market_cids[k] <= cid_by_chp[k]]
+    differ = [k for k in d_chps if k in market_cids and k in cid_by_chp and not market_cids[k] <= cid_by_chp[k]]
+    no_market_cid = sorted(k for k in d_chps if k not in market_cids)
+    cid_check = {"datawise_companies": len(d_chps), "market_items_without_CompanyId": len(no_cid_in_items),
+                 "companies_with_market_CompanyId": len(market_cids), "companies_with_maya_id_from_sweep": len(cid_by_chp),
+                 "agree_with_maya_sweep": len(agree), "differ_from_maya_sweep": len(differ),
+                 "differ_examples": [{"chp": k, "market": sorted(market_cids[k]), "maya": sorted(cid_by_chp[k])} for k in differ[:30]],
+                 "companies_without_market_CompanyId": len(no_market_cid),
+                 "of_which_approved": sum(1 for k in no_market_cid if k in approved),
+                 "of_which_maya_id_known": sum(1 for k in no_market_cid if k in cid_by_chp),
+                 "examples_without": [{"chp": k, "company": names.get(k, ""), "approved": k in approved, "maya_ids": sorted(cid_by_chp.get(k, []))} for k in no_market_cid[:40]]}
+    res = {"company_id_check": cid_check, "sizes": {"maya": len(M), "datawise": len(D), "market": len(K)},
            "intersections": {"M&D": len(set(M) & set(D)), "M&K": len(set(M) & set(K)), "D&K": len(set(D) & set(K)),
                              "all3": len(set(M) & set(D) & set(K))},
            "only_datawise_not_maya": diff(D, M, (D,)), "only_maya_not_datawise": diff(M, D, (M,)),
@@ -70,7 +98,7 @@ def main():
     os.makedirs("data/probe", exist_ok=True)
     with open("data/probe/source_comparison.json", "w", encoding="utf-8") as f:
         json.dump(res, f, ensure_ascii=False, indent=1)
-    print(json.dumps({k: (v if k in ("sizes", "intersections", "example_1248434") else {x: y for x, y in v.items() if x != "rows"}) for k, v in res.items()},
+    print(json.dumps({k: (v if k in ("sizes", "intersections", "example_1248434", "company_id_check") else {x: y for x, y in v.items() if x != "rows"}) for k, v in res.items()},
                      ensure_ascii=False, indent=1))
 
 
