@@ -1,3 +1,4 @@
+import { checkPassword } from "./_shared/auth.js";
 // GET /api/debug-tase  — temporary debug endpoint, delete after fixing
 
 const TASE_API   = "https://datawise.tase.co.il";
@@ -6,7 +7,7 @@ const BOND_TYPES = ["03", "05", "11", "36"];
 
 export async function onRequestGet({ request, env }) {
   const auth = (request.headers.get("Authorization") || "").replace("Bearer ", "").trim();
-  if (auth !== env.ADMIN_PASSWORD) {
+  if (!(await checkPassword(auth, env))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 

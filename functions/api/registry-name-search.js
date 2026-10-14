@@ -1,3 +1,4 @@
+import { checkAdmin } from "./_shared/auth.js";
 // GET /api/registry-name-search?q=<שם חברה או מספר>   (מנהל בלבד)
 // חיפוש שם בכל מאגר הרישום (חברות / שותפויות / עמותות) דרך ה-D1 השני (DB1 = company-info-db), באינדקס FTS5 trigram
 // (companies_fts וכו') - שאילתה אחת (D1 batch), בלי וריאנטים של זיהוי דיבור.
@@ -11,10 +12,7 @@ const PER_TABLE = 25;
 const SUB = { companies: "corp_type", partnerships: "ptype", associations: "category" };
 const KINDS = { companies: "company", partnerships: "partnership", associations: "association" };
 
-function isAuthed(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
-}
+const isAuthed = (request, env) => checkAdmin(request, env);
 function normB(s) {
   s = String(s || "").replace(/~/g, '"').replace(/\([^)]*\)/g, " ").replace(/[^א-ת0-9A-Za-z ]/g, " ");
   return s.replace(/\s+/g, " ").trim();
@@ -23,7 +21,7 @@ const ftsPhrase = (w) => `"${w.replace(/"/g, '""')}"`;
 
 export async function onRequestGet({ request, env }) {
   const t0 = Date.now();
-  if (!isAuthed(request, env)) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!(await isAuthed(request, env))) return Response.json({ error: "Unauthorized" }, { status: 401 });
   if (!env.DB1) return Response.json({ error: "DB1 (company-info-db) לא מחובר לפרויקט" }, { status: 503 });
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") || "").trim();

@@ -1,3 +1,4 @@
+import { checkAdmin } from "./_shared/auth.js";
 // POST /api/sync-tase — הכפתור "עדכן אג"ח מבורסה" בדף הניהול.
 //
 // לא מחשב כלום בעצמו (היה כאן עותק של הלוגיקה, בלי החרגת ני"ע מסחריים, שסתר את הריצה היומית).
@@ -21,12 +22,10 @@ const SCOPE_MESSAGE = {
 };
 const RUNS_URL = `https://github.com/${GH.owner}/${GH.repo}/actions/workflows/${GH.workflow}`;
 
-function isAuthed(request, env) {
-  return (request.headers.get("Authorization") || "").replace("Bearer ", "").trim() === env.ADMIN_PASSWORD;
-}
+const isAuthed = (request, env) => checkAdmin(request, env);
 
 export async function onRequestPost({ request, env }) {
-  if (!isAuthed(request, env)) {
+  if (!(await isAuthed(request, env))) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!env.GITHUB_DISPATCH_TOKEN) {

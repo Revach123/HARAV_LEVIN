@@ -62,6 +62,9 @@
     transition: background .15s;
   }
   #admin-toggle:hover { background: rgba(255,255,255,.2); }
+  .hdr-btns { display:flex; gap:8px; align-items:center; }
+  #pw-btn { background:#fff; color:var(--navy,#274d5b); border:1px solid var(--navy,#274d5b); font-size:13px; padding:6px 14px; border-radius:4px; cursor:pointer; font-family:inherit; }
+  #pw-btn:hover { background:var(--accent-bg,#e9f5f4); }
 
   /* ── MAIN ── */
   main { max-width: 1900px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
@@ -848,7 +851,7 @@
   <div>
     <a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a>
   </div>
-  <button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button>
+  <div class="hdr-btns"><button id="pw-btn" onclick="openChangePassword()" style="display:none;">🔑 שינוי סיסמה</button><button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button></div>
 </header>
 
 <main>
@@ -984,6 +987,7 @@ function render() {
   bindEvents();
   document.getElementById("admin-toggle").textContent =
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
+  document.getElementById("pw-btn").style.display = isAdmin ? "" : "none";
 }
 
 // ── TABLE (public) — combined view ──
@@ -1707,13 +1711,16 @@ function setView(v) {
 }
 
 function toggleAdmin() {
-  if (isAdmin) { if (view === "form" && formDirty && !confirmLeave()) return; isAdmin = false; adminToken = ""; location.href = "/"; }   // יציאה = חזרה לאתר הציבורי
+  if (isAdmin) { if (view === "form" && formDirty && !confirmLeave()) return; isAdmin = false; adminToken = ""; saveToken(""); location.href = "/"; }   // יציאה = חזרה לאתר הציבורי
   else setView("login");
 }
 
+// "זכור אותי במכשיר": הסיסמה נשמרת בדפדפן הזה, כך שאין צורך להקליד אותה שוב. "יציאה ממנהל" או סיסמה שגויה מוחקות אותה.
+function saveToken(t) { try { t ? localStorage.setItem("adm_tok", t) : localStorage.removeItem("adm_tok"); } catch {} }
+function loadToken() { try { return localStorage.getItem("adm_tok") || ""; } catch { return ""; } }
 async function doLogin() {
   const pwd = document.getElementById("pwd")?.value || "";
-  adminToken = pwd;
+  adminToken = pwd; saveToken(pwd);
   try {
     await apiFetch("/businesses");
     isAdmin = true; setView("home");
@@ -2138,6 +2145,29 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
   render();
 }
 
+// ── שינוי סיסמה (כפתור בכותרת, בכל אזורי הניהול) ──
+function openChangePassword() {
+  document.getElementById("pw-root")?.remove();
+  const root = document.createElement("div"); root.id = "pw-root";
+  const f = (id, label) => `<div class="field"><label>${label}</label><input type="password" id="${id}" autocomplete="off"></div>`;
+  root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))this.parentNode.remove()"><div class="modal-box" style="max-width:380px;text-align:right;">
+    <div class="modal-title">שינוי סיסמה</div>${f("pw-cur", "סיסמה נוכחית")}${f("pw-new", "סיסמה חדשה (לפחות 6 תווים)")}${f("pw-new2", "סיסמה חדשה שוב")}
+    <p class="error-msg" id="pw-err"></p>
+    <div class="modal-actions" style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn-ghost" onclick="document.getElementById('pw-root').remove()">ביטול</button><button class="btn-primary" onclick="doChangePassword()" style="width:auto;padding:8px 22px;">שמור סיסמה</button></div></div></div>`;
+  document.body.appendChild(root);
+  document.getElementById("pw-cur").focus();
+}
+async function doChangePassword() {
+  const v = id => document.getElementById(id).value, err = m => { document.getElementById("pw-err").textContent = m; };
+  if (v("pw-new").length < 6) return err("הסיסמה החדשה קצרה מדי (לפחות 6 תווים)");
+  if (v("pw-new") !== v("pw-new2")) return err("הסיסמאות החדשות לא זהות");
+  try {
+    await apiFetch("/change-password", { method: "POST", body: JSON.stringify({ current: v("pw-cur"), next: v("pw-new") }) });
+    adminToken = v("pw-new").trim(); if (loadToken()) saveToken(adminToken);
+    document.getElementById("pw-root").remove(); showStatus("הסיסמה שונתה ✓");
+  } catch (e) { err(e.message === "Unauthorized" ? "הסיסמה הנוכחית שגויה" : e.message); }
+}
+
 // ── כיסוי מדד: כמה אחוז מחברות המדד (ברירת מחדל ת"א-SME60) יש להן היתר עסקה, וכמה היתר פרטי ──
 let idxBonds = null, idxMarket = null; const idxCache = {}; let idxLoading = false;
 // עוגה בתוך עוגה: טבעת חיצונית = אחוז עם היתר עסקה, טבעת פנימית = אחוז עם היתר פרטי (מתוך כלל המדד)
@@ -2399,7 +2429,7 @@ async function doSave() {
 }
 
 function handleUnauth() {
-  isAdmin = false; adminToken = ""; saving = false;
+  isAdmin = false; adminToken = ""; saving = false; saveToken("");
   alert("הסיסמה שגויה — בקשה נדחתה");
   setView("login");
 }
@@ -2784,7 +2814,8 @@ document.addEventListener("click", (e) => {
   });
 });
 
-// עמוד הניהול נפתח במסך כניסה
+// עמוד הניהול נפתח במסך כניסה (או ישר לתפריט, אם הסיסמה נשמרה במכשיר הזה)
+{ const t = loadToken(); if (t) { adminToken = t; isAdmin = true; view = "home"; } }
 ["input", "change"].forEach(ev => document.getElementById("app").addEventListener(ev, () => { if (view === "form") formDirty = true; }, true));   // סימון שינויים שלא נשמרו בטופס
 render();
 
