@@ -15,6 +15,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -35,6 +36,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -55,6 +57,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -75,6 +78,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -95,6 +99,7 @@
    "securities": [
     {
      "security_type": "אג\"ח להמרה",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -115,11 +120,13 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     },
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -140,6 +147,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -160,6 +168,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": "ilBBB+",
      "midroog_rating": null
     }
@@ -180,6 +189,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -200,6 +210,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -220,6 +231,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -240,6 +252,7 @@
    "securities": [
     {
      "security_type": "אג\"ח להמרה",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -260,6 +273,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -280,6 +294,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -300,6 +315,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -320,6 +336,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -340,6 +357,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -360,6 +378,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -380,6 +399,7 @@
    "securities": [
     {
      "security_type": "אג\"ח להמרה",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -400,6 +420,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -420,6 +441,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -440,6 +462,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -460,6 +483,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": "Aaa.il"
     }
@@ -480,6 +504,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": "A3.il"
     }
@@ -500,6 +525,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -520,6 +546,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -540,6 +567,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -560,6 +588,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
@@ -580,6 +609,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": "ilAA-",
      "midroog_rating": null
     }
@@ -600,6 +630,7 @@
    "securities": [
     {
      "security_type": "אג\"ח",
+     "name": "",
      "maalot_rating": null,
      "midroog_rating": null
     }
