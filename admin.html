@@ -789,6 +789,10 @@
   .permit-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sc-btns { display:inline-flex; gap:4px; flex-wrap:wrap; }
+  .sc-b { font-family:inherit; font-size:12px; color:var(--text); background:#fff; border:1px solid var(--border); border-radius:5px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
+  .sc-b.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); font-weight:700; }
+  .sc-btns.need .sc-b { border-color:var(--red); }
   .pc-btn:hover { border-color:var(--accent); }
   .pc-btn.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); }
   #form-after-permit.locked { opacity:.35; pointer-events:none; user-select:none; }
@@ -983,38 +987,6 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <button class="btn-ghost" onclick="runRegistrySync()" id="sync-btn">🔄 עדכן שמות מרשם</button>
-        <button class="btn-ghost" onclick="runTaseSync('bonds')" id="tase-btn" title="קצר: מעדכן רק את הדגל &quot;יש אג&quot;ח&quot;">📈 עדכן אג"ח מבורסה</button>
-        <button class="btn-ghost" onclick="runTaseSync('all')" id="tase-full-btn" title="אותה ריצה של הריצה היומית: שמות, סוגים ואג&quot;ח (כ-6 דקות)">🔄 עדכון מלא</button>
-        <button class="btn-ghost" onclick="openCsvImport()" style="border-color:#d0a020;color:#9a7010;">📥 ייבוא מ-CSV</button>
-        <button class="btn-ghost" onclick="exportCsv(true)" title="ייצוא כל הנתונים לCSV">📤 ייצוא CSV</button>
-        <style>
-          .dbmenu{position:relative;display:inline-block}
-          .dbmenu>summary{list-style:none;cursor:pointer}
-          .dbmenu>summary::-webkit-details-marker{display:none}
-          .dbmenu[open]>summary{outline:2px solid var(--navy,#1a3a5c)}
-          .dbmenu-items{position:absolute;top:calc(100% + 4px);right:0;z-index:100;background:#fff;border:1px solid var(--border,#e0ddd8);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:190px;overflow:hidden}
-          .dbmenu-items a{display:block;padding:9px 14px;font-size:13px;color:#1a3a5c;text-decoration:none;white-space:nowrap}
-          .dbmenu-items a:hover{background:#f0efec}
-        </style>
-        <details class="dbmenu">
-          <summary class="btn-ghost">📤 ייצוא מסד נתונים ל-CSV ▾</summary>
-          <div class="dbmenu-items">
-            <a href="/api/lists?type=companies-all&format=csv">רשם החברות</a>
-          </div>
-        </details>
-        <details class="dbmenu">
-          <summary class="btn-ghost">📥 רשימות אג"ח מאושרות (מאיה) ▾</summary>
-          <div class="dbmenu-items">
-            <a href="/data/bonds_list/bonds_all.csv" download="bonds_all.csv">רשימה ממוזגת (פרטי + כללי)</a>
-            <a href="/data/bonds_list/bonds_private.csv" download="bonds_private.csv">אג"ח פרטי</a>
-            <a href="/data/bonds_list/bonds_general.csv" download="bonds_general.csv">אג"ח כללי</a>
-          </div>
-        </details>
-        <button class="btn-ghost" onclick="setView('home')">🏠 תפריט ראשי</button>
-        <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
-      </div>
     </div>
     <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
     <div class="filter-bar">
@@ -1077,13 +1049,8 @@ function renderAdminTable() {
                   if (!hasNote) return "";                                           // בלי הערה - אין מה לבחור
                   const waiting = pendingNotes[b.id] !== undefined && !b.notes_scope;      // הערה חדשה: חובה לבחור
                   const sc = waiting ? "" : (b.notes_scope || "companies");              // הערה ישנה בלי בחירה = חברות
-                  return `<select onchange="noteScopeChange('${b.id}',this.value)" title="באיזו רשימה מוצגת ההערה"
-                    style="padding:4px 6px;border:1px solid ${waiting?"var(--red)":"var(--border)"};border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
-                    <option value="" ${!sc?"selected":""} disabled>— בחר —</option>
-                    <option value="companies" ${sc==="companies"?"selected":""}>רק חברות</option>
-                    <option value="bonds"     ${sc==="bonds"?"selected":""}>רק אג"ח</option>
-                    <option value="both"      ${sc==="both"?"selected":""}>שתיהן</option>
-                  </select>`; })()}
+                  const bt = (v, l) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="noteScopeChange('${b.id}','${v}')">${l}</button>`;
+                  return `<span class="sc-btns ${waiting?"need":""}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
@@ -1252,13 +1219,9 @@ function renderForm() {
 
       <div class="field" id="f-notes-scope-wrap" style="${(b.notes||"").trim() ? "" : "display:none;"}">
         <label>היכן להציג את ההערה <span style="color:var(--red)">*</span></label>
-        <select id="f-notes-scope">
-          ${(() => { const sc = b.notes_scope || ((b.notes||"").trim() ? "companies" : "");   // הערה קיימת בלי בחירה = מוצגת בחברות
-            return `<option value="" ${!sc?"selected":""} disabled>— בחר —</option>
-          <option value="companies" ${sc==="companies"?"selected":""}>רק ברשימת החברות</option>
-          <option value="bonds" ${sc==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
-          <option value="both" ${sc==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>`; })()}
-        </select>
+        ${(() => { const sc = b.notes_scope || ((b.notes||"").trim() ? "companies" : "");   // הערה קיימת בלי בחירה = מוצגת בחברות
+          return `<input type="hidden" id="f-notes-scope" value="${sc}">
+        <div class="sc-btns" id="f-notes-scope-btns">${[["companies","רק ברשימת החברות"],["bonds","רק ברשימת האג\"ח"],["both","בשתי הרשימות (חברות ואג\"ח)"]].map(([v,l]) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="formScopePick('${v}')">${l}</button>`).join("")}</div>`; })()}
       </div>
 
       <p class="error-msg" id="form-err"></p>
@@ -1779,6 +1742,11 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
   const hint = document.getElementById("permit-hint"); if (hint) hint.style.color = (permitMode === "other" && v.length < 4 && v.length > 0) ? "var(--red)" : "var(--light)";
+}
+function formScopePick(v) {            // "היכן להציג את ההערה" בטופס: כפתורי בחירה
+  const h = document.getElementById("f-notes-scope"); if (h) h.value = v;
+  document.querySelectorAll("#f-notes-scope-btns .sc-b").forEach((b, i) => b.classList.toggle("on", ["companies", "bonds", "both"][i] === v));
+  formDirty = true;
 }
 function permitPick(m) {
   permitMode = m; formDirty = true;
