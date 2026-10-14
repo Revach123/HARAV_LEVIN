@@ -722,6 +722,53 @@
   .step:last-child { border-left: none; }
   .step.active { background: var(--navy); color: #fff; font-weight: 500; }
   .step.done { background: var(--green-bg); color: var(--green); }
+  /* Alef — אותו גופן של האתר (SIL OFL), מאורח בריפו */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+  /* ═══ התאמה לעיצוב האתר (display.html): גופן Alef, צבעי navy/טורקיז, כותרות טבלה בירקרק בהיר ═══ */
+  :root {
+    --navy:#274d5b; --navy2:#1c3a47;
+    --accent:#2aada1; --accent-dark:#1e8f85; --accent-bg:#e9f6f5; --accent-border:#b9e3de; --row-alt:#f6fafa;
+    --bg:#f6fafa; --bg2:#ffffff; --border:#dfe7e8;
+    --text:#3b3d3d; --muted:#6a7c82; --light:#a6b4b8;
+    --green:#1e8f85; --green-bg:#e9f6f5; --green-border:#b9e3de;
+  }
+  body { font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif; background:#ffffff; font-size:16px; }
+  button, input, select, textarea { font-family: inherit; }
+  header { background: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
+  header h1 { font-size: 20px; font-weight: 700; }
+  #admin-toggle { border-radius: 4px; }
+  .btn-primary, .btn-add, .lookup-row button { border-radius: 4px; font-weight: 700; }
+  .btn-primary:hover, .btn-add:hover, .lookup-row button:hover { background: var(--accent-dark); }
+  .btn-ghost { border-radius: 4px; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .panel, .table-wrap, .csv-panel { border-radius: 4px; }
+  thead th { background: var(--accent-bg); color: var(--navy); font-weight: 700; font-size: 13px; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--accent-bg); }
+  .admin-bar h2, .panel h2, .panel-header h2 { color: var(--navy); font-weight: 700; }
+  .home-card { border-radius: 4px; border-color: var(--border); }
+  .home-card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(39,77,91,.12); }
+  .home-card b { color: var(--navy); }
+  .home-card .ico { color: var(--accent-dark); }
+  .gs-box input:focus { border-color: var(--accent); }
+  .scard { border-radius: 4px; }
+  .scard .badge-t { background: var(--accent-bg); color: var(--accent-dark); }
+  .scard .badge-t.bond { background: #dff0f0; color: var(--navy); }
+  .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
+  .admin-tabs { display:flex; gap:0; margin:0 0 1.2rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .admin-tabs button { flex:1; min-width:150px; padding:.8rem 1rem; font-size:17px; font-weight:700; font-family:inherit; background:transparent; color:var(--navy); border:none; border-top:3px solid transparent; cursor:pointer; transition:.15s; }
+  .admin-tabs button:hover { color:var(--accent-dark); }
+  .admin-tabs button.active { color:var(--accent-dark); border-top-color:var(--accent); background:var(--accent-bg); }
 </style>
 </head>
 <body>
@@ -859,10 +906,10 @@ function render() {
   if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "home")       app.innerHTML = renderHome();
-  else if (view === "search")     app.innerHTML = renderSearch();
-  else if (view === "admin")      app.innerHTML = renderAdminTable();
-  else if (view === "form")       app.innerHTML = renderForm();
-  else if (view === "csv-import") app.innerHTML = renderCsvImport();
+  else if (view === "search")     app.innerHTML = adminTabs() + renderSearch();
+  else if (view === "admin")      app.innerHTML = adminTabs() + renderAdminTable();
+  else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
+  else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   bindEvents();
   document.getElementById("admin-toggle").textContent =
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
@@ -975,18 +1022,22 @@ function renderAdminTable() {
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td>
-                  <input type="text" value="${escHtml(b.notes||"")}" placeholder="הערה"
-                    onchange="inlineUpdate('${b.id}','notes',this.value.trim())"
+                  <input type="text" value="${escHtml(pendingNotes[b.id] ?? b.notes ?? "")}" placeholder="הערה"
+                    onchange="noteInline('${b.id}', this.value)"
                     style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">
                 </td>
-                <td>
-                  <select onchange="inlineUpdate('${b.id}','notes_scope',this.value)" title="באיזו רשימה מוצגת ההערה"
-                    style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
-                    <option value=""          ${!b.notes_scope?"selected":""}>ברירת מחדל</option>
-                    <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק חברות</option>
-                    <option value="bonds"     ${b.notes_scope==="bonds"?"selected":""}>רק אג"ח</option>
-                    <option value="both"      ${b.notes_scope==="both"?"selected":""}>שתיהן</option>
-                  </select>
+                <td>${(() => {
+                  const hasNote = (pendingNotes[b.id] ?? b.notes ?? "").trim() !== "";
+                  if (!hasNote) return "";                                           // בלי הערה - אין מה לבחור
+                  const waiting = pendingNotes[b.id] !== undefined && !b.notes_scope;      // הערה חדשה: חובה לבחור
+                  const sc = waiting ? "" : (b.notes_scope || "companies");              // הערה ישנה בלי בחירה = חברות
+                  return `<select onchange="noteScopeChange('${b.id}',this.value)" title="באיזו רשימה מוצגת ההערה"
+                    style="padding:4px 6px;border:1px solid ${waiting?"var(--red)":"var(--border)"};border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
+                    <option value="" ${!sc?"selected":""} disabled>— בחר —</option>
+                    <option value="companies" ${sc==="companies"?"selected":""}>רק חברות</option>
+                    <option value="bonds"     ${sc==="bonds"?"selected":""}>רק אג"ח</option>
+                    <option value="both"      ${sc==="both"?"selected":""}>שתיהן</option>
+                  </select>`; })()}
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
@@ -1130,7 +1181,7 @@ function renderForm() {
 
       <div class="field">
         <label>הערות</label>
-        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}"
+        <input type="text" id="f-notes" value="${escHtml(b.notes||"")}" oninput="document.getElementById('f-notes-scope-wrap').style.display = this.value.trim() ? '' : 'none'"
           placeholder='בחר מהרשימה או הקלד הערה חדשה'
           list="notes-list" autocomplete="off">
         <datalist id="notes-list">
@@ -1141,15 +1192,16 @@ function renderForm() {
         </datalist>
       </div>
 
-      <div class="field">
-        <label>היכן להציג את ההערה</label>
+      <div class="field" id="f-notes-scope-wrap" style="${(b.notes||"").trim() ? "" : "display:none;"}">
+        <label>היכן להציג את ההערה <span style="color:var(--red)">*</span></label>
         <select id="f-notes-scope">
-          <option value="" ${!b.notes_scope?"selected":""}>ברירת מחדל: רק ברשימת החברות</option>
-          <option value="companies" ${b.notes_scope==="companies"?"selected":""}>רק ברשימת החברות</option>
-          <option value="bonds" ${b.notes_scope==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
-          <option value="both" ${b.notes_scope==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>
+          ${(() => { const sc = b.notes_scope || ((b.notes||"").trim() ? "companies" : "");   // הערה קיימת בלי בחירה = מוצגת בחברות
+            return `<option value="" ${!sc?"selected":""} disabled>— בחר —</option>
+          <option value="companies" ${sc==="companies"?"selected":""}>רק ברשימת החברות</option>
+          <option value="bonds" ${sc==="bonds"?"selected":""}>רק ברשימת האג"ח</option>
+          <option value="both" ${sc==="both"?"selected":""}>בשתי הרשימות (חברות ואג"ח)</option>`; })()}
         </select>
-        <div style="font-size:12px;color:var(--light);margin-top:4px;">"בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד. אם לא התבצעה ההרצה של migrations/0004 - הבחירה לא תישמר.</div>
+        <div style="font-size:12px;color:var(--light);margin-top:4px;">חובה לבחור כשיש הערה. "בעלות גוי" ו"בפירוק" מוצגות ברשימת האג"ח תמיד.</div>
       </div>
 
       <p class="error-msg" id="form-err"></p>
@@ -1361,6 +1413,13 @@ function renderCsvImport() {
 // ════════════════════════════════════════════
 //  מסך ראשי + חיפוש במאגר (חברות + אג"ח, חיפוש מקורב)
 // ════════════════════════════════════════════
+// שלוש האפשרויות בראש כל מסך: הוספת עסק / עדכון עסק קיים / חיפוש במאגר
+function adminTabs() {
+  const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
+  const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
+}
+
 function renderHome() {
   return `
     <div class="home-grid">
@@ -1792,10 +1851,11 @@ function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מ
   }, 250);
 }
 
-async function inlineUpdate(id, field, value) {
+async function inlineUpdate(id, field, value) { return inlineUpdateMany(id, { [field]: value }); }
+async function inlineUpdateMany(id, fields) {
   const biz = businesses.find(b => b.id === id);
   if (!biz) return;
-  const updated = { ...biz, [field]: value };
+  const updated = { ...biz, ...fields };
   try {
     await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
     businesses = businesses.map(b => b.id === id ? updated : b);
@@ -1805,6 +1865,29 @@ async function inlineUpdate(id, field, value) {
     if (e.message === "Unauthorized") { handleUnauth(); return false; }
     showStatus("שגיאה בשמירה"); render();
     return false;
+  }
+}
+
+// הערות בטבלה: הערה חדשה נשמרת רק אחרי שנבחר היכן להציג אותה (pendingNotes = הערות שממתינות לבחירה)
+const pendingNotes = {};
+async function noteInline(id, raw) {
+  const v = (raw || "").trim();
+  const biz = businesses.find(b => b.id === id);
+  if (!biz) return;
+  if (!v) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: "", notes_scope: "" }); render(); return; }
+  if (biz.notes_scope) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v }); return; }
+  if ((biz.notes || "").trim()) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: "companies" }); return; }   // הערה ישנה בלי בחירה = חברות
+  pendingNotes[id] = v;                        // הערה חדשה: ממתינה לבחירה
+  showStatus("בחר היכן להציג את ההערה");
+  render();
+}
+async function noteScopeChange(id, scope) {
+  if (pendingNotes[id] !== undefined) {
+    const v = pendingNotes[id]; delete pendingNotes[id];
+    await inlineUpdateMany(id, { notes: v, notes_scope: scope });
+    render();
+  } else {
+    await inlineUpdateMany(id, { notes_scope: scope });
   }
 }
 
@@ -1916,6 +1999,10 @@ async function doSave() {
     if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
     return;
   }
+  if ((document.getElementById("f-notes")?.value || "").trim() && !(document.getElementById("f-notes-scope")?.value || "")) {
+    if (errEl) errEl.textContent = "יש לבחור היכן להציג את ההערה";
+    return;
+  }
   const chpVal = (document.getElementById("chp")?.value || "").trim();
   // ── Duplicate ח.פ. check ──
   if (chpVal) {
@@ -1937,7 +2024,7 @@ async function doSave() {
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),
     notes:          (document.getElementById("f-notes")?.value     || "").trim(),
-    notes_scope:    (document.getElementById("f-notes-scope")?.value || "").trim(),
+    notes_scope:    (document.getElementById("f-notes")?.value || "").trim() ? (document.getElementById("f-notes-scope")?.value || "").trim() : "",
     biz_type:       (document.getElementById("f-biztype")?.value   || "").trim(),
     visibility:     (document.getElementById("f-visibility")?.value|| "").trim(),
     agch_approved:  (document.getElementById("f-agch")?.value      || "").trim(),
@@ -2159,6 +2246,7 @@ async function startImport() {
       tase_has_agch:  get("tase_has_agch"),
       biz_type:       get("biz_type"),
       notes:          get("notes"),
+      notes_scope:    get("notes") ? "companies" : "",
       has_details:    0,
     };
 
