@@ -790,7 +790,15 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
-  tr.row-dirty td { background:#fff8e6; }
+  .chg-bar { display:flex; gap:8px; margin-bottom:10px; }
+  .chg-bar .btn-ghost:disabled { opacity:.4; cursor:default; }
+  .lg-row { padding:9px 4px; border-bottom:1px solid #edf2f2; }
+  .lg-row.undone { opacity:.5; } .lg-row.undone .lg-name { text-decoration:line-through; }
+  .lg-top { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .lg-chip { font-size:11px; padding:1px 8px; border-radius:10px; color:#fff; } .lg-chip.add{background:#2f8f5b} .lg-chip.del{background:#c0392b} .lg-chip.edit{background:#274d5b}
+  .lg-det { font-size:12px; color:var(--muted); margin:3px 0 0; }
+  .lg-btns { margin-top:5px; display:flex; gap:6px; }
+  .lg-btns button { font-family:inherit; font-size:12px; padding:3px 10px; border-radius:5px; border:1px solid var(--border); background:#fff; cursor:pointer; }
   .row-save, .row-del { font-family:inherit; font-size:12px; padding:4px 10px; border-radius:5px; border:1px solid var(--border); background:#fff; cursor:pointer; }
   .row-save { border-color:var(--accent); color:var(--accent-dark); font-weight:700; }
   .row-save:disabled { opacity:.35; cursor:default; border-color:var(--border); color:var(--muted); font-weight:400; }
@@ -994,7 +1002,10 @@ function renderAdminTable() {
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
     </div>
-    <div style="margin-bottom:10px;"><button class="btn-primary" id="save-all-btn" onclick="saveAllRows()" ${dirtyIds().length ? "" : "disabled"} style="width:auto;padding:9px 22px;">שמירת כל השינויים${dirtyIds().length ? ` (${dirtyIds().length})` : ""}</button></div>
+    <div class="chg-bar">
+      <button class="btn-ghost" onclick="undoLast()" ${changeLog.some(e=>!e.undone) ? "" : "disabled"}>↩ ביטול שינוי אחרון</button>
+      <button class="btn-ghost" onclick="openChangeLog()">📜 יומן שינויים${changeLog.length ? ` (${changeLog.length})` : ""}</button>
+    </div>
     <div id="sync-status" style="display:none;margin-bottom:1rem;padding:10px 14px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:var(--bg2);"></div>
     <div class="filter-bar">
       <div class="fb-group" style="flex:1;min-width:200px;">
@@ -1039,9 +1050,9 @@ function renderAdminTable() {
         </thead>
         <tbody>
           ${sorted.map(b0 => {
-            const b = effBiz(b0), dirty = isDirty(b0.id);
+            const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             return `
-              <tr class="${dirty ? "row-dirty" : ""}">
+              <tr>
                 <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
@@ -1060,7 +1071,7 @@ function renderAdminTable() {
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
-                  <select onchange="draftSet('${b.id}','visibility',this.value)"
+                  <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.visibility?"selected":""}>רק כללי</option>
                     <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
@@ -1084,7 +1095,6 @@ function renderAdminTable() {
                   </select>
                 </td>
                 <td style="text-align:center;white-space:nowrap;">
-                  <button class="row-save" onclick="saveRow('${b.id}')" ${dirty ? "" : "disabled"}>שמור</button>
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
               </tr>`;
@@ -1854,8 +1864,10 @@ async function tryConfirmDelete() {
 
 async function confirmDelete(id) {
   try {
+    const old = businesses.find(b => b.id === id);
     await apiFetch(`/businesses/${id}`, { method: "DELETE" });
     businesses = businesses.filter(b => b.id !== id);
+    if (old) logChange("delete", old, null);
     deleteId = null;
     const modal = document.getElementById("delete-modal");
     if (modal) modal.style.display = "none";
@@ -2059,10 +2071,12 @@ function renderBondPicker() {
 
 // שינוי "אישור אג"ח" בטבלת הניהול. "⚙ בחירת אג"ח…" היא פעולה: תמיד פותחת את חלון הבחירה (גם אם החברה כבר במצב
 // "אג"ח מסוימים"), ומעבירה את החברה למצב הזה אם עוד לא; הבחירה בתפריט עצמה חוזרת לערך הנוכחי.
-function agchChange(id, sel) {
-  if (sel.value === "__pick__") { draftSet(id, "agch_approved", BOND_PICK); openBondPicker(id); return; }
-  draftSet(id, "agch_approved", sel.value);
-  if (sel.value === BOND_PICK) openBondPicker(id);
+async function agchChange(id, sel) {
+  const biz = businesses.find(b => b.id === id); if (!biz) return;
+  const val = sel.value === "__pick__" ? BOND_PICK : sel.value;
+  if (val !== (biz.agch_approved || "")) { const ok = await inlineUpdate(id, "agch_approved", val); if (!ok) { sel.value = biz.agch_approved || ""; return; } render(); }
+  else if (sel.value === "__pick__") sel.value = BOND_PICK;
+  if (sel.value === "__pick__" || val === BOND_PICK) openBondPicker(id);
 }
 
 let admSearchTimer = null;
@@ -2084,7 +2098,8 @@ async function inlineUpdateMany(id, fields) {
   try {
     await apiFetch(`/businesses/${id}`, { method: "PUT", body: JSON.stringify(updated) });
     businesses = businesses.map(b => b.id === id ? updated : b);
-    showStatus("עודכן ✓");
+    logChange("edit", biz, updated);
+    showStatus("נשמר ✓");
     return true;
   } catch(e) {
     if (e.message === "Unauthorized") { handleUnauth(); return false; }
@@ -2093,49 +2108,87 @@ async function inlineUpdateMany(id, fields) {
   }
 }
 
-// טבלת העדכון: שינויים בשורות נשמרים כטיוטה (drafts) עד "שמור" בשורה או "שמירת כל השינויים"; הטיוטות לא הולכות לאיבוד בחיפוש / סינון / מיון
-const drafts = {};
-const draftFields = ["notes", "notes_scope", "visibility", "agch_approved", "permit_name", "registrar_name"];
-const effBiz = b => ({ ...b, ...(drafts[b.id] || {}) });
-const isDirty = id => { const d = drafts[id], b = businesses.find(x => x.id === id); return !!d && !!b && draftFields.some(f => f in d && (d[f] ?? "") !== (b[f] ?? "")); };
-const dirtyIds = () => Object.keys(drafts).filter(isDirty);
-function draftSet(id, field, value) {
-  (drafts[id] = drafts[id] || {})[field] = value;
-  render();
-}
-function noteInline(id, raw) {
+// טבלת העדכון: כל שינוי נשמר מיד ואוטומטית ונרשם ביומן השינויים (אפשר לבטל). הערה חדשה ממתינה (pendingNotes) עד שבוחרים היכן להציג אותה.
+const pendingNotes = {};
+async function noteInline(id, raw) {
   const v = (raw || "").trim();
   const biz = businesses.find(b => b.id === id); if (!biz) return;
-  const d = drafts[id] = drafts[id] || {};
-  d.notes = v;
-  if (!v) d.notes_scope = "";
-  else if (!(d.notes_scope ?? biz.notes_scope)) d.notes_scope = (biz.notes || "").trim() ? "companies" : "";   // הערה ישנה בלי בחירה = חברות; חדשה = חובה לבחור
+  if (!v) { delete pendingNotes[id]; if ((biz.notes || "") !== "" || biz.notes_scope) await inlineUpdateMany(id, { notes: "", notes_scope: "" }); render(); return; }
+  if (v === (biz.notes || "").trim() && pendingNotes[id] === undefined) return;
+  if (biz.notes_scope) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v }); render(); return; }
+  if ((biz.notes || "").trim()) { delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: "companies" }); render(); return; }   // הערה ישנה בלי בחירה = חברות
+  pendingNotes[id] = v; showStatus("בחר היכן להציג את ההערה"); render();     // הערה חדשה: חובה לבחור
+}
+async function noteScopeChange(id, scope) {
+  if (pendingNotes[id] !== undefined) { const v = pendingNotes[id]; delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: scope }); }
+  else await inlineUpdateMany(id, { notes_scope: scope });
   render();
 }
-function nameInline(id, raw) {          // עסק בלי ח.פ.: שם אחד, נשמר גם כשם בהיתר וגם כשם הרשם
+async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, נשמר גם כשם בהיתר וגם כשם הרשם
   const v = (raw || "").trim();
-  const d = drafts[id] = drafts[id] || {};
-  d.permit_name = v; d.registrar_name = v;
+  if (!v) { showStatus("שם העסק לא יכול להיות ריק"); render(); return; }
+  await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
   render();
 }
-function noteScopeChange(id, scope) { draftSet(id, "notes_scope", scope); }
-async function saveRow(id, quiet) {
-  const biz = businesses.find(b => b.id === id), d = drafts[id];
-  if (!biz || !d) return true;
-  const eff = effBiz(biz);
-  if ("permit_name" in d && !(d.permit_name || "").trim()) { if (!quiet) showStatus("שם העסק לא יכול להיות ריק"); return false; }
-  if ((eff.notes || "").trim() && !eff.notes_scope && !(biz.notes || "").trim()) { if (!quiet) showStatus("בחר היכן להציג את ההערה"); return false; }
-  if ((eff.notes || "").trim() && !eff.notes_scope) d.notes_scope = "companies";
-  const ok = await inlineUpdateMany(id, Object.fromEntries(draftFields.filter(f => f in d).map(f => [f, d[f]])));
-  if (ok) { delete drafts[id]; if (!quiet) { showStatus("נשמר ✓"); render(); } }
-  return !!ok;
+
+// ── יומן שינויים: כל הוספה / מחיקה / עדכון נרשמים, ואפשר לבטל שינוי מסוים או לחזור אחורה ──
+let changeLog = []; let chgSeq = 0;
+try { changeLog = JSON.parse(sessionStorage.getItem("chglog") || "[]"); chgSeq = changeLog.reduce((m, e) => Math.max(m, e.n), 0); } catch {}
+const saveLog = () => { try { sessionStorage.setItem("chglog", JSON.stringify(changeLog.slice(-200))); } catch {} };
+const CHG_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: "ח.פ.", category: "קטגוריה", region: "אזור", notes: "הערה", notes_scope: "היכן להציג הערה", visibility: "פרטי/כללי", agch_approved: "אישור אג\"ח", biz_type: "סוג עסק" };
+const CHG_SCOPE = { companies: "חברות", bonds: "אג\"ח", both: "שתיהן" };
+const chgVal = (f, v) => v === undefined || v === null || v === "" ? (f === "visibility" ? "רק כללי" : "ריק") : f === "notes_scope" ? (CHG_SCOPE[v] || v) : f === "visibility" && v === "פרטי" ? "יש גם פרטי" : v;
+const chgName = b => ((b.permit_name || b.registrar_name || "") + "").trim() || "(ללא שם)";
+function logChange(type, before, after) {
+  const e = { n: ++chgSeq, ts: Date.now(), type, id: (after || before).id, name: chgName(after || before), before, after, changes: [], undone: false };
+  if (type === "edit") {
+    e.changes = Object.keys(CHG_LABELS).filter(f => (before[f] ?? "") !== (after[f] ?? "")).map(f => ({ f, from: before[f] ?? "", to: after[f] ?? "" }));
+    if (!e.changes.length) { chgSeq--; return; }
+  }
+  changeLog.push(e); if (changeLog.length > 200) changeLog.shift(); saveLog();
 }
-async function saveAllRows() {
-  const ids = dirtyIds(); if (!ids.length) return;
-  let ok = 0, fail = 0;
-  for (const id of ids) { if (await saveRow(id, true)) ok++; else fail++; }
-  render();
-  showStatus(fail ? `נשמרו ${ok}, ${fail} לא נשמרו (חסרה בחירה היכן להציג הערה)` : `נשמרו ${ok} שורות ✓`);
+async function undoEntry(e) {
+  try {
+    if (e.type === "edit") {
+      const cur = businesses.find(b => b.id === e.id); if (!cur) throw new Error("העסק כבר לא קיים");
+      const upd = { ...cur }; e.changes.forEach(c => { upd[c.f] = c.from; });
+      await apiFetch(`/businesses/${e.id}`, { method: "PUT", body: JSON.stringify(upd) });
+      businesses = businesses.map(b => b.id === e.id ? upd : b);
+    } else if (e.type === "add") {
+      if (businesses.some(b => b.id === e.id)) await apiFetch(`/businesses/${e.id}`, { method: "DELETE" });
+      businesses = businesses.filter(b => b.id !== e.id);
+    } else {
+      if (!businesses.some(b => b.id === e.id)) await apiFetch("/businesses", { method: "POST", body: JSON.stringify(e.before) });
+      if (!businesses.some(b => b.id === e.id)) businesses = [...businesses, e.before];
+    }
+    e.undone = true; saveLog(); return true;
+  } catch (err) {
+    if (err.message === "Unauthorized") { handleUnauth(); return false; }
+    showStatus("הביטול נכשל: " + err.message); return false;
+  }
+}
+async function undoLast() { const e = [...changeLog].reverse().find(x => !x.undone); if (e && await undoEntry(e)) { showStatus("השינוי האחרון בוטל"); render(); if (document.getElementById("log-root")) openChangeLog(); } }
+async function undoOne(n) { const e = changeLog.find(x => x.n === n); if (e && !e.undone && await undoEntry(e)) { showStatus("השינוי בוטל"); render(); openChangeLog(); } }
+async function undoBackTo(n) {      // מבטל את כל השינויים שאחרי השינוי הזה (מהחדש לישן), כך שהמצב חוזר לרגע שאחריו
+  const list = changeLog.filter(x => x.n > n && !x.undone).reverse();
+  for (const e of list) if (!(await undoEntry(e))) break;
+  render(); openChangeLog();
+}
+function openChangeLog() {
+  document.getElementById("log-root")?.remove();
+  const fmtT = ts => new Date(ts).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  const det = e => e.type === "edit" ? e.changes.map(c => `${CHG_LABELS[c.f]}: "${escHtml(chgVal(c.f, c.from))}" ← "${escHtml(chgVal(c.f, c.to))}"`).join("<br>") : "";
+  const rows = [...changeLog].reverse().map(e => `<div class="lg-row ${e.undone ? "undone" : ""}">
+      <div class="lg-top"><span class="lg-chip ${e.type}">${e.type === "add" ? "נוסף" : e.type === "delete" ? "נמחק" : "שונה"}</span><b class="lg-name">${escHtml(e.name)}</b><span style="color:var(--light);font-size:11px;">${fmtT(e.ts)}${e.undone ? " · בוטל" : ""}</span></div>
+      ${det(e) ? `<div class="lg-det">${det(e)}</div>` : ""}
+      <div class="lg-btns">${e.undone ? "" : `<button onclick="undoOne(${e.n})">בטל שינוי זה</button>`}${changeLog.some(x => x.n > e.n && !x.undone) ? `<button onclick="undoBackTo(${e.n})">חזור למצב שאחרי שינוי זה</button>` : ""}</div>
+    </div>`).join("") || '<div style="padding:16px;text-align:center;color:var(--light);">עדיין אין שינויים</div>';
+  const root = document.createElement("div"); root.id = "log-root";
+  root.innerHTML = `<div class="modal-overlay" onclick="if(event.target.classList.contains('modal-overlay'))document.getElementById('log-root').remove()">
+    <div class="modal-box" style="max-width:600px;"><div class="modal-title">יומן שינויים</div>
+      <div style="max-height:60vh;overflow:auto;text-align:right;">${rows}</div>
+      <div class="modal-actions" style="margin-top:12px;display:flex;justify-content:flex-end;"><button class="btn-ghost" onclick="document.getElementById('log-root').remove()">סגירה</button></div></div></div>`;
+  document.body.appendChild(root);
 }
 
 // החלף את הפונקציה runRegistrySync הקיימת בזו:
@@ -2277,10 +2330,13 @@ async function doSave() {
     const isEdit = !!editBiz?.id;
     if (isEdit) {
       await apiFetch(`/businesses/${payload.id}`, { method: "PUT",  body: JSON.stringify(payload) });
+      const old = businesses.find(b => b.id === payload.id);
       businesses = businesses.map(b => b.id === payload.id ? { ...b, ...payload } : b);
+      if (old) logChange("edit", old, { ...old, ...payload });
     } else {
       await apiFetch("/businesses", { method: "POST", body: JSON.stringify(payload) });
       businesses = [...businesses, payload];
+      logChange("add", null, payload);
     }
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
     saving = false; formDirty = false; setView(formReturn);
