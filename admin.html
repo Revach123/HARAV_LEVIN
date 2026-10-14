@@ -1774,7 +1774,7 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   const w = document.getElementById("form-after-permit"); if (!w) return;
   const isEdit = !!editBiz?.id;
   const v = (document.getElementById("f-permit")?.value || "").trim();
-  const ok = isEdit || permitMode === "reg" || (permitMode === "other" && v.length >= 4);
+  const ok = isEdit || permitMode === "reg" || (permitMode === "other" && v.length >= (noChp ? 1 : 4));
   w.classList.toggle("locked", !ok);
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
@@ -2249,7 +2249,7 @@ async function doSave() {
   let permitName = (document.getElementById("f-permit")?.value || "").trim();
   if (noChp) regName = permitName;                                     // בלי ח.פ.: שם אחד, נשמר בשני השדות
   if (permitMode === "reg") permitName = regName;                      // "שם מהרשם"
-  else if (!editBiz?.id && permitName.length < 4) { const e0 = document.getElementById("form-err"); if (e0) e0.textContent = "יש לבחור שם להיתר עסקה: שם מהרשם, או שם אחר (4 תווים לפחות)"; return; }
+  else if (!editBiz?.id && permitName.length < (noChp ? 1 : 4)) { const e0 = document.getElementById("form-err"); if (e0) e0.textContent = "יש לבחור שם להיתר עסקה: שם מהרשם, או שם אחר (4 תווים לפחות)"; return; }
   const errEl = document.getElementById("form-err");
   if (!regName && !permitName) {
     if (errEl) errEl.textContent = "חובה להזין לפחות שם אחד";
