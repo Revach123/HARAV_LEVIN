@@ -312,6 +312,30 @@
   }
 
   /* ── PANEL (login / form) ── */
+
+  /* ── מסך ראשי של הניהול + חיפוש במאגר ── */
+  .home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:900px; margin:2.5rem auto; }
+  .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
+  .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
+  .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
+  .home-card b { font-size:18px; display:block; margin-bottom:4px; }
+  .home-card span.sub { font-size:13px; color:var(--muted); }
+  .gs-box { max-width:900px; margin:0 auto 1rem; }
+  .gs-box input { width:100%; padding:12px 16px; font-size:16px; border:1.5px solid var(--border); border-radius:10px; font-family:inherit; background:var(--bg2); }
+  .gs-box input:focus { outline:none; border-color:var(--navy); }
+  .gs-info { color:var(--muted); font-size:13px; margin:.4rem 0 1rem; }
+  .gs-sec { font-size:15px; font-weight:600; color:var(--navy); margin:1.2rem 0 .6rem; }
+  .gs-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:12px; }
+  .scard { background:var(--bg2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; }
+  .scard .sh { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .scard .st { font-size:15px; font-weight:600; color:var(--navy); }
+  .scard .badge-t { font-size:11px; padding:1px 8px; border-radius:10px; background:#e8eef5; color:var(--navy); white-space:nowrap; }
+  .scard .badge-t.bond { background:#e6f4ea; color:var(--green); }
+  .scard dl { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; margin:0; }
+  .scard dt { color:var(--muted); }
+  .scard dd { margin:0; word-break:break-word; }
+  .scard mark { background:#fff3b0; padding:0 1px; border-radius:2px; }
+  .scard .sbtn { font-size:12px; padding:3px 10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); cursor:pointer; font-family:inherit; }
   .panel {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -834,6 +858,8 @@ function render() {
   const app = document.getElementById("app");
   if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
   else if (view === "login")      app.innerHTML = renderLogin();
+  else if (view === "home")       app.innerHTML = renderHome();
+  else if (view === "search")     app.innerHTML = renderSearch();
   else if (view === "admin")      app.innerHTML = renderAdminTable();
   else if (view === "form")       app.innerHTML = renderForm();
   else if (view === "csv-import") app.innerHTML = renderCsvImport();
@@ -893,6 +919,7 @@ function renderAdminTable() {
             <a href="/data/bonds_list/bonds_general.csv" download="bonds_general.csv">אג"ח כללי</a>
           </div>
         </details>
+        <button class="btn-ghost" onclick="setView('home')">🏠 תפריט ראשי</button>
         <button class="btn-add" onclick="openForm(null)">+ הוספת עסק</button>
       </div>
     </div>
@@ -1005,7 +1032,7 @@ function renderForm() {
     <div class="panel">
       <div class="panel-header">
         <h2>${isEdit ? "עריכת עסק" : "הוספת עסק חדש"}</h2>
-        <button class="btn-ghost" onclick="setView('admin')">ביטול</button>
+        <button class="btn-ghost" onclick="setView(formReturn)">ביטול</button>
       </div>
 
       <div class="lookup-box">
@@ -1331,6 +1358,115 @@ function renderCsvImport() {
 // ─────────────────────────────────────────────
 //  BIND EVENTS
 // ─────────────────────────────────────────────
+// ════════════════════════════════════════════
+//  מסך ראשי + חיפוש במאגר (חברות + אג"ח, חיפוש מקורב)
+// ════════════════════════════════════════════
+function renderHome() {
+  return `
+    <div class="home-grid">
+      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
+      <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
+      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
+    </div>`;
+}
+
+let gsQuery = "", gsBonds = null, gsBondsLoading = false;
+async function loadGsBonds() {
+  if (gsBonds || gsBondsLoading) return;
+  gsBondsLoading = true;
+  try {
+    const r = await fetch("/data/bonds_list/bonds_all.json");
+    const d = r.ok ? await r.json() : { rows: [] };
+    gsBonds = d.rows || [];
+  } catch (e) { gsBonds = []; }
+  gsBondsLoading = false;
+  if (view === "search") runGlobalSearch();
+}
+function renderSearch() {
+  loadGsBonds();
+  return `
+    <div class="admin-bar" style="max-width:900px;margin:0 auto 1rem;">
+      <h2>חיפוש במאגר</h2>
+      <button class="btn-ghost" onclick="setView('home')">🏠 תפריט ראשי</button>
+    </div>
+    <div class="gs-box"><input id="gs" type="search" placeholder="שם, ח.פ., מספר נייר, הערה... (מתקן שגיאות כתיב)" value="${escHtml(gsQuery)}" autocomplete="off"></div>
+    <div id="gs-results"></div>`;
+}
+
+// נרמול לחיפוש: בלי ניקוד/גרשיים/מקפים, אותיות קטנות
+const gsNorm = s => String(s ?? "").toLowerCase().replace(/[֑-ׇ]/g, "").replace(/["'״׳`´’]/g, "").replace(/[-–_.,/\\()\[\]:;]/g, " ").replace(/\s+/g, " ").trim();
+function gsLev(a, b, max) {            // מרחק עריכה חסום, כולל החלפת אותיות סמוכות (פקוס ~ פוקס)
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const d = [];
+  for (let i = 0; i <= a.length; i++) { d[i] = [i]; }
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    let best = Infinity;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      if (d[i][j] < best) best = d[i][j];
+    }
+    if (best > max) return max + 1;
+  }
+  return d[a.length][b.length];
+}
+function gsTokenScore(t, full, words) {  // 0 = אין התאמה
+  if (/\d/.test(t)) return full.includes(t) ? 3 : 0;          // מספרים: התאמה מדויקת (חלקית)
+  if (full.includes(t)) return words.some(w => w === t) ? 4 : 3;
+  const max = t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0;
+  if (!max) return 0;
+  for (const w of words) if (gsLev(t, w, max) <= max || (w.length > t.length && gsLev(t, w.slice(0, t.length), 1) <= (t.length >= 5 ? 1 : 0))) return 1.5;
+  return 0;
+}
+const gsCache = new WeakMap();           // טקסט מנורמל לכל רשומה (בלי לשנות את הרשומה עצמה - היא נשלחת לשרת בעדכון)
+function gsMatch(rec, tokens) {         // מחזיר ציון או 0 (כל המילים חייבות להתאים)
+  let c = gsCache.get(rec);
+  if (!c) { const full = gsNorm(Object.values(rec).join(" ")); c = { full, words: [...new Set(full.split(" "))] }; gsCache.set(rec, c); }
+  let sc = 0;
+  for (const t of tokens) { const x = gsTokenScore(t, c.full, c.words); if (!x) return 0; sc += x; }
+  return sc;
+}
+function gsHighlight(val, tokens) {
+  return String(val ?? "").split(/(\s+)/).map(w => {
+    if (!w.trim()) return escHtml(w);
+    const n = gsNorm(w);
+    const hit = n && tokens.some(t => /\d/.test(t) ? n.includes(t) : (n.includes(t) || gsLev(t, n, t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0) <= (t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0)));
+    return hit ? `<mark>${escHtml(w)}</mark>` : escHtml(w);
+  }).join("");
+}
+const GS_BIZ_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: 'ח.פ.', entity_type: "סוג ישות", category: "קטגוריה", region: "אזור", biz_type: "סוג עסק",
+  visibility: "פרטי / כללי", agch_approved: 'אישור אג"ח', tase_has_agch: 'אג"ח בבורסה', registry_status: "סטטוס ברשם", notes: "הערות", notes_scope: "היכן להציג הערה", updated_at: "עודכן" };
+const GS_BOND_LABELS = { security_name: 'שם אג"ח', symbol: "סימול", security_id: "מספר נייר", isin: "ISIN", security_type: "סוג נייר", company: "חברה", chp_number: 'ח.פ.', agch_approved: "אישור",
+  is_private: "קיים היתר פרטי", annual_interest: "ריבית %", redemption_date: "מועד פדיון", linkage: "הצמדה", last_price: "שער אחרון", ytm_gross: "תשואה לפדיון", midroog_rating: "דירוג מידרוג", maalot_rating: "דירוג מעלות", notes: "הערות" };
+const GS_SCOPE = { "": "ברירת מחדל (חברות)", companies: "רק חברות", bonds: 'רק אג"ח', both: "חברות + אג\"ח" };
+function gsCard(rec, kind, tokens) {
+  const labels = kind === "biz" ? GS_BIZ_LABELS : GS_BOND_LABELS;
+  const title = kind === "biz" ? displayName(rec) : (rec.security_name || "");
+  const rows = Object.keys(labels).filter(k => rec[k] !== undefined && rec[k] !== null && String(rec[k]).trim() !== "").map(k => {
+    let v = rec[k];
+    if (k === "notes_scope") v = GS_SCOPE[v] ?? v;
+    return `<dt>${escHtml(labels[k])}</dt><dd>${gsHighlight(v, tokens)}</dd>`;
+  }).join("");
+  const btn = kind === "biz" ? `<button class="sbtn" onclick="openForm('${rec.id}')">✏️ עריכה</button>`
+    : (businesses.find(b => (b.chp_number || "") && b.chp_number === rec.chp_number) ? `<button class="sbtn" onclick="openForm('${businesses.find(b => b.chp_number === rec.chp_number).id}')">פתיחת החברה</button>` : "");
+  return `<div class="scard"><div class="sh"><div><span class="badge-t ${kind === "bond" ? "bond" : ""}">${kind === "biz" ? "חברה" : 'אג"ח'}</span>
+    <div class="st">${gsHighlight(title, tokens)}</div></div>${btn}</div><dl>${rows}</dl></div>`;
+}
+function runGlobalSearch() {
+  const out = document.getElementById("gs-results"); if (!out) return;
+  const tokens = gsNorm(gsQuery).split(" ").filter(Boolean);
+  if (!tokens.length) { out.innerHTML = `<p class="gs-info">הקלד מילה או מספר. החיפוש כולל את כל השדות של החברות והאג"ח, ומתקן שגיאות כתיב קלות.</p>`; return; }
+  const rank = (arr, kind) => arr.map(r => [gsMatch(r, tokens), r]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).map(x => x[1]);
+  const biz = rank(businesses, "biz"), bonds = gsBonds ? rank(gsBonds, "bond") : [];
+  const LIM = 60;
+  const sec = (title, arr, kind) => arr.length ? `<div class="gs-sec">${title} (${arr.length}${arr.length > LIM ? `, מוצגות ${LIM} הראשונות` : ""})</div><div class="gs-cards">${arr.slice(0, LIM).map(r => gsCard(r, kind, tokens)).join("")}</div>` : "";
+  out.innerHTML = `<div class="gs-info">נמצאו ${biz.length} חברות${gsBonds ? ` ו-${bonds.length} אג"ח` : ` (אג"ח נטענות...)`}</div>`
+    + sec("חברות", biz, "biz") + sec('אג"ח', bonds, "bond")
+    + (!biz.length && !bonds.length && gsBonds ? `<p class="gs-info">לא נמצאו תוצאות. נסה פחות מילים או כתיב אחר.</p>` : "");
+}
+
 function bindEvents() {
   const on = (id, ev, fn) => { const el=document.getElementById(id); if(el) el.addEventListener(ev, fn); };
 
@@ -1341,6 +1477,11 @@ function bindEvents() {
   on("f-vis",    "change", e => { filterVis     = e.target.value; render(); });
   on("f-agch",   "change", e => { filterAgch    = e.target.value; render(); });
   on("pwd","keydown", e => { if(e.key==="Enter") doLogin(); });
+  if (view === "search") {
+    const g = document.getElementById("gs");
+    if (g) { let tm; g.addEventListener("input", e => { gsQuery = e.target.value; clearTimeout(tm); tm = setTimeout(runGlobalSearch, 120); }); g.focus(); }
+    runGlobalSearch();
+  }
 
   // שמירת ח.פ. שמוקלד בזמן אמת כדי שלא יאבד בעת render מחדש
   const chpEl = document.getElementById("chp");
@@ -1394,13 +1535,15 @@ async function doLogin() {
   adminToken = pwd;
   try {
     await apiFetch("/businesses");
-    isAdmin = true; setView("admin");
+    isAdmin = true; setView("home");
   } catch {
-    isAdmin = true; setView("admin");
+    isAdmin = true; setView("home");
   }
 }
 
+let formReturn = "admin";
 function openForm(id) {
+  formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
   chpResult = null; chpError = "";
   setView("form");
@@ -1811,7 +1954,7 @@ async function doSave() {
       businesses = [...businesses, payload];
     }
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
-    saving = false; setView("admin");
+    saving = false; setView(formReturn);
   } catch(e) {
     saving = false;
     if (e.message === "Unauthorized") { handleUnauth(); return; }
