@@ -1123,8 +1123,6 @@ function renderForm() {
               <input type="search" id="nsq" placeholder="או חפש לפי שם חברה (מ-3 אותיות)" autocomplete="off"
                 style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
               <div id="ns-out" style="text-align:right;"></div>
-              <a href="#" id="ns-diag" style="font-size:11px;color:var(--light);" onclick="nameSearchDiag(event)">אבחון החיפוש</a>
-              <pre id="ns-diag-out" style="display:none;text-align:left;direction:ltr;font-size:11px;white-space:pre-wrap;background:#fff;border:1px solid var(--border);border-radius:4px;padding:6px;max-height:220px;overflow:auto;"></pre>
             </div>
             <div id="lookup-out" style="text-align:right;">${lookupOutHtml()}</div>
           </div>
@@ -1561,12 +1559,6 @@ function runGlobalSearch() {
 }
 
 // חיפוש חברה לפי שם במאגר הרישום (company-info-db) - בחירה ממלאת את ח.פ. ומפעילה את החיפוש ברשם
-async function nameSearchDiag(ev) {
-  ev.preventDefault();
-  const o = document.getElementById("ns-diag-out"); o.style.display = ""; o.textContent = "בודק…";
-  try { o.textContent = JSON.stringify(await apiFetch("/registry-name-search?diag=1"), null, 1); }
-  catch (e) { o.textContent = "שגיאה: " + e.message; }
-}
 let nsSeq = 0;
 function bindNameSearch() {
   const inp = document.getElementById("nsq"), out = document.getElementById("ns-out");
