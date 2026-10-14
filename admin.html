@@ -1136,8 +1136,8 @@ function renderForm() {
 
       <div id="form-rest" style="${(isEdit || noChp || chpResult) ? "" : "display:none;"}">
       <div class="field">
-        <label>שם ברשם הרשמי <span id="reg-hint" style="color:var(--light)">(${(b.chp_number||"").trim() && !noChp ? "נמשך מהרשם, לא ניתן לעריכה" : "ללא ח.פ. - מקלידים ידנית"})</span></label>
-        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" placeholder="שם כפי שרשום בגוף הממשלתי" ${(b.chp_number||"").trim() && !noChp ? "readonly" : ""}>
+        <label>שם ברשם הרשמי <span id="reg-hint" style="color:var(--light)">${(b.chp_number||"").trim() && !noChp ? "(נמשך מהרשם, לא ניתן לעריכה)" : ""}</span></label>
+        <input type="text" id="f-reg" value="${escHtml(b.registrar_name||"")}" ${(b.chp_number||"").trim() && !noChp ? "readonly" : ""}>
       </div>
 
       <div class="field">
@@ -1692,7 +1692,7 @@ function updateFormGate() {
   const reg = document.getElementById("f-reg"), hint = document.getElementById("reg-hint");
   const lock = !!chp && !noChp;
   if (reg) { reg.readOnly = lock; reg.style.background = lock ? "#eef3f3" : ""; }
-  if (hint) hint.textContent = lock ? "(נמשך מהרשם, לא ניתן לעריכה)" : "(ללא ח.פ. - מקלידים ידנית)";
+  if (hint) hint.textContent = lock ? "(נמשך מהרשם, לא ניתן לעריכה)" : "";
 }
 function showChpPart() {                          // מציג את החלק המתאים: שני הכרטיסים / פס "בלי ח.פ."
   const set = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? "" : "none"; };
