@@ -1,24 +1,24 @@
 # -*- coding: utf-8 -*-
 """
-OCR בעברית לקבצי PDF סרוקים (תמונות בלבד) שלא זוהו בשלב הראשון - רץ על המחשב שלך.
+OCR בעברית לקבצי PDF סרוקים (תמונות בלבד) - רץ על המחשב שלך. מפיק רק טקסט (תיקיית ocr_text); ההצלבה והזיהוי ב-reconcile.py.
+כל קובץ נקרא תמיד (לא רק מה שנכשל), כי לא סומכים על מקור אחד: שם הפוסט עלול להיות שגוי, ולכן מחלצים ח.פ. ושם גם מהקובץ.
 
-קלט:  קובץ התוצאות של match_pdfs.py (למשל כל_הקבצים4.csv), תיקיית uploads, ורשימת העסקים (businesses.json).
-פלט:  קובץ CSV חדש עם הזיהוי מחדש (לפי הטקסט שנקרא מהסריקה: ח.פ. עם ספרת ביקורת תקינה + שם העסק),
-      ותיקייה ocr_text עם הטקסט שנקרא מכל קובץ (לבדיקה ידנית).
-שימוש:
-  python ocr_pdfs.py --results כל_הקבצים4.csv --uploads "<uploads>" --businesses businesses.json --out ocr_תוצאות.csv [--limit 20]
-דורש:  pip install pymupdf   +   Tesseract עם שפה עברית (ראה הוראות בשיחה).
+  python ocr_pdfs.py --results כל_הקבצים4.csv --uploads "<uploads>" [--workers 4] [--limit 20]
+
+* ניתן להפסיק ולהמשיך: קבצים שכבר נקראו (ocr_text\\<מזהה>.txt) מדולגים.
+* קורא את העמוד הראשון; אם לא נמצא בו ח.פ. תקין - קורא גם את העמוד השני.
+דורש:  pip install pymupdf   +   Tesseract עם שפה עברית.
 """
 import argparse
-import csv
 import os
 import re
 import subprocess
 import sys
 import tempfile
+from multiprocessing import Pool
 
 try:
-    import pymupdf as fitz  # PyMuPDF
+    import pymupdf as fitz
 except ImportError:
     import fitz
 
@@ -28,82 +28,68 @@ import match_pdfs as m  # noqa: E402
 TESS_DEFAULT = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 
-def ocr_pdf(path, tesseract, pages, dpi):
-    texts = []
-    doc = fitz.open(path)
-    for i in range(min(pages, len(doc))):
-        pix = doc[i].get_pixmap(dpi=dpi)
-        with tempfile.TemporaryDirectory() as td:
-            png = os.path.join(td, "p.png")
-            pix.save(png)
-            out = subprocess.run([tesseract, png, "stdout", "-l", "heb+eng", "--psm", "6"], capture_output=True, timeout=180)
-            texts.append(out.stdout.decode("utf-8", "replace"))
-    doc.close()
-    return "\n".join(texts)
+def has_valid_hp(text):
+    return any(m.check_digit_ok(x.zfill(9)) for x in re.findall(r"(?<!\d)(\d{8,9})(?!\d)", text.replace(",", "")))
+
+
+def ocr_page(doc, i, tesseract, dpi):
+    pix = doc[i].get_pixmap(dpi=dpi)
+    with tempfile.TemporaryDirectory() as td:
+        png = os.path.join(td, "p.png")
+        pix.save(png)
+        out = subprocess.run([tesseract, png, "stdout", "-l", "heb+eng", "--psm", "6"], capture_output=True, timeout=240)
+    return out.stdout.decode("utf-8", "replace")
+
+
+def work(job):
+    aid, path, out_dir, tesseract, dpi = job
+    dest = os.path.join(out_dir, f"{aid}.txt")
+    if os.path.exists(dest):
+        return aid, "קיים"
+    try:
+        doc = fitz.open(path)
+        text = ocr_page(doc, 0, tesseract, dpi)
+        if len(doc) > 1 and not has_valid_hp(text):
+            text += "\n" + ocr_page(doc, 1, tesseract, dpi)
+        doc.close()
+    except Exception as e:  # noqa: BLE001
+        return aid, f"נכשל: {e}"
+    with open(dest, "w", encoding="utf-8") as f:
+        f.write(text)
+    return aid, "נקרא"
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True)
     ap.add_argument("--uploads", required=True)
-    ap.add_argument("--businesses", required=True)
-    ap.add_argument("--out", default="ocr_תוצאות.csv")
+    ap.add_argument("--out-dir", default="ocr_text")
     ap.add_argument("--tesseract", default=TESS_DEFAULT if os.name == "nt" else "tesseract")
-    ap.add_argument("--pages", type=int, default=2, help="כמה עמודים ראשונים לקרוא מכל קובץ")
     ap.add_argument("--dpi", type=int, default=200)
-    ap.add_argument("--statuses", default="לבדיקה ידנית,סביר", help="אילו קבצים לעבד (לפי הסטטוס בתוצאות הקודמות)")
+    ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
-
-    biz = m.load_businesses(a.businesses)
-    by_hp = {}
-    for b in biz:
-        d = re.sub(r"\D", "", b.get("chp_number") or "").lstrip("0")
-        if d:
-            by_hp.setdefault(d.zfill(9), []).append(b)
-    names = [(n, b) for b in biz for n in {(b.get("registrar_name") or "").strip(), (b.get("permit_name") or "").strip()} if n]
 
     index = {}
     for d, _, files in os.walk(a.uploads):
         for f in files:
             if f.lower().endswith(".pdf"):
                 index.setdefault(f, os.path.join(d, f))
-
-    statuses = {s.strip() for s in a.statuses.split(",")}
-    rows = [r for r in m.read_csv(a.results) if r["confidence"] in statuses and int(r.get("text_chars") or 0) < 15]
+    rows = [r for r in m.read_csv(a.results) if int(r.get("text_chars") or 0) < 15 and r["file"] in index]
     if a.limit:
         rows = rows[:a.limit]
-    os.makedirs("ocr_text", exist_ok=True)
-
-    cols = ["attachment_id", "file", "post_title", "old_confidence", "confidence", "reason", "hp", "business_id", "business_name", "hp_candidates", "ocr_chars", "post_type"]
+    os.makedirs(a.out_dir, exist_ok=True)
+    jobs = [(r["attachment_id"], index[r["file"]], a.out_dir, a.tesseract, a.dpi) for r in rows]
     stats = {}
-    with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f)
-        w.writerow(cols)
-        for i, r in enumerate(rows, 1):
-            path = index.get(r["file"], "")
-            title = r["post_title"]
-            if not path:
-                conf, reason, hp, b, cands, text = "לבדיקה ידנית", "הקובץ לא נמצא", "", None, [], ""
-            else:
-                try:
-                    text = ocr_pdf(path, a.tesseract, a.pages, a.dpi)
-                except Exception as e:  # noqa: BLE001
-                    text = ""
-                    print("OCR נכשל:", r["file"], e, file=sys.stderr)
-                with open(os.path.join("ocr_text", f"{r['attachment_id']}.txt"), "w", encoding="utf-8") as tf:
-                    tf.write(text)
-                if len(text.strip()) < 15:
-                    conf, reason, hp, b, cands = "לבדיקה ידנית", "OCR לא קרא טקסט", "", None, []
-                else:
-                    hp, b, conf, reason, cands = m.classify(text, title, by_hp, names)
-                    reason = "OCR; " + reason
-            stats[conf] = stats.get(conf, 0) + 1
-            w.writerow([r["attachment_id"], r["file"], title, r["confidence"], conf, reason, hp, (b or {}).get("id", ""),
-                        ((b or {}).get("registrar_name") or (b or {}).get("permit_name") or ""), " ".join(cands[:6]), len(text.strip()), r.get("post_type", "")])
-            if i % 10 == 0:
-                print(f"{i}/{len(rows)}", stats, flush=True)
-    print("סיום:", stats, "->", a.out)
+    with Pool(a.workers) as pool:
+        for i, (aid, st) in enumerate(pool.imap_unordered(work, jobs), 1):
+            k = st.split(":")[0]
+            stats[k] = stats.get(k, 0) + 1
+            if st.startswith("נכשל"):
+                print(aid, st, file=sys.stderr)
+            if i % 20 == 0:
+                print(f"{i}/{len(jobs)}", stats, flush=True)
+    print("סיום:", stats, "->", a.out_dir)
 
 
 if __name__ == "__main__":
