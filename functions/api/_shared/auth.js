@@ -21,8 +21,9 @@ export async function checkPassword(token, env) {
 }
 
 // ── כניסה לפי IP (בלי סיסמה) ──
-// IP מורשה = OWNER_IPS (משתנה סביבה, רשימה מופרדת בפסיקים, כמו ב-revach) + IP אחד נוסף שנרשם אוטומטית:
-// מי שמקליד סיסמה נכונה ראשון מ-IP שאינו ברשימה, ה-IP שלו נרשם (פעם אחת בלבד).
+// שני האנשים הראשונים שמקלידים סיסמה נכונה נרשמים לפי ה-IP שלהם, ומכאן נכנסים בלי סיסמה.
+// (אפשר גם להוסיף ידנית בלי הגבלה דרך המשתנה OWNER_IPS - רשימה מופרדת בפסיקים.)
+const MAX_REGISTERED = 2;
 export const clientIp = request => request.headers.get("CF-Connecting-IP") || "";
 async function storedIps(env) {
   try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = 'trusted_ips'").first(); return r ? JSON.parse(r.value) : []; }
@@ -33,14 +34,15 @@ export async function isTrustedIp(request, env) {
   const owner = (env.OWNER_IPS || "").split(",").map(x => x.trim()).filter(Boolean);
   return owner.includes(ip) || (await storedIps(env)).includes(ip);
 }
-// נקרא אחרי הקלדת סיסמה נכונה: אם אין עדיין IP נוסף רשום וה-IP הזה לא מורשה - רושם אותו. מחזיר true אם נרשם עכשיו.
+// נקרא אחרי הקלדת סיסמה נכונה: אם נרשמו פחות משני IP וה-IP הזה לא מורשה - רושם אותו. מחזיר true אם נרשם עכשיו.
 export async function registerFirstIp(request, env) {
   const ip = clientIp(request);
   if (!ip || await isTrustedIp(request, env)) return false;
-  if ((await storedIps(env)).length) return false;
+  const list = await storedIps(env);
+  if (list.length >= MAX_REGISTERED) return false;
   try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
-    await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('trusted_ips', ?)").bind(JSON.stringify([ip])).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('trusted_ips', ?)").bind(JSON.stringify([...list, ip])).run();
     return true;
   } catch { return false; }
 }

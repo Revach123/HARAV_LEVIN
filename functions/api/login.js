@@ -1,6 +1,6 @@
 // functions/api/login.js
 //   GET  /api/login            -> { trusted }  האם ה-IP הזה מורשה להיכנס בלי סיסמה
-//   POST /api/login {password} -> בודק סיסמה; הראשון שמקליד סיסמה נכונה מ-IP לא מורשה נרשם (נכנס בלי סיסמה בפעמים הבאות)
+//   POST /api/login {password} -> בודק סיסמה; שני הראשונים שמקלידים סיסמה נכונה נרשמים (נכנס בלי סיסמה בפעמים הבאות)
 import { checkPassword, isTrustedIp, registerFirstIp } from "./_shared/auth.js";
 
 export async function onRequestGet({ request, env }) {
