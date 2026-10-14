@@ -22,6 +22,27 @@ const json = (data, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json; charset=utf-8" },
   });
 
+// שם להצגה: שם החברה ברשם; אם השם בהיתר העסקה שונה ממנו - מוצג בסוגריים אחריו.
+// השוואה בלי "בע"מ", רווחים וסימני פיסוק; שם שהוא קידומת של השני (שם חתוך) נחשב זהה.
+const normName = s => String(s || "").toLowerCase().replace(/בע"?מ|בע״מ|בע''מ|\bltd\b|\blimited\b/g, "").replace(/[^0-9a-z\u0590-\u05ff]/g, "");
+const sameName = (a, b) => {
+  const x = normName(a), y = normName(b);
+  if (x === y) return true;
+  const [s, l] = x.length <= y.length ? [x, y] : [y, x];
+  return s.length >= 20 && l.startsWith(s);
+};
+function withRegistrarNames(rows) {
+  const out = rows.map(r => {
+    const { _registrar, ...rest } = r;
+    const reg = String(_registrar || "").replace(/\s+/g, " ").trim();
+    const permit = String(r.permit_name || "").replace(/\s+/g, " ").trim();
+    let name = permit;
+    if (reg) name = !permit || sameName(reg, permit) ? reg : `${reg} (${permit})`;
+    return { ...rest, permit_name: name };
+  });
+  return out.sort((a, b) => a.permit_name.localeCompare(b.permit_name, "he"));
+}
+
 // המרת שורות ל-CSV עם BOM (כדי שאקסל יזהה UTF-8 ויציג עברית)
 function toCsv(rows) {
   if (!rows.length) return "\uFEFF";
@@ -101,7 +122,7 @@ export async function onRequestGet(context) {
                   ELSE ${notesExpr} END`
           : notesExpr;
         return `
-        SELECT permit_name, chp_number, category, region,
+        SELECT permit_name, registrar_name AS _registrar, chp_number, category, region,
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
@@ -143,6 +164,8 @@ export async function onRequestGet(context) {
       }
       if (last) throw last;
     }
+
+    if (type === "companies-private" || type === "companies-general") results = withRegistrarNames(results);
 
     if (format === "csv") {
       return csvResponse(results, type);
