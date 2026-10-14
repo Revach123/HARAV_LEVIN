@@ -722,6 +722,48 @@
   .step:last-child { border-left: none; }
   .step.active { background: var(--navy); color: #fff; font-weight: 500; }
   .step.done { background: var(--green-bg); color: var(--green); }
+  /* Alef — אותו גופן של האתר (SIL OFL), מאורח בריפו */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+  /* ═══ התאמה לעיצוב האתר (display.html): גופן Alef, צבעי navy/טורקיז, כותרות טבלה בירקרק בהיר ═══ */
+  :root {
+    --navy:#274d5b; --navy2:#1c3a47;
+    --accent:#2aada1; --accent-dark:#1e8f85; --accent-bg:#e9f6f5; --accent-border:#b9e3de; --row-alt:#f6fafa;
+    --bg:#f6fafa; --bg2:#ffffff; --border:#dfe7e8;
+    --text:#3b3d3d; --muted:#6a7c82; --light:#a6b4b8;
+    --green:#1e8f85; --green-bg:#e9f6f5; --green-border:#b9e3de;
+  }
+  body { font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif; background:#ffffff; font-size:16px; }
+  button, input, select, textarea { font-family: inherit; }
+  header { background: var(--navy); border-bottom: 3px solid var(--accent); box-shadow: none; }
+  header h1 { font-size: 20px; font-weight: 700; }
+  #admin-toggle { border-radius: 4px; }
+  .btn-primary, .btn-add, .lookup-row button { border-radius: 4px; font-weight: 700; }
+  .btn-primary:hover, .btn-add:hover, .lookup-row button:hover { background: var(--accent-dark); }
+  .btn-ghost { border-radius: 4px; }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .panel, .table-wrap, .csv-panel { border-radius: 4px; }
+  thead th { background: var(--accent-bg); color: var(--navy); font-weight: 700; font-size: 13px; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: var(--accent-bg); }
+  .admin-bar h2, .panel h2, .panel-header h2 { color: var(--navy); font-weight: 700; }
+  .home-card { border-radius: 4px; border-color: var(--border); }
+  .home-card:hover { border-color: var(--accent); box-shadow: 0 4px 14px rgba(39,77,91,.12); }
+  .home-card b { color: var(--navy); }
+  .home-card .ico { color: var(--accent-dark); }
+  .gs-box input:focus { border-color: var(--accent); }
+  .scard { border-radius: 4px; }
+  .scard .badge-t { background: var(--accent-bg); color: var(--accent-dark); }
+  .scard .badge-t.bond { background: #dff0f0; color: var(--navy); }
+  .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
 </style>
 </head>
 <body>
