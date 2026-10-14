@@ -1042,7 +1042,7 @@ function renderAdminTable() {
             const b = effBiz(b0), dirty = isDirty(b0.id);
             return `
               <tr class="${dirty ? "row-dirty" : ""}">
-                <td class="biz-name">${displayName(b,true)}</td>
+                <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -2095,7 +2095,7 @@ async function inlineUpdateMany(id, fields) {
 
 // טבלת העדכון: שינויים בשורות נשמרים כטיוטה (drafts) עד "שמור" בשורה או "שמירת כל השינויים"; הטיוטות לא הולכות לאיבוד בחיפוש / סינון / מיון
 const drafts = {};
-const draftFields = ["notes", "notes_scope", "visibility", "agch_approved"];
+const draftFields = ["notes", "notes_scope", "visibility", "agch_approved", "permit_name", "registrar_name"];
 const effBiz = b => ({ ...b, ...(drafts[b.id] || {}) });
 const isDirty = id => { const d = drafts[id], b = businesses.find(x => x.id === id); return !!d && !!b && draftFields.some(f => f in d && (d[f] ?? "") !== (b[f] ?? "")); };
 const dirtyIds = () => Object.keys(drafts).filter(isDirty);
@@ -2112,11 +2112,18 @@ function noteInline(id, raw) {
   else if (!(d.notes_scope ?? biz.notes_scope)) d.notes_scope = (biz.notes || "").trim() ? "companies" : "";   // הערה ישנה בלי בחירה = חברות; חדשה = חובה לבחור
   render();
 }
+function nameInline(id, raw) {          // עסק בלי ח.פ.: שם אחד, נשמר גם כשם בהיתר וגם כשם הרשם
+  const v = (raw || "").trim();
+  const d = drafts[id] = drafts[id] || {};
+  d.permit_name = v; d.registrar_name = v;
+  render();
+}
 function noteScopeChange(id, scope) { draftSet(id, "notes_scope", scope); }
 async function saveRow(id, quiet) {
   const biz = businesses.find(b => b.id === id), d = drafts[id];
   if (!biz || !d) return true;
   const eff = effBiz(biz);
+  if ("permit_name" in d && !(d.permit_name || "").trim()) { if (!quiet) showStatus("שם העסק לא יכול להיות ריק"); return false; }
   if ((eff.notes || "").trim() && !eff.notes_scope && !(biz.notes || "").trim()) { if (!quiet) showStatus("בחר היכן להציג את ההערה"); return false; }
   if ((eff.notes || "").trim() && !eff.notes_scope) d.notes_scope = "companies";
   const ok = await inlineUpdateMany(id, Object.fromEntries(draftFields.filter(f => f in d).map(f => [f, d[f]])));
