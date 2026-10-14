@@ -48,8 +48,15 @@ def norm(s):
     return re.sub(r"\s+", " ", s).strip()
 
 
+def title_core(t):
+    """שם פוסט -> שם החברה: מוריד סיומות של סדרת אג"ח ('אג"ח א'', 'לאג"ח בלבד')."""
+    t = re.sub(r"\s+ל?אג[\"״]?ח\s+בלבד\s*$", "", t or "")
+    t = re.sub(r"\s+אג[\"״]?ח\s+\S{1,3}\s*$", "", t)
+    return t.strip()
+
+
 def sim(a, b):
-    a, b = norm(a), norm(b)
+    a, b = norm(title_core(a)), norm(b)
     return difflib.SequenceMatcher(None, a, b).ratio() if a and b else 0.0
 
 
@@ -111,8 +118,15 @@ def classify(text, title, by_hp, names):
         return h, b, "סביר", f"ח.פ. תקין במסמך אך השם לא תואם (דמיון {t:.2f})", cands
     if len(scored) > 1:
         return "", None, "לבדיקה ידנית", "כמה ח.פ. של עסקים שלנו במסמך: " + ", ".join(s[0] for s in scored), cands
-    best = max(((sim(title, nm), nm, b) for nm, b in names), key=lambda x: x[0], default=(0, "", None))
-    if best[0] >= 0.9:
+    ranked = sorted(((sim(title, nm), nm, b) for nm, b in names), key=lambda x: -x[0])
+    best = ranked[0] if ranked else (0, "", None)
+    others = {id(x[2]) for x in ranked[1:] if x[0] >= best[0] - 0.03 and x[2] is not best[2]}      # עסק אחר עם שם כמעט זהה = עמימות
+    if best[0] >= 0.97 and not others:
+        b = best[2]
+        return (re.sub(r"\D", "", b.get("chp_number") or "")), b, "ודאי (לפי שם)", f"שם הפוסט זהה לשם החברה (דמיון {best[0]:.2f}), ללא חברה אחרת דומה", cands
+    if best[0] >= 0.97 and others:
+        return "", None, "לבדיקה ידנית", f"כמה עסקים עם שם כמעט זהה לשם הפוסט ({best[1]})", cands
+    if best[0] >= 0.85:
         b = best[2]
         return (re.sub(r"\D", "", b.get("chp_number") or "")), b, "סביר", f"לפי שם הפוסט בלבד (דמיון {best[0]:.2f})", cands
     if cands:
@@ -159,8 +173,8 @@ def main():
                 if chars < 15:
                     conf, reason, hp, b, cands = "לבדיקה ידנית", "סרוק - דורש OCR (אין טקסט בקובץ)", "", None, []
                     hp0, b0, c0, r0, _ = classify("", title, by_hp, names)       # לפחות ניסיון לפי שם הפוסט
-                    if c0 == "סביר":
-                        hp, b, conf, reason = hp0, b0, "סביר", "סרוק; " + r0
+                    if c0 in ("סביר", "ודאי (לפי שם)"):
+                        hp, b, conf, reason = hp0, b0, c0, "סרוק; " + r0
                 else:
                     hp, b, conf, reason, cands = classify(text, title, by_hp, names)
             stats[conf] = stats.get(conf, 0) + 1
