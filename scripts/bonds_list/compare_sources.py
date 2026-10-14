@@ -88,6 +88,33 @@ def main():
                  "of_which_approved": sum(1 for k in no_market_cid if k in approved),
                  "of_which_maya_id_known": sum(1 for k in no_market_cid if k in cid_by_chp),
                  "examples_without": [{"chp": k, "company": names.get(k, ""), "approved": k in approved, "maya_ids": sorted(cid_by_chp.get(k, []))} for k in no_market_cid[:40]]}
+    # רשימת החברות של datawise (companies-list: issuerId, corporateId) מול מזהה החברה במאיה
+    issuer_by_chp, list_err = {}, ""
+    try:
+        raw = b.dw_get("/v1/basic-securities/companies-list")
+        for r in (((raw or {}).get("companiesList") or {}).get("result")) or []:
+            k = b.chp_norm(r.get("corporateId"))
+            if k and r.get("issuerId") not in (None, ""):
+                issuer_by_chp.setdefault(k, set()).add(int(r["issuerId"]))
+    except Exception as e:  # noqa: BLE001
+        list_err = str(e)
+    il = {k: sorted(v) for k, v in issuer_by_chp.items()}
+    mc = {k: sorted(v) for k, v in cid_by_chp.items()}
+    def cmp(keys):
+        have = [k for k in keys if k in il]
+        ok = [k for k in have if k in cid_by_chp and set(il[k]) <= cid_by_chp[k]]
+        bad = [k for k in have if k in cid_by_chp and not set(il[k]) <= cid_by_chp[k]]
+        return {"companies": len(keys), "in_companies_list": len(have), "missing_from_companies_list": len(keys) - len(have),
+                "issuerId_equals_maya_id": len(ok), "issuerId_differs_from_maya_id": len(bad),
+                "differ_examples": [{"chp": k, "issuerId": il[k], "maya": mc.get(k)} for k in bad[:30]],
+                "missing_examples": [{"chp": k, "company": names.get(k, ""), "approved": k in approved, "maya": mc.get(k)} for k in keys if k not in il][:30],
+                "missing_approved": sum(1 for k in keys if k not in il and k in approved)}
+    cid_check["companies_list"] = {"error": list_err, "size": len(il), "for_companies_with_bonds": cmp(sorted(d_chps)),
+                                   "for_all_maya_companies": cmp(sorted(cid_by_chp))}
+    os.makedirs("data/probe", exist_ok=True)
+    with open("data/probe/company_ids.json", "w", encoding="utf-8") as f:     # מפות מזהים לשימוש חוזר, בלי סריקה חוזרת
+        json.dump({"maya_company_id_by_chp": mc, "companies_list_issuerId_by_chp": il,
+                   "market_CompanyId_by_chp": {k: sorted(v) for k, v in market_cids.items()}}, f, ensure_ascii=False, separators=(",", ":"))
     res = {"company_id_check": cid_check, "sizes": {"maya": len(M), "datawise": len(D), "market": len(K)},
            "intersections": {"M&D": len(set(M) & set(D)), "M&K": len(set(M) & set(K)), "D&K": len(set(D) & set(K)),
                              "all3": len(set(M) & set(D) & set(K))},
