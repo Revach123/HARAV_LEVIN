@@ -68,9 +68,10 @@ def main():
         p = m.local_path(a.uploads, guid.get(r["attachment_id"], ""))
         if p and os.path.exists(p) and int(r.get("text_chars") or 0) >= 15:
             text += m.pdf_text(p)
-        op = os.path.join(a.ocr_dir, f"{r['attachment_id']}.txt")
-        if os.path.exists(op):
-            text += "\n" + open(op, encoding="utf-8").read()
+        for od in a.ocr_dir.split(","):      # אפשר כמה תיקיות OCR (עמוד ראשון + עמודים נוספים)
+            op = os.path.join(od.strip(), f"{r['attachment_id']}.txt")
+            if os.path.exists(op):
+                text += "\n" + open(op, encoding="utf-8").read()
         if len(text.strip()) < 100:
             continue
         docs.append({"id": r["attachment_id"], "file": r["file"], "title": r["post_title"], "type": "P" if pt in P_TYPES else "G", "win": windows(text)})
