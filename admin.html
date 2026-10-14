@@ -790,7 +790,8 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
-  .idx-box { margin-inline-start:auto; background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
+  .idx-row { display:flex; margin:10px 0; }
+  .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
   .idx-sub { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-head { font-size:12px; color:var(--muted); margin-bottom:4px; }
   .idx-pie { display:flex; gap:12px; align-items:center; }
@@ -1007,7 +1008,6 @@ function renderAdminTable() {
   return `
     <div class="admin-bar">
       <h2>ניהול עסקים · <span class="count">${businesses.length} רשומות</span></h2>
-      ${idxBoxHtml()}
     </div>
     <div class="chg-bar">
       <button class="btn-ghost" onclick="undoLast()" ${changeLog.some(e=>!e.undone) ? "" : "disabled"}>↩ ביטול שינוי אחרון</button>
@@ -1462,7 +1462,7 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div><div class="idx-row" id="idx-row">${idxBoxHtml()}</div>`;
 }
 
 function renderHome() {
@@ -2177,7 +2177,7 @@ async function idxLoad() {
     idxCache.tb60 = await r.json();
   } catch (e) { idxCache.tb60 = { error: "לא ניתן לטעון את נתוני המדד" }; }
   idxLoading = false;
-  if (view === "admin") render();
+  const row = document.getElementById("idx-row"); if (row) row.innerHTML = idxBoxHtml();      // מעדכן רק את התיבה (בלי לרנדר מחדש ולאבד הקלדה)
 }
 
 // ── יומן שינויים: כל הוספה / מחיקה / עדכון נרשמים, ואפשר לבטל שינוי מסוים או לחזור אחורה ──
