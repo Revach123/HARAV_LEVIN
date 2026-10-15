@@ -114,6 +114,30 @@
       </div>`);
   }
 
+  // הורדת קובץ המסמך. ברשת עם סינון תוכן (נטפרי) הורדת PDF נחסמת ("Blocked by NetFree"): במקרה כזה עוברים אוטומטית להעברה כ-JSON (base64) ושומרים את הבחירה
+  async function fetchPdfBlob(id) {
+    const viaJson = async () => {
+      const r = await fetch(`/api/permit-docs/${id}/file?enc=b64`, { headers: authH() });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || r.statusText || "HTTP " + r.status);
+      const bin = atob(j.data), u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return new Blob([u8], { type: "application/pdf" });
+    };
+    let pref = false; try { pref = localStorage.getItem("pd_b64") === "1"; } catch {}
+    if (pref) return viaJson();
+    try {
+      const r = await fetch(`/api/permit-docs/${id}/file`, { headers: authH() });
+      if (!r.ok) throw new Error(r.statusText || "HTTP " + r.status);
+      const b = await r.blob();
+      if (new TextDecoder().decode(await b.slice(0, 5).arrayBuffer()) !== "%PDF-") throw new Error("לא PDF");
+      return new Blob([b], { type: "application/pdf" });
+    } catch (e) {
+      try { localStorage.setItem("pd_b64", "1"); } catch {}
+      return viaJson();
+    }
+  }
+
   // ───────── חלון: צפייה ועריכה של מסמך ─────────
   async function openDoc(docId, fromBiz) {
     const d = S.byId.get(docId); if (!d) return;
@@ -122,9 +146,7 @@
     overlay("pd-doc", `<div class="pd-body">טוען…</div>`, true);
     closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); if (fromBiz && S.byBiz.get(fromBiz)) openCompany(fromBiz); };
     try {
-      const res = await fetch(`/api/permit-docs/${docId}/file`, { headers: authH() });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
-      blobUrl = URL.createObjectURL(await res.blob());
+      blobUrl = URL.createObjectURL(await fetchPdfBlob(docId));
     } catch (e) { blobUrl = ""; fileErr = e.message; }
     const paint = () => {
       const doc = S.byId.get(docId); if (!doc) { close("pd-doc"); return; }
@@ -451,9 +473,7 @@
       if (Q.blobUrl) { URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; }
       (async () => {
         try {
-          const res = await fetch(`/api/permit-docs/${d.id}/file`, { headers: authH() });
-          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
-          const blob = await res.blob(); if (tok !== Q.token) return;
+          const blob = await fetchPdfBlob(d.id); if (tok !== Q.token) return;
           Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}" title="המסמך"></iframe>`;
           try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
             const r = await extractText(await blob.arrayBuffer(), 6); if (tok !== Q.token) return;
