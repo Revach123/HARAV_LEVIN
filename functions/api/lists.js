@@ -141,14 +141,14 @@ export async function onRequestGet(context) {
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
       const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
       // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות/מחוקות (מחוסלת.../חיסול.../מחוקה/נגרעה מהמרשם) לא מוצגות;
-      // בפירוק (בפרוק...) - גם מוסתרות (לפי מנהל האתר). אם העמודה עדיין לא קיימת - בלי סינון.
+      // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
       const build = (withStatus, withScope) => {
         const hideNote = withScope ? `COALESCE(notes_scope,'') = 'bonds'` : `0`;
         const bondsNoteAll = `CASE WHEN ${hideNote} THEN '' ELSE ${bondsNoteExprBase} END`;
         const bondsNoteExpr = `CASE WHEN ${hideNote} OR NOT (${hasBonds}) THEN '' ELSE ${bondsNoteExprBase} END`;   // חברה בלי אג"ח: אין הערת אישור אג"ח
         const notesExpr = `CASE WHEN ${hideNote} THEN '' ELSE ${notesExprBase} END`;
-        const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%' AND COALESCE(registry_status,'') NOT LIKE 'מחוק%' AND COALESCE(registry_status,'') NOT LIKE 'נגרע%' AND COALESCE(registry_status,'') NOT LIKE 'בפרוק%'` : "";
+        const liquidated = withStatus ? `AND COALESCE(registry_status,'') NOT LIKE 'מחוסל%' AND COALESCE(registry_status,'') NOT LIKE 'חיסול%' AND COALESCE(registry_status,'') NOT LIKE 'מחוק%' AND COALESCE(registry_status,'') NOT LIKE 'נגרע%'` : "";
         const notesOut = withStatus
           ? `CASE WHEN COALESCE(registry_status,'') LIKE 'בפרוק%'
                   THEN 'בפירוק' || CASE WHEN ${notesExpr} != '' THEN '; ' || ${notesExpr} ELSE '' END
