@@ -24,7 +24,7 @@ except ImportError:
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import match_pdfs as m  # noqa: E402
 from coverage_report import file_hashes  # noqa: E402
-from dedupe_company_docs import words, shingles, same_page, visual_sig, MAX_PAGES  # noqa: E402
+from dedupe_company_docs import words, shingles, same_page, visual_sig, fine_sig, exact_page, MAX_PAGES  # noqa: E402
 
 COLORS = ["#e6194b", "#3cb44b", "#4363d8", "#f58231", "#911eb4", "#008080", "#9a6324", "#800000", "#808000", "#000075", "#f032e6", "#469990"]
 
@@ -37,9 +37,9 @@ def page_data(path):
         ws = words(pg.get_text() or "")
         r = pg.rect
         if len(ws) >= 6:
-            sig = ("t", shingles(ws))
+            sig = ("t", shingles(ws), fine_sig(pg))
         else:
-            sig = visual_sig(pg)
+            sig = visual_sig(pg) + (fine_sig(pg),)
         th = pg.get_pixmap(matrix=fitz.Matrix(170 / max(1, r.width), 170 / max(1, r.width)), colorspace=fitz.csGRAY)
         out.append({"sig": sig, "png": base64.b64encode(th.tobytes("png")).decode("ascii"), "kind": sig[0]})
     doc.close()
@@ -120,14 +120,20 @@ def main():
         if pairs:
             n1, n2 = len(ds[i]["pages"]), len(ds[j]["pages"])
             same_pages = len({p for p, _ in pairs})
-            print(f"  {ds[i]['file']} ({n1} עמ') ↔ {ds[j]['file']} ({n2} עמ'): {same_pages} עמודים זהים: " + ", ".join(f"{p}={q}" for p, q in pairs[:12]))
+            print(f"  {ds[i]['file']} ({n1} עמ') ↔ {ds[j]['file']} ({n2} עמ'): {same_pages} עמודים זהים: " + ", ".join(f"{p}={q}" + ("" if exact_page(ds[i]["pages"][p - 1]["sig"], ds[j]["pages"][q - 1]["sig"]) else "⚠(הבדל קטן)") for p, q in pairs[:12]))
     rows = []
+    rep_of = {root: members[0] for root, members in groups.items() if root in gid}     # נציג כל קבוצה: מולו נבדק אם יש הבדל קטן (שורה מחוקה / הערה)
     for i, d in enumerate(ds):
         cells = []
         for j, pg in enumerate(d["pages"]):
             g = gid.get(find((i, j)))
             col = COLORS[(g - 1) % len(COLORS)] if g else "#ccc"
-            tag = f'<div class="tag" style="background:{col}">קבוצה {g}</div>' if g else '<div class="tag none">ייחודי</div>'
+            small = ""
+            if g:
+                ri, rj = rep_of[find((i, j))]
+                if (ri, rj) != (i, j) and not exact_page(ds[ri]["pages"][rj]["sig"], pg["sig"]):
+                    small = " · ⚠ הבדל קטן"
+            tag = f'<div class="tag" style="background:{col}">קבוצה {g}{small}</div>' if g else '<div class="tag none">ייחודי</div>'
             cells.append(f'<div class="pg" style="border-color:{col}"><img src="data:image/png;base64,{pg["png"]}"><div class="n">עמוד {j + 1}{" (טקסט)" if pg["kind"] == "t" else " (סריקה)"}</div>{tag}</div>')
         t = "+".join(sorted(d["types"])) or "לא ידוע"
         rows.append(f'<h3>{html.escape(d["file"])} <small>· {len(d["pages"])} עמודים · {html.escape(t)} · מזהים: {html.escape(" ".join(d["ids"]))}</small></h3><div class="row">{"".join(cells)}</div>')
