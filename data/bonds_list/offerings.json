@@ -155,15 +155,15 @@
    "chp_number": "512719485"
   },
   {
-   "id": 10370,
-   "maya_report_id": 1775592,
+   "id": 10376,
+   "maya_report_id": 1776338,
    "company_name": "מגוריט",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775592",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
    "link_presentation": null,
    "securities": [
     {
@@ -197,15 +197,15 @@
    "chp_number": "515846558"
   },
   {
-   "id": 10366,
-   "maya_report_id": 1775203,
+   "id": 10375,
+   "maya_report_id": 1776319,
    "company_name": "דיפלומט",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775200",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
    "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
    "securities": [
     {
@@ -631,6 +631,52 @@
    "securities": [
     {
      "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-15"
+  },
+  {
+   "chp_number": "510400740",
+   "company_name": "דיפלומט",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10366,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775200",
+   "maya_report_id": 1775203,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-15"
+  },
+  {
+   "chp_number": "515434074",
+   "company_name": "מגוריט",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10370,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775592",
+   "maya_report_id": 1775592,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilBBB+",
      "midroog_rating": null,
      "name": "",
      "security_type": "אג\"ח"

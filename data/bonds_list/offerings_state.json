@@ -760,6 +760,56 @@
    "kind": "upcoming",
    "last_seen": "2026-10-15"
   },
+  "U10375": {
+   "data": {
+    "chp_number": "510400740",
+    "company_name": "דיפלומט",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10375,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
+    "maya_report_id": 1776319,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-15"
+  },
+  "U10376": {
+   "data": {
+    "chp_number": "515434074",
+    "company_name": "מגוריט",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10376,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
+    "maya_report_id": 1776338,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilBBB+",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-15"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
