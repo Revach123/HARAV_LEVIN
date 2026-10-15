@@ -2128,7 +2128,7 @@ function renderBondPicker() {
         <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #edf2f2;${r.inMaya ? "" : "opacity:.65;"}">
           <div style="min-width:0;"><div style="font-size:13px;font-weight:500;">${escHtml(String(r.name || "").replace(/\s+/g, " "))}</div>
             <div style="font-size:11px;color:var(--muted);">מס' ${r.id}${r.symbol ? " · " + escHtml(r.symbol) : ""}${r.inMaya ? "" : " · לא קיימת כרגע במאיה (נשמרת, לא מוצגת ברשימה)"}</div></div>
-          <div style="white-space:nowrap;">${btn(bpOn(r.scope, "private"), "פרטי", i, "private")} ${btn(bpOn(r.scope, "general"), "כללי", i, "general")} ${btn(bpOn(r.scope, "only"), "רק פרטי", i, "only")}
+          <div style="white-space:nowrap;">${btn(bpOn(r.scope, "private"), "פרטי", i, "private")} ${btn(bpOn(r.scope, "only"), "רק פרטי", i, "only")} ${btn(bpOn(r.scope, "general"), "כללי", i, "general")}
             ${!r.inMaya ? `<button onclick="bpRemove(${i})" title="הסרה מהרשימה השמורה" style="border:none;background:none;cursor:pointer;">🗑</button>` : ""}</div>
         </div>`; }).join("") || '<div style="padding:14px;text-align:center;color:var(--light);">אין אג"ח לחברה</div>'}
     </div>
