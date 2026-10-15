@@ -1,0 +1,32 @@
+name: Export site lists (read-only, manual)
+
+# מייצא את מה שמוצג באתר עכשיו (API הציבורי) ל-data/probe, להשוואה לקובצי האקסל. לא משנה שום דבר באתר.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch lists
+        run: |
+          mkdir -p data/probe
+          for t in companies-general companies-private companies-all; do
+            curl -sS --fail --retry 3 --retry-delay 5 -H "User-Agent: Mozilla/5.0" "https://harav-levin.pages.dev/api/lists?type=$t" -o "data/probe/site_$t.json"
+          done
+          ls -la data/probe
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "export-site-lists: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push
