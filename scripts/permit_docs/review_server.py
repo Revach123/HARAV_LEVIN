@@ -86,10 +86,14 @@ def build_items():
         for hp in re.findall(r"\d{8,9}", r.get("doc_hps_in_db") or ""):
             add(by_chp.get(hp), "ח.פ. בתוך הקובץ")
         # סיווג כללי/פרטי נקבע לפי מיקום הקובץ באתר (בלי שאלה): סיבת "המיקום והנוסח לא מסכימים" לא מייצרת שאלה
-        reasons = [x.strip() for x in (r.get("review_reasons") or "").split("|") if x.strip() and "כללי/פרטי" not in x]
+        # שיוך לחברה במקור יחיד (למשל שם הפוסט) ושם פוסט שונה כשיש ח.פ. מאומת: נחשבים מאומתים. בבדיקה של 26 קבצים כאלה, ב-26 מהם
+        # הבחירה הידנית הייתה זהה לשיוך שזוהה. נשאלות רק סתירה, לא זוהה, וקובץ בלי מיקום באתר (כדי לקבוע כללי/פרטי).
+        TRUSTED = ("שיוך לחברה במקור יחיד", "שם הפוסט שונה מהחברה בקובץ")
+        reasons = [x.strip() for x in (r.get("review_reasons") or "").split("|")
+                   if x.strip() and "כללי/פרטי" not in x and not any(x.strip().startswith(t) for t in TRUSTED)]
         if not reasons:
             continue
-        ask_type = False
+        ask_type = any("אין מיקום" in x for x in reasons)
         ask_company = any(x.startswith("שיוך לחברה") or "שם הפוסט שונה" in x for x in reasons)
         items.append({
             "aid": r["attachment_id"], "file": r.get("file", ""), "reasons": reasons,
