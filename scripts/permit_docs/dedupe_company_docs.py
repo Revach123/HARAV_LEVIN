@@ -53,6 +53,23 @@ def visual_sig(pg):
     return ("v", int(bits, 2), bits.count("1"))
 
 
+def fine_sig(pg):
+    """חתימה עדינה של העמוד (120x170, פיקסלים כהים): תופסת הבדל קטן כמו שורה מחוקה או הערה בכתב יד. -> (סיביות, מספר פיקסלים כהים)"""
+    r = pg.rect
+    pix = pg.get_pixmap(matrix=fitz.Matrix(120 / max(1, r.width), 170 / max(1, r.height)), colorspace=fitz.csGRAY)
+    px = bytes(pix.samples)[:20400].ljust(20400, b"\xff")
+    bits = "".join("1" if v < 200 else "0" for v in px)
+    return (int(bits, 2), bits.count("1"))
+
+
+def exact_page(a, b):
+    """האם שני עמודים (שכבר נחשבו זהים) זהים גם ברמה העדינה, בלי שורה מחוקה/הערה: הבדל עד 3% מהפיקסלים הכהים."""
+    fa, fb = a[-1], b[-1]
+    diff = bin(fa[0] ^ fb[0]).count("1")
+    ink = max(fa[1], fb[1])
+    return diff == 0 or (ink >= 25 and diff <= 0.03 * ink)
+
+
 def page_sigs(path):
     """חתימה לכל עמוד: קבוצת רצפי מילים (עמוד עם טקסט) או טביעת אצבע חזותית 16x16 (עמוד סרוק בלי טקסט). מאפשר לזהות מסמכים עם עמודים זהים ועמוד נוסף."""
     sigs = []
@@ -62,9 +79,9 @@ def page_sigs(path):
             pg = doc[i]
             ws = words(pg.get_text() or "")
             if len(ws) >= 6:
-                sigs.append(("t", shingles(ws)))
+                sigs.append(("t", shingles(ws), fine_sig(pg)))
                 continue
-            sigs.append(visual_sig(pg))
+            sigs.append(visual_sig(pg) + (fine_sig(pg),))
         doc.close()
     except Exception:  # noqa: BLE001
         return []
@@ -82,12 +99,17 @@ def same_page(a, b):
 
 
 def page_relation(sa, sb):
-    """-> (כיסוי A ב-B, כיסוי B ב-A, עמודי B שאין להם מקביל ב-A, עמודי A שאין להם מקביל ב-B)"""
+    """-> (כיסוי A ב-B, כיסוי B ב-A, עמודי B שאין להם מקביל ב-A, עמודי A שאין להם מקביל ב-B, כיסוי מדויק A, כיסוי מדויק B, עמודי A עם הבדל קטן, עמודי B עם הבדל קטן)
+    כיסוי = עמודים זהים בתוכן; כיסוי מדויק = גם ברמה העדינה (בלי שורה מחוקה/הערה שנוספה)."""
     if not sa or not sb:
         return None
-    ma = [any(same_page(p, q) for q in sb) for p in sa]
-    mb = [any(same_page(q, p) for p in sa) for q in sb]
-    return sum(ma) / len(sa), sum(mb) / len(sb), [i + 1 for i, v in enumerate(mb) if not v], [i + 1 for i, v in enumerate(ma) if not v]
+    ma = [[q for q in sb if same_page(p, q)] for p in sa]
+    mb = [[p for p in sa if same_page(q, p)] for q in sb]
+    ea = [any(exact_page(p, q) for q in m_) for p, m_ in zip(sa, ma)]
+    eb = [any(exact_page(q, p) for p in m_) for q, m_ in zip(sb, mb)]
+    ca, cb = [bool(x) for x in ma], [bool(x) for x in mb]
+    return (sum(ca) / len(sa), sum(cb) / len(sb), [i + 1 for i, v in enumerate(cb) if not v], [i + 1 for i, v in enumerate(ca) if not v],
+            sum(ea) / len(sa), sum(eb) / len(sb), [i + 1 for i, v in enumerate(ca) if v and not ea[i]], [i + 1 for i, v in enumerate(cb) if v and not eb[i]])
 
 
 def load_text(aid, path, ocr_dirs, text_chars):
@@ -142,15 +164,24 @@ def build_report(a):
                 inter = len(A["sh"] & B["sh"])
                 jac = inter / max(1, len(A["sh"] | B["sh"]))
                 con = inter / max(1, min(len(A["sh"]), len(B["sh"])))
+            exact_ok = True
             if rel and rel[0] >= 0.95 and rel[1] >= 0.95:
-                verdict = "זהים בכל העמודים"
-                jac = max(jac, 1.0)
+                if rel[4] >= 0.95 and rel[5] >= 0.95:
+                    verdict = "זהים בכל העמודים"
+                    jac = max(jac, 1.0)
+                else:
+                    verdict = "אותו תוכן אבל יש הבדל קטן בעמוד (למשל שורה מחוקה / הערה): נשארים נפרדים"
+                    extra = "עמודים עם הבדל בראשון: " + ",".join(map(str, rel[6])) + " | בשני: " + ",".join(map(str, rel[7]))
+                    jac = max(jac, 0.99)
+                    exact_ok = False
             elif rel and rel[0] >= 0.95 and len(B["pages"]) > len(A["pages"]):
                 verdict = "הראשון כלול בשני (לשני עמודים נוספים)"
-                extra = "עמודים נוספים בשני: " + ",".join(map(str, rel[2]))
+                extra = "עמודים נוספים בשני: " + ",".join(map(str, rel[2])) + (" | הבדל קטן בעמודי הראשון: " + ",".join(map(str, rel[6])) if rel[6] else "")
+                exact_ok = rel[4] >= 0.95
             elif rel and rel[1] >= 0.95 and len(A["pages"]) > len(B["pages"]):
                 verdict = "השני כלול בראשון (לראשון עמודים נוספים)"
-                extra = "עמודים נוספים בראשון: " + ",".join(map(str, rel[3]))
+                extra = "עמודים נוספים בראשון: " + ",".join(map(str, rel[3])) + (" | הבדל קטן בעמודי השני: " + ",".join(map(str, rel[7])) if rel[7] else "")
+                exact_ok = rel[5] >= 0.95
             elif rel and max(rel[0], rel[1]) >= 0.6:
                 verdict = "חופפים חלקית (%d%% מהעמודים)" % round(100 * max(rel[0], rel[1]))
                 jac = max(jac, max(rel[0], rel[1]) * 0.9)
@@ -180,7 +211,7 @@ def build_report(a):
             evidence = "טקסט" if score >= 0.9 else ("טקסט חלקי" if score >= 0.6 else ("חזותי בלבד" if page_based else "טקסט"))
             # הסרה אוטומטית: זהים/כמעט זהים, או מסמך שכלול באחר - רק כשהטקסט מאשר (דמיון 90% ומעלה). ראיה חזותית בלבד או חלקית: לבדיקה שלכם.
             # כשסיווגי המסמכים שונים (כללי מול פרטי) המסמך שנשאר יהפוך ל"כללי+פרטי" בעת הביצוע.
-            auto = "הסר" if verdict in ("זהים בכל העמודים", "כמעט זהים (טקסט)") or (contained and con >= 0.9) else ""
+            auto = "הסר" if exact_ok and (verdict in ("זהים בכל העמודים", "כמעט זהים (טקסט)") or (contained and con >= 0.9)) else ""
             union = keep["types"] | drop["types"]
             merged = "כללי+פרטי" if union == {"כללי", "פרטי"} else (next(iter(union)) if union else "לא ידוע")
             rows.append({"company": biz[cid].get("registrar_name") or biz[cid].get("permit_name") or "", "chp": biz[cid].get("chp_number", ""), "business_id": cid,
