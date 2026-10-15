@@ -40,33 +40,49 @@ def windows(text):
     return out
 
 
-# משפט מפתח קבוע של היתר פרטי: "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך"
-# (בטקסט שחולץ מ-PDF או מ-OCR סדר המילים בעברית לפעמים הפוך, ולכן נבדקים שני הסדרים)
-PHRASE = "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך".split()
-PHRASE_MIN = 6        # לפחות כמה מילות מפתח חייבות להופיע ברצף בחלון קצר
+# שני משפטי מפתח קבועים (בטקסט שחולץ מ-PDF סדר המילים בעברית לפעמים הפוך, ולכן נבדקים שני הסדרים):
+#   רק פרטי: "החברה הביעה את הסכמתה להתקשרות באופן פרטי על פי היתר עיסקא עם מי שמעו חתימתה על שטר רישום חברה"
+#   משולב (כללי ופרטי ביחד): "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך"
+PRIVATE_ONLY = ("החברה הביעה הסכמתה התקשרות באופן פרטי פי היתר עיסקא עם מי שמעו חתימתה שטר רישום חברה").split()
+PRIVATE_ONLY_MUST = ("הסכמתה", "הביעה", "שטר", "חתימתה")      # לפחות אחת מהן
+COMBINED = ("החברה מאשרת בזאת התקשרות היתר עיסקא באופן פרטי עם כל המעוניין בכך").split()
+COMBINED_MUST = ("מאשרת", "בזאת", "המעוניין")                    # לפחות אחת מהן
 PHRASE_WIN = 14
+KIND_PRIVATE_ONLY, KIND_COMBINED = "רק פרטי", "משולב"
 
 
 def _norm_word(w):
     return re.sub(r"[^\u05d0-\u05ea]", "", w)
 
 
-def has_key_phrase(text):
+def _ext(win):
+    """מילים בחלון, וגם בלי אות שימוש בתחילתן (בהיתר -> היתר, להתקשרות -> התקשרות)."""
+    return set(win) | {x[1:] for x in win if len(x) > 3}
+
+
+def _phrase_at(win, words, must, need):
+    e = _ext(win)
+    return sum(1 for k in set(words) if k in e) >= need and any(k in e for k in must) and "פרטי" in e and ("עיסקא" in e or "התקשרות" in e)
+
+
+def phrase_kind(text):
+    """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
+    found = set()
     for seq in (ws, ws[::-1]):
-        i = 0
-        while i < len(seq):
-            if seq[i] in ("פרטי", "עיסקא", "התקשרות", "המעוניין"):
+        for i, w in enumerate(seq):
+            if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):
                 win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]
-                if sum(1 for k in set(PHRASE) if k in win) >= PHRASE_MIN and "פרטי" in win and ("עיסקא" in win or "התקשרות" in win):
-                    return True
-            i += 1
-    return False
+                if _phrase_at(win, COMBINED, COMBINED_MUST, 6):
+                    return KIND_COMBINED
+                if _phrase_at(win, PRIVATE_ONLY, PRIVATE_ONLY_MUST, 7):
+                    found.add(KIND_PRIVATE_ONLY)
+    return KIND_PRIVATE_ONLY if found else ""
 
 
 def phrase_snippet(text):
-    """קטע טקסט סביב המילה 'פרטי' במקום שבו נמצא משפט המפתח (לבדיקה ידנית של התאמה); ריק אם לא נמצא."""
-    if not has_key_phrase(text):
+    """קטע טקסט סביב המילה 'פרטי' במקום שבו נמצא משפט מפתח (לבדיקה ידנית); ריק אם לא נמצא."""
+    if not phrase_kind(text):
         return ""
     ws = [x for x in text.split() if x.strip()]
     for i, w in enumerate(ws):
@@ -111,17 +127,18 @@ def main():
                 text += "\n" + open(op, encoding="utf-8").read()
         if len(text.strip()) < 100:
             continue
-        docs.append({"id": r["attachment_id"], "file": r["file"], "title": r["post_title"], "type": "P" if pt in P_TYPES else "G", "win": windows(text), "phrase": has_key_phrase(text), "snippet": phrase_snippet(text)})
+        docs.append({"id": r["attachment_id"], "file": r["file"], "title": r["post_title"], "type": "P" if pt in P_TYPES else "G", "win": windows(text), "phrase": phrase_kind(text), "snippet": phrase_snippet(text)})
     P = [d for d in docs if d["type"] == "P"]
     G = [d for d in docs if d["type"] == "G"]
     print(f"מסמכים עם טקסט: פרטי {len(P)}, כללי {len(G)}")
-    print(f"משפט המפתח של היתר פרטי: בפרטיים {sum(1 for d in P if d['phrase'])}/{len(P)}, בכלליים {sum(1 for d in G if d['phrase'])}/{len(G)}")
+    for kind in (KIND_PRIVATE_ONLY, KIND_COMBINED):
+        print(f"משפט מפתח '{kind}': בפרטיים {sum(1 for d in P if d['phrase'] == kind)}/{len(P)}, בכלליים {sum(1 for d in G if d['phrase'] == kind)}/{len(G)}")
     with open("phrase_samples.csv", "w", encoding="utf-8-sig", newline="") as f:      # דוגמאות: איפה נמצא משפט המפתח, לפי מיקום הקובץ
         w = csv.writer(f)
-        w.writerow(["attachment_id", "file", "type_by_location", "snippet"])
+        w.writerow(["attachment_id", "file", "type_by_location", "phrase_kind", "snippet"])
         for typ, lst in (("כללי", G), ("פרטי", P)):
             for d in [x for x in lst if x["phrase"]][:40]:
-                w.writerow([d["id"], d["file"], typ, d["snippet"]])
+                w.writerow([d["id"], d["file"], typ, d["phrase"], d["snippet"]])
     print(f"מסמכים שמכילים 'פרטי/פרטני': בפרטיים {sum(1 for d in P if d['win'])}/{len(P)}, בכלליים {sum(1 for d in G if d['win'])}/{len(G)}")
     if len(P) < 3:
         print("אין מספיק מסמכים פרטיים עם טקסט (חכה לסיום ה-OCR)")
@@ -157,12 +174,18 @@ def main():
     print(f"נוסחי היתר פרטי מבדילים: {len(sig)}")
     bad, ok = [], 0
     for d in docs:
-        hit = d["phrase"] or any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
+        hit = any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
+        loc = "פרטי" if d["type"] == "P" else "כללי"
+        if d["phrase"] == KIND_COMBINED:          # נוסח משולב: מכסה כללי ופרטי ביחד, בכל מיקום
+            bad.append((d["id"], d["file"], d["title"], loc, "נוסח משולב (כללי ופרטי)", len(d["win"])))
+            continue
+        if d["phrase"] == KIND_PRIVATE_ONLY:
+            hit = True
         guess = "P" if hit else "G"
         if guess == d["type"]:
             ok += 1
         else:
-            bad.append((d["id"], d["file"], d["title"], "פרטי" if d["type"] == "P" else "כללי", "יש נוסח פרטי" if hit else "אין נוסח פרטי", len(d["win"])))
+            bad.append((d["id"], d["file"], d["title"], loc, ("נוסח רק פרטי" if d["phrase"] else "יש נוסח פרטי") if hit else "אין נוסח פרטי", len(d["win"])))
     with open(a.check_out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["attachment_id", "file", "post_title", "type_by_location", "text_check", "keyword_hits"])
