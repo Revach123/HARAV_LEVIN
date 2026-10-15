@@ -196,6 +196,7 @@ def main():
         todo = todo[:a.limit]
     print(f"{len(have)} מסמכים כבר באתר; מעלה {len(todo)}...")
     ok = fail = 0
+    changed = []
     for n, d in enumerate(todo, 1):
         with open(d["path"], "rb") as f:
             data = f.read()
@@ -204,8 +205,11 @@ def main():
                              d["name"], data)
         for attempt in range(4):
             try:
-                call(a.site, token, "/permit-docs", body, ct)
+                res = call(a.site, token, "/permit-docs", body, ct)
                 ok += 1
+                if (res.get("doc") or {}).get("sha256") not in (None, d["sha"]):     # השרת קיבל קובץ שונה מהמקור (סינון תוכן ברשת משנה את הקובץ בדרך)
+                    changed.append(d["ref"])
+                    print(f"  אזהרה: {d['name']} ({d['ref']}) נשמר שונה מהקובץ המקומי")
                 break
             except urllib.error.HTTPError as e:
                 msg = e.read().decode("utf-8", "replace")[:150]
@@ -224,6 +228,8 @@ def main():
                 time.sleep(3 * (attempt + 1))
         if n % 25 == 0 or n == len(todo):
             print(f"  {n}/{len(todo)} (הצליחו {ok}, נכשלו {fail})", flush=True)
+    if changed:
+        print(f"  {len(changed)} מסמכים נשמרו שונים מהמקור (כנראה סינון תוכן ברשת): {', '.join(changed[:20])}")
     print(f"סיום: הועלו {ok}, נכשלו {fail}. ניתן להריץ שוב: מה שהועלה מדולג.")
     return 0 if not fail else 2
 

@@ -115,7 +115,16 @@
   }
 
   // הורדת קובץ המסמך. ברשת עם סינון תוכן (נטפרי) הורדת PDF נחסמת ("Blocked by NetFree"): במקרה כזה עוברים אוטומטית להעברה כ-JSON (base64) ושומרים את הבחירה
-  async function fetchPdfBlob(id) {
+  const pdfCache = new Map();      // מטמון של הבטחות (גם טעינה מראש): פתיחה חוזרת של אותו מסמך מיידית
+  function fetchPdfBlob(id) {
+    if (pdfCache.has(id)) return pdfCache.get(id);
+    const t0 = performance.now();
+    const p = fetchPdfBlobNet(id).then(b => { S.lastMs = Math.round(performance.now() - t0); return b; }, e => { pdfCache.delete(id); throw e; });
+    pdfCache.set(id, p);
+    if (pdfCache.size > 16) pdfCache.delete(pdfCache.keys().next().value);
+    return p;
+  }
+  async function fetchPdfBlobNet(id) {
     const viaJson = async () => {
       const r = await fetch(`/api/permit-docs/${id}/file?enc=b64`, { headers: authH() });
       const j = await r.json().catch(() => ({}));
@@ -146,7 +155,9 @@
     overlay("pd-doc", `<div class="pd-body">טוען…</div>`, true);
     closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); if (fromBiz && S.byBiz.get(fromBiz)) openCompany(fromBiz); };
     try {
-      blobUrl = URL.createObjectURL(await fetchPdfBlob(docId));
+      const blob = await fetchPdfBlob(docId);
+      blobUrl = URL.createObjectURL(blob);
+      try { S.integrity = S.integrity || {}; S.integrity[docId] = (await sha256(await blob.arrayBuffer())) === d.sha256; } catch { /* בלי בדיקה */ }
     } catch (e) { blobUrl = ""; fileErr = e.message; }
     const paint = () => {
       const doc = S.byId.get(docId); if (!doc) { close("pd-doc"); return; }
@@ -155,7 +166,7 @@
       const typeBtns = Object.keys(TL).map(t => `<button class="pd-btn ${doc.doc_type === t ? "sel" : ""}" onclick="PD._setType('${docId}','${t}')">${TL[t]}</button>`).join("");
       const chips = ids.map(b => `<div class="pd-co"><span>${E(bizName(b))}</span><button class="pd-link" onclick="PD._unassign('${docId}','${b}')" title="ביטול שיוך המסמך לחברה הזו">ביטול שיוך</button></div>`).join("") || `<div class="pd-sub">המסמך לא משויך לאף חברה</div>`;
       const html = `
-        <div class="pd-head"><b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}</span><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>
+        <div class="pd-head"><b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>
         <div class="pd-split">
           <div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div>
           <div class="pd-side" id="pd-doc-side">
@@ -211,7 +222,7 @@
   async function doDelete(id) {
     try {
       await api("/permit-docs/" + id, "DELETE");
-      S.docs = S.docs.filter(d => d.id !== id); reindex();
+      S.docs = S.docs.filter(d => d.id !== id); reindex(); pdfCache.delete(id);
       close("pd-confirm"); close("pd-doc");
       if ($("pd-un")) { Q.curId = ""; uqShow(); }
       showStatus("המסמך נמחק");
@@ -469,12 +480,14 @@
       Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type;
       Q.cands = uqMergeCands(d); Q.liveDone = false;
       const tok = ++Q.token;
-      view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>`;
+      view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך… <span id="pd-un-sec"></span></div>`;
+      { const t0 = Date.now(), iv = setInterval(() => { const el = $("pd-un-sec"); if (!el || tok !== Q.token) return clearInterval(iv); el.textContent = Math.round((Date.now() - t0) / 1000) + " שנ'"; }, 500); }
       if (Q.blobUrl) { URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; }
       (async () => {
         try {
           const blob = await fetchPdfBlob(d.id); if (tok !== Q.token) return;
           Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}" title="המסמך"></iframe>`;
+          unassignedList().slice(Q.i + 1, Q.i + 3).forEach(x => fetchPdfBlob(x.id).catch(() => {}));      // טעינה מראש של שני המסמכים הבאים
           try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
             const r = await extractText(await blob.arrayBuffer(), 6); if (tok !== Q.token) return;
             const sug = suggest(r.text, d.original_name);
