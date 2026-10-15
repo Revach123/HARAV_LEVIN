@@ -64,34 +64,43 @@ function show(){
   const done=items.filter(i=>dec[i.aid]).length;
   $("prog").textContent=`נענו ${done} מתוך ${items.length} · מוצג ${list.length?idx+1:0}/${list.length}`;
   if(!it){$("cards").innerHTML="";$("q").innerHTML="<h3>אין עוד קבצים לבדיקה 🎉</h3>";$("pdf").removeAttribute("src");$("fname").textContent="";return}
-  const d=dec[it.aid]||{};ans={type:d.type_answer||"",cid:d.company_id||"",cname:d.company_name||"",cspec:d.company_special||""};
+  const d=dec[it.aid]||{};
+  const ids=(d.company_ids||d.company_id||"").split(";").filter(Boolean),nms=(d.company_names||d.company_name||"").split(";");
+  ans={type:d.type_answer||"",cids:ids.map((id,i)=>({id,name:nms[i]||""})),cspec:d.company_special||""};
   let h=`<div class="why">${it.reasons.map(esc).join(" · ")}${it.doc_type ? ` · סיווג לפי מיקום באתר: <b>${esc(it.doc_type)}</b>` : ""}</div>`;
   h+=`<div class="mut">קובץ: ${esc(it.file)} · כותרת הפוסט: ${esc(it.post_title)||"—"}${it.linked_in?` · מקושר ב: ${esc(it.linked_in)}`:""}</div>`;
   if(it.ask_type){
     h+=`<div class="sec"><h3>כללי או פרטי? <span class="mut">(לפי המיקום: ${esc(it.doc_type)}; ${esc(it.text_check)})</span></h3><div class="btns" id="tb">`+
-    ["כללי","פרטי","שניהם / מסמך משולב","לא ברור"].map(t=>`<button data-t="${t}" class="${ans.type===t?"sel":""}">${t}</button>`).join("")+`</div></div>`;
+    ["כללי","פרטי","כללי + פרטי","לא ברור"].map(t=>`<button data-t="${t}" class="${ans.type===t?"sel":""}">${t}</button>`).join("")+`</div></div>`;
   }
   if(it.ask_company){
     h+=`<div class="sec"><h3>לאיזו חברה שייך המסמך? <span class="mut">(${esc(it.status)})</span></h3><div class="btns" id="cb">`+
-    it.cands.map(c=>`<button data-id="${esc(c.id)}" data-n="${esc(c.name)}" class="${ans.cid===c.id?"sel":""}">${esc(c.name)} <span class="why">${esc(c.chp)} · ${esc(c.why)}</span></button>`).join("")+
+    it.cands.map(c=>`<button data-id="${esc(c.id)}" data-n="${esc(c.name)}" class="${hasC(c.id)?"sel":""}">${esc(c.name)} <span class="why">${esc(c.chp)} · ${esc(c.why)}</span></button>`).join("")+
     ["מסמך קבוצתי (כמה חברות)","החברה לא במאגר","מסמך לא רלוונטי","לא ברור"].map(t=>`<button data-s="${t}" class="${ans.cspec===t?"sel":""}">${t}</button>`).join("")+
     `</div><div style="margin-top:4px"><input type="text" id="srch" placeholder="חיפוש חברה אחרת בשם או בח.פ."><div id="res"></div></div>`+
     (it.doc_name_matches?`<div class="why">שמות שנמצאו בקובץ: ${esc(it.doc_name_matches)}</div>`:"")+
     (it.doc_hps_not_in_db?`<div class="why">ח.פ. בקובץ שאינו במאגר: ${esc(it.doc_hps_not_in_db)}</div>`:"")+`</div>`;
   }
+  if((it.dups||[]).length)h+=`<div class="sec"><label><input type="checkbox" id="applyDups" checked> יש ${it.dups.length} קבצים זהים לקובץ הזה בדיוק (מספרים ${it.dups.slice(0,6).join(", ")}${it.dups.length>6?"…":""}): להחיל עליהם את אותה תשובה</label></div>`;
   h+=`<div class="sec"><h3>ביאור חופשי — מה יש בקובץ</h3><textarea id="note" placeholder="כתוב כאן בטקסט חופשי מה כתוב במסמך, למי הוא שייך, כל דבר שחשוב לדעת"></textarea></div>`;
   $("q").innerHTML=h;$("note").value=d.note||"";renderCards(it);
   $("fname").textContent=it.file;
   $("pdf").src="/pdf?id="+encodeURIComponent(it.aid);
   $("tb")?.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ans.type=b.dataset.t;mark("tb",b)});
   $("cb")?.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
-    if(b.dataset.id){ans.cid=b.dataset.id;ans.cname=b.dataset.n;ans.cspec=""}else{ans.cspec=b.dataset.s;ans.cid="";ans.cname=""}mark("cb",b);renderCards(visible()[idx])});
+    if(b.dataset.id){toggleC(b.dataset.id,b.dataset.n);b.classList.toggle("sel",hasC(b.dataset.id));if(ans.cspec&&ans.cspec!==GRP)ans.cspec="";syncSpecials()}
+    else{const sp=b.dataset.s;ans.cspec=ans.cspec===sp?"":sp;if(ans.cspec&&ans.cspec!==GRP)ans.cids=[];syncSpecials();document.querySelectorAll("#cb button[data-id]").forEach(x=>x.classList.toggle("sel",hasC(x.dataset.id)))}
+    renderCards(visible()[idx])});
   $("srch")?.addEventListener("input",e=>{const v=e.target.value.trim();if(v.length<2){$("res").innerHTML="";return}
     $("res").innerHTML=biz.filter(b=>b.name.includes(v)||b.permit_name.includes(v)||b.chp.includes(v)).slice(0,12)
-    .map(b=>`<button data-id="${esc(b.id)}" data-n="${esc(b.name)}">${esc(b.name)} <span class="why">${esc(b.chp)}</span></button>`).join("")});
-  $("res")?.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;ans.cid=b.dataset.id;ans.cname=b.dataset.n;ans.cspec="";renderCards(visible()[idx]);
-    document.querySelectorAll("#cb button").forEach(x=>x.classList.remove("sel"));document.querySelectorAll("#res button").forEach(x=>x.classList.remove("sel"));b.classList.add("sel")});
+    .map(b=>`<button data-id="${esc(b.id)}" data-n="${esc(b.name)}" class="${hasC(b.id)?"sel":""}">${esc(b.name)} <span class="why">${esc(b.chp)}</span></button>`).join("")});
+  $("res")?.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;toggleC(b.dataset.id,b.dataset.n);b.classList.toggle("sel",hasC(b.dataset.id));
+    if(ans.cspec&&ans.cspec!==GRP)ans.cspec="";syncSpecials();renderCards(visible()[idx])});
 }
+const GRP="מסמך קבוצתי (כמה חברות)";
+const hasC=id=>ans.cids.some(c=>c.id===id);
+function toggleC(id,name){const i=ans.cids.findIndex(c=>c.id===id);if(i>=0)ans.cids.splice(i,1);else ans.cids.push({id,name})}
+function syncSpecials(){document.querySelectorAll("#cb button[data-s]").forEach(x=>x.classList.toggle("sel",ans.cspec===x.dataset.s))}
 const VC={"רק כללי":"",};
 function card(b,on,why){const dd=b.docs||{};
   const r=(k,v)=>v?`<div class="row"><i>${k}</i><span>${esc(v)}</span></div>`:"";
@@ -102,16 +111,18 @@ function card(b,on,why){const dd=b.docs||{};
   `<div class="why">סטטוס רשם החברות אינו זמין בכלי המקומי; מצוי במאגר הנפרד</div></div>`}
 function renderCards(it){
   const byId=Object.fromEntries(biz.map(b=>[b.id,b]));
-  const sel=ans.cid;let h="";
-  const ids=it.cands.map(c=>c.id);if(sel&&!ids.includes(sel))ids.push(sel);
-  h=ids.map(id=>{const c=it.cands.find(x=>x.id===id);const b=byId[id];return b?card(b,id===sel,c?.why):""}).join("");
+  const ids=it.cands.map(c=>c.id);ans.cids.forEach(c=>{if(!ids.includes(c.id))ids.push(c.id)});
+  const h=ids.map(id=>{const c=it.cands.find(x=>x.id===id);const b=byId[id];return b?card(b,hasC(id),c?.why):""}).join("");
   $("cards").innerHTML=h||`<span class="mut">לא זוהתה חברה מועמדת. חפש חברה בשדה החיפוש שבשאלה.</span>`}
 function mark(id,b){document.querySelectorAll("#"+id+" button").forEach(x=>x.classList.remove("sel"));document.querySelectorAll("#res button").forEach(x=>x.classList.remove("sel"));b.classList.add("sel")}
 async function save(){
   const it=visible()[idx];if(!it)return;
-  if(!ans.type&&!ans.cid&&!ans.cspec&&!$("note").value){return false}
-  const d={attachment_id:it.aid,file:it.file,type_answer:ans.type,company_id:ans.cid,company_name:ans.cname,company_special:ans.cspec,note:$("note").value};
-  await fetch("/api/answer",{method:"POST",body:JSON.stringify(d)});dec[it.aid]=d;return true;
+  if(!ans.type&&!ans.cids.length&&!ans.cspec&&!$("note").value){return false}
+  const d={attachment_id:it.aid,file:it.file,type_answer:ans.type,company_id:ans.cids[0]?.id||"",company_name:ans.cids[0]?.name||"",
+    company_ids:ans.cids.map(c=>c.id).join(";"),company_names:ans.cids.map(c=>c.name).join(";"),company_special:ans.cspec,note:$("note").value,
+    apply_dups:!!($("applyDups")&&$("applyDups").checked)};
+  await fetch("/api/answer",{method:"POST",body:JSON.stringify(d)});dec[it.aid]=d;
+  if(d.apply_dups)for(const o of it.dups||[])dec[o]={...d,attachment_id:o,same_as:it.aid};return true;
 }
 $("next").onclick=async()=>{const before=visible();const it=before[idx];const saved=await save();
   const after=visible();

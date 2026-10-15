@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import hashlib
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
@@ -21,7 +22,9 @@ from urllib.parse import urlparse, parse_qs
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOCK = threading.Lock()
 A = None
-DEC_COLS = ["attachment_id", "file", "type_answer", "company_id", "company_name", "company_special", "note", "time"]
+DEC_COLS = ["attachment_id", "file", "type_answer", "company_id", "company_name", "company_ids", "company_names", "company_special", "note", "same_as", "time"]
+HASHES = {}          # attachment_id -> sha256 של הקובץ (נבנה ברקע; קבצים זהים מקבלים אותה תשובה)
+HASH_STATE = {"done": 0, "total": 0}
 
 
 def read_csv(path):
@@ -102,7 +105,7 @@ def build_items():
             "text_check": r.get("text_check", ""), "status": r.get("status", ""),
             "post_title": r.get("post_title", ""), "note": r.get("note", ""),
             "doc_name_matches": r.get("doc_name_matches", ""), "doc_hps_not_in_db": r.get("doc_hps_not_in_db", ""),
-            "linked_in": r.get("linked_in", ""), "cands": cands,
+            "linked_in": r.get("linked_in", ""), "cands": cands, "dups": dups_of(r["attachment_id"]),
         })
     return items
 
@@ -117,12 +120,59 @@ def save_decision(d):
         from datetime import datetime
         d["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cur[d["attachment_id"]] = {k: d.get(k, "") for k in DEC_COLS}
+        if d.get("apply_dups"):       # קבצים זהים (אותו תוכן בדיוק) מקבלים את אותה תשובה
+            files = {r.get("ID"): os.path.basename(r.get("guid") or "") for r in read_csv(A.attachments)}
+            for other in dups_of(d["attachment_id"]):
+                cur[other] = {**{k: d.get(k, "") for k in DEC_COLS}, "attachment_id": other, "file": files.get(other, ""),
+                              "same_as": d["attachment_id"], "time": d["time"]}
         tmp = A.decisions + ".tmp"
         with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, fieldnames=DEC_COLS)
             w.writeheader()
             w.writerows(cur.values())
         os.replace(tmp, A.decisions)
+
+
+def build_hashes():
+    """sha256 לכל קובץ PDF (ברקע, עם מטמון בקובץ hashes_cache.json): כדי לזהות קבצים זהים."""
+    cache_path = os.path.join(os.path.dirname(os.path.abspath(A.decisions)) or ".", "hashes_cache.json")
+    cache = {}
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, encoding="utf-8") as f:
+                cache = json.load(f)
+        except (OSError, ValueError):
+            cache = {}
+    rows = [r for r in read_csv(A.attachments) if (r.get("guid") or "").lower().endswith(".pdf")]
+    HASH_STATE["total"] = len(rows)
+    for r in rows:
+        aid = r.get("ID")
+        m = re.search(r"wp-content/uploads/(.+)$", r.get("guid") or "")
+        p = os.path.join(A.uploads, *m.group(1).split("/")) if m else ""
+        HASH_STATE["done"] += 1
+        if not p or not os.path.exists(p):
+            continue
+        st = os.stat(p)
+        c = cache.get(aid)
+        if c and c[0] == st.st_size and c[1] == int(st.st_mtime):
+            HASHES[aid] = c[2]
+            continue
+        h = hashlib.sha256()
+        with open(p, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        HASHES[aid] = h.hexdigest()
+        cache[aid] = [st.st_size, int(st.st_mtime), HASHES[aid]]
+    try:
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
+    except OSError:
+        pass
+
+
+def dups_of(aid):
+    h = HASHES.get(aid)
+    return [a for a, x in HASHES.items() if h and x == h and a != aid]
 
 
 def pdf_path(aid):
@@ -158,7 +208,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, f.read(), "text/html; charset=utf-8")
         if u.path == "/api/items":
             return self.send(200, json.dumps({"mtime": mtime(A.final, A.businesses), "items": build_items(),
-                                              "decisions": decisions()}, ensure_ascii=False))
+                                              "decisions": decisions(), "hashes": dict(HASH_STATE)}, ensure_ascii=False))
         if u.path == "/api/mtime":
             return self.send(200, json.dumps({"mtime": mtime(A.final, A.businesses)}))
         if u.path == "/api/businesses":
@@ -193,6 +243,7 @@ def main():
     ap.add_argument("--decisions", default="החלטות_בדיקה.csv")
     ap.add_argument("--port", type=int, default=8765)
     A = ap.parse_args()
+    threading.Thread(target=build_hashes, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", A.port), H)
     print(f"הדשבורד פועל: http://localhost:{A.port}   (לעצירה: Ctrl+C)")
     try:
