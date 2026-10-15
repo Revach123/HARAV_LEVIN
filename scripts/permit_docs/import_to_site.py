@@ -130,6 +130,12 @@ def apply_dedupe(docs, a):
         rows = dd.build_report(a)
         dd.write_report(rows, a.dedupe)
         print(f"  {len(rows)} זוגות דומים, מהם {sum(1 for r in rows if r['action'] == 'הסר')} כפולים בטוחים שלא יועלו")
+    if os.path.exists(a.removed_log) and not a.restore_removed:        # מסמכים שכבר נמחקו ככפולים בעבר: לא מעלים שוב (גם אם הדוח נוצר מחדש)
+        gone = {r["sha"] for r in rd(a.removed_log)}
+        n = len([d for d in docs if d["sha"] in gone])
+        docs = [d for d in docs if d["sha"] not in gone]
+        if n:
+            print(f"  דילוג על {n} מסמכים שנמחקו ככפולים בעבר (לפי {a.removed_log}; להחזרתם: --restore-removed)")
     if not a.dedupe or not os.path.exists(a.dedupe):
         return docs
     by_sha = {d["sha"]: d for d in docs}
@@ -208,6 +214,8 @@ def main():
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--password-file", default="admin_password.txt", help="קובץ טקסט עם סיסמת המנהל בשורה הראשונה (אם אין משתנה ADMIN_PASSWORD)")
     ap.add_argument("--dedupe", default="כפילויות_לחברות.csv", help="דוח הכפילויות שאושר (כפילויות_לחברות.csv): מסמכים שסומנו הסר לא יועלו שוב")
+    ap.add_argument("--removed-log", default="dedupe_removed.csv")
+    ap.add_argument("--restore-removed", action="store_true", help="להעלות גם מסמכים שנמחקו ככפולים בעבר (לפי היומן)")
     ap.add_argument("--no-dedupe", action="store_true", help="בלי בדיקת כפילויות לפני ההעלאה")
     ap.add_argument("--ocr-dir", default="ocr_text")
     ap.add_argument("--replace-altered", action="store_true", help="להחליף מסמכים שהועלו קודם עם תוכן שונה מהמקור (נמחק הישן ומועלה התקין)")

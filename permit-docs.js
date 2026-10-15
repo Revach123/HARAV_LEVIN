@@ -33,6 +33,52 @@
   const bizName = id => { const b = bizById(id); return b ? displayName(b) : "(חברה שנמחקה)"; };
   const fmtSize = n => (n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
 
+  // ───────── חיפוש חברה: במאגר שלנו, ובמאגר הרשם (חברות שאינן במאגר: כרטיסייה אדומה; סימון חברות מחוסלות/נמחקו) ─────────
+  const DEFUNCT = /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/;
+  const stTag = st => (st ? `<span class="pd-st${DEFUNCT.test(st) ? " bad" : ""}">${E(st)}</span>` : "");
+  const digitsOf = x => String(x || "").replace(/\D/g, "").replace(/^0+/, "");
+  const markText = r => `חסר במאגר: ${r.name} (ח.פ. ${r.id}${r.status ? ", " + r.status : ""})`;
+  function runCompanySearch(q, out, o) {
+    q = (q || "").trim();
+    clearTimeout(out._t);
+    if (q.length < 2) { out.innerHTML = ""; out._seq = (out._seq || 0) + 1; return; }
+    const dg = q.replace(/\D/g, "");
+    const local = bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10);
+    out.innerHTML = (local.map(b => `<button class="pd-pick" data-pick="${b.id}">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span>${stTag(b.registry_status)}</button>`).join("") ||
+      `<div class="pd-sub">לא נמצאה חברה במאגר שלנו</div>`) + `<div class="pd-regbox"></div>`;
+    out.onclick = e => {
+      const pk = e.target.closest("[data-pick]"); if (pk) return o.pick(pk.dataset.pick);
+      const mk = e.target.closest("[data-mark]"); if (mk) return o.mark({ id: mk.dataset.mark, name: mk.dataset.name, status: mk.dataset.status });
+      const ad = e.target.closest("[data-addreg]"); if (ad) return addReg(ad.dataset.addreg, ad.dataset.defunct === "1");
+    };
+    if (q.length >= 3) out._t = setTimeout(() => regLookup(q, out, o), 450);
+  }
+  async function regLookup(q, out, o) {
+    const box = out.querySelector(".pd-regbox"); if (!box) return;
+    const seq = out._seq = (out._seq || 0) + 1;
+    box.innerHTML = `<div class="pd-sub">בודק גם ברשם החברות…</div>`;
+    let d;
+    try { d = await api("/registry-name-search?q=" + encodeURIComponent(q)); }
+    catch (e) { if (seq === out._seq && out.contains(box)) box.innerHTML = `<div class="pd-sub">הבדיקה ברשם לא זמינה (${E(e.message)})</div>`; return; }
+    if (seq !== out._seq || !out.contains(box)) return;
+    const byChp = new Map(bizList().filter(b => digitsOf(b.chp_number)).map(b => [digitsOf(b.chp_number), b]));
+    const rs = d.results || [];
+    const inDb = rs.map(r => ({ r, b: byChp.get(digitsOf(r.id)) })).filter(x => x.b && !o.exclude(x.b.id));
+    const miss = rs.filter(r => !byChp.has(digitsOf(r.id)));
+    box.innerHTML = (inDb.length ? `<div class="pd-grp weak">במאגר שלנו (לפי הרשם)</div>` + inDb.slice(0, 6).map(x => `<button class="pd-pick" data-pick="${x.b.id}">${displayName(x.b, true)} <span class="pd-sub">${E(x.r.id)}</span>${stTag(x.r.status)}</button>`).join("") : "") +
+      (miss.length ? `<div class="pd-grp" style="color:#c0392b">לא במאגר שלנו (נמצאו ברשם)</div>` + miss.slice(0, 8).map(r => `
+        <div class="pd-reg"><div><b>${E(r.name)}</b> <span class="pd-tag red">לא במאגר</span>${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div>
+          <div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div>
+          <div class="pd-btns" style="margin-top:4px"><button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>
+            <button class="pd-btn" data-addreg="${E(r.id)}" data-defunct="${r.defunct ? 1 : 0}">הוספה למאגר…</button></div></div>`).join("") +
+        (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
+  }
+  function addReg(id, defunct) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא
+    if (defunct && !confirm("החברה מחוסלת / נמחקה ברשם. להוסיף אותה למאגר בכל זאת?")) return;
+    ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-company"].forEach(close);
+    if (typeof openForm === "function") { openForm(null); setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150); }
+  }
+
   // ───────── טעינה ואינדקס ─────────
   function reindex() {
     S.byBiz = new Map(); S.byId = new Map();
@@ -200,11 +246,8 @@
   }
   function addSearch(id, q) {
     const out = $("pd-add-res"); if (!out) return;
-    q = (q || "").trim(); if (q.length < 2) { out.innerHTML = ""; return; }
-    const d = S.byId.get(id), have = new Set(d.business_ids || []);
-    const digits = q.replace(/\D/g, "");
-    const hit = bizList().filter(b => !have.has(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (digits.length >= 4 && (b.chp_number || "").includes(digits)))).slice(0, 10);
-    out.innerHTML = hit.map(b => `<button class="pd-pick" onclick="PD._assign('${id}','${b.id}')">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span></button>`).join("") || `<div class="pd-sub">לא נמצאה חברה</div>`;
+    runCompanySearch(q, out, { exclude: x => ((S.byId.get(id) || {}).business_ids || []).includes(x), pick: b => assign(id, b),
+      mark: r => { const d = S.byId.get(id); updateDoc(id, { note: (d.note ? d.note + " | " : "") + markText(r) }); } });
   }
   function assign(id, bizId) { const d = S.byId.get(id); updateDoc(id, { business_ids: [...(d.business_ids || []), bizId] }); }
   function askDelete(id) {
@@ -387,7 +430,7 @@
     }
     const sug = c.sug;
     const noText = normText(c.text).length < 40;
-    const card = x => `<label class="pd-cand"><input type="checkbox" ${c.sel.has(x.b.id) ? "checked" : ""} onchange="PD._tog('${x.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(x.b, true)}</b> <span class="pd-sub">${E(x.b.chp_number || "")} · ${x.hp ? "התאמה לפי ח.פ." : "התאמה לפי שם"} (${E(x.why.join(", "))})</span></span></label>`;
+    const card = x => `<label class="pd-cand"><input type="checkbox" ${c.sel.has(x.b.id) ? "checked" : ""} onchange="PD._tog('${x.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(x.b, true)}</b> <span class="pd-sub">${E(x.b.chp_number || "")} · ${x.hp ? "התאמה לפי ח.פ." : "התאמה לפי שם"} (${E(x.why.join(", "))})</span>${stTag(x.b.registry_status)}</span></label>`;
     const extra = [...c.sel].filter(id => !sug.cands.some(x => x.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, hp: false, why: ["נבחר ידנית"] }));
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
     $("pd-up-body").innerHTML = `
@@ -421,10 +464,9 @@
   }
   function upTog(id, on) { on ? U.cur.sel.add(id) : U.cur.sel.delete(id); const b = $("pd-save"); if (b) b.textContent = U.cur.sel.size ? `שמירה ושיוך ל-${U.cur.sel.size} חברות` : "שמירה בלי שיוך"; }
   function upSearch(q) {
-    const out = $("pd-up-res"); if (!out) return; q = (q || "").trim(); if (q.length < 2) { out.innerHTML = ""; return; }
-    const digits = q.replace(/\D/g, "");
-    const hit = bizList().filter(b => !U.cur.sel.has(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (digits.length >= 4 && (b.chp_number || "").includes(digits)))).slice(0, 10);
-    out.innerHTML = hit.map(b => `<button class="pd-pick" onclick="PD._upAdd('${b.id}')">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span></button>`).join("") || `<div class="pd-sub">לא נמצאה חברה</div>`;
+    const out = $("pd-up-res"); if (!out) return;
+    runCompanySearch(q, out, { exclude: x => U.cur.sel.has(x), pick: id => { U.cur.sel.add(id); upReview(); },
+      mark: r => { U.cur.note = (U.cur.note ? U.cur.note + " | " : "") + markText(r); upReview(); } });
   }
   async function upSave() {
     const c = U.cur, btn = $("pd-save"); if (btn) btn.disabled = true;
@@ -499,7 +541,7 @@
         } catch (e) { if (tok === Q.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
       })();
     }
-    const card = c => `<label class="pd-cand"><input type="checkbox" ${Q.sel.has(c.b.id) ? "checked" : ""} onchange="PD._unTog('${c.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(c.b, true)}</b> <span class="pd-sub">${E(c.b.chp_number || "")} · ${E(c.why.join(", "))}</span></span></label>`;
+    const card = c => `<label class="pd-cand"><input type="checkbox" ${Q.sel.has(c.b.id) ? "checked" : ""} onchange="PD._unTog('${c.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(c.b, true)}</b> <span class="pd-sub">${E(c.b.chp_number || "")} · ${E(c.why.join(", "))}</span>${stTag(c.b.registry_status)}</span></label>`;
     const extra = [...Q.sel].filter(id => !Q.cands.some(c => c.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, why: ["נבחר ידנית"] }));
     const tb = ["general", "private", "both", "unknown"].map(t => `<button class="pd-btn ${Q.type === t ? "sel" : ""}" onclick="PD._unType('${t}')">${TL[t]}</button>`).join("");
     const keepIn = document.activeElement && document.activeElement.id === "pd-un-q" ? document.getElementById("pd-un-q").value : null;
@@ -523,10 +565,15 @@
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
   }
   function uqSearch(q) {
-    const out = $("pd-un-res"); if (!out) return; q = (q || "").trim(); if (q.length < 2) { out.innerHTML = ""; return; }
-    const digits = q.replace(/\D/g, "");
-    const hit = bizList().filter(b => !Q.sel.has(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (digits.length >= 4 && (b.chp_number || "").includes(digits)))).slice(0, 10);
-    out.innerHTML = hit.map(b => `<button class="pd-pick" onclick="PD._unAdd('${b.id}')">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span></button>`).join("") || `<div class="pd-sub">לא נמצאה חברה</div>`;
+    const out = $("pd-un-res"); if (!out) return;
+    runCompanySearch(q, out, { exclude: x => Q.sel.has(x), pick: id => { Q.sel.add(id); uqShow(); }, mark: uqMark });
+  }
+  async function uqMark(reg) {        // סימון "חסר במאגר" בהערת המסמך (המסמך נשאר לא משויך)
+    const d = unassignedList()[Q.i]; if (!d) return;
+    const note = (Q.note ? Q.note + " | " : "") + markText(reg); Q.note = note;
+    try { const r = await api("/permit-docs/" + d.id, "PUT", { note }); replaceDoc(r.doc); showStatus("נוסף סימון: חסר במאגר"); }
+    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "הסימון נכשל: " + e.message; }
+    uqShow();
   }
   async function uqSave() {
     const d = unassignedList()[Q.i]; if (!d || !Q.sel.size) return;
@@ -582,6 +629,8 @@
   .pd-warnbox{background:#fff6e0;border:1px solid #e8c36a;border-radius:7px;padding:7px 10px;font-size:12.5px;margin:6px 0}
   .pd-dup{background:#fdecea;border:1px solid #e6a39b;border-radius:8px;padding:12px;font-size:13.5px;line-height:1.6}
   .pd-ok-msg{background:#edf7f1;border:1px solid #a8d9bc;border-radius:8px;padding:8px 12px;margin:10px 14px 0}
+  .pd-st{font-size:11px;border-radius:9px;padding:1px 7px;background:#eee;color:#555;margin-inline-start:6px;white-space:nowrap}.pd-st.bad{background:#fdecea;color:#c0392b;font-weight:600}
+  .pd-reg{border:2px solid #c0392b;background:#fdecea;border-radius:8px;padding:7px 9px;margin-top:5px}.pd-tag.red{background:#c0392b;color:#fff}
   .pd-grp{font-size:12px;font-weight:600;color:#1e7e4a;margin:8px 0 4px}.pd-grp.weak{color:#8a8a8a}
   @media(max-width:800px){.pd-split{flex-direction:column}.pd-side{width:auto;max-width:none}}
   `;
