@@ -85,11 +85,13 @@ def main():
     # מסמך שרשום בסוג אחד ונוסחו מצביע על הסוג השני: ייתכן שהוא מסמך משולב (כללי ופרטי ביחד)
     both = {}
     for r in (m.read_csv(a.type_check) if os.path.exists(a.type_check) else []):
-        if r.get("type_by_location") == "כללי" and r.get("text_check", "").startswith("יש נוסח פרטי"):
-            both[r["attachment_id"]] = "פרטי"        # רשום כללי, אבל יש בו נוסח פרטי
-        elif r.get("type_by_location") == "פרטי" and r.get("text_check", "").startswith("אין נוסח פרטי"):
+        loc, tx = r.get("type_by_location"), r.get("text_check", "")
+        if tx.startswith("נוסח משולב"):          # משפט המפתח של מסמך משולב: מכסה כללי ופרטי ביחד, בכל מיקום
+            both[r["attachment_id"]] = "פרטי" if loc == "כללי" else "כללי"
+        elif loc == "כללי" and (tx.startswith("יש נוסח פרטי") or tx.startswith("נוסח רק פרטי")):
+            both[r["attachment_id"]] = "פרטי"        # רשום כללי, אבל נוסחו פרטי
+        elif loc == "פרטי" and tx.startswith("אין נוסח פרטי"):
             both[r["attachment_id"]] = "כללי"        # רשום פרטי, אבל אין בו נוסח פרטי (כנראה נוסח כללי)
-
     # אותו קובץ בדיוק ברשימת הכללי וגם ברשימת הפרטי: מסמך אחד שמכסה את שני הסוגים
     hashes = file_hashes(a.attachments, a.uploads, a.hash_cache)
     by_hash = collections.defaultdict(list)
