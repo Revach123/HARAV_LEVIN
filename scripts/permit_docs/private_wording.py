@@ -129,6 +129,7 @@ def main():
     ap.add_argument("--attachments", required=True)
     ap.add_argument("--uploads", required=True)
     ap.add_argument("--ocr-dir", default="ocr_text")
+    ap.add_argument("--only-personal", action="store_true", help="עדכון מהיר: רק נוסח 'התקשרות אישית' נוסף ל-type_check.csv הקיים, בלי קיבוץ הנוסחים הדומים (השלב האיטי)")
     ap.add_argument("--out", default="private_wording.csv")
     ap.add_argument("--check-out", default="type_check.csv")
     ap.add_argument("--sig-private-min", type=float, default=0.03, help="נוסח נחשב 'נוסח פרטי' אם הוא מופיע בלפחות שיעור זה מהמסמכים הפרטיים")
@@ -165,6 +166,19 @@ def main():
             for d in [x for x in lst if x["phrase"]][:40]:
                 w.writerow([d["id"], d["file"], typ, d["phrase"], d["snippet"]])
     print(f"מסמכים שמכילים 'פרטי/פרטני': בפרטיים {sum(1 for d in P if d['win'])}/{len(P)}, בכלליים {sum(1 for d in G if d['win'])}/{len(G)}")
+    if a.only_personal:
+        old = list(csv.reader(open(a.check_out, encoding="utf-8-sig"))) if os.path.exists(a.check_out) else []
+        head = old[0] if old else ["attachment_id", "file", "post_title", "type_by_location", "text_check", "keyword_hits"]
+        pers = {d["id"]: d for d in docs if d["phrase"] == KIND_PERSONAL}
+        rows = [r for r in old[1:] if r and r[0] not in pers]
+        for d in pers.values():
+            rows.append([d["id"], d["file"], d["title"], "פרטי" if d["type"] == "P" else "כללי", "נוסח אישית (גם פרטי)", len(d["win"])])
+        with open(a.check_out, "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(head)
+            w.writerows(rows)
+        print(f"{len(pers)} מסמכים עם נוסח 'התקשרות אישית' נוספו/עודכנו ב-{a.check_out} (שאר הקובץ לא שונה)")
+        return
     if len(P) < 3:
         print("אין מספיק מסמכים פרטיים עם טקסט (חכה לסיום ה-OCR)")
         return
