@@ -65,11 +65,23 @@ def _phrase_at(win, words, must, need):
     return sum(1 for k in set(words) if k in e) >= need and any(k in e for k in must) and "פרטי" in e and ("עיסקא" in e or "התקשרות" in e)
 
 
+def _has_approves_here(seq):
+    """"החברה מאשרת בזאת" (שלוש המילים קרוב זו לזו, בכל סדר): נחשב נוסח משולב בלי תנאים נוספים."""
+    for i, w in enumerate(seq):
+        if w == "מאשרת":
+            win = set(seq[max(0, i - 4): i + 5])
+            if "בזאת" in win and ("החברה" in win or "חברה" in win):
+                return True
+    return False
+
+
 def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
     found = set()
     for seq in (ws, ws[::-1]):
+        if _has_approves_here(seq):
+            return KIND_COMBINED
         for i, w in enumerate(seq):
             if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):
                 win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]

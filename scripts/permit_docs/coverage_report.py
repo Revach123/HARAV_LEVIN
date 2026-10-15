@@ -84,10 +84,11 @@ def main():
     rows = m.read_csv(a.final)
     # מסמך שרשום בסוג אחד ונוסחו מצביע על הסוג השני: ייתכן שהוא מסמך משולב (כללי ופרטי ביחד)
     both = {}
+    combined_ids = set()      # נוסח משולב ("החברה מאשרת בזאת..."): מסמך שמכסה כללי ופרטי ביחד, בכל מיקום - ללא "אולי"
     for r in (m.read_csv(a.type_check) if os.path.exists(a.type_check) else []):
         loc, tx = r.get("type_by_location"), r.get("text_check", "")
         if tx.startswith("נוסח משולב"):          # משפט המפתח של מסמך משולב: מכסה כללי ופרטי ביחד, בכל מיקום
-            both[r["attachment_id"]] = "פרטי" if loc == "כללי" else "כללי"
+            combined_ids.add(r["attachment_id"])
         elif loc == "כללי" and (tx.startswith("יש נוסח פרטי") or tx.startswith("נוסח רק פרטי")):
             both[r["attachment_id"]] = "פרטי"        # רשום כללי, אבל נוסחו פרטי
         elif loc == "פרטי" and tx.startswith("אין נוסח פרטי"):
@@ -120,10 +121,12 @@ def main():
             if x.strip() in biz:
                 ids.add(x.strip())
         types = {t} if t in ("כללי", "פרטי") else set()
+        if aid in combined_ids:
+            types = {"כללי", "פרטי"}
         for other in by_hash.get(hashes.get(aid), []):
             if other != aid and type_of.get(other) in ("כללי", "פרטי"):
                 types.add(type_of[other])
-        both_lists = len(types) == 2
+        both_lists = len(types) == 2 and aid not in combined_ids
         for bid in ids:
             for tt in (types or {t}):
                 docs[bid][tt].add(aid)
