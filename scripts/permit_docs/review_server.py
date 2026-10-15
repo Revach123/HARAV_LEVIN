@@ -62,7 +62,61 @@ def load_businesses():
     return out
 
 
+def build_items_unassigned():
+    """תור "חסר שיוך לחברה": כל קובץ שלא שויך לאף חברה (אין business_id ואין ח.פ. בקובץ שנמצא במאגר). בלי שאלת כללי/פרטי - זה השלב הבא.
+    מועמדות: החברה לפי שם הפוסט, ח.פ. בקובץ, שמות חברות שנמצאו בטקסט, ומועמדים_לחברות_חסרות.csv (חיפוש בטקסט לפי חברה שחסר לה מסמך)."""
+    rows = read_csv(A.final)
+    biz = load_businesses()
+    by_id = {b["id"]: b for b in biz}
+    by_chp = {b["chp"].zfill(9): b for b in biz if b["chp"]}
+    by_name = {}
+    for b in biz:
+        for n in (b["name"], b["permit_name"]):
+            if n and len(n.strip()) >= 4:
+                by_name.setdefault(n.strip(), b)
+    from_missing = {}
+    for r in read_csv(A.candidates):
+        b = by_chp.get(str(r.get("chp") or "").zfill(9))
+        if b:
+            from_missing.setdefault(r.get("candidate_id"), []).append((b, r.get("evidence", "")))
+    items = []
+    for r in rows:
+        if r.get("business_id"):
+            continue
+        hps = re.findall(r"\d{8,9}", r.get("doc_hps_in_db") or "")
+        if any(h.zfill(9) in by_chp for h in hps):
+            continue
+        cands, seen = [], set()
+
+        def add(b, why):
+            if b and b["id"] not in seen:
+                seen.add(b["id"])
+                cands.append({"id": b["id"], "name": b["name"], "chp": b["chp"], "why": why})
+        tb = (r.get("title_business") or "").strip()
+        if tb:
+            add(by_name.get(tb), "לפי שם הפוסט")
+        matches = r.get("doc_name_matches") or ""
+        for n, b in by_name.items():
+            if n in matches:
+                add(b, "שם החברה נמצא בקובץ")
+        for b, ev in from_missing.get(r["attachment_id"], []):
+            add(b, "חיפוש לחברה חסרה: " + ev)
+        items.append({
+            "aid": r["attachment_id"], "file": r.get("file", ""), "reasons": ["אין שיוך לחברה (" + (r.get("status") or "לא זוהה") + ")"],
+            "ask_type": False, "ask_company": True,
+            "doc_type": r.get("doc_type_clean") or r.get("doc_type") or "", "text_check": "", "status": r.get("status", ""),
+            "post_title": r.get("post_title", ""), "note": r.get("note", ""),
+            "doc_name_matches": matches, "doc_hps_not_in_db": r.get("doc_hps_not_in_db", ""),
+            "linked_in": r.get("linked_in", ""), "multi_kind": r.get("multi_kind", ""), "hp_pages": r.get("hp_pages", ""),
+            "cands": cands, "dups": dups_of(r["attachment_id"]),
+        })
+    items.sort(key=lambda i: (-len(i["cands"]), i["file"]))
+    return items
+
+
 def build_items():
+    if A.queue == "unassigned":
+        return build_items_unassigned()
     rows = read_csv(A.final)
     biz = load_businesses()
     by_id = {b["id"]: b for b in biz}
@@ -242,6 +296,9 @@ def main():
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--decisions", default="החלטות_בדיקה.csv")
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--queue", choices=["unassigned", "review"], default="unassigned",
+                    help="unassigned = רק קבצים שלא שויכו לאף חברה (ברירת מחדל); review = כל הקבצים שסומנו לבדיקה ידנית")
+    ap.add_argument("--candidates", default="מועמדים_לחברות_חסרות.csv")
     A = ap.parse_args()
     threading.Thread(target=build_hashes, daemon=True).start()
     srv = ThreadingHTTPServer(("127.0.0.1", A.port), H)
