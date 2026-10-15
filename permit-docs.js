@@ -218,19 +218,21 @@
       const ids = doc.business_ids || [];
       const typeBtns = Object.keys(TL).map(t => `<button class="pd-btn ${doc.doc_type === t ? "sel" : ""}" onclick="PD._setType('${docId}','${t}')">${TL[t]}</button>`).join("");
       const chips = ids.map(b => `<div class="pd-co"><span>${E(bizName(b))}</span><button class="pd-link" onclick="PD._unassign('${docId}','${b}')" title="ביטול שיוך המסמך לחברה הזו">ביטול שיוך</button></div>`).join("") || `<div class="pd-sub">המסמך לא משויך לאף חברה</div>`;
-      const html = `
-        <div class="pd-head"><b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>
-        <div class="pd-split">
-          <div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div>
-          <div class="pd-side" id="pd-doc-side">
+      const headHtml = `<div class="pd-head"><b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
+      const sideHtml = `
             <h4>סיווג</h4><div class="pd-btns">${typeBtns}</div>
             <h4>חברות משויכות (${ids.length})</h4>${chips}
             <div style="margin-top:6px"><input class="pd-in" id="pd-add-q" placeholder="הוספת / שינוי שיוך: שם או ח.פ." oninput="PD._addSearch('${docId}',this.value)" autocomplete="off"><div id="pd-add-res"></div></div>
             <h4>הערה</h4><textarea class="pd-in" id="pd-note" rows="2" onchange="PD._setNote('${docId}',this.value)">${E(doc.note || "")}</textarea>
-            <div class="pd-danger"><button class="pd-btn danger" onclick="PD._askDelete('${docId}')">🗑 מחיקת המסמך לגמרי</button></div>
-          </div>
-        </div>`;
-      $("pd-doc").querySelector(".pd-box").innerHTML = html;
+            <div class="pd-danger"><button class="pd-btn danger" onclick="PD._askDelete('${docId}')">🗑 מחיקת המסמך לגמרי</button></div>`;
+      const box = $("pd-doc").querySelector(".pd-box");
+      if (box.querySelector(".pd-view") && box.dataset.docId === docId) {      // רענון חלקי (שינוי סיווג וכו'): הקובץ עצמו לא נטען מחדש
+        box.querySelector(".pd-head").outerHTML = headHtml;
+        $("pd-doc-side").innerHTML = sideHtml;
+      } else {
+        box.dataset.docId = docId;
+        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
+      }
       const s2 = $("pd-doc-side"); if (s2) s2.scrollTop = keep;
     };
     S._paintDoc = paint; paint();

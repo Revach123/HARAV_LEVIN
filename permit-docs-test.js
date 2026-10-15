@@ -216,19 +216,21 @@
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
       const slotBtns = fromBiz ? `<h4>קישור לרשימה של ${E(bizName(fromBiz))}</h4><div class="pd-btns">${["private", "general"].map(t => `<button class="pd-btn ${slotsOf(doc, fromBiz).includes(t) ? "sel" : ""}" onclick="PD._slot('${docId}','${fromBiz}','${t}')">${slotsOf(doc, fromBiz).includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`).join("")}</div>` : "";
-      const html = `
-        <div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>
-        <div class="pd-split">
-          <div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div>
-          <div class="pd-side" id="pd-doc-side">
+      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
+      const sideHtml = `
             <h4>סיווג</h4><div class="pd-btns">${typeBtns}</div>${slotBtns}
             <h4>חברות משויכות (${ids.length})</h4>${chips}
             <div style="margin-top:6px"><input class="pd-in" id="pd-add-q" placeholder="הוספת / שינוי שיוך: שם או ח.פ." oninput="PD._addSearch('${docId}',this.value)" autocomplete="off"><div id="pd-add-res"></div></div>
             <h4>הערה</h4><textarea class="pd-in" id="pd-note" rows="2" onchange="PD._setNote('${docId}',this.value)">${E(doc.note || "")}</textarea>
-            <div class="pd-danger"><button class="pd-btn danger" onclick="PD._askDelete('${docId}')">🗑 מחיקת המסמך לגמרי</button></div>
-          </div>
-        </div>`;
-      $("pd-doc").querySelector(".pd-box").innerHTML = html;
+            <div class="pd-danger"><button class="pd-btn danger" onclick="PD._askDelete('${docId}')">🗑 מחיקת המסמך לגמרי</button></div>`;
+      const box = $("pd-doc").querySelector(".pd-box");
+      if (box.querySelector(".pd-view") && box.dataset.docId === docId) {      // רענון חלקי (שינוי סיווג וכו'): הקובץ עצמו לא נטען מחדש
+        box.querySelector(".pd-head").outerHTML = headHtml;
+        $("pd-doc-side").innerHTML = sideHtml;
+      } else {
+        box.dataset.docId = docId;
+        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
+      }
       const s2 = $("pd-doc-side"); if (s2) s2.scrollTop = keep;
     };
     S._paintDoc = paint; paint();
@@ -633,7 +635,7 @@
   }
 
   // ───────── תמונה קטנה של העמוד הראשון (pdf.js, עד 3 במקביל) ─────────
-  const thumbs = new Map(), thumbWait = []; let thumbActive = 0;
+  const thumbs = new Map(), thumbUrls = new Map(), thumbWait = []; let thumbActive = 0;
   function thumb(id) {
     if (thumbs.has(id)) return thumbs.get(id);
     const run = async () => {
@@ -648,7 +650,7 @@
     const p = new Promise(res => {
       const go = () => { thumbActive++; run().then(res).finally(() => { thumbActive--; const n = thumbWait.shift(); if (n) n(); }); };
       thumbActive < 3 ? go() : thumbWait.push(go);
-    }).then(u => { if (!u) thumbs.delete(id); return u; });
+    }).then(u => { if (u) thumbUrls.set(id, u); else thumbs.delete(id); return u; });
     thumbs.set(id, p);
     return p;
   }
@@ -675,7 +677,7 @@
     const moveBox = M.move === d.id ? `<div class="pd-mg-sh"><input class="pd-in" placeholder="העברה לחברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','move',this.value)" autocomplete="off"></div>` : "";
     return `<div class="pd-mg-card">
       <div class="pd-mg-l">
-        <div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt=""><span class="pd-mg-ld">טוען…</span></div>
+        <div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div>
         <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף</label>
       </div>
       <div class="pd-mg-r">
