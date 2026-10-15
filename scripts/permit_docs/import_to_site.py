@@ -256,13 +256,43 @@ def audit_site(docs, existing, a):
 
 
 def sync_types(docs, existing, a, token):
-    """מיישר את הסיווג באתר לצפוי לפי קבצי המחשב והדוח הנוכחי. נוגע רק במסמכים שהועלו בייבוא ורק בשדה הסיווג. בלי --go: רק מציג."""
+    """מיישר את הסיווג באתר לצפוי לפי קבצי המחשב והדוח הנוכחי. נוגע רק במסמכים שהועלו בייבוא ורק בשדה הסיווג. בלי --go: רק מציג.
+    הגנה: לא מבצע שינוי שגורם לחברה לאבד כיסוי קיים (למשל היתר פרטי יחיד שהופך לכללי), ולא משנה מסמך שמקושר לרשימה (כללי / פרטי) לסוג שלא מכסה אותה."""
+    COV = {"general": {"general"}, "private": {"private"}, "both": {"general", "private"}}
+    cov = collections.defaultdict(collections.Counter)                   # חברה -> סוג -> כמה מסמכים מכסים אותו כרגע
+    for x in existing:
+        for b in x.get("business_ids") or []:
+            for t in COV.get(x["doc_type"], ()):
+                cov[b][t] += 1
     exp = {d["sha"]: d for d in docs}
-    todo = [(x, exp[x["sha256"]]) for x in existing if x.get("source") == "import" and x["sha256"] in exp and x["doc_type"] != exp[x["sha256"]]["doc_type"]]
+    cand = [(x, exp[x["sha256"]]) for x in existing if x.get("source") == "import" and x["sha256"] in exp and x["doc_type"] != exp[x["sha256"]]["doc_type"]]
+    todo, blocked = [], []
+    for x, d in cand:
+        old, new = COV.get(x["doc_type"], set()), COV.get(d["doc_type"], set())
+        lost = old - new
+        why = []
+        for b in x.get("business_ids") or []:
+            for t in lost:
+                if cov[b][t] <= 1:
+                    why.append("החברה תאבד כיסוי " + {"general": "כללי", "private": "פרטי"}[t])
+                if t in str((x.get("slots") or {}).get(b, "")).split(","):
+                    why.append("המסמך מקושר לרשימת " + {"general": "הכללי", "private": "הפרטי"}[t])
+        if why:
+            blocked.append((x, d, sorted(set(why))))
+            continue
+        for b in x.get("business_ids") or []:
+            for t in lost:
+                cov[b][t] -= 1
+            for t in new - old:
+                cov[b][t] += 1
+        todo.append((x, d))
     for x, d in todo:
         print(f"  {d['name']} ({d['ref']}): {x['doc_type']} -> {d['doc_type']}")
+    for x, d, why in blocked:
+        print(f"  דולג: {d['name']} ({d['ref']}): {x['doc_type']} -> {d['doc_type']}  [{'; '.join(why)}]")
+    print(f"{len(todo)} מסמכים ישתנו; {len(blocked)} דולגו כדי לא לדרוס כיסוי קיים (היתר פרטי / כללי או קישור לרשימה).")
     if not a.go:
-        print(f"{len(todo)} מסמכים בסיווג שונה. ליישור בפועל: python import_to_site.py --sync-types --go")
+        print("ליישור בפועל: python import_to_site.py --sync-types --go")
         return 0
     ok = 0
     for x, d in todo:
