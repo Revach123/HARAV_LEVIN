@@ -65,7 +65,7 @@ function show(){
   $("prog").textContent=`נענו ${done} מתוך ${items.length} · מוצג ${list.length?idx+1:0}/${list.length}`;
   if(!it){$("cards").innerHTML="";$("q").innerHTML="<h3>אין עוד קבצים לבדיקה 🎉</h3>";$("pdf").removeAttribute("src");$("fname").textContent="";return}
   const d=dec[it.aid]||{};ans={type:d.type_answer||"",cid:d.company_id||"",cname:d.company_name||"",cspec:d.company_special||""};
-  let h=`<div class="why">${it.reasons.map(esc).join(" · ")}</div>`;
+  let h=`<div class="why">${it.reasons.map(esc).join(" · ")}${it.doc_type ? ` · סיווג לפי מיקום באתר: <b>${esc(it.doc_type)}</b>` : ""}</div>`;
   h+=`<div class="mut">קובץ: ${esc(it.file)} · כותרת הפוסט: ${esc(it.post_title)||"—"}${it.linked_in?` · מקושר ב: ${esc(it.linked_in)}`:""}</div>`;
   if(it.ask_type){
     h+=`<div class="sec"><h3>כללי או פרטי? <span class="mut">(לפי המיקום: ${esc(it.doc_type)}; ${esc(it.text_check)})</span></h3><div class="btns" id="tb">`+

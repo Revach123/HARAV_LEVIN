@@ -48,9 +48,8 @@ def main():
         dtype = r["doc_type"].rstrip("?")                  # כללי / פרטי / (ריק)
         tc = tcheck.get(aid)
         text_flag = ""
-        if tc:
+        if tc:       # הסיווג נקבע לפי המיקום באתר; הנוסח נשמר רק כמידע ואינו מייצר שאלה
             text_flag = f"נוסח הקובץ: {tc['text_check']} (מיקום: {tc['type_by_location']})"
-            flags.append("סיווג כללי/פרטי: המיקום והנוסח לא מסכימים")
         loc = unatt.get(aid)
         linked = loc["linked_in (type: title)"] if loc else ""
         if r["status"] in ("סתירה", "לא זוהה"):

@@ -85,8 +85,11 @@ def build_items():
             add(by_name.get(tb), "לפי שם הפוסט")
         for hp in re.findall(r"\d{8,9}", r.get("doc_hps_in_db") or ""):
             add(by_chp.get(hp), "ח.פ. בתוך הקובץ")
-        reasons = [x.strip() for x in (r.get("review_reasons") or "").split("|") if x.strip()]
-        ask_type = any("כללי/פרטי" in x for x in reasons)
+        # סיווג כללי/פרטי נקבע לפי מיקום הקובץ באתר (בלי שאלה): סיבת "המיקום והנוסח לא מסכימים" לא מייצרת שאלה
+        reasons = [x.strip() for x in (r.get("review_reasons") or "").split("|") if x.strip() and "כללי/פרטי" not in x]
+        if not reasons:
+            continue
+        ask_type = False
         ask_company = any(x.startswith("שיוך לחברה") or "שם הפוסט שונה" in x for x in reasons)
         items.append({
             "aid": r["attachment_id"], "file": r.get("file", ""), "reasons": reasons,
