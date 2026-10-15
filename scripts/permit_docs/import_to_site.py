@@ -123,6 +123,13 @@ def build(a):
 def apply_dedupe(docs, a):
     """כפילויות שאושרו (כפילויות_לחברות.csv, עמודה action=הסר): לא מעלים שוב מסמך שהוסר כפול. אם הוא משויך גם לחברות אחרות - רק מוסרת ממנו החברה הכפולה.
     המסמך שנשאר מקבל את איחוד הסיווגים (כללי+פרטי)."""
+    if a.dedupe and not os.path.exists(a.dedupe) and not a.no_dedupe:
+        # אין דוח כפילויות: מריצים את הבדיקה כאן (פעם אחת), שומרים אותו, ובעקבותיו לא מעלים כפולים
+        import dedupe_company_docs as dd
+        print("  מריץ בדיקת כפילויות לפני ההעלאה (עשוי לקחת כמה דקות; הדוח נשמר ב-" + a.dedupe + ")...")
+        rows = dd.build_report(a)
+        dd.write_report(rows, a.dedupe)
+        print(f"  {len(rows)} זוגות דומים, מהם {sum(1 for r in rows if r['action'] == 'הסר')} כפולים בטוחים שלא יועלו")
     if not a.dedupe or not os.path.exists(a.dedupe):
         return docs
     by_sha = {d["sha"]: d for d in docs}
@@ -201,6 +208,8 @@ def main():
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--password-file", default="admin_password.txt", help="קובץ טקסט עם סיסמת המנהל בשורה הראשונה (אם אין משתנה ADMIN_PASSWORD)")
     ap.add_argument("--dedupe", default="כפילויות_לחברות.csv", help="דוח הכפילויות שאושר (כפילויות_לחברות.csv): מסמכים שסומנו הסר לא יועלו שוב")
+    ap.add_argument("--no-dedupe", action="store_true", help="בלי בדיקת כפילויות לפני ההעלאה")
+    ap.add_argument("--ocr-dir", default="ocr_text")
     ap.add_argument("--replace-altered", action="store_true", help="להחליף מסמכים שהועלו קודם עם תוכן שונה מהמקור (נמחק הישן ומועלה התקין)")
     ap.add_argument("--go", action="store_true", help="להעלות בפועל (בלי זה: דוח בלבד)")
     ap.add_argument("--limit", type=int, default=0)

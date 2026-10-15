@@ -187,6 +187,15 @@ def build_report(a):
     return rows
 
 
+def write_report(rows, out):
+    cols = ["company", "chp", "verdict", "evidence", "similarity", "containment", "merged_type", "keep_file", "keep_ids", "keep_types", "keep_words", "keep_pages",
+            "remove_file", "remove_ids", "remove_types", "remove_words", "remove_pages", "note", "remove_shared_with", "action", "business_id", "remove_sha", "keep_sha"]
+    with open(out, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        w.writerows(rows)
+
+
 def apply_plan(a):
     from import_to_site import call
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -262,12 +271,7 @@ def main():
     if a.apply:
         return apply_plan(a)
     rows = build_report(a)
-    cols = ["company", "chp", "verdict", "evidence", "similarity", "containment", "merged_type", "keep_file", "keep_ids", "keep_types", "keep_words", "keep_pages",
-            "remove_file", "remove_ids", "remove_types", "remove_words", "remove_pages", "note", "remove_shared_with", "action", "business_id", "remove_sha", "keep_sha"]
-    with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=cols)
-        w.writeheader()
-        w.writerows(rows)
+    write_report(rows, a.out)
     c = collections.Counter(r["verdict"] for r in rows)
     print(f"{len(rows)} זוגות מסמכים דומים אצל {len({r['business_id'] for r in rows})} חברות -> {a.out}")
     print("  לפי סוג:", dict(c), "| מסומנים להסרה אוטומטית:", sum(1 for r in rows if r["action"] == "הסר"))
