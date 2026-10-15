@@ -8,7 +8,7 @@
         הערות (כולל מסמך משותף / כמה מסמכים בקובץ והצעת פיצול), כותרת הפוסט הישן, והצעות שיוך לקבצים שאין להם חברה.
         קבצים שסימנת "לא קשור" נטענים כסוג "לא קשור" בלי שיוך.
   ברירת מחדל: דוח בלבד (שום דבר לא נשלח). להעלאה בפועל: --go. אפשר להפסיק ולהמשיך: מסמך שכבר קיים באתר מדולג.
-  נדרשת סיסמת מנהל האתר: משתנה הסביבה ADMIN_PASSWORD, או הקלדה בשורת הפקודה.
+  נדרשת סיסמת מנהל האתר (ההעלאה מוגנת, ואי אפשר לבטל את זה): משתנה הסביבה ADMIN_PASSWORD, או קובץ admin_password.txt בתיקייה, או הקלדה.
     python import_to_site.py                      (דוח)
     python import_to_site.py --go --limit 20      (ניסיון על 20 מסמכים)
     python import_to_site.py --go                 (הכול)
@@ -19,6 +19,7 @@ import getpass
 import json
 import os
 import re
+import ssl
 import sys
 import time
 import urllib.error
@@ -128,11 +129,30 @@ def multipart(fields, fname, data):
     return b"".join(out), "multipart/form-data; boundary=" + b
 
 
+STRICT = [True]
+
+
+def ssl_context():
+    ctx = ssl.create_default_context()           # אימות התעודה נשאר מלא; רק הבדיקה הקפדנית-מדי של סיומות בתעודת ה-CA (Python 3.13) מוקלת בפולבק
+    if not STRICT[0] and hasattr(ssl, "VERIFY_X509_STRICT"):
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    return ctx
+
+
 def call(site, token, path, data=None, ctype=None, method=None):
     req = urllib.request.Request(site.rstrip("/") + "/api" + path, data=data, method=method or ("POST" if data else "GET"),
                                  headers={"Authorization": "Bearer " + token, **({"Content-Type": ctype} if ctype else {})})
-    with urllib.request.urlopen(req, timeout=180) as r:
-        return json.loads(r.read().decode("utf-8"))
+    for _ in range(2):
+        try:
+            with urllib.request.urlopen(req, timeout=180, context=ssl_context()) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.URLError as e:
+            # תעודת CA בלי סיומת key usage (נפוץ עם אנטי-וירוס/פרוקסי מקומי) נדחית ב-Python 3.13: מנסים שוב בלי הבדיקה הקפדנית הזו, עם אימות תעודה מלא
+            if STRICT[0] and isinstance(e.reason, ssl.SSLCertVerificationError) and "key usage" in str(e.reason):
+                STRICT[0] = False
+                print("הערה: תעודת CA במחשב חסרה סיומת key usage; ממשיך עם אימות תעודה מלא, בלי הבדיקה הקפדנית הזו.")
+                continue
+            raise
 
 
 def main():
@@ -146,6 +166,7 @@ def main():
     ap.add_argument("--attachments", default="attachments.csv")
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
+    ap.add_argument("--password-file", default="admin_password.txt", help="קובץ טקסט עם סיסמת המנהל בשורה הראשונה (אם אין משתנה ADMIN_PASSWORD)")
     ap.add_argument("--go", action="store_true", help="להעלות בפועל (בלי זה: דוח בלבד)")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
@@ -159,7 +180,11 @@ def main():
     if not a.go:
         print("דוח בלבד. להעלאה: python import_to_site.py --go   (אפשר קודם --go --limit 20)")
         return 0
-    token = os.environ.get("ADMIN_PASSWORD") or getpass.getpass("סיסמת מנהל האתר: ")
+    token = os.environ.get("ADMIN_PASSWORD") or ""
+    if not token and os.path.exists(a.password_file):       # קובץ מקומי עם הסיסמה בשורה הראשונה: אין צורך להקליד בכל הרצה
+        with open(a.password_file, encoding="utf-8-sig") as f:
+            token = (f.readline() or "").strip()
+    token = token or getpass.getpass("סיסמת מנהל האתר: ")
     try:
         have = {d["sha256"] for d in call(a.site, token, "/permit-docs")["docs"]}
     except urllib.error.HTTPError as e:
