@@ -11,6 +11,7 @@
 import argparse
 import collections
 import csv
+import hashlib
 import json
 import os
 import re
@@ -27,6 +28,38 @@ def hps_of(text):
     return [x.zfill(9) for x in re.findall(r"(?<!\d)(\d{8,9})(?!\d)", text or "")]
 
 
+def file_hashes(attachments_csv, uploads, cache_path):
+    """sha256 לכל קובץ (עם מטמון משותף לדשבורד: hashes_cache.json), כדי לזהות אותו קובץ שמופיע גם ברשימת הכללי וגם ברשימת הפרטי."""
+    cache = {}
+    if os.path.exists(cache_path):
+        try:
+            cache = json.load(open(cache_path, encoding="utf-8"))
+        except (OSError, ValueError):
+            cache = {}
+    out = {}
+    for r in (m.read_csv(attachments_csv) if os.path.exists(attachments_csv) else []):
+        aid = r.get("ID")
+        p = m.local_path(uploads, r.get("guid", ""))
+        if not p or not os.path.exists(p):
+            continue
+        st = os.stat(p)
+        c = cache.get(aid)
+        if c and c[0] == st.st_size and c[1] == int(st.st_mtime):
+            out[aid] = c[2]
+            continue
+        h = hashlib.sha256()
+        with open(p, "rb") as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        out[aid] = h.hexdigest()
+        cache[aid] = [st.st_size, int(st.st_mtime), out[aid]]
+    try:
+        json.dump(cache, open(cache_path, "w", encoding="utf-8"))
+    except OSError:
+        pass
+    return out
+
+
 def is_company_hp(h):
     """מספר חברה/שותפות/עמותה מתחיל ב-5 (51, 52, 55, 56, 57, 58). מספרים אחרים עם ספרת ביקורת תקינה הם בדרך כלל תעודות זהות של יחידים - לא נשמרים ולא מסוכמים."""
     return h.startswith("5") and m.check_digit_ok(h)
@@ -38,6 +71,9 @@ def main():
     ap.add_argument("--businesses", default="businesses.json")
     ap.add_argument("--decisions", default="החלטות_בדיקה.csv")
     ap.add_argument("--type-check", default="type_check.csv")
+    ap.add_argument("--attachments", default="attachments.csv")
+    ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
+    ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--out", default="כיסוי_חברות.csv")
     ap.add_argument("--out-hps", default="חפ_לא_במאגר.csv")
     a = ap.parse_args()
@@ -54,7 +90,18 @@ def main():
         elif r.get("type_by_location") == "פרטי" and r.get("text_check", "").startswith("אין נוסח פרטי"):
             both[r["attachment_id"]] = "כללי"        # רשום פרטי, אבל אין בו נוסח פרטי (כנראה נוסח כללי)
 
+    # אותו קובץ בדיוק ברשימת הכללי וגם ברשימת הפרטי: מסמך אחד שמכסה את שני הסוגים
+    hashes = file_hashes(a.attachments, a.uploads, a.hash_cache)
+    by_hash = collections.defaultdict(list)
+    for aid, h in hashes.items():
+        by_hash[h].append(aid)
+    type_of = {}
+    for r in rows:
+        t0 = (dec.get(r["attachment_id"], {}).get("type_answer") or r.get("doc_type_clean") or r.get("doc_type") or "").rstrip("?")
+        if t0 in ("כללי", "פרטי"):
+            type_of[r["attachment_id"]] = t0
     docs = collections.defaultdict(lambda: {"כללי": set(), "פרטי": set(), "ללא מיקום": set(), "אולי כללי": set(), "אולי פרטי": set()})
+    same_file = collections.defaultdict(set)
     outside = collections.defaultdict(lambda: {"files": set(), "names": set()})
     for r in rows:
         aid = r["attachment_id"]
@@ -70,8 +117,16 @@ def main():
         for x in (d.get("company_ids") or d.get("company_id") or "").split(";"):
             if x.strip() in biz:
                 ids.add(x.strip())
+        types = {t} if t in ("כללי", "פרטי") else set()
+        for other in by_hash.get(hashes.get(aid), []):
+            if other != aid and type_of.get(other) in ("כללי", "פרטי"):
+                types.add(type_of[other])
+        both_lists = len(types) == 2
         for bid in ids:
-            docs[bid][t].add(aid)
+            for tt in (types or {t}):
+                docs[bid][tt].add(aid)
+            if both_lists:
+                same_file[bid].add(aid)
             if aid in both:
                 docs[bid]["אולי " + both[aid]].add(aid)
         for h in hps_of(r.get("doc_hps_not_in_db")):
@@ -104,7 +159,7 @@ def main():
             status = "יש מסמך מסוג שלא רשום במאגר"
         out.append({"company": b.get("registrar_name") or b.get("permit_name") or "", "chp": b.get("chp_number", ""), "registered": vis,
                     "general": len(d["כללי"]), "private": len(d["פרטי"]), "no_location": len(d["ללא מיקום"]),
-                    "missing": " + ".join(missing), "maybe_covered_by_combined_doc": " ".join(sorted(set().union(*[d["אולי " + t] for t in maybe]))) if maybe else "", "extra_type": " + ".join(extra), "status": status,
+                    "missing": " + ".join(missing), "same_file_in_both_lists": " ".join(sorted(same_file.get(bid, []))), "maybe_covered_by_combined_doc": " ".join(sorted(set().union(*[d["אולי " + t] for t in maybe]))) if maybe else "", "extra_type": " + ".join(extra), "status": status,
                     "files_no_location": " ".join(sorted(d["ללא מיקום"]) if missing else [])})
     order = {"חסר": 0, "חסר, אך ייתכן שמכוסה במסמך משולב": 0.5, "חסר, יש קבצים ללא מיקום לבדיקה": 1, "יש מסמך מסוג שלא רשום במאגר": 2, "מלא": 3}
     out.sort(key=lambda r: (order[r["status"]], r["company"]))
