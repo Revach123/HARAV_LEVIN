@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1239888": {
+   "data": {
+    "begins_at": "2026-10-15T09:30:00",
+    "chp_number": "516046307",
+    "ends_at": "2026-10-15T15:30:00",
+    "interest": 6.82,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1848,
+    "issuer_name": "סולאיר",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1776073",
+    "offer_number": 1239888,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אג\"ח ג",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-15"
+  },
   "U10118": {
    "data": {
     "chp_number": "",
@@ -512,31 +541,6 @@
     "link_prospectus": null,
     "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774418",
     "maya_report_id": 1774418,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-15"
-  },
-  "U10361": {
-   "data": {
-    "chp_number": "516046307",
-    "company_name": "סולאיר",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10361,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774751",
-    "maya_report_id": 1774751,
     "new_company_type": null,
     "securities": [
      {

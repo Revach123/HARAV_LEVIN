@@ -197,27 +197,6 @@
    "chp_number": "515846558"
   },
   {
-   "id": 10361,
-   "maya_report_id": 1774751,
-   "company_name": "סולאיר",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774751",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "516046307"
-  },
-  {
    "id": 10366,
    "maya_report_id": 1775203,
    "company_name": "דיפלומט",
@@ -661,7 +640,33 @@
    "last_seen": "2026-10-15"
   }
  ],
- "open": [],
+ "open": [
+  {
+   "offer_number": 1239888,
+   "issuer_id": 1848,
+   "issuer_name": "סולאיר",
+   "is_new_company": false,
+   "begins_at": "2026-10-15T09:30:00",
+   "ends_at": "2026-10-15T15:30:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 6.82,
+   "is_variable_interest": false,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1776073",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אג\"ח ג",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "ללא",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "516046307"
+  }
+ ],
  "companies": [
   {
    "chp_number": "2352046",
@@ -779,7 +784,7 @@
    "chp_number": "516046307",
    "name": "סולאיר",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
