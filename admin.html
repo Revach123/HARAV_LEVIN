@@ -182,7 +182,7 @@
   col.c-agch-combined { width: 150px; }
   col.c-tase     { width: 62px; }
   col.c-agch     { width: 108px; }
-  col.c-notes    { width: 150px; }
+  col.c-notes    { width: 200px; }
   col.c-nscope   { width: 150px; }
   col.c-regst    { width: 80px; }
   col.c-actions  { width: 110px; }
@@ -1043,7 +1043,6 @@ function renderAdminTable() {
           <col class="c-biztype">
           <col class="c-region">
           <col class="c-notes">
-          <col class="c-nscope">
           <col class="c-regst">
           <col class="c-vis">
           <col class="c-tase">
@@ -1058,8 +1057,7 @@ function renderAdminTable() {
             <th>קטגוריה</th>
             <th>סוג עסק</th>
             <th>אזור</th>
-            <th>הערות (עריכה ישירה)</th>
-            <th>היכן להציג ההערה</th>
+            <th>הערות (עריכה ישירה) · היכן להציג</th>
             <th>סטטוס ברשם</th>
             <th style="text-align:center;">פרטי/כללי</th>
             <th style="text-align:center;">אג"ח בורסה</th>
@@ -1082,12 +1080,11 @@ function renderAdminTable() {
                   <input type="text" value="${escHtml(b.notes ?? "")}" placeholder="הערה"
                     onchange="noteInline('${b.id}', this.value)"
                     style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);">
-                </td>
-                <td>${(() => {
+                  <div style="margin-top:4px;">${(() => {
                   if (!(b.notes || "").trim()) return "";                              // בלי הערה - אין מה לבחור
                   const sc = b.notes_scope || ((b0.notes || "").trim() ? "companies" : "");   // הערה ישנה בלי בחירה = חברות
                   const bt = (v, l) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="noteScopeChange('${b.id}','${v}')">${l}</button>`;
-                  return `<span class="sc-btns ${sc?"":"need"}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}
+                  return `<span class="sc-btns ${sc?"":"need"}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}</div>
                 </td>
                 <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
