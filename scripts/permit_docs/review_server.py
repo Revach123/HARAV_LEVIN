@@ -71,9 +71,10 @@ def build_items_unassigned():
     by_chp = {b["chp"].zfill(9): b for b in biz if b["chp"]}
     by_name = {}
     for b in biz:
-        for n in (b["name"], b["permit_name"]):
-            if n and len(n.strip()) >= 4:
-                by_name.setdefault(n.strip(), b)
+        for raw in (b["name"], b["permit_name"]):       # שם ברשם ו"שם בהיתר עיסקא" (אפשר כמה שמות, מופרדים ב- ; | / או שורה)
+            for n in re.split(r"[;|\n/]+", raw or ""):
+                if len(n.strip()) >= 4:
+                    by_name.setdefault(n.strip(), b)
     from_missing = {}
     for r in read_csv(A.candidates):
         b = by_chp.get(str(r.get("chp") or "").zfill(9))
