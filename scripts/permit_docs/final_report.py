@@ -54,10 +54,7 @@ def main():
         linked = loc["linked_in (type: title)"] if loc else ""
         if r["status"] in ("סתירה", "לא זוהה"):
             flags.append("שיוך לחברה: " + r["status"])
-        elif r["status"] == "מאומת - שם הפוסט שונה":
-            flags.append("שם הפוסט שונה מהחברה בקובץ")
-        elif r["status"] == "מקור יחיד":
-            flags.append("שיוך לחברה במקור יחיד")
+        # "שם הפוסט שונה" (עם ח.פ. מאומת) ו"מקור יחיד": נחשבים מאומתים ואינם מסומנים לבדיקה (26 מתוך 26 בבדיקה ידנית היו נכונים)
         if not r["post_type"] and not linked:
             flags.append("אין מיקום באתר (קובץ לא משויך)")
         out.append({**r, "doc_type_clean": dtype or "לא ידוע", "text_check": text_flag, "linked_in": linked, "needs_review": "כן" if flags else "", "review_reasons": " | ".join(flags)})
