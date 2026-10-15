@@ -810,6 +810,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-15"
   },
+  "U10377": {
+   "data": {
+    "chp_number": "515846558",
+    "company_name": "ג'נריישן קפיטל",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10377,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
+    "maya_report_id": 1776435,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-15"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
