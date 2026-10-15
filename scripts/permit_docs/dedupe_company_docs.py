@@ -5,7 +5,7 @@
   קלט: מיפוי_קבצים.csv, attachments.csv, wp-content\\uploads, ocr_text\\ (טקסט שכבר נקרא), businesses.json
   שלב 1 (דוח, ברירת מחדל):  python dedupe_company_docs.py
         כותב כפילויות_לחברות.csv: לכל זוג מסמכים של אותה חברה - דמיון בתוכן, איזה כדאי להשאיר, ועמודה action
-        (מולאה "הסר" אוטומטית רק כשכל העמודים זהים או הטקסט כמעט זהה, ולא כשיש בנספח/במסמך הגדול עמודים נוספים; בשאר השורות ריקה: להחלטתך - כתוב "הסר" כדי להסיר את remove_file)
+        (מולאה "הסר" אוטומטית כשכל העמודים זהים / הטקסט כמעט זהה, או כשמסמך כלול במסמך אחר והטקסט מאשר (90%+); ראיה חזותית בלבד או חלקית - לבדיקתכם; בשאר השורות ריקה: להחלטתך - כתוב "הסר" כדי להסיר את remove_file)
   שלב 2 (ביצוע):           python dedupe_company_docs.py --apply כפילויות_לחברות.csv [--site ...]
         לכל שורה עם action=הסר: אם המסמך המוסר משויך רק לחברה הזו - נמחק לגמרי; אם הוא משותף לחברות נוספות - רק מבוטל שיוכו מהחברה הזו.
         דורש סיסמת מנהל (ADMIN_PASSWORD או admin_password.txt). בלי --apply שום דבר לא משתנה.
@@ -153,7 +153,7 @@ def build_report(a):
                 verdict = "כמעט זהים (טקסט)"
             elif min(A["len"], B["len"]) >= 20 and con >= CONTAIN:
                 verdict = "האחד מכיל את השני (טקסט)"
-            elif min(A["len"], B["len"]) >= 20 and jac >= SHOW:
+            elif min(A["len"], B["len"]) >= 20 and jac >= 0.8:
                 verdict = "דומים (טקסט)"
             elif A["len"] < 20 and B["len"] < 20 and abs(A["size"] - B["size"]) <= 0.02 * max(A["size"], B["size"]):
                 verdict = "בלי טקסט, גודל זהה (לבדיקה בעין)"
@@ -168,12 +168,20 @@ def build_report(a):
                 keep, drop = x, y
             else:
                 keep, drop = (x, y) if key(x) >= key(y) else (y, x)
-            auto = "הסר" if verdict in ("זהים בכל העמודים", "כמעט זהים (טקסט)") and drop["types"] <= keep["types"] else ""
+            page_based = verdict.startswith(("זהים", "הראשון כלול", "השני כלול", "חופפים"))
+            contained = verdict.startswith(("הראשון כלול", "השני כלול"))
+            score = con if contained else jac                 # למסמך כלול באחר מודדים כמה מהקטן נמצא בגדול (containment), לא דמיון כולל
+            evidence = "טקסט" if score >= 0.9 else ("טקסט חלקי" if score >= 0.6 else ("חזותי בלבד" if page_based else "טקסט"))
+            # הסרה אוטומטית: זהים/כמעט זהים, או מסמך שכלול באחר - רק כשהטקסט מאשר (דמיון 90% ומעלה). ראיה חזותית בלבד או חלקית: לבדיקה שלכם.
+            # כשסיווגי המסמכים שונים (כללי מול פרטי) המסמך שנשאר יהפוך ל"כללי+פרטי" בעת הביצוע.
+            auto = "הסר" if verdict in ("זהים בכל העמודים", "כמעט זהים (טקסט)") or (contained and con >= 0.9) else ""
+            union = keep["types"] | drop["types"]
+            merged = "כללי+פרטי" if union == {"כללי", "פרטי"} else (next(iter(union)) if union else "לא ידוע")
             rows.append({"company": biz[cid].get("registrar_name") or biz[cid].get("permit_name") or "", "chp": biz[cid].get("chp_number", ""), "business_id": cid,
                          "verdict": verdict, "similarity": round(jac, 2), "containment": round(con, 2),
                          "keep_file": keep["name"], "keep_ids": " ".join(keep["ids"]), "keep_types": "+".join(sorted(keep["types"])) or "לא ידוע", "keep_words": cache[keep["sha"]]["len"],
                          "remove_file": drop["name"], "remove_ids": " ".join(drop["ids"]), "remove_types": "+".join(sorted(drop["types"])) or "לא ידוע", "remove_words": cache[drop["sha"]]["len"],
-                         "keep_pages": len(cache[keep["sha"]]["pages"]), "remove_pages": len(cache[drop["sha"]]["pages"]), "note": extra,
+                         "evidence": evidence, "merged_type": merged, "keep_pages": len(cache[keep["sha"]]["pages"]), "remove_pages": len(cache[drop["sha"]]["pages"]), "note": extra,
                          "remove_shared_with": max(0, len(drop["companies"]) - 1), "action": auto, "remove_sha": drop["sha"], "keep_sha": keep["sha"]})
     rows.sort(key=lambda r: (-r["similarity"], r["company"]))
     return rows
@@ -197,6 +205,7 @@ def apply_plan(a):
             continue
         bid = r["business_id"]
         others = [b for b in doc["business_ids"] if b != bid]
+        keepdoc = by_sha.get(r.get("keep_sha", ""))
         try:
             if not others:
                 call(a.site, token, "/permit-docs/" + doc["id"], method="DELETE")
@@ -204,6 +213,15 @@ def apply_plan(a):
             else:
                 call(a.site, token, "/permit-docs/" + doc["id"], json.dumps({"business_ids": others}).encode("utf-8"), "application/json", method="PUT")
                 print(f"  בוטל שיוך: {r['remove_file']} מ-{r['company']} (נשאר משויך ל-{len(others)} חברות)")
+            if keepdoc:             # המסמך שנשאר מכסה גם את הסיווג של המוסר (כללי + פרטי = שניהם)
+                kt = {"general": {"כללי"}, "private": {"פרטי"}, "both": {"כללי", "פרטי"}}.get(keepdoc["doc_type"], set())
+                dt = {"general": {"כללי"}, "private": {"פרטי"}, "both": {"כללי", "פרטי"}}.get(doc["doc_type"], set())
+                u = kt | dt
+                new_type = "both" if u == {"כללי", "פרטי"} else ("general" if u == {"כללי"} else ("private" if u == {"פרטי"} else ""))
+                if new_type and new_type != keepdoc["doc_type"]:
+                    call(a.site, token, "/permit-docs/" + keepdoc["id"], json.dumps({"doc_type": new_type}).encode("utf-8"), "application/json", method="PUT")
+                    keepdoc["doc_type"] = new_type
+                    print(f"    סיווג המסמך שנשאר ({r['keep_file']}): {new_type}")
             done += 1
         except urllib.error.HTTPError as e:
             print(f"  נכשל {r['remove_file']}: {e.code}")
@@ -228,7 +246,7 @@ def main():
     if a.apply:
         return apply_plan(a)
     rows = build_report(a)
-    cols = ["company", "chp", "verdict", "similarity", "containment", "keep_file", "keep_ids", "keep_types", "keep_words", "keep_pages",
+    cols = ["company", "chp", "verdict", "evidence", "similarity", "containment", "merged_type", "keep_file", "keep_ids", "keep_types", "keep_words", "keep_pages",
             "remove_file", "remove_ids", "remove_types", "remove_words", "remove_pages", "note", "remove_shared_with", "action", "business_id", "remove_sha", "keep_sha"]
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols)
