@@ -30,7 +30,6 @@ import match_pdfs as m  # noqa: E402
 from coverage_report import file_hashes  # noqa: E402
 
 MAX_PAGES = 60   # כמה עמודים לכל מסמך נבדקים
-HAM = 20         # עמודים סרוקים נחשבים זהים אם בטביעת האצבע החזותית (256 סיביות) נבדלים עד כמה סיביות
 AUTO = 0.90      # דמיון (Jaccard על רצפי 3 מילים) שממנו מוצעת הסרה אוטומטית
 SHOW = 0.55      # מתחת לזה לא מדווחים
 CONTAIN = 0.90   # מסמך אחד מכיל את השני (גרסה חלקית)
@@ -45,6 +44,15 @@ def shingles(ws, n=3):
     return {" ".join(ws[i:i + n]) for i in range(max(0, len(ws) - n + 1))}
 
 
+def visual_sig(pg):
+    """טביעת אצבע חזותית של עמוד בלי טקסט: מפת פיקסלים כהים (קבוע, לא יחסית לממוצע) ברזולוציה 40x56, ומספר הפיקסלים הכהים.
+    עמוד כמעט ריק לא יתאים לשום עמוד אחר (נדרש מספר מינימלי של פיקסלים כהים)."""
+    r = pg.rect
+    pix = pg.get_pixmap(matrix=fitz.Matrix(40 / max(1, r.width), 56 / max(1, r.height)), colorspace=fitz.csGRAY)
+    bits = "".join("1" if v < 200 else "0" for v in list(pix.samples)[:2240])
+    return ("v", int(bits, 2), bits.count("1"))
+
+
 def page_sigs(path):
     """חתימה לכל עמוד: קבוצת רצפי מילים (עמוד עם טקסט) או טביעת אצבע חזותית 16x16 (עמוד סרוק בלי טקסט). מאפשר לזהות מסמכים עם עמודים זהים ועמוד נוסף."""
     sigs = []
@@ -53,14 +61,10 @@ def page_sigs(path):
         for i in range(min(len(doc), MAX_PAGES)):
             pg = doc[i]
             ws = words(pg.get_text() or "")
-            if len(ws) >= 15:
+            if len(ws) >= 6:
                 sigs.append(("t", shingles(ws)))
                 continue
-            r = pg.rect
-            pix = pg.get_pixmap(matrix=fitz.Matrix(16 / max(1, r.width), 16 / max(1, r.height)), colorspace=fitz.csGRAY)
-            px = list(pix.samples)[:256]
-            mean = sum(px) / max(1, len(px))
-            sigs.append(("v", int("".join("1" if v > mean else "0" for v in px), 2)))
+            sigs.append(visual_sig(pg))
         doc.close()
     except Exception:  # noqa: BLE001
         return []
@@ -73,7 +77,8 @@ def same_page(a, b):
     if a[0] == "t":
         inter = len(a[1] & b[1])
         return inter / max(1, len(a[1] | b[1])) >= 0.8
-    return bin(a[1] ^ b[1]).count("1") <= HAM
+    ink = max(a[2], b[2])                                  # עמוד סרוק: הבדל של עד 12% מהפיקסלים הכהים; עמוד כמעט ריק לא מתאים לכלום
+    return ink >= 25 and bin(a[1] ^ b[1]).count("1") <= 0.12 * ink
 
 
 def page_relation(sa, sb):
