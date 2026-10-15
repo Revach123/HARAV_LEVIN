@@ -1477,7 +1477,7 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-up", "📄", "הוספת היתר עסקה", "PD.openUpload()") + t("pd-un", "🗂️", "מסמכים לא משויכים", "PD.openUnassigned()") : ""}</div>`;
 }
 
 function renderHome() {
