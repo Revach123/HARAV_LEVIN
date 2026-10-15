@@ -2492,6 +2492,7 @@ async function doSave() {
       businesses = [...businesses, payload];
       logChange("add", null, payload);
     }
+    if (!isEdit && window.PD && PD.bizAdded) setTimeout(() => PD.bizAdded(payload), 400);      // שיוך אוטומטי של מסמך שממתין לחברה החדשה
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
     saving = false; formDirty = false; setView(formReturn);
   } catch(e) {
