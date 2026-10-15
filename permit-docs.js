@@ -1,4 +1,4 @@
-/* מאגר מסמכי היתר עסקה - ממשק בדף הניהול (admin_test.html). בשלב זה אין תצוגה ציבורית.
+/* מאגר מסמכי היתר עסקה - ממשק בדף הניהול (admin.html). בשלב זה אין תצוגה ציבורית.
    תלוי בגלובלים של דף הניהול: businesses, adminToken, apiFetch, escHtml, displayName, showStatus, render, view.
    חשיפה: window.PD (cell, homeCards, load, openUpload, openUnassigned, openCompany, openDoc ...) */
 (function () {
