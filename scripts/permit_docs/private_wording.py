@@ -40,6 +40,30 @@ def windows(text):
     return out
 
 
+# משפט מפתח קבוע של היתר פרטי: "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך"
+# (בטקסט שחולץ מ-PDF או מ-OCR סדר המילים בעברית לפעמים הפוך, ולכן נבדקים שני הסדרים)
+PHRASE = "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך".split()
+PHRASE_MIN = 6        # לפחות כמה מילות מפתח חייבות להופיע ברצף בחלון קצר
+PHRASE_WIN = 14
+
+
+def _norm_word(w):
+    return re.sub(r"[^\u05d0-\u05ea]", "", w)
+
+
+def has_key_phrase(text):
+    ws = [x for x in (_norm_word(w) for w in text.split()) if x]
+    for seq in (ws, ws[::-1]):
+        i = 0
+        while i < len(seq):
+            if seq[i] in ("פרטי", "עיסקא", "התקשרות", "המעוניין"):
+                win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]
+                if sum(1 for k in set(PHRASE) if k in win) >= PHRASE_MIN and "פרטי" in win and ("עיסקא" in win or "התקשרות" in win):
+                    return True
+            i += 1
+    return False
+
+
 def ratio(a, b):
     sm = difflib.SequenceMatcher(None, a, b)
     if sm.real_quick_ratio() < 0.6 or sm.quick_ratio() < 0.6:
@@ -76,10 +100,11 @@ def main():
                 text += "\n" + open(op, encoding="utf-8").read()
         if len(text.strip()) < 100:
             continue
-        docs.append({"id": r["attachment_id"], "file": r["file"], "title": r["post_title"], "type": "P" if pt in P_TYPES else "G", "win": windows(text)})
+        docs.append({"id": r["attachment_id"], "file": r["file"], "title": r["post_title"], "type": "P" if pt in P_TYPES else "G", "win": windows(text), "phrase": has_key_phrase(text)})
     P = [d for d in docs if d["type"] == "P"]
     G = [d for d in docs if d["type"] == "G"]
     print(f"מסמכים עם טקסט: פרטי {len(P)}, כללי {len(G)}")
+    print(f"משפט המפתח של היתר פרטי: בפרטיים {sum(1 for d in P if d['phrase'])}/{len(P)}, בכלליים {sum(1 for d in G if d['phrase'])}/{len(G)}")
     print(f"מסמכים שמכילים 'פרטי/פרטני': בפרטיים {sum(1 for d in P if d['win'])}/{len(P)}, בכלליים {sum(1 for d in G if d['win'])}/{len(G)}")
     if len(P) < 3:
         print("אין מספיק מסמכים פרטיים עם טקסט (חכה לסיום ה-OCR)")
@@ -115,7 +140,7 @@ def main():
     print(f"נוסחי היתר פרטי מבדילים: {len(sig)}")
     bad, ok = [], 0
     for d in docs:
-        hit = any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
+        hit = d["phrase"] or any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
         guess = "P" if hit else "G"
         if guess == d["type"]:
             ok += 1
