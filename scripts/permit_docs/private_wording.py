@@ -157,7 +157,7 @@ def main():
     print(f"נוסחי היתר פרטי מבדילים: {len(sig)}")
     bad, ok = [], 0
     for d in docs:
-        hit = any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
+        hit = d["phrase"] or any(ratio(wt, s) >= a.similar for wt in d["win"] for s in sig)
         guess = "P" if hit else "G"
         if guess == d["type"]:
             ok += 1
