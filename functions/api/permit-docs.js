@@ -29,7 +29,17 @@ export async function onRequestPost({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   if (!env.PERMITS) return noStore();
   try {
-    const form = await request.formData();
+    // העלאה כ-JSON (file_b64): ברשתות עם סינון תוכן (נטפרי) קובץ PDF בגוף הבקשה עלול להשתנות בדרך; JSON לא נסרק כקובץ
+    let form;
+    if ((request.headers.get("Content-Type") || "").includes("application/json")) {
+      const j = await request.json();
+      form = new FormData();
+      const bin = atob(String(j.file_b64 || ""));
+      const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      form.set("file", new File([u8], String(j.name || "permit.pdf"), { type: "application/pdf" }));
+      for (const k of ["doc_type", "business_ids", "note", "source", "source_ref", "source_title", "suggest"]) if (j[k] !== undefined) form.set(k, typeof j[k] === "string" ? j[k] : JSON.stringify(j[k]));
+    } else form = await request.formData();
     const file = form.get("file");
     if (!file || typeof file === "string") return Response.json({ error: "לא נבחר קובץ" }, { status: 400 });
     if (file.size > MAX_BYTES) return Response.json({ error: "הקובץ גדול מדי (מעל 50MB)" }, { status: 413 });
