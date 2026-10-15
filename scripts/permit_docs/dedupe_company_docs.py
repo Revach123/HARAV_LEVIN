@@ -156,9 +156,9 @@ def build_report(a):
                 jac = max(jac, max(rel[0], rel[1]) * 0.9)
             elif min(A["len"], B["len"]) >= 20 and jac >= AUTO:
                 verdict = "כמעט זהים (טקסט)"
-            elif min(A["len"], B["len"]) >= 20 and con >= CONTAIN:
+            elif rel is None and min(A["len"], B["len"]) >= 20 and con >= CONTAIN:      # השוואת טקסט בלבד רק כשאין חתימות עמודים (קובץ שלא נפתח); כשיש, העמודים קובעים
                 verdict = "האחד מכיל את השני (טקסט)"
-            elif min(A["len"], B["len"]) >= 20 and jac >= 0.8:
+            elif rel is None and min(A["len"], B["len"]) >= 20 and jac >= 0.8:
                 verdict = "דומים (טקסט)"
             elif A["len"] < 20 and B["len"] < 20 and abs(A["size"] - B["size"]) <= 0.02 * max(A["size"], B["size"]):
                 verdict = "בלי טקסט, גודל זהה (לבדיקה בעין)"
@@ -201,6 +201,16 @@ def write_report(rows, out):
         w.writerows(rows)
 
 
+def log_removed(path, r):
+    """יומן קבוע של מסמכים שנמחקו ככפולים: הטעינה לא תעלה אותם שוב גם אם הדוח נוצר מחדש."""
+    new = not os.path.exists(path)
+    with open(path, "a", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["sha", "file", "ids", "company", "keep_file", "time"])
+        w.writerow([r["remove_sha"], r["remove_file"], r["remove_ids"], r["company"], r["keep_file"], __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
+
+
 def apply_plan(a):
     from import_to_site import call
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -239,6 +249,7 @@ def apply_plan(a):
             if not others:
                 call(a.site, token, "/permit-docs/" + doc["id"], method="DELETE")
                 replaced[r["remove_sha"]] = r["keep_sha"]
+                log_removed(a.removed_log, r)
                 print(f"  נמחק: {r['remove_file']} ({r['company']})")
             else:
                 call(a.site, token, "/permit-docs/" + doc["id"], json.dumps({"business_ids": others}).encode("utf-8"), "application/json", method="PUT")
@@ -269,6 +280,7 @@ def main():
     ap.add_argument("--ocr-dir", default="ocr_text")
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--out", default="כפילויות_לחברות.csv")
+    ap.add_argument("--removed-log", default="dedupe_removed.csv", help="יומן המסמכים שנמחקו ככפולים (הטעינה מדלגת עליהם)")
     ap.add_argument("--apply", default="", help="קובץ דוח ערוך לביצוע")
     ap.add_argument("--site", default="https://harav-levin.pages.dev")
     ap.add_argument("--password-file", default="admin_password.txt")
