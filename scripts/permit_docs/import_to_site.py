@@ -16,6 +16,7 @@
 import argparse
 import base64
 import collections
+import csv
 import getpass
 import json
 import os
@@ -164,6 +165,33 @@ def apply_dedupe(docs, a):
     return out
 
 
+def audit_site(docs, existing, a):
+    """ביקורת: מה באתר מול מה שאמור להיות לפי קבצי המחשב והדוח הנוכחי (בלי קשר להיסטוריית ההרצות). לא משנה כלום."""
+    exp = {d["sha"]: d for d in docs}
+    site = {d["sha256"]: d for d in existing}
+    rows = []
+    for sha, d in exp.items():
+        if sha not in site:
+            rows.append(["חסר באתר (יועלה בהעלאה הבאה)", d["name"], d["ref"], d["doc_type"], "", "; ".join(d["companies"])[:80], d["note"][:80]])
+        elif site[sha]["doc_type"] != d["doc_type"] and site[sha].get("source") == "import":
+            rows.append(["סיווג שונה (באתר מול צפוי)", d["name"], d["ref"], d["doc_type"], site[sha]["doc_type"], "", ""])
+    for sha, x in site.items():
+        if sha not in exp and x.get("source") == "import":
+            rows.append(["באתר אבל לא צפוי (כפול שסומן להסרה, או קובץ שאינו במיפוי)", x.get("original_name", ""), x.get("source_ref", ""), "", x["doc_type"], "", (x.get("note") or "")[:80]])
+    with open(a.audit_out, "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["status", "file", "source_ref", "expected_type", "site_type", "companies", "note"])
+        w.writerows(rows)
+    c = collections.Counter(r[0].split(" (")[0] for r in rows)
+    print(f"באתר {len(site)} מסמכים | צפויים לפי המחשב והדוח: {len(exp)}")
+    for k, v in c.items():
+        print(f"  {k}: {v}")
+    if not rows:
+        print("  הכול תואם.")
+    print(f"פירוט: {a.audit_out}")
+    return 0
+
+
 def multipart(fields, fname, data):
     b = "----" + uuid.uuid4().hex
     out = []
@@ -216,6 +244,8 @@ def main():
     ap.add_argument("--dedupe", default="כפילויות_לחברות.csv", help="דוח הכפילויות שאושר (כפילויות_לחברות.csv): מסמכים שסומנו הסר לא יועלו שוב")
     ap.add_argument("--removed-log", default="dedupe_removed.csv")
     ap.add_argument("--restore-removed", action="store_true", help="להעלות גם מסמכים שנמחקו ככפולים בעבר (לפי היומן)")
+    ap.add_argument("--audit", action="store_true", help="ביקורת בלבד: מה חסר באתר / מיותר / בסיווג שונה, לפי קבצי המחשב והדוח הנוכחי (לא משנה כלום)")
+    ap.add_argument("--audit-out", default="ביקורת_אתר.csv")
     ap.add_argument("--no-dedupe", action="store_true", help="בלי בדיקת כפילויות לפני ההעלאה")
     ap.add_argument("--ocr-dir", default="ocr_text")
     ap.add_argument("--replace-altered", action="store_true", help="להחליף מסמכים שהועלו קודם עם תוכן שונה מהמקור (נמחק הישן ומועלה התקין)")
@@ -223,13 +253,15 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
 
+    if a.audit:
+        a.restore_removed = True                         # ביקורת: מתעלמים מהיסטוריית המחיקות; רק קבצי המחשב והדוח הנוכחי קובעים מה אמור להיות באתר
     docs, missing = build(a)
     c = collections.Counter(d["doc_type"] for d in docs)
     print(f"{len(docs)} מסמכים ייחודיים (לפי תוכן) | סוגים: {dict(c)}")
     print(f"  עם חברה משויכת: {sum(1 for d in docs if d['companies'])} | בלי שיוך: {sum(1 for d in docs if not d['companies'] and d['doc_type'] != 'other')} (מהם עם הצעות שיוך: {sum(1 for d in docs if d['suggest'])}) | לא קשור: {c.get('other', 0)}")
     if missing:
         print(f"  {len(missing)} שורות במיפוי בלי קובץ מקומי: {', '.join(missing[:15])}{'...' if len(missing) > 15 else ''}")
-    if not a.go:
+    if not a.go and not a.audit:
         print("דוח בלבד. להעלאה: python import_to_site.py --go   (אפשר קודם --go --limit 20)")
         return 0
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -242,6 +274,8 @@ def main():
     except urllib.error.HTTPError as e:
         print("גישה נדחתה או שגיאה:", e.code, e.read().decode("utf-8", "replace")[:200])
         return 1
+    if a.audit:
+        return audit_site(docs, existing, a)
     have = {d["sha256"] for d in existing}
     by_ref = {d["source_ref"]: d for d in existing if d.get("source") == "import" and d.get("source_ref")}
     todo = [d for d in docs if d["sha"] not in have]
