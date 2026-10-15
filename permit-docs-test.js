@@ -754,7 +754,7 @@
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
-  .pd-ok{white-space:nowrap}.pd-long{width:100%;justify-content:center}
+  .pd-ok{white-space:nowrap}.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-long:hover{filter:brightness(1.12)}
   .pd-warn{background:#fff1d6;color:#8a5a00;border:1px solid #e8c36a;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-mg-top{display:flex;gap:16px;align-items:stretch}
   .pd-mg-slot{flex:1;min-width:0;border:2px solid #b9c7da;border-radius:10px;padding:8px 10px;background:#f7f9fc}.pd-mg-slot.off{opacity:.65}
