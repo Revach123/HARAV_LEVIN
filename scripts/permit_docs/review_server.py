@@ -105,7 +105,7 @@ def build_items():
             "text_check": r.get("text_check", ""), "status": r.get("status", ""),
             "post_title": r.get("post_title", ""), "note": r.get("note", ""),
             "doc_name_matches": r.get("doc_name_matches", ""), "doc_hps_not_in_db": r.get("doc_hps_not_in_db", ""),
-            "linked_in": r.get("linked_in", ""), "cands": cands, "dups": dups_of(r["attachment_id"]),
+            "linked_in": r.get("linked_in", ""), "multi_kind": r.get("multi_kind", ""), "hp_pages": r.get("hp_pages", ""), "cands": cands, "dups": dups_of(r["attachment_id"]),
         })
     return items
 

@@ -29,6 +29,7 @@ def main():
     ap.add_argument("--type-check", default="type_check.csv")
     ap.add_argument("--unattached", default="מיקום_לא_משויכים.csv")
     ap.add_argument("--businesses", default="businesses.json")
+    ap.add_argument("--hp-layout", default="hp_layout.csv")
     ap.add_argument("--out", default="סופי_מאוחד.csv")
     ap.add_argument("--out-biz", default="סיכום_עסקים.csv")
     a = ap.parse_args()
@@ -36,6 +37,7 @@ def main():
     biz = {b["id"]: b for b in json.load(open(a.businesses, encoding="utf-8"))}
     tcheck = {r["attachment_id"]: r for r in read(a.type_check)}
     unatt = {r["attachment_id"]: r for r in read(a.unattached)}
+    layout = {r["attachment_id"]: r for r in read(a.hp_layout)}      # hp_layout.py: מסמך משותף / כמה מסמכים בקובץ
     rows = read(a.final)
     if not rows:
         print("אין קובץ סופי - הרץ קודם reconcile.py")
@@ -57,14 +59,15 @@ def main():
         # "שם הפוסט שונה" (עם ח.פ. מאומת) ו"מקור יחיד": נחשבים מאומתים ואינם מסומנים לבדיקה (26 מתוך 26 בבדיקה ידנית היו נכונים)
         if not r["post_type"] and not linked:
             flags.append("אין מיקום באתר (קובץ לא משויך)")
-        out.append({**r, "doc_type_clean": dtype or "לא ידוע", "text_check": text_flag, "linked_in": linked, "needs_review": "כן" if flags else "", "review_reasons": " | ".join(flags)})
+        out.append({**r, "doc_type_clean": dtype or "לא ידוע", "text_check": text_flag, "linked_in": linked, "needs_review": "כן" if flags else "", "review_reasons": " | ".join(flags),
+                    "multi_kind": (layout.get(aid) or {}).get("kind", ""), "hp_pages": (layout.get(aid) or {}).get("hps_by_page", "")})
         bid = r["business_id"]
         if bid:
             d = per_biz.setdefault(bid, {"G": 0, "P": 0, "U": 0, "files": []})
             d[{"כללי": "G", "פרטי": "P"}.get(dtype, "U")] += 1
             d["files"].append(r["file"])
 
-    cols = list(rows[0].keys()) + ["doc_type_clean", "text_check", "linked_in", "needs_review", "review_reasons"]
+    cols = list(rows[0].keys()) + ["doc_type_clean", "text_check", "linked_in", "needs_review", "review_reasons", "multi_kind", "hp_pages"]
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()

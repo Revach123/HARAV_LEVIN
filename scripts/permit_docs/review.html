@@ -27,6 +27,8 @@ button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:
 button:hover{border-color:var(--acc)}button.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
 button.primary{background:var(--ok);color:#fff;border-color:var(--ok)}
 .why{font-size:12px;color:var(--mut)}
+.kind{margin:4px 0;padding:4px 8px;border-radius:8px;font-size:12px;border:1px solid var(--line)}
+.kind-shared{background:#e8f4ff;border-color:#9cc8f5}.kind-multi{background:#fff4d6;border-color:#e8c36a}
 input[type=text]{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:220px}
 #res{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 #viewer{flex:1;min-height:260px}#viewer iframe{width:100%;height:100%;border:0;background:#888}
@@ -68,6 +70,7 @@ function show(){
   const ids=(d.company_ids||d.company_id||"").split(";").filter(Boolean),nms=(d.company_names||d.company_name||"").split(";");
   ans={type:d.type_answer||"",cids:ids.map((id,i)=>({id,name:nms[i]||""})),cspec:d.company_special||""};
   let h=`<div class="why">${it.reasons.map(esc).join(" · ")}${it.doc_type ? ` · סיווג לפי מיקום באתר: <b>${esc(it.doc_type)}</b>` : ""}</div>`;
+  if(it.multi_kind&&it.multi_kind!=="יחיד")h+=`<div class="kind kind-${it.multi_kind==="מסמך משותף"?"shared":"multi"}"><b>${esc(it.multi_kind)}</b>${it.multi_kind==="מסמך משותף"?" (ח.פ.-ים קרובים זה לזה)":" (ח.פ.-ים בעמודים שונים - מועמד לפיצול)"}<br><span class="mut">${esc(it.hp_pages)}</span></div>`;
   h+=`<div class="mut">קובץ: ${esc(it.file)} · כותרת הפוסט: ${esc(it.post_title)||"—"}${it.linked_in?` · מקושר ב: ${esc(it.linked_in)}`:""}</div>`;
   if(it.ask_type){
     h+=`<div class="sec"><h3>כללי או פרטי? <span class="mut">(לפי המיקום: ${esc(it.doc_type)}; ${esc(it.text_check)})</span></h3><div class="btns" id="tb">`+
