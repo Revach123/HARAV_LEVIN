@@ -1487,8 +1487,7 @@ function renderHome() {
       <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
-      <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
-    </div>`;
+    </div>${window.PD ? PD.homeCards() : ""}`;
 }
 
 let gsQuery = "", gsBonds = null, gsBondsLoading = false;
