@@ -75,7 +75,8 @@ def lookup(name, chp):
 
 
 def main():
-    with open(os.path.join(HERE, "missing_companies.csv"), encoding="utf-8-sig", newline="") as f:
+    inp = os.environ.get("CHECK_INPUT") or "missing_companies.csv"      # אפשר להריץ על קובץ קלט אחר באותה תיקייה
+    with open(os.path.join(HERE, inp), encoding="utf-8-sig", newline="") as f:
         companies = list(csv.DictReader(f))
     out, rows = [], []
     for i, c in enumerate(companies, 1):
@@ -83,10 +84,10 @@ def main():
         print(f"[{i}/{len(companies)}] {c['name']} ({c['chp'] or 'ללא ח.פ.'}): {len(hits)} תוצאות{' (שגיאת רשת)' if failed else ''}")
         out.append({**c, "hits": hits, "network_error": failed})
         for h in hits or [{"found": "לא נמצא" if not failed else "שגיאת רשת", "how": "", "kind": "", "registry_id": "", "registry_name": "", "status": ""}]:
-            rows.append([c["name"], c["chp"], c["category"], c["in_general_excel"], c["in_private_excel"], c["bond_status_excel"],
+            rows.append([c["name"], c["chp"], c.get("category", ""), c.get("in_general_excel", ""), c.get("in_private_excel", ""), c.get("bond_status_excel", ""),
                          h["found"], h["how"], h["kind"], h["registry_id"], h["registry_name"], h["status"]])
     os.makedirs(os.path.join(ROOT, "reports", "registry_check"), exist_ok=True)
-    base = os.path.join(ROOT, "reports", "registry_check", "missing_companies_report")
+    base = os.path.join(ROOT, "reports", "registry_check", os.environ.get("CHECK_OUT") or "missing_companies_report")
     with open(base + ".csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["שם באקסל הישן", "ח.פ.", "קטגוריה", "ברשימה הכללית באקסל", "ברשימה הפרטית באקסל", "אג\"ח באקסל",

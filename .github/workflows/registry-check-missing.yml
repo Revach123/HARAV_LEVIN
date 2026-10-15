@@ -4,7 +4,14 @@ name: Registry check (missing companies, read-only)
 # לא כותב ל-D1 ולא משנה את האתר. הפלט: reports/registry_check/missing_companies_report.{csv,json}
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      input_csv:
+        description: "קובץ קלט בתיקיית scripts/registry_check (name, chp)"
+        default: "missing_companies.csv"
+      output_name:
+        description: "שם בסיס לקובץ הדוח ב-reports/registry_check"
+        default: "missing_companies_report"
 
 permissions:
   contents: write
@@ -23,6 +30,9 @@ jobs:
         with:
           python-version: "3.11"
       - name: Check missing companies against the registry
+        env:
+          CHECK_INPUT: ${{ github.event.inputs.input_csv }}
+          CHECK_OUT: ${{ github.event.inputs.output_name }}
         run: python scripts/registry_check/check_missing.py
       - name: Commit report
         if: always()
