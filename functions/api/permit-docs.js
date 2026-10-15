@@ -6,6 +6,8 @@ import { TYPES, MAX_BYTES, noAuth, noStore, newId, withBusinesses, existingBusin
 // POST /api/permit-docs                → העלאה (multipart: file, doc_type, business_ids, note, source, source_ref). קובץ זהה כבר קיים: 409
 // קבצים נשמרים ב-R2 (קשירה PERMITS ב-wrangler.toml).
 
+const cleanJson = v => { try { const t = String(v || ""); if (!t) return ""; JSON.parse(t); return t.length > 20000 ? "" : t; } catch { return ""; } };
+
 export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   try {
@@ -45,8 +47,9 @@ export async function onRequestPost({ request, env }) {
     await env.PERMITS.put(key, buf, { httpMetadata: { contentType: "application/pdf" } });
     try {
       await env.DB.batch([
-        env.DB.prepare("INSERT INTO permit_docs (id, sha256, file_key, original_name, size, doc_type, note, source, source_ref) VALUES (?,?,?,?,?,?,?,?,?)")
-          .bind(id, sha, key, String(file.name || "").slice(0, 300), buf.byteLength, docType, String(form.get("note") || ""), String(form.get("source") || "upload"), String(form.get("source_ref") || "")),
+        env.DB.prepare("INSERT INTO permit_docs (id, sha256, file_key, original_name, size, doc_type, note, source, source_ref, source_title, suggest) VALUES (?,?,?,?,?,?,?,?,?,?,?)")
+          .bind(id, sha, key, String(file.name || "").slice(0, 300), buf.byteLength, docType, String(form.get("note") || ""), String(form.get("source") || "upload"), String(form.get("source_ref") || ""),
+                String(form.get("source_title") || "").slice(0, 500), cleanJson(form.get("suggest"))),
         ...bids.map(b => env.DB.prepare("INSERT OR IGNORE INTO permit_doc_companies (doc_id, business_id) VALUES (?, ?)").bind(id, b)),
       ]);
     } catch (e) {

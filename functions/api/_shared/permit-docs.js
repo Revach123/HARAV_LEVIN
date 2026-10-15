@@ -1,6 +1,6 @@
 // עזרים משותפים לנקודות permit-docs* (קובץ בתיקיית _shared: אינו נקודת קצה)
 
-export const TYPES = ["general", "private", "both", "unknown"];
+export const TYPES = ["general", "private", "both", "unknown", "other"];     // other = לא היתר עסקה / לא קשור
 export const MAX_BYTES = 50 * 1024 * 1024;
 export const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
 export const noAuth = () => Response.json({ error: "Unauthorized" }, { status: 401 });

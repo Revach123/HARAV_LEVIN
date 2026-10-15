@@ -1,11 +1,11 @@
 /* מאגר מסמכי היתר עסקה - ממשק בדף הניהול (admin_test.html). בשלב זה אין תצוגה ציבורית.
    תלוי בגלובלים של דף הניהול: businesses, adminToken, apiFetch, escHtml, displayName, showStatus, render, view.
-   חשיפה: window.PD = { cell, refresh, load, openUpload, openCompany, openDoc } */
+   חשיפה: window.PD (cell, homeCards, load, openUpload, openUnassigned, openCompany, openDoc ...) */
 (function () {
   "use strict";
   const S = { docs: [], byBiz: new Map(), byId: new Map(), loaded: false, loading: false, err: "" };
-  const TL = { general: "כללי", private: "פרטי", both: "כללי + פרטי", unknown: "לא ידוע" };
-  const TCOL = { general: "#1e4570", private: "#7a3b8f", both: "#1e7e4a", unknown: "#8a6d00" };
+  const TL = { general: "כללי", private: "פרטי", both: "כללי + פרטי", unknown: "לא ידוע", other: "לא קשור / לא היתר" };
+  const TCOL = { general: "#1e4570", private: "#7a3b8f", both: "#1e7e4a", unknown: "#8a6d00", other: "#777" };
   const $ = id => document.getElementById(id);
   const E = s => escHtml(s);
   const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
@@ -84,6 +84,15 @@
     if (e.key !== "Escape") return;
     for (const id of ["pd-confirm", "pd-doc", "pd-upload", "pd-company"]) if ($(id)) { close(id); break; }
   });
+
+  // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
+  function homeCards() {
+    if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
+    const n = S.loaded && !S.err ? unassignedCount() : null;
+    return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
+      <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
+      <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכים לא משויכים${n !== null ? " (" + n + ")" : ""}</b><span class="sub">חיפוש חברה מתאימה לכל מסמך</span></button></div>`;
+  }
 
   // ───────── חלון: מסמכי חברה ─────────
   function openCompany(bizId) {
@@ -182,6 +191,7 @@
       await api("/permit-docs/" + id, "DELETE");
       S.docs = S.docs.filter(d => d.id !== id); reindex();
       close("pd-confirm"); close("pd-doc");
+      if ($("pd-un")) { Q.curId = ""; uqShow(); }
       showStatus("המסמך נמחק");
       refresh();
     } catch (e) { alert("המחיקה נכשלה: " + e.message); }
@@ -235,20 +245,23 @@
     const nts = textVariants(normText(text)), fn = normText(String(fileName || "").replace(/\.pdf$/i, ""));
     const byChp = new Map(bizList().filter(b => (b.chp_number || "").trim()).map(b => [String(b.chp_number).trim().padStart(9, "0"), b]));
     const found = new Map(), outside = new Set();
-    const add = (b, key, why) => { const c = found.get(b.id) || { b, hp: false, name: false, why: [] }; c[key] = true; if (!c.why.includes(why)) c.why.push(why); found.set(b.id, c); };
+    const add = (b, key, why, len) => { const c = found.get(b.id) || { b, hp: false, name: false, why: [], nameLen: 0 }; c[key] = true; c.nameLen = Math.max(c.nameLen, len || 0); if (!c.why.includes(why)) c.why.push(why); found.set(b.id, c); };
     const hps = new Set((String(text || "").replace(/,/g, "").match(/(?<!\d)\d{8,9}(?!\d)/g) || []).map(x => x.padStart(9, "0")));
     for (const h of hps) { if (!hpOk(h) || h[0] !== "5") continue; const b = byChp.get(h); if (b) add(b, "hp", "ח.פ. " + h + " בקובץ"); else outside.add(h); }
     for (const { b, names } of nameIndex()) {
       const hit = names.find(n => nts.some(t => t.includes(n)));
-      if (hit) add(b, "name", "השם בקובץ");
-      else if (fn.length >= 6 && names.some(n => n.includes(fn) || fn.includes(n))) add(b, "name", "שם הקובץ");
+      if (hit) add(b, "name", "השם בקובץ", hit.length);
+      else if (fn.length >= 6 && names.some(n => n.includes(fn) || fn.includes(n))) add(b, "file", "שם הקובץ", fn.length);
     }
-    const cands = [...found.values()].sort((a, b) => (b.hp - a.hp) || (b.name - a.name));
+    // ציון התאמה: ח.פ. (3, ועוד חצי אם גם השם), שם בקובץ (2 + עד חצי לפי אורך השם), שם הקובץ בלבד (1)
+    for (const c of found.values()) c.score = (c.hp ? 3 + (c.name ? 0.5 : 0) : c.name ? 2 + Math.min(c.nameLen, 40) / 80 : 1);
+    const cands = [...found.values()].sort((a, b) => b.score - a.score);
     const strong = cands.filter(c => c.hp);
-    const pre = strong.length ? strong : cands.length === 1 ? cands : [];
-    const kind = phraseKind(text);
-    return { cands, preselect: new Set(pre.map(c => c.b.id)), outside: [...outside], shared: strong.length > 1, doubt: !strong.length && cands.length > 1,
-             type: kind === "combined" ? "both" : kind === "private" ? "private" : "unknown", typeWhy: kind === "combined" ? "נוסח \"החברה מאשרת בזאת\" = כללי ופרטי ביחד" : kind === "private" ? "נוסח \"הביעה את הסכמתה\" = פרטי בלבד" : "" };
+    const kind = phraseKind(text), readable = nts[0].length >= 40;
+    // סיווג מוצע: משפט "החברה מאשרת בזאת" = כללי+פרטי; "הביעה את הסכמתה" = פרטי; אחרת, אם יש טקסט קריא ואין נוסח פרטי = כללי
+    return { cands, outside: [...outside], shared: strong.length > 1, doubt: !strong.length && cands.length > 1, readable,
+             type: kind === "combined" ? "both" : kind === "private" ? "private" : readable ? "general" : "unknown",
+             typeWhy: kind === "combined" ? "נוסח \"החברה מאשרת בזאת\" = כללי ופרטי ביחד" : kind === "private" ? "נוסח \"הביעה את הסכמתה\" = פרטי בלבד" : readable ? "לא נמצא נוסח פרטי בטקסט, ולכן כללי" : "" };
   }
 
   // ───────── קריאת טקסט מ-PDF (pdf.js; OCR רק לפי בקשה) ─────────
@@ -336,7 +349,7 @@
     const c = U.cur;
     if (fresh || !c.sug) {      // ההצעה מחושבת פעם אחת לכל טקסט; בחירות ידניות נשמרות בעת רענון התצוגה
       c.sug = suggest(c.text, c.file.name);
-      c.sel = new Set(c.sug.preselect); if (U.preset) c.sel.add(U.preset);
+      c.sel = new Set(); if (U.preset) c.sel.add(U.preset);      // אין בחירה אוטומטית של חברות: המשתמש בוחר
       if (!c.typeTouched) c.type = c.sug.type;
     }
     const sug = c.sug;
@@ -351,7 +364,7 @@
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
           ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
-          ${sug.cands.slice(0, 12).map(card).join("") || `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
+          ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
           ${sug.outside.length ? `<div class="pd-sub" style="margin-top:4px">ח.פ. של תאגידים בקובץ שאינם במאגר: ${sug.outside.map(E).join(", ")}</div>` : ""}
           <input class="pd-in" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-up-res"></div>
           <h4>סיווג</h4><div class="pd-btns">${tb}</div>${sug.typeWhy && !c.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(sug.typeWhy)}</div>` : ""}
@@ -359,6 +372,12 @@
           <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" id="pd-save" onclick="PD._save()">${c.sel.size ? `שמירה ושיוך ל-${c.sel.size} חברות` : "שמירה בלי שיוך"}</button><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
           <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div>
         </div></div>`;
+  }
+  // התאמות מובילות למעלה (ח.פ. או שם ברור), פחות מתאימות מתחת
+  function candGroups(cands, card) {
+    const top = cands.filter(x => x.score >= 2.5), rest = cands.filter(x => x.score < 2.5);
+    return (top.length ? `<div class="pd-grp">התאמות מובילות</div>` + top.map(card).join("") : "") +
+           (rest.length ? `<div class="pd-grp weak">התאמות נוספות (פחות מתאימות)</div>` + rest.map(card).join("") : "");
   }
   async function upOcr() {
     const c = U.cur; c.ocr = true;
@@ -388,10 +407,111 @@
     } catch (e) { if (btn) btn.disabled = false; const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
 
+
+  // ───────── דשבורד: מסמכים לא משויכים ─────────
+  const Q = { i: 0, curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", showOther: false, filter: "", blobUrl: "", readable: null };
+  const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
+  const isUnassigned = d => !(d.business_ids || []).length;
+  const unassignedCount = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other").length;
+  function unassignedList() {
+    const f = Q.filter.trim().toLowerCase();
+    return S.docs.filter(d => isUnassigned(d) && (Q.showOther || d.doc_type !== "other") &&
+        (!f || [d.original_name, d.source_title, d.note].some(x => String(x || "").toLowerCase().includes(f))))
+      .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
+  }
+  function openUnassigned() {
+    Q.i = 0; Q.curId = ""; Q.filter = ""; Q.showOther = false;
+    overlay("pd-un", `
+      <div class="pd-head"><b>מסמכים לא משויכים</b><span class="pd-sub" id="pd-un-count"></span>
+        <input class="pd-in" style="width:230px" placeholder="סינון לפי שם קובץ / כותרת / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
+        <label class="pd-sub"><input type="checkbox" onchange="PD._unOther(this.checked)"> הצג גם "לא קשור"</label>
+        <button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
+      <div class="pd-split"><div class="pd-view" id="pd-un-view"></div><div class="pd-side" id="pd-un-side"></div></div>`, true);
+    closers["pd-un"] = () => { if (Q.blobUrl) URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; Q.curId = ""; if (typeof render === "function" && typeof view !== "undefined" && view === "home") render(); };
+    if (!S.loaded) load().then(uqShow); else uqShow();
+  }
+  function uqMergeCands(d, live) {
+    const m = new Map();
+    const put = (id, score, why) => { const b = bizById(id); if (!b) return; const c = m.get(id) || { b, score: 0, why: [] }; c.score = Math.max(c.score, score) + (c.score ? 0.2 : 0); for (const w of [].concat(why || [])) if (!c.why.includes(w)) c.why.push(w); m.set(id, c); };
+    for (const x of sugOf(d)) put(x.id, x.s || 1, x.w);
+    for (const c of live || []) put(c.b.id, c.score, c.why);
+    return [...m.values()].sort((a, b) => b.score - a.score);
+  }
+  async function uqShow(keepSel) {
+    const list = unassignedList(), cnt = $("pd-un-count"); if (!$("pd-un")) return;
+    if (cnt) cnt.textContent = `נותרו ${list.length} מסמכים`;
+    if (Q.i >= list.length) Q.i = Math.max(0, list.length - 1);
+    const d = list[Q.i], side = $("pd-un-side"), view = $("pd-un-view");
+    if (!d) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">אין מסמכים לא משויכים 🎉</div>`; view.innerHTML = ""; Q.curId = ""; return; }
+    if (Q.curId !== d.id) {
+      Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type;
+      Q.cands = uqMergeCands(d); Q.liveDone = false;
+      const tok = ++Q.token;
+      view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>`;
+      if (Q.blobUrl) { URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; }
+      (async () => {
+        try {
+          const res = await fetch(`/api/permit-docs/${d.id}/file`, { headers: authH() });
+          if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.statusText);
+          const blob = await res.blob(); if (tok !== Q.token) return;
+          Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}" title="המסמך"></iframe>`;
+          try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
+            const r = await extractText(await blob.arrayBuffer(), 6); if (tok !== Q.token) return;
+            const sug = suggest(r.text, d.original_name);
+            Q.cands = uqMergeCands(d, sug.cands); Q.liveDone = true;
+            if (!Q.typeTouched && (d.doc_type === "unknown") && sug.type !== "unknown") Q.type = sug.type, Q.typeWhy = sug.typeWhy;
+            uqShow(true);
+          } catch { /* אין טקסט או שגיאת קריאה */ }
+        } catch (e) { if (tok === Q.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
+      })();
+    }
+    const card = c => `<label class="pd-cand"><input type="checkbox" ${Q.sel.has(c.b.id) ? "checked" : ""} onchange="PD._unTog('${c.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(c.b, true)}</b> <span class="pd-sub">${E(c.b.chp_number || "")} · ${E(c.why.join(", "))}</span></span></label>`;
+    const extra = [...Q.sel].filter(id => !Q.cands.some(c => c.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, why: ["נבחר ידנית"] }));
+    const tb = ["general", "private", "both", "unknown"].map(t => `<button class="pd-btn ${Q.type === t ? "sel" : ""}" onclick="PD._unType('${t}')">${TL[t]}</button>`).join("");
+    const keepIn = document.activeElement && document.activeElement.id === "pd-un-q" ? document.getElementById("pd-un-q").value : null;
+    side.innerHTML = `
+      <div class="pd-sub">${Q.i + 1} / ${list.length}</div>
+      <div style="font-weight:600;font-size:14px;word-break:break-all">${E(d.source_title || d.original_name || d.id)}</div>
+      <div class="pd-sub">${E(d.original_name || "")} · ${fmtSize(d.size)}${d.doc_type === "other" ? " · מסומן כלא קשור" : ""}</div>
+      ${d.note ? `<div class="pd-warnbox">${E(d.note)}</div>` : ""}
+      <h4>חברות מתאימות ${Q.cands.length ? "" : '<span class="pd-sub">(לא נמצאו הצעות: חפשו ידנית)</span>'}</h4>
+      ${Q.cands.length ? candGroups(Q.cands.slice(0, 20), card) : ""}${extra.join("")}
+      <input class="pd-in" id="pd-un-q" placeholder="חיפוש חברה: שם או ח.פ." oninput="PD._unSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-un-res"></div>
+      <h4>סיווג</h4><div class="pd-btns">${tb}</div>${Q.typeWhy && !Q.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(Q.typeWhy)}</div>` : ""}
+      <h4>הערה</h4><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea>
+      <div class="pd-btns" style="margin-top:12px">
+        <button class="pd-btn primary" ${Q.sel.size ? "" : "disabled"} onclick="PD._unSave()">${Q.sel.size ? `שמירה ושיוך ל-${Q.sel.size} חברות` : "בחרו חברה לשיוך"} ←</button>
+        <button class="pd-btn" onclick="PD._unGo(1)">דילוג</button><button class="pd-btn" onclick="PD._unGo(-1)">→ הקודם</button>
+      </div>
+      <div class="pd-btns" style="margin-top:10px"><button class="pd-btn" onclick="PD._unOtherDoc()" title="מסמך שאינו היתר עסקה של חברה: יוצא מהתור">לא קשור</button>
+        <button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקה</button></div>
+      <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
+    if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
+  }
+  function uqSearch(q) {
+    const out = $("pd-un-res"); if (!out) return; q = (q || "").trim(); if (q.length < 2) { out.innerHTML = ""; return; }
+    const digits = q.replace(/\D/g, "");
+    const hit = bizList().filter(b => !Q.sel.has(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (digits.length >= 4 && (b.chp_number || "").includes(digits)))).slice(0, 10);
+    out.innerHTML = hit.map(b => `<button class="pd-pick" onclick="PD._unAdd('${b.id}')">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span></button>`).join("") || `<div class="pd-sub">לא נמצאה חברה</div>`;
+  }
+  async function uqSave() {
+    const d = unassignedList()[Q.i]; if (!d || !Q.sel.size) return;
+    try {
+      const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: Q.type, business_ids: [...Q.sel], note: Q.note });
+      replaceDoc(r.doc); showStatus("נשמר"); Q.curId = ""; uqShow();
+    } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
+  }
+  async function uqOther() {
+    const d = unassignedList()[Q.i]; if (!d) return;
+    try { const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: "other", note: Q.note }); replaceDoc(r.doc); Q.curId = ""; uqShow(); }
+    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "הפעולה נכשלה: " + e.message; }
+  }
+
   // ───────── עיצוב ─────────
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
+  .pd-homeh{margin:26px 0 10px;font-size:16px;color:#1a3a5c}
   .pd-missing{background:#fdecea;color:#c0392b;border:1px solid #e6a39b;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-ok{background:#fff;border:1px solid #d6d2ca;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap}
   .pd-warn2{color:#b85c00;font-size:11px;margin-top:2px}
@@ -428,12 +548,17 @@
   .pd-warnbox{background:#fff6e0;border:1px solid #e8c36a;border-radius:7px;padding:7px 10px;font-size:12.5px;margin:6px 0}
   .pd-dup{background:#fdecea;border:1px solid #e6a39b;border-radius:8px;padding:12px;font-size:13.5px;line-height:1.6}
   .pd-ok-msg{background:#edf7f1;border:1px solid #a8d9bc;border-radius:8px;padding:8px 12px;margin:10px 14px 0}
+  .pd-grp{font-size:12px;font-weight:600;color:#1e7e4a;margin:8px 0 4px}.pd-grp.weak{color:#8a8a8a}
   @media(max-width:800px){.pd-split{flex-direction:column}.pd-side{width:auto;max-width:none}}
   `;
   document.head.appendChild(css);
 
-  window.PD = { cell, refresh, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { cell, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
-    _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr };
+    _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
+    _unFilter: v => { Q.filter = v; Q.i = 0; Q.curId = ""; uqShow(); }, _unOther: v => { Q.showOther = v; Q.i = 0; Q.curId = ""; uqShow(); },
+    _unTog: (id, on) => { on ? Q.sel.add(id) : Q.sel.delete(id); uqShow(); }, _unAdd: id => { Q.sel.add(id); uqShow(); }, _unSearch: uqSearch,
+    _unType: t => { Q.type = t; Q.typeTouched = true; uqShow(); }, _unNote: v => { Q.note = v; }, _unSave: uqSave, _unOtherDoc: uqOther,
+    _unGo: n => { const len = unassignedList().length; Q.i = Math.min(Math.max(0, Q.i + n), Math.max(0, len - 1)); Q.curId = ""; uqShow(); } };
 })();
