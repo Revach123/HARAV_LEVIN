@@ -37,6 +37,7 @@ def main():
     ap.add_argument("--final", default="סופי_מאוחד.csv")
     ap.add_argument("--businesses", default="businesses.json")
     ap.add_argument("--decisions", default="החלטות_בדיקה.csv")
+    ap.add_argument("--type-check", default="type_check.csv")
     ap.add_argument("--out", default="כיסוי_חברות.csv")
     ap.add_argument("--out-hps", default="חפ_לא_במאגר.csv")
     a = ap.parse_args()
@@ -45,8 +46,15 @@ def main():
     by_chp = {str(b.get("chp_number") or "").zfill(9): b["id"] for b in biz.values() if b.get("chp_number")}
     dec = {r["attachment_id"]: r for r in m.read_csv(a.decisions)} if os.path.exists(a.decisions) else {}
     rows = m.read_csv(a.final)
+    # מסמך שרשום בסוג אחד ונוסחו מצביע על הסוג השני: ייתכן שהוא מסמך משולב (כללי ופרטי ביחד)
+    both = {}
+    for r in (m.read_csv(a.type_check) if os.path.exists(a.type_check) else []):
+        if r.get("type_by_location") == "כללי" and r.get("text_check", "").startswith("יש נוסח פרטי"):
+            both[r["attachment_id"]] = "פרטי"        # רשום כללי, אבל יש בו נוסח פרטי
+        elif r.get("type_by_location") == "פרטי" and r.get("text_check", "").startswith("אין נוסח פרטי"):
+            both[r["attachment_id"]] = "כללי"        # רשום פרטי, אבל אין בו נוסח פרטי (כנראה נוסח כללי)
 
-    docs = collections.defaultdict(lambda: {"כללי": set(), "פרטי": set(), "ללא מיקום": set()})
+    docs = collections.defaultdict(lambda: {"כללי": set(), "פרטי": set(), "ללא מיקום": set(), "אולי כללי": set(), "אולי פרטי": set()})
     outside = collections.defaultdict(lambda: {"files": set(), "names": set()})
     for r in rows:
         aid = r["attachment_id"]
@@ -64,6 +72,8 @@ def main():
                 ids.add(x.strip())
         for bid in ids:
             docs[bid][t].add(aid)
+            if aid in both:
+                docs[bid]["אולי " + both[aid]].add(aid)
         for h in hps_of(r.get("doc_hps_not_in_db")):
             if not is_company_hp(h):
                 continue
@@ -78,11 +88,14 @@ def main():
     for bid, b in biz.items():
         vis = VIS.get(b.get("visibility") or "", b.get("visibility") or "")
         need = NEED.get(vis, ("כללי",))
-        d = docs.get(bid, {"כללי": set(), "פרטי": set(), "ללא מיקום": set()})
+        d = docs.get(bid, {"כללי": set(), "פרטי": set(), "ללא מיקום": set(), "אולי כללי": set(), "אולי פרטי": set()})
         missing = [t for t in need if not d[t]]
+        maybe = [t for t in missing if d["אולי " + t]]
         extra = [t for t in ("כללי", "פרטי") if d[t] and t not in need]
         if not missing and not extra:
             status = "מלא"
+        elif missing and len(maybe) == len(missing):
+            status = "חסר, אך ייתכן שמכוסה במסמך משולב"
         elif missing and d["ללא מיקום"]:
             status = "חסר, יש קבצים ללא מיקום לבדיקה"
         elif missing:
@@ -91,9 +104,9 @@ def main():
             status = "יש מסמך מסוג שלא רשום במאגר"
         out.append({"company": b.get("registrar_name") or b.get("permit_name") or "", "chp": b.get("chp_number", ""), "registered": vis,
                     "general": len(d["כללי"]), "private": len(d["פרטי"]), "no_location": len(d["ללא מיקום"]),
-                    "missing": " + ".join(missing), "extra_type": " + ".join(extra), "status": status,
+                    "missing": " + ".join(missing), "maybe_covered_by_combined_doc": " ".join(sorted(set().union(*[d["אולי " + t] for t in maybe]))) if maybe else "", "extra_type": " + ".join(extra), "status": status,
                     "files_no_location": " ".join(sorted(d["ללא מיקום"]) if missing else [])})
-    order = {"חסר": 0, "חסר, יש קבצים ללא מיקום לבדיקה": 1, "יש מסמך מסוג שלא רשום במאגר": 2, "מלא": 3}
+    order = {"חסר": 0, "חסר, אך ייתכן שמכוסה במסמך משולב": 0.5, "חסר, יש קבצים ללא מיקום לבדיקה": 1, "יש מסמך מסוג שלא רשום במאגר": 2, "מלא": 3}
     out.sort(key=lambda r: (order[r["status"]], r["company"]))
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(out[0].keys()))
