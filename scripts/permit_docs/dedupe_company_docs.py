@@ -155,7 +155,8 @@ def build_report(a):
                 verdict = "חופפים חלקית (%d%% מהעמודים)" % round(100 * max(rel[0], rel[1]))
                 jac = max(jac, max(rel[0], rel[1]) * 0.9)
             elif min(A["len"], B["len"]) >= 20 and jac >= AUTO:
-                verdict = "כמעט זהים (טקסט)"
+                # טקסט מסמך סרוק נקרא רק מהעמודים הראשונים (OCR), ולכן דמיון טקסט גבוה לבדו לא מספיק כשיש חתימות עמודים: אם העמודים שונים - לבדיקה בלבד
+                verdict = "כמעט זהים (טקסט)" if rel is None else "טקסט דומה אבל העמודים שונים (לבדיקה)"
             elif rel is None and min(A["len"], B["len"]) >= 20 and con >= CONTAIN:      # השוואת טקסט בלבד רק כשאין חתימות עמודים (קובץ שלא נפתח); כשיש, העמודים קובעים
                 verdict = "האחד מכיל את השני (טקסט)"
             elif rel is None and min(A["len"], B["len"]) >= 20 and jac >= 0.8:
