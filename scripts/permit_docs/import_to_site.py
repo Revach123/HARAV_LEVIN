@@ -83,6 +83,7 @@ def build(a):
         companies = [] if unrelated else list(dict.fromkeys(c for r in rows for c in (r.get("company_ids") or "").split(";") if c))
         if unrelated:
             doc_type = "other"
+        personal = any(r.get("personal_wording") == "כן" for r in rows)
         tags = []
         kinds = {r.get("file_kind") for r in rows}
         if "מסמך משותף" in kinds:
@@ -117,8 +118,35 @@ def build(a):
             suggest = [{"id": b, "s": v[0], "w": list(dict.fromkeys(v[1]))} for b, v in sorted(sc.items(), key=lambda x: -x[1][0])[:8]]
         docs.append({"sha": sha, "path": rows[0]["_path"], "name": rows[0].get("file") or os.path.basename(rows[0]["_path"]),
                      "doc_type": doc_type, "companies": companies, "note": " · ".join(tags), "title": " | ".join(t for t in titles if t)[:500],
-                     "ref": "wp:" + ",".join(ids), "suggest": suggest})
-    return apply_dedupe(docs, a), missing
+                     "ref": "wp:" + ",".join(ids), "suggest": suggest, "personal": personal})
+    return apply_dedupe(settle_personal(docs), a), missing
+
+
+def settle_personal(docs):
+    """מסמך עם הנוסח "אנו מאשרים בזאת, התקשרות אישית" (גם פרטי): משולב רק אם זה המסמך היחיד של החברה;
+    אם לחברה יש מסמך אחר שמסווג כללי - הוא פרטי; אחרת נשאר הסיווג לפי המיקום. ההכרעה לפי הסיווג המקורי של המסמכים האחרים."""
+    base = {d["sha"]: d["doc_type"] for d in docs}
+    by_co = collections.defaultdict(list)
+    for d in docs:
+        if d["doc_type"] != "other":
+            for c in d["companies"]:
+                by_co[c].append(d["sha"])
+    n = collections.Counter()
+    for d in docs:
+        if not d.get("personal") or not d["companies"] or d["doc_type"] == "other":
+            continue
+        others = [{s for s in by_co[c] if s != d["sha"]} for c in d["companies"]]
+        if any(any(base[s] in ("general", "both") for s in o) for o in others):
+            d["doc_type"] = "private"
+            n["פרטי (יש מסמך כללי אחר)"] += 1
+        elif not any(others):
+            d["doc_type"] = "both"
+            n["משולב (מסמך יחיד)"] += 1
+        else:
+            n["נשאר לפי המיקום"] += 1
+    if n:
+        print("  נוסח 'התקשרות אישית':", dict(n))
+    return docs
 
 
 def extra_docs(a, plan):

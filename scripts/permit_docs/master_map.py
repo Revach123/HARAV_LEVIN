@@ -124,10 +124,11 @@ def main():
                                    "hps": " ".join(hs), "companies": "; ".join(name_of(by_chp[h]) if h in by_chp else "(לא במאגר)" for h in hs),
                                    "total_pages": lay.get("pages", "")})
         is_combined = tcheck.get(aid, "").startswith("נוסח משולב")
+        is_personal = tcheck.get(aid, "").startswith("נוסח אישית")        # "אנו מאשרים בזאת, התקשרות אישית": גם פרטי; משולב רק אם מסמך יחיד (מוכרע בייבוא)
         _hps, _types, flags = parse_note(d.get("note"), d.get("company_special"))
         files.append({"attachment_id": aid, "file": r.get("file", ""), "type": t, "location": r.get("post_type", ""),
                       "companies": "; ".join(name_of(i) for i in ids), "company_ids": ";".join(ids), "file_kind": kind,
-                      "wording": tcheck.get(aid, ""), "combined_by_wording": "כן" if is_combined else "", "duplicate_group": gid.get(aid, ""), "duplicates": " ".join(dup_ids),
+                      "wording": tcheck.get(aid, ""), "combined_by_wording": "כן" if is_combined else "", "personal_wording": "כן" if is_personal else "", "duplicate_group": gid.get(aid, ""), "duplicates": " ".join(dup_ids),
                       "duplicate_types": "+".join(dup_types) if dup_ids else "", "same_file_in_both_lists": "כן" if both_lists else "",
                       "split_suggestion": sp_text, "decision_flags": ";".join(flags), "needs_review": r.get("needs_review", ""),
                       "review_reasons": r.get("review_reasons", "")})

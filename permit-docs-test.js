@@ -303,7 +303,7 @@
     }).filter(x => x.names.length);
     nameIdxFor = list; return nameIdx;
   }
-  // משפטי מפתח (אותם כללים כמו בבדיקה המקומית private_wording.py): "החברה מאשרת בזאת..." = משולב; "הביעה את הסכמתה..." = רק פרטי; "אנו מאשרים בזאת, התקשרות אישית..." = משולב
+  // משפטי מפתח (אותם כללים כמו בבדיקה המקומית private_wording.py): "החברה מאשרת בזאת..." = משולב; "הביעה את הסכמתה..." = רק פרטי; "אנו מאשרים בזאת, התקשרות אישית..." = גם פרטי (משולב רק אם מסמך יחיד)
   const PO = "החברה הביעה הסכמתה התקשרות באופן פרטי פי היתר עיסקא עם מי שמעו חתימתה שטר רישום חברה".split(" "), PO_MUST = ["הסכמתה", "הביעה", "שטר", "חתימתה"];
   const CB = "החברה מאשרת בזאת התקשרות היתר עיסקא באופן פרטי עם כל המעוניין בכך".split(" "), CB_MUST = ["מאשרת", "בזאת", "המעוניין"];
   function phraseAt(win, words, must, need) {
@@ -312,13 +312,13 @@
     return c >= need && must.some(k => e.has(k)) && e.has("פרטי") && (e.has("עיסקא") || e.has("התקשרות"));
   }
   function phraseKind(text) {
-    let po = false;
+    let po = false, pe = false;
     for (const tv of textVariants(text)) {
       const seq = tv.split(/\s+/).map(hebOnly).filter(Boolean);
       for (let i = 0; i < seq.length; i++) {
         if (seq[i] === "מאשרים") {        // "אנו מאשרים בזאת, התקשרות אישית לפי היתר עיסקא... עם כל המעוניין בכך": משפט מפתח נוסף: גם כללי וגם פרטי
           const w = new Set(seq.slice(Math.max(0, i - 8), i + 14)); for (const x of [...w]) if (x.length > 3) w.add(x.slice(1));
-          if (w.has("בזאת") && w.has("אישית") && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) return "combined";
+          if (w.has("בזאת") && w.has("אישית") && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) pe = true;
         }
         if (seq[i] === "מאשרת") { const w = new Set(seq.slice(Math.max(0, i - 4), i + 5)); if (w.has("בזאת") && (w.has("החברה") || w.has("חברה"))) return "combined"; }
         if (!["פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"].includes(seq[i])) continue;
@@ -327,7 +327,7 @@
         if (phraseAt(win, PO, PO_MUST, 7)) po = true;
       }
     }
-    return po ? "private" : "";
+    return pe ? "personal" : po ? "private" : "";
   }
   function suggest(text, fileName) {
     const nts = textVariants(normText(text)), fn = normText(String(fileName || "").replace(/\.pdf$/i, ""));
@@ -346,10 +346,18 @@
     const cands = [...found.values()].sort((a, b) => b.score - a.score);
     const strong = cands.filter(c => c.hp);
     const kind = phraseKind(text), readable = nts[0].length >= 40;
+    // "אנו מאשרים בזאת, התקשרות אישית" (גם פרטי): משולב רק אם זה המסמך היחיד של החברה; אם יש לה מסמך כללי אחר - פרטי
+    let ptype = "", pwhy = "";
+    if (kind === "personal") {
+      const top = (strong.length ? strong : cands.slice(0, 1)).map(c => c.b.id), dsOf = id => (S.byBiz.get(id) || []).filter(d => d.doc_type !== "other");
+      if (top.some(id => dsOf(id).some(d => d.doc_type === "general" || d.doc_type === "both"))) { ptype = "private"; pwhy = "נוסח \"התקשרות אישית\": לחברה יש כבר מסמך כללי, ולכן פרטי"; }
+      else if (!top.some(id => dsOf(id).length)) { ptype = "both"; pwhy = "נוסח \"התקשרות אישית\": המסמך היחיד של החברה, ולכן כללי ופרטי ביחד"; }
+      else { ptype = "unknown"; pwhy = "נוסח \"התקשרות אישית\": לחברה יש מסמכים אחרים ואף אחד אינו כללי: לבחור ידנית"; }
+    }
     // סיווג מוצע: משפט "החברה מאשרת בזאת" = כללי+פרטי; "הביעה את הסכמתה" = פרטי; אחרת, אם יש טקסט קריא ואין נוסח פרטי = כללי
     return { cands, outside: [...outside], shared: strong.length > 1, doubt: !strong.length && cands.length > 1, readable,
-             type: kind === "combined" ? "both" : kind === "private" ? "private" : readable ? "general" : "unknown",
-             typeWhy: kind === "combined" ? "נוסח \"החברה מאשרת בזאת\" / \"אנו מאשרים בזאת, התקשרות אישית\" = כללי ופרטי ביחד" : kind === "private" ? "נוסח \"הביעה את הסכמתה\" = פרטי בלבד" : readable ? "לא נמצא נוסח פרטי בטקסט, ולכן כללי" : "" };
+             type: kind === "personal" ? ptype : kind === "combined" ? "both" : kind === "private" ? "private" : readable ? "general" : "unknown",
+             typeWhy: kind === "personal" ? pwhy : kind === "combined" ? "נוסח \"החברה מאשרת בזאת\" = כללי ופרטי ביחד" : kind === "private" ? "נוסח \"הביעה את הסכמתה\" = פרטי בלבד" : readable ? "לא נמצא נוסח פרטי בטקסט, ולכן כללי" : "" };
   }
 
   // ───────── קריאת טקסט מ-PDF (pdf.js; OCR רק לפי בקשה) ─────────
