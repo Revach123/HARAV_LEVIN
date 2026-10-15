@@ -48,6 +48,13 @@ def classify(by_page):
 
 
 def work(job):
+    try:
+        return work_inner(job)
+    except KeyboardInterrupt:      # עצירה ב-Ctrl+C: בלי הדפסת שגיאות מכל תהליך
+        return job[0], {"error": "הופסק"}
+
+
+def work_inner(job):
     aid, path, tess, dpi, maxp = job
     try:
         doc = fitz.open(path)
@@ -95,13 +102,29 @@ def main():
     todo = [(aid, p, a.tesseract, a.dpi, a.max_pages) for aid, _f, p in cand if aid not in cache]
     print(f"קבצים עם לפחות שני ח.פ.: {len(cand)} | לבדיקה: {len(todo)}")
     if todo:
-        with Pool(a.workers) as pool:
+        def save():
+            tmp = a.cache + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(cache, f, ensure_ascii=False)
+            os.replace(tmp, a.cache)
+
+        pool = Pool(a.workers)
+        try:
             for n, (aid, res) in enumerate(pool.imap_unordered(work, todo), 1):
-                cache[aid] = res
-                if n % 10 == 0 or n == len(todo):
+                if res.get("error") != "הופסק":
+                    cache[aid] = res
+                if n % 3 == 0 or n == len(todo):      # שמירה תכופה: עצירה לא מאבדת עבודה
                     print(f"  {n}/{len(todo)}", flush=True)
-                    with open(a.cache, "w", encoding="utf-8") as f:
-                        json.dump(cache, f, ensure_ascii=False)
+                    save()
+            pool.close()
+        except KeyboardInterrupt:
+            pool.terminate()
+            save()
+            print("הופסק. מה שנבדק נשמר; הרצה חוזרת תמשיך מאותה נקודה.")
+            return 1
+        finally:
+            pool.join()
+        save()
     with open(a.cache, "w", encoding="utf-8") as f:
         json.dump(cache, f, ensure_ascii=False)
     out = []

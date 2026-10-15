@@ -19,6 +19,21 @@ import match_pdfs as m  # noqa: E402
 VIS = {"": "רק כללי", "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי"}
 
 
+def open_writable(path):
+    """פותח קובץ לכתיבה; אם הוא נעול (פתוח באקסל) כותב לשם חלופי עם מספר ומדווח."""
+    base, ext = os.path.splitext(path)
+    for i in range(0, 20):
+        p = path if i == 0 else f"{base}_{i}{ext}"
+        try:
+            f = open(p, "w", encoding="utf-8-sig", newline="")
+            if i:
+                print(f"אזהרה: {path} נעול (פתוח בתוכנה אחרת); נכתב ל-{p}. סגור את הקובץ והרץ שוב כדי לעדכן את המקורי.")
+            return f
+        except PermissionError:
+            continue
+    raise PermissionError(path)
+
+
 def read(path):
     return m.read_csv(path) if path and os.path.exists(path) else []
 
@@ -68,7 +83,7 @@ def main():
             d["files"].append(r["file"])
 
     cols = list(rows[0].keys()) + ["doc_type_clean", "text_check", "linked_in", "needs_review", "review_reasons", "multi_kind", "hp_pages"]
-    with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
+    with open_writable(a.out) as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
         w.writerows(out)
@@ -90,7 +105,7 @@ def main():
             notes.append("לא נמצא מסמך כללי")
         brows.append([b.get("registrar_name") or b.get("permit_name"), b.get("chp_number", ""), vis, d["G"], d["P"], d["U"], " | ".join(notes)])
     brows.sort(key=lambda x: (x[6] == "", x[0] or ""))
-    with open(a.out_biz, "w", encoding="utf-8-sig", newline="") as f:
+    with open_writable(a.out_biz) as f:
         w = csv.writer(f)
         w.writerow(["business", "chp", "registered_in_db", "general_docs", "private_docs", "unknown_type_docs", "notes"])
         w.writerows(brows)

@@ -32,8 +32,11 @@ def has_valid_hp(text):
     return any(m.check_digit_ok(x.zfill(9)) for x in re.findall(r"(?<!\d)(\d{8,9})(?!\d)", text.replace(",", "")))
 
 
-def ocr_page(doc, i, tesseract, dpi):
-    pix = doc[i].get_pixmap(dpi=dpi)
+def ocr_page(doc, i, tesseract, dpi, rotate=0):
+    page = doc[i]
+    if rotate:
+        page.set_rotation((page.rotation + rotate) % 360)      # מסמך סרוק הפוך: מסובבים את התצוגה בלבד, לא את הקובץ
+    pix = page.get_pixmap(dpi=dpi)
     with tempfile.TemporaryDirectory() as td:
         png = os.path.join(td, "p.png")
         pix.save(png)
@@ -54,6 +57,10 @@ def work(job):
             text = ocr_page(doc, 0, tesseract, dpi)
             if len(doc) > 1 and not has_valid_hp(text):
                 text += "\n" + ocr_page(doc, 1, tesseract, dpi)
+            if not has_valid_hp(text):      # אולי הסריקה הפוכה: ניסיון נוסף בסיבוב 180 מעלות
+                flipped = ocr_page(doc, 0, tesseract, dpi, rotate=180)
+                if has_valid_hp(flipped):
+                    text = flipped
         doc.close()
     except Exception as e:  # noqa: BLE001
         return aid, f"נכשל: {e}"
