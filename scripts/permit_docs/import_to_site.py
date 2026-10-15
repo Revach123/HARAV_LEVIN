@@ -141,7 +141,8 @@ def ssl_context():
 
 def call(site, token, path, data=None, ctype=None, method=None):
     req = urllib.request.Request(site.rstrip("/") + "/api" + path, data=data, method=method or ("POST" if data else "GET"),
-                                 headers={"Authorization": "Bearer " + token, **({"Content-Type": ctype} if ctype else {})})
+                                 headers={"User-Agent": "Mozilla/5.0 (permit-import)",      # Cloudflare חוסם את ה-User-Agent הרגיל של Python (שגיאה 1010)
+                                          **({"Authorization": "Bearer " + token} if token else {}), **({"Content-Type": ctype} if ctype else {})})
     for _ in range(2):
         try:
             with urllib.request.urlopen(req, timeout=180, context=ssl_context()) as r:
