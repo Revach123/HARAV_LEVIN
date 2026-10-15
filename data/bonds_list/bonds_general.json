@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-14",
- "count": 774,
+ "updated": "2026-10-15",
+ "count": 775,
  "columns": [
   "security_id",
   "security_name",
@@ -419,6 +419,32 @@
    "ytm_gross": ""
   },
   {
+   "security_id": 1248434,
+   "security_name": "אביעד ריב אגח א",
+   "symbol": "אברב.ק1",
+   "isin": "IL0012484346",
+   "security_type": "אג\"ח מובנות",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "אביעד ריביות בע\"מ",
+   "company": "אביעד ריביות בע\"מ",
+   "chp_number": "517352274",
+   "agch_approved": "בחירת אג\"ח מסוימים",
+   "is_private": "כן",
+   "notes": "",
+   "redemption_date": "14/10/2036",
+   "annual_interest": "",
+   "linkage": "לא צמוד",
+   "linkage_type": "",
+   "last_price": 0.0,
+   "annual_yield": 0.0,
+   "base_indices": "",
+   "is_tradable": true,
+   "first_seen": "2026-10-14",
+   "midroog_rating": "",
+   "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
    "security_id": "",
    "security_name": "אג\"ח - אג'לן קומרשייל ריט הולדינגס אינק (הנפקה עתידית)",
    "symbol": "",
@@ -439,7 +465,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -2181,7 +2207,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6315,7 +6341,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6497,7 +6523,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7043,7 +7069,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7823,7 +7849,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8005,7 +8031,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8031,7 +8057,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11697,7 +11723,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11983,7 +12009,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "ilBBB+",
    "ytm_gross": ""
@@ -13049,7 +13075,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14167,7 +14193,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15285,7 +15311,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15987,7 +16013,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -16923,7 +16949,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -18639,7 +18665,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -19887,7 +19913,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-14",
+   "first_seen": "2026-10-15",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
