@@ -428,10 +428,11 @@
   }
   async function upSave() {
     const c = U.cur, btn = $("pd-save"); if (btn) btn.disabled = true;
-    const fd = new FormData();
-    fd.append("file", c.file); fd.append("doc_type", c.type); fd.append("business_ids", JSON.stringify([...c.sel])); fd.append("note", c.note || "");
     try {
-      const res = await fetch("/api/permit-docs", { method: "POST", headers: authH(), body: fd });
+      const u8 = new Uint8Array(c.buf); let bin = "";
+      for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+      const res = await fetch("/api/permit-docs", { method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
+        body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: c.type, business_ids: [...c.sel], note: c.note || "" }) });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.doc) { upDuplicate(data.doc); return; }
       if (!res.ok) throw new Error(data.error || res.statusText);

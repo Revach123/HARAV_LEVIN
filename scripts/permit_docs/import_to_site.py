@@ -14,6 +14,7 @@
     python import_to_site.py --go                 (הכול)
 """
 import argparse
+import base64
 import collections
 import getpass
 import json
@@ -168,6 +169,7 @@ def main():
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--password-file", default="admin_password.txt", help="קובץ טקסט עם סיסמת המנהל בשורה הראשונה (אם אין משתנה ADMIN_PASSWORD)")
+    ap.add_argument("--replace-altered", action="store_true", help="להחליף מסמכים שהועלו קודם עם תוכן שונה מהמקור (נמחק הישן ומועלה התקין)")
     ap.add_argument("--go", action="store_true", help="להעלות בפועל (בלי זה: דוח בלבד)")
     ap.add_argument("--limit", type=int, default=0)
     a = ap.parse_args()
@@ -187,11 +189,17 @@ def main():
             token = (f.readline() or "").strip()
     token = token or getpass.getpass("סיסמת מנהל האתר: ")
     try:
-        have = {d["sha256"] for d in call(a.site, token, "/permit-docs")["docs"]}
+        existing = call(a.site, token, "/permit-docs")["docs"]
     except urllib.error.HTTPError as e:
         print("גישה נדחתה או שגיאה:", e.code, e.read().decode("utf-8", "replace")[:200])
         return 1
+    have = {d["sha256"] for d in existing}
+    by_ref = {d["source_ref"]: d for d in existing if d.get("source") == "import" and d.get("source_ref")}
     todo = [d for d in docs if d["sha"] not in have]
+    altered = [d for d in todo if d["ref"] in by_ref]            # קיים באתר מאותו מקור אבל עם תוכן שונה: נשמר משובש בהעלאה קודמת (סינון תוכן)
+    if altered and not a.replace_altered:
+        print(f"  {len(altered)} מסמכים כבר באתר אבל עם תוכן שונה מהמקור (כנראה נשתנו בהעלאה קודמת). להחלפתם: --replace-altered")
+        todo = [d for d in todo if d["ref"] not in by_ref]
     if a.limit:
         todo = todo[:a.limit]
     print(f"{len(have)} מסמכים כבר באתר; מעלה {len(todo)}...")
@@ -200,9 +208,16 @@ def main():
     for n, d in enumerate(todo, 1):
         with open(d["path"], "rb") as f:
             data = f.read()
-        body, ct = multipart({"doc_type": d["doc_type"], "business_ids": json.dumps(d["companies"]), "note": d["note"], "source": "import",
-                              "source_ref": d["ref"], "source_title": d["title"], "suggest": json.dumps(d["suggest"], ensure_ascii=False) if d["suggest"] else ""},
-                             d["name"], data)
+        if d["ref"] in by_ref and a.replace_altered:                      # מחיקת הגרסה המשובשת הישנה לפני העלאת התקינה
+            try:
+                call(a.site, token, "/permit-docs/" + by_ref[d["ref"]]["id"], method="DELETE")
+            except Exception as e:  # noqa: BLE001
+                print(f"  לא ניתן למחוק את הישן ({d['ref']}): {e}")
+        # העלאה כ-JSON (base64): ברשת עם סינון תוכן (נטפרי) קובץ PDF בגוף הבקשה עלול להשתנות בדרך
+        body = json.dumps({"file_b64": base64.b64encode(data).decode("ascii"), "name": d["name"], "doc_type": d["doc_type"], "business_ids": d["companies"],
+                           "note": d["note"], "source": "import", "source_ref": d["ref"], "source_title": d["title"],
+                           "suggest": json.dumps(d["suggest"], ensure_ascii=False) if d["suggest"] else ""}).encode("utf-8")
+        ct = "application/json"
         for attempt in range(4):
             try:
                 res = call(a.site, token, "/permit-docs", body, ct)
