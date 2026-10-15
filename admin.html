@@ -173,7 +173,9 @@
   col.c-num      { width: 36px; }
   col.c-name     { width: 150px; }
   col.c-name-lg  { width: 240px; }
-  col.c-pdocs    { width: 120px; }
+  col.c-pdp      { width: 118px; }
+  col.c-pdg      { width: 118px; }
+  col.c-pdx      { width: 150px; }
   col.c-chp      { width: 80px; }
   col.c-cat      { width: 80px; }
   col.c-biztype  { width: 80px; }
@@ -1037,7 +1039,6 @@ function renderAdminTable() {
       <table class="admin-tbl">
         <colgroup>
           <col class="c-name">
-          <col class="c-pdocs">
           <col class="c-chp">
           <col class="c-cat">
           <col class="c-biztype">
@@ -1047,12 +1048,14 @@ function renderAdminTable() {
           <col class="c-vis">
           <col class="c-tase">
           <col class="c-agch">
+          <col class="c-pdp">
+          <col class="c-pdg">
+          <col class="c-pdx">
           <col class="c-actions">
         </colgroup>
         <thead>
           <tr>
             <th>שם עסק</th>
-            <th>היתרי עסקה</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
             <th>סוג עסק</th>
@@ -1062,6 +1065,9 @@ function renderAdminTable() {
             <th style="text-align:center;">פרטי/כללי</th>
             <th style="text-align:center;">אג"ח בורסה</th>
             <th style="text-align:center;">אישור אג"ח</th>
+            <th style="text-align:center;">הת"ע פרטי</th>
+            <th style="text-align:center;">הת"ע כללי</th>
+            <th style="text-align:center;">מסמכים נוספים לבדיקה</th>
             <th style="text-align:center;">פעולות</th>
           </tr>
         </thead>
@@ -1071,7 +1077,6 @@ function renderAdminTable() {
             return `
               <tr>
                 <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
-                <td class="pd-cell">${window.PD ? PD.cell(b) : ""}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -1111,6 +1116,8 @@ function renderAdminTable() {
                     <option value="__pick__">⚙ בחירת אג"ח…</option>
                   </select>
                 </td>
+                ${window.PD ? PD.slotCells(b) : "<td></td><td></td>"}
+                <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}</td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
