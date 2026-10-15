@@ -14,11 +14,11 @@ database_name = "company-info-db"
 database_id = "c1d082fc-c125-4f62-8b33-9b62d5bda2da"
 
 # אחסון קובצי היתר עסקה (מאגר המסמכים, functions/api/permit-docs*). להפעלה:
-#   1) ב-Cloudflare: R2 → Create bucket בשם  harav-levin-permits   (פרטי, בלי גישה ציבורית)
-#   2) להסיר את ההערות משלוש השורות הבאות ולמזג. אם הדלי לא קיים - הפריסה כולה נכשלת, ולכן זה מושבת עד שהדלי נוצר.
-# [[r2_buckets]]
-# binding = "PERMITS"
-# bucket_name = "harav-levin-permits"
+#   דלי R2 פרטי בשם  harav-levin-permits  (נוצר ב-Cloudflare: R2 → Create bucket)
+#   (הדלי חייב להתקיים לפני הפריסה: אם הוא נמחק, הפריסה כולה נכשלת)
+[[r2_buckets]]
+binding = "PERMITS"
+bucket_name = "harav-levin-permits"
 
 # משתנים רגילים (לא סודות - הקובץ ציבורי). סודות מוגדרים בנפרד:
 #   wrangler pages secret put <שם> --project-name harav-levin
