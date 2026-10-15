@@ -207,7 +207,7 @@ def company_names(companies):
     for c in companies:
         k = chp_norm(c.get("chp_number"))
         reg = (c.get("registry_status") or "").strip()
-        if k and k not in out and not reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע")):
+        if k and k not in out and not reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע", "בפרוק")):
             out[k] = c.get("permit_name") or c.get("registrar_name") or ""
     return out
 
@@ -221,7 +221,7 @@ def approved_map(companies):
         if not k or status not in APPROVED:
             continue
         reg = (c.get("registry_status") or "").strip()      # נקבע ע"י registry-refresh
-        if reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע")):               # חברה מחוסלת - לא ברשימת האג"ח
+        if reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע", "בפרוק")):               # חברה מחוסלת - לא ברשימת האג"ח
             continue
         if k in out:
             continue
@@ -231,7 +231,7 @@ def approved_map(companies):
             "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
             "bond_scope": bond_scope(status, c.get("notes")),
-            "bond_note": "; ".join(x for x in ("בפירוק" if reg.startswith("בפרוק") else "", bond_note(c.get("notes"), c.get("notes_scope"))) if x),
+            "bond_note": "; ".join(x for x in (bond_note(c.get("notes"), c.get("notes_scope"))) if x),
         }
     return out
 
