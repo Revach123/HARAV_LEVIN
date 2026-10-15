@@ -1,14 +1,1 @@
-UPDATE businesses SET tase_has_agch = 'אין' WHERE id = 'mp64k73198ic';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '2cf7cc7fea3c';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '4ac1f60da8ed';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '150a660930af';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '009ef01f8283';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = 'f82e43b18ed3';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '0663328333e9';
-UPDATE businesses SET tase_has_agch = '' WHERE id = '1b86e39d0349';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = 'cddb6b650bf1';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '8d7807cb62eb';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '2c5d5e7b1c3c';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '73ec30d65305';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = '7d08390e8c27';
-UPDATE businesses SET registry_status = '', registrar_name = '', biz_type = '', tase_has_agch = '' WHERE id = 'c9c046c0c3d4';
+UPDATE businesses SET tase_has_agch = 'אין' WHERE id = '4ac1f60da8ed';

@@ -5,34 +5,34 @@
   "unfound_after_batch": 88,
   "values_lost": 0,
   "empty_before": {
-   "registrar_name": 103,
-   "biz_type": 103
+   "registrar_name": 91,
+   "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 91,
    "biz_type": 91
   },
-  "updated": "2026-10-14T08:04:04.920087Z",
+  "updated": "2026-10-15T07:47:56.450864Z",
   "source": "d1",
   "businesses": 1273,
   "numeric_chp": 1268,
   "found_in_registry": 1180,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2224,
-  "datawise_date": "2026-10-13",
-  "bond_companies": 362,
+  "datawise_rows": 2225,
+  "datawise_date": "2026-10-14",
+  "bond_companies": 363,
   "changes": {
-   "registrar_name": 12,
-   "biz_type": 12,
-   "tase_has_agch": 14,
-   "registry_status": 12
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 1,
+   "registry_status": 0
   },
   "fills_of_empty": {
-   "registrar_name": 12,
-   "biz_type": 12,
-   "tase_has_agch": 13,
-   "registry_status": 12
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 0,
+   "registry_status": 0
   },
   "registry_status_counts": {
    "לא ידוע": 155,
@@ -42,359 +42,16 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 14,
+  "statements_applied": 1,
   "problems": []
  },
  "changes": [
   {
-   "id": "mp64k73198ic",
-   "chp": "512569237",
+   "id": "4ac1f60da8ed",
+   "chp": "517352274",
    "field": "tase_has_agch",
    "old": "אין",
    "new": "יש"
-  },
-  {
-   "id": "2cf7cc7fea3c",
-   "chp": "511074114",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "2cf7cc7fea3c",
-   "chp": "511074114",
-   "field": "registrar_name",
-   "old": "",
-   "new": "א. ל. אלבה ליסינג בע\"מ"
-  },
-  {
-   "id": "2cf7cc7fea3c",
-   "chp": "511074114",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "2cf7cc7fea3c",
-   "chp": "511074114",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "4ac1f60da8ed",
-   "chp": "517352274",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "4ac1f60da8ed",
-   "chp": "517352274",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אביעד ריביות בע\"מ"
-  },
-  {
-   "id": "4ac1f60da8ed",
-   "chp": "517352274",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "4ac1f60da8ed",
-   "chp": "517352274",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "150a660930af",
-   "chp": "515802999",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "150a660930af",
-   "chp": "515802999",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אורנים על הים  בע\"מ"
-  },
-  {
-   "id": "150a660930af",
-   "chp": "515802999",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "150a660930af",
-   "chp": "515802999",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "יש"
-  },
-  {
-   "id": "009ef01f8283",
-   "chp": "510487366",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "009ef01f8283",
-   "chp": "510487366",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אלבה פתרונות טכנולוגיים מתקדמים בע\"מ"
-  },
-  {
-   "id": "009ef01f8283",
-   "chp": "510487366",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "009ef01f8283",
-   "chp": "510487366",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "f82e43b18ed3",
-   "chp": "515244721",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "f82e43b18ed3",
-   "chp": "515244721",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אפיקים 38 בע\"מ"
-  },
-  {
-   "id": "f82e43b18ed3",
-   "chp": "515244721",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "f82e43b18ed3",
-   "chp": "515244721",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "0663328333e9",
-   "chp": "517338877",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "0663328333e9",
-   "chp": "517338877",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אשקלון האהובה מתחם העין בע\"מ"
-  },
-  {
-   "id": "0663328333e9",
-   "chp": "517338877",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "0663328333e9",
-   "chp": "517338877",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "1b86e39d0349",
-   "chp": "570011767",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "cddb6b650bf1",
-   "chp": "512624974",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "cddb6b650bf1",
-   "chp": "512624974",
-   "field": "registrar_name",
-   "old": "",
-   "new": "דירנית מכונות וכלים  בע\"מ"
-  },
-  {
-   "id": "cddb6b650bf1",
-   "chp": "512624974",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "cddb6b650bf1",
-   "chp": "512624974",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "8d7807cb62eb",
-   "chp": "513846808",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "8d7807cb62eb",
-   "chp": "513846808",
-   "field": "registrar_name",
-   "old": "",
-   "new": "ילין לפידות - ניהול קרנות נאמנות בע\"מ"
-  },
-  {
-   "id": "8d7807cb62eb",
-   "chp": "513846808",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "8d7807cb62eb",
-   "chp": "513846808",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "registrar_name",
-   "old": "",
-   "new": "יסודות א' ליווי פיננסי  בע\"מ"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  },
-  {
-   "id": "73ec30d65305",
-   "chp": "512728932",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "73ec30d65305",
-   "chp": "512728932",
-   "field": "registrar_name",
-   "old": "",
-   "new": "קבוצת תדהר בע\"מ"
-  },
-  {
-   "id": "73ec30d65305",
-   "chp": "512728932",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה ציבורית - בע\"מ"
-  },
-  {
-   "id": "73ec30d65305",
-   "chp": "512728932",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "יש"
-  },
-  {
-   "id": "7d08390e8c27",
-   "chp": "520037763",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "7d08390e8c27",
-   "chp": "520037763",
-   "field": "registrar_name",
-   "old": "",
-   "new": "שדה נדל\"ן- י.ש.   בע\"מ"
-  },
-  {
-   "id": "7d08390e8c27",
-   "chp": "520037763",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה ציבורית - בע\"מ"
-  },
-  {
-   "id": "7d08390e8c27",
-   "chp": "520037763",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "יש"
-  },
-  {
-   "id": "c9c046c0c3d4",
-   "chp": "512084336",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "c9c046c0c3d4",
-   "chp": "512084336",
-   "field": "registrar_name",
-   "old": "",
-   "new": "שטרן ורסנו הנדסה בע\"מ"
-  },
-  {
-   "id": "c9c046c0c3d4",
-   "chp": "512084336",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "c9c046c0c3d4",
-   "chp": "512084336",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
   }
  ],
  "not_found": [
