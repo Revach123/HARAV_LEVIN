@@ -6,6 +6,8 @@
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
+<meta name="robots" content="noindex,nofollow">
+<script src="/permit-docs.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -171,6 +173,7 @@
   col.c-num      { width: 36px; }
   col.c-name     { width: 150px; }
   col.c-name-lg  { width: 240px; }
+  col.c-pdocs    { width: 120px; }
   col.c-chp      { width: 80px; }
   col.c-cat      { width: 80px; }
   col.c-biztype  { width: 80px; }
@@ -180,9 +183,9 @@
   col.c-tase     { width: 62px; }
   col.c-agch     { width: 108px; }
   col.c-notes    { width: 150px; }
-  col.c-nscope   { width: 175px; }
+  col.c-nscope   { width: 150px; }
   col.c-regst    { width: 80px; }
-  col.c-actions  { width: 140px; }
+  col.c-actions  { width: 110px; }
   thead th {
     text-align: right;
     padding: 11px 14px;
@@ -1034,6 +1037,7 @@ function renderAdminTable() {
       <table class="admin-tbl">
         <colgroup>
           <col class="c-name">
+          <col class="c-pdocs">
           <col class="c-chp">
           <col class="c-cat">
           <col class="c-biztype">
@@ -1049,6 +1053,7 @@ function renderAdminTable() {
         <thead>
           <tr>
             <th>שם עסק</th>
+            <th>היתרי עסקה</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
             <th>סוג עסק</th>
@@ -1068,6 +1073,7 @@ function renderAdminTable() {
             return `
               <tr>
                 <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
+                <td class="pd-cell">${window.PD ? PD.cell(b) : ""}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -1127,6 +1133,8 @@ function renderForm() {
       <div class="panel-header">
         <h2>${isEdit ? "עריכת עסק" : "הוספת עסק חדש"}</h2>
       </div>
+      ${isEdit && window.PD ? `<div style="margin:6px 0 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><b style="font-size:13px;">היתרי עסקה:</b><span id="pd-form-strip">${PD.cell(b)}</span>
+        <button type="button" class="btn-ghost" onclick="PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button></div>` : ""}
 
       <div class="lookup-box" id="lookup-box">
         <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "")}">
@@ -1478,7 +1486,7 @@ function renderHome() {
       <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
-    </div>`;
+    </div>${window.PD ? PD.homeCards() : ""}`;
 }
 
 let gsQuery = "", gsBonds = null, gsBondsLoading = false;
