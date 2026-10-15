@@ -121,6 +121,41 @@ def build(a):
     return apply_dedupe(docs, a), missing
 
 
+def extra_docs(a, plan):
+    """כל קובץ PDF מקומי שאינו בתוכנית (לא במיפוי, או כפול שהוסר): מועלה כמסמך לא משויך, סיווג לא ידוע, לשיוך/מחיקה ישר באתר."""
+    in_plan = {d["sha"] for d in plan}
+    mapped = {r["attachment_id"] for r in rd(a.map)}
+    attach = {r["ID"]: r for r in rd(a.attachments)}
+    hashes = file_hashes(a.attachments, a.uploads, a.hash_cache)
+    groups, skipped = collections.defaultdict(list), collections.Counter()
+    for aid, sha in hashes.items():
+        if sha in in_plan:
+            continue
+        r = attach.get(aid, {})
+        p = m.local_path(a.uploads, r.get("guid", ""))
+        if not p or not os.path.exists(p):
+            continue
+        if os.path.getsize(p) > 50 * 1024 * 1024:
+            skipped["גדול מ-50MB"] += 1
+            continue
+        with open(p, "rb") as f:
+            if f.read(5) != b"%PDF-":
+                skipped["לא PDF"] += 1
+                continue
+        groups[sha].append((aid, r, p))
+    out = []
+    for sha, rows in groups.items():
+        rows.sort(key=lambda x: int(x[0]) if x[0].isdigit() else 0)
+        ids = [x[0] for x in rows]
+        inmap = any(i in mapped for i in ids)
+        titles = list(dict.fromkeys((x[1].get("post_title") or "").strip() for x in rows))
+        note = ("כפול שהוסר מהמיפוי (דומה למסמך אחר של החברה)" if inmap else "קובץ שלא במיפוי") + (f" · אותו קובץ הופיע {len(rows)} פעמים" if len(rows) > 1 else "")
+        out.append({"sha": sha, "path": rows[0][2], "name": os.path.basename(rows[0][2]), "doc_type": "unknown", "companies": [], "note": note,
+                    "title": " | ".join(t for t in titles if t)[:500], "ref": "wp:" + ",".join(ids), "suggest": []})
+    print(f"  קבצים נוספים לא משויכים: {len(out)} ({sum(1 for d in out if d['note'].startswith('כפול'))} כפולים שהוסרו, {sum(1 for d in out if d['note'].startswith('קובץ'))} שלא במיפוי)" + (f" | דולגו: {dict(skipped)}" if skipped else ""))
+    return out
+
+
 def apply_dedupe(docs, a):
     """כפילויות שאושרו (כפילויות_לחברות.csv, עמודה action=הסר): לא מעלים שוב מסמך שהוסר כפול. אם הוא משויך גם לחברות אחרות - רק מוסרת ממנו החברה הכפולה.
     המסמך שנשאר מקבל את איחוד הסיווגים (כללי+פרטי)."""
@@ -266,6 +301,7 @@ def main():
     ap.add_argument("--restore-removed", action="store_true", help="להעלות גם מסמכים שנמחקו ככפולים בעבר (לפי היומן)")
     ap.add_argument("--audit", action="store_true", help="ביקורת בלבד: מה חסר באתר / מיותר / בסיווג שונה, לפי קבצי המחשב והדוח הנוכחי (לא משנה כלום)")
     ap.add_argument("--sync-types", action="store_true", help="יישור הסיווג באתר לצפוי (רק מסמכים שהועלו בייבוא). בלי --go: רק מציג מה ישתנה")
+    ap.add_argument("--upload-rest", action="store_true", help="כל שאר קובצי ה-PDF שאינם בתוכנית: הצגה, ועם --go העלאה כמסמכים לא משויכים (סיווג לא ידוע)")
     ap.add_argument("--audit-out", default="ביקורת_אתר.csv")
     ap.add_argument("--no-dedupe", action="store_true", help="בלי בדיקת כפילויות לפני ההעלאה")
     ap.add_argument("--ocr-dir", default="ocr_text")
@@ -277,13 +313,15 @@ def main():
     if a.audit:
         a.restore_removed = True                         # ביקורת: מתעלמים מהיסטוריית המחיקות; רק קבצי המחשב והדוח הנוכחי קובעים מה אמור להיות באתר
     docs, missing = build(a)
+    if a.upload_rest:
+        docs = extra_docs(a, docs)
     c = collections.Counter(d["doc_type"] for d in docs)
     print(f"{len(docs)} מסמכים ייחודיים (לפי תוכן) | סוגים: {dict(c)}")
     print(f"  עם חברה משויכת: {sum(1 for d in docs if d['companies'])} | בלי שיוך: {sum(1 for d in docs if not d['companies'] and d['doc_type'] != 'other')} (מהם עם הצעות שיוך: {sum(1 for d in docs if d['suggest'])}) | לא קשור: {c.get('other', 0)}")
     if missing:
         print(f"  {len(missing)} שורות במיפוי בלי קובץ מקומי: {', '.join(missing[:15])}{'...' if len(missing) > 15 else ''}")
     if not a.go and not a.audit and not a.sync_types:
-        print("דוח בלבד. להעלאה: python import_to_site.py --go   (אפשר קודם --go --limit 20)")
+        print("דוח בלבד. להעלאה: python import_to_site.py " + ("--upload-rest " if a.upload_rest else "") + "--go   (אפשר קודם --go --limit 20)")
         return 0
     token = os.environ.get("ADMIN_PASSWORD") or ""
     if not token and os.path.exists(a.password_file):       # קובץ מקומי עם הסיסמה בשורה הראשונה: אין צורך להקליד בכל הרצה
