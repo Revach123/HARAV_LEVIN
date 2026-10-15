@@ -7,5 +7,13 @@
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
- "limit": 22
+ "limit": 22,
+ "dropped_no_terms": [
+  {
+   "security_id": 1142231,
+   "security_name": "אפי נכסים אגח ח",
+   "company": "אפי נכסים בע\"מ",
+   "chp_number": "510560188"
+  }
+ ]
 }
