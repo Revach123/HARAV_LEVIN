@@ -43,13 +43,13 @@ def windows(text):
 # שני משפטי מפתח קבועים (בטקסט שחולץ מ-PDF סדר המילים בעברית לפעמים הפוך, ולכן נבדקים שני הסדרים):
 #   רק פרטי: "החברה הביעה את הסכמתה להתקשרות באופן פרטי על פי היתר עיסקא עם מי שמעו חתימתה על שטר רישום חברה"
 #   משולב (כללי ופרטי ביחד): "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך"
-#   משולב (נוסח נוסף, כללי ופרטי ביחד): "אנו מאשרים בזאת, התקשרות אישית לפי היתר עיסקא הנ"ל עם כל המעוניין בכך, באמצעות רישום באתרים המאושרים על ידי בית ההוראה לענייני ריבית..."
+#   "אישית" (נוסח נוסף, גם פרטי): "אנו מאשרים בזאת, התקשרות אישית לפי היתר עיסקא הנ"ל עם כל המעוניין בכך, באמצעות רישום באתרים המאושרים על ידי בית ההוראה לענייני ריבית..."
 PRIVATE_ONLY = ("החברה הביעה הסכמתה התקשרות באופן פרטי פי היתר עיסקא עם מי שמעו חתימתה שטר רישום חברה").split()
 PRIVATE_ONLY_MUST = ("הסכמתה", "הביעה", "שטר", "חתימתה")      # לפחות אחת מהן
 COMBINED = ("החברה מאשרת בזאת התקשרות היתר עיסקא באופן פרטי עם כל המעוניין בכך").split()
 COMBINED_MUST = ("מאשרת", "בזאת", "המעוניין")                    # לפחות אחת מהן
 PHRASE_WIN = 14
-KIND_PRIVATE_ONLY, KIND_COMBINED = "רק פרטי", "משולב"
+KIND_PRIVATE_ONLY, KIND_COMBINED, KIND_PERSONAL = "רק פרטי", "משולב", "אישית"
 
 
 def _norm_word(w):
@@ -77,7 +77,7 @@ def _has_approves_here(seq):
 
 
 def _has_personal_approval(seq):
-    """"אנו מאשרים בזאת ... התקשרות אישית ... היתר עיסקא ... המעוניין": משפט מפתח של היתר משולב: גם כללי וגם פרטי (בכל סדר מילים)."""
+    """"אנו מאשרים בזאת ... התקשרות אישית ... היתר עיסקא ... המעוניין": משפט מפתח "גם פרטי". לא הופך את המסמך למשולב אוטומטית: משולב רק אם זה המסמך היחיד של החברה, ואם יש לה מסמך כללי אחר - פרטי (בכל סדר מילים)."""
     for i, w in enumerate(seq):
         if w == "מאשרים":
             win = _ext(seq[max(0, i - 8): i + 14])
@@ -89,12 +89,12 @@ def _has_personal_approval(seq):
 def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
-    found = set()
+    found, personal = set(), False
     for seq in (ws, ws[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
         if _has_personal_approval(seq):
-            return KIND_COMBINED
+            personal = True
         for i, w in enumerate(seq):
             if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):
                 win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]
@@ -102,7 +102,7 @@ def phrase_kind(text):
                     return KIND_COMBINED
                 if _phrase_at(win, PRIVATE_ONLY, PRIVATE_ONLY_MUST, 7):
                     found.add(KIND_PRIVATE_ONLY)
-    return KIND_PRIVATE_ONLY if found else ""
+    return KIND_PERSONAL if personal else (KIND_PRIVATE_ONLY if found else "")
 
 
 def phrase_snippet(text):
@@ -156,7 +156,7 @@ def main():
     P = [d for d in docs if d["type"] == "P"]
     G = [d for d in docs if d["type"] == "G"]
     print(f"מסמכים עם טקסט: פרטי {len(P)}, כללי {len(G)}")
-    for kind in (KIND_PRIVATE_ONLY, KIND_COMBINED):
+    for kind in (KIND_PRIVATE_ONLY, KIND_COMBINED, KIND_PERSONAL):
         print(f"משפט מפתח '{kind}': בפרטיים {sum(1 for d in P if d['phrase'] == kind)}/{len(P)}, בכלליים {sum(1 for d in G if d['phrase'] == kind)}/{len(G)}")
     with open("phrase_samples.csv", "w", encoding="utf-8-sig", newline="") as f:      # דוגמאות: איפה נמצא משפט המפתח, לפי מיקום הקובץ
         w = csv.writer(f)
@@ -203,6 +203,9 @@ def main():
         loc = "פרטי" if d["type"] == "P" else "כללי"
         if d["phrase"] == KIND_COMBINED:          # נוסח משולב: מכסה כללי ופרטי ביחד, בכל מיקום
             bad.append((d["id"], d["file"], d["title"], loc, "נוסח משולב (כללי ופרטי)", len(d["win"])))
+            continue
+        if d["phrase"] == KIND_PERSONAL:          # "גם פרטי": משולב רק אם זה המסמך היחיד של החברה, אחרת פרטי (מוכרע במיפוי / בייבוא)
+            bad.append((d["id"], d["file"], d["title"], loc, "נוסח אישית (גם פרטי)", len(d["win"])))
             continue
         if d["phrase"] == KIND_PRIVATE_ONLY:
             hit = True
