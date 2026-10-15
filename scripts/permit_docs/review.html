@@ -95,11 +95,22 @@ function show(){
     else{const sp=b.dataset.s;ans.cspec=ans.cspec===sp?"":sp;if(ans.cspec&&ans.cspec!==GRP)ans.cids=[];syncSpecials();document.querySelectorAll("#cb button[data-id]").forEach(x=>x.classList.toggle("sel",hasC(x.dataset.id)))}
     renderCards(visible()[idx])});
   $("srch")?.addEventListener("input",e=>{const v=e.target.value.trim();if(v.length<2){$("res").innerHTML="";return}
-    $("res").innerHTML=biz.filter(b=>b.name.includes(v)||b.permit_name.includes(v)||b.chp.includes(v)).slice(0,12)
-    .map(b=>`<button data-id="${esc(b.id)}" data-n="${esc(b.name)}" class="${hasC(b.id)?"sel":""}">${esc(b.name)} <span class="why">${esc(b.chp)}</span></button>`).join("")});
+    const btn=b=>`<button data-id="${esc(b.id)}" data-n="${esc(b.name)}" class="${hasC(b.id)?"sel":""}">${esc(b.name)} <span class="why">${esc(b.chp)}</span></button>`;
+    let extra="";
+    if(/^\d{7,9}$/.test(v)){      // ח.פ. שנכתב ידנית במסמך: בדיקת ספרת ביקורת, ואם לא תקין / לא במאגר - הצעות לתיקון טעות של ספרה אחת (החלפה או היפוך שכנות)
+      const z=v.padStart(9,"0"),okc=hpOk(z),found=biz.some(b=>b.chp.padStart(9,"0")===z);
+      extra=`<div class="why" style="color:${okc?"var(--ok)":"var(--warn)"}">${okc?"ספרת ביקורת תקינה":"ספרת ביקורת לא תקינה (ייתכנה טעות קריאה/הקלדה)"}${found?"":" · לא נמצא במאגר"}</div>`;
+      if(!okc||!found){const near=biz.filter(b=>b.chp&&hpNear(z,b.chp.padStart(9,"0"))).slice(0,6);
+        if(near.length)extra+=`<div class="why">אולי התכוונת ל:</div>`+near.map(btn).join("")}}
+    $("res").innerHTML=extra+biz.filter(b=>b.name.includes(v)||b.permit_name.includes(v)||b.chp.includes(v)).slice(0,12).map(btn).join("")});
   $("res")?.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;toggleC(b.dataset.id,b.dataset.n);b.classList.toggle("sel",hasC(b.dataset.id));
     if(ans.cspec&&ans.cspec!==GRP)ans.cspec="";syncSpecials();renderCards(visible()[idx])});
 }
+function hpOk(h){if(!/^\d{9}$/.test(h))return false;let t=0;for(let i=0;i<9;i++){let d=+h[i]*(i%2?2:1);t+=d>9?d-9:d}return t%10===0}
+function hpNear(a,b){if(a===b)return false;let diff=[];for(let i=0;i<9;i++)if(a[i]!==b[i])diff.push(i);
+  if(diff.length===1)return true;                                   // ספרה אחת שונה
+  if(diff.length===2&&diff[1]===diff[0]+1&&a[diff[0]]===b[diff[1]]&&a[diff[1]]===b[diff[0]])return true;   // שתי ספרות שכנות הוחלפו
+  return false}
 const GRP="מסמך קבוצתי (כמה חברות)";
 const hasC=id=>ans.cids.some(c=>c.id===id);
 function toggleC(id,name){const i=ans.cids.findIndex(c=>c.id===id);if(i>=0)ans.cids.splice(i,1);else ans.cids.push({id,name})}
