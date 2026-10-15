@@ -133,7 +133,7 @@
       for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
       return new Blob([u8], { type: "application/pdf" });
     };
-    let pref = false; try { pref = localStorage.getItem("pd_b64") === "1"; } catch {}
+    let pref = false; try { const t = +localStorage.getItem("pd_b64") || 0; pref = t > Date.now() - 3600e3; } catch {}      // המעבר ל-JSON נזכר שעה בלבד: אחרי שהחסימה תוקנה חוזרים להורדה הרגילה
     if (pref) return viaJson();
     try {
       const r = await fetch(`/api/permit-docs/${id}/file`, { headers: authH() });
@@ -142,7 +142,7 @@
       if (new TextDecoder().decode(await b.slice(0, 5).arrayBuffer()) !== "%PDF-") throw new Error("לא PDF");
       return new Blob([b], { type: "application/pdf" });
     } catch (e) {
-      try { localStorage.setItem("pd_b64", "1"); } catch {}
+      try { localStorage.setItem("pd_b64", String(Date.now())); } catch {}
       return viaJson();
     }
   }
