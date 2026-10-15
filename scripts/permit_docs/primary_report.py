@@ -35,15 +35,18 @@ def main():
     biz = call(a.site, token, "/businesses")
     docs = call(a.site, token, "/permit-docs")["docs"]
     # (קובץ, חברה) שהם ראשיים: הפוסט שלו באתר הישן נושא את שם החברה
-    prim = collections.defaultdict(set)
+    # ראשי לפי סוג הפוסט באתר הישן: פוסט ברשימת הכללי -> ראשי לכללי; ברשימת הפרטי -> ראשי לפרטי; פוסט אחר (בלי רשימה) -> ראשי לשניהם
+    LOC = {"main_ducuments": ("general",), "privet_ducuments": ("private",)}
+    prim = collections.defaultdict(lambda: collections.defaultdict(set))       # חברה -> סוג -> מזהי קבצים
     for r in rd(a.final):
         if r.get("business_id") and r.get("title_business") and not r.get("title_differs"):
-            prim[r["business_id"]].add(r["attachment_id"])
+            for t in LOC.get(r.get("post_type"), ("general", "private")):
+                prim[r["business_id"]][t].add(r["attachment_id"])
     by = collections.defaultdict(list)
     for d in docs:
         ids = set((d.get("source_ref") or "").replace("wp:", "").split(","))
         for b in d.get("business_ids") or []:
-            by[b].append((d, bool(ids & prim.get(b, set()))))
+            by[b].append((d, {t for t in ("general", "private") if ids & prim[b][t]} if b in prim else set()))
     rows, cnt = [], collections.Counter()
     for b in biz:
         if (b.get("entity_type") or "company") != "company":
@@ -54,7 +57,7 @@ def main():
         problems, miss = [], []
         for t in need:
             cov = [(d, p) for d, p in ds if d["doc_type"] in (t, "both")]
-            pr = [d for d, p in cov if p]
+            pr = [d for d, p in cov if t in p]
             if not cov:
                 miss.append(HE[t])
             elif len(pr) > 1:
@@ -76,7 +79,7 @@ def main():
         extra = sum(1 for d, p in ds if not p)
         cnt[("לסידור: " + ("כמה ראשיים" if any(x.startswith("כמה") for x in problems) else "אין ראשי, כמה משניים")) if status.startswith("לסידור") else status] += 1
         rows.append([b.get("registrar_name") or b.get("permit_name") or "", b.get("chp_number") or "", "כללי+פרטי" if len(need) == 2 else HE[need[0]], st, status, len(ds), extra,
-                     " | ".join(f"{d['original_name']} ({ {'general': 'כללי', 'private': 'פרטי', 'both': 'כללי+פרטי', 'unknown': 'לא ידוע'}.get(d['doc_type'], d['doc_type']) }{', ראשי' if p else ''})" for d, p in ds)])
+                     " | ".join(f"{d['original_name']} ({ {'general': 'כללי', 'private': 'פרטי', 'both': 'כללי+פרטי', 'unknown': 'לא ידוע'}.get(d['doc_type'], d['doc_type']) }{', ראשי ל' + '+'.join(HE[x] for x in ('general', 'private') if x in p) if p else ''})" for d, p in ds)])
     rows.sort(key=lambda r: (r[4].startswith("תקין"), r[4], r[0]))
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
