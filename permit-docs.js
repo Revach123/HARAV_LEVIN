@@ -485,20 +485,20 @@
 
 
   // ───────── דשבורד: מסמכים לא משויכים ─────────
-  const Q = { i: 0, curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", showOther: false, filter: "", blobUrl: "", readable: null };
+  const Q = { i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", showOther: false, filter: "", blobUrl: "", readable: null };
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length;
   const unassignedCount = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other").length;
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    return S.docs.filter(d => isUnassigned(d) && (Q.showOther || d.doc_type !== "other") &&
+    return S.docs.filter(d => isUnassigned(d) && !Q.skipped.has(d.id) && (Q.showOther || d.doc_type !== "other") &&
         (!f || [d.original_name, d.source_title, d.note].some(x => String(x || "").toLowerCase().includes(f))))
       .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
   }
   function openUnassigned() {
-    Q.i = 0; Q.curId = ""; Q.filter = ""; Q.showOther = false;
+    Q.i = 0; Q.curId = ""; Q.filter = ""; Q.showOther = false; Q.skipped = new Set();      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `
-      <div class="pd-head"><b>מסמכים לא משויכים</b><span class="pd-sub" id="pd-un-count"></span>
+      <div class="pd-head"><b>מסמכים לא משויכים</b><span class="pd-sub" id="pd-un-count"></span><span id="pd-un-skipped"></span>
         <input class="pd-in" style="width:230px" placeholder="סינון לפי שם קובץ / כותרת / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
         <label class="pd-sub"><input type="checkbox" onchange="PD._unOther(this.checked)"> הצג גם "לא קשור"</label>
         <button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
@@ -516,9 +516,14 @@
   async function uqShow(keepSel) {
     const list = unassignedList(), cnt = $("pd-un-count"); if (!$("pd-un")) return;
     if (cnt) cnt.textContent = `נותרו ${list.length} מסמכים`;
+    const sk = $("pd-un-skipped"); if (sk) sk.innerHTML = Q.skipped.size ? ` · דולגו ${Q.skipped.size} <button class="pd-link" style="color:#1a3a5c" onclick="PD._unUnskip()">הצג אותם שוב</button>` : "";
     if (Q.i >= list.length) Q.i = Math.max(0, list.length - 1);
     const d = list[Q.i], side = $("pd-un-side"), view = $("pd-un-view");
-    if (!d) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">אין מסמכים לא משויכים 🎉</div>`; view.innerHTML = ""; Q.curId = ""; return; }
+    if (!d) {
+      side.innerHTML = Q.skipped.size ? `<div class="pd-empty" style="color:#1e7e4a">אין עוד מסמכים בתור (דולגו ${Q.skipped.size}).<br><button class="pd-btn" style="margin-top:10px" onclick="PD._unUnskip()">הצג את מה שדולג</button></div>`
+        : `<div class="pd-empty" style="color:#1e7e4a">אין מסמכים לא משויכים 🎉</div>`;
+      view.innerHTML = ""; Q.curId = ""; return;
+    }
     if (Q.curId !== d.id) {
       Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type;
       Q.cands = uqMergeCands(d); Q.liveDone = false;
@@ -557,7 +562,7 @@
       <h4>הערה</h4><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea>
       <div class="pd-btns" style="margin-top:12px">
         <button class="pd-btn primary" ${Q.sel.size ? "" : "disabled"} onclick="PD._unSave()">${Q.sel.size ? `שמירה ושיוך ל-${Q.sel.size} חברות` : "בחרו חברה לשיוך"} ←</button>
-        <button class="pd-btn" onclick="PD._unGo(1)">דילוג</button><button class="pd-btn" onclick="PD._unGo(-1)">→ הקודם</button>
+        <button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button><button class="pd-btn" onclick="PD._unGo(-1)">→ הקודם</button>
       </div>
       <div class="pd-btns" style="margin-top:10px"><button class="pd-btn" onclick="PD._unOtherDoc()" title="מסמך שאינו היתר עסקה של חברה: יוצא מהתור">לא קשור</button>
         <button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקה</button></div>
@@ -643,5 +648,6 @@
     _unFilter: v => { Q.filter = v; Q.i = 0; Q.curId = ""; uqShow(); }, _unOther: v => { Q.showOther = v; Q.i = 0; Q.curId = ""; uqShow(); },
     _unTog: (id, on) => { on ? Q.sel.add(id) : Q.sel.delete(id); uqShow(); }, _unAdd: id => { Q.sel.add(id); uqShow(); }, _unSearch: uqSearch,
     _unType: t => { Q.type = t; Q.typeTouched = true; uqShow(); }, _unNote: v => { Q.note = v; }, _unSave: uqSave, _unOtherDoc: uqOther,
+    _unSkip: () => { const d = unassignedList()[Q.i]; if (d) Q.skipped.add(d.id); Q.curId = ""; uqShow(); }, _unUnskip: () => { Q.skipped = new Set(); Q.curId = ""; uqShow(); },
     _unGo: n => { const len = unassignedList().length; Q.i = Math.min(Math.max(0, Q.i + n), Math.max(0, len - 1)); Q.curId = ""; uqShow(); } };
 })();
