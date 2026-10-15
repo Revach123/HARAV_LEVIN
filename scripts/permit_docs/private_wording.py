@@ -43,6 +43,7 @@ def windows(text):
 # שני משפטי מפתח קבועים (בטקסט שחולץ מ-PDF סדר המילים בעברית לפעמים הפוך, ולכן נבדקים שני הסדרים):
 #   רק פרטי: "החברה הביעה את הסכמתה להתקשרות באופן פרטי על פי היתר עיסקא עם מי שמעו חתימתה על שטר רישום חברה"
 #   משולב (כללי ופרטי ביחד): "החברה מאשרת בזאת התקשרות בהיתר עיסקא באופן פרטי עם כל המעוניין בכך"
+#   פרטי (נוסח נוסף): "אנו מאשרים בזאת, התקשרות אישית לפי היתר עיסקא הנ"ל עם כל המעוניין בכך, באמצעות רישום באתרים המאושרים על ידי בית ההוראה לענייני ריבית..."
 PRIVATE_ONLY = ("החברה הביעה הסכמתה התקשרות באופן פרטי פי היתר עיסקא עם מי שמעו חתימתה שטר רישום חברה").split()
 PRIVATE_ONLY_MUST = ("הסכמתה", "הביעה", "שטר", "חתימתה")      # לפחות אחת מהן
 COMBINED = ("החברה מאשרת בזאת התקשרות היתר עיסקא באופן פרטי עם כל המעוניין בכך").split()
@@ -75,6 +76,16 @@ def _has_approves_here(seq):
     return False
 
 
+def _has_personal_approval(seq):
+    """"אנו מאשרים בזאת ... התקשרות אישית ... היתר עיסקא ... המעוניין": משפט מפתח של היתר עיסקא פרטי (בכל סדר מילים)."""
+    for i, w in enumerate(seq):
+        if w == "מאשרים":
+            win = _ext(seq[max(0, i - 8): i + 14])
+            if "בזאת" in win and "אישית" in win and ("עיסקא" in win or "היתר" in win) and ("המעוניין" in win or "התקשרות" in win):
+                return True
+    return False
+
+
 def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
@@ -82,6 +93,8 @@ def phrase_kind(text):
     for seq in (ws, ws[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
+        if _has_personal_approval(seq):
+            found.add(KIND_PRIVATE_ONLY)
         for i, w in enumerate(seq):
             if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):
                 win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]
