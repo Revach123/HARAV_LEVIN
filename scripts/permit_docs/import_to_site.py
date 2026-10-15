@@ -192,6 +192,26 @@ def audit_site(docs, existing, a):
     return 0
 
 
+def sync_types(docs, existing, a, token):
+    """מיישר את הסיווג באתר לצפוי לפי קבצי המחשב והדוח הנוכחי. נוגע רק במסמכים שהועלו בייבוא ורק בשדה הסיווג. בלי --go: רק מציג."""
+    exp = {d["sha"]: d for d in docs}
+    todo = [(x, exp[x["sha256"]]) for x in existing if x.get("source") == "import" and x["sha256"] in exp and x["doc_type"] != exp[x["sha256"]]["doc_type"]]
+    for x, d in todo:
+        print(f"  {d['name']} ({d['ref']}): {x['doc_type']} -> {d['doc_type']}")
+    if not a.go:
+        print(f"{len(todo)} מסמכים בסיווג שונה. ליישור בפועל: python import_to_site.py --sync-types --go")
+        return 0
+    ok = 0
+    for x, d in todo:
+        try:
+            call(a.site, token, "/permit-docs/" + x["id"], json.dumps({"doc_type": d["doc_type"]}).encode("utf-8"), "application/json", method="PUT")
+            ok += 1
+        except Exception as e:  # noqa: BLE001
+            print(f"  נכשל {d['name']} ({d['ref']}): {e}")
+    print(f"עודכנו {ok} מתוך {len(todo)}.")
+    return 0
+
+
 def multipart(fields, fname, data):
     b = "----" + uuid.uuid4().hex
     out = []
@@ -245,6 +265,7 @@ def main():
     ap.add_argument("--removed-log", default="dedupe_removed.csv")
     ap.add_argument("--restore-removed", action="store_true", help="להעלות גם מסמכים שנמחקו ככפולים בעבר (לפי היומן)")
     ap.add_argument("--audit", action="store_true", help="ביקורת בלבד: מה חסר באתר / מיותר / בסיווג שונה, לפי קבצי המחשב והדוח הנוכחי (לא משנה כלום)")
+    ap.add_argument("--sync-types", action="store_true", help="יישור הסיווג באתר לצפוי (רק מסמכים שהועלו בייבוא). בלי --go: רק מציג מה ישתנה")
     ap.add_argument("--audit-out", default="ביקורת_אתר.csv")
     ap.add_argument("--no-dedupe", action="store_true", help="בלי בדיקת כפילויות לפני ההעלאה")
     ap.add_argument("--ocr-dir", default="ocr_text")
@@ -261,7 +282,7 @@ def main():
     print(f"  עם חברה משויכת: {sum(1 for d in docs if d['companies'])} | בלי שיוך: {sum(1 for d in docs if not d['companies'] and d['doc_type'] != 'other')} (מהם עם הצעות שיוך: {sum(1 for d in docs if d['suggest'])}) | לא קשור: {c.get('other', 0)}")
     if missing:
         print(f"  {len(missing)} שורות במיפוי בלי קובץ מקומי: {', '.join(missing[:15])}{'...' if len(missing) > 15 else ''}")
-    if not a.go and not a.audit:
+    if not a.go and not a.audit and not a.sync_types:
         print("דוח בלבד. להעלאה: python import_to_site.py --go   (אפשר קודם --go --limit 20)")
         return 0
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -276,6 +297,8 @@ def main():
         return 1
     if a.audit:
         return audit_site(docs, existing, a)
+    if a.sync_types:
+        return sync_types(docs, existing, a, token)
     have = {d["sha256"] for d in existing}
     by_ref = {d["source_ref"]: d for d in existing if d.get("source") == "import" and d.get("source_ref")}
     todo = [d for d in docs if d["sha"] not in have]
