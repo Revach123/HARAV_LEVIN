@@ -26,7 +26,7 @@ import sys
 import time
 
 BASE = "https://raw.githubusercontent.com/Revach123/HARAV_LEVIN/main/scripts/permit_docs/"
-SCRIPTS = ["match_pdfs.py", "ocr_pdfs.py", "reconcile.py", "locate_unattached.py", "private_wording.py", "final_report.py"]
+SCRIPTS = ["match_pdfs.py", "ocr_pdfs.py", "reconcile.py", "locate_unattached.py", "private_wording.py", "hp_layout.py", "final_report.py"]
 API = "https://harav-levin.pages.dev/api/businesses"
 LOG = "run_all_log.txt"
 
@@ -121,6 +121,7 @@ def main():
         else:
             log("   דילוג על 'קבצים לא משויכים': אין posts_content.csv")
         run("נוסח פרטי / פרטני", ["private_wording.py"] + common + ["--ocr-dir", dirs])
+        run("מיקום ח.פ. בקובץ (מסמך משותף / כמה מסמכים)", ["hp_layout.py", "--final", "סופי_מלא.csv", "--attachments", "attachments.csv", "--uploads", up, "--tesseract", ts, "--workers", w])
         run("דוח מאוחד", ["final_report.py", "--businesses", "businesses.json"])
     finally:
         keep_awake(False)
