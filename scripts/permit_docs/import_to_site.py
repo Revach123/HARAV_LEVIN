@@ -117,7 +117,38 @@ def build(a):
         docs.append({"sha": sha, "path": rows[0]["_path"], "name": rows[0].get("file") or os.path.basename(rows[0]["_path"]),
                      "doc_type": doc_type, "companies": companies, "note": " · ".join(tags), "title": " | ".join(t for t in titles if t)[:500],
                      "ref": "wp:" + ",".join(ids), "suggest": suggest})
-    return docs, missing
+    return apply_dedupe(docs, a), missing
+
+
+def apply_dedupe(docs, a):
+    """כפילויות שאושרו (כפילויות_לחברות.csv, עמודה action=הסר): לא מעלים שוב מסמך שהוסר כפול. אם הוא משויך גם לחברות אחרות - רק מוסרת ממנו החברה הכפולה.
+    המסמך שנשאר מקבל את איחוד הסיווגים (כללי+פרטי)."""
+    if not a.dedupe or not os.path.exists(a.dedupe):
+        return docs
+    by_sha = {d["sha"]: d for d in docs}
+    pairs = [r for r in rd(a.dedupe) if (r.get("action") or "").strip() == "הסר" and r.get("remove_sha") in by_sha and r.get("keep_sha") in by_sha]
+    TS = {"general": {"כללי"}, "private": {"פרטי"}, "both": {"כללי", "פרטי"}}
+    drop_pairs = collections.defaultdict(set)
+    for _ in range(3):                                      # כמה מעברים, בגלל שרשראות (א כלול בב, ב כלול בג)
+        for r in pairs:
+            k, d = by_sha[r["keep_sha"]], by_sha[r["remove_sha"]]
+            u = TS.get(k["doc_type"], set()) | TS.get(d["doc_type"], set())
+            if u:
+                k["doc_type"] = "both" if len(u) == 2 else ("general" if u == {"כללי"} else "private")
+    for r in pairs:
+        drop_pairs[r["remove_sha"]].add(r["business_id"])
+    out, skipped = [], 0
+    for d in docs:
+        rm = drop_pairs.get(d["sha"])
+        if rm:
+            left = [c for c in d["companies"] if c not in rm]
+            if not left:
+                skipped += 1
+                continue
+            d = {**d, "companies": left}
+        out.append(d)
+    print(f"  דילוג על {skipped} מסמכים שהוסרו ככפולים לפי {a.dedupe}")
+    return out
 
 
 def multipart(fields, fname, data):
@@ -169,6 +200,7 @@ def main():
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--password-file", default="admin_password.txt", help="קובץ טקסט עם סיסמת המנהל בשורה הראשונה (אם אין משתנה ADMIN_PASSWORD)")
+    ap.add_argument("--dedupe", default="כפילויות_לחברות.csv", help="דוח הכפילויות שאושר (כפילויות_לחברות.csv): מסמכים שסומנו הסר לא יועלו שוב")
     ap.add_argument("--replace-altered", action="store_true", help="להחליף מסמכים שהועלו קודם עם תוכן שונה מהמקור (נמחק הישן ומועלה התקין)")
     ap.add_argument("--go", action="store_true", help="להעלות בפועל (בלי זה: דוח בלבד)")
     ap.add_argument("--limit", type=int, default=0)

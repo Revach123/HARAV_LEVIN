@@ -195,9 +195,24 @@ def apply_plan(a):
     existing = call(a.site, token, "/permit-docs")["docs"]
     by_sha = {d["sha256"]: d for d in existing}
     done = skipped = 0
+    replaced = {}                                      # sha שהוסר -> sha של המסמך שנשאר במקומו (שרשראות: א כלול בב, ב כלול בג)
+
+    def final(sha):
+        seen = set()
+        while sha in replaced and sha not in seen:
+            seen.add(sha)
+            sha = replaced[sha]
+        return sha
+
     for r in m.read_csv(a.apply):
         if (r.get("action") or "").strip() != "הסר":
             continue
+        fk = final(r.get("keep_sha", ""))
+        if fk == r["remove_sha"]:
+            print(f"  מדלג (הוראות סותרות: {r['remove_file']} כבר הוחלף במסמך שהוא עצמו אמור להיעלם)")
+            skipped += 1
+            continue
+        r["keep_sha"] = fk
         doc = by_sha.get(r["remove_sha"])
         if not doc:
             print(f"  לא נמצא באתר: {r['remove_file']} ({r['remove_ids']}) - מדלג")
@@ -209,6 +224,7 @@ def apply_plan(a):
         try:
             if not others:
                 call(a.site, token, "/permit-docs/" + doc["id"], method="DELETE")
+                replaced[r["remove_sha"]] = r["keep_sha"]
                 print(f"  נמחק: {r['remove_file']} ({r['company']})")
             else:
                 call(a.site, token, "/permit-docs/" + doc["id"], json.dumps({"business_ids": others}).encode("utf-8"), "application/json", method="PUT")
