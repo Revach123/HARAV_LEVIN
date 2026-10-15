@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>אג"ח ומורשים — הון כשר (בדיקה)</title>
+<style>
+  /* Alef — אותו גופן של האתר (SIL OFL), מאורח בריפו */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#274d5b; --navy2:#1c3a47;
+    --accent:#2aada1; --accent-dark:#1e8f85; --accent-bg:#e9f6f5; --accent-border:#b9e3de;
+    --bg:#ffffff; --bg2:#ffffff; --border:#dfe7e8; --row-alt:#f6fafa;
+    --text:#3b3d3d; --muted:#6a7c82; --light:#a6b4b8;
+    --red:#c0392b;
+  }
+  body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);font-size:17px;line-height:1.6;padding:0 0 3rem}
+  .wrap{max-width:1100px;margin:0 auto;padding:1.5rem}
+
+  /* ── ניווט: שורה אחת, באותו סגנון של תפריט האתר ── */
+  .nav-tabs{display:flex;gap:0;margin-bottom:1.5rem;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+  .nav-tabs button{
+    flex:1;min-width:150px;padding:.9rem 1rem;font-size:18px;font-weight:700;font-family:inherit;
+    background:transparent;color:var(--navy);border:none;border-top:3px solid transparent;cursor:pointer;transition:.15s
+  }
+  .nav-tabs button:hover{color:var(--accent-dark)}
+  .nav-tabs button.active{color:var(--accent-dark);border-top-color:var(--accent);background:var(--accent-bg)}
+
+  /* ── בקרות ── */
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap}
+  .list-title{font-size:26px;font-weight:400;line-height:1.4;color:var(--navy)}
+  .list-title .cnt{font-size:15px;font-weight:500;color:var(--muted);margin-inline-start:.4rem}
+  .upd{font-size:14px;color:var(--muted);margin:-.4rem 0 .8rem}
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{background:#dff0f0}
+  thead th .arr{font-size:11px;color:var(--accent-dark);margin-inline-start:4px}
+  thead tr.frow td{padding:5px 6px;background:#f6fbfb;border-bottom:1px solid var(--border);font-weight:400}
+  thead tr.frow .fbtn{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:#fff;color:var(--muted);cursor:pointer;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  thead tr.frow .fbtn.on{border-color:var(--accent);color:var(--accent-dark);font-weight:600;background:var(--accent-bg)}
+  .fpop{position:absolute;z-index:60;background:#fff;border:1px solid var(--border);border-radius:6px;box-shadow:0 6px 20px rgba(0,0,0,.18);padding:10px 12px;min-width:230px;direction:rtl;font-size:14px;color:var(--navy)}
+  .fprow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .fsym{min-width:72px;font-weight:600}
+  .fprow input{flex:1;min-width:0;box-sizing:border-box;font:inherit;font-size:14px;padding:5px 8px;border:1px solid var(--border);border-radius:3px}
+  .fphint{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.3}
+  .fpclr{background:none;border:none;color:var(--red);font:inherit;font-size:13px;cursor:pointer;padding:0}
+  thead tr.frow input, thead tr.frow select{width:100%;box-sizing:border-box;font:inherit;font-size:13px;padding:4px 6px;border:1px solid var(--border);border-radius:3px;background:#fff;color:var(--navy)}
+  .badge-offer{display:inline-block;padding:2px 8px;border-radius:10px;background:#fff4d6;color:#8a5a00;border:1px solid #e8c36a;font-size:12px;font-weight:600}
+  .search{padding:.5rem .9rem;font-size:14px;font-family:inherit;border:1px solid var(--border);border-radius:3px;min-width:220px;background:var(--bg2)}
+  .search:focus{outline:none;border-color:var(--accent)}
+  .btn-csv{padding:.5rem 1rem;font-size:13px;font-weight:600;font-family:inherit;background:var(--navy);color:#fff;border:none;border-radius:3px;cursor:pointer;white-space:nowrap;transition:.15s}
+  .btn-csv:hover{background:var(--accent-dark)}
+  .btn-clear{background:#fff;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:.5rem .9rem;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+  .btn-clear:hover{background:#fdecea}
+  .head-tools{display:flex;gap:.5rem;align-items:center}
+
+  /* ── טבלה ── */
+  .table-wrap{overflow-x:auto;background:var(--bg2);border:1px solid var(--border);border-radius:3px}
+  table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:16px;min-width:760px}
+  thead th{background:var(--accent-bg);color:var(--navy);font-weight:700;text-align:right;padding:10px 12px;border-bottom:1px solid var(--border)}
+  tbody td{padding:9px 12px;border-bottom:1px solid #edf2f2;overflow-wrap:anywhere}
+  /* פס מפריד בין עמודות (RTL: הגבול בצד שמאל של כל תא, חוץ מהאחרון) */
+  thead th:not(:last-child), tbody td:not(:last-child){border-left:1px solid var(--border)}
+  tbody tr:nth-child(even){background:var(--row-alt)}
+  tbody tr:hover{background:var(--accent-bg)}
+  tbody tr:last-child td{border-bottom:none}
+  th.ctr{text-align:center}
+  td.ctr{text-align:center;white-space:nowrap}
+  thead th{white-space:normal;line-height:1.25;vertical-align:middle}
+  td.nw{white-space:nowrap;overflow-wrap:normal}
+  .name-cell{font-weight:500}
+  .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
+  .up{color:var(--accent-dark)} .down{color:var(--red)}
+  .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
+  .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
+  .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
+  .bond-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:normal;line-height:1.3}
+  .bonds-none{color:var(--muted);font-size:15px}
+  .badge-no{color:var(--light);font-size:13px}
+  .state{padding:2.5rem 1rem;text-align:center;color:var(--muted)}
+  .state.err{color:var(--red)}
+  /* בתוך iframe: רקע שקוף, בלי פס גלילה פנימי (הגובה מדווח לעמוד האב) */
+  html.embed{overflow:hidden}
+  /* גלילה לרוחב: סרגל גלילה נוסף מעל הטבלה (הסרגל התחתון נמצא בסוף הטבלה הארוכה ולכן לא נראה) */
+  .hscroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:3px;display:none}
+  .hscroll-top div{height:1px}
+  body.embed{background:transparent;padding:0}
+  body.embed .wrap{max-width:none;padding:0}
+  body.no-nav .nav-tabs{display:none}
+  .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="nav-tabs" id="navTabs">
+    <button data-type="companies-private" class="active">חברות עם היתר עסקה פרטי</button>
+    <button data-type="companies-general">חברות עם היתר עסקה כללי</button>
+    <button data-type="bonds-private">אג"ח עם היתר עסקה פרטי</button>
+    <button data-type="bonds-general">אג"ח עם היתר עסקה כללי</button>
+  </div>
+
+  <!-- כאן מוזרקת הרשימה. אותו container משמש לכל 4 התצוגות. -->
+  <div id="listContainer"></div>
+</div>
+
+<script src="xlsx-lite.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  CONFIG — לשנות לכתובת האתר בעת הטמעה באתר אחר
+// ═══════════════════════════════════════════════════════════════
+const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same site
+
+// הגדרת העמודות לכל סוג רשימה
+const COLUMNS = {
+  companies: [
+    { key:"permit_name", px:240,        label:"שם החברה",            cell:"name",  w:28 },
+    { key:"chp_number", px:110,         label:'ח"פ',                 cell:"num",   w:12 },
+    { key:"category", px:125,           label:"קטגוריה",                         w:14 },
+    { key:"region", px:85,             label:"אזור",                            w:8  },
+    { key:"has_private_permit", px:125, label:"קיים היתר עסקה פרטי", cell:"yesno", w:14, generalOnly:true },
+    { key:"permit_doc", px:105,         label:"היתר עסקה",           cell:"doc",   w:10 },
+    { key:"bonds_status", px:215,       label:'אג"ח',                cell:"bonds", w:20 },
+    { key:"notes", px:230,              label:"הערות",                           w:22 },
+  ],
+  bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
+    { key:"security_name", px:165,  label:'אג"ח',                 cell:"name",  w:15 },
+    { key:"symbol", px:115,         label:"סימול",                                w:8  },
+    { key:"security_id", px:110,    label:"מספר נייר",            cell:"num",   w:8  },
+    { key:"security_type", px:120,  label:"סוג נייר",                             w:10 },
+    { key:"company", px:200,        label:"חברה",                 cell:"name",  w:19 },
+    { key:"is_private", px:125,     label:"קיים היתר עסקה פרטי", cell:"yesno", w:12, generalOnly:true },
+    { key:"annual_interest", px:85,label:"ריבית %",              cell:"pct",   w:7  },
+    { key:"redemption_date", px:120,label:"מועד פדיון",                           w:10 },
+    { key:"linkage", px:160,        label:"הצמדה",                                w:12 },
+    { key:"last_price", px:95,     label:"שער אחרון",            cell:"num",   w:8  },
+    // השדה AnnualYield של הבורסה: כנראה תשואה ל-12 החודשים האחרונים / מתחילת שנה (טרם אומת)
+    { key:"ytm_gross", px:120,      label:"תשואה לפדיון ברוטו",   cell:"pct",   w:9  },   // לא צמוד בלבד (scripts/bonds_list/enrich.py)
+    { key:"midroog_rating", px:115, label:"דירוג מידרוג",                         w:8  },
+    { key:"maalot_rating", px:115,  label:"דירוג מעלות",                          w:8  },
+    { key:"annual_yield", px:105,   label:"תשואה שנתית",          cell:"pct",   w:9  },
+    { key:"notes",          label:"הערות",                                w:14 },
+  ],
+};
+
+// נתוני דוגמה — מוצגים רק אם ה-API לא זמין (כדי לראות את העיצוב)
+const SAMPLE = {
+  "bonds-private": [
+    {security_name:"אאורה אגח יז",symbol:"אארה.ק17",company:"אאורה השקעות בע\"מ",annual_interest:"3.85",redemption_date:"31/01/2029",linkage:"מדד המחירים לצרכן",last_price:113.87},
+  ],
+  "bonds-general": [
+    {security_name:"אמות אגח ד",symbol:"אמת.ק4",company:"אמות השקעות בע\"מ",annual_interest:"3.20",redemption_date:"02/07/2028",linkage:"מדד המחירים לצרכן",last_price:121.19},
+  ],
+  "companies-private": [
+    {permit_name:"אאורה השקעות בע\"מ",chp_number:"520038274",category:"נדל\"ן",region:"מרכז",has_private_permit:"כן",bonds_status:'יש אג"ח - מאושר'},
+    {permit_name:"א. לוי השקעות ובנין בע\"מ",chp_number:"520041096",category:"נדל\"ן",region:"מרכז",has_private_permit:"כן",bonds_status:'יש אג"ח - לא מאושר'},
+  ],
+  "companies-general": [
+    {permit_name:"אמות השקעות בע\"מ",chp_number:"520037649",category:"נדל\"ן",region:"מרכז",has_private_permit:"כן",bonds_status:'יש אג"ח - מאושר'},
+    {permit_name:"חברה כללית לדוגמה",chp_number:"510000000",category:"מסחר",region:"צפון",bonds_status:'אין אג"ח'},
+  ],
+};
+
+const el = (t, c, h) => { const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; };
+// עד 2 ספרות אחרי הנקודה, בלי אפסים מיותרים (8.13420 -> 8.13, 3.50000 -> 3.5)
+const fmtPct = v => { if (v === null || v === undefined || v === "") return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+// קישורי מסמכי היתר עסקה: ברשימת הפרטי - ההיתר הפרטי של החברה, ברשימת הכללי - ההיתר הכללי (רק מסמך שמקושר לרשימה בניהול)
+let docLinksP = null;
+function docLinks() {
+  return docLinksP || (docLinksP = fetch(`${API_BASE}/api/permit-docs-public`).then(r => r.json()).then(d => d.links || []).catch(() => []));
+}
+async function withDocLinks(rows, level) {
+  const links = await docLinks(), byChp = new Map(), byName = new Map();
+  for (const l of links) { if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
+  return rows.map(r => {
+    const l = byChp.get(String(r.chp_number || "").trim()) || byName.get(r.permit_name);
+    const id = l && l[level] ? l[level] : "";
+    return { ...r, permit_doc: id ? "יש" : "", _docid: id };
+  });
+}
+
+// ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
+async function mountList(container, type) {
+  const topic = type.startsWith("bonds") ? "bonds" : "companies";
+  const level = type.split("-")[1];                       // private | general
+  const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general");
+  container.innerHTML = '<div class="state">טוען…</div>';
+
+  let rows = null, usedSample = false;
+  try {
+    if (topic === "bonds") {
+      // רשימת האג"ח היחידה: הקבצים שנבנים כל יום מדף החברה במאיה (רק חברות מאושרות)
+      const res = await fetch(`${API_BASE}/data/bonds_list/bonds_${type.split("-")[1]}.json`);
+      if (!res.ok) throw new Error("bonds file " + res.status);
+      const data = await res.json();
+      rows = (data.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() }));
+    } else {
+      const res = await fetch(`${API_BASE}/api/lists?type=${type}`);
+      const data = await res.json();
+      if (data && data.ok) rows = data.rows;
+      else throw new Error(data?.error || "bad response");
+    }
+  } catch (e) {
+    rows = SAMPLE[type] || [];
+    usedSample = true;
+  }
+
+  if (topic === "companies") rows = await withDocLinks(rows, level);
+  const state = { rows, filtered: rows, cols, topic };
+  render(container, state, type, usedSample);
+}
+
+function render(container, state, type, usedSample) {
+  container.innerHTML = "";
+
+  if (usedSample) {
+    container.appendChild(el("div","sample-note",
+      'מוצגים נתוני דוגמה בלבד — ה-API לא נענה. אחרי פריסת <code>lists.js</code> יוצגו הנתונים האמיתיים.'));
+  }
+
+  const head = el("div","list-head");
+  const title = el("div","list-title");
+  const label = state.topic === "bonds" ? "איגרות חוב" : "חברות";
+  title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+  const tools = el("div","head-tools");
+  const search = el("input","search"); search.type="search"; search.placeholder="חיפוש…";
+  const csvBtn = el("button","btn-csv","⬇ ייצוא לאקסל");
+  csvBtn.onclick = () => {   // קובץ Excel כטבלה: כל השורות של הרשימה, עם העמודות המוצגות
+    const cellVal = (c, r) => c.cell === "bonds" ? (r[c.key] || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח')) : (c.cell === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2))) : (r[c.key] ?? ""));
+    downloadXlsx(type, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
+      state.rows.map(r => state.cols.map(c => cellVal(c, r))), state.cols.map(c => c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number")));
+  };
+  const clearBtn = el("button", "btn-clear", "✕ ביטול סינון");
+  clearBtn.style.display = "none";
+  tools.append(clearBtn, search, csvBtn);
+  head.append(title, tools);
+  container.appendChild(head);
+  const upd = el("div","upd"); container.appendChild(upd);
+  updatedText().then(t => { upd.textContent = t; if (t && window.parent !== window) window.parent.postMessage({ source: "harav-levin", type: "updated", text: t }, "*"); });
+
+  const wrap = el("div","table-wrap");
+  const table = el("table");
+  const colgroup = el("colgroup");
+  // רוחב עמודה מינימלי בפיקסלים (c.w * 11, לפחות 70). הטבלה לא מתכווצת מתחת לסכום, ובמקום זה יש גלילה לרוחב;
+  // כשיש מקום, הרוחב העודף מתחלק לפי היחס.
+  const colPx = state.cols.map(c => c.px || Math.max(70, Math.round(c.w * 11)));
+  state.cols.forEach((c, i) => { const col = el("col"); col.style.width = colPx[i] + "px"; colgroup.appendChild(col); });
+  table.style.minWidth = colPx.reduce((a, b) => a + b, 0) + "px";
+  table.appendChild(colgroup);
+  const thead = el("thead");
+  const trh = el("tr");
+  const ths = state.cols.map(c => {
+    const th = el("th", ["num","pct","chg","badge","bonds","yesno","doc"].includes(c.cell) ? "ctr sortable" : "sortable", esc(c.label));
+    const sortKey = colKind(c).startsWith("rating") ? "__rating" : c.key;   // שתי עמודות הדירוג ממיינות יחד
+    th.title = sortKey === "__rating" ? "מיון משותף לדירוג מידרוג ומעלות" : "לחיצה למיון";
+    th.addEventListener("click", () => {
+      state.sort = state.sort && state.sort.key === sortKey ? (state.sort.dir === 1 ? { key: sortKey, dir: -1 } : null) : { key: sortKey, dir: 1 };
+      apply();
+    });
+    trh.appendChild(th);
+    return th;
+  });
+  thead.appendChild(trh);
+  // שורת סינון: רשימה נפתחת לעמודות עם מעט ערכים שונים, אחרת תיבת טקסט (בעמודות מספריות גם > < או טווח 5-7)
+  document.querySelectorAll(".fpop").forEach(x => x.remove());   // חלונות סינון של רינדור קודם (הם נוספים ל-body)
+  const frow = el("tr", "frow");
+  state.cf = {};
+  const selects = [];    // רשימות נפתחות לפי אינדקס עמודה (האפשרויות מתעדכנות לפי מה שנשאר אחרי שאר הסינונים)
+  const inputs = [];
+  state.cols.forEach(c => {
+    const td = el("td"); frow.appendChild(td);
+    c.__select = false;
+    const kind = colKind(c);
+    const vals = [...new Set(state.rows.map(r => String(plain(c, r))))].filter(v => v !== "");
+    let inp;
+    if (kind.startsWith("rating") || (kind === "text" && vals.length > 1 && vals.length <= 15)) {
+      c.__select = true; inp = el("select"); inp.appendChild(new Option("הכול", ""));
+      inp.addEventListener("change", () => { state.cf[c.key] = inp.value; apply(); });
+      selects[state.cols.indexOf(c)] = inp;
+    } else {
+      if (kind === "text") {
+        inp = el("input"); inp.type = "search"; inp.placeholder = "סינון";
+        let tmr; inp.addEventListener("input", () => { clearTimeout(tmr); tmr = setTimeout(() => { state.cf[c.key] = inp.value.trim(); apply(); }, 200); });
+      } else {
+        // מספרים ותאריכים: לחיצה פותחת חלון קטן - שורה ראשונה "<" (קטן מ), שורה שנייה ">" (גדול מ). אפשר למלא אחד או שניהם.
+        const btn = el("button", "fbtn", "סינון"); btn.type = "button";
+        const pop = el("div", "fpop"); pop.style.display = "none";
+        const mk = (sym, label) => { const row = el("label", "fprow"); row.appendChild(el("span", "fsym", `${sym} ${label}`));
+          const i = el("input"); i.type = "search"; i.placeholder = kind === "date" ? "תאריך / שנה" : "מספר"; row.appendChild(i); return [row, i]; };
+        const [r1, lt] = mk("<", kind === "date" ? "לפני" : "פחות מ"), [r2, gt] = mk(">", kind === "date" ? "אחרי" : "יותר מ");
+        const hint = el("div", "fphint", kind === "date" ? "תאריך: 2029 · 03/2028 · 01/06/2027 (אפשר למלא אחד או שניהם)" : "אפשר למלא אחד או שניהם");
+        const clr = el("button", "fpclr", "נקה"); clr.type = "button";
+        pop.append(r1, r2, hint, clr);
+        document.body.appendChild(pop);
+        const upd = () => {
+          const lv = lt.value.trim().replace(/,/g, ""), gv = gt.value.trim().replace(/,/g, "");
+          const f = [gv ? ">" + gv : "", lv ? "<" + lv : ""].filter(Boolean).join(" ");
+          state.cf[c.key] = f;
+          btn.textContent = f ? [gv ? "> " + gv : "", lv ? "< " + lv : ""].filter(Boolean).join("  ") : "סינון";
+          btn.classList.toggle("on", !!f);
+          apply();
+        };
+        let tmr; const updSoon = () => { clearTimeout(tmr); tmr = setTimeout(upd, 150); };
+        lt.addEventListener("input", updSoon); gt.addEventListener("input", updSoon);
+        clr.addEventListener("click", () => { lt.value = ""; gt.value = ""; upd(); });
+        const closePop = () => { pop.style.display = "none"; document.body.style.minHeight = ""; if (openPop === closePop) openPop = null; };
+        btn.addEventListener("click", ev => {
+          ev.stopPropagation();
+          if (pop.style.display !== "none") { closePop(); return; }
+          if (openPop) openPop();
+          pop.style.display = "block";
+          const r = btn.getBoundingClientRect(), pw = pop.offsetWidth;
+          pop.style.top = (r.bottom + window.scrollY + 4) + "px";
+          pop.style.left = Math.max(4, Math.min(r.right - pw, document.documentElement.clientWidth - pw - 4)) + "px";
+          document.body.style.minHeight = Math.ceil(r.bottom + window.scrollY + pop.offsetHeight + 16) + "px";   // שה-iframe יתארך מספיק להצגת החלון
+          openPop = closePop; (kind === "date" ? gt : gt).focus();
+        });
+        pop.addEventListener("mousedown", ev => ev.stopPropagation());
+        pop.addEventListener("click", ev => ev.stopPropagation());
+        wrap.addEventListener("scroll", closePop);
+        inp = btn;
+        inp.__reset = () => { lt.value = ""; gt.value = ""; btn.textContent = "סינון"; btn.classList.remove("on"); closePop(); };
+      }
+    }
+    td.appendChild(inp); inputs.push(inp);
+  });
+  thead.appendChild(frow);
+  const tbody = el("tbody");
+  table.append(thead, tbody);
+  wrap.appendChild(table);
+  // סרגל גלילה לרוחב עליון, מסונכרן עם הטבלה (מוצג רק כשיש גלילה לרוחב)
+  const topBar = el("div","hscroll-top"), topInner = el("div");
+  topBar.appendChild(topInner);
+  let syncing = false;
+  const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; if (!parentV5) postHeaderSpec(); schedHscroll(); };
+  topBar.addEventListener("scroll", syncFrom(topBar, wrap));
+  wrap.addEventListener("scroll", syncFrom(wrap, topBar));
+  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; postHscroll(); };
+  hscrollWrap = wrap;
+  new ResizeObserver(updateTop).observe(wrap);
+  container.appendChild(topBar);
+  container.appendChild(wrap);
+  updateTop();
+
+  const draw = () => {
+    tbody.innerHTML = "";
+    if (!state.filtered.length) {
+      const tr = el("tr");
+      const td = el("td"); td.colSpan = state.cols.length;
+      td.className = "state"; td.textContent = "אין רשומות להצגה";
+      tr.appendChild(td); tbody.appendChild(tr);
+      return;
+    }
+    for (const row of state.filtered) {
+      const tr = el("tr");
+      for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key], row));
+      tbody.appendChild(tr);
+    }
+    title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+  };
+
+  // סינון (חיפוש כללי + סינון לפי עמודה) ואז מיון
+  const cmpVals = (a, b) => {
+    const ea = a === "" || a == null, eb = b === "" || b == null;
+    if (ea || eb) return ea && eb ? 0 : ea ? 1 : -1;      // ריקים תמיד בסוף
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return String(a).localeCompare(String(b), "he", { numeric: true });
+  };
+  const pass = (r, skipKey) => {
+    const q = search.value.trim().toLowerCase();
+    if (q && !state.cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q))) return false;
+    return state.cols.every(c => c.key === skipKey || matchFilter(c, r, state.cf[c.key]));
+  };
+  const apply = () => {
+    let rows = state.rows.filter(r => pass(r));
+    // רשימות הסינון מציגות רק ערכים שעדיין קיימים בשורות שנשארו (לפי שאר הסינונים והחיפוש)
+    selects.forEach((sel, i) => {
+      if (!sel) return;
+      const c = state.cols[i], cur = state.cf[c.key] || "", kind = colKind(c);
+      let vals = [...new Set(state.rows.filter(r => pass(r, c.key)).map(r => String(plain(c, r))))].filter(v => v !== "");
+      if (kind.startsWith("rating")) {                      // לפי סדר הדירוג, ולכל דירוג גם "ומעלה"
+        vals.sort((a, b) => ratingRank(kind, a) - ratingRank(kind, b));
+        var opts = []; vals.forEach(v => { opts.push([v, v]); if (ratingRank(kind, v) < LADDER_END[kind.split(":")[1]]) opts.push(["≥" + v, v + " ומעלה"]); });
+      } else {
+        if (cur && !vals.includes(cur)) vals.push(cur);
+        vals.sort((a, b) => a.localeCompare(b, "he"));
+        var opts = vals.map(v => [v, v]);
+      }
+      if (cur && !opts.some(o => o[0] === cur)) opts.push([cur, cur.replace(/^≥/, "") + (cur[0] === "≥" ? " ומעלה" : "")]);
+      const sig = opts.map(o => o[0]).join("\u0001");
+      if (sel.dataset.sig !== sig) {
+        sel.innerHTML = ""; sel.appendChild(new Option("הכול", ""));
+        opts.forEach(o => sel.appendChild(new Option(o[1], o[0])));
+        sel.dataset.sig = sig;
+      }
+      sel.value = cur;
+    });
+    clearBtn.style.display = (search.value.trim() || Object.values(state.cf).some(v => v)) ? "" : "none";
+    if (state.sort) {
+      const c = state.cols.find(x => x.key === state.sort.key), d = state.sort.dir, byRating = state.sort.key === "__rating";
+      rows = rows.map((r, i) => [byRating ? combinedRating(r) : sortVal(c, r), i, r]).sort((x, y) => {
+        const ea = x[0] === "" || x[0] == null, eb = y[0] === "" || y[0] == null;
+        if (ea || eb) return ea && eb ? x[1] - y[1] : ea ? 1 : -1;     // ריקים תמיד בסוף, גם במיון יורד
+        return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
+      }).map(x => x[2]);
+    }
+    state.filtered = rows;
+    ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
+      th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
+    draw();
+    postHeaderSpec();
+  };
+  clearBtn.addEventListener("click", () => {
+    search.value = ""; state.cf = {};
+    inputs.forEach(i => { if (i.__reset) i.__reset(); else i.value = ""; });
+    apply();
+  });
+  search.addEventListener("input", apply);
+
+  apply();
+}
+
+// ערך להצגה / סינון / מיון של תא (לפי סוג העמודה)
+const RATING_ORDER = {
+  midroog: ["Aaa","Aa1","Aa2","Aa3","A1","A2","A3","Baa1","Baa2","Baa3","Ba1","Ba2","Ba3","B1","B2","B3","Caa1","Caa2","Caa3","Ca","C","P-1","P-2","P-3","NP","WR"],
+  maalot:  ["AAA","AA+","AA","AA-","A+","A","A-","BBB+","BBB","BBB-","BB+","BB","BB-","B+","B","B-","CCC","CC","C","D"],
+};
+// מיון משותף לשתי עמודות הדירוג (כמו ב-Revach, securities.html): דירוג מידרוג, ואם אין - דירוג מעלות, על סולם אחד (21 = הגבוה ביותר)
+const MIDROOG_RANK = {"Aaa.il":21,"Aa1.il":20,"Aa2.il":19,"Aa3.il":18,"A1.il":17,"A2.il":16,"A3.il":15,"Baa1.il":14,"Baa2.il":13,"Baa3.il":12,"Ba1.il":11,"Ba2.il":10,"Ba3.il":9,"B1.il":8,"B2.il":7,"B3.il":6,"Caa1.il":5,"Caa2.il":4,"Caa3.il":3,"Ca.il":2,"C.il":1};
+const MAALOT_RANK = {"ilAAA":21,"ilAA+":20,"ilAA":19,"ilAA-":18,"ilA+":17,"ilA":16,"ilA-":15,"ilBBB+":14,"ilBBB":13,"ilBBB-":12,"ilBB+":11,"ilBB":10,"ilBB-":9,"ilB+":8,"ilB":7,"ilB-":6,"ilCCC+":5,"ilCCC":4,"ilCCC-":3,"ilCC":2,"ilD":1};
+function combinedRating(r) {            // ערך למיון עולה: הדירוג הטוב ביותר ראשון; ללא דירוג (ריק) תמיד בסוף
+  const rank = MIDROOG_RANK[r.midroog_rating] || MAALOT_RANK[r.maalot_rating] || 0;
+  return rank ? -rank : "";
+}
+const LADDER_END = { midroog: 21, maalot: 20 };   // דירוגי P-1/WR וכד' אינם חלק מהסולם (בלי אפשרות "ומעלה")
+function colKind(c) {
+  if (c.key === "midroog_rating") return "rating:midroog";
+  if (c.key === "maalot_rating") return "rating:maalot";
+  if (c.key === "redemption_date") return "date";
+  if (c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number") || c.key === "security_id" || c.key === "last_price") return "number";
+  return "text";
+}
+function ratingRank(kind, v) {           // 0 = הדירוג הגבוה ביותר; לא מוכר / ריק = בסוף
+  const ord = RATING_ORDER[kind.split(":")[1]];
+  const i = ord.indexOf(String(v).replace(/\.il$/i, "").replace(/^il/i, "").trim());
+  return i < 0 ? 999 : i;
+}
+function plain(c, r) {
+  const v = r[c.key];
+  if (c.cell === "bonds") return v || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
+  if (c.cell === "yesno") return v === "כן" ? "כן" : "לא";
+  if (colKind(c) === "number") { const n = parseFloat(String(v ?? "").replace(/,/g, "")); return isNaN(n) ? "" : parseFloat(n.toFixed(2)); }
+  return v == null ? "" : v;
+}
+function dateNum(str) {                  // dd/mm/yyyy -> yyyymmdd (או null)
+  const d = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(str).trim());
+  return d ? +(d[3] + d[2].padStart(2, "0") + d[1].padStart(2, "0")) : null;
+}
+function dateBounds(str) {               // dd/mm/yyyy | mm/yyyy | yyyy -> [מוקדם, מאוחר] כ-yyyymmdd
+  str = String(str).trim(); let m;
+  if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(str))) { const n = dateNum(str); return [n, n]; }
+  if ((m = /^(\d{1,2})\/(\d{4})$/.exec(str))) { const mm = m[1].padStart(2, "0"); return [+(m[2] + mm + "01"), +(m[2] + mm + "31")]; }
+  if ((m = /^(\d{4})$/.exec(str))) return [+(m[1] + "0101"), +(m[1] + "1231")];
+  return null;
+}
+function sortVal(c, r) {
+  const k = colKind(c), v = plain(c, r);
+  if (k.startsWith("rating")) return v === "" ? "" : ratingRank(k, v);
+  if (k === "date") { const n = dateNum(v); return n == null ? "" : n; }
+  return v;
+}
+function matchFilter(c, r, f) {
+  if (!f) return true;
+  const k = colKind(c), v = plain(c, r);
+  if (k === "number" || k === "date") {                                       // ">5 <9" = שני תנאים יחד
+    const toks = f.match(/(?:>=|<=|>|<|=)\s*[^\s<>=]+/g);
+    if (toks && toks.length > 1 && toks.join("").replace(/\s/g, "") === f.replace(/\s/g, "")) return toks.every(t => matchFilter(c, r, t));
+  }
+  if (k.startsWith("rating")) {                                              // "≥X" = דירוג X ומעלה
+    if (f.startsWith("≥")) { const rk = ratingRank(k, v), lim = ratingRank(k, f.slice(1)); return v !== "" && rk <= lim && rk !== 999; }
+    return String(v) === f;
+  }
+  if (k === "date") {                                                         // > < >= <= = וטווח, למשל 03/2028-2030
+    const n = dateNum(v); let m;
+    if ((m = /^(>=|<=|>|<|=)\s*(.+)$/.exec(f))) { const bd = dateBounds(m[2]); if (!bd) return false; if (n == null) return false;
+      return m[1] === ">" ? n > bd[1] : m[1] === "<" ? n < bd[0] : m[1] === ">=" ? n >= bd[0] : m[1] === "<=" ? n <= bd[1] : (n >= bd[0] && n <= bd[1]); }
+    if ((m = /^(.+?)\s*-\s*(.+)$/.exec(f))) { const b1 = dateBounds(m[1]), b2 = dateBounds(m[2]); if (b1 && b2) return n != null && n >= b1[0] && n <= b2[1]; }
+  }
+  if (k === "number") {                                                       // > < >= <= = וטווח 5-7
+    const n = typeof v === "number" ? v : parseFloat(String(v).replace(/,/g, "")); let m;
+    if ((m = /^(>=|<=|>|<|=)\s*(-?[\d.]+)$/.exec(f))) { const x = parseFloat(m[2]); if (isNaN(n)) return false;
+      return m[1] === ">" ? n > x : m[1] === "<" ? n < x : m[1] === ">=" ? n >= x : m[1] === "<=" ? n <= x : n === x; }
+    if ((m = /^(-?[\d.]+)\s*-\s*(-?[\d.]+)$/.exec(f))) return !isNaN(n) && n >= parseFloat(m[1]) && n <= parseFloat(m[2]);
+  }
+  if (c.__select) return String(v) === f;
+  return String(v).toLowerCase().includes(f.toLowerCase());
+}
+// תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
+// מספר באותיות עבריות (גימטריה): 22 -> כ"ב, 787 -> תשפ"ז, 15/16 -> ט"ו/ט"ז
+function hebNum(n) {
+  const H = ["", "ק", "ר", "ש", "ת"], T = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"], U = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+  let out = "";
+  while (n >= 400) { out += "ת"; n -= 400; }
+  out += H[Math.floor(n / 100)]; n %= 100;
+  if (n === 15) out += "טו"; else if (n === 16) out += "טז"; else out += T[Math.floor(n / 10)] + U[n % 10];
+  return out.length > 1 ? out.slice(0, -1) + '"' + out.slice(-1) : out + "'";
+}
+let updatedP = null;
+function updatedText() {
+  if (!updatedP) updatedP = fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : null).then(j => {
+      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((j && j.updated) || "");
+      if (!m) return "";
+      const d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+      let heb = "";
+      try {
+        const parts = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).formatToParts(d);
+        const get = t => (parts.find(p => p.type === t) || {}).value || "";
+        const day = parseInt(get("day"), 10), yr = parseInt(get("year") || get("relatedYear"), 10);
+        const month = get("month").replace(/^ב(?=[א-ת])/, "");
+        if (day && yr && month) heb = `${hebNum(day)} ${month} ${hebNum(yr % 1000)}`;
+      } catch (e) { /* ללא תאריך עברי */ }
+      return heb ? `עודכן לאחרונה: ${heb}` : `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`;
+    }).catch(() => "");
+  return updatedP;
+}
+const NOWRAP_KEYS = new Set(["symbol","redemption_date","midroog_rating","maalot_rating","chp_number","last_price"]);   // שאר העמודות (סוג נייר, הצמדה, קטגוריה...) מתפצלות לשתי שורות כשצריך
+function cellFor(col, val, row) {
+  const td = el("td");
+  if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
+  if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
+  if (col.cell === "chg")  {
+    td.className = "num";
+    if (val == null || val === "") { td.textContent = ""; return td; }
+    const n = Number(val);
+    if (n > 0) td.classList.add("up");
+    else if (n < 0) td.classList.add("down");
+    td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
+    return td;
+  }
+  if (col.cell === "doc") {     // קישור למסמך היתר העסקה (נפתח בלשונית חדשה)
+    td.className = "ctr";
+    td.innerHTML = row && row._docid ? `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(row._docid)}" target="_blank" rel="noopener">📄 צפייה</a>` : '<span class="bonds-none">—</span>';
+    return td;
+  }
+  if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא
+    td.className = "ctr";
+    td.innerHTML = val === "כן" ? '<span class="badge-yes">כן</span>' : '<span class="bonds-none">לא</span>';
+    return td;
+  }
+  if (col.cell === "bonds") {
+    // אין אג"ח (טקסט פשוט) | יש אג"ח - מאושר (ירוק ✓) | יש אג"ח - לא מאושר (אדום ✕)
+    // תאימות לאחור: אם ה-API הישן שלח רק approved (0/1)
+    const st = val || (row && Number(row.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
+    td.className = "ctr";
+    if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
+    else if (st.includes("בהנפקה"))       td.innerHTML = `<span class="badge-offer">${esc(st)}</span>`;   // יש אג"ח בהנפקה / בהנפקה עתידית
+    else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
+    else if (st.includes("מסוימים"))      td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span><div class="bond-note">אג"ח מסוימים</div>';
+    else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';
+    if (row && row.bonds_note) td.innerHTML += `<div class="bond-note">${esc(row.bonds_note)}</div>`;   // הערה על אישור האג"ח
+    return td;
+  }
+  if (col.cell === "badge") {
+    td.className = "ctr";
+    td.innerHTML = Number(val) === 1
+      ? '<span class="badge-yes">מאושר ✓</span>'
+      : '<span class="badge-no">—</span>';
+    return td;
+  }
+  td.textContent = val ?? "";
+  return td;
+}
+
+// ── ניווט ──
+// ?type=companies-private|companies-general|bonds-private|bonds-general  בוחר לשונית פעילה
+// ?nav=0  מסתיר את הלשוניות ומציג רשימה אחת בלבד
+const VALID = ["companies-private","companies-general","bonds-private","bonds-general"];
+const params = new URLSearchParams(location.search);
+let current = VALID.includes(params.get("type")) ? params.get("type") : "companies-private";
+if (window.parent !== window) document.documentElement.classList.add("embed"), document.body.classList.add("embed");
+if (params.get("nav") === "0") document.body.classList.add("no-nav");
+
+const container = document.getElementById("listContainer");
+const tabs = document.getElementById("navTabs");
+
+function refresh() {
+  [...tabs.children].forEach(b => b.classList.toggle("active", b.dataset.type === current));
+  mountList(container, current);
+  postNavSpec();
+}
+tabs.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  current = b.dataset.type;
+  refresh();
+});
+
+// מדווח לעמוד האב את גובה התוכן, כדי שה-iframe יתאים את עצמו (ללא פס גלילה פנימי)
+function reportHeight() {
+  if (window.parent === window) return;
+  const h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+  window.parent.postMessage({ source: "harav-levin", type: "resize", height: h }, "*");
+}
+new ResizeObserver(() => { reportHeight(); applySticky(); postHeaderSpec(); postHscroll(); postNavSpec(); }).observe(document.body);
+
+// ── לשוניות הניווט (חברות/אג"ח, פרטי/כללי) נשארות צמודות בגלילה: ה-iframe שולח לעמוד האב את מבנה הלשוניות (embed.js בונה מהן סרגל
+// position:fixed, כמו כותרת הטבלה), ולחיצה בסרגל חוזרת לכאן כהודעה setType.
+let lastNav = "";
+function postNavSpec() {
+  if (window.parent === window || params.get("nav") === "0") return;
+  const r = tabs.getBoundingClientRect(); if (!r.height) return;
+  const bs = getComputedStyle(document.body), cs = getComputedStyle(tabs);
+  const spec = {
+    source: "harav-levin", type: "nav", top: Math.round(r.top + window.scrollY), h: Math.round(r.height),
+    contentH: Math.ceil(document.documentElement.getBoundingClientRect().height),
+    bg: /rgba\(0, 0, 0, 0\)|transparent/.test(bs.backgroundColor) ? "#fff" : bs.backgroundColor,
+    border: cs.borderBottomWidth + " solid " + cs.borderBottomColor,
+    tabs: [...tabs.children].map(b => { const c = getComputedStyle(b);
+      return { t: b.textContent.trim(), type: b.dataset.type, on: b.classList.contains("active"), color: c.color, bg: c.backgroundColor,
+               fw: c.fontWeight, fs: c.fontSize, bt: c.borderTopWidth + " solid " + c.borderTopColor }; }),
+  };
+  const key = JSON.stringify(spec); if (key === lastNav) return; lastNav = key;
+  window.parent.postMessage(spec, "*");
+}
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setType" || !VALID.includes(d.value)) return;
+  current = d.value; refresh();
+});
+
+// ── כותרת קבועה יציבה (גרסה 3): ה-iframe שולח לעמוד האב את מבנה שורת הכותרת, ועמוד האב בונה ממנה סרגל position:fixed
+// "אמיתי" (בלי תנועה אסינכרונית מתוך ה-iframe, לכן בלי רעידות). הסרגל מופיע בדיוק כשהכותרת המקורית עוברת את ה-OFFSET.
+// עמוד אב בלי גרסה 3 מתעלם מההודעה הזאת (ואז עובד המנגנון הישן, translateY).
+// ── גלילה לרוחב: סרגל קבוע בתחתית החלון (גרסה 4 של קוד ההטמעה) - ה-iframe מדווח מידות ומיקום גלילה, ועמוד האב שולח חזרה את המיקום
+let parentV5 = false;   // קוד הטמעה 5 מזיז את סרגל הכותרת בעצמו לפי הגלילה; גרסה 4 ומטה צריכה spec חדש בכל גלילה
+let openPop = null;
+document.addEventListener("click", () => { if (openPop) openPop(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && openPop) openPop(); });
+let hscrollWrap = null, lastHs = "", hsPending = false;
+function schedHscroll() { if (hsPending) return; hsPending = true; requestAnimationFrame(() => { hsPending = false; postHscroll(); }); }
+function postHscroll() {
+  if (window.parent === window || !hscrollWrap) return;
+  const t = hscrollWrap.querySelector("table"); if (!t) return;
+  const r = hscrollWrap.getBoundingClientRect();
+  const m = { source: "harav-levin", type: "hscroll", sw: t.scrollWidth, cw: hscrollWrap.clientWidth, left: Math.round(hscrollWrap.scrollLeft),
+              x: Math.round(r.left), top: Math.round(r.top + window.scrollY), h: Math.round(r.height) };
+  const k = JSON.stringify(m); if (k === lastHs) return; lastHs = k;
+  window.parent.postMessage(m, "*");
+}
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source === window.parent && d && d.source === "harav-parent" && d.type === "v5") parentV5 = true;
+  if (e.source === window.parent && d && d.source === "harav-parent" && d.type === "updShown") document.querySelectorAll(".upd").forEach(u => { u.style.display = "none"; });   // עמוד האב הציג את התאריך בתת-הכותרת
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "setScroll" || !hscrollWrap) return;
+  if (Math.abs(hscrollWrap.scrollLeft - d.left) > 1) hscrollWrap.scrollLeft = d.left;
+});
+let lastSpec = "";
+function postHeaderSpec() {
+  if (window.parent === window) return;
+  const table = container.querySelector("table");
+  if (!table || !table.tHead) return;
+  const ths = [...table.tHead.rows[0].querySelectorAll("th")];
+  if (!ths.length) return;
+  const tr = table.getBoundingClientRect(), hr = table.tHead.rows[0].getBoundingClientRect();
+  const sl = hscrollWrap ? hscrollWrap.scrollLeft : 0;   // x נשלח כמיקום בגלילה 0; עמוד האב מזיז את הסרגל לפי הגלילה הנוכחית
+  const cs = getComputedStyle(ths[0]);
+  const spec = {
+    source: "harav-levin", type: "header",
+    tableTop: Math.round(tr.top + window.scrollY), tableH: Math.round(tr.height), h: Math.round(hr.height),
+    bg: cs.backgroundColor, color: cs.color, fw: cs.fontWeight, fs: cs.fontSize,
+    border: cs.borderBottomWidth + " solid " + cs.borderBottomColor,
+    cells: ths.map(th => { const r = th.getBoundingClientRect(), c = getComputedStyle(th);
+      return { t: th.textContent.trim(), x: Math.round(r.left), x0: Math.round(r.left + sl), w: Math.round(r.width), a: c.textAlign,
+               bl: c.borderLeftWidth + " solid " + c.borderLeftColor, pad: c.paddingRight }; }),
+  };
+  const key = JSON.stringify(spec);
+  if (key === lastSpec) return;
+  lastSpec = key;
+  window.parent.postMessage(spec, "*");
+}
+
+// ── כותרת קבועה (freeze panes) במחשב ──
+// ה-iframe מתארך לפי התוכן והגלילה היא של עמוד האב, ולכן עמוד האב שולח לכאן את מיקום ה-iframe ביחס לחלון
+// (top), וכאן מזיזים את שורת הכותרת כך שתישאר צמודה לחלק העליון של החלון (offset = גובה כותרת קבועה של האתר, אם יש).
+let stick = { top: 0, offset: 0, on: false };
+let stickMsgs = 0;
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (e.source !== window.parent || !d || d.source !== "harav-parent" || d.type !== "scroll") return;
+  stickMsgs++;
+  stick = { top: Number(d.top) || 0, offset: Number(d.offset) || 0, on: !!d.desktop };
+  applySticky();
+  showDebug();
+});
+// ?debug=1 ב-src של ה-iframe: תג אבחון קטן בפינה - האם עמוד האב שולח את מיקום הגלילה (כותרת קבועה דורשת את קוד ה-iframe העדכני בעמוד)
+function showDebug() {
+  if (new URLSearchParams(location.search).get("debug") !== "1") return;
+  let el = document.getElementById("stick-debug");
+  if (!el) { el = document.createElement("div"); el.id = "stick-debug"; el.style.cssText = "position:fixed;top:4px;left:4px;z-index:99;font:12px sans-serif;background:#fff8e6;border:1px solid #eadfb0;padding:3px 8px;direction:ltr"; document.body.appendChild(el); }
+  el.textContent = stickMsgs ? `sticky: parent connected (${stickMsgs} msgs, top=${Math.round(stick.top)}, desktop=${stick.on})` : "sticky: NO messages from the parent page (update the embed code)";
+}
+if (window.parent !== window) setTimeout(showDebug, 1500);
+function applySticky() {
+  const table = container.querySelector("table"); if (!table) return;
+  const ths = table.querySelectorAll("thead th");
+  let delta = 0;
+  if (stick.on) {
+    const headBottom = table.tHead.offsetHeight;
+    const natural = stick.top + table.getBoundingClientRect().top;      // מיקום הכותרת (הטבעי) ביחס לחלון
+    delta = Math.max(0, Math.min(stick.offset - natural, table.offsetHeight - headBottom - 2));
+  }
+  ths.forEach(th => {
+    th.style.transform = delta ? `translateY(${delta}px)` : "";
+    th.style.position = delta ? "relative" : "";
+    th.style.zIndex = delta ? "2" : "";
+    th.style.boxShadow = delta ? "0 2px 3px -1px rgba(0,0,0,.18)" : "";
+  });
+}
+
+refresh(); // טעינה ראשונית
+</script>
+</body>
+</html>

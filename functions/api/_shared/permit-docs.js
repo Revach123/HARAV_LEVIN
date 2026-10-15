@@ -7,15 +7,38 @@ export const noAuth = () => Response.json({ error: "Unauthorized" }, { status: 4
 export const noStore = () => Response.json({ error: "אחסון הקבצים (R2) עדיין לא הוגדר: ראה הוראות ב-wrangler.toml" }, { status: 503 });
 export const newId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 
+export const SLOTS = ["general", "private"];
+export const cleanSlot = v => SLOTS.filter(x => (Array.isArray(v) ? v : String(v || "").split(",")).includes(x)).join(",");
+
+// slots: לכל מסמך { מזהה_חברה: "general" | "private" | "general,private" } - רק לחברות שהמסמך מקושר אצלן לרשימה (אחרת המפתח חסר)
 export async function withBusinesses(env, rows) {
   const ids = rows.map(r => r.id);
-  const links = new Map(ids.map(i => [i, []]));
+  const links = new Map(ids.map(i => [i, []])), slots = new Map(ids.map(i => [i, {}]));
   if (ids.length) {
     // לא משתמשים ב-IN (...) עם אלפי פרמטרים: שליפה אחת של כל הקישורים
-    const all = await env.DB.prepare("SELECT doc_id, business_id FROM permit_doc_companies").all();
-    for (const l of all.results ?? []) if (links.has(l.doc_id)) links.get(l.doc_id).push(l.business_id);
+    let all;
+    try { all = await env.DB.prepare("SELECT doc_id, business_id, slot FROM permit_doc_companies").all(); }
+    catch { all = await env.DB.prepare("SELECT doc_id, business_id FROM permit_doc_companies").all(); }      // לפני מיגרציה 0007
+    for (const l of all.results ?? []) if (links.has(l.doc_id)) { links.get(l.doc_id).push(l.business_id); if (l.slot) slots.get(l.doc_id)[l.business_id] = l.slot; }
   }
-  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [] }));
+  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {} }));
+}
+
+// קובע את הקישור לרשימות של מסמך אחד: slotMap = { מזהה_חברה: ["general","private"] }.
+// לכל חברה מסמך אחד בכל רשימה: מסמך אחר שהיה מקושר לאותה רשימה אצלה מאבד את הקישור. מחזיר פקודות לאצווה.
+export async function slotStatements(env, docId, slotMap) {
+  const stmts = [];
+  for (const [bid, v] of Object.entries(slotMap || {})) {
+    const mine = cleanSlot(v);
+    stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = ? WHERE doc_id = ? AND business_id = ?").bind(mine, docId, bid));
+    if (!mine) continue;
+    const others = await env.DB.prepare("SELECT doc_id, slot FROM permit_doc_companies WHERE business_id = ? AND doc_id != ? AND slot != ''").bind(bid, docId).all();
+    for (const o of others.results ?? []) {
+      const keep = cleanSlot(String(o.slot).split(",").filter(x => !mine.split(",").includes(x)));
+      if (keep !== o.slot) stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = ? WHERE doc_id = ? AND business_id = ?").bind(keep, o.doc_id, bid));
+    }
+  }
+  return stmts;
 }
 
 export async function existingBusinessIds(env, ids) {
