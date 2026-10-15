@@ -49,7 +49,7 @@
     out.onclick = e => {
       const pk = e.target.closest("[data-pick]"); if (pk) return o.pick(pk.dataset.pick);
       const mk = e.target.closest("[data-mark]"); if (mk) return o.mark({ id: mk.dataset.mark, name: mk.dataset.name, status: mk.dataset.status });
-      const ad = e.target.closest("[data-addreg]"); if (ad) return addReg(ad.dataset.addreg, ad.dataset.defunct === "1");
+      const ad = e.target.closest("[data-addreg]"); if (ad) return addReg(ad.dataset.addreg, ad.dataset.defunct === "1", o.mkAdded && o.mkAdded());
     };
     if (q.length >= 3) out._t = setTimeout(() => regLookup(q, out, o), 450);
   }
@@ -73,10 +73,17 @@
             <button class="pd-btn" data-addreg="${E(r.id)}" data-defunct="${r.defunct ? 1 : 0}">הוספה למאגר…</button></div></div>`).join("") +
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
   }
-  function addReg(id, defunct) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא
+  let pendingAdd = null;
+  function addReg(id, defunct, added) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא; אם יש added - אחרי השמירה הוא משייך אוטומטית
     if (defunct && !confirm("החברה מחוסלת / נמחקה ברשם. להוסיף אותה למאגר בכל זאת?")) return;
+    pendingAdd = added ? { chp: digitsOf(id), added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-company"].forEach(close);
     if (typeof openForm === "function") { openForm(null); setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150); }
+  }
+
+  function bizAdded(b) {        // נקרא מטופס העסקים אחרי שמירת עסק חדש
+    const p = pendingAdd; pendingAdd = null;
+    if (p && b && digitsOf(b.chp_number) === p.chp) p.added(b.id);
   }
 
   // ───────── טעינה ואינדקס ─────────
@@ -247,6 +254,7 @@
   function addSearch(id, q) {
     const out = $("pd-add-res"); if (!out) return;
     runCompanySearch(q, out, { exclude: x => ((S.byId.get(id) || {}).business_ids || []).includes(x), pick: b => assign(id, b),
+      mkAdded: () => async bid => { const d = S.byId.get(id); if (d && await updateDoc(id, { business_ids: [...(d.business_ids || []), bid] })) openDoc(id); },
       mark: r => { const d = S.byId.get(id); updateDoc(id, { note: (d.note ? d.note + " | " : "") + markText(r) }); } });
   }
   function assign(id, bizId) { const d = S.byId.get(id); updateDoc(id, { business_ids: [...(d.business_ids || []), bizId] }); }
@@ -571,7 +579,12 @@
   }
   function uqSearch(q) {
     const out = $("pd-un-res"); if (!out) return;
-    runCompanySearch(q, out, { exclude: x => Q.sel.has(x), pick: id => { Q.sel.add(id); uqShow(); }, mark: uqMark });
+    runCompanySearch(q, out, { exclude: x => Q.sel.has(x), pick: id => { Q.sel.add(id); uqShow(); }, mark: uqMark,
+      mkAdded: () => { const d0 = unassignedList()[Q.i], sel0 = [...Q.sel], type0 = Q.type, note0 = Q.note; return async bid => {
+        try { if (d0) replaceDoc((await api("/permit-docs/" + d0.id, "PUT", { doc_type: type0, business_ids: [...sel0, bid], note: note0 })).doc); showStatus("החברה נוספה והמסמך שויך אליה"); }
+        catch (e) { alert("החברה נוספה, אך שיוך המסמך נכשל: " + e.message); }
+        openUnassigned();
+      }; } });
   }
   async function uqMark(reg) {        // סימון "חסר במאגר" בהערת המסמך (המסמך נשאר לא משויך)
     const d = unassignedList()[Q.i]; if (!d) return;
@@ -641,7 +654,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { cell, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { bizAdded, cell, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
