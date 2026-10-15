@@ -1116,8 +1116,7 @@ function renderAdminTable() {
                     <option value="__pick__">⚙ בחירת אג"ח…</option>
                   </select>
                 </td>
-                <td class="pd-cell" style="text-align:center;">${window.PD ? PD.slotCell(b, "private") : ""}</td>
-                <td class="pd-cell" style="text-align:center;">${window.PD ? PD.slotCell(b, "general") : ""}</td>
+                ${window.PD ? PD.slotCells(b) : "<td></td><td></td>"}
                 <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}</td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
