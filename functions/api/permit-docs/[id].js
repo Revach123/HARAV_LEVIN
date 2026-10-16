@@ -1,7 +1,7 @@
 import { checkAdmin } from "../_shared/auth.js";
 import { TYPES, noAuth, withBusinesses, existingBusinessIds, slotStatements } from "../_shared/permit-docs.js";
 // GET    /api/permit-docs/:id   → מסמך אחד
-// PUT    /api/permit-docs/:id   → עדכון { bonds? (שיוך לאג"ח: [{id,name,symbol,company,chp}]), ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
+// PUT    /api/permit-docs/:id   → עדכון { pages?, doc_dates? (מערך YYYY-MM-DD), bonds? (שיוך לאג"ח: [{id,name,symbol,company,chp}]), ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
 // DELETE /api/permit-docs/:id   → מחיקה מלאה של המסמך (השיוכים והקובץ)
 
 export async function onRequestGet({ request, env, params }) {
@@ -50,6 +50,11 @@ export async function onRequestPut({ request, env, params }) {
         stmts.push(env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp) VALUES (?,?,?,?,?,?)")
           .bind(params.id, sid, String(x.name || "").slice(0, 200), String(x.symbol || "").slice(0, 60), String(x.company || "").slice(0, 200), String(x.chp || "").slice(0, 20)));
       }
+    }
+    if (body.pages !== undefined || body.doc_dates !== undefined) {          // מספר עמודים ותאריכים שנשלפו מהמסמך (מיגרציה 0010)
+      const pages = Math.max(0, Math.min(5000, parseInt(body.pages, 10) || 0));
+      const dates = (Array.isArray(body.doc_dates) ? body.doc_dates : []).map(String).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 12);
+      stmts.push(env.DB.prepare("UPDATE permit_docs SET pages = ?, doc_dates = ? WHERE id = ?").bind(pages, dates.length ? JSON.stringify(dates) : "", params.id));
     }
     await env.DB.batch(stmts);
     const fresh = await env.DB.prepare("SELECT * FROM permit_docs WHERE id = ?").bind(params.id).first();
