@@ -561,9 +561,10 @@
       <div class="pd-sidecol"><div class="pd-sidehead">
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">מסמכי היתר · שיוך ובדיקה</b><button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
         <div class="pd-tabs" id="pd-un-tabs"></div>
-        <div class="pd-sub"><span id="pd-un-count"></span><span id="pd-un-skipped"></span></div>
+        <div class="pd-nav"><button class="pd-btn" onclick="PD._unGo(-1)" title="המסמך הקודם">→ הקודם</button><span class="pd-navpos" id="pd-un-pos"></span><button class="pd-btn" onclick="PD._unGo(1)" title="המסמך הבא">הבא ←</button><button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button></div>
         <input class="pd-in" placeholder="סינון הרשימה: שם קובץ / חברה / ח.פ. / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
-        <div class="pd-btns"><span id="pd-un-undo"></span><button class="pd-btn" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-btn" onclick="PD._openExt()">חברות שאינן במאגר (<span id="pd-un-extn">${S.ext.length}</span>)</button></div>
+        <div class="pd-sub"><span id="pd-un-count"></span><span id="pd-un-skipped"></span></div>
+        <div class="pd-btns" style="gap:12px"><span id="pd-un-undo"></span><button class="pd-link2" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-link2" onclick="PD._openExt()">חברות שאינן במאגר (<span id="pd-un-extn">${S.ext.length}</span>)</button></div>
       </div><div class="pd-side" id="pd-un-side"></div></div></div>`, "full");
     closers["pd-un"] = () => { if (Q.blobUrl) URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; Q.curId = ""; if (typeof render === "function" && typeof view !== "undefined" && view === "home") render(); };
     if (!S.loaded) load().then(uqShow); else uqShow();
@@ -592,6 +593,7 @@
     if (tabs) tabs.innerHTML = VIEWS.map(([v, l]) => `<button class="pd-tab ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
     const xn = $("pd-un-extn"); if (xn) xn.textContent = S.ext.length;
     if (cnt) cnt.textContent = `${list.length} מסמכים בתצוגה`;
+    const pos = $("pd-un-pos"); if (pos) pos.textContent = list.length ? `${Math.min(Q.i, list.length - 1) + 1} / ${list.length}` : "0 / 0";
     const sk = $("pd-un-skipped"); if (sk) sk.innerHTML = Q.skipped.size ? ` · דולגו ${Q.skipped.size} <button class="pd-link" style="color:#1a3a5c" onclick="PD._unUnskip()">הצג אותם שוב</button>` : "";
     if (Q.i >= list.length) Q.i = Math.max(0, list.length - 1);
     const d = list[Q.i], side = $("pd-un-side"), view = $("pd-un-view");
@@ -624,16 +626,15 @@
     }
     const card = c => `<label class="pd-cand"><input type="${Q.shared ? "checkbox" : "radio"}" name="pd-un-co" ${Q.sel.has(c.b.id) ? "checked" : ""} onchange="PD._unPick('${c.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(c.b, true)}</b> <span class="pd-sub">${E(c.b.chp_number || "")} · ${E(c.why.join(", "))}</span>${stTag(c.b.registry_status)}${marks(c.b, d)}</span></label>`;
     const extra = [...Q.sel].filter(id => !Q.cands.some(c => c.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, why: ["נבחר ידנית"] }));
-    const tb = ["general", "private", "both", "unknown"].map(t => `<button class="pd-btn ${Q.type === t ? "sel" : ""}" onclick="PD._unType('${t}')">${TL[t]}</button>`).join("");
+    const tb = `<select class="pd-sel" style="font-size:13px;padding:4px 6px" onchange="PD._unType(this.value)">${["general", "private", "both", "unknown"].map(t => `<option value="${t}" ${Q.type === t ? "selected" : ""}>${TL[t]}</option>`).join("")}</select>`;
     const keepIn = document.activeElement && document.activeElement.id === "pd-un-q" ? document.getElementById("pd-un-q").value : null;
     const reasons = inView(d, "review") ? reviewReasons(d) : (d.doc_type === "unknown" ? ["ללא סיווג"] : []);
     const curCos = (d.business_ids || []).map(id => bizById(id)).filter(Boolean);
     const curBlock = (curCos.length || (d.ext_ids || []).length) ? `<h4>שיוכים נוכחיים</h4>` +
       curCos.map(b => `<div class="pd-co" style="align-items:flex-start"><div class="pd-grow"><b>${displayName(b, true)}</b>${marks(b, d)}</div>
-        <div class="pd-btns" style="flex-direction:column"><button class="pd-btn" onclick="PD._unManage('${b.id}')">שיוך / ניהול</button><button class="pd-link" onclick="PD._unDetach('${b.id}')">הסר</button></div></div>`).join("") +
+        <div class="pd-btns" style="flex-direction:column;align-items:flex-start"><button class="pd-link2" onclick="PD._unManage('${b.id}')">שיוך / ניהול</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unDetach('${b.id}')">הסר</button></div></div>`).join("") +
       (d.ext_ids || []).map(id => { const x = extById(id); return `<div class="pd-co"><span><b>${E(extName(id))}</b> <span class="pd-st bad">${x ? EXT_HE[x.status] : ""}</span> <span class="pd-sub">${E(x ? x.chp : "")}</span></span><button class="pd-link" onclick="PD._unExtDetach('${id}')">הסר</button></div>`; }).join("") : "";
     side.innerHTML = `
-      <div class="pd-sub">${Q.i + 1} / ${list.length}</div>
       <div style="font-weight:600;font-size:14px;word-break:break-all">${E(d.source_title || d.original_name || d.id)}</div>
       <div class="pd-sub">${E(d.original_name || "")} · ${fmtSize(d.size)} · <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span></div>
       ${reasons.length ? `<div class="pd-warnbox">${reasons.map(E).join("<br>")}</div>` : ""}
@@ -646,15 +647,12 @@
       <details style="margin-top:6px"><summary class="pd-sub" style="cursor:pointer">חברה שאינה במאגר: הוספה ידנית (בלי חיפוש ברשם)</summary>
         <div style="display:flex;gap:6px;margin-top:5px"><input class="pd-in" id="pd-ext-name" placeholder="שם החברה"><input class="pd-in" id="pd-ext-chp" placeholder="ח.פ." style="max-width:120px"></div>
         <div class="pd-btns" style="margin-top:5px">${["deleted", "merged", "not_in_db"].map(st => `<button class="pd-btn" onclick="PD._unExtAdd('${st}')">שיוך כ"${EXT_HE[st]}"</button>`).join("")}</div></details>
-      <h4>סיווג</h4><div class="pd-btns">${tb}</div>${Q.typeWhy && !Q.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(Q.typeWhy)}</div>` : ""}
-      <h4>הערה</h4><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea>
-      <div class="pd-btns" style="margin-top:12px">
-        <button class="pd-btn primary" ${Q.sel.size ? "" : "disabled"} onclick="PD._unAssign()">${Q.sel.size ? (Q.shared ? `שיוך (${Q.sel.size} חברות)` : "שיוך לחברה") : "בחרו חברה לשיוך"} ←</button>
-        <button class="pd-btn" ${Q.sel.size ? "" : "disabled"} onclick="PD._unSave()" title="שמירה מהירה: המסמך משויך לחברות שנבחרו, בלי קישור לרשימת הכללי / הפרטי">שמירה מהירה</button>
-        <button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button><button class="pd-btn" onclick="PD._unGo(-1)">→ הקודם</button>
-      </div>
-      <div class="pd-btns" style="margin-top:10px">${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()" title="מחזיר את המסמך לתור הלא משויכים">↩ החזרה לתור</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="מסמך שאינו היתר עסקה של חברה: עובר ל'מסמכים אחרים'">לא קשור</button>`}
-        <button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקה</button></div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="pd-sub">סיווג:</span>${tb}${Q.typeWhy && !Q.typeTouched ? `<span class="pd-sub">(הצעה: ${E(Q.typeWhy)})</span>` : ""}</div>
+      <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
+      <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" style="flex:1" ${Q.sel.size ? "" : "disabled"} onclick="PD._unAssign()">${Q.sel.size ? (Q.shared ? `שיוך (${Q.sel.size} חברות)` : "שיוך לחברה") : "בחרו חברה לשיוך"} ←</button></div>
+      <div class="pd-btns" style="margin-top:8px;gap:10px">
+        ${isOther(d) ? `<button class="pd-link2" onclick="PD._unRestore()">החזרה לתור</button>` : `<button class="pd-link2" onclick="PD._unOtherDoc()" title="מסמך שאינו היתר עסקה של חברה: עובר ל'מסמכים אחרים'">לא קשור</button>`}
+        <button class="pd-link2" style="color:#c0392b" onclick="PD._askDelete('${d.id}')">מחיקה</button></div>
       <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
   }
@@ -689,7 +687,7 @@
   function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
   function undoRefresh() {
     const e = histGet().slice(-1)[0];
-    const html = e ? `<button class="pd-btn" onclick="PD._undo()" title="מחזיר את המסמך למצב שלפני השיוך האחרון (${E(e.name)})">↩ ביטול שיוך אחרון: ${E(String(e.what).slice(0, 38))}</button>` : "";
+    const html = e ? `<button class="pd-link2" onclick="PD._undo()" title="${E(e.name)}: ${E(e.what)}. מחזיר את המסמך למצב שלפני">↩ ביטול אחרון</button>` : "";
     for (const id of ["pd-un-undo", "pd-mg-undo"]) { const el = $(id); if (el) el.innerHTML = html; }
   }
   async function refetchDocs(ids) {       // מסמכים אחרים שהקישור שלהם לרשימה הוחלף בצד השרת: טוענים מחדש כדי שהתצוגה לא תישאר ישנה
@@ -970,7 +968,7 @@
   }
 
   // ───────── חלון "ניהול מסמכים" לחברה ─────────
-  const M = { biz: "", share: new Set(), move: "" };
+  const M = { biz: "", share: new Set(), move: "", menu: "" };
   function openManage(bizId) {
     if (!bizById(bizId)) return;
     M.biz = bizId; M.share = new Set(); M.move = "";
@@ -983,24 +981,23 @@
   }
   function mgCard(d, b) {
     const others = (d.business_ids || []).filter(x => x !== b.id), sl = slotsOf(d, b.id);
-    const shared = others.length > 0 || M.share.has(d.id);
-    const tb = t => `<button class="pd-mini ${d.doc_type === t ? "sel" : ""}" onclick="PD._setType('${d.id}','${t}')">${{ general: "כללי", private: "פרטי", both: "משולב", unknown: "?", other: "לא קשור" }[t]}</button>`;
-    const lb = t => `<button class="pd-mini link ${sl.includes(t) ? "sel" : ""}" onclick="PD._slot('${d.id}','${b.id}','${t}')">${sl.includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`;
+    const shared = others.length > 0 || M.share.has(d.id), menuOpen = M.menu === d.id || M.move === d.id;
+    const typeSel = `<select class="pd-sel" onchange="PD._setType('${d.id}',this.value)" title="סיווג המסמך">${["general", "private", "both", "unknown", "other"].map(t => `<option value="${t}" ${d.doc_type === t ? "selected" : ""}>${TL[t]}</option>`).join("")}</select>`;
+    const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
+      : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
     const shareBox = shared ? `<div class="pd-mg-sh">${others.map(o => `<div class="pd-co"><span>${E(bizName(o))}</span><button class="pd-link" onclick="PD._mgRemove('${d.id}','${o}')">הסר</button></div>`).join("")}
         ${M.move === d.id ? "" : `<input class="pd-in" placeholder="הוספת חברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','add',this.value)" autocomplete="off">`}</div>` : "";
     const moveBox = M.move === d.id ? `<div class="pd-mg-sh"><input class="pd-in" placeholder="העברה לחברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','move',this.value)" autocomplete="off"></div>` : "";
     return `<div class="pd-mg-card" draggable="true" ondragstart="PD._dragStart(event,'${d.id}')" ondragend="PD._dragEnd()" title="אפשר לגרור לתיבת הת&quot;ע פרטי / כללי או למסמכים נוספים">
-      <div class="pd-mg-l">
-        <div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div>
-        <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף</label>
-      </div>
+      <div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div></div>
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
-        <div class="pd-sub">${fmtSize(d.size)}${d.note ? " · " + E(d.note).slice(0, 80) : ""}</div>
-        <div class="pd-btns">${["general", "private", "both", "unknown", "other"].map(tb).join("")}</div>
-        <div class="pd-btns">${lb("private")}${lb("general")}</div>
-        <div class="pd-btns"><button class="pd-mini" onclick="PD._mgMove('${d.id}')">העברה לחברה אחרת</button><button class="pd-mini danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקה</button></div>
-        ${shareBox}${moveBox}<div id="pd-mgs-${d.id}"></div>
+        <div class="pd-sub">${typeSel} ${fmtSize(d.size)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
+        <div class="pd-btns">${linkBtns}</div>
+        <details class="pd-menu" ${menuOpen ? "open" : ""} ontoggle="PD._menu('${d.id}',this.open)"><summary>⋯ עוד</summary>
+          <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף (כמה חברות)</label>${shareBox}
+          <div class="pd-btns" style="margin-top:6px"><button class="pd-link2" onclick="PD._mgMove('${d.id}')">העברה לחברה אחרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._askDelete('${d.id}')">מחיקה</button></div>${moveBox}</details>
+        <div id="pd-mgs-${d.id}"></div>
       </div></div>`;
   }
   function paintMg() {
@@ -1028,16 +1025,16 @@
   function dragEnd() { dragId = ""; document.querySelectorAll(".pd-drop-on").forEach(x => x.classList.remove("pd-drop-on")); }
   function dragOver(ev) { if (!dragId) return; ev.preventDefault(); ev.currentTarget.classList.add("pd-drop-on"); }
   function dragLeave(ev) { ev.currentTarget.classList.remove("pd-drop-on"); }
+  async function toExtras(id) {
+    const d = S.byId.get(id); if (!d || !M.biz || !slotsOf(d, M.biz).length) return;
+    const before = snapDoc(d);
+    if (await updateDoc(id, { slots: { [M.biz]: [] } })) { pushHist(before, "הורד מהת\"ע ל\"מסמכים נוספים\" (" + bizName(M.biz) + ")"); showStatus("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
+  }
   async function dropOn(ev, target) {          // גרירה לתיבת הת"ע: המסמך נהפך לראשי (והקודם עובר למסמכים נוספים); גרירה ל"מסמכים נוספים": מסיר את הקישור לרשימות
     ev.preventDefault(); ev.currentTarget.classList.remove("pd-drop-on");
     const id = dragId || (ev.dataTransfer && ev.dataTransfer.getData("text/plain")); dragId = "";
     const d = S.byId.get(id); if (!d || !M.biz) return;
-    if (target === "extra") {
-      const cur = slotsOf(d, M.biz); if (!cur.length) return;
-      const before = snapDoc(d);
-      if (await updateDoc(id, { slots: { [M.biz]: [] } })) { pushHist(before, "הורד מהת\"ע לחברה ל\"מסמכים נוספים\" (" + bizName(M.biz) + ")"); showStatus("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
-      return;
-    }
+    if (target === "extra") return toExtras(id);
     if (slotsOf(d, M.biz).includes(target)) return;
     await toggleSlot(id, M.biz, target);
   }
@@ -1071,7 +1068,7 @@
     if (others.length) updateDoc(id, { business_ids: [M.biz] }); else paintMg();
   }
   const mgRemove = (id, bid) => { const d = S.byId.get(id); if (d) updateDoc(id, { business_ids: (d.business_ids || []).filter(x => x !== bid) }); };
-  function mgMove(id) { M.move = M.move === id ? "" : id; paintMg(); }
+  function mgMove(id) { M.move = M.move === id ? "" : id; M.menu = id; paintMg(); }
   function mgSearch(id, mode, q) {
     const d = S.byId.get(id), out = $("pd-mgs-" + id); if (!d || !out) return;
     const act = async bid => {
@@ -1096,6 +1093,10 @@
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
+  .pd-nav{display:flex;gap:6px;align-items:center}.pd-nav .pd-btn{flex:none}.pd-navpos{flex:1;text-align:center;font-weight:600;font-size:13px}
+  .pd-link2{border:none;background:none;color:#1a3a5c;font-size:12.5px;cursor:pointer;text-decoration:underline;padding:2px 4px}
+  .pd-sel{border:1px solid #cfcac0;border-radius:6px;padding:2px 4px;font-size:12px;background:#fff}
+  .pd-menu summary{cursor:pointer;font-size:12.5px;color:#555;list-style:none}.pd-menu summary::-webkit-details-marker{display:none}.pd-menu[open]{background:#f7f7f5;border-radius:6px;padding:4px 6px}
   .pd-box.wide.full{width:min(1750px,99vw);height:96vh}
   .pd-rv{display:flex;flex:1;min-height:0;height:100%}.pd-rv .pd-view{flex:1;min-width:0}
   .pd-sidecol{width:440px;max-width:46%;display:flex;flex-direction:column;min-height:0;border-inline-start:1px solid #e0ddd8}
@@ -1174,7 +1175,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: toExtras, _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
