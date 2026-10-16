@@ -748,14 +748,18 @@
     const cur = slotsOf(d, bizId), on = !cur.includes(t);
     const next = on ? [...cur, t] : cur.filter(x => x !== t);
     const patch = { slots: { [bizId]: next } };
+    let prev = null;
     if (on) {
-      const prev = slotDoc(bizId, t);
+      prev = slotDoc(bizId, t);
       if (prev && prev.id !== docId && !confirm(`כבר מקושר מסמך אחר (${prev.original_name || prev.id}) להת"ע ${SLOT_HE[t]} של החברה. להחליף? המסמך הקודם יעבור למסמכים נוספים.`)) return;
       if (d.doc_type === "unknown") patch.doc_type = next.length === 2 ? "both" : t;
       else if (d.doc_type !== "both" && d.doc_type !== t) { if (!confirm(`המסמך מסווג "${TL[d.doc_type] || d.doc_type}". לקשר להת"ע ${SLOT_HE[t]} ולשנות את הסיווג ל"כללי + פרטי"?`)) return; patch.doc_type = "both"; }
       else if (d.doc_type === t && next.length === 2) patch.doc_type = "both";
     }
-    await updateDoc(docId, patch);
+    if (await updateDoc(docId, patch) && prev && prev.id !== docId) {          // המסמך שהוחלף נטען מחדש (הקישור שלו לרשימה הוסר בשרת), כדי שהתצוגה לא תישאר ישנה
+      try { replaceDoc((await api("/permit-docs/" + prev.id)).doc); } catch { /* ננסה בטעינה הבאה */ }
+      refresh(); showStatus(`קושר. המסמך הקודם (${prev.original_name || prev.id}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים".`);
+    }
   }
   function mgShare(id, on) {
     const d = S.byId.get(id); if (!d) return;
