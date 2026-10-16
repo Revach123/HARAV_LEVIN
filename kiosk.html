@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>רשימות היתר עסקה — תצוגת עמדה</title>
+<style>
+  /* דף חדש לבדיקה: תצוגת כרטיסים למסך מגע (עמדה / טאבלט). לא משנה את display.html. */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --navy:#274d5b; --accent:#2aada1; --accent-dark:#1e8f85; --accent-bg:#e9f6f5; --accent-border:#b9e3de;
+    --border:#dfe7e8; --text:#3b3d3d; --muted:#6a7c82; --red:#c0392b; --green:#1e8f4e;
+  }
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);font-size:18px;line-height:1.5;
+    -webkit-tap-highlight-color:transparent}
+  body.hideheader .top .brand{display:none}
+  .top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--accent);padding:.6rem 1rem .8rem;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .brand{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
+  .brand img{height:40px;width:auto}
+  .brand span{font-size:20px;font-weight:700;color:var(--navy)}
+  .tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem}
+  @media (min-width:900px){.tabs{grid-template-columns:repeat(4,1fr)}}
+  .tabs button{font:inherit;font-size:17px;font-weight:700;min-height:52px;padding:.4rem .6rem;line-height:1.25;color:var(--navy);background:#fff;
+    border:2px solid var(--accent-border);border-radius:12px;cursor:pointer}
+  .tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .searchrow{display:flex;gap:.5rem}
+  .searchrow input{flex:1;min-width:0;font:inherit;font-size:20px;min-height:56px;padding:.4rem 1rem;border:2px solid var(--accent-border);border-radius:12px;background:#fff;color:var(--navy)}
+  .searchrow input:focus{outline:none;border-color:var(--accent)}
+  .searchrow button{font:inherit;font-size:18px;font-weight:700;min-height:56px;padding:0 1.4rem;border:0;border-radius:12px;cursor:pointer;color:#fff;background:var(--navy)}
+  .searchrow button.clear{background:#fff;color:var(--navy);border:2px solid var(--accent-border);padding:0 1rem;display:none}
+  .meta{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;color:var(--muted);font-size:15px;margin-top:.5rem}
+  main{max-width:1300px;margin:0 auto;padding:1rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:.9rem}
+  .card{background:#fff;border:1px solid var(--border);border-inline-start:6px solid var(--accent);border-radius:12px;padding:.9rem 1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .card h3{font-size:21px;line-height:1.3;color:var(--navy);font-weight:700;margin-bottom:.15rem}
+  .card .sub{color:var(--muted);font-size:15px;margin-bottom:.5rem}
+  .chips{display:flex;flex-wrap:wrap;gap:.4rem;margin:.2rem 0 .5rem}
+  .chip{font-size:15px;padding:.15rem .7rem;border-radius:999px;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border)}
+  .chip.ok{background:#e6f5ec;color:var(--green);border-color:#b8e0c8}
+  .chip.no{background:#f3f3f3;color:var(--muted);border-color:var(--border)}
+  .chip.warn{background:#fdeceb;color:var(--red);border-color:#f2c4c0}
+  dl{display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;font-size:16px}
+  dt{color:var(--muted)}
+  dd{color:var(--text);font-weight:700;overflow-wrap:anywhere}
+  .note{margin-top:.55rem;padding:.45rem .65rem;background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;border-radius:8px;font-size:15px}
+  .state{text-align:center;color:var(--muted);padding:3rem 1rem;font-size:20px}
+  .more{display:block;margin:1.2rem auto 2rem;font:inherit;font-size:19px;font-weight:700;min-height:56px;padding:0 2.2rem;border:2px solid var(--accent);border-radius:12px;background:#fff;color:var(--accent-dark);cursor:pointer}
+  .top-btn{position:fixed;inset-inline-start:1rem;bottom:1rem;z-index:30;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:26px;cursor:pointer;display:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'"><span>רשימות היתר עסקה</span></div>
+  <div class="tabs" id="tabs">
+    <button data-type="companies-private">חברות עם היתר עסקה פרטי</button>
+    <button data-type="companies-general">חברות עם היתר עסקה כללי</button>
+    <button data-type="bonds-private">אג"ח עם היתר עסקה פרטי</button>
+    <button data-type="bonds-general">אג"ח עם היתר עסקה כללי</button>
+  </div>
+  <div class="searchrow">
+    <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="חיפוש לפי שם, ח&quot;פ, סימול…" autocomplete="off">
+    <button class="clear" id="clr" type="button" aria-label="נקה חיפוש">✕</button>
+    <button id="go" type="button">הצג</button>
+  </div>
+  <div class="meta"><span id="count"></span><span id="upd"></span></div>
+</div>
+<main>
+  <div class="grid" id="grid"></div>
+  <div class="state" id="state"></div>
+  <button class="more" id="more" type="button" style="display:none"></button>
+</main>
+<button class="top-btn" id="toTop" type="button" aria-label="לראש הדף">↑</button>
+
+<script>
+// ?type=companies-private|companies-general|bonds-private|bonds-general   ?nav=0 מסתיר לשוניות   ?hideheader מסתיר כותרת
+const API_BASE = /pages\.dev$|localhost|127\.0\.0\.1/.test(location.hostname) ? "" : "https://harav-levin.pages.dev";
+const VALID = ["companies-private","companies-general","bonds-private","bonds-general"];
+const PAGE = 48;
+const params = new URLSearchParams(location.search);
+if (params.has("hideheader")) document.body.classList.add("hideheader");
+if (params.get("nav") === "0") document.getElementById("tabs").style.display = "none";
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const pct = v => { if (v === "" || v == null) return ""; const n = Number(v); return Number.isFinite(n) ? parseFloat(n.toFixed(2)) + "%" : String(v); };
+const num = v => { if (v === "" || v == null) return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
+const norm = s => String(s ?? "").toLowerCase().replace(/["'״׳]/g, "").replace(/\s+/g, " ").trim();
+
+let current = VALID.includes(params.get("type")) ? params.get("type") : "companies-private";
+let rows = [], view = [], shown = 0, query = "", token = 0;
+const cache = {};
+
+function row(label, val) { return val === "" || val == null ? "" : `<dt>${label}</dt><dd>${esc(val)}</dd>`; }
+function note(r) { return r.notes ? `<div class="note">${esc(r.notes)}</div>` : ""; }
+
+function companyCard(r) {
+  const st = r.bonds_status || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
+  const cls = /לא מאושר/.test(st) ? "warn" : /מאושר/.test(st) ? "ok" : "no";
+  const priv = r.has_private_permit ? `<span class="chip">${esc(r.has_private_permit === "כן" ? "יש גם היתר עסקה פרטי" : r.has_private_permit)}</span>` : "";
+  return `<article class="card"><h3>${esc(r.permit_name)}</h3>
+    <div class="chips"><span class="chip ${cls}">${esc(st)}</span>${priv}</div>
+    <dl>${row('ח"פ', r.chp_number)}${row("קטגוריה", r.category)}${row("אזור", r.region)}</dl>${note(r)}</article>`;
+}
+function bondCard(r) {
+  const rating = [r.midroog_rating && "מידרוג " + r.midroog_rating, r.maalot_rating && "מעלות " + r.maalot_rating].filter(Boolean).join(" · ");
+  return `<article class="card"><h3>${esc(r.security_name)}</h3><div class="sub">${esc(r.company)}</div>
+    <div class="chips">${r.symbol ? `<span class="chip">${esc(r.symbol)}</span>` : ""}${r.security_type ? `<span class="chip no">${esc(r.security_type)}</span>` : ""}</div>
+    <dl>${row("מספר נייר", r.security_id)}${row("ריבית", pct(r.annual_interest))}${row("מועד פדיון", r.redemption_date)}${row("הצמדה", r.linkage)}
+    ${row("שער אחרון", num(r.last_price))}${row("תשואה לפדיון", pct(r.ytm_gross))}${row("תשואה שנתית", pct(r.annual_yield))}${row("דירוג", rating)}</dl>${note(r)}</article>`;
+}
+
+function haystack(r) {
+  return norm([r.permit_name, r.chp_number, r.category, r.region, r.bonds_status, r.notes,
+    r.security_name, r.symbol, r.security_id, r.company, r.security_type].join(" "));
+}
+
+function applyFilter() {
+  const terms = norm(query).split(" ").filter(Boolean);
+  view = terms.length ? rows.filter(r => { const h = r._h || (r._h = haystack(r)); return terms.every(t => h.includes(t)); }) : rows;
+  shown = 0; $("grid").innerHTML = "";
+  $("count").textContent = `${view.length} ${current.startsWith("bonds") ? "איגרות חוב" : "חברות"}` + (terms.length ? ` מתוך ${rows.length}` : "");
+  $("clr").style.display = query ? "" : "none";
+  $("state").textContent = view.length ? "" : "לא נמצאו תוצאות";
+  more();
+}
+function more() {
+  const card = current.startsWith("bonds") ? bondCard : companyCard;
+  const next = view.slice(shown, shown + PAGE);
+  $("grid").insertAdjacentHTML("beforeend", next.map(card).join(""));
+  shown += next.length;
+  const left = view.length - shown;
+  $("more").style.display = left > 0 ? "" : "none";
+  $("more").textContent = `הצג עוד (${left})`;
+}
+
+async function load(type) {
+  const my = ++token;
+  current = type;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.type === type));
+  $("grid").innerHTML = ""; $("more").style.display = "none"; $("count").textContent = ""; $("state").textContent = "טוען…";
+  try {
+    if (!cache[type]) {
+      if (type.startsWith("bonds")) {
+        const j = await fetch(`${API_BASE}/data/bonds_list/bonds_${type.split("-")[1]}.json`).then(r => { if (!r.ok) throw 0; return r.json(); });
+        cache[type] = (j.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() }));
+      } else {
+        const j = await fetch(`${API_BASE}/api/lists?type=${type}`).then(r => r.json());
+        if (!j || !j.ok) throw 0;
+        cache[type] = j.rows;
+      }
+    }
+  } catch (e) {
+    if (my === token) $("state").textContent = "לא ניתן לטעון את הרשימה כרגע. נסו שוב בעוד רגע.";
+    return;
+  }
+  if (my !== token) return;
+  rows = cache[type];
+  applyFilter();
+}
+
+// תאריך עדכון (לועזי פשוט; display.html מציג גם עברי)
+fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((j && j.updated) || "");
+  if (m) $("upd").textContent = `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`;
+}).catch(() => {});
+
+$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.type !== current) { query = ""; $("q").value = ""; load(b.dataset.type); window.scrollTo(0, 0); } });
+const run = () => { query = $("q").value; applyFilter(); $("q").blur(); window.scrollTo(0, 0); };
+$("go").addEventListener("click", run);
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+let t; $("q").addEventListener("input", () => { clearTimeout(t); t = setTimeout(() => { query = $("q").value; applyFilter(); }, 250); });
+$("clr").addEventListener("click", () => { $("q").value = ""; query = ""; applyFilter(); });
+$("more").addEventListener("click", more);
+window.addEventListener("scroll", () => { $("toTop").style.display = window.scrollY > 600 ? "block" : "none"; }, { passive: true });
+$("toTop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+load(current);
+</script>
+</body>
+</html>
