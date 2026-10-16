@@ -21,7 +21,11 @@ export async function withBusinesses(env, rows) {
     catch { all = await env.DB.prepare("SELECT doc_id, business_id FROM permit_doc_companies").all(); }      // לפני מיגרציה 0007
     for (const l of all.results ?? []) if (links.has(l.doc_id)) { links.get(l.doc_id).push(l.business_id); if (l.slot) slots.get(l.doc_id)[l.business_id] = l.slot; }
   }
-  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {} }));
+  const ext = new Map(ids.map(i => [i, []]));
+  if (ids.length) {          // חברות שאינן במאגר (מיגרציה 0008); לפני המיגרציה - ריק
+    try { for (const l of (await env.DB.prepare("SELECT doc_id, ext_id FROM permit_doc_ext").all()).results ?? []) if (ext.has(l.doc_id)) ext.get(l.doc_id).push(l.ext_id); } catch { /* אין טבלה עדיין */ }
+  }
+  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [] }));
 }
 
 // קובע את הקישור לרשימות של מסמך אחד: slotMap = { מזהה_חברה: ["general","private"] }.

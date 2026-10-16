@@ -1,7 +1,7 @@
 import { checkAdmin } from "../_shared/auth.js";
 import { TYPES, noAuth, withBusinesses, existingBusinessIds, slotStatements } from "../_shared/permit-docs.js";
 // GET    /api/permit-docs/:id   → מסמך אחד
-// PUT    /api/permit-docs/:id   → עדכון { doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
+// PUT    /api/permit-docs/:id   → עדכון { ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
 // DELETE /api/permit-docs/:id   → מחיקה מלאה של המסמך (השיוכים והקובץ)
 
 export async function onRequestGet({ request, env, params }) {
@@ -36,6 +36,11 @@ export async function onRequestPut({ request, env, params }) {
     }
     if (body.slots && typeof body.slots === "object") {
       stmts.push(...await slotStatements(env, params.id, body.slots));
+    }
+    if (Array.isArray(body.ext_ids)) {        // חברות שאינן במאגר (permit_ext_companies): החלפה מלאה
+      const have = new Set(((await env.DB.prepare("SELECT id FROM permit_ext_companies").all()).results ?? []).map(r => r.id));
+      stmts.push(env.DB.prepare("DELETE FROM permit_doc_ext WHERE doc_id = ?").bind(params.id));
+      for (const x of [...new Set(body.ext_ids.map(String))].filter(i => have.has(i))) stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_ext (doc_id, ext_id) VALUES (?, ?)").bind(params.id, x));
     }
     await env.DB.batch(stmts);
     const fresh = await env.DB.prepare("SELECT * FROM permit_docs WHERE id = ?").bind(params.id).first();
