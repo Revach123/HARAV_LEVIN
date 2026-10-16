@@ -32,7 +32,7 @@ export async function onRequestPut({ request, env, params }) {
       try { for (const l of (await env.DB.prepare("SELECT business_id, slot FROM permit_doc_companies WHERE doc_id = ?").bind(params.id).all()).results ?? []) old[l.business_id] = l.slot || ""; } catch { /* לפני מיגרציה 0007 */ }
       stmts.push(env.DB.prepare("DELETE FROM permit_doc_companies WHERE doc_id = ?").bind(params.id));
       for (const b of ids) stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_companies (doc_id, business_id) VALUES (?, ?)").bind(params.id, b));
-      if (body.slots === undefined) for (const b of ids) if (old[b]) stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = ? WHERE doc_id = ? AND business_id = ?").bind(old[b], params.id, b));
+      for (const b of ids) if (old[b] && !(body.slots && typeof body.slots === "object" && b in body.slots)) stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = ? WHERE doc_id = ? AND business_id = ?").bind(old[b], params.id, b));
     }
     if (body.slots && typeof body.slots === "object") {
       stmts.push(...await slotStatements(env, params.id, body.slots));
