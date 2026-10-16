@@ -541,10 +541,17 @@
   };
   const unassignedCount = () => S.docs.filter(d => inView(d, "un")).length;
   const viewCounts = () => { const c = {}; for (const [v] of VIEWS) c[v] = 0; for (const d of S.docs) for (const [v] of VIEWS) if (inView(d, v)) c[v]++; return c; };
+  function docHay(d) {        // טקסט לסינון: שם קובץ, כותרת, הערה, ושמות / ח.פ. של החברות המשויכות (גם שאינן במאגר)
+    if (d._hay && d._hayN === S.docs.length + ":" + S.ext.length) return d._hay;
+    const cos = (d.business_ids || []).map(bizById).filter(Boolean).flatMap(b => [displayName(b), b.chp_number, b.registrar_name, b.permit_name]);
+    const exts = (d.ext_ids || []).map(extById).filter(Boolean).flatMap(x => [x.name, x.chp]);
+    d._hayN = S.docs.length + ":" + S.ext.length;
+    return (d._hay = [d.original_name, d.source_title, d.note, ...cos, ...exts].map(x => String(x || "").toLowerCase()).join(" | "));
+  }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
     const l = S.docs.filter(d => inView(d, Q.view) && !Q.skipped.has(d.id) &&
-        (!f || [d.original_name, d.source_title, d.note].some(x => String(x || "").toLowerCase().includes(f))));
+        (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he"));      // מסמכים של אותה חברה צמודים
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
   }
@@ -555,7 +562,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">מסמכי היתר · שיוך ובדיקה</b><button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
         <div class="pd-tabs" id="pd-un-tabs"></div>
         <div class="pd-sub"><span id="pd-un-count"></span><span id="pd-un-skipped"></span></div>
-        <input class="pd-in" placeholder="סינון לפי שם קובץ / כותרת / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
+        <input class="pd-in" placeholder="סינון הרשימה: שם קובץ / חברה / ח.פ. / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
         <div class="pd-btns"><span id="pd-un-undo"></span><button class="pd-btn" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-btn" onclick="PD._openExt()">חברות שאינן במאגר (<span id="pd-un-extn">${S.ext.length}</span>)</button></div>
       </div><div class="pd-side" id="pd-un-side"></div></div></div>`, "full");
     closers["pd-un"] = () => { if (Q.blobUrl) URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; Q.curId = ""; if (typeof render === "function" && typeof view !== "undefined" && view === "home") render(); };
@@ -1171,7 +1178,10 @@
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
-    _unFilter: v => { Q.filter = v; Q.i = 0; Q.curId = ""; uqShow(); }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
+    _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
+      Q.filter = v; clearTimeout(Q._ft);
+      Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
+    }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
     _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); },
     _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
