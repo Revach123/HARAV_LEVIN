@@ -883,6 +883,7 @@ let filterCat  = "";
 let filterRegion   = "";
 let filterBizType  = "";
 let filterVis      = "";
+let filterDocs     = "";      // "" | review | missing: סינון לפי מצב מסמכי ההיתר (permit-docs.js)
 let filterAgch     = "";   // "" | "אין" | "מאושר" | "לא מאושר" | "יש"
 let sortCol    = "name";   // name | chp | category | region | biz_type | visibility | agch | notes
 let sortDir    = "asc";    // asc | desc
@@ -1032,6 +1033,12 @@ function renderAdminTable() {
         <input type="text" id="adm-srch" class="fb-search${search ? " active" : ""}" autocomplete="off"
           placeholder="🔍 שם, ח.פ., קטגוריה, אזור, הערות…" value="${escHtml(search)}" oninput="onAdminSearch(this.value)">
       </div>
+      ${window.PD && PD.docCounts ? (() => { const c = PD.docCounts(businesses); return `<div class="fb-group"><span class="fb-label">מסמכי היתר</span>
+        <select id="f-docs" onchange="filterDocs=this.value;render()" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text);">
+          <option value="" ${!filterDocs ? "selected" : ""}>הכל</option>
+          <option value="review" ${filterDocs === "review" ? "selected" : ""}>לבדיקה ידנית (${c.review})</option>
+          <option value="missing" ${filterDocs === "missing" ? "selected" : ""}>חסר מסמך (${c.missing})</option>
+        </select></div>`; })() : ""}
       <div class="fb-group" style="justify-content:flex-end;"><span class="fb-label">&nbsp;</span>
         <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
     </div>
@@ -2810,7 +2817,7 @@ function setSort(col) {
 
 function clearFilters() {
   search = ""; filterCat = ""; filterRegion = "";
-  filterBizType = ""; filterVis = ""; filterAgch = "";
+  filterBizType = ""; filterVis = ""; filterAgch = ""; filterDocs = "";
   render();
 }
 
@@ -2840,6 +2847,7 @@ function filteredAndSorted() {
     if (filterRegion  && b.region      !== filterRegion)  return false;
     if (filterBizType && b.biz_type    !== filterBizType) return false;
     if (filterVis     && b.visibility  !== filterVis)     return false;
+    if (filterDocs && window.PD && PD.docStatus && PD.docStatus(b) !== filterDocs) return false;
     if (filterAgch) {
       const has  = (b.tase_has_agch||"").trim();
       const appr = (b.agch_approved||"").trim();
