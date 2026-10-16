@@ -50,6 +50,40 @@
   }
   const fmtSize = n => (n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
 
+  // ───────── מספר עמודים ותאריכים מהמסמך ─────────
+  const pad2 = n => String(n).padStart(2, "0");
+  function extractDates(text) {          // תאריכים לועזיים (dd/mm/yyyy, dd.mm.yy, yyyy-mm-dd) בטווח סביר; מהמאוחר למוקדם
+    const now = new Date().getFullYear(), out = new Set(), t = String(text || "");
+    const add = (y, m, d) => { y = +y; m = +m; d = +d; if (y < 100) y += 2000; if (y < 1990 || y > now + 1 || m < 1 || m > 12 || d < 1 || d > 31) return; out.add(`${y}-${pad2(m)}-${pad2(d)}`); };
+    for (const m of t.matchAll(/(?<!\d)(\d{1,2})[./\-](\d{1,2})[./\-](\d{4}|\d{2})(?!\d)/g)) add(m[3], m[2], m[1]);
+    for (const m of t.matchAll(/(?<!\d)(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})(?!\d)/g)) add(m[1], m[2], m[3]);
+    const r = x => [...x].reverse().join("");          // טקסט עברי שחולץ הפוך (אותיות / ספרות בסדר הפוך): 0202/11/03 = 30/11/2020
+    for (const m of t.matchAll(/(?<!\d)(\d{4})[./\-](\d{1,2})[./\-](\d{1,2})(?!\d)/g)) add(r(m[1]), r(m[2]), r(m[3]));
+    return [...out].sort().reverse();
+  }
+  const datesOf = d => { try { return JSON.parse(d.doc_dates || "[]"); } catch { return []; } };
+  const fmtDate = iso => iso ? iso.split("-").reverse().join("/") : "";
+  function metaText(d) {
+    const ds = datesOf(d), parts = [];
+    if (d.pages) parts.push(d.pages + " עמ'");
+    if (ds.length) parts.push(fmtDate(ds[0]));
+    return parts.join(" · ");
+  }
+  const metaHtml = d => `<span data-meta="${d.id}" title="${E(datesOf(d).length ? "תאריכים שנמצאו במסמך: " + datesOf(d).map(fmtDate).join(", ") : "")}">${E(metaText(d))}</span>`;
+  const metaBusy = new Set();
+  async function ensureMeta(docId, pdf) {          // ממלא מספר עמודים ותאריכים פעם אחת לכל מסמך, כשהוא נפתח / נטענת לו תמונה
+    const d = S.byId.get(docId); if (!d || d.pages || metaBusy.has(docId) || S.metaOff) return;
+    metaBusy.add(docId);
+    try {
+      const n = pdf.numPages, want = [...new Set([1, 2, n - 1, n].filter(p => p >= 1 && p <= n))]; let text = "";
+      for (const p of want) { try { text += "\n" + (await (await pdf.getPage(p)).getTextContent()).items.map(x => x.str).join(" "); } catch { /* עמוד בלי טקסט */ } }
+      const r = await api("/permit-docs/" + docId, "PUT", { pages: n, doc_dates: extractDates(text) });
+      replaceDoc(r.doc); const nd = S.byId.get(docId);
+      document.querySelectorAll(`[data-meta="${docId}"]`).forEach(el => { el.textContent = metaText(nd); el.title = datesOf(nd).length ? "תאריכים שנמצאו במסמך: " + datesOf(nd).map(fmtDate).join(", ") : ""; });
+    } catch (e) { if (/no such column/.test(e.message || "")) S.metaOff = true; }      // לפני מיגרציה 0010: לא מנסים שוב
+    metaBusy.delete(docId);
+  }
+
   // ───────── חיפוש חברה: במאגר שלנו, ובמאגר הרשם (חברות שאינן במאגר: כרטיסייה אדומה; סימון חברות מחוסלות/נמחקו) ─────────
   const DEFUNCT = /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/;
   const stTag = st => (st ? `<span class="pd-st${DEFUNCT.test(st) ? " bad" : ""}">${E(st)}</span>` : "");
@@ -215,6 +249,7 @@
     try {
       const blob = await fetchPdfBlob(docId);
       blobUrl = URL.createObjectURL(blob);
+      if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(docId, pdf)).catch(() => {});
       try { S.integrity = S.integrity || {}; S.integrity[docId] = (await sha256(await blob.arrayBuffer())) === d.sha256; } catch { /* בלי בדיקה */ }
     } catch (e) { blobUrl = ""; fileErr = e.message; }
     const paint = () => {
@@ -226,7 +261,7 @@
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
       const slotBtns = fromBiz ? `<h4>קישור לרשימה של ${E(bizName(fromBiz))}</h4><div class="pd-btns">${["private", "general"].map(t => `<button class="pd-btn ${slotsOf(doc, fromBiz).includes(t) ? "sel" : ""}" onclick="PD._slot('${docId}','${fromBiz}','${t}')">${slotsOf(doc, fromBiz).includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`).join("")}</div>` : "";
-      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
+      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${metaText(doc) ? " · " + E(metaText(doc)) : ""}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
       const sideHtml = `
             <h4>סיווג</h4><div class="pd-btns">${typeBtns}</div>${slotBtns}
             <h4>חברות משויכות (${ids.length})</h4>${chips}
@@ -617,6 +652,7 @@
         try {
           const blob = await fetchPdfBlob(d.id); if (tok !== Q.token) return;
           Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}" title="המסמך"></iframe>`;
+          if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
           unassignedList().slice(Q.i + 1, Q.i + 3).forEach(x => fetchPdfBlob(x.id).catch(() => {}));      // טעינה מראש של שני המסמכים הבאים
           try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
             const r = await extractText(await blob.arrayBuffer(), 6); if (tok !== Q.token) return;
@@ -640,7 +676,7 @@
     const typeBtns = ["general", "both", "private"].map(t => `<button class="pd-btn ${d.doc_type === t ? "sel" : ""}" onclick="PD._unSetType('${t}')" title="${{ general: "היתר כללי בלבד", both: "היתר פרטי (מכסה גם את הרשימה הכללית)", private: "היתר פרטי בלבד" }[t]}">${TL[t]}</button>`).join("");
     side.innerHTML = `
       <div style="font-weight:600;font-size:14px;word-break:break-all">${E(d.source_title || d.original_name || d.id)}</div>
-      <div class="pd-sub">${E(d.original_name || "")} · ${fmtSize(d.size)}</div>
+      <div class="pd-sub">${E(d.original_name || "")} · ${fmtSize(d.size)} · ${metaHtml(d)}</div>
       ${reasons.length ? `<div class="pd-warnbox">${reasons.map(E).join("<br>")}</div>` : ""}
       ${d.note ? `<div class="pd-warnbox">${E(d.note)}</div>` : ""}
       <div style="margin-top:8px"><span class="pd-sub">סיווג המסמך:</span><div class="pd-btns" style="margin-top:3px">${typeBtns}</div>
@@ -649,15 +685,12 @@
       ${assigned ? `<div class="pd-ucs">${assigned}</div>` : ""}
       <h4 style="margin-top:14px">${Q.replace ? `שינוי שיוך: בחרו חברה במקום "${E(replName)}" <button class="pd-link2" onclick="PD._unPicker('')">ביטול</button>` : nAsg ? "הוספת שיוך נוסף" : "שיוך לחברה"}</h4>
       <input class="pd-in" id="pd-un-q" placeholder="חיפוש לפי ח.פ. או שם חברה" oninput="PD._unSearch(this.value)" autocomplete="off"><div id="pd-un-res"></div>
-      <div style="margin-top:8px"><button class="pd-btn ${Q.bondPicker ? "sel" : ""}" onclick="PD._unBondPicker()" title="שיוך המסמך גם לאג&quot;ח של החברה, בנוסף לשיוך לחברה">שיוך לאג"ח ${Q.bondPicker ? "▴" : "▾"}</button></div>
-      ${Q.bondPicker ? `<div class="pd-picker"><input class="pd-in" id="pd-un-bq" placeholder="חיפוש אג&quot;ח: שם, סימול, מספר נייר או חברה" value="${E(Q.bondQ)}" oninput="PD._unBondSearch(this.value)" autocomplete="off"><div id="pd-un-bres" style="max-height:230px;overflow:auto"></div></div>` : ""}
       ${sugg.length ? `<div class="pd-sub" style="margin-top:8px">הצעות לפי סריקת המסמך:</div><div class="pd-ucs">${sugg.map(c => ucard(c.b, d, { why: c.why })).join("")}</div>` : `<div class="pd-sub" style="margin-top:8px">לא נמצאו הצעות לפי תוכן המסמך: חפשו ידנית.</div>`}
       <details style="margin-top:8px"><summary class="pd-sub" style="cursor:pointer">חברה שאינה במאגר: הוספה ידנית (בלי חיפוש ברשם)</summary>
         <div style="display:flex;gap:6px;margin-top:5px"><input class="pd-in" id="pd-ext-name" placeholder="שם החברה"><input class="pd-in" id="pd-ext-chp" placeholder="ח.פ." style="max-width:120px"></div>
         <div class="pd-btns" style="margin-top:5px">${["deleted", "merged", "not_in_db"].map(st => `<button class="pd-btn" onclick="PD._unExtAdd('${st}')">שיוך כ"${EXT_HE[st]}"</button>`).join("")}</div></details>
       <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
       <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
-    if (Q.bondPicker) bondRender();
     const foot = $("pd-un-foot");
     if (foot) foot.innerHTML = `<button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקת המסמך</button>${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()">↩ החזרה לתור</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="עובר ללשונית 'מסמכים אחרים'">סימון: מסמך שאינו היתר עסקה</button>`}`;
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
@@ -689,24 +722,31 @@
     return `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.name || x.id)}</b><div class="pd-sub">אג"ח · ${E(x.symbol)} · נייר ${E(x.id)}</div><div class="pd-sub">${E(x.company)}${x.chp && !own ? ' <span class="pd-st bad">החברה לא משויכת למסמך</span>' : ""}</div></div>
       <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" style="color:#c0392b" onclick="PD._unBondDel('${E(x.id)}')">ביטול</button></div></div>`;
   }
-  async function bondRender() {
-    const out = $("pd-un-bres"); if (!out) return;
-    const d = unassignedList()[Q.i]; if (!d) return;
-    const rows = await bondList(), q = Q.bondQ.trim().toLowerCase(), have = new Set((d.bonds || []).map(x => x.id));
-    const chps = new Set([...(d.business_ids || []).map(bizById).filter(Boolean).map(b => digitsOf(b.chp_number)), ...Q.cands.slice(0, 3).map(c => digitsOf(c.b.chp_number))].filter(Boolean));
+  // ───────── שיוך מסמך לאג"ח, מתוך חלון ניהול מסמכי החברה ─────────
+  function mgBond(docId) { M.bond = M.bond === docId ? "" : docId; M.bondQ = ""; M.menu = ""; paintMg(); }
+  async function mgBondSearch(docId, q, keep) {
+    if (!keep) M.bondQ = String(q || "");
+    const out = $("pd-mgbr-" + docId); if (!out) return;
+    const d = S.byId.get(docId), b = bizById(M.biz); if (!d || !b) return;
+    const rows = await bondList(), have = new Set((d.bonds || []).map(x => x.id)), qq = String(q || "").trim().toLowerCase();
+    const own = r => digitsOf(r.chp) && digitsOf(r.chp) === digitsOf(b.chp_number);
     let list = rows.filter(r => !have.has(r.id));
-    const mine = r => digitsOf(r.chp) && chps.has(digitsOf(r.chp));
-    list = q ? list.filter(r => [r.name, r.symbol, r.id, r.company].some(v => String(v).toLowerCase().includes(q))) : list.filter(mine);
-    list.sort((a, b) => (mine(b) ? 1 : 0) - (mine(a) ? 1 : 0) || String(a.name).localeCompare(String(b.name), "he"));
-    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._unBondAdd('${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(r.symbol)} · ${E(r.company)}</span>${mine(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
-      || `<div class="pd-sub" style="padding:6px">${q ? "לא נמצאו אג\"ח" : "אין אג\"ח של החברות המשויכות או המוצעות. הקלידו לחיפוש."}</div>`;
+    list = qq ? list.filter(r => [r.name, r.symbol, r.id, r.company].some(v => String(v).toLowerCase().includes(qq))) : list.filter(own);
+    list.sort((x, y) => (own(y) ? 1 : 0) - (own(x) ? 1 : 0) || String(x.name).localeCompare(String(y.name), "he"));
+    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._mgBondAdd('${docId}','${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(r.symbol)}${own(r) ? "" : " · " + E(r.company)}</span>${own(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
+      || `<div class="pd-sub" style="padding:5px">${qq ? "לא נמצאו אג\"ח" : "אין אג\"ח רשומות לחברה הזו. הקלידו לחיפוש בכל האג\"ח."}</div>`;
   }
-  async function bondAdd(id) {
-    const d = unassignedList()[Q.i]; if (!d) return;
-    const r = (await bondList()).find(x => x.id === id); if (!r) return;
-    try { const before = snapDoc(d); const res = await api("/permit-docs/" + d.id, "PUT", { bonds: [...(d.bonds || []), r] }); replaceDoc(res.doc); pushHist(before, "שויך לאג\"ח " + r.name); }
-    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "שיוך האג\"ח נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0009 ב-D1)" : ""); return; }
-    uqShow();
+  async function mgBondAdd(docId, id) {
+    const d = S.byId.get(docId), r = (await bondList()).find(x => x.id === id); if (!d || !r) return;
+    try { const before = snapDoc(d); replaceDoc((await api("/permit-docs/" + docId, "PUT", { bonds: [...(d.bonds || []), r] })).doc); pushHist(before, "שויך לאג\"ח " + r.name); }
+    catch (e) { alert("שיוך האג\"ח נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0009 ב-D1)" : "")); return; }
+    paintMg();
+  }
+  async function mgBondDel(docId, id) {
+    const d = S.byId.get(docId); if (!d) return;
+    try { const before = snapDoc(d); replaceDoc((await api("/permit-docs/" + docId, "PUT", { bonds: (d.bonds || []).filter(x => x.id !== id) })).doc); pushHist(before, "בוטל שיוך לאג\"ח"); }
+    catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
+    paintMg();
   }
   async function bondDel(id) {
     const d = unassignedList()[Q.i]; if (!d) return;
@@ -850,7 +890,7 @@
     const tb = t => `<button class="pd-btn ${A.type === t ? "sel" : ""}" onclick="PD._asType('${t}')">${TL[t]}</button>`;
     const sb = t => `<button class="pd-btn ${A.slots.has(t) ? "sel" : ""}" style="${A.slots.has(t) ? "background:" + TCOL[t] + ";border-color:" + TCOL[t] : ""}" onclick="PD._asSlot('${t}')">${A.slots.has(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`;
     const mini = x => `<div class="pd-as-mini" onclick="PD.openDoc('${x.id}')" title="פתיחה בגדול"><div class="pd-mg-th" style="height:120px"><img data-thumb="${x.id}" alt="" ${thumbUrls.get(x.id) ? `src="${thumbUrls.get(x.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(x.id) ? 'style="display:none"' : ""}>…</span></div>
-      <div class="pd-name" title="${E(x.original_name || "")}">${E(x.original_name || x.id)}</div>
+      <div class="pd-name" title="${E(x.original_name || "")}">${E(x.original_name || x.id)}</div><div class="pd-sub">${metaHtml(x)}</div>
       <div class="pd-btns"><span class="pd-chip" style="background:${TCOL[x.doc_type] || TCOL.unknown}">${TL[x.doc_type] || TL.unknown}</span>${slotsOf(x, b.id).map(t => `<span class="pd-chip" style="background:#555">הת"ע ${SLOT_HE[t]}</span>`).join("")}</div></div>`;
     const pr = slotDoc(b.id, "private"), ge = slotDoc(b.id, "general"), ex = others.filter(x => !slotsOf(x, b.id).length);
     const chips = A.queue.map((id, k) => `<span class="pd-chip" style="background:${k < A.i ? "#1e7e4a" : k === A.i ? "#1a3a5c" : "#8a8a8a"}">${k < A.i ? "✓ " : ""}${E(bizName(id))}${k > A.i ? ` <a href="#" style="color:#fff" onclick="PD._asDrop(${k});return false" title="הסרה מהרשימה">✕</a>` : ""}</span>`).join(" ");
@@ -1069,6 +1109,7 @@
     const run = async () => {
       try {
         const pdf = await pdfDoc(await (await fetchPdfBlob(id)).arrayBuffer());
+        ensureMeta(id, pdf);
         const pg = await pdf.getPage(1), v1 = pg.getViewport({ scale: 1 }), vp = pg.getViewport({ scale: 240 / v1.width });
         const cv = document.createElement("canvas"); cv.width = Math.round(vp.width); cv.height = Math.round(vp.height);
         await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
@@ -1084,7 +1125,7 @@
   }
 
   // ───────── חלון "ניהול מסמכים" לחברה ─────────
-  const M = { biz: "", share: new Set(), move: "", menu: "" };
+  const M = { biz: "", share: new Set(), move: "", menu: "", bond: "", bondQ: "" };
   function openManage(bizId) {
     if (!bizById(bizId)) return;
     M.biz = bizId; M.share = new Set(); M.move = "";
@@ -1108,8 +1149,10 @@
       <div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div></div>
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
-        <div class="pd-sub">${typeSel} ${fmtSize(d.size)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
+        <div class="pd-sub">${typeSel} ${fmtSize(d.size)} · ${metaHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
         <div class="pd-btns">${linkBtns}</div>
+        <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(x.symbol || x.name)} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
+        ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
         <details class="pd-menu" ${menuOpen ? "open" : ""} ontoggle="PD._menu('${d.id}',this.open)"><summary>⋯ עוד</summary>
           <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף (כמה חברות)</label>${shareBox}
           <div class="pd-btns" style="margin-top:6px"><button class="pd-link2" onclick="PD._mgMove('${d.id}')">העברה לחברה אחרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._askDelete('${d.id}')">מחיקה</button></div>${moveBox}</details>
@@ -1131,6 +1174,7 @@
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div></div>`;
     const body = root.querySelector(".pd-body"); if (body) body.scrollTop = keep;
     undoRefresh();
+    if (M.bond && S.byId.get(M.bond)) mgBondSearch(M.bond, M.bondQ, true);
     root.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => {
       if (!img.isConnected) return;
       if (u) { img.src = u; img.nextElementSibling && (img.nextElementSibling.style.display = "none"); } else if (img.nextElementSibling) img.nextElementSibling.textContent = "אין תצוגה מקדימה";
@@ -1314,7 +1358,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _unBondPicker: () => { Q.bondPicker = !Q.bondPicker; uqShow(); }, _unBondSearch: v => { Q.bondQ = v; bondRender(); }, _unBondAdd: bondAdd, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
