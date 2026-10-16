@@ -629,6 +629,9 @@
     const html = e ? `<button class="pd-btn" onclick="PD._undo()" title="מחזיר את המסמך למצב שלפני השיוך האחרון (${E(e.name)})">↩ ביטול שיוך אחרון: ${E(String(e.what).slice(0, 38))}</button>` : "";
     for (const id of ["pd-un-undo", "pd-mg-undo"]) { const el = $(id); if (el) el.innerHTML = html; }
   }
+  async function refetchDocs(ids) {       // מסמכים אחרים שהקישור שלהם לרשימה הוחלף בצד השרת: טוענים מחדש כדי שהתצוגה לא תישאר ישנה
+    await Promise.all([...new Set(ids)].map(id => api("/permit-docs/" + id).then(r => replaceDoc(r.doc)).catch(() => {})));
+  }
   const slotArrs = (map, ids) => Object.fromEntries(ids.map(b => [b, String((map || {})[b] || "").split(",").filter(Boolean)]));
   async function undoLast() {
     const h = histGet(), last = h[h.length - 1]; if (!last) return;
@@ -729,7 +732,8 @@
       const before = snapDoc(d), others = [];
       for (const t of A.slots) { const o = slotDoc(b.id, t); if (o && o.id !== d.id && !others.some(x => x.id === o.id)) others.push({ id: o.id, bid: b.id, slot: slotsOf(o, b.id) }); }
       const r = await api("/permit-docs/" + d.id, "PUT", { business_ids: ids, doc_type: A.type, slots: { [b.id]: [...A.slots] } });
-      replaceDoc(r.doc); pushHist(before, "שויך ל" + displayName(b), others, A.sid); showStatus("המסמך שויך ל" + displayName(b)); refresh();
+      replaceDoc(r.doc); await refetchDocs(others.map(o => o.id)); pushHist(before, "שויך ל" + displayName(b), others, A.sid);
+      showStatus("המסמך שויך ל" + displayName(b) + (others.length ? `. המסמך הקודם בהת"ע (${others.map(o => (S.byId.get(o.id) || {}).original_name || o.id).join(", ")}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : "")); refresh();
     } catch (e) { const el = $("pd-as-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
     asNext();
   }
@@ -890,14 +894,21 @@
     const cur = slotsOf(d, bizId), on = !cur.includes(t);
     const next = on ? [...cur, t] : cur.filter(x => x !== t);
     const patch = { slots: { [bizId]: next } };
+    const before = snapDoc(d), others = [];
+    let prev = null;
     if (on) {
-      const prev = slotDoc(bizId, t);
+      prev = slotDoc(bizId, t);
+      if (prev && prev.id !== docId) others.push({ id: prev.id, bid: bizId, slot: slotsOf(prev, bizId) });
       if (prev && prev.id !== docId && !confirm(`כבר מקושר מסמך אחר (${prev.original_name || prev.id}) להת"ע ${SLOT_HE[t]} של החברה. להחליף? המסמך הקודם יעבור למסמכים נוספים.`)) return;
       if (d.doc_type === "unknown") patch.doc_type = next.length === 2 ? "both" : t;
       else if (d.doc_type !== "both" && d.doc_type !== t) { if (!confirm(`המסמך מסווג "${TL[d.doc_type] || d.doc_type}". לקשר להת"ע ${SLOT_HE[t]} ולשנות את הסיווג ל"כללי + פרטי"?`)) return; patch.doc_type = "both"; }
       else if (d.doc_type === t && next.length === 2) patch.doc_type = "both";
     }
-    await updateDoc(docId, patch);
+    if (await updateDoc(docId, patch)) {
+      await refetchDocs(others.map(o => o.id)); refresh();
+      pushHist(before, (on ? "קישור להת\"ע " : "ביטול קישור להת\"ע ") + SLOT_HE[t] + " של " + bizName(bizId), others);
+      showStatus(on && prev && prev.id !== docId ? `קושר. המסמך הקודם (${prev.original_name || prev.id}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : on ? "המסמך קושר לרשימה" : "הקישור לרשימה בוטל");
+    }
   }
   function mgShare(id, on) {
     const d = S.byId.get(id); if (!d) return;
