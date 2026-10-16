@@ -508,10 +508,12 @@
   const Q = { i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", showOther: false, filter: "", blobUrl: "", readable: null };
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length;
-  const unassignedCount = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other").length;
+  const missingMarked = d => /חסר במאגר:/.test(d.note || "");      // סומן שהחברה שלו אינה במאגר (למשל מחוסלת): טופל, יוצא מהתור
+  const handled = d => d.doc_type === "other" || missingMarked(d);
+  const unassignedCount = () => S.docs.filter(d => isUnassigned(d) && !handled(d)).length;
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    return S.docs.filter(d => isUnassigned(d) && !Q.skipped.has(d.id) && (Q.showOther || d.doc_type !== "other") &&
+    return S.docs.filter(d => isUnassigned(d) && !Q.skipped.has(d.id) && (Q.showOther || !handled(d)) &&
         (!f || [d.original_name, d.source_title, d.note].some(x => String(x || "").toLowerCase().includes(f))))
       .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
   }
@@ -520,7 +522,7 @@
     overlay("pd-un", `
       <div class="pd-head"><b>מסמכים לא משויכים</b><span class="pd-sub" id="pd-un-count"></span><span id="pd-un-skipped"></span>
         <input class="pd-in" style="width:230px" placeholder="סינון לפי שם קובץ / כותרת / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
-        <label class="pd-sub"><input type="checkbox" onchange="PD._unOther(this.checked)"> הצג גם "לא קשור"</label>
+        <label class="pd-sub"><input type="checkbox" onchange="PD._unOther(this.checked)"> הצג גם "לא קשור" / "חסר במאגר"</label>
         <button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
       <div class="pd-split"><div class="pd-view" id="pd-un-view"></div><div class="pd-side" id="pd-un-side"></div></div>`, true);
     closers["pd-un"] = () => { if (Q.blobUrl) URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; Q.curId = ""; if (typeof render === "function" && typeof view !== "undefined" && view === "home") render(); };
@@ -601,7 +603,7 @@
   async function uqMark(reg) {        // סימון "חסר במאגר" בהערת המסמך (המסמך נשאר לא משויך)
     const d = unassignedList()[Q.i]; if (!d) return;
     const note = (Q.note ? Q.note + " | " : "") + markText(reg); Q.note = note;
-    try { const r = await api("/permit-docs/" + d.id, "PUT", { note }); replaceDoc(r.doc); showStatus("נוסף סימון: חסר במאגר"); }
+    try { const r = await api("/permit-docs/" + d.id, "PUT", { note, doc_type: Q.type }); replaceDoc(r.doc); showStatus("נשמר: החברה אינה במאגר. המסמך יצא מהתור"); Q.curId = ""; }
     catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "הסימון נכשל: " + e.message; }
     uqShow();
   }
