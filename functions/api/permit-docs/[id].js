@@ -1,7 +1,7 @@
 import { checkAdmin } from "../_shared/auth.js";
 import { TYPES, noAuth, withBusinesses, existingBusinessIds, slotStatements } from "../_shared/permit-docs.js";
 // GET    /api/permit-docs/:id   → מסמך אחד
-// PUT    /api/permit-docs/:id   → עדכון { ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
+// PUT    /api/permit-docs/:id   → עדכון { bonds? (שיוך לאג"ח: [{id,name,symbol,company,chp}]), ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
 // DELETE /api/permit-docs/:id   → מחיקה מלאה של המסמך (השיוכים והקובץ)
 
 export async function onRequestGet({ request, env, params }) {
@@ -41,6 +41,15 @@ export async function onRequestPut({ request, env, params }) {
       const have = new Set(((await env.DB.prepare("SELECT id FROM permit_ext_companies").all()).results ?? []).map(r => r.id));
       stmts.push(env.DB.prepare("DELETE FROM permit_doc_ext WHERE doc_id = ?").bind(params.id));
       for (const x of [...new Set(body.ext_ids.map(String))].filter(i => have.has(i))) stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_ext (doc_id, ext_id) VALUES (?, ?)").bind(params.id, x));
+    }
+    if (Array.isArray(body.bonds)) {        // שיוך לאג"ח: החלפה מלאה { id, name, symbol, company, chp }
+      stmts.push(env.DB.prepare("DELETE FROM permit_doc_bonds WHERE doc_id = ?").bind(params.id));
+      const seen = new Set();
+      for (const x of body.bonds.slice(0, 300)) {
+        const sid = String(x && x.id || "").trim(); if (!sid || seen.has(sid)) continue; seen.add(sid);
+        stmts.push(env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp) VALUES (?,?,?,?,?,?)")
+          .bind(params.id, sid, String(x.name || "").slice(0, 200), String(x.symbol || "").slice(0, 60), String(x.company || "").slice(0, 200), String(x.chp || "").slice(0, 20)));
+      }
     }
     await env.DB.batch(stmts);
     const fresh = await env.DB.prepare("SELECT * FROM permit_docs WHERE id = ?").bind(params.id).first();

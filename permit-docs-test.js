@@ -515,7 +515,7 @@
 
 
   // ───────── דשבורד מסמכי היתר: לא משויכים / לבדיקה / לחברות שאינן במאגר / מסמכים אחרים ─────────
-  const Q = { view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
+  const Q = { bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
   const VIEWS = [["un", "לא משויכים"], ["review", "לבדיקה"], ["ext", "חברות שאינן במאגר"], ["other", "מסמכים אחרים"]];
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length && !(d.ext_ids || []).length;
@@ -607,7 +607,7 @@
       view.innerHTML = ""; Q.curId = ""; const ft = $("pd-un-foot"); if (ft) ft.innerHTML = ""; return;
     }
     if (Q.curId !== d.id) {
-      Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type; Q.shared = false; Q.picker = isUnassigned(d) ? "add" : null; Q.replace = null;
+      Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type; Q.shared = false; Q.picker = isUnassigned(d) ? "add" : null; Q.replace = null; Q.bondPicker = false; Q.bondQ = "";
       Q.cands = uqMergeCands(d); Q.liveDone = false;
       const tok = ++Q.token;
       view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך… <span id="pd-un-sec"></span></div>`;
@@ -632,8 +632,9 @@
     const reasons = inView(d, "review") ? reviewReasons(d) : (d.doc_type === "unknown" ? ["ללא סיווג"] : []);
     const curCos = (d.business_ids || []).map(id => bizById(id)).filter(Boolean);
     const nAsg = curCos.length + (d.ext_ids || []).length;
-    const statusBar = nAsg ? `<div class="pd-asg ok">✓ משויך ל-${nAsg} ${nAsg > 1 ? "חברות" : "חברה"}</div>` : `<div class="pd-asg no">✗ לא משויך לאף חברה</div>`;
-    const assigned = curCos.map(b => ucard(b, d, { assigned: true })).join("") + (d.ext_ids || []).map(id => xcard(id)).join("");
+    const nb = (d.bonds || []).length;
+    const statusBar = (nAsg ? `<div class="pd-asg ok">✓ משויך ל-${nAsg} ${nAsg > 1 ? "חברות" : "חברה"}${nb ? ` · ${nb} אג"ח` : ""}</div>` : `<div class="pd-asg no">✗ לא משויך לאף חברה${nb ? ` · ${nb} אג"ח` : ""}</div>`);
+    const assigned = curCos.map(b => ucard(b, d, { assigned: true })).join("") + (d.ext_ids || []).map(id => xcard(id)).join("") + (d.bonds || []).map(x => bcard(x, d)).join("");
     const replName = Q.replace ? (Q.replace.kind === "biz" ? bizName(Q.replace.id) : extName(Q.replace.id)) : "";
     const sugg = Q.cands.filter(c => !(d.business_ids || []).includes(c.b.id)).slice(0, 8);
     const typeBtns = ["general", "both", "private"].map(t => `<button class="pd-btn ${d.doc_type === t ? "sel" : ""}" onclick="PD._unSetType('${t}')" title="${{ general: "היתר כללי בלבד", both: "היתר פרטי (מכסה גם את הרשימה הכללית)", private: "היתר פרטי בלבד" }[t]}">${TL[t]}</button>`).join("");
@@ -648,12 +649,15 @@
       ${assigned ? `<div class="pd-ucs">${assigned}</div>` : ""}
       <h4 style="margin-top:14px">${Q.replace ? `שינוי שיוך: בחרו חברה במקום "${E(replName)}" <button class="pd-link2" onclick="PD._unPicker('')">ביטול</button>` : nAsg ? "הוספת שיוך נוסף" : "שיוך לחברה"}</h4>
       <input class="pd-in" id="pd-un-q" placeholder="חיפוש לפי ח.פ. או שם חברה" oninput="PD._unSearch(this.value)" autocomplete="off"><div id="pd-un-res"></div>
+      <div style="margin-top:8px"><button class="pd-btn ${Q.bondPicker ? "sel" : ""}" onclick="PD._unBondPicker()" title="שיוך המסמך גם לאג&quot;ח של החברה, בנוסף לשיוך לחברה">שיוך לאג"ח ${Q.bondPicker ? "▴" : "▾"}</button></div>
+      ${Q.bondPicker ? `<div class="pd-picker"><input class="pd-in" id="pd-un-bq" placeholder="חיפוש אג&quot;ח: שם, סימול, מספר נייר או חברה" value="${E(Q.bondQ)}" oninput="PD._unBondSearch(this.value)" autocomplete="off"><div id="pd-un-bres" style="max-height:230px;overflow:auto"></div></div>` : ""}
       ${sugg.length ? `<div class="pd-sub" style="margin-top:8px">הצעות לפי סריקת המסמך:</div><div class="pd-ucs">${sugg.map(c => ucard(c.b, d, { why: c.why })).join("")}</div>` : `<div class="pd-sub" style="margin-top:8px">לא נמצאו הצעות לפי תוכן המסמך: חפשו ידנית.</div>`}
       <details style="margin-top:8px"><summary class="pd-sub" style="cursor:pointer">חברה שאינה במאגר: הוספה ידנית (בלי חיפוש ברשם)</summary>
         <div style="display:flex;gap:6px;margin-top:5px"><input class="pd-in" id="pd-ext-name" placeholder="שם החברה"><input class="pd-in" id="pd-ext-chp" placeholder="ח.פ." style="max-width:120px"></div>
         <div class="pd-btns" style="margin-top:5px">${["deleted", "merged", "not_in_db"].map(st => `<button class="pd-btn" onclick="PD._unExtAdd('${st}')">שיוך כ"${EXT_HE[st]}"</button>`).join("")}</div></details>
       <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
       <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
+    if (Q.bondPicker) bondRender();
     const foot = $("pd-un-foot");
     if (foot) foot.innerHTML = `<button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקת המסמך</button>${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()">↩ החזרה לתור</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="עובר ללשונית 'מסמכים אחרים'">סימון: מסמך שאינו היתר עסקה</button>`}`;
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
@@ -672,6 +676,43 @@
         <b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}${reg}${stTag(b.registry_status)}</div>
         <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}${f.me ? " glow" : ""}" title="${E(f.names)}${f.me ? " | המסמך הזה הוא אחד מהמסמכים הראשיים של החברה" : ""}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex" title="מסמכים נוספים של החברה">נוספים ${f.ex}</span></div>
         ${o.why && o.why.length ? `<div class="pd-sub" style="font-size:10.5px">${E(o.why.slice(0, 2).join(", "))}</div>` : ""}</div>${act}</div>`;
+  }
+  let bondRows = null;
+  async function bondList() {
+    if (bondRows) return bondRows;
+    try { const j = await (await fetch("/data/bonds_list/bonds_all.json")).json(); bondRows = (j.rows || []).map(r => ({ id: String(r.security_id), name: r.security_name || "", symbol: r.symbol || "", company: r.company || r.issuer_name || "", chp: String(r.chp_number || "") })); }
+    catch { bondRows = []; }
+    return bondRows;
+  }
+  function bcard(x, d) {
+    const own = (d.business_ids || []).map(bizById).filter(Boolean).some(b => digitsOf(b.chp_number) && digitsOf(b.chp_number) === digitsOf(x.chp));
+    return `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.name || x.id)}</b><div class="pd-sub">אג"ח · ${E(x.symbol)} · נייר ${E(x.id)}</div><div class="pd-sub">${E(x.company)}${x.chp && !own ? ' <span class="pd-st bad">החברה לא משויכת למסמך</span>' : ""}</div></div>
+      <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" style="color:#c0392b" onclick="PD._unBondDel('${E(x.id)}')">ביטול</button></div></div>`;
+  }
+  async function bondRender() {
+    const out = $("pd-un-bres"); if (!out) return;
+    const d = unassignedList()[Q.i]; if (!d) return;
+    const rows = await bondList(), q = Q.bondQ.trim().toLowerCase(), have = new Set((d.bonds || []).map(x => x.id));
+    const chps = new Set([...(d.business_ids || []).map(bizById).filter(Boolean).map(b => digitsOf(b.chp_number)), ...Q.cands.slice(0, 3).map(c => digitsOf(c.b.chp_number))].filter(Boolean));
+    let list = rows.filter(r => !have.has(r.id));
+    const mine = r => digitsOf(r.chp) && chps.has(digitsOf(r.chp));
+    list = q ? list.filter(r => [r.name, r.symbol, r.id, r.company].some(v => String(v).toLowerCase().includes(q))) : list.filter(mine);
+    list.sort((a, b) => (mine(b) ? 1 : 0) - (mine(a) ? 1 : 0) || String(a.name).localeCompare(String(b.name), "he"));
+    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._unBondAdd('${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(r.symbol)} · ${E(r.company)}</span>${mine(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
+      || `<div class="pd-sub" style="padding:6px">${q ? "לא נמצאו אג\"ח" : "אין אג\"ח של החברות המשויכות או המוצעות. הקלידו לחיפוש."}</div>`;
+  }
+  async function bondAdd(id) {
+    const d = unassignedList()[Q.i]; if (!d) return;
+    const r = (await bondList()).find(x => x.id === id); if (!r) return;
+    try { const before = snapDoc(d); const res = await api("/permit-docs/" + d.id, "PUT", { bonds: [...(d.bonds || []), r] }); replaceDoc(res.doc); pushHist(before, "שויך לאג\"ח " + r.name); }
+    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "שיוך האג\"ח נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0009 ב-D1)" : ""); return; }
+    uqShow();
+  }
+  async function bondDel(id) {
+    const d = unassignedList()[Q.i]; if (!d) return;
+    try { const before = snapDoc(d); const res = await api("/permit-docs/" + d.id, "PUT", { bonds: (d.bonds || []).filter(x => x.id !== id) }); replaceDoc(res.doc); pushHist(before, "בוטל שיוך לאג\"ח"); }
+    catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
+    uqShow();
   }
   function xcard(id) {
     const x = extById(id);
@@ -737,7 +778,7 @@
   const HK = "pd_hist";
   const histGet = () => { try { return JSON.parse(localStorage.getItem(HK) || "[]"); } catch { return []; } };
   const histSet = v => { try { localStorage.setItem(HK, JSON.stringify(v.slice(-40))); } catch { /* בלי אחסון */ } };
-  const snapDoc = d => ({ id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
+  const snapDoc = d => ({ id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], bonds: (d.bonds || []).map(x => ({ ...x })), business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
   function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
   function undoRefresh() {
     const e = histGet().slice(-1)[0];
@@ -754,7 +795,7 @@
     const grp = h.slice(from), e = grp[0];
     if (!confirm(`לבטל את השיוך האחרון?\n${e.name}: ${grp.map(x => x.what).join(" ; ")}\nהמסמך יחזור למצב שלפני השיוך.`)) return;
     try {
-      const r = await api("/permit-docs/" + e.id, "PUT", { business_ids: e.business_ids, doc_type: e.doc_type, note: e.note, slots: slotArrs(e.slots, e.business_ids), ...(e.ext_ids ? { ext_ids: e.ext_ids } : {}) });
+      const r = await api("/permit-docs/" + e.id, "PUT", { business_ids: e.business_ids, doc_type: e.doc_type, note: e.note, slots: slotArrs(e.slots, e.business_ids), ...(e.ext_ids ? { ext_ids: e.ext_ids } : {}), ...(e.bonds ? { bonds: e.bonds } : {}) });
       replaceDoc(r.doc);
       for (const g of grp.slice().reverse()) for (const o of g.others || []) { try { const r2 = await api("/permit-docs/" + o.id, "PUT", { slots: { [o.bid]: o.slot } }); replaceDoc(r2.doc); } catch { /* המסמך כבר לא קיים */ } }
     } catch (err) { alert("הביטול נכשל: " + err.message); return; }
@@ -1168,6 +1209,7 @@
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
+  .pd-uc.bond{border-color:#9db7d8;background:#f4f8fd}
   .pd-viewcol{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}.pd-viewcol .pd-view{flex:1;min-height:0}
   .pd-toolbar{display:flex;flex-direction:column;gap:6px;padding:8px 12px;background:#f1efe9;border-bottom:1px solid #e0ddd8}
   .pd-tbrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -1272,7 +1314,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _unBondPicker: () => { Q.bondPicker = !Q.bondPicker; uqShow(); }, _unBondSearch: v => { Q.bondQ = v; bondRender(); }, _unBondAdd: bondAdd, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
