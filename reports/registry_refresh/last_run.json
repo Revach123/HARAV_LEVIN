@@ -6,37 +6,37 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 91,
-   "biz_type": 91
+   "biz_type": 92
   },
   "empty_after": {
    "registrar_name": 91,
    "biz_type": 91
   },
-  "updated": "2026-10-15T07:47:56.450864Z",
+  "updated": "2026-10-16T07:35:06.144802Z",
   "source": "d1",
-  "businesses": 1273,
-  "numeric_chp": 1268,
-  "found_in_registry": 1180,
+  "businesses": 1274,
+  "numeric_chp": 1269,
+  "found_in_registry": 1181,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2225,
-  "datawise_date": "2026-10-14",
+  "datawise_rows": 2224,
+  "datawise_date": "2026-10-15",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 0,
-   "biz_type": 0,
+   "registrar_name": 1,
+   "biz_type": 1,
    "tase_has_agch": 1,
-   "registry_status": 0
+   "registry_status": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "registry_status_counts": {
    "לא ידוע": 155,
-   "פעילה": 1067,
+   "פעילה": 1068,
    "מחוסלת/חיסול": 35,
    "בפירוק": 16
   },
@@ -47,11 +47,32 @@
  },
  "changes": [
   {
-   "id": "4ac1f60da8ed",
-   "chp": "517352274",
+   "id": "mv9bs2l9gtm5",
+   "chp": "517037917",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mv9bs2l9gtm5",
+   "chp": "517037917",
+   "field": "registrar_name",
+   "old": "א.ב.ג. קרית יערים בע\"מ",
+   "new": "א.ב.ג. קרית יערים  בע\"מ"
+  },
+  {
+   "id": "mv9bs2l9gtm5",
+   "chp": "517037917",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mv9bs2l9gtm5",
+   "chp": "517037917",
    "field": "tase_has_agch",
-   "old": "אין",
-   "new": "יש"
+   "old": "",
+   "new": "אין"
   }
  ],
  "not_found": [
