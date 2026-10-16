@@ -523,10 +523,12 @@
       <div class="pd-head"><b>מסמכים לא משויכים</b><span class="pd-sub" id="pd-un-count"></span><span id="pd-un-skipped"></span>
         <input class="pd-in" style="width:230px" placeholder="סינון לפי שם קובץ / כותרת / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
         <label class="pd-sub"><input type="checkbox" onchange="PD._unOther(this.checked)"> הצג גם "לא קשור" / "חסר במאגר"</label>
+        <span id="pd-un-undo"></span><button class="pd-btn" onclick="PD._recent()">שיוכים אחרונים</button>
         <button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
       <div class="pd-split"><div class="pd-view" id="pd-un-view"></div><div class="pd-side" id="pd-un-side"></div></div>`, true);
     closers["pd-un"] = () => { if (Q.blobUrl) URL.revokeObjectURL(Q.blobUrl); Q.blobUrl = ""; Q.curId = ""; if (typeof render === "function" && typeof view !== "undefined" && view === "home") render(); };
     if (!S.loaded) load().then(uqShow); else uqShow();
+    undoRefresh();
   }
   function uqMergeCands(d, live) {
     const m = new Map();
@@ -616,10 +618,52 @@
     openAssign(d.id, [...Q.sel], Q.type, Q.typeTouched || d.doc_type !== "unknown");
   }
 
+  // ───────── היסטוריית שיוכים וביטול ─────────
+  const HK = "pd_hist";
+  const histGet = () => { try { return JSON.parse(localStorage.getItem(HK) || "[]"); } catch { return []; } };
+  const histSet = v => { try { localStorage.setItem(HK, JSON.stringify(v.slice(-40))); } catch { /* בלי אחסון */ } };
+  const snapDoc = d => ({ id: d.id, name: d.original_name || d.id, business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
+  function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
+  function undoRefresh() {
+    const e = histGet().slice(-1)[0];
+    const html = e ? `<button class="pd-btn" onclick="PD._undo()" title="מחזיר את המסמך למצב שלפני השיוך האחרון (${E(e.name)})">↩ ביטול שיוך אחרון: ${E(String(e.what).slice(0, 38))}</button>` : "";
+    for (const id of ["pd-un-undo", "pd-mg-undo"]) { const el = $(id); if (el) el.innerHTML = html; }
+  }
+  const slotArrs = (map, ids) => Object.fromEntries(ids.map(b => [b, String((map || {})[b] || "").split(",").filter(Boolean)]));
+  async function undoLast() {
+    const h = histGet(), last = h[h.length - 1]; if (!last) return;
+    let from = h.length - 1; while (last.sid && from > 0 && h[from - 1].sid === last.sid) from--;       // כל השיוכים של אותו מסמך משותף בחלון השיוך מתבטלים יחד
+    const grp = h.slice(from), e = grp[0];
+    if (!confirm(`לבטל את השיוך האחרון?\n${e.name}: ${grp.map(x => x.what).join(" ; ")}\nהמסמך יחזור למצב שלפני השיוך.`)) return;
+    try {
+      const r = await api("/permit-docs/" + e.id, "PUT", { business_ids: e.business_ids, doc_type: e.doc_type, note: e.note, slots: slotArrs(e.slots, e.business_ids) });
+      replaceDoc(r.doc);
+      for (const g of grp.slice().reverse()) for (const o of g.others || []) { try { const r2 = await api("/permit-docs/" + o.id, "PUT", { slots: { [o.bid]: o.slot } }); replaceDoc(r2.doc); } catch { /* המסמך כבר לא קיים */ } }
+    } catch (err) { alert("הביטול נכשל: " + err.message); return; }
+    histSet(h.slice(0, from)); showStatus("השיוך בוטל"); refresh();
+    if ($("pd-un")) { Q.curId = ""; uqShow(); }
+    undoRefresh();
+  }
+  function openRecent() {          // מסמכים ששויכו / עודכנו ב-48 השעות האחרונות: אפשר להחזיר לא משויך
+    const since = Date.now() - 48 * 3600e3;
+    const ts = d => Date.parse(String(d.updated_at || "").replace(" ", "T") + "Z") || 0;
+    const rows = S.docs.filter(d => (d.business_ids || []).length && ts(d) > since).sort((a, b) => ts(b) - ts(a)).slice(0, 60);
+    overlay("pd-recent", `<div class="pd-head"><b>שיוכים אחרונים (48 שעות)</b><button class="pd-x" onclick="PD._close('pd-recent')">✕</button></div>
+      <div class="pd-body">${rows.map(d => `<div class="pd-row" style="cursor:default"><div class="pd-grow"><div class="pd-name">${E(d.original_name || d.id)} <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span></div>
+        <div class="pd-sub">${E((d.business_ids || []).map(bizName).join(" · ").slice(0, 160))} · ${E(String(d.updated_at || "").slice(0, 16))}</div></div>
+        <button class="pd-btn" onclick="PD._unassignAll('${d.id}')">החזרה ללא שיוך</button></div>`).join("") || `<div class="pd-sub">אין שיוכים ב-48 השעות האחרונות.</div>`}</div>`);
+  }
+  async function unassignAll(id) {
+    const d = S.byId.get(id); if (!d) return;
+    if (!confirm(`להחזיר את "${d.original_name || id}" למסמכים הלא משויכים? השיוך לכל החברות יוסר (המסמך עצמו נשמר).`)) return;
+    try { const before = snapDoc(d); const r = await api("/permit-docs/" + id, "PUT", { business_ids: [] }); replaceDoc(r.doc); pushHist(before, "הוחזר ללא שיוך"); } catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
+    refresh(); openRecent(); if ($("pd-un")) { Q.curId = ""; uqShow(); }
+  }
+
   // ───────── חלון שיוך מסמך לחברה (נפתח מעל חלון המסמכים הלא משויכים, בלי לסגור אותו) ─────────
   const A = { docId: "", queue: [], i: 0, type: "unknown", slots: new Set(), typeKnown: false };
   function openAssign(docId, queue, type, typeKnown) {
-    Object.assign(A, { docId, queue, i: 0, type: type || "unknown", typeKnown: !!typeKnown });
+    Object.assign(A, { docId, queue, i: 0, type: type || "unknown", typeKnown: !!typeKnown, sid: "s" + Date.now() });
     overlay("pd-assign", `<div id="pd-as" style="display:flex;flex-direction:column;height:100%;min-height:0"></div>`, true);
     asInit(); paintAssign();
   }
@@ -650,8 +694,10 @@
       <div class="pd-name" title="${E(x.original_name || "")}">${E(x.original_name || x.id)}</div>
       <div class="pd-btns"><span class="pd-chip" style="background:${TCOL[x.doc_type] || TCOL.unknown}">${TL[x.doc_type] || TL.unknown}</span>${slotsOf(x, b.id).map(t => `<span class="pd-chip" style="background:#555">הת"ע ${SLOT_HE[t]}</span>`).join("")}</div></div>`;
     const pr = slotDoc(b.id, "private"), ge = slotDoc(b.id, "general"), ex = others.filter(x => !slotsOf(x, b.id).length);
+    const chips = A.queue.map((id, k) => `<span class="pd-chip" style="background:${k < A.i ? "#1e7e4a" : k === A.i ? "#1a3a5c" : "#8a8a8a"}">${k < A.i ? "✓ " : ""}${E(bizName(id))}${k > A.i ? ` <a href="#" style="color:#fff" onclick="PD._asDrop(${k});return false" title="הסרה מהרשימה">✕</a>` : ""}</span>`).join(" ");
     root.innerHTML = `<div class="pd-head"><b>שיוך מסמך · ${displayName(b, true)}</b>${A.queue.length > 1 ? `<span class="pd-sub">חברה ${A.i + 1} מתוך ${A.queue.length}</span>` : ""}<button class="pd-x" onclick="PD._close('pd-assign')">✕</button></div>
-      <div class="pd-body"><div class="pd-as-top">
+      <div class="pd-body"><div style="margin-bottom:10px"><div class="pd-sub">חברות לשיוך (מסמך משותף): ${chips}</div>
+        <input class="pd-in" id="pd-as-q" placeholder="הוספת חברה נוספת למסמך (מסמך משותף): שם או ח.פ." oninput="PD._asAdd(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-as-res"></div></div><div class="pd-as-top">
         <div class="pd-as-new"><h4>המסמך שמשייכים</h4>
           <div class="pd-mg-card"><div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}')"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div></div>
             <div class="pd-mg-r"><div class="pd-name">${E(d.original_name || d.id)}</div>${asCaption(b, d)}
@@ -665,6 +711,13 @@
         <div id="pd-as-err" style="color:#c0392b;margin-top:6px"></div></div>`;
     root.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) { img.src = u; if (img.nextElementSibling) img.nextElementSibling.style.display = "none"; } }));
   }
+  function asAdd(q) {
+    const out = $("pd-as-res"); if (!out) return;
+    const d = S.byId.get(A.docId);
+    runCompanySearch(q, out, { exclude: x => A.queue.includes(x) || ((d && d.business_ids) || []).includes(x), pick: id => { A.queue.push(id); paintAssign(); },
+      mark: () => alert("סימון 'חסר במאגר' אפשרי בחלון המסמכים הלא משויכים.") });
+  }
+  function asDrop(k) { if (k > A.i) { A.queue.splice(k, 1); paintAssign(); } }
   function asNext() {
     if (A.i + 1 < A.queue.length) { A.i++; asInit(); paintAssign(); }
     else { close("pd-assign"); if ($("pd-un")) { Q.curId = ""; uqShow(); } }
@@ -673,8 +726,10 @@
     const b = bizById(A.queue[A.i]), d = S.byId.get(A.docId); if (!b || !d) return;
     const ids = [...new Set([...(d.business_ids || []), b.id])];
     try {
+      const before = snapDoc(d), others = [];
+      for (const t of A.slots) { const o = slotDoc(b.id, t); if (o && o.id !== d.id && !others.some(x => x.id === o.id)) others.push({ id: o.id, bid: b.id, slot: slotsOf(o, b.id) }); }
       const r = await api("/permit-docs/" + d.id, "PUT", { business_ids: ids, doc_type: A.type, slots: { [b.id]: [...A.slots] } });
-      replaceDoc(r.doc); showStatus("המסמך שויך ל" + displayName(b)); refresh();
+      replaceDoc(r.doc); pushHist(before, "שויך ל" + displayName(b), others, A.sid); showStatus("המסמך שויך ל" + displayName(b)); refresh();
     } catch (e) { const el = $("pd-as-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
     asNext();
   }
@@ -695,13 +750,14 @@
   async function uqSave() {
     const d = unassignedList()[Q.i]; if (!d || !Q.sel.size) return;
     try {
+      const before = snapDoc(d);
       const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: Q.type, business_ids: [...Q.sel], note: Q.note });
-      replaceDoc(r.doc); showStatus("נשמר"); Q.curId = ""; uqShow();
+      replaceDoc(r.doc); pushHist(before, "שמירה מהירה ל-" + Q.sel.size + " חברות"); showStatus("נשמר"); Q.curId = ""; uqShow();
     } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
   async function uqOther() {
     const d = unassignedList()[Q.i]; if (!d) return;
-    try { const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: "other", note: Q.note }); replaceDoc(r.doc); Q.curId = ""; uqShow(); }
+    try { const before = snapDoc(d); const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: "other", note: Q.note }); replaceDoc(r.doc); pushHist(before, "סומן לא קשור"); Q.curId = ""; uqShow(); }
     catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "הפעולה נכשלה: " + e.message; }
   }
 
@@ -818,11 +874,12 @@
         : `<div class="pd-mg-empty ${need[t] ? "need" : ""}">${need[t] ? "⚠ אין מסמך מקושר" : "אין מסמך מקושר"}<div class="pd-sub">לקישור: בחרו מסמך מלמטה ולחצו "הת"ע ${SLOT_HE[t]}"</div></div>`}</div>`; };
     const ex = extrasOf(b.id);
     root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b>
-        <button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
+        <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
       <div class="pd-body"><div class="pd-mg-top">${slotBox("private")}${slotBox("general")}</div>
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים.</div>`}</div></div>`;
     const body = root.querySelector(".pd-body"); if (body) body.scrollTop = keep;
+    undoRefresh();
     root.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => {
       if (!img.isConnected) return;
       if (u) { img.src = u; img.nextElementSibling && (img.nextElementSibling.style.display = "none"); } else if (img.nextElementSibling) img.nextElementSibling.textContent = "אין תצוגה מקדימה";
@@ -947,6 +1004,7 @@
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unFilter: v => { Q.filter = v; Q.i = 0; Q.curId = ""; uqShow(); }, _unOther: v => { Q.showOther = v; Q.i = 0; Q.curId = ""; uqShow(); },
+    _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
     _unTog: (id, on) => { on ? Q.sel.add(id) : Q.sel.delete(id); uqShow(); }, _unAdd: id => { Q.sel.add(id); uqShow(); }, _unSearch: uqSearch,
     _unType: t => { Q.type = t; Q.typeTouched = true; uqShow(); }, _unNote: v => { Q.note = v; }, _unSave: uqSave, _unOtherDoc: uqOther,
