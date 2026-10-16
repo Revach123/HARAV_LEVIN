@@ -835,6 +835,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-16"
   },
+  "U10378": {
+   "data": {
+    "chp_number": "1811308",
+    "company_name": "אקסטל לימיטד",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10378,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776492",
+    "maya_report_id": 1776492,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-16"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
