@@ -662,8 +662,8 @@
     return review ? "review" : missing ? "missing" : "ok";
   }
   function docCounts(list) {
-    const c = { review: 0, missing: 0 };
-    for (const b of list) { const s = docStatus(b); if (s === "review" || s === "missing") c[s]++; }
+    const c = { review: 0, missing: 0, ok: 0 };
+    for (const b of list) { const s = docStatus(b); if (s === "review" || s === "missing" || s === "ok") c[s]++; }
     return c;
   }
 
