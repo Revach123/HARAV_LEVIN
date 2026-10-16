@@ -29,6 +29,7 @@
     else if (typeof render === "function") render();
     if ($("pd-manage") && S._paintMg) S._paintMg();
   }
+  const say = () => {};          // הודעות הצלחה שגרתיות בוטלו (המצב החדש נראה על המסך); שגיאות וחלונות אישור נשארים
   const bizList = () => (typeof businesses !== "undefined" ? businesses : []);
   const bizById = id => bizList().find(b => b.id === id);
   const bizName = id => { const b = bizById(id); return b ? displayName(b) : "(חברה שנמחקה)"; };
@@ -285,7 +286,7 @@
       S.docs = S.docs.filter(d => d.id !== id); reindex(); pdfCache.delete(id);
       close("pd-confirm"); close("pd-doc");
       if ($("pd-un")) { Q.curId = ""; uqShow(); }
-      showStatus("המסמך נמחק");
+      say("המסמך נמחק");
       refresh();
     } catch (e) { alert("המחיקה נכשלה: " + e.message); }
   }
@@ -507,7 +508,7 @@
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.doc) { upDuplicate(data.doc); return; }
       if (!res.ok) throw new Error(data.error || res.statusText);
-      replaceDoc(data.doc); showStatus("המסמך נשמר"); refresh();
+      replaceDoc(data.doc); say("המסמך נשמר"); refresh();
       if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick(`✓ נשמר: ${E(c.file.name)}`); }
     } catch (e) { if (btn) btn.disabled = false; const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
@@ -707,7 +708,7 @@
       const r = await api("/permit-docs/" + docId, "PUT", { business_ids: ids, doc_type: type, slots: { [bizId]: slots } });
       replaceDoc(r.doc); await refetchDocs(others.map(o => o.id));
       pushHist(before, (t ? `הת"ע ${SLOT_HE[t]} של ` : "שויך ל") + displayName(b), others);
-      showStatus(t ? `המסמך הוא עכשיו הת"ע ${SLOT_HE[t]} של ${displayName(b)}${others.length ? ". המסמך הקודם נשאר בחברה תחת מסמכים נוספים. לביטול: ↩" : ""}` : "המסמך שויך ל" + displayName(b));
+      say(t ? `המסמך הוא עכשיו הת"ע ${SLOT_HE[t]} של ${displayName(b)}${others.length ? ". המסמך הקודם נשאר בחברה תחת מסמכים נוספים. לביטול: ↩" : ""}` : "המסמך שויך ל" + displayName(b));
       await uqApplyReplace(docId);
     } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
     refresh(); if ($("pd-un")) uqAfter();
@@ -757,7 +758,7 @@
       replaceDoc(r.doc);
       for (const g of grp.slice().reverse()) for (const o of g.others || []) { try { const r2 = await api("/permit-docs/" + o.id, "PUT", { slots: { [o.bid]: o.slot } }); replaceDoc(r2.doc); } catch { /* המסמך כבר לא קיים */ } }
     } catch (err) { alert("הביטול נכשל: " + err.message); return; }
-    histSet(h.slice(0, from)); showStatus("השיוך בוטל"); refresh();
+    histSet(h.slice(0, from)); say("השיוך בוטל"); refresh();
     if ($("pd-un")) { Q.curId = ""; uqShow(); }
     undoRefresh();
   }
@@ -849,7 +850,7 @@
       for (const t of A.slots) { const o = slotDoc(b.id, t); if (o && o.id !== d.id && !others.some(x => x.id === o.id)) others.push({ id: o.id, bid: b.id, slot: slotsOf(o, b.id) }); }
       const r = await api("/permit-docs/" + d.id, "PUT", { business_ids: ids, doc_type: A.type, slots: { [b.id]: [...A.slots] }, ...(rp && rp.kind === "ext" ? { ext_ids: (d.ext_ids || []).filter(x => x !== rp.id) } : {}) });
       replaceDoc(r.doc); await refetchDocs(others.map(o => o.id)); pushHist(before, "שויך ל" + displayName(b), others, A.sid);
-      showStatus("המסמך שויך ל" + displayName(b) + (others.length ? `. המסמך הקודם בהת"ע (${others.map(o => (S.byId.get(o.id) || {}).original_name || o.id).join(", ")}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : "")); refresh();
+      say("המסמך שויך ל" + displayName(b) + (others.length ? `. המסמך הקודם בהת"ע (${others.map(o => (S.byId.get(o.id) || {}).original_name || o.id).join(", ")}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : "")); refresh();
     } catch (e) { const el = $("pd-as-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
     asNext();
   }
@@ -871,7 +872,7 @@
     const before = snapDoc(d), ids = [...new Set([...(d.ext_ids || []), extId])];
     const r = await api("/permit-docs/" + docId, "PUT", { ext_ids: ids });
     replaceDoc(r.doc); const x = extById(extId); if (x) x.doc_ids = [...new Set([...(x.doc_ids || []), docId])];
-    pushHist(before, what || "שויך לחברה שאינה במאגר: " + extName(extId)); showStatus(`שויך ל"${extName(extId)}" (${EXT_HE[(x || {}).status] || ""}) וברשימת החברות שאינן במאגר`); refresh();
+    pushHist(before, what || "שויך לחברה שאינה במאגר: " + extName(extId)); say(`שויך ל"${extName(extId)}" (${EXT_HE[(x || {}).status] || ""}) וברשימת החברות שאינן במאגר`); refresh();
   }
   function uqAfter() { Q.sel = new Set(); Q.replace = null; const d = S.byId.get(Q.curId); Q.picker = d && isUnassigned(d) ? "add" : null; uqShow(); }
   async function uqSetType(t) {
@@ -940,7 +941,7 @@
         </tbody></table></div>`);
   }
   async function extStatus(id, st) {
-    try { await api("/permit-ext/" + id, "PUT", { status: st }); const x = extById(id); if (x) x.status = st; showStatus("הסטטוס עודכן"); refresh(); }
+    try { await api("/permit-ext/" + id, "PUT", { status: st }); const x = extById(id); if (x) x.status = st; say("הסטטוס עודכן"); refresh(); }
     catch (e) { alert("העדכון נכשל: " + e.message); }
   }
   async function extDel(id) {
@@ -953,7 +954,7 @@
   async function uqMark(reg) {        // סימון "חסר במאגר" בהערת המסמך (המסמך נשאר לא משויך)
     const d = unassignedList()[Q.i]; if (!d) return;
     const note = (Q.note ? Q.note + " | " : "") + markText(reg); Q.note = note;
-    try { const r = await api("/permit-docs/" + d.id, "PUT", { note, doc_type: Q.type }); replaceDoc(r.doc); showStatus("נשמר: החברה אינה במאגר. המסמך יצא מהתור"); Q.curId = ""; }
+    try { const r = await api("/permit-docs/" + d.id, "PUT", { note, doc_type: Q.type }); replaceDoc(r.doc); say("נשמר: החברה אינה במאגר. המסמך יצא מהתור"); Q.curId = ""; }
     catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "הסימון נכשל: " + e.message; }
     uqShow();
   }
@@ -962,7 +963,7 @@
     try {
       const before = snapDoc(d);
       const r = await api("/permit-docs/" + d.id, "PUT", { doc_type: Q.type, business_ids: [...Q.sel], note: Q.note });
-      replaceDoc(r.doc); pushHist(before, "שמירה מהירה ל-" + Q.sel.size + " חברות"); showStatus("נשמר"); Q.curId = ""; uqShow();
+      replaceDoc(r.doc); pushHist(before, "שמירה מהירה ל-" + Q.sel.size + " חברות"); say("נשמר"); Q.curId = ""; uqShow();
     } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
   async function uqOther() {
@@ -1102,7 +1103,7 @@
   async function toExtras(id) {
     const d = S.byId.get(id); if (!d || !M.biz || !slotsOf(d, M.biz).length) return;
     const before = snapDoc(d);
-    if (await updateDoc(id, { slots: { [M.biz]: [] } })) { pushHist(before, "הורד מהת\"ע ל\"מסמכים נוספים\" (" + bizName(M.biz) + ")"); showStatus("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
+    if (await updateDoc(id, { slots: { [M.biz]: [] } })) { pushHist(before, "הורד מהת\"ע ל\"מסמכים נוספים\" (" + bizName(M.biz) + ")"); say("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
   }
   async function dropOn(ev, target) {          // גרירה לתיבת הת"ע: המסמך נהפך לראשי (והקודם עובר למסמכים נוספים); גרירה ל"מסמכים נוספים": מסיר את הקישור לרשימות
     ev.preventDefault(); ev.currentTarget.classList.remove("pd-drop-on");
@@ -1130,7 +1131,7 @@
     if (await updateDoc(docId, patch)) {
       await refetchDocs(others.map(o => o.id)); refresh();
       pushHist(before, (on ? "קישור להת\"ע " : "ביטול קישור להת\"ע ") + SLOT_HE[t] + " של " + bizName(bizId), others);
-      showStatus(on && prev && prev.id !== docId ? `קושר. המסמך הקודם (${prev.original_name || prev.id}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : on ? "המסמך קושר לרשימה" : "הקישור לרשימה בוטל");
+      say(on && prev && prev.id !== docId ? `קושר. המסמך הקודם (${prev.original_name || prev.id}) לא נמחק: הוא נשאר בחברה תחת "מסמכים נוספים". לביטול: ↩` : on ? "המסמך קושר לרשימה" : "הקישור לרשימה בוטל");
     }
   }
   function mgShare(id, on) {
