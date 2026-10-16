@@ -225,7 +225,7 @@
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
       const slotBtns = fromBiz ? `<h4>קישור לרשימה של ${E(bizName(fromBiz))}</h4><div class="pd-btns">${["private", "general"].map(t => `<button class="pd-btn ${slotsOf(doc, fromBiz).includes(t) ? "sel" : ""}" onclick="PD._slot('${docId}','${fromBiz}','${t}')">${slotsOf(doc, fromBiz).includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`).join("")}</div>` : "";
-      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
+      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${fmtSize(doc.size)}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
       const sideHtml = `
             <h4>סיווג</h4><div class="pd-btns">${typeBtns}</div>${slotBtns}
             <h4>חברות משויכות (${ids.length})</h4>${chips}
@@ -408,7 +408,7 @@
   const U = { queue: [], cur: null, preset: null };
   function openUpload(opts) {
     U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null;
-    overlay("pd-upload", `<div class="pd-head"><b>העלאת היתר עסקה</b><button class="pd-x" onclick="PD._close('pd-upload')">✕</button></div>
+    overlay("pd-upload", `<div class="pd-head"><b>העלאת היתר עסקה</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-upload')">✕</button></div>
       <div class="pd-body" id="pd-up-body"></div>`, true);
     closers["pd-upload"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
     upPick();
@@ -559,7 +559,7 @@
     Q.view = view || "un"; Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set();      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `<div class="pd-rv"><div class="pd-view" id="pd-un-view"></div>
       <div class="pd-sidecol"><div class="pd-sidehead">
-        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">מסמכי היתר · שיוך ובדיקה</b><button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
+        <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:15px">מסמכי היתר · שיוך ובדיקה</b><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
         <div class="pd-tabs" id="pd-un-tabs"></div>
         <div class="pd-nav"><button class="pd-btn" onclick="PD._unGo(-1)" title="המסמך הקודם">→ הקודם</button><span class="pd-navpos" id="pd-un-pos"></span><button class="pd-btn" onclick="PD._unGo(1)" title="המסמך הבא">הבא ←</button><button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button></div>
         <input class="pd-in" placeholder="סינון הרשימה: שם קובץ / חברה / ח.פ. / הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
@@ -712,7 +712,7 @@
     const since = Date.now() - 48 * 3600e3;
     const ts = d => Date.parse(String(d.updated_at || "").replace(" ", "T") + "Z") || 0;
     const rows = S.docs.filter(d => (d.business_ids || []).length && ts(d) > since).sort((a, b) => ts(b) - ts(a)).slice(0, 60);
-    overlay("pd-recent", `<div class="pd-head"><b>שיוכים אחרונים (48 שעות)</b><button class="pd-x" onclick="PD._close('pd-recent')">✕</button></div>
+    overlay("pd-recent", `<div class="pd-head"><b>שיוכים אחרונים (48 שעות)</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-recent')">✕</button></div>
       <div class="pd-body">${rows.map(d => `<div class="pd-row" style="cursor:default"><div class="pd-grow"><div class="pd-name">${E(d.original_name || d.id)} <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span></div>
         <div class="pd-sub">${E((d.business_ids || []).map(bizName).join(" · ").slice(0, 160))} · ${E(String(d.updated_at || "").slice(0, 16))}</div></div>
         <button class="pd-btn" onclick="PD._unassignAll('${d.id}')">החזרה ללא שיוך</button></div>`).join("") || `<div class="pd-sub">אין שיוכים ב-48 השעות האחרונות.</div>`}</div>`);
@@ -759,7 +759,7 @@
       <div class="pd-btns"><span class="pd-chip" style="background:${TCOL[x.doc_type] || TCOL.unknown}">${TL[x.doc_type] || TL.unknown}</span>${slotsOf(x, b.id).map(t => `<span class="pd-chip" style="background:#555">הת"ע ${SLOT_HE[t]}</span>`).join("")}</div></div>`;
     const pr = slotDoc(b.id, "private"), ge = slotDoc(b.id, "general"), ex = others.filter(x => !slotsOf(x, b.id).length);
     const chips = A.queue.map((id, k) => `<span class="pd-chip" style="background:${k < A.i ? "#1e7e4a" : k === A.i ? "#1a3a5c" : "#8a8a8a"}">${k < A.i ? "✓ " : ""}${E(bizName(id))}${k > A.i ? ` <a href="#" style="color:#fff" onclick="PD._asDrop(${k});return false" title="הסרה מהרשימה">✕</a>` : ""}</span>`).join(" ");
-    root.innerHTML = `<div class="pd-head"><b>שיוך מסמך · ${displayName(b, true)}</b>${A.queue.length > 1 ? `<span class="pd-sub">חברה ${A.i + 1} מתוך ${A.queue.length}</span>` : ""}<button class="pd-x" onclick="PD._close('pd-assign')">✕</button></div>
+    root.innerHTML = `<div class="pd-head"><b>שיוך מסמך · ${displayName(b, true)}</b>${A.queue.length > 1 ? `<span class="pd-sub">חברה ${A.i + 1} מתוך ${A.queue.length}</span>` : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-assign')">✕</button></div>
       <div class="pd-body"><div style="margin-bottom:10px"><div class="pd-sub">חברות לשיוך (מסמך משותף): ${chips}</div>
         <input class="pd-in" id="pd-as-q" placeholder="הוספת חברה נוספת למסמך (מסמך משותף): שם או ח.פ." oninput="PD._asAdd(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-as-res"></div></div><div class="pd-as-top">
         <div class="pd-as-new"><h4>המסמך שמשייכים</h4>
@@ -854,9 +854,15 @@
     catch (e) { alert("הפעולה נכשלה: " + e.message); }
   }
   // ───────── חלון: חברות שאינן במאגר (מחוקות / מוזגו / לא במאגר) ─────────
+  function goHome() {          // סוגר את כל החלונות וחוזר לדף הראשי של הניהול
+    S._nav = true;
+    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-un"]) close(id);
+    S._nav = false;
+    if (typeof setView === "function") setView("home");
+  }
   function openExt() {
     const rows = S.ext.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), "he"));
-    overlay("pd-ext", `<div class="pd-head"><b>חברות שאינן במאגר (${rows.length})</b><button class="pd-x" onclick="PD._close('pd-ext')">✕</button></div>
+    overlay("pd-ext", `<div class="pd-head"><b>חברות שאינן במאגר (${rows.length})</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-ext')">✕</button></div>
       <div class="pd-body"><div class="pd-sub" style="margin-bottom:8px">חברות שמסמכי היתר משויכים אליהן אבל אינן במאגר העסקים. כל שיוך כזה מוסיף את החברה לכאן. ${S.extErr ? `<span style="color:#c0392b">(${E(S.extErr)}: אם חסרה מיגרציה 0008 - להריץ ב-D1)</span>` : ""}</div>
         <table class="pd-ext-tbl"><thead><tr><th>שם</th><th>ח.פ.</th><th>סטטוס</th><th>מסמכים</th><th></th></tr></thead><tbody>
         ${rows.map(x => `<tr><td>${E(x.name)}</td><td dir="ltr" style="text-align:right">${E(x.chp || "")}</td>
@@ -1009,7 +1015,7 @@
         : `<div class="pd-mg-empty ${need[t] ? "need" : ""}">${need[t] ? "⚠ אין מסמך מקושר" : "אין מסמך מקושר"}<div class="pd-sub">לקישור: בחרו מסמך מלמטה ולחצו "הת"ע ${SLOT_HE[t]}"</div></div>`}</div>`; };
     const ex = extrasOf(b.id);
     root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b>
-        <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
+        <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
       <div class="pd-body"><div class="pd-mg-top">${slotBox("private")}${slotBox("general")}</div>
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div></div>`;
@@ -1184,7 +1190,7 @@
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
     _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); },
-    _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
+    _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
     _unTog: (id, on) => { on ? Q.sel.add(id) : Q.sel.delete(id); uqShow(); }, _unAdd: id => { Q.sel.add(id); uqShow(); }, _unSearch: uqSearch,
