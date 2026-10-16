@@ -646,6 +646,27 @@
     return `<button type="button" class="pd-ok" onclick="PD.openManage('${b.id}')">🗂 ניהול מסמכים${n ? ` <span class="pd-chip" style="background:#b85c00">${n} לבדיקה</span>` : ""}</button>`;
   }
 
+  // מצב מסמכי ההיתר של חברה, לסינון בטבלת הניהול: review = צריכה החלטה ידנית (כמה מועמדים לרשימה בלי קישור, או מסמך בלי סיווג);
+  // missing = חסר מסמך מהסוג הנדרש ואין מועמד; ok = תקין; inactive = לא פעילה ברשם; "" = הנתונים עוד לא נטענו
+  const INACTIVE_ST = /מחוקה|נגרעה|מחוסלת|בפרוק/;
+  function docStatus(b) {
+    if (!S.loaded || S.err) return "";
+    if (INACTIVE_ST.test(b.registry_status || "")) return "inactive";
+    const ds = liveDocs(b.id), need = needOf(b);
+    let review = ds.some(d => d.doc_type === "unknown"), missing = false;
+    for (const t of ["general", "private"]) {
+      if (!need[t] || slotDoc(b.id, t)) continue;
+      const cov = ds.filter(d => d.doc_type === t || d.doc_type === "both").length;
+      if (cov >= 2) review = true; else if (!cov) missing = true;
+    }
+    return review ? "review" : missing ? "missing" : "ok";
+  }
+  function docCounts(list) {
+    const c = { review: 0, missing: 0 };
+    for (const b of list) { const s = docStatus(b); if (s === "review" || s === "missing") c[s]++; }
+    return c;
+  }
+
   // ───────── תמונה קטנה של העמוד הראשון (pdf.js, עד 3 במקביל) ─────────
   const thumbs = new Map(), thumbUrls = new Map(), thumbWait = []; let thumbActive = 0;
   function thumb(id) {
@@ -828,7 +849,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
