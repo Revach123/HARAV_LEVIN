@@ -1,25 +1,19 @@
 {
- "updated": "2026-10-15",
+ "updated": "2026-10-16",
  "status": "ok",
- "datawise_date": "2026-10-14",
- "expected": 756,
- "maya": 756,
+ "datawise_date": "2026-10-15",
+ "expected": 755,
+ "maya": 755,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
  "dropped_no_terms": [
   {
-   "security_id": 1142231,
-   "security_name": "אפי נכסים אגח ח",
-   "company": "אפי נכסים בע\"מ",
-   "chp_number": "510560188"
-  },
-  {
-   "security_id": 1243104,
-   "security_name": "מז טפ הנפמסחרי6",
-   "company": "מזרחי טפחות חברה להנפקות בע\"מ",
-   "chp_number": "520032046"
+   "security_id": 1215078,
+   "security_name": "קיסטון אינ אגחב",
+   "company": "קיסטון ריט בע\"מ",
+   "chp_number": "515983476"
   }
  ]
 }
