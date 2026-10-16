@@ -995,7 +995,7 @@
         <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף</label>
       </div>
       <div class="pd-mg-r">
-        <div class="pd-name" title="${E(d.original_name || "")}">${E(d.original_name || d.id)}</div>
+        <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
         <div class="pd-sub">${fmtSize(d.size)}${d.note ? " · " + E(d.note).slice(0, 80) : ""}</div>
         <div class="pd-btns">${["general", "private", "both", "unknown", "other"].map(tb).join("")}</div>
         <div class="pd-btns">${lb("private")}${lb("general")}</div>
@@ -1108,7 +1108,7 @@
   .pd-mk.me{outline:2px solid #1e7e4a;font-weight:700}.pd-mk.ex{background:#fff1d6;color:#8a5a00}
   .pd-ext-tbl{width:100%;border-collapse:collapse;font-size:13px}.pd-ext-tbl th,.pd-ext-tbl td{padding:6px 8px;border-bottom:1px solid #eee;text-align:right;vertical-align:top}
   .pd-drop-on{outline:3px dashed #1e7e4a;outline-offset:-3px;background:#edf7f1}
-  #pd-assign .pd-ov{z-index:1050}
+  #pd-assign .pd-ov,#pd-ext .pd-ov,#pd-recent .pd-ov{z-index:1050}#pd-doc .pd-ov{z-index:1080}#pd-confirm .pd-ov{z-index:1100}
   .pd-as-top{display:flex;gap:16px;align-items:flex-start}.pd-as-new{flex:1.1;min-width:0}.pd-as-have{flex:1;min-width:0}
   .pd-as-cap{font-size:12.5px;margin:3px 0}
   .pd-as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
