@@ -1066,7 +1066,7 @@
     const chips = (sl.length ? sl.map(t => `<span class="pd-chip" style="background:${TCOL[t]}">הת"ע ${SLOT_HE[t]}</span>`).join(" ") : (o.sug ? "" : `<span class="pd-chip" style="background:#8a8a8a">נוסף</span>`)) + ` <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span>`;
     const fl = (it.f || []).length ? `<span class="pd-feat part" title="${E((it.f || []).map(f => FLAG_HE[f.c] || f.c).join("\n"))}">⚠ ${(it.f || []).length}</span>` : "";
     const acts = o.sug ? `<button class="pd-mini" onclick="PD._cdAct('${d.id}','${bid}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','general')">הת"ע כללי</button>` : ""}`
-      : (sl.length ? `<button class="pd-link2" onclick="PD._cdExtras('${d.id}','${bid}')">הורדה לנוספים</button>` : ["private", "general"].filter(t => need[t]).map(t => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("")) + `<button class="pd-mini" onclick="PD._cdSpecial('${d.id}','${bid}')" title="יופיע באתר הסופי תחת כותרת שתבחרו, בנוסף להת&quot;ע הראשיים">★ ראשי מיוחד</button><button class="pd-link2" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${bid}')">הסרת שיוך</button>`;
+      : (sl.length ? `<button class="pd-link2" onclick="PD._cdExtras('${d.id}','${bid}')">הורדה לנוספים</button>` : ["private", "general"].filter(t => need[t]).map(t => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("")) + `<button class="pd-mini" onclick="PD._cdSpecial('${d.id}','${bid}')" title="סיווג המסמך כ'אחר': מופיע באתר הסופי תחת כותרת שתבחרו. מסמך הוא פרטי / כללי או אחר, לא שניהם">אחר (עם כותרת)</button><button class="pd-link2" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${bid}')">הסרת שיוך</button>`;
     return `<div class="pd-cdc ${CD.selDoc === d.id ? "sel" : ""}"><div class="pd-cdc-top" onclick="PD._cdSel('${d.id}')" title="הצגה בצד"><div class="pd-cdc-th"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}></div>
       <div class="pd-grow"><div class="pd-name" title="${E(d.original_name || "")}">${E(d.original_name || d.id)}</div><div class="pd-sub">${metaHtml(d)}</div><div class="pd-btns" style="gap:3px;margin-top:2px">${chips} ${fl}</div>
       <div class="pd-sub" style="font-size:10.5px">${E(it.o ? ORIG_HE[it.o] : "")}${(it.t || []).length ? " · " + E(it.t[0]) : ""}</div>
@@ -1122,7 +1122,7 @@
   }
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
     : op.t === "vis" ? `שינוי רישום ${bizName(op.bid)} ל${op.value === "רק פרטי" ? '"רק פרטי"' : op.value === "פרטי" ? '"יש גם פרטי"' : '"רק כללי"'}`
-    : op.t === "special" ? `${docNm(op.docId)} כמסמך ראשי מיוחד של ${bizName(op.bid)}: ${op.title}`
+    : op.t === "special" ? `${docNm(op.docId)}: סיווג "אחר" של ${bizName(op.bid)} (${op.title})`
     : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
@@ -1613,14 +1613,14 @@
   const specialTitle = d => (intelOf(d).t || [])[0] || d.source_title || String(d.original_name || "").replace(/\.pdf$/i, "");
   async function spEdit(docId, bid) {          // מסמך ראשי מיוחד: מופיע באתר הסופי של החברה תחת כותרת משלו
     const d = S.byId.get(docId); if (!d) return;
-    const cur = (d.specials || {})[bid], t = prompt("כותרת המסמך באתר הסופי:", cur !== undefined ? cur : specialTitle(d)); if (t === null || !t.trim()) return;
+    const cur = (d.specials || {})[bid], t = prompt("סיווג 'אחר': כותרת המסמך באתר הסופי:", cur !== undefined ? cur : specialTitle(d)); if (t === null || !t.trim()) return;
     const before = snapDoc(d);
-    if (await updateDoc(docId, { specials: { [bid]: t.trim() } })) { pushHist(before, "מסמך ראשי מיוחד: " + t.trim()); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
+    if (await updateDoc(docId, { specials: { [bid]: t.trim() } })) { pushHist(before, "סיווג \"אחר\": " + t.trim()); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
   }
   async function spDel(docId, bid) {
     const d = S.byId.get(docId); if (!d) return;
     const before = snapDoc(d);
-    if (await updateDoc(docId, { specials: { [bid]: "" } })) { pushHist(before, "בוטל מסמך ראשי מיוחד"); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
+    if (await updateDoc(docId, { specials: { [bid]: "" } })) { pushHist(before, "בוטל סיווג \"אחר\""); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
   }
   function mgCard(d, b) {
     const others = (d.business_ids || []).filter(x => x !== b.id), sl = slotsOf(d, b.id);
@@ -1629,8 +1629,8 @@
     const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
       : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
     const sp = (d.specials || {})[b.id];
-    const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="מופיע באתר הסופי תחת הכותרת הזו">★ ${E(sp)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
-      : `<button class="pd-mini" onclick="PD._spEdit('${d.id}','${b.id}')" title="מסמך נוסף שיופיע באתר הסופי של החברה, תחת כותרת שתבחרו, בנוסף להת&quot;ע הראשיים">★ ראשי מיוחד</button>`;
+    const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="מופיע באתר הסופי תחת הכותרת הזו">אחר: ${E(sp)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
+      : `<button class="pd-mini" onclick="PD._spEdit('${d.id}','${b.id}')" title="סיווג המסמך כ'אחר': מופיע באתר הסופי של החברה תחת כותרת שתבחרו (כמה שרוצים). מסמך הוא פרטי / כללי או אחר, לא שניהם">אחר (עם כותרת)</button>`;
     const shareBox = shared ? `<div class="pd-mg-sh">${others.map(o => `<div class="pd-co"><span>${E(bizName(o))}</span><button class="pd-link" onclick="PD._mgRemove('${d.id}','${o}')">הסר</button></div>`).join("")}
         ${M.move === d.id ? "" : `<input class="pd-in" placeholder="הוספת חברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','add',this.value)" autocomplete="off">`}</div>` : "";
     const moveBox = M.move === d.id ? `<div class="pd-mg-sh"><input class="pd-in" placeholder="העברה לחברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','move',this.value)" autocomplete="off"></div>` : "";

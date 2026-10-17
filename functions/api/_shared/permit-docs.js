@@ -40,10 +40,13 @@ export async function withBusinesses(env, rows) {
 // לכל חברה מסמך אחד בכל רשימה: מסמך אחר שהיה מקושר לאותה רשימה אצלה מאבד את הקישור. מחזיר פקודות לאצווה.
 export async function slotStatements(env, docId, slotMap) {
   const stmts = [];
+  let hasSpecial = true;
+  try { await env.DB.prepare("SELECT 1 FROM permit_doc_special LIMIT 1").first(); } catch { hasSpecial = false; }      // לפני מיגרציה 0013
   for (const [bid, v] of Object.entries(slotMap || {})) {
     const mine = cleanSlot(v);
     stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = ? WHERE doc_id = ? AND business_id = ?").bind(mine, docId, bid));
     if (!mine) continue;
+    if (hasSpecial) stmts.push(env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ? AND business_id = ?").bind(docId, bid));      // מסמך הוא פרטי / כללי או "אחר", לא שניהם
     const others = await env.DB.prepare("SELECT doc_id, slot FROM permit_doc_companies WHERE business_id = ? AND doc_id != ? AND slot != ''").bind(bid, docId).all();
     for (const o of others.results ?? []) {
       const keep = cleanSlot(String(o.slot).split(",").filter(x => !mine.split(",").includes(x)));

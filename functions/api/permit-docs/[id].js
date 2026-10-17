@@ -43,6 +43,7 @@ export async function onRequestPut({ request, env, params }) {
         const title = String(body.specials[b] || "").trim().slice(0, 200);
         if (!title) { stmts.push(env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ? AND business_id = ?").bind(params.id, b)); continue; }
         stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_companies (doc_id, business_id) VALUES (?, ?)").bind(params.id, b));
+        stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = '' WHERE doc_id = ? AND business_id = ?").bind(params.id, b));      // "אחר" אינו גם פרטי / כללי
         stmts.push(env.DB.prepare("INSERT INTO permit_doc_special (doc_id, business_id, title) VALUES (?,?,?) ON CONFLICT(doc_id, business_id) DO UPDATE SET title = excluded.title").bind(params.id, b, title));
       }
     }
