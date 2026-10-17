@@ -86,6 +86,16 @@ def _has_personal_approval(seq):
     return False
 
 
+def _has_personal_alt(seq):
+    """"החברה מאשרת להתקשר בהיתר עיסקא זה גם באופן אישי עם כל המעוניין בכך": נוסח נוסף של "גם פרטי" (בלי "בזאת")."""
+    for i, w in enumerate(seq):
+        if w == "מאשרת":
+            win = _ext(seq[max(0, i - 8): i + 16])
+            if ("אישי" in win or "אישית" in win) and ("עיסקא" in win or "היתר" in win) and "המעוניין" in win:
+                return True
+    return False
+
+
 def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
@@ -94,7 +104,7 @@ def phrase_kind(text):
     for seq in (ws, ws[::-1], rl, rl[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
-        if _has_personal_approval(seq):
+        if _has_personal_approval(seq) or _has_personal_alt(seq):
             personal = True
         for i, w in enumerate(seq):
             if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):

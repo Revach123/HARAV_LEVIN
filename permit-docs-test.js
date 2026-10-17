@@ -371,6 +371,10 @@
           const w = new Set(seq.slice(Math.max(0, i - 8), i + 14)); for (const x of [...w]) if (x.length > 3) w.add(x.slice(1));
           if (w.has("בזאת") && w.has("אישית") && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) pe = true;
         }
+        if (seq[i] === "מאשרת") {          // "החברה מאשרת להתקשר בהיתר עיסקא זה גם באופן אישי עם כל המעוניין בכך": נוסח נוסף של "גם פרטי"
+          const w2 = new Set(seq.slice(Math.max(0, i - 8), i + 16)); for (const x of [...w2]) if (x.length > 3) w2.add(x.slice(1));
+          if ((w2.has("אישי") || w2.has("אישית")) && (w2.has("עיסקא") || w2.has("היתר")) && w2.has("המעוניין")) pe = true;
+        }
         if (seq[i] === "מאשרת") { const w = new Set(seq.slice(Math.max(0, i - 4), i + 5)); if (w.has("בזאת") && (w.has("החברה") || w.has("חברה"))) return "combined"; }
         if (!["פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"].includes(seq[i])) continue;
         const win = seq.slice(Math.max(0, i - 14), i + 14);
