@@ -1088,17 +1088,29 @@
     const l = CD.pend[cdKey()] || [];
     return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>ממתין לאישור:</b></div>` + l.map((op, i) => `<div class="pd-sub" style="width:100%">• ${E(opLabel(op))} <a href="#" onclick="PD._cdUnstage(${i});return false" style="color:#c0392b" title="ביטול הבחירה">✕</a></div>`).join("") : ""}
       <input class="pd-in" id="pd-cd-qn" placeholder="הערה לשאלת מנהל (אופציונלי)" style="flex:1;min-width:140px">
-      <button class="pd-btn primary" onclick="PD._cdOk()" title="מבצע את הבחירות ועובר לפריט הבא">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
-      <button class="pd-btn" style="background:#fff3cd;border-color:#e0b84a" onclick="PD._cdQ()" title="הפריט עובר לרשימת שאלות מנהל, בלי לבצע את הבחירות">❓ שאלת מנהל</button></div>`;
+      <button class="pd-btn primary" onclick="PD._cdOk()" title="מבצע את הבחירות ועובר לפריט הבא. בלי בחירות: מאשר את הרישום המקורי מהאתר הישן">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
+      <button class="pd-btn" style="background:#fff3cd;border-color:#e0b84a" onclick="PD._cdQ()" title="הפריט עובר לרשימת שאלות מנהל, בלי לבצע את הבחירות; הרישום המקורי נשאר כפי שהוא">❓ שאלת מנהל</button></div>`;
   }
   async function setReview(key, status, note) {
     await api("/permit-review", "PUT", { key, status, note: note || "" });
     if (!S.rev) S.rev = new Map();
     if (status) S.rev.set(key, { key, status, note: note || "" }); else S.rev.delete(key);
   }
+  function originOps(bid) {          // השיוך המקורי: המסמך שבפוסט של החברה, ברשימה הכללית / הפרטית שבה הופיע
+    const b = bizById(bid); if (!b) return [];
+    const need = needOf(b), want = { g: ["general"], p: ["private"], gp: ["general", "private"] }, out = [], seen = new Set();
+    for (const x of flagsOfCompany(bid)) {
+      if (seen.has(x.d.id)) continue; seen.add(x.d.id);
+      const ts = (want[intelOf(x.d).o] || []).filter(t => need[t]);
+      for (const t of ts) if (!slotsOf(x.d, bid).includes(t)) out.push({ t: "act", docId: x.d.id, bid, act: t });
+      if (!ts.length && !(x.d.business_ids || []).includes(bid)) out.push({ t: "act", docId: x.d.id, bid, act: "only" });
+    }
+    return out;
+  }
   async function cdOk() {
     if (!CD.curBiz) return;
-    const k = cdKey(), ops = CD.pend[k] || [];
+    const k = cdKey(); let ops = CD.pend[k] || [];
+    if (!ops.length && CD.mode === "review" && !k.startsWith("post:")) ops = originOps(CD.curBiz);      // אישור בלי שינוי = אישור הרישום המקורי (לפי הפוסט באתר הישן)
     try {
       for (const op of ops) {
         if (op.t === "act") await actFor(op.docId, op.bid, op.act);
@@ -1114,7 +1126,9 @@
   async function cdQuestion() {
     if (!CD.curBiz) return;
     const k = cdKey(), n = $("pd-cd-qn");
-    try { await setReview(k, "question", n ? n.value : ""); }
+    const names = k.startsWith("post:") ? [docNm(k.slice(5))] : flagsOfCompany(CD.curBiz).map(x => docNm(x.d.id));
+    const note = ([...new Set(names)].join(", ") + (n && n.value ? " | " + n.value : "")).slice(0, 480);
+    try { await setReview(k, "question", note); }
     catch (e) { alert("השמירה נכשלה: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
     delete CD.pend[k]; CD.curBiz = ""; cdShow();
   }
