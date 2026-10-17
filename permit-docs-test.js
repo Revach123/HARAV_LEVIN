@@ -1065,6 +1065,28 @@
     side.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) img.src = u; }));
     cdViewer();
   }
+  const postExtHtml = d => {          // הצעות לשיוך לחברה שאינה במאגר: ח.פ. של תאגיד שנמצא במסמך, חברה קיימת ברשימה שהשם דומה, או לפי שם הפוסט
+    const it = intelOf(d), title = postTitle(d), tn = normText(title), have = new Set((d.ext_ids || []));
+    const cards = [], seen = new Set();
+    const card = (name, sub, acts) => `<div class="pd-uc ext"><div class="pd-uc-top" style="cursor:default"><b>${E(name)}</b><div class="pd-sub">${E(sub)}</div></div><div class="pd-uc-act">${acts}</div></div>`;
+    for (const hp of it.xo || []) {
+      const x = S.ext.find(e => digitsOf(e.chp) === digitsOf(hp)); if (x) seen.add(x.id);
+      cards.push(card(x ? x.name : (title || "חברה שאינה במאגר"), `ח.פ. ${hp} · תאגיד שנמצא במסמך${x ? " · כבר ברשימת החברות שאינן במאגר" : ""}`,
+        `<button class="pd-mini link" onclick="PD._postExt('${d.id}','${hp}','${x ? x.id : ""}')">שיוך כחברה שאינה במאגר</button>${x ? "" : `<button class="pd-link2" onclick="PD._postAdd('${d.id}','${hp}')">הוספה למאגר</button>`}`));
+    }
+    if (tn.length >= 4) for (const x of S.ext) { const xn = normText(x.name); if (!seen.has(x.id) && xn.length >= 4 && (xn.includes(tn) || tn.includes(xn))) { seen.add(x.id); cards.push(card(x.name, `${x.chp ? "ח.פ. " + x.chp + " · " : ""}${EXT_HE[x.status] || ""} · שם דומה לשם הפוסט`, `<button class="pd-mini link" onclick="PD._postExt('${d.id}','','${x.id}')">שיוך</button>`)); } }
+    if (title) cards.push(card(title, "לפי שם הפוסט · חברה חדשה ברשימת החברות שאינן במאגר (בלי ח.פ.)", `<button class="pd-mini link" onclick="PD._postExt('${d.id}','','')">שיוך לפי שם הפוסט</button>`));
+    return cards.join("");
+  };
+  async function postExt(docId, hp, extId) {
+    const d = S.byId.get(docId); if (!d) return;
+    try {
+      let id = extId;
+      if (!id) { const c = await extEnsure({ chp: hp || "", name: postTitle(d), status: "not_in_db" }); id = c.id; }
+      await extAssign(docId, id); cdShow();
+    } catch (e) { alert("השיוך נכשל: " + e.message); }
+  }
+  function postAdd(docId, hp) { addReg(hp, false, async bid => { try { await doLink(docId, bid, ""); refresh(); } catch (e) { alert("החברה נוספה, אך שיוך המסמך נכשל: " + e.message); } }); }
   function cdShowPost(pb) {          // פוסט מהאתר הישן שכותרתו אינה מזוהה במאגר: שם הפוסט, השאלה על השיוך המקורי, והצעות שיוך
     const d = pb.post, it = intelOf(d), side = $("pd-cd-side");
     if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: pb.id, i: CD.i })); } catch { /* בלי אחסון */ } }
@@ -1079,7 +1101,8 @@
       <h4>הצעות לשיוך (${sugs.length})</h4>
       ${sugs.length ? sugs.map(({ x, b }) => { const need = needOf(b), f = cfeat(b, d);
         return `<div class="pd-uc"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}${E((x.w || []).join(", "))}</div><div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span></div></div>
-          <div class="pd-uc-act"><button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','general')">הת"ע כללי</button>` : ""}</div></div>`; }).join("") : `<div class="pd-sub">לא נמצאה הצעה לפי תוכן המסמך. אפשר לשייך דרך "מסמכים לא משויכים".</div>`}`;
+          <div class="pd-uc-act"><button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','general')">הת"ע כללי</button>` : ""}</div></div>`; }).join("") : `<div class="pd-sub">לא נמצאה חברה במאגר לפי תוכן המסמך.</div>`}
+      <h4>חברות שאינן במאגר</h4>${postExtHtml(d)}`;
     cdViewer();
   }
   async function cdViewer() {
@@ -1627,7 +1650,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: postExt, _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,

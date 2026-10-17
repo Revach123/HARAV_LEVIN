@@ -116,7 +116,7 @@ def main():
         sha = hashes.get(aid)
         if not sha:
             continue
-        d = docs.setdefault(sha, {"sha": sha, "aids": [], "files": [], "origins": set(), "titles": [], "tbids": [], "flags": {}, "sug": {}, "manual": [], "path": None})
+        d = docs.setdefault(sha, {"sha": sha, "aids": [], "files": [], "origins": set(), "titles": [], "tbids": [], "flags": {}, "xo": [], "sug": {}, "manual": [], "path": None})
         d["aids"].append(aid)
         d["files"].append(r.get("file", ""))
         org = ORIGIN.get(r.get("post_type"), "x")
@@ -162,6 +162,9 @@ def main():
                 fl[code].append(detail)
         tchp = str(by_id[tb].get("chp_number") or "").zfill(9) if tb and by_id[tb].get("chp_number") else ""
         hps_out = [x for x in (r.get("doc_hps_not_in_db") or "").split() if x]
+        for h in hps_out:
+            if h not in d["xo"]:
+                d["xo"].append(h)
         if org != "x" and tchp and (hps_in or hps_out) and tchp not in [h.zfill(9) for h in hps_in]:
             flag("hp_missing", "ח.פ. החברה " + tchp + "; במסמך: " + " ".join(hps_in + hps_out))
         if r.get("title_differs") == "כן":
@@ -202,7 +205,7 @@ def main():
         sug = sorted(([b, round(v[0], 1), v[1]] for b, v in d["sug"].items()), key=lambda x: -x[1])[:8]
         titles = list(dict.fromkeys(d["titles"]))
         intel[sha] = {"o": o, "t": titles[:3], "tb": d["tbids"][:4], "f": [{"c": c, "d": "; ".join(v)[:200]} for c, v in d["flags"].items()],
-                      "s": [{"b": b, "s": s_, "w": w[:3]} for b, s_, w in sug[:6]], "m": d["manual"][:6]}
+                      "s": [{"b": b, "s": s_, "w": w[:3]} for b, s_, w in sug[:6]], "m": d["manual"][:6], "xo": d["xo"][:4]}
         files = " | ".join(dict.fromkeys(d["files"]))
         if o != "x":
             out1.append([sha[:12], files, " ".join(d["aids"]), ORIGIN_HE[o], " | ".join(titles), " | ".join(name_of(b) for b in d["tbids"]),
