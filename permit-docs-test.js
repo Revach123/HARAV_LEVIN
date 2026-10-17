@@ -980,7 +980,7 @@
   function flagsOfCompany(bid) {          // ממצאי הסריקה של מסמכי החברה
     const out = [];
     for (const d of liveDocs(bid)) {
-      for (const f of intelOf(d).f || []) out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
+      for (const f of intelOf(d).f || []) if (f.c !== "private_phrase_in_general") out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
       for (const r of reviewReasons(d)) out.push({ d, label: r, detail: "" });
     }
     return out;
