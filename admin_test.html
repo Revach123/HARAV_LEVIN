@@ -793,7 +793,7 @@
   .big-nochp .ico { display:block; font-size:30px; margin-bottom:6px; }
   .big-nochp small { display:block; font-size:13px; font-weight:400; color:var(--muted); margin-top:4px; }
   .nochp-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px; color:var(--navy); }
-  @media (max-width:700px) { .chp-choice { grid-template-columns:1fr; } }
+  @media (max-width:700px) { .chp-choice { grid-template-columns:1fr !important; } }
   .permit-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1149,7 +1149,7 @@ function renderForm() {
         <button type="button" class="btn-ghost" onclick="PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button></div>` : ""}
 
       <div class="lookup-box" id="lookup-box">
-        <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "")}">
+        <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "grid-template-columns:1.4fr 1fr 1fr;")}">
           <div class="big-card">
             <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
             <div class="lookup-row" id="chp-row">
@@ -1163,7 +1163,7 @@ function renderForm() {
             </div>
             <div id="lookup-out" style="text-align:right;">${lookupOutHtml()}</div>
           </div>
-          ${!isEdit ? `<div style="display:flex;flex-direction:column;gap:12px;"><button type="button" class="big-nochp" style="min-height:0;flex:1" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>${window.PD ? `<button type="button" class="big-nochp" style="min-height:0;flex:1" onclick="PD.openUpload({addCompany:true})"><span class="ico">📄</span>הוספה ע"י העלאת היתר עסקה<small>המערכת תסרוק את המסמך ותציע את החברה להוספה</small></button>` : ""}</div>` : ""}
+          ${!isEdit ? `<button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>${window.PD ? `<button type="button" class="big-nochp" onclick="PD.openUpload({addCompany:true})"><span class="ico">📄</span>הוספה ע"י העלאת היתר עסקה<small>המערכת תסרוק את המסמך ותציע את החברה להוספה</small></button>` : ""}` : ""}
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
