@@ -202,9 +202,8 @@
     const c = S.loaded && !S.err ? viewCounts() : null;
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
-      <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>דשבורד לפי חברות</b><span class="sub">שיוכים קיימים לבדיקה · הצעות לשיוכים חדשים</span></button>
-      <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכי היתר: שיוך ובדיקה${c ? " (" + (c.un + c.review) + ")" : ""}</b><span class="sub">${c ? `${c.un} לא משויכים · ${c.review} לבדיקה · ${c.other} אחרים` : "לא משויכים, לבדיקה, מסמכים אחרים"}</span></button>
-      <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
+      <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>בדיקת מאגר המסמכים</b><span class="sub">מסמכים לבדיקה · לא משויכים · ניהול שיוכים</span></button>
+            <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
       <button class="home-card" onclick="PD.openExt('gone')"><span class="ico">🏚️</span><b>חברות מחוקות (${extCount("gone")})</b><span class="sub">מחוקות / מוזגו / לא קיימות היום</span></button></div>`;
   }
 
@@ -279,7 +278,7 @@
         $("pd-doc-side").innerHTML = sideHtml;
       } else {
         box.dataset.docId = docId;
-        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
+        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
       }
       const s2 = $("pd-doc-side"); if (s2) s2.scrollTop = keep;
     };
@@ -507,7 +506,7 @@
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
     $("pd-up-body").innerHTML = `
       <div class="pd-split">
-        <div class="pd-view"><iframe src="${c.url}" title="תצוגה מקדימה"></iframe></div>
+        <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0" title="תצוגה מקדימה"></iframe></div>
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
           ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
@@ -632,7 +631,8 @@
 
   // ───────── דשבורד מסמכי היתר: לא משויכים / לבדיקה / לחברות שאינן במאגר / מסמכים אחרים ─────────
   const Q = { bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
-  const VIEWS = [["un", "לא משויכים"], ["review", "לבדיקה"], ["ext", "חברות שאינן במאגר"], ["gone", "חברות מחוקות"], ["other", "מסמכים אחרים"]];
+  const VIEWS = [["un", "לא משויכים כלל"], ["sug", "עם הצעת שיוך נוספת"], ["other", "מסמכים אחרים"]];
+  const ALLV = ["un", "sug", "review", "ext", "gone", "other"];
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length && !(d.ext_ids || []).length;
   const missingMarked = d => /חסר במאגר:/.test(d.note || "");      // סימון ישן: "חסר במאגר" בהערה (לפני רשימת החברות שאינן במאגר)
@@ -654,10 +654,11 @@
     if (v === "un") return isUnassigned(d);
     if (v === "ext" || v === "gone") return !(d.business_ids || []).length && (d.ext_ids || []).some(id => { const x = extById(id); return x && extGroup(x) === (v === "gone" ? "gone" : "nodb"); });
     if (v === "review") return (d.business_ids || []).length > 0 && reviewReasons(d).length > 0;
+    if (v === "sug") return !isUnassigned(d) && (intelOf(d).s || []).some(x => !(d.business_ids || []).includes(x.b) && (x.s >= 3.5 || (intelOf(d).m || []).includes(x.b)) && bizById(x.b));
     return false;
   };
   const unassignedCount = () => S.docs.filter(d => inView(d, "un")).length;
-  const viewCounts = () => { const c = {}; for (const [v] of VIEWS) c[v] = 0; for (const d of S.docs) for (const [v] of VIEWS) if (inView(d, v)) c[v]++; return c; };
+  const viewCounts = () => { const c = {}; for (const v of ALLV) c[v] = 0; for (const d of S.docs) for (const v of ALLV) if (inView(d, v)) c[v]++; return c; };
   function docHay(d) {        // טקסט לסינון: שם קובץ, כותרת, הערה, ושמות / ח.פ. של החברות המשויכות (גם שאינן במאגר)
     if (d._hay && d._hayN === S.docs.length + ":" + S.ext.length) return d._hay;
     const cos = (d.business_ids || []).map(bizById).filter(Boolean).flatMap(b => [displayName(b), b.chp_number, b.registrar_name, b.permit_name]);
@@ -675,8 +676,18 @@
   const posKey = v => "pd_pos_" + v;          // המקום האחרון בכל לשונית: המשך מאותו מסמך בפתיחה הבאה
   const readPos = v => { try { return JSON.parse(localStorage.getItem(posKey(v)) || "null"); } catch { return null; } };
   const savePos = (v, id, i) => { try { localStorage.setItem(posKey(v), JSON.stringify({ id, i })); } catch { /* בלי אחסון */ } };
+  // שלוש הבחירות הראשיות של "בדיקת מאגר המסמכים" (משותפות לחלון לפי מסמכים ולחלון לפי חברות)
+  function topTabs(active) {
+    const vc = viewCounts();
+    return [["review", "מסמכים לבדיקה", cdCount("review")], ["un", "מסמכים לא משויכים", vc.un + vc.sug], ["manage", "ניהול שיוכים", cdCount("manage")]]
+      .map(([t, l, n]) => `<button class="pd-tab ${active === t ? "sel" : ""}" onclick="PD._top('${t}')">${l} <span class="pd-tabn">${n}</span></button>`).join("");
+  }
+  function topGo(t) {
+    for (const id of ["pd-un", "pd-cd"]) if ($(id)) close(id);
+    if (t === "un") openUnassigned("un"); else openCompanyDash(t);
+  }
   function openUnassigned(view) {
-    Q.view = view || "review"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
+    Q.view = view || "un"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `<div class="pd-rv"><div class="pd-viewcol">
         <div class="pd-toolbar">
           <div class="pd-tbrow"><div class="pd-tabs" id="pd-un-tabs"></div><span style="flex:1"></span>
@@ -713,7 +724,7 @@
   async function uqShow(keepSel) {
     const list = unassignedList(), cnt = $("pd-un-count"); if (!$("pd-un")) return;
     const vc = viewCounts(), tabs = $("pd-un-tabs");
-    if (tabs) tabs.innerHTML = VIEWS.map(([v, l]) => `<button class="pd-tab ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
+    if (tabs) tabs.innerHTML = topTabs("un") + `<span class="pd-sub" style="margin:0 8px">|</span>` + VIEWS.map(([v, l]) => `<button class="pd-tab sub ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
     const xn = $("pd-un-extn"); if (xn) xn.textContent = extCount("nodb");
     const gn = $("pd-un-gonen"); if (gn) gn.textContent = extCount("gone");
     if (cnt) cnt.textContent = `${list.length} מסמכים בתצוגה`;
@@ -738,7 +749,7 @@
       (async () => {
         try {
           const blob = await fetchPdfBlob(d.id); if (tok !== Q.token) return;
-          Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}" title="המסמך"></iframe>`;
+          Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
           if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
           unassignedList().slice(Q.i + 1, Q.i + 3).forEach(x => fetchPdfBlob(x.id).catch(() => {}));      // טעינה מראש של שני המסמכים הבאים
           try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
@@ -978,6 +989,7 @@
     const f = CD.filter.trim().toLowerCase(), seen = new Map();
     const take = (bid, n) => { const b = bizById(bid); if (!b || INACTIVE_ST.test(b.registry_status || "")) return; const e = seen.get(bid) || { b, n: 0 }; e.n += n; seen.set(bid, e); };
     if (CD.mode === "review") { for (const b of bizList()) { const n = flagsOfCompany(b.id).length; if (n) take(b.id, n); } }
+    else if (CD.mode === "manage") { for (const b of bizList()) { const f = cfeat(b, null); if (f.total && f.have < f.total) take(b.id, f.total - f.have); } }
     else { const cand = new Map(); for (const d of S.docs) { if (d.doc_type === "other") continue; for (const x of intelOf(d).s || []) if (!(d.business_ids || []).includes(x.b) && (x.s >= 3.5 || isUnassigned(d) || (intelOf(d).m || []).includes(x.b))) cand.set(x.b, (cand.get(x.b) || 0) + 1); } for (const [bid, n] of cand) take(bid, n); }
     return [...seen.values()].filter(e => !CD.skipped.has(e.b.id) && (!f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f)))
       .sort((a, b) => String(displayName(a.b)).localeCompare(String(displayName(b.b)), "he"));
@@ -1015,14 +1027,14 @@
   async function cdShow() {
     if (!$("pd-cd")) return;
     const tabs = $("pd-cd-tabs");
-    if (tabs) tabs.innerHTML = [["review", "שיוכים קיימים לבדיקה"], ["suggest", "הצעות לשיוכים חדשים"]].map(([m, l]) => `<button class="pd-tab ${CD.mode === m ? "sel" : ""}" onclick="PD._cdMode('${m}')">${l} <span class="pd-tabn">${cdCount(m)}</span></button>`).join("");
+    if (tabs) tabs.innerHTML = topTabs(CD.mode);
     const list = cdCompanies(), pos = $("pd-cd-pos"), side = $("pd-cd-side");
     if (CD.resume) { const k = list.findIndex(e => e.b.id === CD.resume.id); CD.i = k >= 0 ? k : Math.min(CD.resume.i || 0, Math.max(0, list.length - 1)); CD.resume = null; }
     else if (CD.curBiz) { const k = list.findIndex(e => e.b.id === CD.curBiz); if (k >= 0) CD.i = k; }
     if (CD.i >= list.length) CD.i = Math.max(0, list.length - 1);
     if (pos) pos.textContent = list.length ? `${CD.i + 1} / ${list.length}` : "0 / 0";
     const e = list[CD.i];
-    if (!e) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">${CD.mode === "review" ? "אין שיוכים קיימים לבדיקה 🎉" : "אין הצעות לשיוכים חדשים"}</div>`; $("pd-cd-view").innerHTML = ""; $("pd-cd-vhead").innerHTML = ""; CD.curBiz = ""; return; }
+    if (!e) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">${CD.mode === "review" ? "אין מסמכים לבדיקה 🎉" : CD.mode === "manage" ? "לכל החברות יש שיוך מסודר 🎉" : "אין הצעות לשיוכים חדשים"}</div>`; $("pd-cd-view").innerHTML = ""; $("pd-cd-vhead").innerHTML = ""; CD.curBiz = ""; return; }
     const b = e.b;
     if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: b.id, i: CD.i })); } catch { /* בלי אחסון */ } }
     if (CD.curBiz !== b.id) { CD.curBiz = b.id; CD.selDoc = ""; }
@@ -1053,7 +1065,7 @@
     if (CD.blobUrl) { URL.revokeObjectURL(CD.blobUrl); CD.blobUrl = ""; }
     try {
       const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
-      CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}" title="המסמך"></iframe>`;
+      CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
       if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
     } catch (e) { if (tok === CD.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
   }
@@ -1506,6 +1518,7 @@
   .pd-sidehead{padding:10px 12px;background:#f1efe9;border-bottom:1px solid #e0ddd8;display:flex;flex-direction:column;gap:7px}
   .pd-sidecol .pd-side{width:auto;max-width:none;flex:1;border:0}
   .pd-tabs{display:flex;gap:4px;flex-wrap:wrap}.pd-tab{border:1px solid #cfcac0;background:#fff;border-radius:7px;padding:4px 9px;font-size:12.5px;cursor:pointer}.pd-tab.sel{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
+  .pd-tab{font-weight:600}.pd-tab.sub{font-weight:400;font-size:12px;padding:3px 8px;background:#f6f4ee}.pd-tab.sub.sel{background:#3d6a99;color:#fff}
   .pd-tabn{display:inline-block;background:#e9e6df;color:#333;border-radius:9px;padding:0 6px;font-size:11px;margin-inline-start:3px}.pd-tab.sel .pd-tabn{background:#fff3;color:#fff}
   .pd-marks{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}.pd-mk{font-size:11px;border-radius:8px;padding:1px 7px;background:#eee;color:#555}
   .pd-mk.private{background:#f0e3f5;color:#7a3b8f}.pd-mk.general{background:#e0ebf7;color:#1e4570}.pd-mk.miss{background:#fdecea;color:#c0392b;font-weight:600}.pd-mk.off{background:#f4f4f2;color:#9a9a9a}
@@ -1586,7 +1599,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
