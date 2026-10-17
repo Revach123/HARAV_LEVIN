@@ -51,6 +51,10 @@ export async function onRequestPut({ request, env, params }) {
           .bind(params.id, sid, String(x.name || "").slice(0, 200), String(x.symbol || "").slice(0, 60), String(x.company || "").slice(0, 200), String(x.chp || "").slice(0, 20)));
       }
     }
+    if (body.intel !== undefined) {          // מידע מהסריקה המקומית (מיגרציה 0011)
+      const txt = body.intel && typeof body.intel === "object" ? JSON.stringify(body.intel) : "";
+      stmts.push(env.DB.prepare("UPDATE permit_docs SET intel = ? WHERE id = ?").bind(txt.length > 8000 ? "" : txt, params.id));
+    }
     if (body.pages !== undefined || body.doc_dates !== undefined) {          // מספר עמודים ותאריכים שנשלפו מהמסמך (מיגרציה 0010)
       const pages = Math.max(0, Math.min(5000, parseInt(body.pages, 10) || 0));
       const dates = (Array.isArray(body.doc_dates) ? body.doc_dates : []).map(String).filter(x => /^\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 12);

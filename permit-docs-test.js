@@ -193,7 +193,7 @@
   function close(id) { $(id)?.remove(); if (closers[id]) { closers[id](); delete closers[id]; } }
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company"]) if ($(id)) { close(id); break; }
+    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd"]) if ($(id)) { close(id); break; }
   });
 
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
@@ -202,6 +202,7 @@
     const c = S.loaded && !S.err ? viewCounts() : null;
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
+      <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>דשבורד לפי חברות</b><span class="sub">שיוכים קיימים לבדיקה · הצעות לשיוכים חדשים</span></button>
       <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכי היתר: שיוך ובדיקה${c ? " (" + (c.un + c.review) + ")" : ""}</b><span class="sub">${c ? `${c.un} לא משויכים · ${c.review} לבדיקה · ${c.other} אחרים` : "לא משויכים, לבדיקה, מסמכים אחרים"}</span></button>
       <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
       <button class="home-card" onclick="PD.openExt('gone')"><span class="ico">🏚️</span><b>חברות מחוקות (${extCount("gone")})</b><span class="sub">מחוקות / מוזגו / לא קיימות היום</span></button></div>`;
@@ -771,8 +772,9 @@
       <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" onclick="PD._unPicker('change','ext','${id}')">שינוי</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unExtDetach('${id}')">ביטול</button></div></div>`;
   }
   const C = { docId: "", bizId: "", t: "" };
-  async function uqAct(bizId, act) {
-    const d = unassignedList()[Q.i]; if (!d) return;
+  async function uqAct(bizId, act) { const d = unassignedList()[Q.i]; if (d) return actFor(d.id, bizId, act); }
+  async function actFor(docId, bizId, act) {
+    const d = S.byId.get(docId); if (!d) return;
     const t = act === "only" ? "" : act, cur = t ? slotDoc(bizId, t) : null;
     if (cur && cur.id !== d.id) {          // כבר קיים מסמך לחברה: חלון קופץ
       Object.assign(C, { docId: d.id, bizId, t });
@@ -803,7 +805,7 @@
       say(t ? `המסמך הוא עכשיו הת"ע ${SLOT_HE[t]} של ${displayName(b)}${others.length ? ". המסמך הקודם נשאר בחברה תחת מסמכים נוספים. לביטול: ↩" : ""}` : "המסמך שויך ל" + displayName(b));
       await uqApplyReplace(docId);
     } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
-    refresh(); if ($("pd-un")) uqAfter();
+    refresh(); if ($("pd-un")) uqAfter(); if ($("pd-cd")) cdShow();
   }
   function uqSearch(q) {
     const out = $("pd-un-res"); if (!out) return;
@@ -868,6 +870,122 @@
     if (!confirm(`להחזיר את "${d.original_name || id}" למסמכים הלא משויכים? השיוך לכל החברות יוסר (המסמך עצמו נשמר).`)) return;
     try { const before = snapDoc(d); const r = await api("/permit-docs/" + id, "PUT", { business_ids: [] }); replaceDoc(r.doc); pushHist(before, "הוחזר ללא שיוך"); } catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
     refresh(); openRecent(); if ($("pd-un")) { Q.curId = ""; uqShow(); }
+  }
+
+
+  // ───────── דשבורד לפי חברות: שיוכים קיימים לבדיקה / הצעות לשיוכים חדשים ─────────
+  const FLAG_HE = { hp_missing: "ח.פ. החברה לא מופיע במסמך", hp_typo: "ח.פ. שנראה כטעות הקלדה של ח.פ. החברה", hp_bad: "ח.פ. עם ספרת ביקורת שגויה", name_differs: "שם הפוסט שונה משם החברה במסמך", status: "זיהוי החברה לא חד-משמעי",
+    no_private_phrase: "בהיתר פרטי חסר משפט מפתח של נוסח פרטי", private_phrase_in_general: "בהיתר כללי יש משפט מפתח של נוסח פרטי", no_text: "אין טקסט קריא במסמך" };
+  const ORIG_HE = { g: "מהאתר הישן: רשימת הכללי", p: "מהאתר הישן: רשימת הפרטי", gp: "מהאתר הישן: שתי הרשימות", x: "מסמך נוסף (לא היה באף מאגר)" };
+  const intelOf = d => { if (d._in !== undefined && d._inSrc === d.intel) return d._in; let v = {}; try { v = JSON.parse(d.intel || "{}") || {}; } catch { v = {}; } d._in = v; d._inSrc = d.intel; return v; };
+  const CD = { mode: "review", i: 0, filter: "", skipped: new Set(), curBiz: "", selDoc: "", token: 0, blobUrl: "", shownDoc: "" };
+  function sugFor(bid) {          // מסמכים שמוצעים לחברה (לפי הסריקה המקומית) ועוד לא משויכים אליה
+    const out = [];
+    for (const d of S.docs) {
+      if (d.doc_type === "other" || (d.business_ids || []).includes(bid)) continue;
+      const it = intelOf(d), s = (it.s || []).find(x => x.b === bid);
+      if (s && (s.s >= 3.5 || isUnassigned(d) || (it.m || []).includes(bid))) out.push({ d, s: s.s, w: s.w || [] });
+    }
+    return out.sort((a, b) => b.s - a.s);
+  }
+  function flagsOfCompany(bid) {          // ממצאי הסריקה של מסמכי החברה
+    const out = [];
+    for (const d of liveDocs(bid)) {
+      for (const f of intelOf(d).f || []) out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
+      for (const r of reviewReasons(d)) out.push({ d, label: r, detail: "" });
+    }
+    return out;
+  }
+  function cdCompanies() {
+    const f = CD.filter.trim().toLowerCase(), seen = new Map();
+    const take = (bid, n) => { const b = bizById(bid); if (!b || INACTIVE_ST.test(b.registry_status || "")) return; const e = seen.get(bid) || { b, n: 0 }; e.n += n; seen.set(bid, e); };
+    if (CD.mode === "review") { for (const b of bizList()) { const n = flagsOfCompany(b.id).length; if (n) take(b.id, n); } }
+    else { const cand = new Map(); for (const d of S.docs) { if (d.doc_type === "other") continue; for (const x of intelOf(d).s || []) if (!(d.business_ids || []).includes(x.b) && (x.s >= 3.5 || isUnassigned(d) || (intelOf(d).m || []).includes(x.b))) cand.set(x.b, (cand.get(x.b) || 0) + 1); } for (const [bid, n] of cand) take(bid, n); }
+    return [...seen.values()].filter(e => !CD.skipped.has(e.b.id) && (!f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f)))
+      .sort((a, b) => String(displayName(a.b)).localeCompare(String(displayName(b.b)), "he"));
+  }
+  const cdCount = m => { const old = CD.mode; CD.mode = m; const sk = CD.skipped, fl = CD.filter; CD.skipped = new Set(); CD.filter = ""; const n = cdCompanies().length; CD.mode = old; CD.skipped = sk; CD.filter = fl; return n; };
+  const cdPosKey = () => "pd_cd_pos_" + CD.mode;
+  function openCompanyDash(mode) {
+    CD.mode = mode || "review"; CD.skipped = new Set(); CD.filter = ""; CD.i = 0; CD.curBiz = ""; CD.selDoc = "";
+    let pos = null; try { pos = JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { /* בלי אחסון */ }
+    CD.resume = pos;
+    overlay("pd-cd", `<div class="pd-rv"><div class="pd-viewcol">
+        <div class="pd-toolbar">
+          <div class="pd-tbrow"><div class="pd-tabs" id="pd-cd-tabs"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-cd')">✕</button></div>
+          <div class="pd-tbrow"><div class="pd-nav"><button class="pd-btn" onclick="PD._cdGo(-1)">→ החברה הקודמת</button><span class="pd-navpos" id="pd-cd-pos"></span><button class="pd-btn" onclick="PD._cdGo(1)">החברה הבאה ←</button><button class="pd-btn" onclick="PD._cdSkip()" title="מסתיר את החברה עד לפתיחה הבאה">דילוג</button></div>
+            <input class="pd-in" style="flex:1;min-width:180px" placeholder="חיפוש חברה: שם או ח.פ." oninput="PD._cdFilter(this.value)" autocomplete="off"><span id="pd-cd-undo"></span></div>
+        </div>
+        <div class="pd-viewhead" id="pd-cd-vhead"></div>
+        <div class="pd-view" id="pd-cd-view"></div></div>
+      <div class="pd-sidecol" style="width:470px"><div class="pd-side" id="pd-cd-side"></div></div></div>`, "full");
+    closers["pd-cd"] = () => { if (CD.blobUrl) URL.revokeObjectURL(CD.blobUrl); CD.blobUrl = ""; CD.shownDoc = ""; };
+    if (!S.loaded) load().then(cdShow); else cdShow();
+  }
+  function cdCard(d, bid, o) {          // כרטיס מסמך קטן בדשבורד החברות
+    o = o || {};
+    const sl = slotsOf(d, bid), it = intelOf(d), need = needOf(bizById(bid));
+    const chips = (sl.length ? sl.map(t => `<span class="pd-chip" style="background:${TCOL[t]}">הת"ע ${SLOT_HE[t]}</span>`).join(" ") : (o.sug ? "" : `<span class="pd-chip" style="background:#8a8a8a">נוסף</span>`)) + ` <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span>`;
+    const fl = (it.f || []).length ? `<span class="pd-feat part" title="${E((it.f || []).map(f => FLAG_HE[f.c] || f.c).join("\n"))}">⚠ ${(it.f || []).length}</span>` : "";
+    const acts = o.sug ? `<button class="pd-mini" onclick="PD._cdAct('${d.id}','${bid}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','general')">הת"ע כללי</button>` : ""}`
+      : (sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}','${bid}')">הורדה לנוספים</button>` : ["private", "general"].filter(t => need[t]).map(t => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("")) + `<button class="pd-link2" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${bid}')">הסרת שיוך</button>`;
+    return `<div class="pd-cdc ${CD.selDoc === d.id ? "sel" : ""}"><div class="pd-cdc-top" onclick="PD._cdSel('${d.id}')" title="הצגה בצד"><div class="pd-cdc-th"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}></div>
+      <div class="pd-grow"><div class="pd-name" title="${E(d.original_name || "")}">${E(d.original_name || d.id)}</div><div class="pd-sub">${metaHtml(d)}</div><div class="pd-btns" style="gap:3px;margin-top:2px">${chips} ${fl}</div>
+      <div class="pd-sub" style="font-size:10.5px">${E(it.o ? ORIG_HE[it.o] : "")}${(it.t || []).length ? " · " + E(it.t[0]) : ""}</div>
+      ${o.sug ? `<div class="pd-sub" style="font-size:10.5px;color:#1e4570">${E(o.w.slice(0, 3).join(" · "))} (${o.s})</div>` : ""}</div></div><div class="pd-uc-act">${acts}</div></div>`;
+  }
+  async function cdShow() {
+    if (!$("pd-cd")) return;
+    const tabs = $("pd-cd-tabs");
+    if (tabs) tabs.innerHTML = [["review", "שיוכים קיימים לבדיקה"], ["suggest", "הצעות לשיוכים חדשים"]].map(([m, l]) => `<button class="pd-tab ${CD.mode === m ? "sel" : ""}" onclick="PD._cdMode('${m}')">${l} <span class="pd-tabn">${cdCount(m)}</span></button>`).join("");
+    const list = cdCompanies(), pos = $("pd-cd-pos"), side = $("pd-cd-side");
+    if (CD.resume) { const k = list.findIndex(e => e.b.id === CD.resume.id); CD.i = k >= 0 ? k : Math.min(CD.resume.i || 0, Math.max(0, list.length - 1)); CD.resume = null; }
+    else if (CD.curBiz) { const k = list.findIndex(e => e.b.id === CD.curBiz); if (k >= 0) CD.i = k; }
+    if (CD.i >= list.length) CD.i = Math.max(0, list.length - 1);
+    if (pos) pos.textContent = list.length ? `${CD.i + 1} / ${list.length}` : "0 / 0";
+    const e = list[CD.i];
+    if (!e) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">${CD.mode === "review" ? "אין שיוכים קיימים לבדיקה 🎉" : "אין הצעות לשיוכים חדשים"}</div>`; $("pd-cd-view").innerHTML = ""; $("pd-cd-vhead").innerHTML = ""; CD.curBiz = ""; return; }
+    const b = e.b;
+    if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: b.id, i: CD.i })); } catch { /* בלי אחסון */ } }
+    if (CD.curBiz !== b.id) { CD.curBiz = b.id; CD.selDoc = ""; }
+    const f = cfeat(b, null), need = needOf(b), reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
+    const docs = liveDocs(b.id), slotsFirst = ["private", "general"].map(t => slotDoc(b.id, t)).filter((x, i, a) => x && a.indexOf(x) === i), ex = docs.filter(d => !slotsOf(d, b.id).length);
+    const flags = flagsOfCompany(b.id), sug = sugFor(b.id);
+    if (!CD.selDoc || !S.byId.get(CD.selDoc)) CD.selDoc = (CD.mode === "suggest" && sug[0] ? sug[0].d.id : (flags[0] || {}).d ? flags[0].d.id : (slotsFirst[0] || docs[0] || (sug[0] || {}).d || {}).id) || "";
+    side.innerHTML = `
+      <div class="pd-uc is-main-none" style="border-width:2px"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b style="font-size:15px">${displayName(b, true)}</b>
+        <div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
+        <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex">נוספים ${f.ex}</span>${flags.length ? `<span class="pd-feat part">⚠ ${flags.length} ממצאים</span>` : ""}${sug.length ? `<span class="pd-feat ex">${sug.length} הצעות</span>` : ""}</div></div></div>
+      ${flags.length ? `<h4>ממצאים לבדיקה</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">⚠ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
+      <h4>מסמכי החברה (${docs.length})</h4>
+      ${docs.length ? `<div class="pd-cdgrid">${[...slotsFirst, ...ex].map(d => cdCard(d, b.id)).join("")}</div>` : `<div class="pd-mg-empty need">⚠ אין מסמכים לחברה</div>`}
+      <h4>הצעות למסמכים נוספים (${sug.length})</h4>
+      ${sug.length ? `<div class="pd-cdgrid">${sug.slice(0, 12).map(x => cdCard(x.d, b.id, { sug: true, s: x.s, w: x.w })).join("")}</div>` : `<div class="pd-sub">אין הצעות לחברה הזו.</div>`}`;
+    side.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) img.src = u; }));
+    cdViewer();
+  }
+  async function cdViewer() {
+    const d = S.byId.get(CD.selDoc), view = $("pd-cd-view"), head = $("pd-cd-vhead");
+    if (!d) { view.innerHTML = ""; head.innerHTML = ""; CD.shownDoc = ""; return; }
+    const it = intelOf(d);
+    head.innerHTML = `<b>${E(d.original_name || d.id)}</b> <span class="pd-sub">${metaHtml(d)} · ${E(it.o ? ORIG_HE[it.o] : "")}${(it.t || []).length ? " · שם הפוסט: " + E(it.t.join(" | ")) : ""}</span>`;
+    if (CD.shownDoc === d.id) return;
+    CD.shownDoc = d.id; const tok = ++CD.token;
+    view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>`;
+    if (CD.blobUrl) { URL.revokeObjectURL(CD.blobUrl); CD.blobUrl = ""; }
+    try {
+      const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
+      CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}" title="המסמך"></iframe>`;
+      if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
+    } catch (e) { if (tok === CD.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
+  }
+  function cdGo(n) { const len = cdCompanies().length; CD.i = Math.min(Math.max(0, CD.i + n), Math.max(0, len - 1)); CD.curBiz = ""; cdShow(); }
+  async function cdDetach(docId, bid) {
+    const d = S.byId.get(docId); if (!d) return;
+    if ((d.business_ids || []).length === 1 && !(d.ext_ids || []).length && !confirm("זו החברה האחרונה של המסמך. הוא יחזור למסמכים הלא משויכים. להמשיך?")) return;
+    try { const before = snapDoc(d); replaceDoc((await api("/permit-docs/" + docId, "PUT", { business_ids: (d.business_ids || []).filter(x => x !== bid) })).doc); pushHist(before, "הוסר שיוך ל" + bizName(bid)); }
+    catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
+    refresh(); cdShow();
   }
 
   // ───────── חלון שיוך מסמך לחברה (נפתח מעל חלון המסמכים הלא משויכים, בלי לסגור אותו) ─────────
@@ -1017,7 +1135,7 @@
   // ───────── חלון: חברות שאינן במאגר (מחוקות / מוזגו / לא במאגר) ─────────
   function goHome() {          // סוגר את כל החלונות וחוזר לדף הראשי של הניהול
     S._nav = true;
-    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-un"]) close(id);
+    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-un", "pd-cd"]) close(id);
     S._nav = false;
     if (typeof setView === "function") setView("home");
   }
@@ -1211,10 +1329,11 @@
   function dragEnd() { dragId = ""; document.querySelectorAll(".pd-drop-on").forEach(x => x.classList.remove("pd-drop-on")); }
   function dragOver(ev) { if (!dragId) return; ev.preventDefault(); ev.currentTarget.classList.add("pd-drop-on"); }
   function dragLeave(ev) { ev.currentTarget.classList.remove("pd-drop-on"); }
-  async function toExtras(id) {
-    const d = S.byId.get(id); if (!d || !M.biz || !slotsOf(d, M.biz).length) return;
+  async function toExtras(id, biz) {
+    biz = biz || M.biz;
+    const d = S.byId.get(id); if (!d || !biz || !slotsOf(d, biz).length) return;
     const before = snapDoc(d);
-    if (await updateDoc(id, { slots: { [M.biz]: [] } })) { pushHist(before, "הורד מהת\"ע ל\"מסמכים נוספים\" (" + bizName(M.biz) + ")"); say("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
+    if (await updateDoc(id, { slots: { [biz]: [] } })) { pushHist(before, "הורד מהת\"ע ל\"מסמכים נוספים\" (" + bizName(biz) + ")"); if ($("pd-cd")) cdShow(); say("המסמך עבר ל\"מסמכים נוספים\" והוא עדיין משויך לחברה"); }
   }
   async function dropOn(ev, target) {          // גרירה לתיבת הת"ע: המסמך נהפך לראשי (והקודם עובר למסמכים נוספים); גרירה ל"מסמכים נוספים": מסיר את הקישור לרשימות
     ev.preventDefault(); ev.currentTarget.classList.remove("pd-drop-on");
@@ -1279,6 +1398,11 @@
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
+  .pd-viewhead{padding:6px 12px;background:#faf9f6;border-bottom:1px solid #e0ddd8;font-size:13px}
+  .pd-cdgrid{display:grid;grid-template-columns:1fr;gap:8px}
+  .pd-cdc{border:1px solid #d6d2ca;border-radius:9px;background:#fff;overflow:hidden}.pd-cdc.sel{border:2px solid #1a3a5c;box-shadow:0 0 0 2px #cfe0f3}
+  .pd-cdc-top{display:flex;gap:8px;padding:6px 8px;cursor:pointer}.pd-cdc-top:hover{background:#f7f7f5}
+  .pd-cdc-th{width:62px;height:84px;flex:none;background:#eee;border-radius:5px;overflow:hidden;display:flex;align-items:center;justify-content:center}.pd-cdc-th img{max-width:100%;max-height:100%}
   .pd-uc.bond{border-color:#9db7d8;background:#f4f8fd}
   .pd-viewcol{flex:1;min-width:0;display:flex;flex-direction:column;min-height:0}.pd-viewcol .pd-view{flex:1;min-height:0}
   .pd-toolbar{display:flex;flex-direction:column;gap:6px;padding:8px 12px;background:#f1efe9;border-bottom:1px solid #e0ddd8}
@@ -1376,7 +1500,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: toExtras, _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
@@ -1384,7 +1508,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, openCompanyDash, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
