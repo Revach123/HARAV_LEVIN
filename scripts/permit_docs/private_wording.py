@@ -106,6 +106,16 @@ def _has_company_wants_personal(seq):
     return False
 
 
+def _has_register_clause(seq):
+    """הסעיף "...היתר עיסקא... עם כל המעוניין בכך, באמצעות רישום..." גם כשחלק מהמילים בטקסט חסרות או מעורבבות (ה-OCR / חילוץ הטקסט שיבשו את "מאשרים בזאת")."""
+    for i, w in enumerate(seq):
+        if w == "המעוניין":
+            win = _ext(seq[max(0, i - 14): i + 16])
+            if "בכך" in win and "רישום" in win and ("עיסקא" in win or "היתר" in win):
+                return True
+    return False
+
+
 def _has_deed_title(seq):
     """כותרת "שטר רישום חברה להיתר עיסקא פרטי"."""
     for i, w in enumerate(seq):
@@ -124,7 +134,7 @@ def phrase_kind(text):
     for seq in (ws, ws[::-1], rl, rl[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
-        if _has_personal_approval(seq) or _has_personal_alt(seq) or _has_company_wants_personal(seq):
+        if _has_personal_approval(seq) or _has_personal_alt(seq) or _has_company_wants_personal(seq) or _has_register_clause(seq):
             personal = True
         if _has_deed_title(seq):
             found.add(KIND_PRIVATE_ONLY)
