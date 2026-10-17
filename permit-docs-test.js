@@ -592,11 +592,14 @@
     const f = Q.filter.trim().toLowerCase();
     const l = S.docs.filter(d => inView(d, Q.view) && !Q.skipped.has(d.id) &&
         (!f || docHay(d).includes(f)));
-    if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he"));      // מסמכים של אותה חברה צמודים
+    if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
   }
+  const posKey = v => "pd_pos_" + v;          // המקום האחרון בכל לשונית: המשך מאותו מסמך בפתיחה הבאה
+  const readPos = v => { try { return JSON.parse(localStorage.getItem(posKey(v)) || "null"); } catch { return null; } };
+  const savePos = (v, id, i) => { try { localStorage.setItem(posKey(v), JSON.stringify({ id, i })); } catch { /* בלי אחסון */ } };
   function openUnassigned(view) {
-    Q.view = view || "review"; Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
+    Q.view = view || "review"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `<div class="pd-rv"><div class="pd-viewcol">
         <div class="pd-toolbar">
           <div class="pd-tbrow"><div class="pd-tabs" id="pd-un-tabs"></div><span style="flex:1"></span>
@@ -639,6 +642,7 @@
     if (cnt) cnt.textContent = `${list.length} מסמכים בתצוגה`;
     const pos = $("pd-un-pos"); if (pos) pos.textContent = list.length ? `${Math.min(Q.i, list.length - 1) + 1} / ${list.length}` : "0 / 0";
     const sk = $("pd-un-skipped"); if (sk) sk.innerHTML = Q.skipped.size ? ` · דולגו ${Q.skipped.size} <button class="pd-link" style="color:#1a3a5c" onclick="PD._unUnskip()">הצג אותם שוב</button>` : "";
+    if (Q.resume) { const k = list.findIndex(x => x.id === Q.resume.id); Q.i = k >= 0 ? k : Math.min(Q.resume.i || 0, Math.max(0, list.length - 1)); Q.resume = null; }
     if (Q.i >= list.length) Q.i = Math.max(0, list.length - 1);
     const d = list[Q.i], side = $("pd-un-side"), view = $("pd-un-view");
     if (!d) {
@@ -646,6 +650,7 @@
         : `<div class="pd-empty" style="color:#1e7e4a">${{ un: "אין מסמכים לא משויכים 🎉", review: "אין מסמכים לבדיקה ידנית 🎉", ext: "אין מסמכים ששויכו לחברות שאינן במאגר", gone: "אין מסמכים ששויכו לחברות מחוקות", other: "אין מסמכים אחרים" }[Q.view]}</div>`;
       view.innerHTML = ""; Q.curId = ""; const ft = $("pd-un-foot"); if (ft) ft.innerHTML = ""; return;
     }
+    if (!Q.filter.trim()) savePos(Q.view, d.id, Q.i);
     if (Q.curId !== d.id) {
       Q.curId = d.id; Q.sel = new Set(); Q.typeTouched = false; Q.typeWhy = ""; Q.note = d.note || ""; Q.type = d.doc_type === "other" ? "unknown" : d.doc_type; Q.shared = false; Q.picker = isUnassigned(d) ? "add" : null; Q.replace = null; Q.bondPicker = false; Q.bondQ = "";
       Q.cands = uqMergeCands(d); Q.liveDone = false;
@@ -1378,7 +1383,7 @@
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
-    }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
+    }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
     _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
