@@ -23,20 +23,22 @@
   html{-webkit-text-size-adjust:100%}
   body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);font-size:18px;line-height:1.5;
     -webkit-tap-highlight-color:transparent}
-  body.hideheader .top .brand{display:none}
-  .top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--accent);padding:.6rem 1rem .8rem;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-  .brand{display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem}
-  .brand img{height:40px;width:auto}
-  .brand span{font-size:20px;font-weight:700;color:var(--navy)}
-  .tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-bottom:.7rem}
-  @media (min-width:900px){.tabs{grid-template-columns:repeat(4,1fr)}}
-  .tabs button{font:inherit;font-size:17px;font-weight:700;min-height:52px;padding:.4rem .6rem;line-height:1.25;color:var(--navy);background:#fff;
-    border:2px solid var(--accent-border);border-radius:12px;cursor:pointer}
-  .tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  body.hideheader .row1 img{display:none}
+  .top{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--accent);padding:.5rem 1rem .6rem;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .row1{display:flex;align-items:center;gap:.6rem;margin-bottom:.45rem}
+  .row1 img{height:46px;width:auto;flex:none}
+  .main,.sub{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+  .main{flex:1}
+  .sub{margin-bottom:.5rem}
+  .main button,.sub button{font:inherit;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px;cursor:pointer;line-height:1.2}
+  .main button{font-size:21px;min-height:52px}
+  .sub button{font-size:17px;min-height:44px}
+  .main button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .sub button.active{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-dark)}
   .searchrow{display:flex;gap:.5rem}
-  .searchrow input{flex:1;min-width:0;font:inherit;font-size:20px;min-height:56px;padding:.4rem 1rem;border:2px solid var(--accent-border);border-radius:12px;background:#fff;color:var(--navy)}
+  .searchrow input{flex:1;min-width:0;font:inherit;font-size:20px;min-height:52px;padding:.4rem 1rem;border:2px solid var(--accent-border);border-radius:12px;background:#fff;color:var(--navy)}
   .searchrow input:focus{outline:none;border-color:var(--accent)}
-  .searchrow button{font:inherit;font-size:18px;font-weight:700;min-height:56px;padding:0 1.4rem;border:0;border-radius:12px;cursor:pointer;color:#fff;background:var(--navy)}
+  .searchrow button{font:inherit;font-size:18px;font-weight:700;min-height:52px;padding:0 1.4rem;border:0;border-radius:12px;cursor:pointer;color:#fff;background:var(--navy)}
   .searchrow button.clear{background:#fff;color:var(--navy);border:2px solid var(--accent-border);padding:0 1rem;display:none}
   .meta{display:flex;justify-content:space-between;gap:.5rem;flex-wrap:wrap;color:var(--muted);font-size:15px;margin-top:.5rem}
   main{max-width:1300px;margin:0 auto;padding:1rem}
@@ -60,12 +62,16 @@
 </head>
 <body>
 <div class="top">
-  <div class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'"><span>רשימות היתר עסקה</span></div>
-  <div class="tabs" id="tabs">
-    <button data-type="companies-private">חברות עם היתר עסקה פרטי</button>
-    <button data-type="companies-general">חברות עם היתר עסקה כללי</button>
-    <button data-type="bonds-private">אג"ח עם היתר עסקה פרטי</button>
-    <button data-type="bonds-general">אג"ח עם היתר עסקה כללי</button>
+  <div class="row1">
+    <img src="logo.png" alt="" onerror="this.style.display='none'">
+    <div class="main" id="mainTabs">
+      <button data-topic="companies">חברות</button>
+      <button data-topic="bonds">אג"ח</button>
+    </div>
+  </div>
+  <div class="sub" id="subTabs">
+    <button data-level="private">היתר עסקה פרטי</button>
+    <button data-level="general">היתר עסקה כללי</button>
   </div>
   <div class="searchrow">
     <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="חיפוש לפי שם, ח&quot;פ, סימול…" autocomplete="off">
@@ -86,11 +92,11 @@
 const API_BASE = /pages\.dev$|localhost|127\.0\.0\.1/.test(location.hostname) ? "" : "https://harav-levin.pages.dev";
 const VALID = ["companies-private","companies-general","bonds-private","bonds-general"];
 const PAGE = 48;
+const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 if (params.has("hideheader")) document.body.classList.add("hideheader");
-if (params.get("nav") === "0") document.getElementById("tabs").style.display = "none";
+if (params.get("nav") === "0") { $("mainTabs").style.display = "none"; $("subTabs").style.display = "none"; }
 
-const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const pct = v => { if (v === "" || v == null) return ""; const n = Number(v); return Number.isFinite(n) ? parseFloat(n.toFixed(2)) + "%" : String(v); };
 const num = v => { if (v === "" || v == null) return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
@@ -146,7 +152,9 @@ function more() {
 async function load(type) {
   const my = ++token;
   current = type;
-  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("active", b.dataset.type === type));
+  const [tp, lv] = type.split("-");
+  document.querySelectorAll("#mainTabs button").forEach(b => b.classList.toggle("active", b.dataset.topic === tp));
+  document.querySelectorAll("#subTabs button").forEach(b => b.classList.toggle("active", b.dataset.level === lv));
   $("grid").innerHTML = ""; $("more").style.display = "none"; $("count").textContent = ""; $("state").textContent = "טוען…";
   try {
     if (!cache[type]) {
@@ -174,7 +182,9 @@ fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" }).th
   if (m) $("upd").textContent = `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`;
 }).catch(() => {});
 
-$("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b && b.dataset.type !== current) { query = ""; $("q").value = ""; load(b.dataset.type); window.scrollTo(0, 0); } });
+function pick(type) { if (type !== current) { query = ""; $("q").value = ""; load(type); window.scrollTo(0, 0); } }
+$("mainTabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(b.dataset.topic + "-" + current.split("-")[1]); });
+$("subTabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(current.split("-")[0] + "-" + b.dataset.level); });
 const run = () => { query = $("q").value; applyFilter(); $("q").blur(); window.scrollTo(0, 0); };
 $("go").addEventListener("click", run);
 $("q").addEventListener("keydown", e => { if (e.key === "Enter") run(); });
