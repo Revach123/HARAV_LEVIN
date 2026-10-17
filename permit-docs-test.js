@@ -371,6 +371,14 @@
           const w = new Set(seq.slice(Math.max(0, i - 8), i + 14)); for (const x of [...w]) if (x.length > 3) w.add(x.slice(1));
           if (w.has("בזאת") && w.has("אישית") && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) pe = true;
         }
+        if (seq[i] === "מעוניינת") {          // "הואיל והחברה מעוניינת להתקשר בהיתר עיסקא זה גם באופן אישי" (שטר רישום חברה): גם פרטי
+          const w3 = new Set(seq.slice(Math.max(0, i - 4), i + 14)); for (const x of [...w3]) if (x.length > 3) w3.add(x.slice(1));
+          if ((w3.has("אישי") || w3.has("אישית")) && (w3.has("עיסקא") || w3.has("היתר"))) pe = true;
+        }
+        if (seq[i] === "שטר") {          // כותרת "שטר רישום חברה להיתר עיסקא פרטי"
+          const w4 = new Set(seq.slice(i, i + 9)); for (const x of [...w4]) if (x.length > 3) w4.add(x.slice(1));
+          if (w4.has("רישום") && (w4.has("חברה") || w4.has("לחברה")) && (w4.has("פרטי") || w4.has("פרטית")) && (w4.has("עיסקא") || w4.has("היתר"))) po = true;
+        }
         if (seq[i] === "מאשרת") {          // "החברה מאשרת להתקשר בהיתר עיסקא זה גם באופן אישי עם כל המעוניין בכך": נוסח נוסף של "גם פרטי"
           const w2 = new Set(seq.slice(Math.max(0, i - 8), i + 16)); for (const x of [...w2]) if (x.length > 3) w2.add(x.slice(1));
           if ((w2.has("אישי") || w2.has("אישית")) && (w2.has("עיסקא") || w2.has("היתר")) && w2.has("המעוניין")) pe = true;
