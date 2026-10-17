@@ -969,7 +969,7 @@
     no_private_phrase: "בהיתר פרטי חסר משפט מפתח של נוסח פרטי", private_phrase_in_general: "בהיתר כללי יש משפט מפתח של נוסח פרטי", no_text: "אין טקסט קריא במסמך" };
   const ORIG_HE = { g: "מהאתר הישן: רשימת הכללי", p: "מהאתר הישן: רשימת הפרטי", gp: "מהאתר הישן: שתי הרשימות", x: "מסמך נוסף (לא היה באף מאגר)" };
   const intelOf = d => { if (d._in !== undefined && d._inSrc === d.intel) return d._in; let v = {}; try { v = JSON.parse(d.intel || "{}") || {}; } catch { v = {}; } d._in = v; d._inSrc = d.intel; return v; };
-  const CD = { live: {}, mode: "review", i: 0, filter: "", skipped: new Set(), curBiz: "", selDoc: "", token: 0, blobUrl: "", shownDoc: "" };
+  const CD = { after: [], live: {}, mode: "review", i: 0, filter: "", skipped: new Set(), curBiz: "", selDoc: "", token: 0, blobUrl: "", shownDoc: "" };
   function sugFor(bid) {          // מסמכים שמוצעים לחברה (לפי הסריקה המקומית) ועוד לא משויכים אליה
     const out = [];
     for (const d of S.docs) {
@@ -1080,7 +1080,7 @@
       ${docs.length ? `<div class="pd-cdgrid">${[...slotsFirst, ...ex].map(d => cdCard(d, b.id)).join("")}</div>` : `<div class="pd-mg-empty need">⚠ אין מסמכים לחברה</div>`}
       <h4>הצעות למסמכים נוספים (${sug.length})</h4>
       ${sug.length ? `<div class="pd-cdgrid">${sug.slice(0, 12).map(x => cdCard(x.d, b.id, { sug: true, s: x.s, w: x.w })).join("")}</div>` : `<div class="pd-sub">אין הצעות לחברה הזו.</div>`}${cdBar()}`;
-    side.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) img.src = u; }));
+    CD.after.push(() => side.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) img.src = u; })));      // תמונות ממוזערות: רק אחרי שהמסמך הראשי נטען
     cdViewer();
   }
   // ───────── אישור / שאלת מנהל: בחירות בדשבורד נקלטות רק אחרי "אישור" ─────────
@@ -1188,11 +1188,11 @@
     const lv = CD.live[d.id];
     if (!lv) {          // קריאת הטקסט מהמסמך עצמו (בלי סריקה נוספת במחשב): תאגידים שאינם במאגר והצעות נוספות
       CD.live[d.id] = { wait: true };
-      (async () => {
+      CD.after.push(async () => {
         try { const r = await extractText(await (await fetchPdfBlob(d.id)).arrayBuffer(), 6), sg = suggest(r.text, d.original_name); CD.live[d.id] = { xo: sg.outside || [], cands: sg.cands || [] }; }
         catch { CD.live[d.id] = { xo: [], cands: [] }; }
         if (CD.curBiz === pb.id && $("pd-cd")) cdShow();
-      })();
+      });
     }
     const sugs = (it.s || []).map(x => ({ x, b: bizById(x.b) })).filter(y => y.b);
     for (const c of (lv && lv.cands) || []) if (!sugs.some(y => y.b.id === c.b.id)) sugs.push({ x: { w: c.why || [] }, b: c.b });
@@ -1214,7 +1214,7 @@
     if (!d) { view.innerHTML = ""; head.innerHTML = ""; CD.shownDoc = ""; return; }
     const it = intelOf(d);
     head.innerHTML = `<b>${E(d.original_name || d.id)}</b> <span class="pd-sub">${metaHtml(d)} · ${E(it.o ? ORIG_HE[it.o] : "")}${(it.t || []).length ? " · שם הפוסט: " + E(it.t.join(" | ")) : ""}</span>`;
-    if (CD.shownDoc === d.id) return;
+    if (CD.shownDoc === d.id) { cdAfterMain(); return; }
     CD.shownDoc = d.id; const tok = ++CD.token;
     view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>`;
     if (CD.blobUrl) { URL.revokeObjectURL(CD.blobUrl); CD.blobUrl = ""; }
@@ -1222,8 +1222,12 @@
       const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
       CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
       if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
-      cdPrefetch();
-    } catch (e) { if (tok === CD.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
+      if (tok === CD.token) cdAfterMain();
+    } catch (e) { if (tok === CD.token) { view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; cdAfterMain(); } }
+  }
+  function cdAfterMain() {          // קודם נטען רק המסמך הראשי; אחר כך, ברקע: תמונות ממוזערות, קריאת טקסט, והמסמכים הבאים
+    const q = CD.after.splice(0);
+    setTimeout(() => { for (const f of q) { try { f(); } catch { /* אינו קריטי */ } } setTimeout(cdPrefetch, 400); }, 150);
   }
   function cdPrefetch() {          // טעינה מראש של המסמך הראשי של שני הפריטים הבאים ברשימה
     try {
