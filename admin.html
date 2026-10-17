@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js"></script>
+<script src="/permit-docs.js?v=20261016c"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1035,9 +1035,10 @@ function renderAdminTable() {
       </div>
       ${window.PD && PD.docCounts ? (() => { const c = PD.docCounts(businesses); return `<div class="fb-group"><span class="fb-label">מסמכי היתר</span>
         <select id="f-docs" onchange="filterDocs=this.value;render()" style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg);color:var(--text);">
-          <option value="" ${!filterDocs ? "selected" : ""}>הכל</option>
+          <option value="" ${!filterDocs ? "selected" : ""}>הכל (${businesses.length})</option>
           <option value="review" ${filterDocs === "review" ? "selected" : ""}>לבדיקה ידנית (${c.review})</option>
           <option value="missing" ${filterDocs === "missing" ? "selected" : ""}>חסר מסמך (${c.missing})</option>
+          <option value="ok" ${filterDocs === "ok" ? "selected" : ""}>תקין (${c.ok})</option>
         </select></div>`; })() : ""}
       <div class="fb-group" style="justify-content:flex-end;"><span class="fb-label">&nbsp;</span>
         <span class="count" style="line-height:34px;">${sorted.length} מתוך ${businesses.length}</span></div>
@@ -2889,7 +2890,7 @@ function showStatus(msg) {
   if (!el) return;
   el.textContent = msg;
   el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2500);
+  setTimeout(() => el.classList.remove("show"), String(msg).length > 60 ? 10000 : 2500);      // הודעה ארוכה נשארת זמן מספיק לקריאה
 }
 
 // ─────────────────────────────────────────────

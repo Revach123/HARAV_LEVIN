@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-16",
+ "updated": "2026-10-17",
  "upcoming": [
   {
    "id": 10358,
@@ -153,6 +153,27 @@
     }
    ],
    "chp_number": "512719485"
+  },
+  {
+   "id": 10378,
+   "maya_report_id": 1776492,
+   "company_name": "אקסטל לימיטד",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776492",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "1811308"
   },
   {
    "id": 10376,
@@ -739,6 +760,13 @@
   }
  ],
  "companies": [
+  {
+   "chp_number": "1811308",
+   "name": "אקסטל לימיטד",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
   {
    "chp_number": "2352046",
    "name": "אג'לן",
