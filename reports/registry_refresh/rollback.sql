@@ -1,1 +1,0 @@
-UPDATE businesses SET registry_status = '', registrar_name = 'א.ב.ג. קרית יערים בע"מ', biz_type = '', tase_has_agch = '' WHERE id = 'mv9bs2l9gtm5';
