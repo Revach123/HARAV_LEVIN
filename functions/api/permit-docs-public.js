@@ -19,16 +19,17 @@ export async function onRequestGet({ env }) {
       by.set(k, e);
     }
     try {          // מסמכים ראשיים מיוחדים (מיגרציה 0013): { id, title } ברשימה נפרדת לכל חברה
-      const sp = await env.DB.prepare(`
-        SELECT s.doc_id, s.title, b.chp_number, b.permit_name, b.registrar_name
+      const q = cols => env.DB.prepare(`
+        SELECT s.doc_id, s.title, ${cols} b.chp_number, b.permit_name, b.registrar_name
         FROM permit_doc_special s
         JOIN businesses b ON b.id = s.business_id
         JOIN permit_docs d ON d.id = s.doc_id
         WHERE d.doc_type != 'other' ORDER BY s.created_at, s.title`).all();
+      const sp = await q("s.detail,").catch(() => q(""));      // לפני מיגרציה 0014 אין פירוט
       for (const r of sp.results ?? []) {
         const k = r.chp_number || "n:" + (r.permit_name || r.registrar_name);
         const e = by.get(k) || { chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "" };
-        (e.specials = e.specials || []).push({ id: r.doc_id, title: r.title });
+        (e.specials = e.specials || []).push({ id: r.doc_id, title: r.title, detail: r.detail || "" });
         by.set(k, e);
       }
     } catch { /* אין טבלה עדיין */ }

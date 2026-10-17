@@ -27,7 +27,10 @@ export async function withBusinesses(env, rows) {
   }
   const specials = new Map(ids.map(i => [i, {}]));
   if (ids.length) {          // מסמכים ראשיים מיוחדים (מיגרציה 0013): { מזהה_חברה: כותרת }
-    try { for (const l of (await env.DB.prepare("SELECT doc_id, business_id, title FROM permit_doc_special").all()).results ?? []) if (specials.has(l.doc_id)) specials.get(l.doc_id)[l.business_id] = l.title; } catch { /* אין טבלה עדיין */ }
+    let sp;
+    try { sp = await env.DB.prepare("SELECT doc_id, business_id, title, detail FROM permit_doc_special").all(); }
+    catch { try { sp = await env.DB.prepare("SELECT doc_id, business_id, title FROM permit_doc_special").all(); } catch { sp = null; } }      // לפני מיגרציה 0014 / 0013
+    for (const l of (sp && sp.results) || []) if (specials.has(l.doc_id)) specials.get(l.doc_id)[l.business_id] = { title: l.title, detail: l.detail || "" };
   }
   const bonds = new Map(ids.map(i => [i, []]));
   if (ids.length) {          // שיוך לאג"ח (מיגרציה 0009)

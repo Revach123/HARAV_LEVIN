@@ -1122,7 +1122,7 @@
   }
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
     : op.t === "vis" ? `שינוי רישום ${bizName(op.bid)} ל${op.value === "רק פרטי" ? '"רק פרטי"' : op.value === "פרטי" ? '"יש גם פרטי"' : '"רק כללי"'}`
-    : op.t === "special" ? `${docNm(op.docId)}: סיווג "אחר" של ${bizName(op.bid)} (${op.title})`
+    : op.t === "special" ? `${docNm(op.docId)}: סיווג "אחר" של ${bizName(op.bid)} (${op.title}${op.detail ? ": " + op.detail : ""})`
     : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
@@ -1164,7 +1164,7 @@
         else if (op.t === "detach") await cdDetach(op.docId, op.bid);
         else if (op.t === "extras") await toExtras(op.docId, op.bid);
         else if (op.t === "vis") { if (typeof inlineUpdate === "function" && await inlineUpdate(op.bid, "visibility", op.value) === false) throw new Error("עדכון הרישום נכשל"); }
-        else if (op.t === "special") await updateDoc(op.docId, { specials: { [op.bid]: op.title } });
+        else if (op.t === "special") await updateDoc(op.docId, { specials: { [op.bid]: { title: op.title, detail: op.detail } } });
         else if (op.t === "reject") { /* הרישום המקורי לא מתקבל: אין מה לבצע */ }
         else if (op.t === "type") await updateDoc(op.docId, { doc_type: op.dtype });
         else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
@@ -1611,11 +1611,27 @@
     if (!S.loaded && !S.loading) load();
   }
   const specialTitle = d => (intelOf(d).t || [])[0] || d.source_title || String(d.original_name || "").replace(/\.pdf$/i, "");
-  async function spEdit(docId, bid) {          // מסמך ראשי מיוחד: מופיע באתר הסופי של החברה תחת כותרת משלו
+  const SP = { docId: "", bid: "", staged: false };
+  function spEdit(docId, bid, staged) {          // סיווג "אחר": כותרת (מוצגת באתר) + פירוט שמסביר את מהות המסמך; שניהם חובה
     const d = S.byId.get(docId); if (!d) return;
-    const cur = (d.specials || {})[bid], t = prompt("סיווג 'אחר': כותרת המסמך באתר הסופי:", cur !== undefined ? cur : specialTitle(d)); if (t === null || !t.trim()) return;
+    Object.assign(SP, { docId, bid, staged: !!staged });
+    const cur = (d.specials || {})[bid] || {};
+    overlay("pd-confirm", `<div class="pd-head"><b>סיווג "אחר": ${E(d.original_name || "")}</b></div>
+      <div class="pd-body"><div class="pd-sub">החברה: ${E(bizName(bid))}. מסמך "אחר" אינו פרטי / כללי, ומוצג באתר הסופי תחת הכותרת.</div>
+        <label class="pd-sub" style="display:block;margin-top:8px">כותרת (מוצגת באתר)</label><input class="pd-in" id="pd-sp-t" value="${E(cur.title || specialTitle(d))}" maxlength="200">
+        <label class="pd-sub" style="display:block;margin-top:8px">פירוט: מהות המסמך (חובה)</label><textarea class="pd-in" id="pd-sp-d" rows="3" maxlength="1000" placeholder="למשל: רישום היתר עיסקא פרטי של קרנות הראל, שהפניקס התקשרה בהן">${E(cur.detail || "")}</textarea>
+        <div id="pd-sp-err" style="color:#c0392b;margin-top:4px"></div>
+        <div class="pd-btns" style="margin-top:10px"><button class="pd-btn primary" onclick="PD._spSave()">שמירה</button><button class="pd-btn" onclick="PD._close('pd-confirm')">ביטול</button></div></div>`);
+    setTimeout(() => { const el = $("pd-sp-d"); if (el) el.focus(); }, 50);
+  }
+  async function spSave() {
+    const title = ($("pd-sp-t") || {}).value, detail = ($("pd-sp-d") || {}).value;
+    if (!String(title || "").trim() || !String(detail || "").trim()) { const e = $("pd-sp-err"); if (e) e.textContent = "יש למלא כותרת ופירוט."; return; }
+    const { docId, bid, staged } = SP, d = S.byId.get(docId); if (!d) return;
+    close("pd-confirm");
+    if (staged) { stage({ t: "special", docId, bid, title: title.trim(), detail: detail.trim() }); return; }
     const before = snapDoc(d);
-    if (await updateDoc(docId, { specials: { [bid]: t.trim() } })) { pushHist(before, "סיווג \"אחר\": " + t.trim()); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
+    if (await updateDoc(docId, { specials: { [bid]: { title: title.trim(), detail: detail.trim() } } })) { pushHist(before, "סיווג \"אחר\": " + title.trim()); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
   }
   async function spDel(docId, bid) {
     const d = S.byId.get(docId); if (!d) return;
@@ -1629,7 +1645,7 @@
     const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
       : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
     const sp = (d.specials || {})[b.id];
-    const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="מופיע באתר הסופי תחת הכותרת הזו">אחר: ${E(sp)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
+    const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="${E(sp.detail || "")}">אחר: ${E(sp.title)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
       : `<button class="pd-mini" onclick="PD._spEdit('${d.id}','${b.id}')" title="סיווג המסמך כ'אחר': מופיע באתר הסופי של החברה תחת כותרת שתבחרו (כמה שרוצים). מסמך הוא פרטי / כללי או אחר, לא שניהם">אחר (עם כותרת)</button>`;
     const shareBox = shared ? `<div class="pd-mg-sh">${others.map(o => `<div class="pd-co"><span>${E(bizName(o))}</span><button class="pd-link" onclick="PD._mgRemove('${d.id}','${o}')">הסר</button></div>`).join("")}
         ${M.move === d.id ? "" : `<input class="pd-in" placeholder="הוספת חברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','add',this.value)" autocomplete="off">`}</div>` : "";
@@ -1639,7 +1655,7 @@
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
         <div class="pd-sub">${typeSel} ${fmtSize(d.size)} · ${metaHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
-        <div class="pd-btns">${linkBtns}${spBtn}</div>
+        <div class="pd-btns">${linkBtns}${spBtn}</div>${sp !== undefined && sp.detail ? `<div class="pd-sub">פירוט: ${E(sp.detail)}</div>` : ""}
         <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(x.symbol || x.name)} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
         ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
         <details class="pd-menu" ${menuOpen ? "open" : ""} ontoggle="PD._menu('${d.id}',this.open)"><summary>⋯ עוד</summary>
@@ -1854,7 +1870,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: spEdit, _spDel: spDel, _cdSpecial: (docId, bid) => { const d = S.byId.get(docId); if (!d) return; const t = prompt("כותרת המסמך באתר הסופי:", specialTitle(d)); if (t && t.trim()) stage({ t: "special", docId, bid, title: t.trim() }); }, _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: (d, b) => spEdit(d, b, false), _spSave: spSave, _spDel: spDel, _cdSpecial: (docId, bid) => spEdit(docId, bid, true), _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
