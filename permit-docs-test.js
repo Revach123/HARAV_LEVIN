@@ -993,12 +993,13 @@
     }
     return true;
   }
+  const PK = new Map();          // בדיקה חוזרת באתר של משפט המפתח הפרטי (קורא עד 15 עמודים מהמסמך): yes / no
   function flagMap() {
     if (S._fm && S._fmFor === S.docs) return S._fm;
     const m = new Map(), add = (bid, d, f) => { if (!m.has(bid)) m.set(bid, []); m.get(bid).push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" }); };
     for (const d of S.docs) {
       const it = intelOf(d); if (!["g", "p", "gp"].includes(it.o)) continue;
-      const fl = (it.f || []).filter(f => REVIEW_CODES.includes(f.c)); if (!fl.length) continue;
+      const fl = (it.f || []).filter(f => REVIEW_CODES.includes(f.c) && !(f.c === "no_private_phrase" && PK.get(d.id) === "yes")); if (!fl.length) continue;
       for (const bid of it.tb || []) for (const f of fl) if (flagFits(bid, f)) add(bid, d, f);
     }
     S._fm = m; S._fmFor = S.docs; return m;
@@ -1222,7 +1223,12 @@
       const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
       CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
       if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
-      if (tok === CD.token) cdAfterMain();
+      if (tok === CD.token) {
+        if ((intelOf(d).f || []).some(f => f.c === "no_private_phrase") && !PK.has(d.id)) CD.after.push(async () => {          // הסריקה המקומית קראה רק חלק מהעמודים: בודקים שוב את כל המסמך
+          try { const r = await extractText(await blob.arrayBuffer(), 15); PK.set(d.id, phraseKind(r.text) ? "yes" : "no"); S._fm = null; if (PK.get(d.id) === "yes" && $("pd-cd")) cdShow(); } catch { /* בלי טקסט */ }
+        });
+        cdAfterMain();
+      }
     } catch (e) { if (tok === CD.token) { view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; cdAfterMain(); } }
   }
   function cdAfterMain() {          // קודם נטען רק המסמך הראשי; אחר כך, ברקע: תמונות ממוזערות, קריאת טקסט, והמסמכים הבאים
