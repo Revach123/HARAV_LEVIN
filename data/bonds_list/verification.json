@@ -1,19 +1,12 @@
 {
- "updated": "2026-10-16",
+ "updated": "2026-10-17",
  "status": "ok",
- "datawise_date": "2026-10-15",
+ "datawise_date": "2026-10-16",
  "expected": 755,
  "maya": 755,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
- "dropped_no_terms": [
-  {
-   "security_id": 1215078,
-   "security_name": "קיסטון אינ אגחב",
-   "company": "קיסטון ריט בע\"מ",
-   "chp_number": "515983476"
-  }
- ]
+ "dropped_no_terms": []
 }
