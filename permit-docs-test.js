@@ -1129,7 +1129,7 @@
     const l = CD.pend[cdKey()] || [];
     return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>ממתין לאישור:</b></div>` + l.map((op, i) => `<div class="pd-sub" style="width:100%">• ${E(opLabel(op))} <a href="#" onclick="PD._cdUnstage(${i});return false" style="color:#c0392b" title="ביטול הבחירה">✕</a></div>`).join("") : ""}
       <input class="pd-in" id="pd-cd-qn" placeholder="הערה לשאלת מנהל (אופציונלי)" style="flex:1;min-width:140px">
-      <button class="pd-btn primary" onclick="PD._cdOk()" title="מבצע את הבחירות ועובר לפריט הבא. בלי בחירות: מאשר את הרישום המקורי מהאתר הישן">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
+      <button class="pd-btn primary" onclick="PD._cdOk()" title="מבצע רק את הבחירות שסומנו (אם יש) ועובר לפריט הבא. בלי בחירות: לא משנה כלום, רק מסמן שהרישום המקורי נבדק ונמצא תקין">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
       <button class="pd-btn" style="background:#fff3cd;border-color:#e0b84a" onclick="PD._cdQ()" title="הפריט עובר לרשימת שאלות מנהל, בלי לבצע את הבחירות; הרישום המקורי נשאר כפי שהוא">❓ שאלת מנהל</button></div>`;
   }
   async function setReview(key, status, note) {
@@ -1157,7 +1157,6 @@
   async function cdOk() {
     if (!CD.curBiz) return;
     const k = cdKey(); let ops = CD.pend[k] || [];
-    if (!ops.length && CD.mode === "review" && !k.startsWith("post:")) ops = originOps(CD.curBiz);      // אישור בלי שינוי = אישור הרישום המקורי (לפי הפוסט באתר הישן)
     try {
       for (const op of ops) {
         if (op.t === "act") await actFor(op.docId, op.bid, op.act);
