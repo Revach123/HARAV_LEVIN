@@ -1055,6 +1055,10 @@
     const docs = liveDocs(b.id), slotsFirst = ["private", "general"].map(t => slotDoc(b.id, t)).filter((x, i, a) => x && a.indexOf(x) === i), ex = docs.filter(d => !slotsOf(d, b.id).length);
     const flags = flagsOfCompany(b.id), sug = sugFor(b.id);
     if (!CD.selDoc || !S.byId.get(CD.selDoc)) CD.selDoc = (CD.mode === "suggest" && sug[0] ? sug[0].d.id : (flags[0] || {}).d ? flags[0].d.id : (slotsFirst[0] || docs[0] || (sug[0] || {}).d || {}).id) || "";
+    if (CD.mode === "review") {
+      if (!CD.selDoc || !S.byId.get(CD.selDoc) || !flags.some(x => x.d.id === CD.selDoc)) CD.selDoc = (flags[0] || {}).d ? flags[0].d.id : CD.selDoc;
+      side.innerHTML = cdReviewPanel(b, flags) + cdBar(); cdViewer(); return;
+    }
     side.innerHTML = `
       <div class="pd-uc is-main-none" style="border-width:2px"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b style="font-size:15px">${displayName(b, true)}</b>
         <div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
@@ -1074,11 +1078,11 @@
   function stage(op) {
     if (!CD.curBiz) return;
     const k = cdKey(), l = CD.pend[k] || (CD.pend[k] = []);
-    if (!l.some(x => x.t === op.t && x.docId === op.docId && x.bid === op.bid && x.act === op.act && x.hp === op.hp && x.extId === op.extId)) l.push(op);
+    if (!l.some(x => x.t === op.t && x.docId === op.docId && x.bid === op.bid && x.act === op.act && x.hp === op.hp && x.extId === op.extId && x.dtype === op.dtype)) l.push(op);
     cdShow();
   }
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
-    : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
+    : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
   function cdBar() {
     const l = CD.pend[cdKey()] || [];
@@ -1100,6 +1104,7 @@
         if (op.t === "act") await actFor(op.docId, op.bid, op.act);
         else if (op.t === "detach") await cdDetach(op.docId, op.bid);
         else if (op.t === "extras") await toExtras(op.docId, op.bid);
+        else if (op.t === "type") await updateDoc(op.docId, { doc_type: op.dtype });
         else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
       }
       await setReview(k, "approved");
@@ -1112,6 +1117,23 @@
     try { await setReview(k, "question", n ? n.value : ""); }
     catch (e) { alert("השמירה נכשלה: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
     delete CD.pend[k]; CD.curBiz = ""; cdShow();
+  }
+  function cdReviewPanel(b, flags) {          // תצוגה פשוטה: השאלה, אפשרויות שינוי מתאימות, ולמטה כפתורי האישור
+    const by = new Map(); for (const x of flags) { if (!by.has(x.d.id)) by.set(x.d.id, { d: x.d, qs: [] }); by.get(x.d.id).qs.push(x); }
+    const blocks = [...by.values()].map(({ d, qs }) => {
+      const it = intelOf(d), linked = (d.business_ids || []).includes(b.id), others = (it.s || []).filter(x => x.b !== b.id && bizById(x.b)).slice(0, 4);
+      const noPriv = qs.some(q => /משפט מפתח/.test(q.label));
+      return `<div class="pd-warnbox ${CD.selDoc === d.id ? "pd-qsel" : ""}" style="cursor:pointer" onclick="PD._cdSel('${d.id}')">
+        <div class="pd-sub">${E(d.original_name || "")}${(it.t || []).length ? " · פוסט: " + E(it.t[0]) : ""} · ${E(ORIG_HE[it.o] || "")}</div>
+        ${qs.map(q => `<div>❓ <b>${E(q.label)}</b>${q.detail ? ` <span class="pd-sub">${E(q.detail)}</span>` : ""}</div>`).join("")}
+        <div class="pd-btns" style="margin-top:6px" onclick="event.stopPropagation()">
+          ${linked ? `<button class="pd-mini" onclick="PD._cdDetach('${d.id}','${b.id}')">הסרת שיוך מהחברה</button>` : `<button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך לחברה</button>`}
+          ${noPriv ? `<button class="pd-mini" onclick="PD._cdType('${d.id}','general')">סיווג כמסמך כללי</button>` : ""}
+          ${others.map(x => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${x.b}','only')" title="${E((x.w || []).join(", "))}">שיוך ל${E(bizName(x.b))}</button>`).join("")}
+        </div></div>`;
+    }).join("");
+    return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) : ""}</span></div>
+      <h4>❓ שאלות על השיוך המקורי</h4>${blocks || `<div class="pd-sub">אין שאלות.</div>`}`;
   }
   const postExtHtml = d => {          // הצעות לשיוך לחברה שאינה במאגר: ח.פ. של תאגיד שנמצא במסמך, חברה קיימת ברשימה שהשם דומה, או לפי שם הפוסט
     const it = intelOf(d), title = postTitle(d), tn = normText(title), have = new Set((d.ext_ids || []));
@@ -1627,7 +1649,7 @@
   .pd-sidehead{padding:10px 12px;background:#f1efe9;border-bottom:1px solid #e0ddd8;display:flex;flex-direction:column;gap:7px}
   .pd-sidecol .pd-side{width:auto;max-width:none;flex:1;border:0}
   .pd-tabs{display:flex;gap:4px;flex-wrap:wrap}.pd-tab{border:1px solid #cfcac0;background:#fff;border-radius:7px;padding:4px 9px;font-size:12.5px;cursor:pointer}.pd-tab.sel{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
-  .pd-cdbar{position:sticky;bottom:0;background:#fff;border-top:2px solid #cfcac0;padding:8px 4px;margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;box-shadow:0 -4px 8px #0001}.pd-tab{font-weight:600}.pd-tab.sub{font-weight:400;font-size:12px;padding:3px 8px;background:#f6f4ee}.pd-tab.sub.sel{background:#3d6a99;color:#fff}
+  .pd-qsel{outline:2px solid #1a3a5c}.pd-cdbar{position:sticky;bottom:0;background:#fff;border-top:2px solid #cfcac0;padding:8px 4px;margin-top:14px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;box-shadow:0 -4px 8px #0001}.pd-tab{font-weight:600}.pd-tab.sub{font-weight:400;font-size:12px;padding:3px 8px;background:#f6f4ee}.pd-tab.sub.sel{background:#3d6a99;color:#fff}
   .pd-tabn{display:inline-block;background:#e9e6df;color:#333;border-radius:9px;padding:0 6px;font-size:11px;margin-inline-start:3px}.pd-tab.sel .pd-tabn{background:#fff3;color:#fff}
   .pd-marks{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}.pd-mk{font-size:11px;border-radius:8px;padding:1px 7px;background:#eee;color:#555}
   .pd-mk.private{background:#f0e3f5;color:#7a3b8f}.pd-mk.general{background:#e0ebf7;color:#1e4570}.pd-mk.miss{background:#fdecea;color:#c0392b;font-weight:600}.pd-mk.off{background:#f4f4f2;color:#9a9a9a}
@@ -1708,7 +1730,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdOk: cdOk, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => stage({ t: "detach", docId, bid }), _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdOk: cdOk, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => stage({ t: "detach", docId, bid }), _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
