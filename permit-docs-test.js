@@ -202,6 +202,7 @@
     const c = S.loaded && !S.err ? viewCounts() : null;
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
+      <button class="home-card" onclick="PD.openUpload({addCompany:true})"><span class="ico">➕</span><b>הוספת חברה חדשה ממסמך</b><span class="sub">העלאת מסמך, סריקה והצעת הוספה לפי הנתונים בו</span></button>
       <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>דשבורד לפי חברות</b><span class="sub">שיוכים קיימים לבדיקה · הצעות לשיוכים חדשים</span></button>
       <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכי היתר: שיוך ובדיקה${c ? " (" + (c.un + c.review) + ")" : ""}</b><span class="sub">${c ? `${c.un} לא משויכים · ${c.review} לבדיקה · ${c.other} אחרים` : "לא משויכים, לבדיקה, מסמכים אחרים"}</span></button>
       <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
@@ -448,7 +449,7 @@
   // ───────── חלון: העלאת היתר עסקה ─────────
   const U = { queue: [], cur: null, preset: null };
   function openUpload(opts) {
-    U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null;
+    U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null; U.addCompany = !!(opts && opts.addCompany);
     overlay("pd-upload", `<div class="pd-head"><b>העלאת היתר עסקה</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-upload')">✕</button></div>
       <div class="pd-body" id="pd-up-body"></div>`, true);
     closers["pd-upload"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
@@ -511,7 +512,8 @@
           ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
           ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
-          ${sug.outside.length ? `<div class="pd-sub" style="margin-top:4px">ח.פ. של תאגידים בקובץ שאינם במאגר: ${sug.outside.map(E).join(", ")}</div>` : ""}
+          ${sug.outside.length ? `<h4>${U.addCompany ? "הוספת חברה חדשה למאגר" : "תאגידים במסמך שאינם במאגר"}</h4>` + sug.outside.map(h => { const nm = nameNear(c.text, h); return `<div class="pd-uc ext" style="margin-top:5px"><div class="pd-uc-top" style="cursor:default"><b>${E(nm || "שם החברה לא זוהה במסמך")}</b><div class="pd-sub">ח.פ. ${E(h)} · תאגיד שנמצא במסמך ואינו במאגר${nm ? "" : " (השם יושלם מהרשם)"}</div></div>
+            <div class="pd-uc-act"><button class="pd-btn primary" onclick="PD._upNewCo('${h}')" title="שומר את המסמך, פותח את טופס הוספת העסק עם הנתונים (השלמה מהרשם) ומשייך אליו את המסמך אחרי השמירה">הוספת החברה למאגר</button><button class="pd-link2" onclick="PD._upExtCo('${h}')" title="חברה מחוקה / שאינה במאגר: נרשמת ברשימת החברות שאינן במאגר">שיוך כחברה שאינה במאגר</button></div></div>`; }).join("") : (U.addCompany ? `<div class="pd-warnbox">לא נמצא במסמך ח.פ. של תאגיד שאינו במאגר. אפשר לחפש ברשם בשדה "חיפוש חברה אחרת" ולבחור "הוספה למאגר".</div>` : "")}
           <input class="pd-in" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-up-res"></div>
           <h4>סיווג</h4><div class="pd-btns">${tb}</div>${sug.typeWhy && !c.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(sug.typeWhy)}</div>` : ""}
           <h4>הערה (אופציונלי)</h4><textarea class="pd-in" rows="2" onchange="PD._upNote(this.value)">${E(c.note)}</textarea>
@@ -537,6 +539,46 @@
     const out = $("pd-up-res"); if (!out) return;
     runCompanySearch(q, out, { exclude: x => U.cur.sel.has(x), pick: id => { U.cur.sel.add(id); upReview(); },
       mark: r => { U.cur.note = (U.cur.note ? U.cur.note + " | " : "") + markText(r); upReview(); } });
+  }
+  function nameNear(text, hp) {          // שם חברה (מסתיים ב"בע"מ") הקרוב ביותר ל-ח.פ. בטקסט המסמך
+    const t = String(text || "").replace(/\s+/g, " "), i = t.indexOf(hp); if (i < 0) return "";
+    const from = Math.max(0, i - 160), win = t.slice(from, i + 160);
+    let best = "", bestD = 1e9;
+    for (const m of win.matchAll(/([א-ת][א-ת0-9'"׳״.\-()\s]{1,50}?)\s*בע["״']?מ/g)) {
+      const d = Math.abs(from + m.index - i), nm = m[1].replace(/^(של|את|החברה|חברת)\s+/, "").trim();
+      if (nm.length >= 3 && d < bestD) { best = nm + ' בע"מ'; bestD = d; }
+    }
+    return best;
+  }
+  async function upPost(c, ids) {          // שמירת המסמך באתר; מסמך זהה שכבר קיים מוחזר כמות שהוא
+    const u8 = new Uint8Array(c.buf); let bin = "";
+    for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+    const res = await fetch("/api/permit-docs", { method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
+      body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: c.type, business_ids: ids, note: c.note || "" }) });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 409 && data.doc) return data.doc;
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    return data.doc;
+  }
+  async function upNewCo(hp) {          // שמירת המסמך, ואז הוספת החברה למאגר (טופס הוספת עסק עם ח.פ. ממולא) ושיוך המסמך אליה אחרי השמירה
+    const c = U.cur; if (!c) return;
+    try {
+      const doc = await upPost(c, [...c.sel]); replaceDoc(doc);
+      const type = c.type;
+      addReg(hp, false, async bid => {
+        try { const d = S.byId.get(doc.id), r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: [...new Set([...((d && d.business_ids) || []), bid])], doc_type: type }); replaceDoc(r.doc); refresh(); }
+        catch (e) { alert("החברה נוספה, אך שיוך המסמך נכשל: " + e.message); }
+      });
+    } catch (e) { const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
+  }
+  async function upExtCo(hp) {
+    const c = U.cur; if (!c) return;
+    try {
+      const doc = await upPost(c, [...c.sel]); replaceDoc(doc);
+      const co = await extEnsure({ chp: hp, name: nameNear(c.text, hp) || hp, status: "not_in_db" });
+      await extAssign(doc.id, co.id);
+      if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick(`✓ נשמר ושויך לחברה שאינה במאגר: ${E(co.name)}`); }
+    } catch (e) { const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
   async function upSave() {
     const c = U.cur, btn = $("pd-save"); if (btn) btn.disabled = true;
@@ -1508,7 +1550,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, openCompanyDash, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => actFor(docId, bid, act), _cdDetach: cdDetach, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
