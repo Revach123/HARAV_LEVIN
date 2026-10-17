@@ -185,7 +185,7 @@ async function withDocLinks(rows, level) {
   return rows.map(r => {
     const l = byChp.get(String(r.chp_number || "").trim()) || byName.get(r.permit_name);
     const id = l && l[level] ? l[level] : "";
-    return { ...r, permit_doc: id ? "יש" : "", _docid: id };
+    return { ...r, permit_doc: id ? "יש" : "", _docid: id, _specials: l && l.specials ? l.specials : [] };
   });
 }
 
@@ -552,7 +552,9 @@ function cellFor(col, val, row) {
   }
   if (col.cell === "doc") {     // קישור למסמך היתר העסקה (נפתח בלשונית חדשה)
     td.className = "ctr";
-    td.innerHTML = row && row._docid ? `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(row._docid)}" target="_blank" rel="noopener">📄 צפייה</a>` : '<span class="bonds-none">—</span>';
+    const main = row && row._docid ? `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(row._docid)}" target="_blank" rel="noopener">📄 צפייה</a>` : "";
+    const extra = ((row && row._specials) || []).map(x => `<div><a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(x.id)}" target="_blank" rel="noopener" title="${esc(x.title)}">📄 ${esc(x.title)}</a></div>`).join("");
+    td.innerHTML = main || extra ? main + extra : '<span class="bonds-none">—</span>';
     return td;
   }
   if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא

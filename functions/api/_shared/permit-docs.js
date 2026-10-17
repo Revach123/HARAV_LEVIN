@@ -25,11 +25,15 @@ export async function withBusinesses(env, rows) {
   if (ids.length) {          // חברות שאינן במאגר (מיגרציה 0008); לפני המיגרציה - ריק
     try { for (const l of (await env.DB.prepare("SELECT doc_id, ext_id FROM permit_doc_ext").all()).results ?? []) if (ext.has(l.doc_id)) ext.get(l.doc_id).push(l.ext_id); } catch { /* אין טבלה עדיין */ }
   }
+  const specials = new Map(ids.map(i => [i, {}]));
+  if (ids.length) {          // מסמכים ראשיים מיוחדים (מיגרציה 0013): { מזהה_חברה: כותרת }
+    try { for (const l of (await env.DB.prepare("SELECT doc_id, business_id, title FROM permit_doc_special").all()).results ?? []) if (specials.has(l.doc_id)) specials.get(l.doc_id)[l.business_id] = l.title; } catch { /* אין טבלה עדיין */ }
+  }
   const bonds = new Map(ids.map(i => [i, []]));
   if (ids.length) {          // שיוך לאג"ח (מיגרציה 0009)
     try { for (const l of (await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds").all()).results ?? []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp }); } catch { /* אין טבלה עדיין */ }
   }
-  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [] }));
+  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [], specials: specials.get(r.id) || {} }));
 }
 
 // קובע את הקישור לרשימות של מסמך אחד: slotMap = { מזהה_חברה: ["general","private"] }.
