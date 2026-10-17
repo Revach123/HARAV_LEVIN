@@ -35,6 +35,9 @@
   const bizName = id => { const b = bizById(id); return b ? displayName(b) : "(חברה שנמחקה)"; };
   const SLOT_HE = { private: "פרטי", general: "כללי" };
   const EXT_HE = { deleted: "מחוקה", merged: "מוזגה", not_in_db: "אינה במאגר" };
+  const GONE = ["deleted", "merged"];          // "מחוקות": כל סוגי החברות שכבר לא קיימות היום (מחוקה / מוזגה / בפרוק); "שאינן במאגר": חברות קיימות שאינן במאגר העסקים שלנו
+  const extGroup = x => (GONE.includes(x.status) ? "gone" : "nodb");
+  const extCount = g => S.ext.filter(x => extGroup(x) === g).length;
   const extById = id => S.ext.find(x => x.id === id);
   const extName = id => { const x = extById(id); return x ? x.name : "(חברה שנמחקה מהרשימה)"; };
   const extGuess = st => (/מיזוג|מוזג/.test(st || "") ? "merged" : /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/.test(st || "") ? "deleted" : "not_in_db");
@@ -200,7 +203,8 @@
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
       <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכי היתר: שיוך ובדיקה${c ? " (" + (c.un + c.review) + ")" : ""}</b><span class="sub">${c ? `${c.un} לא משויכים · ${c.review} לבדיקה · ${c.other} אחרים` : "לא משויכים, לבדיקה, מסמכים אחרים"}</span></button>
-      <button class="home-card" onclick="PD.openExt()"><span class="ico">🏚️</span><b>חברות שאינן במאגר (${S.ext.length})</b><span class="sub">מחוקות / מוזגו / לא במאגר</span></button></div>`;
+      <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
+      <button class="home-card" onclick="PD.openExt('gone')"><span class="ico">🏚️</span><b>חברות מחוקות (${extCount("gone")})</b><span class="sub">מחוקות / מוזגו / לא קיימות היום</span></button></div>`;
   }
 
   const openCompany = bizId => openManage(bizId);
@@ -551,7 +555,7 @@
 
   // ───────── דשבורד מסמכי היתר: לא משויכים / לבדיקה / לחברות שאינן במאגר / מסמכים אחרים ─────────
   const Q = { bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
-  const VIEWS = [["un", "לא משויכים"], ["review", "לבדיקה"], ["ext", "חברות שאינן במאגר"], ["other", "מסמכים אחרים"]];
+  const VIEWS = [["un", "לא משויכים"], ["review", "לבדיקה"], ["ext", "חברות שאינן במאגר"], ["gone", "חברות מחוקות"], ["other", "מסמכים אחרים"]];
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length && !(d.ext_ids || []).length;
   const missingMarked = d => /חסר במאגר:/.test(d.note || "");      // סימון ישן: "חסר במאגר" בהערה (לפני רשימת החברות שאינן במאגר)
@@ -571,7 +575,7 @@
     if (v === "other") return isOther(d);
     if (isOther(d)) return false;
     if (v === "un") return isUnassigned(d);
-    if (v === "ext") return !(d.business_ids || []).length && (d.ext_ids || []).length > 0;
+    if (v === "ext" || v === "gone") return !(d.business_ids || []).length && (d.ext_ids || []).some(id => { const x = extById(id); return x && extGroup(x) === (v === "gone" ? "gone" : "nodb"); });
     if (v === "review") return (d.business_ids || []).length > 0 && reviewReasons(d).length > 0;
     return false;
   };
@@ -600,7 +604,7 @@
           <div class="pd-tbrow"><div class="pd-nav"><button class="pd-btn" onclick="PD._unGo(-1)" title="המסמך הקודם">→ הקודם</button><span class="pd-navpos" id="pd-un-pos"></span><button class="pd-btn" onclick="PD._unGo(1)" title="המסמך הבא">הבא ←</button><button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button></div>
             <input class="pd-in" style="flex:1;min-width:180px" placeholder="חיפוש / סינון המסמכים: שם קובץ, חברה, ח.פ., הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
             <span class="pd-sub"><span id="pd-un-count"></span><span id="pd-un-skipped"></span></span>
-            <span id="pd-un-undo"></span><button class="pd-link2" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-link2" onclick="PD._openExt()">חברות שאינן במאגר (<span id="pd-un-extn">${S.ext.length}</span>)</button></div>
+            <span id="pd-un-undo"></span><button class="pd-link2" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-link2" onclick="PD._openExt('nodb')">חברות שאינן במאגר (<span id="pd-un-extn">${extCount("nodb")}</span>)</button><button class="pd-link2" onclick="PD._openExt('gone')">חברות מחוקות (<span id="pd-un-gonen">${extCount("gone")}</span>)</button></div>
         </div>
         <div class="pd-view" id="pd-un-view"></div>
         <div class="pd-viewfoot" id="pd-un-foot"></div></div>
@@ -630,7 +634,8 @@
     const list = unassignedList(), cnt = $("pd-un-count"); if (!$("pd-un")) return;
     const vc = viewCounts(), tabs = $("pd-un-tabs");
     if (tabs) tabs.innerHTML = VIEWS.map(([v, l]) => `<button class="pd-tab ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
-    const xn = $("pd-un-extn"); if (xn) xn.textContent = S.ext.length;
+    const xn = $("pd-un-extn"); if (xn) xn.textContent = extCount("nodb");
+    const gn = $("pd-un-gonen"); if (gn) gn.textContent = extCount("gone");
     if (cnt) cnt.textContent = `${list.length} מסמכים בתצוגה`;
     const pos = $("pd-un-pos"); if (pos) pos.textContent = list.length ? `${Math.min(Q.i, list.length - 1) + 1} / ${list.length}` : "0 / 0";
     const sk = $("pd-un-skipped"); if (sk) sk.innerHTML = Q.skipped.size ? ` · דולגו ${Q.skipped.size} <button class="pd-link" style="color:#1a3a5c" onclick="PD._unUnskip()">הצג אותם שוב</button>` : "";
@@ -638,7 +643,7 @@
     const d = list[Q.i], side = $("pd-un-side"), view = $("pd-un-view");
     if (!d) {
       side.innerHTML = Q.skipped.size ? `<div class="pd-empty" style="color:#1e7e4a">אין עוד מסמכים בתור (דולגו ${Q.skipped.size}).<br><button class="pd-btn" style="margin-top:10px" onclick="PD._unUnskip()">הצג את מה שדולג</button></div>`
-        : `<div class="pd-empty" style="color:#1e7e4a">${{ un: "אין מסמכים לא משויכים 🎉", review: "אין מסמכים לבדיקה ידנית 🎉", ext: "אין מסמכים ששויכו לחברות שאינן במאגר", other: "אין מסמכים אחרים" }[Q.view]}</div>`;
+        : `<div class="pd-empty" style="color:#1e7e4a">${{ un: "אין מסמכים לא משויכים 🎉", review: "אין מסמכים לבדיקה ידנית 🎉", ext: "אין מסמכים ששויכו לחברות שאינן במאגר", gone: "אין מסמכים ששויכו לחברות מחוקות", other: "אין מסמכים אחרים" }[Q.view]}</div>`;
       view.innerHTML = ""; Q.curId = ""; const ft = $("pd-un-foot"); if (ft) ft.innerHTML = ""; return;
     }
     if (Q.curId !== d.id) {
@@ -1011,9 +1016,11 @@
     S._nav = false;
     if (typeof setView === "function") setView("home");
   }
-  function openExt() {
-    const rows = S.ext.slice().sort((a, b) => String(a.name).localeCompare(String(b.name), "he"));
-    overlay("pd-ext", `<div class="pd-head"><b>חברות שאינן במאגר (${rows.length})</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-ext')">✕</button></div>
+  let extGrp = "nodb";
+  function openExt(g) {
+    if (g === "gone" || g === "nodb") extGrp = g;
+    const rows = S.ext.filter(x => extGroup(x) === extGrp).sort((a, b) => String(a.name).localeCompare(String(b.name), "he"));
+    overlay("pd-ext", `<div class="pd-head"><b>${extGrp === "gone" ? "חברות מחוקות" : "חברות שאינן במאגר"} (${rows.length})</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-ext')">✕</button></div>
       <div class="pd-body"><div class="pd-sub" style="margin-bottom:8px">חברות שמסמכי היתר משויכים אליהן אבל אינן במאגר העסקים. כל שיוך כזה מוסיף את החברה לכאן. ${S.extErr ? `<span style="color:#c0392b">(${E(S.extErr)}: אם חסרה מיגרציה 0008 - להריץ ב-D1)</span>` : ""}</div>
         <table class="pd-ext-tbl"><thead><tr><th>שם</th><th>ח.פ.</th><th>סטטוס</th><th>מסמכים</th><th></th></tr></thead><tbody>
         ${rows.map(x => `<tr><td>${E(x.name)}</td><td dir="ltr" style="text-align:right">${E(x.chp || "")}</td>
@@ -1023,7 +1030,7 @@
         </tbody></table></div>`);
   }
   async function extStatus(id, st) {
-    try { await api("/permit-ext/" + id, "PUT", { status: st }); const x = extById(id); if (x) x.status = st; say("הסטטוס עודכן"); refresh(); }
+    try { await api("/permit-ext/" + id, "PUT", { status: st }); const x = extById(id); if (x) x.status = st; refresh(); openExt(); if ($("pd-un")) uqShow(); }
     catch (e) { alert("העדכון נכשל: " + e.message); }
   }
   async function extDel(id) {
