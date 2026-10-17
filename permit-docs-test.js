@@ -1118,6 +1118,7 @@
     cdShow();
   }
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
+    : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
   function cdBar() {
@@ -1152,6 +1153,7 @@
         if (op.t === "act") await actFor(op.docId, op.bid, op.act);
         else if (op.t === "detach") await cdDetach(op.docId, op.bid);
         else if (op.t === "extras") await toExtras(op.docId, op.bid);
+        else if (op.t === "reject") { /* הרישום המקורי לא מתקבל: אין מה לבצע */ }
         else if (op.t === "type") await updateDoc(op.docId, { doc_type: op.dtype });
         else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
       }
@@ -1184,7 +1186,7 @@
         <div class="pd-sub">${E(d.original_name || "")}${(it.t || []).length ? " · פוסט: " + E(it.t[0]) : ""} · ${E(ORIG_HE[it.o] || "")}</div>
         ${qs.map(q => `<div>❓ <b>${E(q.label)}</b>${q.detail ? ` <span class="pd-sub">${E(q.detail)}</span>` : ""}</div>`).join("")}
         <div class="pd-btns" style="margin-top:6px" onclick="event.stopPropagation()">
-          ${linked ? `<button class="pd-mini" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${b.id}')">ביטול שיוך</button>` : ""}
+          <button class="pd-mini" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${b.id}')" title="${linked ? "מסיר את המסמך מהחברה" : "המסמך עדיין לא משויך לחברה: הרישום המקורי מהאתר הישן לא יתקבל"}">ביטול שיוך</button>
           <span class="pd-sub">סיווג:</span><button class="pd-mini ${d.doc_type === "general" ? "sel" : ""}" onclick="PD._cdType('${d.id}','general')">כללי</button><button class="pd-mini ${d.doc_type === "both" || d.doc_type === "private" ? "sel" : ""}" onclick="PD._cdType('${d.id}','both')">פרטי</button>
         </div></div>`;
     }).join("");
@@ -1804,7 +1806,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => stage({ t: "detach", docId, bid }), _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
