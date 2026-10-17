@@ -703,7 +703,7 @@
       <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
       <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
     const foot = $("pd-un-foot");
-    if (foot) foot.innerHTML = `<button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקת המסמך</button>${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()">↩ החזרה לתור</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="עובר ללשונית 'מסמכים אחרים'">סימון: מסמך שאינו היתר עסקה</button>`}`;
+    if (foot) foot.innerHTML = `<button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקת המסמך</button>${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()" title="המסמך חוזר ללשונית 'לא משויכים'">סימון מסמך כהיתר עסקה</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="עובר ללשונית 'מסמכים אחרים'">סימון: מסמך שאינו היתר עסקה</button>`}`;
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
   }
   function cfeat(b, d) {          // פיצ'ר מסמכים ראשיים: כמה מהנדרשים קשורים (למשל 1/2), והאם המסמך הזה אחד מהם
