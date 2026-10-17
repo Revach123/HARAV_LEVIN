@@ -85,7 +85,7 @@ def main():
     ap.add_argument("--attachments", default="attachments.csv")
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
-    ap.add_argument("--ocr-dirs", default="ocr_text,ocr_text_p2")
+    ap.add_argument("--ocr-dirs", default="ocr_text,ocr_text_p2,ocr_text_pg")
     ap.add_argument("--password-file", default="admin_password.txt")
     ap.add_argument("--go", action="store_true")
     a = ap.parse_args()
