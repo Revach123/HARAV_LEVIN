@@ -1143,8 +1143,14 @@
     for (const x of flagsOfCompany(bid)) {
       if (seen.has(x.d.id)) continue; seen.add(x.d.id);
       const ts = (want[intelOf(x.d).o] || []).filter(t => need[t]);
-      for (const t of ts) if (!slotsOf(x.d, bid).includes(t)) out.push({ t: "act", docId: x.d.id, bid, act: t });
-      if (!ts.length && !(x.d.business_ids || []).includes(bid)) out.push({ t: "act", docId: x.d.id, bid, act: "only" });
+      let linkOnly = !ts.length;
+      for (const t of ts) {
+        if (slotsOf(x.d, bid).includes(t)) continue;
+        const cur = slotDoc(bid, t);
+        if (cur && cur.id !== x.d.id) linkOnly = true;      // ההת"ע של החברה כבר תפוס במסמך אחר: לא מחליפים ולא שואלים, רק משייכים (המסמך הקיים נשאר ההת"ע)
+        else out.push({ t: "act", docId: x.d.id, bid, act: t });
+      }
+      if (linkOnly && !(x.d.business_ids || []).includes(bid) && !out.some(o => o.docId === x.d.id)) out.push({ t: "act", docId: x.d.id, bid, act: "only" });
     }
     return out;
   }
