@@ -1135,15 +1135,13 @@
   function cdReviewPanel(b, flags) {          // תצוגה פשוטה: השאלה, אפשרויות שינוי מתאימות, ולמטה כפתורי האישור
     const by = new Map(); for (const x of flags) { if (!by.has(x.d.id)) by.set(x.d.id, { d: x.d, qs: [] }); by.get(x.d.id).qs.push(x); }
     const blocks = [...by.values()].map(({ d, qs }) => {
-      const it = intelOf(d), linked = (d.business_ids || []).includes(b.id), others = (it.s || []).filter(x => x.b !== b.id && bizById(x.b)).slice(0, 4);
-      const noPriv = qs.some(q => /משפט מפתח/.test(q.label));
+      const it = intelOf(d), linked = (d.business_ids || []).includes(b.id);
       return `<div class="pd-warnbox ${CD.selDoc === d.id ? "pd-qsel" : ""}" style="cursor:pointer" onclick="PD._cdSel('${d.id}')">
         <div class="pd-sub">${E(d.original_name || "")}${(it.t || []).length ? " · פוסט: " + E(it.t[0]) : ""} · ${E(ORIG_HE[it.o] || "")}</div>
         ${qs.map(q => `<div>❓ <b>${E(q.label)}</b>${q.detail ? ` <span class="pd-sub">${E(q.detail)}</span>` : ""}</div>`).join("")}
         <div class="pd-btns" style="margin-top:6px" onclick="event.stopPropagation()">
-          ${linked ? `<button class="pd-mini" onclick="PD._cdDetach('${d.id}','${b.id}')">הסרת שיוך מהחברה</button>` : `<button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך לחברה</button>`}
-          ${noPriv ? `<button class="pd-mini" onclick="PD._cdType('${d.id}','general')">סיווג כמסמך כללי</button>` : ""}
-          ${others.map(x => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${x.b}','only')" title="${E((x.w || []).join(", "))}">שיוך ל${E(bizName(x.b))}</button>`).join("")}
+          ${linked ? `<button class="pd-mini" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${b.id}')">ביטול שיוך</button>` : ""}
+          <span class="pd-sub">סיווג:</span><button class="pd-mini ${d.doc_type === "general" ? "sel" : ""}" onclick="PD._cdType('${d.id}','general')">כללי</button><button class="pd-mini ${d.doc_type === "both" || d.doc_type === "private" ? "sel" : ""}" onclick="PD._cdType('${d.id}','both')">פרטי</button>
         </div></div>`;
     }).join("");
     return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) : ""}</span></div>
