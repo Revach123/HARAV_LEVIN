@@ -981,13 +981,25 @@
   }
   const REVIEW_CODES = ["hp_missing", "hp_typo", "hp_bad", "name_differs", "no_private_phrase"];      // אי התאמה: ח.פ., שם חברה, משפט מפתח פרטי חסר
   // הבסיס: רשימות הפוסטים באתר הישן (רשימת שטרות "פרטי" ורשימת "כללי"). כל מסמך שהיה בפוסט נבדק מול החברה שבכותרת הפוסט
+  function flagFits(bid, f) {          // מסמך משותף לשני פוסטים: ממצא ששייך לחברה אחרת בפוסט (ח.פ. או שם אחר) לא מוצג אצל החברה הזו
+    const b = bizById(bid); if (!b) return true;
+    const d = String(f.d || "");
+    const chp = String(b.chp_number || "").replace(/\D/g, "").padStart(9, "0");
+    if (f.c === "hp_missing" || f.c === "hp_typo") { const ms = [...d.matchAll(/ח\.פ\. החברה (\d{9})/g)].map(m => m[1]); return !ms.length || (b.chp_number ? ms.includes(chp) : true); }
+    if (f.c === "name_differs") {
+      const ts = [...d.matchAll(/פוסט: (.*?) \| במסמך/g)].map(m => normText(m[1])).filter(x => x.length >= 3); if (!ts.length) return true;
+      const names = [b.registrar_name, b.permit_name].flatMap(x => String(x || "").split(/[;|\n/]+/)).map(normText).filter(x => x.length >= 3);
+      return ts.some(t => names.some(n => n.includes(t) || t.includes(n)));
+    }
+    return true;
+  }
   function flagMap() {
     if (S._fm && S._fmFor === S.docs) return S._fm;
     const m = new Map(), add = (bid, d, f) => { if (!m.has(bid)) m.set(bid, []); m.get(bid).push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" }); };
     for (const d of S.docs) {
       const it = intelOf(d); if (!["g", "p", "gp"].includes(it.o)) continue;
       const fl = (it.f || []).filter(f => REVIEW_CODES.includes(f.c)); if (!fl.length) continue;
-      for (const bid of it.tb || []) for (const f of fl) add(bid, d, f);
+      for (const bid of it.tb || []) for (const f of fl) if (flagFits(bid, f)) add(bid, d, f);
     }
     S._fm = m; S._fmFor = S.docs; return m;
   }
