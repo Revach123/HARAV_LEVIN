@@ -555,7 +555,7 @@
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length && !(d.ext_ids || []).length;
   const missingMarked = d => /חסר במאגר:/.test(d.note || "");      // סימון ישן: "חסר במאגר" בהערה (לפני רשימת החברות שאינן במאגר)
-  const isOther = d => d.doc_type === "other" || (missingMarked(d) && isUnassigned(d));          // סימון ישן בהערה נחשב "אחר" רק כל עוד המסמך לא שויך לחברה / לחברה שאינה במאגר
+  const isOther = d => d.doc_type === "other";          // "מסמכים אחרים" = רק מה שסומן "לא קשור" (סימון ישן בהערה "חסר במאגר" כבר לא משפיע)
   function reviewReasons(d) {          // למה מסמך משויך עדיין צריך בדיקה ידנית
     const out = [];
     if (d.doc_type === "unknown") out.push("ללא סיווג");
@@ -681,7 +681,7 @@
       ${d.note ? `<div class="pd-warnbox">${E(d.note)}</div>` : ""}
       <div style="margin-top:8px"><span class="pd-sub">סיווג המסמך:</span><div class="pd-btns" style="margin-top:3px">${typeBtns}</div>
         ${d.doc_type === "unknown" && Q.type !== "unknown" ? `<div class="pd-sub" style="margin-top:3px">הצעה: ${TL[Q.type]}${Q.typeWhy ? " (" + E(Q.typeWhy) + ")" : ""} <button class="pd-link2" onclick="PD._unSetType('${Q.type}')">אימוץ ההצעה</button></div>` : ""}</div>
-      ${Q.view === "other" && legacyDocs().length ? `<button class="pd-btn" style="margin-top:8px" onclick="PD._legacy()" title="ממיר את הסימון הישן בהערה לשיוך לחברה ברשימת החברות שאינן במאגר">המרת ${legacyDocs().length} סימוני "חסר במאגר" ישנים</button>` : ""}
+      ${Q.view === "un" && legacyDocs().length ? `<button class="pd-btn" style="margin-top:8px" onclick="PD._legacy()" title="ממיר את הסימון הישן בהערה לשיוך לחברה ברשימת החברות שאינן במאגר">המרת ${legacyDocs().length} סימוני "חסר במאגר" ישנים</button>` : ""}
       ${statusBar}
       ${assigned ? `<div class="pd-ucs">${assigned}</div>` : ""}
       <h4 style="margin-top:14px">${Q.replace ? `שינוי שיוך: בחרו חברה במקום "${E(replName)}" <button class="pd-link2" onclick="PD._unPicker('')">ביטול</button>` : nAsg ? "הוספת שיוך נוסף" : "שיוך לחברה"}</h4>
