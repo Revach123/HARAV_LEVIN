@@ -555,7 +555,7 @@
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
   const isUnassigned = d => !(d.business_ids || []).length && !(d.ext_ids || []).length;
   const missingMarked = d => /חסר במאגר:/.test(d.note || "");      // סימון ישן: "חסר במאגר" בהערה (לפני רשימת החברות שאינן במאגר)
-  const isOther = d => d.doc_type === "other" || missingMarked(d);
+  const isOther = d => d.doc_type === "other" || (missingMarked(d) && isUnassigned(d));          // סימון ישן בהערה נחשב "אחר" רק כל עוד המסמך לא שויך לחברה / לחברה שאינה במאגר
   function reviewReasons(d) {          // למה מסמך משויך עדיין צריך בדיקה ידנית
     const out = [];
     if (d.doc_type === "unknown") out.push("ללא סיווג");
@@ -592,7 +592,7 @@
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
   }
   function openUnassigned(view) {
-    Q.view = view || "un"; Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
+    Q.view = view || "review"; Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `<div class="pd-rv"><div class="pd-viewcol">
         <div class="pd-toolbar">
           <div class="pd-tbrow"><div class="pd-tabs" id="pd-un-tabs"></div><span style="flex:1"></span>
@@ -681,6 +681,7 @@
       ${d.note ? `<div class="pd-warnbox">${E(d.note)}</div>` : ""}
       <div style="margin-top:8px"><span class="pd-sub">סיווג המסמך:</span><div class="pd-btns" style="margin-top:3px">${typeBtns}</div>
         ${d.doc_type === "unknown" && Q.type !== "unknown" ? `<div class="pd-sub" style="margin-top:3px">הצעה: ${TL[Q.type]}${Q.typeWhy ? " (" + E(Q.typeWhy) + ")" : ""} <button class="pd-link2" onclick="PD._unSetType('${Q.type}')">אימוץ ההצעה</button></div>` : ""}</div>
+      ${Q.view === "other" && legacyDocs().length ? `<button class="pd-btn" style="margin-top:8px" onclick="PD._legacy()" title="ממיר את הסימון הישן בהערה לשיוך לחברה ברשימת החברות שאינן במאגר">המרת ${legacyDocs().length} סימוני "חסר במאגר" ישנים</button>` : ""}
       ${statusBar}
       ${assigned ? `<div class="pd-ucs">${assigned}</div>` : ""}
       <h4 style="margin-top:14px">${Q.replace ? `שינוי שיוך: בחרו חברה במקום "${E(replName)}" <button class="pd-link2" onclick="PD._unPicker('')">ביטול</button>` : nAsg ? "הוספת שיוך נוסף" : "שיוך לחברה"}</h4>
@@ -1032,6 +1033,19 @@
     catch (e) { alert("המחיקה נכשלה: " + e.message); }
   }
 
+  const legacyDocs = () => S.docs.filter(d => missingMarked(d) && isUnassigned(d) && d.doc_type !== "other");
+  async function legacyConvert() {          // המרת הסימון הישן "חסר במאגר: שם (ח.פ. N, סטטוס)" בהערה לחברה ברשימת החברות שאינן במאגר
+    const list = legacyDocs();
+    if (!list.length || !confirm(`להמיר ${list.length} מסמכים שסומנו "חסר במאגר" לשיוך לחברות שאינן במאגר? (ההערה נשמרת)`)) return;
+    let ok = 0, bad = 0;
+    for (const d of list) {
+      const m = /חסר במאגר:\s*(.+?)\s*\(ח\.פ\.\s*(\d+)(?:,\s*([^)]*))?\)/.exec(d.note || "");
+      if (!m) { bad++; continue; }
+      try { const c = await extEnsure({ chp: m[2], name: m[1], status: extGuess(m[3]) }); await extAssign(d.id, c.id); ok++; } catch { bad++; }
+    }
+    alert(`הומרו ${ok} מסמכים${bad ? `, ${bad} לא הומרו (אין ח.פ. או שם בהערה)` : ""}.`);
+    Q.curId = ""; uqShow();
+  }
   async function uqMark(reg) {        // סימון "חסר במאגר" בהערת המסמך (המסמך נשאר לא משויך)
     const d = unassignedList()[Q.i]; if (!d) return;
     const note = (Q.note ? Q.note + " | " : "") + markText(reg); Q.note = note;
@@ -1358,7 +1372,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
