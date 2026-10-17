@@ -1210,7 +1210,16 @@
       const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
       CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
       if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
+      cdPrefetch();
     } catch (e) { if (tok === CD.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
+  }
+  function cdPrefetch() {          // טעינה מראש של המסמך הראשי של שני הפריטים הבאים ברשימה
+    try {
+      for (const e of cdCompanies().slice(CD.i + 1, CD.i + 3)) {
+        const id = e.b.post ? e.b.post.id : ((flagsOfCompany(e.b.id)[0] || {}).d || {}).id || ((slotDoc(e.b.id, "private") || slotDoc(e.b.id, "general") || liveDocs(e.b.id)[0]) || {}).id;
+        if (id) fetchPdfBlob(id).catch(() => {});
+      }
+    } catch { /* טעינה מראש אינה קריטית */ }
   }
   function cdGo(n) { const len = cdCompanies().length; CD.i = Math.min(Math.max(0, CD.i + n), Math.max(0, len - 1)); CD.curBiz = ""; cdShow(); }
   async function cdDetach(docId, bid) {
