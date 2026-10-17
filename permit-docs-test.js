@@ -977,11 +977,12 @@
     }
     return out.sort((a, b) => b.s - a.s);
   }
-  function flagsOfCompany(bid) {          // ממצאי הסריקה של מסמכי החברה
+  const REVIEW_CODES = ["hp_missing", "hp_typo", "hp_bad", "name_differs", "no_private_phrase"];      // אי התאמה: ח.פ., שם חברה, משפט מפתח פרטי חסר
+  function flagsOfCompany(bid) {          // ממצאי הסריקה במסמכי החברה שהיו באתר הישן (מסמכים נוספים אינם נבדקים כאן)
     const out = [];
     for (const d of liveDocs(bid)) {
-      for (const f of intelOf(d).f || []) if (f.c !== "private_phrase_in_general") out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
-      for (const r of reviewReasons(d)) out.push({ d, label: r, detail: "" });
+      const it = intelOf(d); if (!["g", "p", "gp"].includes(it.o)) continue;
+      for (const f of it.f || []) if (REVIEW_CODES.includes(f.c)) out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
     }
     return out;
   }
