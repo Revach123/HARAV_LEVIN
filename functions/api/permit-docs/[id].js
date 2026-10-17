@@ -39,12 +39,16 @@ export async function onRequestPut({ request, env, params }) {
     }
     if (body.specials && typeof body.specials === "object") {        // מסמכים ראשיים מיוחדים (מיגרציה 0013): { מזהה_חברה: כותרת }, כותרת ריקה = ביטול
       const ids = await existingBusinessIds(env, Object.keys(body.specials));
+      let hasDetail = true;
+      try { await env.DB.prepare("SELECT detail FROM permit_doc_special LIMIT 1").first(); } catch { hasDetail = false; }      // לפני מיגרציה 0014
       for (const b of ids) {
-        const title = String(body.specials[b] || "").trim().slice(0, 200);
+        const raw = body.specials[b], obj = raw && typeof raw === "object" ? raw : { title: raw };
+        const title = String(obj.title || "").trim().slice(0, 200), detail = String(obj.detail || "").trim().slice(0, 1000);
         if (!title) { stmts.push(env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ? AND business_id = ?").bind(params.id, b)); continue; }
         stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_companies (doc_id, business_id) VALUES (?, ?)").bind(params.id, b));
         stmts.push(env.DB.prepare("UPDATE permit_doc_companies SET slot = '' WHERE doc_id = ? AND business_id = ?").bind(params.id, b));      // "אחר" אינו גם פרטי / כללי
-        stmts.push(env.DB.prepare("INSERT INTO permit_doc_special (doc_id, business_id, title) VALUES (?,?,?) ON CONFLICT(doc_id, business_id) DO UPDATE SET title = excluded.title").bind(params.id, b, title));
+        if (hasDetail) stmts.push(env.DB.prepare("INSERT INTO permit_doc_special (doc_id, business_id, title, detail) VALUES (?,?,?,?) ON CONFLICT(doc_id, business_id) DO UPDATE SET title = excluded.title, detail = excluded.detail").bind(params.id, b, title, detail));
+        else stmts.push(env.DB.prepare("INSERT INTO permit_doc_special (doc_id, business_id, title) VALUES (?,?,?) ON CONFLICT(doc_id, business_id) DO UPDATE SET title = excluded.title").bind(params.id, b, title));
       }
     }
     if (Array.isArray(body.ext_ids)) {        // חברות שאינן במאגר (permit_ext_companies): החלפה מלאה

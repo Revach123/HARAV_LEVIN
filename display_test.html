@@ -553,7 +553,7 @@ function cellFor(col, val, row) {
   if (col.cell === "doc") {     // קישור למסמך היתר העסקה (נפתח בלשונית חדשה)
     td.className = "ctr";
     const main = row && row._docid ? `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(row._docid)}" target="_blank" rel="noopener">📄 צפייה</a>` : "";
-    const extra = ((row && row._specials) || []).map(x => `<div><a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(x.id)}" target="_blank" rel="noopener" title="${esc(x.title)}">📄 ${esc(x.title)}</a></div>`).join("");
+    const extra = ((row && row._specials) || []).map(x => `<div><a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(x.id)}" target="_blank" rel="noopener" title="${esc(x.detail || x.title)}">📄 ${esc(x.title)}</a>${x.detail ? `<div style="font-size:11px;color:#666;max-width:220px">${esc(x.detail)}</div>` : ""}</div>`).join("");
     td.innerHTML = main || extra ? main + extra : '<span class="bonds-none">—</span>';
     return td;
   }
