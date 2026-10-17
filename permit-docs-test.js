@@ -161,6 +161,7 @@
     refresh();
   }
   function replaceDoc(doc) {
+    S._fm = null;
     const i = S.docs.findIndex(d => d.id === doc.id);
     if (i >= 0) S.docs[i] = doc; else S.docs.unshift(doc);
     reindex();
@@ -978,14 +979,19 @@
     return out.sort((a, b) => b.s - a.s);
   }
   const REVIEW_CODES = ["hp_missing", "hp_typo", "hp_bad", "name_differs", "no_private_phrase"];      // אי התאמה: ח.פ., שם חברה, משפט מפתח פרטי חסר
-  function flagsOfCompany(bid) {          // ממצאי הסריקה במסמכי החברה שהיו באתר הישן (מסמכים נוספים אינם נבדקים כאן)
-    const out = [];
-    for (const d of liveDocs(bid)) {
+  // הבסיס: רשימות הפוסטים באתר הישן (רשימת שטרות "פרטי" ורשימת "כללי"). כל מסמך שהיה בפוסט נבדק מול החברה שבכותרת הפוסט
+  function flagMap() {
+    if (S._fm && S._fmFor === S.docs) return S._fm;
+    const m = new Map(), add = (bid, d, f) => { if (!m.has(bid)) m.set(bid, []); m.get(bid).push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" }); };
+    for (const d of S.docs) {
       const it = intelOf(d); if (!["g", "p", "gp"].includes(it.o)) continue;
-      for (const f of it.f || []) if (REVIEW_CODES.includes(f.c)) out.push({ d, label: FLAG_HE[f.c] || f.c, detail: f.d || "" });
+      const fl = (it.f || []).filter(f => REVIEW_CODES.includes(f.c)); if (!fl.length) continue;
+      const owners = (it.tb || []).length ? it.tb : (d.business_ids || []);      // בלי חברה לפי כותרת הפוסט: החברות שהמסמך משויך אליהן
+      for (const bid of owners) for (const f of fl) add(bid, d, f);
     }
-    return out;
+    S._fm = m; S._fmFor = S.docs; return m;
   }
+  const flagsOfCompany = bid => flagMap().get(bid) || [];
   function cdCompanies() {
     const f = CD.filter.trim().toLowerCase(), seen = new Map();
     const take = (bid, n) => { const b = bizById(bid); if (!b || INACTIVE_ST.test(b.registry_status || "")) return; const e = seen.get(bid) || { b, n: 0 }; e.n += n; seen.set(bid, e); };
@@ -1047,7 +1053,7 @@
       <div class="pd-uc is-main-none" style="border-width:2px"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b style="font-size:15px">${displayName(b, true)}</b>
         <div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
         <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex">נוספים ${f.ex}</span>${flags.length ? `<span class="pd-feat part">⚠ ${flags.length} ממצאים</span>` : ""}${sug.length ? `<span class="pd-feat ex">${sug.length} הצעות</span>` : ""}</div></div></div>
-      ${flags.length ? `<h4>ממצאים לבדיקה</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">⚠ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
+      ${flags.length ? `<h4>ממצאים לבדיקה</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">⚠ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${(intelOf(x.d).t || []).length ? " <span class='pd-sub'>(פוסט: " + E(intelOf(x.d).t[0]) + ")</span>" : ""}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
       <h4>מסמכי החברה (${docs.length})</h4>
       ${docs.length ? `<div class="pd-cdgrid">${[...slotsFirst, ...ex].map(d => cdCard(d, b.id)).join("")}</div>` : `<div class="pd-mg-empty need">⚠ אין מסמכים לחברה</div>`}
       <h4>הצעות למסמכים נוספים (${sug.length})</h4>
