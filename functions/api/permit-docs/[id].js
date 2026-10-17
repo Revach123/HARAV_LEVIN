@@ -37,6 +37,15 @@ export async function onRequestPut({ request, env, params }) {
     if (body.slots && typeof body.slots === "object") {
       stmts.push(...await slotStatements(env, params.id, body.slots));
     }
+    if (body.specials && typeof body.specials === "object") {        // מסמכים ראשיים מיוחדים (מיגרציה 0013): { מזהה_חברה: כותרת }, כותרת ריקה = ביטול
+      const ids = await existingBusinessIds(env, Object.keys(body.specials));
+      for (const b of ids) {
+        const title = String(body.specials[b] || "").trim().slice(0, 200);
+        if (!title) { stmts.push(env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ? AND business_id = ?").bind(params.id, b)); continue; }
+        stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_companies (doc_id, business_id) VALUES (?, ?)").bind(params.id, b));
+        stmts.push(env.DB.prepare("INSERT INTO permit_doc_special (doc_id, business_id, title) VALUES (?,?,?) ON CONFLICT(doc_id, business_id) DO UPDATE SET title = excluded.title").bind(params.id, b, title));
+      }
+    }
     if (Array.isArray(body.ext_ids)) {        // חברות שאינן במאגר (permit_ext_companies): החלפה מלאה
       const have = new Set(((await env.DB.prepare("SELECT id FROM permit_ext_companies").all()).results ?? []).map(r => r.id));
       stmts.push(env.DB.prepare("DELETE FROM permit_doc_ext WHERE doc_id = ?").bind(params.id));
@@ -77,6 +86,7 @@ export async function onRequestDelete({ request, env, params }) {
       env.DB.prepare("DELETE FROM permit_doc_companies WHERE doc_id = ?").bind(params.id),
       env.DB.prepare("DELETE FROM permit_docs WHERE id = ?").bind(params.id),
     ]);
+    await env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ?").bind(params.id).run().catch(() => {});
     if (env.PERMITS) await env.PERMITS.delete(row.file_key).catch(() => {});
     return Response.json({ success: true });
   } catch (e) {

@@ -938,7 +938,7 @@
   const HK = "pd_hist";
   const histGet = () => { try { return JSON.parse(localStorage.getItem(HK) || "[]"); } catch { return []; } };
   const histSet = v => { try { localStorage.setItem(HK, JSON.stringify(v.slice(-40))); } catch { /* בלי אחסון */ } };
-  const snapDoc = d => ({ id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], bonds: (d.bonds || []).map(x => ({ ...x })), business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
+  const snapDoc = d => ({ specials: { ...(d.specials || {}) }, id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], bonds: (d.bonds || []).map(x => ({ ...x })), business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
   function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
   function lastRevItem() {          // האישור / שאלת המנהל האחרונים: גם אחרי רענון הדף (לפי הזמן ששמור בשרת)
     let best = null; for (const x of (S.rev || new Map()).values()) if (!best || String(x.updated_at || "") > String(best.updated_at || "")) best = x;
@@ -961,7 +961,7 @@
     const grp = h.slice(from), e = grp[0];
     if (!confirm(`לבטל את השיוך האחרון?\n${e.name}: ${grp.map(x => x.what).join(" ; ")}\nהמסמך יחזור למצב שלפני השיוך.`)) return;
     try {
-      const r = await api("/permit-docs/" + e.id, "PUT", { business_ids: e.business_ids, doc_type: e.doc_type, note: e.note, slots: slotArrs(e.slots, e.business_ids), ...(e.ext_ids ? { ext_ids: e.ext_ids } : {}), ...(e.bonds ? { bonds: e.bonds } : {}) });
+      const r = await api("/permit-docs/" + e.id, "PUT", { business_ids: e.business_ids, doc_type: e.doc_type, note: e.note, slots: slotArrs(e.slots, e.business_ids), ...(e.ext_ids ? { ext_ids: e.ext_ids } : {}), ...(e.bonds ? { bonds: e.bonds } : {}), ...(e.specials ? { specials: { ...Object.fromEntries(Object.keys((S.byId.get(e.id) || {}).specials || {}).map(b => [b, ""])), ...e.specials } } : {}) });
       replaceDoc(r.doc);
       for (const g of grp.slice().reverse()) for (const o of g.others || []) { try { const r2 = await api("/permit-docs/" + o.id, "PUT", { slots: { [o.bid]: o.slot } }); replaceDoc(r2.doc); } catch { /* המסמך כבר לא קיים */ } }
     } catch (err) { alert("הביטול נכשל: " + err.message); return; }
@@ -1066,7 +1066,7 @@
     const chips = (sl.length ? sl.map(t => `<span class="pd-chip" style="background:${TCOL[t]}">הת"ע ${SLOT_HE[t]}</span>`).join(" ") : (o.sug ? "" : `<span class="pd-chip" style="background:#8a8a8a">נוסף</span>`)) + ` <span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span>`;
     const fl = (it.f || []).length ? `<span class="pd-feat part" title="${E((it.f || []).map(f => FLAG_HE[f.c] || f.c).join("\n"))}">⚠ ${(it.f || []).length}</span>` : "";
     const acts = o.sug ? `<button class="pd-mini" onclick="PD._cdAct('${d.id}','${bid}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','general')">הת"ע כללי</button>` : ""}`
-      : (sl.length ? `<button class="pd-link2" onclick="PD._cdExtras('${d.id}','${bid}')">הורדה לנוספים</button>` : ["private", "general"].filter(t => need[t]).map(t => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("")) + `<button class="pd-link2" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${bid}')">הסרת שיוך</button>`;
+      : (sl.length ? `<button class="pd-link2" onclick="PD._cdExtras('${d.id}','${bid}')">הורדה לנוספים</button>` : ["private", "general"].filter(t => need[t]).map(t => `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${bid}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("")) + `<button class="pd-mini" onclick="PD._cdSpecial('${d.id}','${bid}')" title="יופיע באתר הסופי תחת כותרת שתבחרו, בנוסף להת&quot;ע הראשיים">★ ראשי מיוחד</button><button class="pd-link2" style="color:#c0392b" onclick="PD._cdDetach('${d.id}','${bid}')">הסרת שיוך</button>`;
     return `<div class="pd-cdc ${CD.selDoc === d.id ? "sel" : ""}"><div class="pd-cdc-top" onclick="PD._cdSel('${d.id}')" title="הצגה בצד"><div class="pd-cdc-th"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}></div>
       <div class="pd-grow"><div class="pd-name" title="${E(d.original_name || "")}">${E(d.original_name || d.id)}</div><div class="pd-sub">${metaHtml(d)}</div><div class="pd-btns" style="gap:3px;margin-top:2px">${chips} ${fl}</div>
       <div class="pd-sub" style="font-size:10.5px">${E(it.o ? ORIG_HE[it.o] : "")}${(it.t || []).length ? " · " + E(it.t[0]) : ""}</div>
@@ -1122,6 +1122,7 @@
   }
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
     : op.t === "vis" ? `שינוי רישום ${bizName(op.bid)} ל${op.value === "רק פרטי" ? '"רק פרטי"' : op.value === "פרטי" ? '"יש גם פרטי"' : '"רק כללי"'}`
+    : op.t === "special" ? `${docNm(op.docId)} כמסמך ראשי מיוחד של ${bizName(op.bid)}: ${op.title}`
     : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
@@ -1163,6 +1164,7 @@
         else if (op.t === "detach") await cdDetach(op.docId, op.bid);
         else if (op.t === "extras") await toExtras(op.docId, op.bid);
         else if (op.t === "vis") { if (typeof inlineUpdate === "function" && await inlineUpdate(op.bid, "visibility", op.value) === false) throw new Error("עדכון הרישום נכשל"); }
+        else if (op.t === "special") await updateDoc(op.docId, { specials: { [op.bid]: op.title } });
         else if (op.t === "reject") { /* הרישום המקורי לא מתקבל: אין מה לבצע */ }
         else if (op.t === "type") await updateDoc(op.docId, { doc_type: op.dtype });
         else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
@@ -1608,12 +1610,27 @@
     paintMg();
     if (!S.loaded && !S.loading) load();
   }
+  const specialTitle = d => (intelOf(d).t || [])[0] || d.source_title || String(d.original_name || "").replace(/\.pdf$/i, "");
+  async function spEdit(docId, bid) {          // מסמך ראשי מיוחד: מופיע באתר הסופי של החברה תחת כותרת משלו
+    const d = S.byId.get(docId); if (!d) return;
+    const cur = (d.specials || {})[bid], t = prompt("כותרת המסמך באתר הסופי:", cur !== undefined ? cur : specialTitle(d)); if (t === null || !t.trim()) return;
+    const before = snapDoc(d);
+    if (await updateDoc(docId, { specials: { [bid]: t.trim() } })) { pushHist(before, "מסמך ראשי מיוחד: " + t.trim()); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
+  }
+  async function spDel(docId, bid) {
+    const d = S.byId.get(docId); if (!d) return;
+    const before = snapDoc(d);
+    if (await updateDoc(docId, { specials: { [bid]: "" } })) { pushHist(before, "בוטל מסמך ראשי מיוחד"); if ($("pd-manage")) paintMg(); if ($("pd-cd")) cdShow(); }
+  }
   function mgCard(d, b) {
     const others = (d.business_ids || []).filter(x => x !== b.id), sl = slotsOf(d, b.id);
     const shared = others.length > 0 || M.share.has(d.id), menuOpen = M.menu === d.id || M.move === d.id;
     const typeSel = `<select class="pd-sel" onchange="PD._setType('${d.id}',this.value)" title="סיווג המסמך">${["general", "private", "both", "unknown", "other"].map(t => `<option value="${t}" ${d.doc_type === t ? "selected" : ""}>${TL[t]}</option>`).join("")}</select>`;
     const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
       : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
+    const sp = (d.specials || {})[b.id];
+    const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="מופיע באתר הסופי תחת הכותרת הזו">★ ${E(sp)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
+      : `<button class="pd-mini" onclick="PD._spEdit('${d.id}','${b.id}')" title="מסמך נוסף שיופיע באתר הסופי של החברה, תחת כותרת שתבחרו, בנוסף להת&quot;ע הראשיים">★ ראשי מיוחד</button>`;
     const shareBox = shared ? `<div class="pd-mg-sh">${others.map(o => `<div class="pd-co"><span>${E(bizName(o))}</span><button class="pd-link" onclick="PD._mgRemove('${d.id}','${o}')">הסר</button></div>`).join("")}
         ${M.move === d.id ? "" : `<input class="pd-in" placeholder="הוספת חברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','add',this.value)" autocomplete="off">`}</div>` : "";
     const moveBox = M.move === d.id ? `<div class="pd-mg-sh"><input class="pd-in" placeholder="העברה לחברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','move',this.value)" autocomplete="off"></div>` : "";
@@ -1622,7 +1639,7 @@
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
         <div class="pd-sub">${typeSel} ${fmtSize(d.size)} · ${metaHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
-        <div class="pd-btns">${linkBtns}</div>
+        <div class="pd-btns">${linkBtns}${spBtn}</div>
         <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(x.symbol || x.name)} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
         ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
         <details class="pd-menu" ${menuOpen ? "open" : ""} ontoggle="PD._menu('${d.id}',this.open)"><summary>⋯ עוד</summary>
@@ -1837,7 +1854,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => stage({ t: "ext", docId, hp, extId }), _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: spEdit, _spDel: spDel, _cdSpecial: (docId, bid) => { const d = S.byId.get(docId); if (!d) return; const t = prompt("כותרת המסמך באתר הסופי:", specialTitle(d)); if (t && t.trim()) stage({ t: "special", docId, bid, title: t.trim() }); }, _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,

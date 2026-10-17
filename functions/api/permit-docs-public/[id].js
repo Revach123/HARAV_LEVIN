@@ -4,7 +4,8 @@ export async function onRequestGet({ env, params }) {
   try {
     const row = await env.DB.prepare(`
       SELECT d.file_key, d.original_name FROM permit_docs d
-      WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id AND c.slot != '')`).bind(params.id).first();
+      WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id AND c.slot != '')`).bind(params.id).first()
+      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)`).bind(params.id).first().catch(() => null);
     if (!row) return new Response("not found", { status: 404 });
     const obj = await env.PERMITS.get(row.file_key);
     if (!obj) return new Response("not found", { status: 404 });
