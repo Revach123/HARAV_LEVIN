@@ -90,7 +90,8 @@ def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
     found, personal = set(), False
-    for seq in (ws, ws[::-1]):
+    rl = [w[::-1] for w in ws]      # טקסט שחולץ מ-PDF בסדר חזותי: האותיות בכל מילה הפוכות
+    for seq in (ws, ws[::-1], rl, rl[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
         if _has_personal_approval(seq):
