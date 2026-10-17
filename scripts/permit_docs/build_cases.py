@@ -40,7 +40,6 @@ FLAG_HE = {
     "name_differs": "שם הפוסט שונה משם החברה במסמך",
     "status": "זיהוי החברה לא חד-משמעי",
     "no_private_phrase": "בהיתר פרטי חסר משפט מפתח של נוסח פרטי",
-    "private_phrase_in_general": "בהיתר כללי יש משפט מפתח של נוסח פרטי",
     "no_text": "אין טקסט קריא במסמך",
 }
 
@@ -172,8 +171,6 @@ def main():
         tc = r.get("text_check") or ""
         if org == "p" and "אין נוסח פרטי" in tc:
             flag("no_private_phrase", "מיקום: רשימת הפרטי")
-        if org == "g" and "יש נוסח פרטי" in tc:
-            flag("private_phrase_in_general", "מיקום: רשימת הכללי")
         try:
             tchars = int(r.get("text_chars") or 0)
         except ValueError:
