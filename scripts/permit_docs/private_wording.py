@@ -81,7 +81,7 @@ def _has_personal_approval(seq):
     for i, w in enumerate(seq):
         if w == "מאשרים":
             win = _ext(seq[max(0, i - 8): i + 14])
-            if "בזאת" in win and "אישית" in win and ("עיסקא" in win or "היתר" in win) and ("המעוניין" in win or "התקשרות" in win):
+            if "בזאת" in win and ("אישית" in win or "פרטית" in win) and ("עיסקא" in win or "היתר" in win) and ("המעוניין" in win or "התקשרות" in win):
                 return True
     return False
 

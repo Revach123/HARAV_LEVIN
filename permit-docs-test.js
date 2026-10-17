@@ -369,7 +369,7 @@
       for (let i = 0; i < seq.length; i++) {
         if (seq[i] === "מאשרים") {        // "אנו מאשרים בזאת, התקשרות אישית לפי היתר עיסקא... עם כל המעוניין בכך": משפט מפתח נוסף: גם כללי וגם פרטי
           const w = new Set(seq.slice(Math.max(0, i - 8), i + 14)); for (const x of [...w]) if (x.length > 3) w.add(x.slice(1));
-          if (w.has("בזאת") && w.has("אישית") && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) pe = true;
+          if (w.has("בזאת") && (w.has("אישית") || w.has("פרטית")) && (w.has("עיסקא") || w.has("היתר")) && (w.has("המעוניין") || w.has("התקשרות"))) pe = true;
         }
         if (seq[i] === "המעוניין") {          // הסעיף "...היתר עיסקא... עם כל המעוניין בכך, באמצעות רישום..." גם כשהטקסט משובש
           const w5 = new Set(seq.slice(Math.max(0, i - 14), i + 16)); for (const x of [...w5]) if (x.length > 3) w5.add(x.slice(1));
