@@ -202,7 +202,6 @@
     const c = S.loaded && !S.err ? viewCounts() : null;
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
-      <button class="home-card" onclick="PD.openUpload({addCompany:true})"><span class="ico">➕</span><b>הוספת חברה חדשה ממסמך</b><span class="sub">העלאת מסמך, סריקה והצעת הוספה לפי הנתונים בו</span></button>
       <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>דשבורד לפי חברות</b><span class="sub">שיוכים קיימים לבדיקה · הצעות לשיוכים חדשים</span></button>
       <button class="home-card" onclick="PD.openUnassigned()"><span class="ico">🗂️</span><b>מסמכי היתר: שיוך ובדיקה${c ? " (" + (c.un + c.review) + ")" : ""}</b><span class="sub">${c ? `${c.un} לא משויכים · ${c.review} לבדיקה · ${c.other} אחרים` : "לא משויכים, לבדיקה, מסמכים אחרים"}</span></button>
       <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>

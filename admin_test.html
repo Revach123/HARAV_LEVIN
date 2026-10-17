@@ -1163,7 +1163,7 @@ function renderForm() {
             </div>
             <div id="lookup-out" style="text-align:right;">${lookupOutHtml()}</div>
           </div>
-          ${!isEdit ? `<button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>` : ""}
+          ${!isEdit ? `<div style="display:flex;flex-direction:column;gap:12px;"><button type="button" class="big-nochp" style="min-height:0;flex:1" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>${window.PD ? `<button type="button" class="big-nochp" style="min-height:0;flex:1" onclick="PD.openUpload({addCompany:true})"><span class="ico">📄</span>הוספה ע"י העלאת היתר עסקה<small>המערכת תסרוק את המסמך ותציע את החברה להוספה</small></button>` : ""}</div>` : ""}
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
