@@ -123,7 +123,7 @@
       (miss.length ? `<div class="pd-grp" style="color:#c0392b">לא במאגר שלנו (נמצאו ברשם)</div>` + miss.slice(0, 8).map(r => `
         <div class="pd-reg"><div><b>${E(r.name)}</b> <span class="pd-tag red">לא במאגר</span>${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div>
           <div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div>
-          <div class="pd-btns" style="margin-top:4px">${o.ext ? `<span class="pd-sub">שיוך כחברה שאינה במאגר:</span> ${["deleted", "merged", "not_in_db"].map(st => `<button class="pd-btn ${extGuess(r.status) === st ? "sel" : ""}" data-ext="${st}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">${EXT_HE[st]}</button>`).join("")}` : `<button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>`}
+          <div class="pd-btns" style="margin-top:4px">${o.ext ? `<button class="pd-btn primary" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="הסטטוס (${EXT_HE[extGuess(r.status)]}) נקבע לפי הרשם, ואפשר לשנות אותו ברשימת החברות שאינן במאגר">שיוך</button>` : `<button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>`}
             <button class="pd-btn" data-addreg="${E(r.id)}" data-defunct="${r.defunct ? 1 : 0}">הוספה למאגר…</button></div></div>`).join("") +
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
   }
@@ -689,7 +689,7 @@
       ${sugg.length ? `<div class="pd-sub" style="margin-top:8px">הצעות לפי סריקת המסמך:</div><div class="pd-ucs">${sugg.map(c => ucard(c.b, d, { why: c.why })).join("")}</div>` : `<div class="pd-sub" style="margin-top:8px">לא נמצאו הצעות לפי תוכן המסמך: חפשו ידנית.</div>`}
       <details style="margin-top:8px"><summary class="pd-sub" style="cursor:pointer">חברה שאינה במאגר: הוספה ידנית (בלי חיפוש ברשם)</summary>
         <div style="display:flex;gap:6px;margin-top:5px"><input class="pd-in" id="pd-ext-name" placeholder="שם החברה"><input class="pd-in" id="pd-ext-chp" placeholder="ח.פ." style="max-width:120px"></div>
-        <div class="pd-btns" style="margin-top:5px">${["deleted", "merged", "not_in_db"].map(st => `<button class="pd-btn" onclick="PD._unExtAdd('${st}')">שיוך כ"${EXT_HE[st]}"</button>`).join("")}</div></details>
+        <div class="pd-btns" style="margin-top:5px"><button class="pd-btn primary" onclick="PD._unExtAdd('not_in_db')" title="הסטטוס (מחוקה / מוזגה / אינה במאגר) אפשר לשנות ברשימת החברות שאינן במאגר">שיוך</button></div></details>
       <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
       <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
     const foot = $("pd-un-foot");
