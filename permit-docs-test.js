@@ -928,11 +928,15 @@
   const histSet = v => { try { localStorage.setItem(HK, JSON.stringify(v.slice(-40))); } catch { /* בלי אחסון */ } };
   const snapDoc = d => ({ id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], bonds: (d.bonds || []).map(x => ({ ...x })), business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
   function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
+  function lastRevItem() {          // האישור / שאלת המנהל האחרונים: גם אחרי רענון הדף (לפי הזמן ששמור בשרת)
+    let best = null; for (const x of (S.rev || new Map()).values()) if (!best || String(x.updated_at || "") > String(best.updated_at || "")) best = x;
+    return best;
+  }
   function undoRefresh() {
     const e = histGet().slice(-1)[0];
     const html = e ? `<button class="pd-link2" onclick="PD._undo()" title="${E(e.name)}: ${E(e.what)}. מחזיר את המסמך למצב שלפני">↩ ביטול אחרון</button>` : "";
     for (const id of ["pd-un-undo", "pd-mg-undo"]) { const el = $(id); if (el) el.innerHTML = html; }
-    const rv = CD.lastRev.slice(-1)[0], cu = $("pd-cd-undo");
+    const rv = lastRevItem(), cu = $("pd-cd-undo");
     if (cu) cu.innerHTML = (rv ? `<button class="pd-link2" onclick="PD._cdUnrev()" title="מחזיר את הפריט שאושר / הועבר לשאלת מנהל חזרה לרשימה (שינויים שבוצעו במסמכים מתבטלים בכפתור ביטול אחרון)">↩ ביטול ${rv.status === "question" ? "שאלת מנהל" : "אישור"} אחרון</button>` : "") + html;
   }
   async function refetchDocs(ids) {       // מסמכים אחרים שהקישור שלהם לרשימה הוחלף בצד השרת: טוענים מחדש כדי שהתצוגה לא תישאר ישנה
@@ -1114,7 +1118,7 @@
   async function setReview(key, status, note) {
     await api("/permit-review", "PUT", { key, status, note: note || "" });
     if (!S.rev) S.rev = new Map();
-    if (status) S.rev.set(key, { key, status, note: note || "" }); else S.rev.delete(key);
+    if (status) S.rev.set(key, { key, status, note: note || "", updated_at: new Date().toISOString().replace("T", " ").slice(0, 19) }); else S.rev.delete(key);
   }
   function originOps(bid) {          // השיוך המקורי: המסמך שבפוסט של החברה, ברשימה הכללית / הפרטית שבה הופיע
     const b = bizById(bid); if (!b) return [];
@@ -1144,8 +1148,10 @@
     delete CD.pend[k]; CD.curBiz = ""; cdShow();
   }
   async function cdUnrev() {
-    const r = CD.lastRev.pop(); if (!r) return;
-    try { await setReview(r.key, ""); } catch (e) { CD.lastRev.push(r); alert("הביטול נכשל: " + e.message); return; }
+    const it = lastRevItem(); if (!it) return;
+    const r = { key: it.key, status: it.status };
+    try { await setReview(r.key, ""); } catch (e) { alert("הביטול נכשל: " + e.message); return; }
+    CD.lastRev = CD.lastRev.filter(x => x.key !== r.key);
     CD.curBiz = r.key.startsWith("post:") ? r.key : r.key.split(":").slice(1).join(":"); CD.mode = r.key.startsWith("post:") ? "review" : r.key.split(":")[0]; CD.i = 0; CD.resume = null;
     cdShow();
   }
