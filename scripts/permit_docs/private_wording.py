@@ -96,6 +96,26 @@ def _has_personal_alt(seq):
     return False
 
 
+def _has_company_wants_personal(seq):
+    """"הואיל והחברה מעוניינת להתקשר בהיתר עיסקא זה גם באופן אישי": נוסח של שטר רישום חברה ("גם פרטי")."""
+    for i, w in enumerate(seq):
+        if w == "מעוניינת":
+            win = _ext(seq[max(0, i - 4): i + 14])
+            if ("אישי" in win or "אישית" in win) and ("עיסקא" in win or "היתר" in win):
+                return True
+    return False
+
+
+def _has_deed_title(seq):
+    """כותרת "שטר רישום חברה להיתר עיסקא פרטי"."""
+    for i, w in enumerate(seq):
+        if w == "שטר":
+            win = _ext(seq[i: i + 9])
+            if "רישום" in win and ("חברה" in win or "לחברה" in win) and ("פרטי" in win or "פרטית" in win) and ("עיסקא" in win or "היתר" in win):
+                return True
+    return False
+
+
 def phrase_kind(text):
     """-> "משולב" (כללי ופרטי ביחד) / "רק פרטי" / "" לפי משפטי המפתח; משולב קודם."""
     ws = [x for x in (_norm_word(w) for w in text.split()) if x]
@@ -104,8 +124,10 @@ def phrase_kind(text):
     for seq in (ws, ws[::-1], rl, rl[::-1]):
         if _has_approves_here(seq):
             return KIND_COMBINED
-        if _has_personal_approval(seq) or _has_personal_alt(seq):
+        if _has_personal_approval(seq) or _has_personal_alt(seq) or _has_company_wants_personal(seq):
             personal = True
+        if _has_deed_title(seq):
+            found.add(KIND_PRIVATE_ONLY)
         for i, w in enumerate(seq):
             if w in ("פרטי", "עיסקא", "התקשרות", "המעוניין", "הסכמתה"):
                 win = seq[max(0, i - PHRASE_WIN): i + PHRASE_WIN]

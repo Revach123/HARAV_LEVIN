@@ -206,7 +206,7 @@ def main():
         sug = sorted(([b, round(v[0], 1), v[1]] for b, v in d["sug"].items()), key=lambda x: -x[1])[:8]
         titles = list(dict.fromkeys(d["titles"]))
         intel[sha] = {"o": o, "t": titles[:3], "tb": d["tbids"][:4], "f": [{"c": c, "d": "; ".join(v)[:200]} for c, v in d["flags"].items()],
-                      "s": [{"b": b, "s": s_, "w": w[:3]} for b, s_, w in sug[:6]], "m": d["manual"][:6], "xo": d["xo"][:4]}
+                      "s": [{"b": b, "s": s_, "w": w[:3]} for b, s_, w in sug[:6]], "m": d["manual"][:6], "xo": d["xo"][:20]}
         files = " | ".join(dict.fromkeys(d["files"]))
         if o != "x":
             out1.append([sha[:12], files, " ".join(d["aids"]), ORIGIN_HE[o], " | ".join(titles), " | ".join(name_of(b) for b in d["tbids"]),
