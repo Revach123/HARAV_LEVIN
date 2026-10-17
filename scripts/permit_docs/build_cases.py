@@ -28,6 +28,7 @@ except ImportError:
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import match_pdfs as m  # noqa: E402
+from private_wording import phrase_kind  # noqa: E402
 from coverage_report import file_hashes  # noqa: E402
 from import_to_site import call  # noqa: E402
 
@@ -65,10 +66,10 @@ def doc_text(aid, path, ocr_dirs):
                 t += "\n" + open(p, encoding="utf-8").read()
             except OSError:
                 pass
-    if len(t.strip()) < 80 and path and os.path.exists(path):
+    if path and os.path.exists(path):      # שכבת הטקסט של ה-PDF תמיד (עד 30 עמודים), בנוסף ל-OCR שמכסה רק את העמודים הראשונים
         try:
             pdf = fitz.open(path)
-            t += "\n".join(pdf[i].get_text() or "" for i in range(min(len(pdf), 12)))
+            t += "\n" + "\n".join(pdf[i].get_text() or "" for i in range(min(len(pdf), 30)))
             pdf.close()
         except Exception:  # noqa: BLE001
             pass
@@ -172,8 +173,6 @@ def main():
         if r.get("status") in ("סתירה", "לא זוהה") and org != "x":
             flag("status", r.get("status") + (" · " + r["review_reasons"][:120] if r.get("review_reasons") else ""))
         tc = r.get("text_check") or ""
-        if org == "p" and "אין נוסח פרטי" in tc:
-            flag("no_private_phrase", "מיקום: רשימת הפרטי")
         try:
             tchars = int(r.get("text_chars") or 0)
         except ValueError:
@@ -183,8 +182,10 @@ def main():
     # ---- בדיקת מספרי ח.פ. בטקסט: ספרת ביקורת שגויה / דומה לח.פ. של החברה ----
     for n, d in enumerate(docs.values(), 1):
         tchps = [str(by_id[b].get("chp_number") or "").zfill(9) for b in d["tbids"] if by_id[b].get("chp_number")]
+        text = doc_text(d["aids"][0], d["path"], ocr_dirs) if d["origins"] - {"x"} else ""
+        if "p" in d["origins"] and len(text.strip()) >= 100 and not phrase_kind(text):      # רשימת הפרטי: אין משפט מפתח בכל הטקסט (כולל אותיות הפוכות ונוסחים נוספים)
+            d["flags"].setdefault("no_private_phrase", []).append("מיקום: רשימת הפרטי")
         if d["origins"] - {"x"} and tchps:
-            text = doc_text(d["aids"][0], d["path"], ocr_dirs)
             for h in dict.fromkeys(re.findall(r"(?<!\d)(5\d{8})(?!\d)", text.replace(",", ""))):
                 if hp_ok(h):
                     continue
