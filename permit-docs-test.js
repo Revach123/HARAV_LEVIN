@@ -986,20 +986,23 @@
     for (const d of S.docs) {
       const it = intelOf(d); if (!["g", "p", "gp"].includes(it.o)) continue;
       const fl = (it.f || []).filter(f => REVIEW_CODES.includes(f.c)); if (!fl.length) continue;
-      const owners = (it.tb || []).length ? it.tb : (d.business_ids || []);      // בלי חברה לפי כותרת הפוסט: החברות שהמסמך משויך אליהן
-      for (const bid of owners) for (const f of fl) add(bid, d, f);
+      for (const bid of it.tb || []) for (const f of fl) add(bid, d, f);
     }
     S._fm = m; S._fmFor = S.docs; return m;
   }
   const flagsOfCompany = bid => flagMap().get(bid) || [];
+  const postDocs = () => S.docs.filter(d => { const it = intelOf(d); return ["g", "p", "gp"].includes(it.o) && !(it.tb || []).length && isUnassigned(d) && d.doc_type !== "other"; });      // פוסטים מהאתר הישן שכותרתם אינה מזוהה במאגר ועוד לא שויכו
+  const postTitle = d => (intelOf(d).t || [])[0] || d.source_title || d.original_name || "";
+  const entName = e => e.b.post ? postTitle(e.b.post) : displayName(e.b);
   function cdCompanies() {
     const f = CD.filter.trim().toLowerCase(), seen = new Map();
     const take = (bid, n) => { const b = bizById(bid); if (!b || INACTIVE_ST.test(b.registry_status || "")) return; const e = seen.get(bid) || { b, n: 0 }; e.n += n; seen.set(bid, e); };
     if (CD.mode === "review") { for (const b of bizList()) { const n = flagsOfCompany(b.id).length; if (n) take(b.id, n); } }
     else if (CD.mode === "manage") { for (const b of bizList()) { const f = cfeat(b, null); if (f.total && f.have < f.total) take(b.id, f.total - f.have); } }
     else { const cand = new Map(); for (const d of S.docs) { if (d.doc_type === "other") continue; for (const x of intelOf(d).s || []) if (!(d.business_ids || []).includes(x.b) && (x.s >= 3.5 || isUnassigned(d) || (intelOf(d).m || []).includes(x.b))) cand.set(x.b, (cand.get(x.b) || 0) + 1); } for (const [bid, n] of cand) take(bid, n); }
-    return [...seen.values()].filter(e => !CD.skipped.has(e.b.id) && (!f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f)))
-      .sort((a, b) => String(displayName(a.b)).localeCompare(String(displayName(b.b)), "he"));
+    const out = [...seen.values()].sort((a, b) => String(displayName(a.b)).localeCompare(String(displayName(b.b)), "he"));
+    if (CD.mode === "review") out.push(...postDocs().map(d => ({ b: { id: "post:" + d.id, post: d }, n: 1 })).sort((a, b) => entName(a).localeCompare(entName(b), "he")));      // בסוף: פוסטים שכותרתם לא מזוהה
+    return out.filter(e => !CD.skipped.has(e.b.id) && (!f || `${entName(e)} ${e.b.chp_number || ""}`.toLowerCase().includes(f)));
   }
   const cdCount = m => { const old = CD.mode; CD.mode = m; const sk = CD.skipped, fl = CD.filter; CD.skipped = new Set(); CD.filter = ""; const n = cdCompanies().length; CD.mode = old; CD.skipped = sk; CD.filter = fl; return n; };
   const cdPosKey = () => "pd_cd_pos_" + CD.mode;
@@ -1043,6 +1046,7 @@
     const e = list[CD.i];
     if (!e) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">${CD.mode === "review" ? "אין מסמכים לבדיקה 🎉" : CD.mode === "manage" ? "לכל החברות יש שיוך מסודר 🎉" : "אין הצעות לשיוכים חדשים"}</div>`; $("pd-cd-view").innerHTML = ""; $("pd-cd-vhead").innerHTML = ""; CD.curBiz = ""; return; }
     const b = e.b;
+    if (b.post) return cdShowPost(b);
     if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: b.id, i: CD.i })); } catch { /* בלי אחסון */ } }
     if (CD.curBiz !== b.id) { CD.curBiz = b.id; CD.selDoc = ""; }
     const f = cfeat(b, null), need = needOf(b), reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
@@ -1053,12 +1057,29 @@
       <div class="pd-uc is-main-none" style="border-width:2px"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b style="font-size:15px">${displayName(b, true)}</b>
         <div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
         <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex">נוספים ${f.ex}</span>${flags.length ? `<span class="pd-feat part">⚠ ${flags.length} ממצאים</span>` : ""}${sug.length ? `<span class="pd-feat ex">${sug.length} הצעות</span>` : ""}</div></div></div>
-      ${flags.length ? `<h4>ממצאים לבדיקה</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">⚠ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${(intelOf(x.d).t || []).length ? " <span class='pd-sub'>(פוסט: " + E(intelOf(x.d).t[0]) + ")</span>" : ""}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
+      ${flags.length ? `<h4>❓ שאלות על השיוך המקורי (לפי פוסטים מהאתר הישן)</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">❓ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${(intelOf(x.d).t || []).length ? " <span class='pd-sub'>(פוסט: " + E(intelOf(x.d).t[0]) + ")</span>" : ""}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
       <h4>מסמכי החברה (${docs.length})</h4>
       ${docs.length ? `<div class="pd-cdgrid">${[...slotsFirst, ...ex].map(d => cdCard(d, b.id)).join("")}</div>` : `<div class="pd-mg-empty need">⚠ אין מסמכים לחברה</div>`}
       <h4>הצעות למסמכים נוספים (${sug.length})</h4>
       ${sug.length ? `<div class="pd-cdgrid">${sug.slice(0, 12).map(x => cdCard(x.d, b.id, { sug: true, s: x.s, w: x.w })).join("")}</div>` : `<div class="pd-sub">אין הצעות לחברה הזו.</div>`}`;
     side.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) img.src = u; }));
+    cdViewer();
+  }
+  function cdShowPost(pb) {          // פוסט מהאתר הישן שכותרתו אינה מזוהה במאגר: שם הפוסט, השאלה על השיוך המקורי, והצעות שיוך
+    const d = pb.post, it = intelOf(d), side = $("pd-cd-side");
+    if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: pb.id, i: CD.i })); } catch { /* בלי אחסון */ } }
+    if (CD.curBiz !== pb.id) { CD.curBiz = pb.id; CD.selDoc = d.id; }
+    const sugs = (it.s || []).map(x => ({ x, b: bizById(x.b) })).filter(y => y.b);
+    const fl = (it.f || []).filter(f => f.c !== "private_phrase_in_general");
+    side.innerHTML = `
+      <div class="pd-uc" style="border-width:2px"><div class="pd-uc-top" style="cursor:default"><div class="pd-sub">פוסט באתר הישן · ${E(ORIG_HE[it.o] || "")}</div><b style="font-size:15px">${E(postTitle(d))}</b>
+        <div class="pd-ucf"><span class="pd-feat part">❓ כותרת הפוסט אינה מזוהה במאגר</span></div></div></div>
+      <div class="pd-warnbox" style="margin-top:8px">❓ <b>שאלה על השיוך המקורי:</b> לאיזו חברה במאגר שייך הפוסט הזה? המסמך עדיין לא משויך לאף חברה.</div>
+      ${fl.map(f => `<div class="pd-warnbox">⚠ ${E(FLAG_HE[f.c] || f.c)}${f.d ? " <span class='pd-sub'>" + E(f.d) + "</span>" : ""}</div>`).join("")}
+      <h4>הצעות לשיוך (${sugs.length})</h4>
+      ${sugs.length ? sugs.map(({ x, b }) => { const need = needOf(b), f = cfeat(b, d);
+        return `<div class="pd-uc"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}${E((x.w || []).join(", "))}</div><div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span></div></div>
+          <div class="pd-uc-act"><button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','general')">הת"ע כללי</button>` : ""}</div></div>`; }).join("") : `<div class="pd-sub">לא נמצאה הצעה לפי תוכן המסמך. אפשר לשייך דרך "מסמכים לא משויכים".</div>`}`;
     cdViewer();
   }
   async function cdViewer() {
