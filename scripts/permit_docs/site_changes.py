@@ -61,7 +61,7 @@ def main():
     def when(d):
         u = str(d.get("updated_at") or "")
         return "לא ידוע (הרצת סקריפט)" if minute[u[:16]] >= a.bulk else u
-    rows, cnt = [], collections.Counter()
+    rows, cnt, tp, notes = [], collections.Counter(), collections.Counter(), collections.Counter()
     def add(d, kind, detail):
         cnt[kind] += 1
         rows.append([d.get("original_name", ""), d["id"], kind, detail, when(d)])
@@ -74,17 +74,23 @@ def main():
         base = set(it.get("tb") or []) | local.get(d.get("sha256"), set())
         have = set(d.get("business_ids") or [])
         label = lambda ids: "; ".join(sorted(name_of(i) for i in ids))  # noqa: E731
-        if have - base:
-            add(d, "שיוך שנוסף ידנית", label(have - base))
+        explained = {x["b"]: ", ".join(x.get("w") or []) for x in (it.get("s") or []) if any(k in " ".join(x.get("w") or []) for k in ("ח.פ.", "שם החברה", "זיהוי לפי תוכן"))}
+        extra = have - base
+        if extra & set(explained):
+            add(d, "שיוך שנוסף, מוסבר לפי תוכן המסמך (ח.פ. / שם בתוך המסמך)", "; ".join(f"{name_of(i)} ({explained[i]})" for i in sorted(extra & set(explained))))
+        if extra - set(explained):
+            add(d, "שיוך שנוסף ידנית (בלי הסבר מתוכן המסמך)", label(extra - set(explained)))
         if base - have and (it.get("o") in ("g", "p", "gp") or local.get(d.get("sha256"))):
             add(d, "שיוך מהפוסט / מהבדיקה המקומית שלא קיים באתר (הוסר או לא נקלט)", label(base - have))
         if d.get("doc_type") == "other":
             add(d, "סומן 'לא קשור / לא היתר'", d.get("note") or "")
         o = it.get("o")
         if o in ORIG_TYPE and d.get("doc_type") not in (ORIG_TYPE[o], "both", "other") and d.get("doc_type") != "unknown":
+            tp[(o, d.get("doc_type"))] += 1
             add(d, "סיווג שונה מהרשימה שבה הופיע", f"היה ברשימת {'הכללי' if o == 'g' else 'הפרטי'}, מסווג כעת: {TL.get(d.get('doc_type'), d.get('doc_type'))}")
         if d.get("note") and d.get("doc_type") != "other":
-            add(d, "הערה ידנית", str(d["note"])[:150])
+            notes[str(d["note"])[:14]] += 1
+            add(d, "הערה", str(d["note"])[:150])
         if d.get("ext_ids"):
             add(d, "משויך לחברה שאינה במאגר", "; ".join(ext[i]["name"] for i in d["ext_ids"] if i in ext))
         if d.get("bonds"):
@@ -98,6 +104,8 @@ def main():
     print(f"מסמכים באתר: {len(docs)}")
     for k, v in cnt.most_common():
         print(f"  {k}: {v}")
+    print("סיווג שונה מהרשימה (מקור ← סיווג נוכחי): " + ", ".join(f"{'כללי' if k[0] == 'g' else 'פרטי'}←{TL.get(k[1], k[1])}: {v}" for k, v in tp.most_common(6)))
+    print("תחילת ההערות השכיחות: " + " | ".join(f"{k.strip()} ({v})" for k, v in notes.most_common(6)))
     print(f"נכתב: {a.out}")
     return 0
 
