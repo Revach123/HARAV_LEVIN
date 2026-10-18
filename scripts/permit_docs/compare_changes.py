@@ -17,6 +17,7 @@ import getpass
 import json
 import os
 import sys
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import match_pdfs as m  # noqa: E402
@@ -34,6 +35,8 @@ def main():
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--password-file", default="admin_password.txt")
     ap.add_argument("--out", default="השוואת_שינויים.csv")
+    ap.add_argument("--since", default="", help="נקודת הזמן שמבדילה בין שינויים ישנים לחדשים (שעון UTC, למשל '2026-10-17 20:00'); ברירת מחדל: שעה לפני האישור הראשון בדשבורד החדש")
+    ap.add_argument("--tz-offset", type=float, default=3, help="הפרש שעות בין השעה המקומית ל-UTC (קיץ בישראל: 3, חורף: 2); זמני ההחלטות המקומיות נשמרו בשעון המקומי")
     a = ap.parse_args()
 
     biz = json.load(open(a.businesses, encoding="utf-8"))
@@ -65,13 +68,24 @@ def main():
     except Exception:  # noqa: BLE001
         rev = {}
     site = {d["sha256"]: d for d in docs}
+    since = a.since.strip()
+    if not since:
+        ts = sorted(x.get("updated_at", "") for x in rev.values() if x.get("updated_at"))
+        since = (datetime.strptime(ts[0], "%Y-%m-%d %H:%M:%S") - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S") if ts else "9999"
+    print(f"נקודת הזמן (UTC): {since}  (שינוי באתר אחריה = 'חדש', לפניה = 'ישן')")
+
+    def loc_utc(t):          # זמן החלטה מקומית -> UTC, כדי להשוות לזמני האתר
+        try:
+            return (datetime.strptime(t[:19], "%Y-%m-%d %H:%M:%S") - timedelta(hours=a.tz_offset)).strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return ""
 
     rows, cnt = [], collections.Counter()
     for sha, e in local.items():
         d = site.get(sha)
         if not d:
             if e["cos"]:
-                rows.append([sorted(e["files"])[0] if e["files"] else sha[:12], "", "מסמך שנמחק מהאתר", "; ".join(name_of(i) for i in e["cos"]), "", e["time"]])
+                rows.append([sorted(e["files"])[0] if e["files"] else sha[:12], "", "מסמך שנמחק מהאתר", "; ".join(name_of(i) for i in e["cos"]), "", e["time"], "", "", ""])
                 cnt["מסמך שנמחק מהאתר"] += 1
             continue
         site_cos = set(d.get("business_ids") or [])
@@ -85,17 +99,24 @@ def main():
             if key in rev:
                 status.append("באתר: " + ("שאלת מנהל" if rev[key]["status"] == "question" else "אושר"))
         label = lambda ids: "; ".join(name_of(i) for i in sorted(ids, key=name_of))  # noqa: E731
+        upd, dec = str(d.get("updated_at") or ""), loc_utc(e["time"])
+        when = "שינוי חדש באתר (אחרי הנקודה)" if upd >= since else "שינוי ישן באתר (לפני הנקודה)"
+        later = "האתר עודכן אחרי ההחלטה המקומית" if (upd and dec and upd > dec) else "ההחלטה המקומית חדשה מהאתר (לא נקלטה?)"
         if only_local:
-            cnt["בהחלטה מקומית בלבד"] += 1
-            rows.append([sorted(e["files"])[0] if e["files"] else d.get("original_name", ""), d["id"], "בהחלטה מקומית בלבד (לא משויך באתר)", label(only_local), label(site_cos), e["time"], " | ".join(status)])
+            cnt["בהחלטה מקומית בלבד: " + later] += 1
+            rows.append([sorted(e["files"])[0] if e["files"] else d.get("original_name", ""), d["id"], "בהחלטה מקומית בלבד (לא משויך באתר)", label(only_local), label(site_cos), e["time"], upd, later + " · " + when, " | ".join(status)])
         if only_site:
-            cnt["באתר בלבד"] += 1
-            rows.append([d.get("original_name", ""), d["id"], "באתר בלבד (לא בהחלטה המקומית)", label(only_site), label(e["cos"]), e["time"], " | ".join(status)])
+            cnt["באתר בלבד: " + when] += 1
+            rows.append([d.get("original_name", ""), d["id"], "באתר בלבד (לא בהחלטה המקומית)", label(only_site), label(e["cos"]), e["time"], upd, later + " · " + when, " | ".join(status)])
         if not only_local and not only_site:
             cnt["זהה"] += 1
+    old_site = [d for d in docs if d.get("sha256") not in local and (d.get("business_ids") or d.get("doc_type") == "other") and str(d.get("updated_at") or "") < since and str(d.get("updated_at") or "") > str(d.get("created_at") or "")]
+    for d in old_site:
+        rows.append([d.get("original_name", ""), d["id"], "שינוי ישן באתר, בלי החלטה מקומית", "; ".join(name_of(i) for i in d.get("business_ids") or []) + (" [לא קשור]" if d.get("doc_type") == "other" else ""), "", "", d.get("updated_at", ""), "", ""])
+    print(f"מסמכים ששונו באתר לפני הנקודה, בלי החלטה מקומית: {len(old_site)} (נכנסו לקובץ)")
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["קובץ", "מזהה באתר", "סוג הבדל", "חברות בהבדל", "חברות בצד השני", "זמן החלטה מקומית", "הערות מהאתר"])
+        w.writerow(["קובץ", "מזהה באתר", "סוג הבדל", "חברות בהבדל", "חברות בצד השני", "זמן החלטה מקומית", "עדכון אחרון באתר (UTC)", "מי עדכן אחרון / מתי", "הערות מהאתר"])
         w.writerows(rows)
     print(f"החלטות מקומיות שנבדקו: {len(local)}")
     for k, v in cnt.most_common():
