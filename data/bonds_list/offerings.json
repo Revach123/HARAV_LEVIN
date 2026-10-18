@@ -65,27 +65,6 @@
    "chp_number": "520033309"
   },
   {
-   "id": 10369,
-   "maya_report_id": 1775421,
-   "company_name": "קרדן נדל\"ן",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775421",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "520041005"
-  },
-  {
    "id": 10379,
    "maya_report_id": 1776611,
    "company_name": "מגה אור",
@@ -703,6 +682,29 @@
    ],
    "carried": true,
    "last_seen": "2026-10-15"
+  },
+  {
+   "chp_number": "520041005",
+   "company_name": "קרדן נדל\"ן",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10369,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775421",
+   "maya_report_id": 1775421,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-18"
   },
   {
    "chp_number": "515434074",
