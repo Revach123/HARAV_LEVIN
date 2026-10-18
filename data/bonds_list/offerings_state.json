@@ -885,6 +885,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-18"
   },
+  "U10380": {
+   "data": {
+    "chp_number": "515434074",
+    "company_name": "מגוריט",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10380,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1776659",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
+    "maya_report_id": 1776659,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilBBB+",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-18"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",

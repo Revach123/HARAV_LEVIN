@@ -197,14 +197,14 @@
    "chp_number": "1811308"
   },
   {
-   "id": 10376,
-   "maya_report_id": 1776338,
+   "id": 10380,
+   "maya_report_id": 1776659,
    "company_name": "מגוריט",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1776659",
    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
    "link_presentation": null,
    "securities": [
@@ -749,6 +749,29 @@
    ],
    "carried": true,
    "last_seen": "2026-10-15"
+  },
+  {
+   "chp_number": "515434074",
+   "company_name": "מגוריט",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10376,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
+   "maya_report_id": 1776338,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilBBB+",
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-18"
   }
  ],
  "open": [

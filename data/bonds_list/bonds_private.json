@@ -1,6 +1,6 @@
 {
  "updated": "2026-10-18",
- "count": 693,
+ "count": 694,
  "columns": [
   "security_id",
   "security_name",
@@ -10816,6 +10816,32 @@
    "first_seen": "2026-10-11",
    "midroog_rating": "",
    "maalot_rating": "",
+   "ytm_gross": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - מגוריט ישראל בע\"מ (הנפקה עתידית)",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "מגוריט ישראל בע\"מ",
+   "company": "מגוריט ישראל בע\"מ",
+   "chp_number": "515434074",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-10-18",
+   "midroog_rating": "",
+   "maalot_rating": "ilBBB+",
    "ytm_gross": ""
   },
   {
