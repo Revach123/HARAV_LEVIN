@@ -13,7 +13,7 @@
 
   python ink_ocr.py [--limit 10] [--only-bottom] [--workers 2]
 דרישות:  pip install opencv-python-headless numpy
-פלט: text_index\\permit_text.db (טבלת ink_hits) + text_index\\ink\\<sha>_p<N>_<K>.png + text_index\\ink_סיכום.csv
+פלט: text_index\\permit_ink.db (טבלאות ink_hits, ink_done; קובץ נפרד, אפשר להריץ במקביל ל-build_text_index.py) + text_index\\ink\\<sha>_p<N>_<K>.png + text_index\\ink_סיכום.csv
 """
 import argparse
 import collections
@@ -44,9 +44,12 @@ from ocr_pdfs import TESS_DEFAULT  # noqa: E402
 
 DIGITS = re.compile(r"\d{8,10}")
 TESS = [TESS_DEFAULT if os.name == "nt" else "tesseract"]
+DEADLINE = [0.0]          # זמן סיום מותר לעמוד הנוכחי; אחריו כל קריאת OCR מחזירה ריק
 
 
 def ocr(img, psm=6, digits=False, lang="heb+eng"):
+    if time.time() > DEADLINE[0]:
+        return ""
     with tempfile.TemporaryDirectory() as td:
         p = os.path.join(td, "x.png")
         cv2.imwrite(p, img)
@@ -54,7 +57,7 @@ def ocr(img, psm=6, digits=False, lang="heb+eng"):
         if digits:
             cmd += ["-c", "tessedit_char_whitelist=0123456789"]
         try:
-            return subprocess.run(cmd, capture_output=True, timeout=30).stdout.decode("utf-8", "replace")
+            return subprocess.run(cmd, capture_output=True, timeout=max(5, min(30, DEADLINE[0] - time.time()))).stdout.decode("utf-8", "replace")
         except Exception:  # noqa: BLE001
             return ""
 
@@ -142,6 +145,16 @@ def tilt_readings(iso):
     return outs
 
 
+def gray_tilts(crop):
+    """חותמת מוטה על טקסט: קריאת ספרות מהתמונה המקורית (לא מהמסכה, שמפרקת קווים), בהגדלה ובזוויות עדינות."""
+    g = cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) if crop.ndim == 3 else crop
+    big = cv2.resize(g, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC)
+    outs = []
+    for ang in (0, -5, 5, -10, 10, -15, 15, -20, 20, -3, 3, -8, 8):
+        outs.append(ocr(rot(big, ang) if ang else big, 11, digits=True))
+    return outs
+
+
 def tsv_mask(gray, a_dpi):
     """עמוד סרוק (בלי שכבת טקסט): אזורי המילים המודפסות לפי OCR, כדי שלא יסומנו כ"כתב יד"."""
     mask = np.zeros(gray.shape[:2], np.uint8)
@@ -149,7 +162,7 @@ def tsv_mask(gray, a_dpi):
         p = os.path.join(td, "x.png")
         cv2.imwrite(p, gray)
         try:
-            out = subprocess.run([TESS[0], p, "stdout", "-l", "heb+eng", "--psm", "6", "tsv"], capture_output=True, timeout=180).stdout.decode("utf-8", "replace")
+            out = subprocess.run([TESS[0], p, "stdout", "-l", "heb+eng", "--psm", "6", "tsv"], capture_output=True, timeout=max(5, min(60, DEADLINE[0] - time.time()))).stdout.decode("utf-8", "replace")
         except Exception:  # noqa: BLE001
             return mask
     for ln in out.split("\n")[1:]:
@@ -179,6 +192,7 @@ def near_valid(d, chps):
 
 def page_hits(sha, page, pno, a, chps, outdir):
     t0 = time.time()
+    DEADLINE[0] = t0 + a.page_seconds
     img = render(page, a.dpi)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     H = img.shape[0]
@@ -213,17 +227,21 @@ def page_hits(sha, page, pno, a, chps, outdir):
     # 1) חותמות / עט צבעוני
     color = ((hsv[:, :, 1] > 70) & (hsv[:, :, 2] > 40)).astype(np.uint8) * 255
     color = cv2.morphologyEx(color, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
-    for (x, y, w, h) in blobs(color, 35, 25, 90, 40, 1500, 1200):
+    for (x, y, w, h) in sorted(blobs(color, 35, 25, 90, 40, 1500, 1200), key=lambda b: -b[3]):      # כתמים עבים (חותמות) קודם
         if a.only_bottom and y < H * 0.5:
             continue
         pad = 12
         crop = img[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         mask = color[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         iso = cv2.bitwise_not(mask)             # דיו צבעוני בלבד, שחור על לבן: בלי הטקסט המודפס שמתחת
-        if time.time() - t0 > a.page_seconds:
+        if time.time() > DEADLINE[0]:
             print(f"    {sha[:12]} עמוד {pno}: חרג מזמן העמוד ({a.page_seconds} שניות), ממשיך לעמוד הבא", flush=True)
             return hits
-        add("חותמת / עט צבעוני", crop, [lambda: readings(iso), lambda: tilt_readings(iso), lambda: readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY))], (x, y, w, h))
+        if h < 80:          # כתם דק: שורת טקסט בסריקה צבעונית (לא חותמת), קריאת ספרות אחת מספיקה
+            stages = [lambda: [ocr(iso, 7, digits=True)]]
+        else:
+            stages = [lambda: readings(iso), lambda: gray_tilts(crop), lambda: tilt_readings(iso), lambda: readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY))]
+        add("חותמת / עט צבעוני", crop, stages, (x, y, w, h))
     # 2) כתב יד בדיו כהה, מחוץ לטקסט המודפס
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ink = (gray < 150).astype(np.uint8) * 255
@@ -261,6 +279,21 @@ def work(job):
     return sha, uniq, ""
 
 
+def doc_files(out):
+    """שמות הקבצים לכל מסמך, מקריאה בלבד ממאגר הטקסט (ייתכן שהוא בבנייה במקביל: אם נעול, משתמשים בקוד המסמך)."""
+    path = os.path.join(out, "permit_text.db")
+    if not os.path.exists(path):
+        return {}
+    try:
+        t = sqlite3.connect("file:" + os.path.abspath(path).replace("\\", "/") + "?mode=ro", uri=True, timeout=5)
+        try:
+            return dict(t.execute("SELECT sha, files FROM docs"))
+        finally:
+            t.close()
+    except sqlite3.Error:
+        return {}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--final", default="סופי_מאוחד.csv")
@@ -290,16 +323,13 @@ def main():
         if sha and p and os.path.exists(p):
             docs.setdefault(sha, p)
     chps = {str(b.get("chp_number") or "").zfill(9) for b in json.load(open(a.businesses, encoding="utf-8")) if b.get("chp_number")} if os.path.exists(a.businesses) else set()
-    db = sqlite3.connect(os.path.join(a.out, "permit_text.db"))
+    db = sqlite3.connect(os.path.join(a.out, "permit_ink.db"), timeout=60)
     db.execute("CREATE TABLE IF NOT EXISTS ink_hits (sha TEXT, page INT, value TEXT, status TEXT, kind TEXT, raw TEXT, crop TEXT, in_db INT)")
     db.execute("CREATE TABLE IF NOT EXISTS ink_done (sha TEXT PRIMARY KEY)")
     done = {r[0] for r in db.execute("SELECT sha FROM ink_done")}
     if a.only:
-        try:
-            files = dict(db.execute("SELECT sha, files FROM docs"))
-        except sqlite3.OperationalError:
-            files = {}
-        want = {sha for sha in docs if a.only.lower() in files.get(sha, "").lower()}
+        files = doc_files(a.out)
+        want = {sha for sha, pth in docs.items() if a.only.lower() in (files.get(sha, "") + " " + os.path.basename(pth)).lower()}
         for sha in want:
             db.execute("DELETE FROM ink_hits WHERE sha=?", (sha,))
         done -= want
@@ -320,11 +350,7 @@ def main():
                 db.commit()
                 print(f"  {n}/{len(jobs)} (נמצאו {total})", flush=True)
     db.commit()
-    files = {}
-    try:
-        files = dict(db.execute("SELECT sha, files FROM docs"))
-    except sqlite3.OperationalError:
-        pass
+    files = doc_files(a.out)
     with open(os.path.join(a.out, "ink_סיכום.csv"), "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["קבצים", "עמוד", "ערך", "סטטוס", "סוג", "נקרא כ", "תמונה", "במאגר"])
