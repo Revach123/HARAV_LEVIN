@@ -93,6 +93,21 @@ def main():
             add(d, "הערה", str(d["note"])[:150])
         if d.get("ext_ids"):
             add(d, "משויך לחברה שאינה במאגר", "; ".join(ext[i]["name"] for i in d["ext_ids"] if i in ext))
+        # ---- סתירות פנימיות באתר (בין שינויים שונים) ----
+        slots = d.get("slots") or {}
+        if d.get("doc_type") == "other" and (have or d.get("ext_ids") or any(slots.values())):
+            add(d, "סתירה: סומן 'לא קשור' אבל משויך לחברה", label(have) or "חברה שאינה במאגר")
+        for bid, sl in slots.items():
+            vis = (by_id.get(bid) or {}).get("visibility") or ""
+            parts = [x for x in str(sl).split(",") if x]
+            if "private" in parts and vis == "":
+                add(d, "סתירה: הת\"ע פרטי לחברה שרשומה 'רק כללי'", name_of(bid))
+            if "general" in parts and vis == "רק פרטי":
+                add(d, "סתירה: הת\"ע כללי לחברה שרשומה 'רק פרטי'", name_of(bid))
+            if "private" in parts and d.get("doc_type") == "general":
+                add(d, "סתירה: סלוט פרטי למסמך שמסווג 'כללי'", name_of(bid))
+            if "general" in parts and d.get("doc_type") == "private":
+                add(d, "סתירה: סלוט כללי למסמך שמסווג 'רק פרטי'", name_of(bid))
         if d.get("bonds"):
             add(d, 'משויך לאג"ח', "; ".join((x.get("symbol") or x.get("name") or "") for x in d["bonds"]))
         if d.get("specials"):
