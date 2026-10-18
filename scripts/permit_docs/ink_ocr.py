@@ -109,6 +109,57 @@ def readings(img):
     return outs
 
 
+def rot(img, ang):
+    h, w = img.shape[:2]
+    M = cv2.getRotationMatrix2D((w / 2, h / 2), ang, 1.0)
+    c, s_ = abs(M[0, 0]), abs(M[0, 1])
+    nw, nh = int(h * s_ + w * c), int(h * c + w * s_)
+    M[0, 2] += nw / 2 - w / 2
+    M[1, 2] += nh / 2 - h / 2
+    return cv2.warpAffine(img, M, (nw, nh), flags=cv2.INTER_CUBIC, borderValue=255 if img.ndim == 2 else (255, 255, 255))
+
+
+def tilt_readings(iso):
+    """חותמת מוטה: מיישרים לפי הזווית של הכתם הצבעוני, ובודקים גם זוויות קטנות קבועות."""
+    outs = []
+    inv = cv2.bitwise_not(iso)
+    cnts, _ = cv2.findContours(inv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    angs = [-30, -20, -10, 10, 20, 30]
+    if cnts:
+        pts = np.vstack(cnts)
+        (_, _), (rw, rh), a = cv2.minAreaRect(pts)
+        a = a if rw >= rh else a - 90
+        if abs(a) > 3:
+            angs.insert(0, a)
+    for ang in angs:
+        v = rot(iso, ang)
+        outs.append(ocr(v, 6))
+        outs.append(ocr(v, 11))
+    return outs
+
+
+def tsv_mask(gray, a_dpi):
+    """עמוד סרוק (בלי שכבת טקסט): אזורי המילים המודפסות לפי OCR, כדי שלא יסומנו כ"כתב יד"."""
+    mask = np.zeros(gray.shape[:2], np.uint8)
+    with tempfile.TemporaryDirectory() as td:
+        p = os.path.join(td, "x.png")
+        cv2.imwrite(p, gray)
+        try:
+            out = subprocess.run([TESS[0], p, "stdout", "-l", "heb+eng", "--psm", "6", "tsv"], capture_output=True, timeout=180).stdout.decode("utf-8", "replace")
+        except Exception:  # noqa: BLE001
+            return mask
+    for ln in out.split("\n")[1:]:
+        f = ln.split("\t")
+        if len(f) >= 12 and f[0] == "5":
+            try:
+                x, y, w, h, conf = int(f[6]), int(f[7]), int(f[8]), int(f[9]), float(f[10])
+            except ValueError:
+                continue
+            if conf >= 55 and len(f[11].strip()) >= 2 and not re.fullmatch(r"[\d.\-/]+", f[11].strip()):
+                cv2.rectangle(mask, (x - 4, y - 4), (x + w + 4, y + h + 4), 255, -1)
+    return mask
+
+
 def near_valid(d, chps):
     """תקין, או ספרה אחת שגויה שמתאימה לח.פ. של חברה במאגר (טעות OCR אופיינית)."""
     if hp_ok(d):
@@ -162,11 +213,13 @@ def page_hits(sha, page, pno, a, chps, outdir):
         crop = img[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         mask = color[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         iso = cv2.bitwise_not(mask)             # דיו צבעוני בלבד, שחור על לבן: בלי הטקסט המודפס שמתחת
-        add("חותמת / עט צבעוני", crop, readings(iso) + readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)), (x, y, w, h))
+        add("חותמת / עט צבעוני", crop, readings(iso) + tilt_readings(iso) + readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)), (x, y, w, h))
     # 2) כתב יד בדיו כהה, מחוץ לטקסט המודפס
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ink = (gray < 150).astype(np.uint8) * 255
     pm = printed_mask(page, img.shape, a.dpi)
+    if not pm.any():          # עמוד סרוק: המילים המודפסות לפי OCR (ספרות בודדות לא נחשבות מודפסות, כדי שמספר בכתב יד לא ייעלם)
+        pm = tsv_mask(gray, a.dpi)
     if pm.any():
         ink = cv2.bitwise_and(ink, cv2.bitwise_not(cv2.dilate(pm, np.ones((5, 5), np.uint8))))
         for (x, y, w, h) in blobs(ink, 50, 12, 110, 28, 900, 160):
@@ -188,7 +241,12 @@ def work(job):
         doc.close()
     except Exception as e:  # noqa: BLE001
         return sha, hits, str(e)
-    return sha, hits, ""
+    seen, uniq = set(), []
+    for h in hits:          # אותו ערך באותו עמוד: מופע אחד (נשמרת התמונה הראשונה)
+        if (h[1], h[2], h[3]) not in seen:
+            seen.add((h[1], h[2], h[3]))
+            uniq.append(h)
+    return sha, uniq, ""
 
 
 def main():
