@@ -895,7 +895,9 @@
   function uqStage(op) {
     const l = Q.pend[op.docId] || (Q.pend[op.docId] = []);
     if (!l.some(x => x.t === op.t && x.bid === op.bid && x.act === op.act && x.hp === op.hp && x.extId === op.extId && x.name === op.name)) l.push(op);
+    const q = ($("pd-un-q") || {}).value || "";
     uqShow(true);
+    if (q) setTimeout(() => { const el = $("pd-un-q"); if (el) { el.value = q; uqSearch(q); } }, 60);      // תוצאות החיפוש נשארות, כדי שאפשר לבחור עוד חברה
   }
   function uqBar(d) {
     const l = Q.pend[d.id] || [];
