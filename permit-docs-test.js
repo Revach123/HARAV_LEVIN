@@ -253,7 +253,7 @@
     const ser = s => /^\d/.test(s) ? s : s.length === 1 ? s + "'" : s.slice(0, -1) + '"' + s.slice(-1);
     return S.docs.filter(d => (d.business_ids || []).includes(bid) && (d.bonds || []).length && d.doc_type !== "other" && !slotsOf(d, bid).length)
       .map(d => { const ss = [...new Set(d.bonds.map(x => bondSeries(x.name)).filter(Boolean))].map(ser), oth = d.bonds.filter(x => !bondSeries(x.name)).map(x => x.symbol || x.name);
-        return { id: d.id, name: d.original_name, label: 'אג"ח ' + [...ss, ...oth].join(" ו-"), list: d.doc_type === "general" ? "general" : "private" }; })
+        return { id: d.id, name: d.original_name, label: 'אג"ח ' + [...ss, ...oth].join(" ו-"), list: d.doc_type === "general" ? "general" : d.doc_type === "private" ? "private" : "both" }; })
       .sort((a, b) => a.label.localeCompare(b.label, "he") || a.list.localeCompare(b.list));
   }
   async function openDoc(docId, fromBiz, fromList) {
