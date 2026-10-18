@@ -45,7 +45,7 @@ export async function onRequestGet({ env }) {
       const g = new Map();
       for (const r of bd.results ?? []) {
         const k = (r.chp_number || "n:" + (r.permit_name || r.registrar_name)) + "|" + r.doc_id;
-        const e = g.get(k) || { key: r.chp_number || "n:" + (r.permit_name || r.registrar_name), chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "", id: r.doc_id, list: r.doc_type === "general" ? "general" : "private", ser: [], other: [] };
+        const e = g.get(k) || { key: r.chp_number || "n:" + (r.permit_name || r.registrar_name), chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "", id: r.doc_id, list: r.doc_type === "general" ? "general" : r.doc_type === "private" ? "private" : "both", ser: [], other: [] };
         const s = series(r.bname); if (s) { if (!e.ser.includes(s)) e.ser.push(s); } else e.other.push(r.symbol || r.bname);
         g.set(k, e);
       }

@@ -186,7 +186,10 @@ async function withDocLinks(rows, level) {
   return rows.map(r => {
     const l = byChp.get(String(r.chp_number || "").trim()) || byName.get(r.permit_name);
     const id = l && l[level] ? l[level] : "";
-    const bondSubs = ((l && l.bond_docs) || []).filter(x => x.list === level).map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true }));
+    // "פרטי" (both) מופיע גם ברשימת הכללי עם סימון "יש פרטי"; "רק פרטי" רק ברשימת הפרטי. ברשימת הכללי, אם יש מסמך כללי לאותה סדרה - הוא מוצג במקום ה"פרטי"
+    const bd = (l && l.bond_docs) || [], genLabels = new Set(bd.filter(x => x.list === "general").map(x => x.label));
+    const bondSubs = bd.filter(x => level === "private" ? x.list !== "general" : (x.list === "general" || (x.list === "both" && !genLabels.has(x.label))))
+      .map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true, has_private_permit: level === "general" && x.list === "both" ? "כן" : "" }));
     return { ...r, permit_doc: id ? "יש" : "", _docid: id, _specials: l && l.specials ? l.specials : [], _bondSubs: bondSubs };
   });
 }
