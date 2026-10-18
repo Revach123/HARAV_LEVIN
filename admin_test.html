@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=4"></script>
+<script src="/permit-docs-test.js?v=5"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1489,7 +1489,7 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs"><button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-up", "📄", "הוספת היתר עסקה", "PD.openUpload()") + t("pd-cd", "🏛️", "בדיקת מאגר המסמכים", "PD.openCompanyDash()") + t("pd-ext", "🏢", "חברות שאינן במאגר", "PD.openExt('nodb')") + t("pd-gone", "🏚️", "חברות מחוקות", "PD.openExt('gone')") : ""}</div>`;
+  return `<div class="admin-tabs"><button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-up", "📄", "הוספת היתר עסקה", "PD.openUpload()") + t("pd-cd", "🏛️", "בדיקת מאגר המסמכים", "PD.openCompanyDash()") + t("pd-aq", "🧑‍⚖️", "אישור מנהל", "PD.openAdminQ()") + t("pd-ext", "🏢", "חברות שאינן במאגר", "PD.openExt('nodb')") + t("pd-gone", "🏚️", "חברות מחוקות", "PD.openExt('gone')") : ""}</div>`;
 }
 
 function renderHome() {

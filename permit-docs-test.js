@@ -207,6 +207,7 @@
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
       <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>בדיקת מאגר המסמכים</b><span class="sub">מסמכים לבדיקה · לא משויכים · ניהול שיוכים</span></button>
+      <button class="home-card" onclick="PD.openAdminQ()"><span class="ico">🧑‍⚖️</span><b>אישור מנהל${S.loaded && aqCount() ? " (" + aqCount() + ")" : ""}</b><span class="sub">שאלות שהועברו להחלטת מנהל</span></button>
             <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
       <button class="home-card" onclick="PD.openExt('gone')"><span class="ico">🏚️</span><b>חברות מחוקות (${extCount("gone")})</b><span class="sub">מחוקות / מוזגו / לא קיימות היום</span></button></div>`;
   }
@@ -705,11 +706,12 @@
   function topTabs(active) {
     const vc = viewCounts();
     return [["intro", "בדיקת סיווג חברות", cdCount("intro")], ["review", "מסמכים לבדיקה", cdCount("review")], ["un", "מסמכים לא משויכים", vc.un + vc.sug], ["manage", "ניהול שיוכים", cdCount("manage")]]
+      .concat([["aq", "אישור מנהל", aqCount()]])
       .map(([t, l, n]) => `<button class="pd-tab ${active === t ? "sel" : ""}" onclick="PD._top('${t}')">${l} <span class="pd-tabn">${n}</span></button>`).join("");
   }
   function topGo(t) {
-    for (const id of ["pd-un", "pd-cd"]) if ($(id)) close(id);
-    if (t === "un") openUnassigned("un"); else openCompanyDash(t);
+    for (const id of ["pd-un", "pd-cd", "pd-aq"]) if ($(id)) close(id);
+    if (t === "un") openUnassigned("un"); else if (t === "aq") openAdminQ(); else openCompanyDash(t);
   }
   function openUnassigned(view) {
     Q.view = view || "un"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
@@ -1093,6 +1095,82 @@
   }
   const cdCount = m => { const old = CD.mode; CD.mode = m; const sk = CD.skipped, fl = CD.filter; CD.skipped = new Set(); CD.filter = ""; const n = cdCompanies().length; CD.mode = old; CD.skipped = sk; CD.filter = fl; return n; };
   const cdPosKey = () => "pd_cd_pos_" + CD.mode;
+  // ───────── דשבורד "אישור מנהל": כל מה שהועבר ב"שאלת מנהל" ממתין כאן להחלטה ─────────
+  const AQ = { tab: "q", i: 0, key: "", selDoc: "", blobUrl: "", shown: "", token: 0 };
+  const aqCount = () => [...(S.rev || new Map()).values()].filter(x => x.status === "question").length;
+  const aqItems = () => [...(S.rev || new Map()).values()].filter(x => x.status === (AQ.tab === "q" ? "question" : "answered")).sort((a, b) => String(b.updated_at || "").localeCompare(String(a.updated_at || "")));
+  const AQ_KIND = { review: "מסמכים לבדיקה", manage: "ניהול שיוכים", intro: "בדיקת סיווג חברות", post: "פוסט שכותרתו לא מזוהה", doc: "מסמכים לא משויכים" };
+  function openAdminQ(tab) {
+    AQ.tab = tab || "q"; AQ.i = 0; AQ.key = ""; AQ.selDoc = "";
+    overlay("pd-aq", `<div class="pd-rv"><div class="pd-viewcol">
+        <div class="pd-toolbar">
+          <div class="pd-tbrow"><div class="pd-tabs" id="pd-aq-tabs"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-aq')">✕</button></div>
+          <div class="pd-tbrow"><div class="pd-nav"><button class="pd-btn" onclick="PD._aqGo(-1)">→ הקודם</button><span class="pd-navpos" id="pd-aq-pos"></span><button class="pd-btn" onclick="PD._aqGo(1)">הבא ←</button></div>
+            <span class="pd-btns"><button class="pd-mini" id="pd-aq-t-q" onclick="PD._aqTab('q')">ממתינות להחלטה</button><button class="pd-mini" id="pd-aq-t-a" onclick="PD._aqTab('a')">נענו</button></span></div>
+        </div>
+        <div class="pd-viewhead" id="pd-aq-vhead"></div>
+        <div class="pd-view" id="pd-aq-view"></div></div>
+      <div class="pd-sidecol" style="width:470px"><div class="pd-side" id="pd-aq-side"></div></div></div>`, "full");
+    closers["pd-aq"] = () => { if (AQ.blobUrl) URL.revokeObjectURL(AQ.blobUrl); AQ.blobUrl = ""; AQ.shown = ""; };
+    if (!S.loaded) load().then(aqShow); else aqShow();
+  }
+  function aqDocsFor(it) {
+    const [kind, ...r] = it.key.split(":"), id = r.join(":");
+    if (kind === "post" || kind === "doc") { const d = S.byId.get(id); return d ? [d] : []; }
+    if (kind === "review") return [...new Set(flagsOfCompany(id).map(x => x.d))].concat(liveDocs(id)).filter((d, i, a) => a.indexOf(d) === i);
+    return kind === "intro" ? oldDocsOf(id) : liveDocs(id);
+  }
+  function aqShow() {
+    if (!$("pd-aq")) return;
+    const tabs = $("pd-aq-tabs"); if (tabs) tabs.innerHTML = topTabs("aq");
+    for (const k of ["q", "a"]) { const el = $("pd-aq-t-" + k); if (el) el.classList.toggle("sel", AQ.tab === k); }
+    const list = aqItems(), side = $("pd-aq-side"), pos = $("pd-aq-pos");
+    if (AQ.key) { const k = list.findIndex(x => x.key === AQ.key); if (k >= 0) AQ.i = k; }
+    if (AQ.i >= list.length) AQ.i = Math.max(0, list.length - 1);
+    if (pos) pos.textContent = list.length ? `${AQ.i + 1} / ${list.length}` : "0 / 0";
+    const it = list[AQ.i];
+    if (!it) { side.innerHTML = `<div class="pd-empty" style="color:#1e7e4a">${AQ.tab === "q" ? "אין שאלות מנהל ממתינות 🎉" : "אין שאלות שנענו"}</div>`; $("pd-aq-view").innerHTML = ""; $("pd-aq-vhead").innerHTML = ""; AQ.key = ""; return; }
+    const [kind, ...r] = it.key.split(":"), id = r.join(":"), b = (kind === "post" || kind === "doc") ? null : bizById(id), docs = aqDocsFor(it);
+    if (AQ.key !== it.key) { AQ.key = it.key; AQ.selDoc = (docs[0] || {}).id || ""; }
+    const mode = kind;
+    let q = "";
+    if (b && kind === "intro") q = `<div class="pd-warnbox">❓ ${E(introIssue(b))}</div>`;
+    else if (b && kind === "review") q = flagsOfCompany(id).map(x => `<div class="pd-warnbox">❓ <b>${E(x.label)}</b> <span class="pd-sub">${E(x.d.original_name || "")}${x.detail ? " · " + E(x.detail) : ""}</span></div>`).join("");
+    else if (b && kind === "manage") { const f = cfeat(b, null); q = `<div class="pd-warnbox">❓ ראשיים ${f.have}/${f.total}${f.ex ? " · נוספים " + f.ex : ""}</div>`; }
+    else if (!b) { const d = S.byId.get(id); q = d ? `<div class="pd-warnbox">❓ ${E(AQ_KIND[kind])}: ${E(postTitle(d) || d.original_name || "")}</div>` : ""; }
+    const reply = (it.note || "").split(" || תשובת מנהל: ")[1] || "";
+    side.innerHTML = `
+      <div class="pd-sub">${E(AQ_KIND[kind] || kind)} · ${E(String(it.updated_at || "").slice(0, 16))}</div>
+      <div style="font-weight:700;font-size:15px">${b ? displayName(b, true) + (b.chp_number ? ` <span class="pd-sub">ח.פ. ${E(b.chp_number)}</span>` : "") : E(((S.byId.get(id) || {}).original_name) || id)}</div>
+      ${q}
+      ${(it.note || "").split(" || תשובת מנהל: ")[0] ? `<h4>הערת הבודק</h4><div class="pd-warnbox">${E((it.note || "").split(" || תשובת מנהל: ")[0])}</div>` : ""}
+      <h4>מסמכים (${docs.length})</h4>
+      ${docs.map(d => `<div class="pd-uc ${AQ.selDoc === d.id ? "is-main" : ""}" style="cursor:pointer" onclick="PD._aqSel('${d.id}')"><div class="pd-uc-top" style="cursor:pointer"><b>${E(d.original_name || d.id)}</b><div class="pd-sub">${E(TL[d.doc_type] || "")} · ${(d.business_ids || []).map(x => E(bizName(x))).join(", ") || "לא משויך"}</div></div></div>`).join("") || `<div class="pd-sub">אין מסמכים</div>`}
+      ${b ? `<div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD.openManage('${b.id}')">ניהול מסמכי החברה</button></div>` : ""}
+      <div class="pd-cdbar"><textarea class="pd-in" id="pd-aq-reply" rows="2" placeholder="תשובת המנהל / החלטה (אופציונלי)" style="width:100%">${E(reply)}</textarea>
+        ${AQ.tab === "q" ? `<button class="pd-btn primary" onclick="PD._aqAns()" title="סימון השאלה כנענתה: הפריט לא חוזר לדשבורדי הבדיקה">✔ אישור מנהל</button><button class="pd-btn" onclick="PD._aqBack()" title="הפריט חוזר לדשבורד הבדיקה שממנו הגיע, לבדיקה מחדש">↩ החזרה לבדיקה</button>`
+          : `<button class="pd-btn" onclick="PD._aqReopen()">↩ החזרה לשאלות ממתינות</button><button class="pd-btn" onclick="PD._aqBack()">↩ החזרה לבדיקה</button>`}</div>`;
+    aqViewer();
+  }
+  async function aqViewer() {
+    const d = S.byId.get(AQ.selDoc), view = $("pd-aq-view"), head = $("pd-aq-vhead");
+    if (!d) { view.innerHTML = ""; head.innerHTML = ""; AQ.shown = ""; return; }
+    head.innerHTML = `<b>${E(d.original_name || d.id)}</b> <span class="pd-sub">${metaHtml(d)}</span>`;
+    if (AQ.shown === d.id) return;
+    AQ.shown = d.id; const tok = ++AQ.token;
+    view.innerHTML = `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>`;
+    if (AQ.blobUrl) { URL.revokeObjectURL(AQ.blobUrl); AQ.blobUrl = ""; }
+    try { const blob = await fetchPdfBlob(d.id); if (tok !== AQ.token) return; AQ.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${AQ.blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>`; }
+    catch (e) { if (tok === AQ.token) view.innerHTML = `<div class="pd-empty" style="color:#fff">${E(e.message)}</div>`; }
+  }
+  async function aqSet(status, withReply) {
+    const it = aqItems().find(x => x.key === AQ.key); if (!it) return;
+    const reply = withReply ? ((($("pd-aq-reply") || {}).value) || "").trim() : "";
+    const base = (it.note || "").split(" || תשובת מנהל: ")[0];
+    try { await setReview(it.key, status, status ? (base + (reply ? " || תשובת מנהל: " + reply : "")).slice(0, 480) : ""); }
+    catch (e) { alert("הפעולה נכשלה: " + e.message); return; }
+    AQ.key = ""; aqShow();
+  }
   function openCompanyDash(mode) {
     CD.mode = mode || "review"; CD.skipped = new Set(); CD.filter = ""; CD.i = 0; CD.curBiz = ""; CD.selDoc = "";
     let pos = null; try { pos = JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { /* בלי אחסון */ }
@@ -1511,7 +1589,7 @@
   // ───────── חלון: חברות שאינן במאגר (מחוקות / מוזגו / לא במאגר) ─────────
   function goHome() {          // סוגר את כל החלונות וחוזר לדף הראשי של הניהול
     S._nav = true;
-    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-un", "pd-cd"]) close(id);
+    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-un", "pd-cd", "pd-aq"]) close(id);
     S._nav = false;
     if (typeof setView === "function") setView("home");
   }
@@ -1917,7 +1995,7 @@
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
     }, _unOk: uqOk, _unQ: uqQuestion, _unUnstage: i => { (Q.pend[Q.curId] || []).splice(i, 1); uqShow(true); }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => { if ($("pd-cd") && CD.curBiz) stage({ t: "ext", docId, hp, extId }); else if ($("pd-un") && Q.curId === docId) uqStage({ t: "ext", docId, hp, extId }); else postExtApply(docId, hp, extId).then(() => refresh()).catch(() => {}); }, _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: (d, b) => spEdit(d, b, false), _spSave: spSave, _spDel: spDel, _cdSpecial: (docId, bid) => spEdit(docId, bid, true), _cdOk: cdOk, _cdUnrev: m => cdUnrev(m === true), _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => { if ($("pd-cd") && CD.curBiz) stage({ t: "ext", docId, hp, extId }); else if ($("pd-un") && Q.curId === docId) uqStage({ t: "ext", docId, hp, extId }); else postExtApply(docId, hp, extId).then(() => refresh()).catch(() => {}); }, _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: (d, b) => spEdit(d, b, false), _spSave: spSave, _spDel: spDel, _cdSpecial: (docId, bid) => spEdit(docId, bid, true), _cdOk: cdOk, _cdUnrev: m => cdUnrev(m === true), _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, openAdminQ, _top: topGo, _aqGo: n => { const len = aqItems().length; AQ.i = Math.min(Math.max(0, AQ.i + n), Math.max(0, len - 1)); AQ.key = ""; aqShow(); }, _aqTab: t => { AQ.tab = t; AQ.i = 0; AQ.key = ""; aqShow(); }, _aqSel: id => { AQ.selDoc = id; aqShow(); }, _aqAns: () => aqSet("answered", true), _aqBack: () => aqSet("", false), _aqReopen: () => aqSet("question", true), _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
