@@ -809,6 +809,7 @@
       ${Q.view === "un" && legacyDocs().length ? `<button class="pd-btn" style="margin-top:8px" onclick="PD._legacy()" title="ממיר את הסימון הישן בהערה לשיוך לחברה ברשימת החברות שאינן במאגר">המרת ${legacyDocs().length} סימוני "חסר במאגר" ישנים</button>` : ""}
       ${statusBar}
       ${assigned ? `<div class="pd-ucs">${assigned}</div>` : ""}
+      ${(Q.pend[d.id] || []).length ? `<div class="pd-sub" style="margin-top:8px"><b>ממתינים לאישור (לא נשמרו עדיין):</b></div><div class="pd-ucs">${(Q.pend[d.id] || []).map((op, i) => `<div class="pd-uc" style="border-style:dashed;background:#fffbea"><div class="pd-uc-top" style="cursor:default"><b>${E(opLabel(op))}</b></div><div class="pd-uc-act"><button class="pd-link2" style="color:#c0392b" onclick="PD._unUnstage(${i})">ביטול</button></div></div>`).join("")}</div>` : ""}
       <h4 style="margin-top:14px">${Q.replace ? `שינוי שיוך: בחרו חברה במקום "${E(replName)}" <button class="pd-link2" onclick="PD._unPicker('')">ביטול</button>` : nAsg ? "הוספת שיוך נוסף" : "שיוך לחברה"}</h4>
       <input class="pd-in" id="pd-un-q" placeholder="חיפוש לפי ח.פ. או שם חברה" oninput="PD._unSearch(this.value)" autocomplete="off"><div id="pd-un-res"></div>
       ${sugg.length ? `<div class="pd-sub" style="margin-top:8px">הצעות לפי סריקת המסמך:</div><div class="pd-ucs">${sugg.map(c => ucard(c.b, d, { why: c.why })).join("")}</div>` : `<div class="pd-sub" style="margin-top:8px">לא נמצאו הצעות לפי תוכן המסמך: חפשו ידנית.</div>`}
@@ -901,7 +902,7 @@
   }
   function uqBar(d) {
     const l = Q.pend[d.id] || [];
-    return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>ממתין לאישור:</b></div>` + l.map((op, i) => `<div class="pd-sub" style="width:100%">• ${E(opLabel(op))} <a href="#" onclick="PD._unUnstage(${i});return false" style="color:#c0392b" title="ביטול הבחירה">✕</a></div>`).join("") : `<div class="pd-sub" style="width:100%">בחרו שיוך אחד או יותר (אפשר לכמה חברות), ואז אישור.</div>`}
+    return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>${l.length} שיוכים ממתינים לאישור</b> (מוצגים למעלה)</div>` : `<div class="pd-sub" style="width:100%">בחרו שיוך אחד או יותר (אפשר לכמה חברות), ואז אישור.</div>`}
       <input class="pd-in" id="pd-un-qn" placeholder="הערה לשאלת מנהל (אופציונלי)" style="flex:1;min-width:140px">
       <button class="pd-btn primary" onclick="PD._unOk()" title="מבצע את השיוכים שנבחרו ועובר למסמך הבא">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
       <button class="pd-btn" style="background:#fff3cd;border-color:#e0b84a" onclick="PD._unQ()" title="המסמך עובר לרשימת שאלות מנהל, בלי לבצע את הבחירות">❓ שאלת מנהל</button></div>`;
@@ -1477,14 +1478,11 @@
   }
   async function uqExt(reg, st) {
     const d = unassignedList()[Q.i]; if (!d) return;
-    try { const c = await extEnsure({ chp: reg.id, name: reg.name, status: st }); await extAssign(d.id, c.id); await uqApplyReplace(d.id); }
-    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השיוך נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0008 ב-D1)" : ""); return; }
-    uqAfter();
+    uqStage({ t: "extnew", docId: d.id, chp: reg.id, name: reg.name, status: st });          // גם שיוך לחברה שאינה במאגר מצטבר ונקלט רק באישור
   }
   async function uqExtPick(id) {
     const d = unassignedList()[Q.i]; if (!d) return;
-    try { await extAssign(d.id, id); await uqApplyReplace(d.id); } catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
-    uqAfter();
+    uqStage({ t: "ext", docId: d.id, hp: "", extId: id });
   }
   async function uqExtAdd(st) {
     const d = unassignedList()[Q.i], name = ($("pd-ext-name") || {}).value || "", chp = ($("pd-ext-chp") || {}).value || "";
