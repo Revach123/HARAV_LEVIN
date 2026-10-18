@@ -280,7 +280,7 @@
         $("pd-doc-side").innerHTML = sideHtml;
       } else {
         box.dataset.docId = docId;
-        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
+        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
       }
       const s2 = $("pd-doc-side"); if (s2) s2.scrollTop = keep;
     };
@@ -524,7 +524,7 @@
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
     $("pd-up-body").innerHTML = `
       <div class="pd-split">
-        <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0" title="תצוגה מקדימה"></iframe></div>
+        <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0&view=FitH" title="תצוגה מקדימה"></iframe></div>
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
           ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
@@ -773,7 +773,7 @@
       (async () => {
         try {
           const blob = await fetchPdfBlob(d.id); if (tok !== Q.token) return;
-          Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
+          Q.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${Q.blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>`;
           if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
           unassignedList().slice(Q.i + 1, Q.i + 3).forEach(x => fetchPdfBlob(x.id).catch(() => {}));      // טעינה מראש של שני המסמכים הבאים
           try {           // הצעות נוספות מהטקסט של הקובץ עצמו (אם יש בו טקסט); קבצים סרוקים מסתמכים על ההצעות השמורות
@@ -1336,7 +1336,7 @@
     if (CD.blobUrl) { URL.revokeObjectURL(CD.blobUrl); CD.blobUrl = ""; }
     try {
       const blob = await fetchPdfBlob(d.id); if (tok !== CD.token) return;
-      CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0" title="המסמך"></iframe>`;
+      CD.blobUrl = URL.createObjectURL(blob); view.innerHTML = `<iframe src="${CD.blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>`;
       if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(d.id, pdf)).catch(() => {});
       if (tok === CD.token) {
         if ((intelOf(d).f || []).some(f => f.c === "no_private_phrase") && !PK.has(d.id)) CD.after.push(async () => {          // הסריקה המקומית קראה רק חלק מהעמודים: בודקים שוב את כל המסמך
