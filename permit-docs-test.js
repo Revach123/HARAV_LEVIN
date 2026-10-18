@@ -120,8 +120,10 @@
     if (seq !== out._seq || !out.contains(box)) return;
     const byChp = new Map(bizList().filter(b => digitsOf(b.chp_number)).map(b => [digitsOf(b.chp_number), b]));
     const rs = d.results || [];
-    const inDb = rs.map(r => ({ r, b: byChp.get(digitsOf(r.id)) })).filter(x => x.b && !o.exclude(x.b.id));
-    const miss = rs.filter(r => !byChp.has(digitsOf(r.id)));
+    const dg = q.replace(/\D/g, ""), shown = new Set(bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10).map(b => b.id));      // כבר מוצגות ברשימה המקומית למעלה
+    const seenB = new Set(), seenM = new Set();
+    const inDb = rs.map(r => ({ r, b: byChp.get(digitsOf(r.id)) })).filter(x => x.b && !o.exclude(x.b.id) && !shown.has(x.b.id) && !seenB.has(x.b.id) && seenB.add(x.b.id));      // בלי כפילויות (הרשם מחזיר לפעמים את אותה חברה כמה פעמים)
+    const miss = rs.filter(r => !byChp.has(digitsOf(r.id)) && !seenM.has(digitsOf(r.id)) && seenM.add(digitsOf(r.id)));
     box.innerHTML = (inDb.length ? `<div class="pd-grp weak">במאגר שלנו (לפי הרשם)</div>` + inDb.slice(0, 6).map(x => o.card ? o.card(x.b) : `<button class="pd-pick" data-pick="${x.b.id}">${displayName(x.b, true)} <span class="pd-sub">${E(x.r.id)}</span>${stTag(x.r.status)}</button>`).join("") : "") +
       (miss.length ? `<div class="pd-grp" style="color:#c0392b">לא במאגר שלנו (נמצאו ברשם)</div>` + miss.slice(0, 8).map(r => `
         <div class="pd-reg"><div><b>${E(r.name)}</b> <span class="pd-tag red">לא במאגר</span>${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div>
