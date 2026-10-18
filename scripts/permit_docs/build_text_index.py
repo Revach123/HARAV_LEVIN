@@ -42,6 +42,28 @@ NAME = re.compile(r"([א-ת][א-ת0-9'\"׳״.\-()/\s]{2,70}?\s*בע[\"״']?מ)")
 COMMON = ["של", "את", "על", "היתר", "עיסקא", "החברה", "בעמ", "או", "עם", "כל", "הוא"]
 
 
+def norm_fts(t):
+    """נרמול לחיפוש: בלי גרשיים וגרשי מירכא, כך ש-בע"מ מתחפש כ-בעמ (ו"בע""מ" בשורת פקודה לא נשבר)."""
+    return re.sub(r"[\"'׳״`]", "", t or "")
+
+
+def ensure_fts(db):
+    """אינדקס החיפוש: trigram (חיפוש בכל מקום בתוך מילה, כך שגם "ומסלול" נמצא כשמחפשים "מסלול") על טקסט בלי גרשיים. בונה מחדש מהטקסט השמור אם צריך."""
+    db.execute("CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)")
+    cur = db.execute("SELECT v FROM meta WHERE k = 'fts_norm'").fetchone()
+    if cur and cur[0] == "2":
+        return
+    has_pages = db.execute("SELECT 1 FROM sqlite_master WHERE name = 'pages'").fetchone()
+    print("בונה מחדש את אינדקס החיפוש (פעם אחת)…")
+    db.execute("DROP TABLE IF EXISTS pages_fts")
+    db.execute("CREATE VIRTUAL TABLE pages_fts USING fts5(text, sha UNINDEXED, page UNINDEXED, tokenize='trigram')")
+    if has_pages:
+        rows = db.execute("SELECT sha, page, text FROM pages").fetchall()
+        db.executemany("INSERT INTO pages_fts (text, sha, page) VALUES (?,?,?)", [(norm_fts(t), s, p) for s, p, t in rows])
+    db.execute("INSERT OR REPLACE INTO meta VALUES ('fts_norm', '2')")
+    db.commit()
+
+
 def hp_ok(h):
     if not re.fullmatch(r"\d{9}", h):
         return False
@@ -150,10 +172,11 @@ def main():
     db.executescript("""
       CREATE TABLE IF NOT EXISTS docs (sha TEXT PRIMARY KEY, files TEXT, pages INT, chars INT, ocr INT, handwriting_pages TEXT);
       CREATE TABLE IF NOT EXISTS pages (sha TEXT, page INT, text TEXT);
-      CREATE VIRTUAL TABLE IF NOT EXISTS pages_fts USING fts5(text, sha UNINDEXED, page UNINDEXED, tokenize='unicode61');
       CREATE TABLE IF NOT EXISTS hps (sha TEXT, hp TEXT, n INT, pages TEXT, in_db INT);
       CREATE TABLE IF NOT EXISTS names (sha TEXT, name TEXT, src TEXT);
+      CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT);
     """)
+    ensure_fts(db)
     done = {r[0] for r in db.execute("SELECT sha FROM docs")}
     jobs = [(sha, d["aids"], d["path"], [x.strip() for x in a.ocr_dirs.split(",")], a.tesseract, a.dpi, a.max_pages, not a.no_ocr)
             for sha, d in docs.items() if d["path"] and sha not in done]
@@ -174,7 +197,7 @@ def main():
             names = []
             for i, t in enumerate(pages, 1):
                 db.execute("INSERT INTO pages VALUES (?,?,?)", (sha, i, t))
-                db.execute("INSERT INTO pages_fts (text, sha, page) VALUES (?,?,?)", (t, sha, i))
+                db.execute("INSERT INTO pages_fts (text, sha, page) VALUES (?,?,?)", (norm_fts(t), sha, i))
                 for h in dict.fromkeys(HP.findall(t.replace(",", ""))):
                     if hp_ok(h):
                         hp_pages[h][0] += len(re.findall(r"(?<!\d)" + h + r"(?!\d)", t))
