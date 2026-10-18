@@ -676,7 +676,12 @@
     return false;
   };
   const unassignedCount = () => S.docs.filter(d => inView(d, "un")).length;
-  const viewCounts = () => { const c = {}; for (const v of ALLV) c[v] = 0; for (const d of S.docs) for (const v of ALLV) if (inView(d, v)) c[v]++; return c; };
+  // מקור המסמכים בחלון הלא משויכים: הכל / רק מסמכים מהפוסטים באתר הישן / רק מסמכים נוספים (שלא היו בפוסט)
+  const SRC = [["all", "כל המסמכים"], ["post", "רק מפוסטים באתר הישן"], ["extra", "רק מסמכים נוספים"]];
+  let srcMode = "all"; try { srcMode = localStorage.getItem("pd_src") || "all"; } catch { /* בלי אחסון */ }
+  const fromPost = d => ["g", "p", "gp"].includes(intelOf(d).o);
+  const srcOk = d => srcMode === "all" || (srcMode === "post" ? fromPost(d) : !fromPost(d));
+  const viewCounts = () => { const c = {}; for (const v of ALLV) c[v] = 0; for (const d of S.docs) for (const v of ALLV) if (inView(d, v) && (v === "review" || srcOk(d))) c[v]++; return c; };
   function docHay(d) {        // טקסט לסינון: שם קובץ, כותרת, הערה, ושמות / ח.פ. של החברות המשויכות (גם שאינן במאגר)
     if (d._hay && d._hayN === S.docs.length + ":" + S.ext.length) return d._hay;
     const cos = (d.business_ids || []).map(bizById).filter(Boolean).flatMap(b => [displayName(b), b.chp_number, b.registrar_name, b.permit_name]);
@@ -686,7 +691,7 @@
   }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    const l = S.docs.filter(d => inView(d, Q.view) && !Q.skipped.has(d.id) &&
+    const l = S.docs.filter(d => inView(d, Q.view) && srcOk(d) && !Q.skipped.has(d.id) &&
         (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
@@ -711,6 +716,7 @@
           <div class="pd-tbrow"><div class="pd-tabs" id="pd-un-tabs"></div><span style="flex:1"></span>
             <button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-un')">✕</button></div>
           <div class="pd-tbrow"><div class="pd-nav"><button class="pd-btn" onclick="PD._unGo(-1)" title="המסמך הקודם">→ הקודם</button><span class="pd-navpos" id="pd-un-pos"></span><button class="pd-btn" onclick="PD._unGo(1)" title="המסמך הבא">הבא ←</button><button class="pd-btn" onclick="PD._unSkip()" title="מסתיר את המסמך עד לפתיחה הבאה של החלון">דילוג</button></div>
+            <span class="pd-btns" id="pd-un-src" title="איזה מסמכים להציג">${SRC.map(([k, l]) => `<button class="pd-mini ${srcMode === k ? "sel" : ""}" onclick="PD._unSrc('${k}')">${l}</button>`).join("")}</span>
             <input class="pd-in" style="flex:1;min-width:180px" placeholder="חיפוש / סינון המסמכים: שם קובץ, חברה, ח.פ., הערה" oninput="PD._unFilter(this.value)" autocomplete="off">
             <span class="pd-sub"><span id="pd-un-count"></span><span id="pd-un-skipped"></span></span>
             <span id="pd-un-undo"></span><button class="pd-link2" onclick="PD._recent()">שיוכים אחרונים</button><button class="pd-link2" onclick="PD._openExt('nodb')">חברות שאינן במאגר (<span id="pd-un-extn">${extCount("nodb")}</span>)</button><button class="pd-link2" onclick="PD._openExt('gone')">חברות מחוקות (<span id="pd-un-gonen">${extCount("gone")}</span>)</button></div>
@@ -1868,6 +1874,7 @@
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
+    _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
