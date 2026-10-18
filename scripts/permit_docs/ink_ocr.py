@@ -135,6 +135,9 @@ def tilt_readings(iso):
         v = rot(iso, ang)
         outs.append(ocr(v, 6))
         outs.append(ocr(v, 11))
+        big = cv2.erode(cv2.resize(v, None, fx=2.0, fy=2.0, interpolation=cv2.INTER_CUBIC), np.ones((2, 2), np.uint8))   # קו דק של חותמת: מעבים ומגדילים
+        outs.append(ocr(big, 6))
+        outs.append(ocr(big, 11, digits=True))
     return outs
 
 
@@ -190,7 +193,7 @@ def page_hits(sha, page, pno, a, chps, outdir):
                         continue
                     st, fixed = near_valid(cand, chps)
                     if st:
-                        found.append((fixed, st, d))
+                        found.append((fixed, st, cand))
             for mm in NAME.finditer(t):
                 nm = re.sub(r"\s+", " ", mm.group(1)).strip()
                 if len(nm) > 6:
@@ -241,11 +244,10 @@ def work(job):
         doc.close()
     except Exception as e:  # noqa: BLE001
         return sha, hits, str(e)
-    seen, uniq = set(), []
-    for h in hits:          # אותו ערך באותו עמוד: מופע אחד (נשמרת התמונה הראשונה)
-        if (h[1], h[2], h[3]) not in seen:
-            seen.add((h[1], h[2], h[3]))
-            uniq.append(h)
+    best = {}
+    for h in sorted(hits, key=lambda h: h[3] != "תקין"):          # אותו ערך באותו עמוד: מופע אחד; "תקין" קודם ל"קרוב"
+        best.setdefault((h[1], h[2]), h)
+    uniq = list(best.values())
     return sha, uniq, ""
 
 
@@ -262,6 +264,7 @@ def main():
     ap.add_argument("--max-pages", type=int, default=12)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--only-bottom", action="store_true", help="רק החצי התחתון של כל עמוד (שם בדרך כלל החותמת)")
+    ap.add_argument("--only", default="", help="רק מסמכים ששם הקובץ שלהם מכיל את הטקסט (למשל AASDFD); בודק מחדש גם אם כבר נבדקו")
     ap.add_argument("--tesseract", default=TESS[0])
     a = ap.parse_args()
     TESS[0] = a.tesseract
@@ -280,6 +283,16 @@ def main():
     db.execute("CREATE TABLE IF NOT EXISTS ink_hits (sha TEXT, page INT, value TEXT, status TEXT, kind TEXT, raw TEXT, crop TEXT, in_db INT)")
     db.execute("CREATE TABLE IF NOT EXISTS ink_done (sha TEXT PRIMARY KEY)")
     done = {r[0] for r in db.execute("SELECT sha FROM ink_done")}
+    if a.only:
+        try:
+            files = dict(db.execute("SELECT sha, files FROM docs"))
+        except sqlite3.OperationalError:
+            files = {}
+        want = {sha for sha in docs if a.only.lower() in files.get(sha, "").lower()}
+        for sha in want:
+            db.execute("DELETE FROM ink_hits WHERE sha=?", (sha,))
+        done -= want
+        docs = collections.OrderedDict((sha, p) for sha, p in docs.items() if sha in want)
     jobs = [(sha, p, a, chps, outdir) for sha, p in docs.items() if sha not in done]
     if a.limit:
         jobs = jobs[:a.limit]
