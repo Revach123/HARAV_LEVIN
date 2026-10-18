@@ -2,7 +2,7 @@
  "summary": {
   "scope": "all",
   "recovered_by_single_lookup": 0,
-  "unfound_after_batch": 152,
+  "unfound_after_batch": 88,
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 91,
@@ -12,12 +12,12 @@
    "registrar_name": 91,
    "biz_type": 91
   },
-  "updated": "2026-10-17T07:19:17.357323Z",
+  "updated": "2026-10-18T07:29:39.939162Z",
   "source": "d1",
   "businesses": 1274,
   "numeric_chp": 1269,
-  "found_in_registry": 1117,
-  "found_ratio": 0.88,
+  "found_in_registry": 1181,
+  "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2224,
   "datawise_date": "2026-10-16",
@@ -54,22 +54,6 @@
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64j2qkqphc",
-   "chp": "580270007",
-   "permit_name": "אגודת חסידי ספינקא בארץ ישראל מיסודו של כ\"ק מרן האדמו\"ר ר' יעקב יוסף (ע\"ר)",
-   "registrar_name": "אגודת חסידי ספינקא בארץ ישראל מיסודו של כ\"ק מרן האדמו\"ר ר' יעקב יוסף (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64j34ycds3",
-   "chp": "580434165",
-   "permit_name": "אדני הקודש בעלז\"א (ע\"ר)",
-   "registrar_name": "אדני הקודש בעלז\"א (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64j4eji837",
@@ -110,14 +94,6 @@
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64jfsrlkw1",
-   "chp": "580451078",
-   "permit_name": "איל\"ה - איכות יחודית לבית היהודי (ע\"ר)",
-   "registrar_name": "איל\"ה - איכות יחודית לבית היהודי (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64jj6clqcs",
@@ -208,14 +184,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64jpgowba2",
-   "chp": "580065159",
-   "permit_name": "אסנט - היבטים פנימיים של סגנון החיים היהודי (ע\"ר) ASCENT - INNER DIMENSIONS OF",
-   "registrar_name": "אסנט - היבטים פנימיים של סגנון החיים היהודי  (ע\"ר)  ASCENT - INNER DIMENSIONS OF JEWISH LIFESTYLE (R.A.)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64jszyhq1g",
    "chp": "1811308",
    "permit_name": "אקסטל לימיטד",
@@ -224,52 +192,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64ju6imlb7",
-   "chp": "580440139",
-   "permit_name": "באר יצחק קרית יערים (ע\"ר)",
-   "registrar_name": "באר יצחק קרית יערים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64jut645ta",
    "chp": "748930",
    "permit_name": "בורנשטיין קייטררס אינק. (רשומה בדלוואר)",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64jvpuyg60",
-   "chp": "580572782",
-   "permit_name": "בית דוד בית שמש (ע\"ר)",
-   "registrar_name": "בית דוד בית שמש (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64jw4a3c5v",
-   "chp": "580250215",
-   "permit_name": "בית יעקב - דרכי רחל (ע\"ר)",
-   "registrar_name": "בית יעקב - דרכי רחל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64jw81jkfu",
-   "chp": "580107613",
-   "permit_name": "בית מדרש עליון בני ברק - ע\"י קונגרגיישן מתיבתא מיסודו של הגאון רבי ראובן גרוזובס",
-   "registrar_name": "בית מדרש עליון בני ברק - ע\"י קונגרגיישן מתיבתא מיסודו של הגאון רבי ראובן גרוזובסקי ז\"ל. (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64jwbze1fn",
-   "chp": "580111482",
-   "permit_name": "בי\"ס תיכון עיוני בית-יעקב פתח-תקוה (ע\"ר)",
-   "registrar_name": "בי\"ס תיכון עיוני בית-יעקב פתח-תקוה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64jwfaka60",
@@ -374,14 +302,6 @@
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64kghjbr75",
-   "chp": "580073146",
-   "permit_name": "חסדי נעמי (ע\"ר)",
-   "registrar_name": "חסדי נעמי (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64kiwunneg",
@@ -560,14 +480,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lf8pbyjl",
-   "chp": "580403350",
-   "permit_name": "סמינר מרכז בית יעקב למורות ולגננות - פתח תקוה (ע\"ר)",
-   "registrar_name": "סמינר מרכז בית יעקב למורות ולגננות - פתח תקוה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64lfqa0eeb",
    "chp": "475527",
    "permit_name": "סאטל פרופרטיס לימיטד",
@@ -590,14 +502,6 @@
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64lgvhsyuz",
-   "chp": "580173557",
-   "permit_name": "עוגן - הקרן להלוואות ללא ריבית (ע\"ר)",
-   "registrar_name": "עוגן - הקרן להלוואות ללא ריבית (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64lh9hrjj2",
@@ -648,60 +552,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lmvja0bn",
-   "chp": "580070993",
-   "permit_name": "קרן מכבי (ע\"ר)",
-   "registrar_name": "קרן מכבי (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64ln5p4sjz",
    "chp": "134106595",
    "permit_name": "ארחות תורה ארצות הברית",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64lncdxfy8",
-   "chp": "580403533",
-   "permit_name": "גמ\"ח המרכזי",
-   "registrar_name": "גמ\"ח לבית בישראל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64loa0hwlo",
-   "chp": "580140143",
-   "permit_name": "דרכי שמחה (ע\"ר)",
-   "registrar_name": "דרכי שמחה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lodepkin",
-   "chp": "580715381",
-   "permit_name": "הארות (ע\"ר)",
-   "registrar_name": "הארות (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lpeqeuje",
-   "chp": "580648772",
-   "permit_name": "הדרום בפריחה - ערד (ע\"ר)",
-   "registrar_name": "הדרום בפריחה - ערד (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lpi9yvsq",
-   "chp": "580083848",
-   "permit_name": "המרכז העולמי לתורה ולחסידות שע\"י חסידי בעלזא (ע\"ר)",
-   "registrar_name": "המרכז העולמי לתורה ולחסידות שע\"י חסידי בעלזא (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64lq7l9ww0",
@@ -720,28 +576,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lqpumkbo",
-   "chp": "580242642",
-   "permit_name": "חייל חיים למוצאיהם",
-   "registrar_name": "תלמוד תורה דרכי יעקב -יסדת עוז אופקים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64lqwhk28r",
    "chp": "1900288",
    "permit_name": "פסיפיק אוק אסאואר הולדינגס",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64lqzwyurg",
-   "chp": "580196780",
-   "permit_name": "טהרת ישראל - מקוה חצור הגלילית (ע\"ר)",
-   "registrar_name": "טהרת ישראל - מקוה חצור הגלילית  (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64lra43cz9",
@@ -752,140 +592,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lrda695y",
-   "chp": "580708519",
-   "permit_name": "יוצאי פוניבז' קרית ספר (ע\"ר)",
-   "registrar_name": "יוצאי פוניבז' קרית ספר (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lrz0u4gp",
-   "chp": "580327310",
-   "permit_name": "ישיבת ארחות תורה (ע\"ר)",
-   "registrar_name": "ישיבת ארחות תורה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64ls2prxhg",
-   "chp": "580052769",
-   "permit_name": "ישיבת ספינקא בארץ ישראל (ע\"ר)",
-   "registrar_name": "ישיבת ספינקא בארץ ישראל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64ls5xcyye",
-   "chp": "580009181",
-   "permit_name": "ישיבת \"שפתי צדיק\" קריה חסידית חצור הגלילית (ע\"ר)",
-   "registrar_name": "ישיבת \"שפתי צדיק\" קריה חסידית חצור הגלילית (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lscpgtn6",
-   "chp": "580595197",
-   "permit_name": "מוסדות מגדל עוז בארה\"ק (ע\"ר)",
-   "registrar_name": "מוסדות מגדל עוז בארה\"ק (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lsg1iwga",
-   "chp": "580656668",
-   "permit_name": "מוסדות מעזריטש ע\"ש המגיד הקדוש ממעזריטש זיע\"א (ע\"ר)",
-   "registrar_name": "מוסדות מעזריטש ע\"ש המגיד הקדוש ממעזריטש זיע\"א (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lsjg94ij",
-   "chp": "580671618",
-   "permit_name": "מחוברים און ליין (ע\"ר)",
-   "registrar_name": "מחוברים און ליין  (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lstqws8l",
-   "chp": "580290484",
-   "permit_name": "מכון אוהל דבורה קרית ספר (ע\"ר)",
-   "registrar_name": "מכון אוהל דבורה קרית ספר (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lsx0hr8s",
-   "chp": "580542124",
-   "permit_name": "ממקדשי תיראו - מודיעין עילית (ע\"ר)",
-   "registrar_name": "ממקדשי תיראו - מודיעין עילית (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lukrqpse",
-   "chp": "580730497",
-   "permit_name": "מקוה בית פריידא בעלזא (ע\"ר)",
-   "registrar_name": "מקוה בית פריידא בעלזא (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64luybq1m2",
-   "chp": "580110476",
-   "permit_name": "מרכז לבריאות \"חסדי יצחק\" (ע\"ר)",
-   "registrar_name": "מרכז לבריאות \"חסדי יצחק\" (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64lvqf93z7",
    "chp": "1886279",
    "permit_name": "קבוצת קליין אינטרנשיונל",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64lwb621ym",
-   "chp": "580134088",
-   "permit_name": "מרכז ערד להכרת היהדות (ע\"ר)",
-   "registrar_name": "מרכז ערד להכרת היהדות (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lwewsxom",
-   "chp": "580540870",
-   "permit_name": "מרכז רפואה, שיקום וסיעוד בית הדר (ע\"ר)",
-   "registrar_name": "מרכז רפואה\" שיקום וסיעוד בית הדר (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lwicvtpn",
-   "chp": "580010270",
-   "permit_name": "משכנותיך ישראל ירושלים (ע\"ר)",
-   "registrar_name": "משכנותיך ישראל ירושלים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lwlojwko",
-   "chp": "580212843",
-   "permit_name": "נחלת יעקב עמנואל (ע\"ר)",
-   "registrar_name": "נחלת יעקב עמנואל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lwsn84cn",
-   "chp": "580077865",
-   "permit_name": "נתיבות ראובן יוסף (ע\"ר)",
-   "registrar_name": "נתיבות ראובן יוסף (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64lww19d55",
@@ -904,44 +616,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lx6l422t",
-   "chp": "580668986",
-   "permit_name": "סמינר יהלום (ע\"ר)",
-   "registrar_name": "סמינר יהלום (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lxhcyquc",
-   "chp": "580304392",
-   "permit_name": "עמותה לפיתוח שירותים חברתיים - ראש העין (ע\"ר)",
-   "registrar_name": "עמותה לפיתוח שירותים חברתיים - ראש העין (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64lxkj9oji",
-   "chp": "580252872",
-   "permit_name": "מוסדות \"חסידי דאראג\" (ע\"ר)",
-   "registrar_name": "מוסדות \"חסידי דאראג\" (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64lxntnwig",
    "chp": "2100460",
    "permit_name": "קלקן קפיטל",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64ly5wv2wp",
-   "chp": "580282424",
-   "permit_name": "עצת אמת קרית ספר (ע\"ר)",
-   "registrar_name": "עצת אמת קרית ספר (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64lyu9jc5q",
@@ -960,70 +640,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lzvfcaf7",
-   "chp": "580247765",
-   "permit_name": "עצת זקנים (ע\"ר)",
-   "registrar_name": "עצת זקנים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m069h3no",
-   "chp": "580599728",
-   "permit_name": "פשוט לעזור לערד (ע\"ר)",
-   "registrar_name": "פשוט לעזור לערד  (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m0cyjzla",
-   "chp": "580673036",
-   "permit_name": "צדקה וחסד בערד ברדיטשוב (ע\"ר)",
-   "registrar_name": "צדקה וחסד בערד ברדיטשוב (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m0g44wup",
-   "chp": "580670321",
-   "permit_name": "צרכי הרבים - רצופות (ע\"ר)",
-   "registrar_name": "צרכי הרבים - רצופות  (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m0mz56ya",
-   "chp": "580417822",
-   "permit_name": "קהילה תורנית בית מאיר (ע\"ר)",
-   "registrar_name": "קהילה תורנית בית מאיר (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m0xu5kl9",
-   "chp": "580682896",
-   "permit_name": "קהילת שאגת אריה מודיעין עילית (ע\"ר)",
-   "registrar_name": "קהילת שאגת אריה מודיעין עילית (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m1c64hi1",
-   "chp": "580510113",
-   "permit_name": "קופת העיר נתיבות - שמחת חיים (ע\"ר)",
-   "registrar_name": "קופת העיר נתיבות - שמחת חיים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m1pka5vy",
-   "chp": "580233211",
-   "permit_name": "קרנות קורת ישראל - עמותה לפיתוח כלכלי (ע\"ר)",
-   "registrar_name": "קרנות קורת ישראל - עמותה לפיתוח כלכלי (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64m1t2x6mb",
    "chp": "500226402",
    "permit_name": "ראש העין - עירייה",
@@ -1040,92 +656,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64m1zuz9op",
-   "chp": "580701365",
-   "permit_name": "שיח אמונה (ע\"ר)",
-   "registrar_name": "שיח אמונה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m2iilo4u",
-   "chp": "580549327",
-   "permit_name": "שערי ישיבה (ע\"ר)",
-   "registrar_name": "שערי ישיבה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m2lxxslu",
-   "chp": "580336675",
-   "permit_name": "תורת חסד בגליל (ע\"ר)",
-   "registrar_name": "תורת חסד בגליל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m2puyfi9",
-   "chp": "580405496",
-   "permit_name": "תפארת רכסים (ע\"ר)",
-   "registrar_name": "תפארת רכסים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m2th7iv7",
-   "chp": "580043081",
-   "permit_name": "גמילות חסדים הכללי דחסידי בעלזא (אחיעזר ואחיסמך) שע\"י קהל מחזיקי הדת באר\"י (ע\"ר)",
-   "registrar_name": "גמילות חסדים הכללי דחסידי בעלזא (אחיעזר ואחיסמך) שע\"י קהל מחזיקי הדת באר\"י (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m2wu3pyt",
-   "chp": "580464394",
-   "permit_name": "היא תתהלל (ע\"ר)",
-   "registrar_name": "היא תתהלל (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m385sens",
-   "chp": "580556504",
-   "permit_name": "העמותה למען דיור בר השגה (ע\"ר)",
-   "registrar_name": "העמותה למען דיור בר השגה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m3utxtvr",
-   "chp": "580459154",
-   "permit_name": "ועד הורים ירושלמי (ע\"ר)",
-   "registrar_name": "ועד הורים ירושלמי (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64m4d5kbl7",
    "chp": "1849766",
    "permit_name": "רילייטד פורטפוליו מסחרי",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64m4kjd950",
-   "chp": "580325314",
-   "permit_name": "זכרון צבי - לקידום החינוך החרדי לבנות (ע\"ר)",
-   "registrar_name": "זכרון צבי - לקידום החינוך החרדי לבנות (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m4xihma3",
-   "chp": "580469591",
-   "permit_name": "חיים של אהבת תורה (ע\"ר)",
-   "registrar_name": "חיים של אהבת תורה (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64m54hjvjx",
@@ -1136,22 +672,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64m5et7c7m",
-   "chp": "580008910",
-   "permit_name": "מרכז תורה וחינוך חצור הגלילית (ע\"ר)",
-   "registrar_name": "מרכז תורה וחינוך חצור הגלילית (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m5ijl3e9",
-   "chp": "580129807",
-   "permit_name": "מרכזי בריאות קהילתיים ירושלים (ע\"ר)",
-   "registrar_name": "מרכזי בריאות קהילתיים ירושלים (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64m5wmk4nx",
    "chp": "500226501",
    "permit_name": "רעננה - עירייה",
@@ -1160,44 +680,12 @@
    "biz_type": ""
   },
   {
-   "id": "mp64m607ahi7",
-   "chp": "580386100",
-   "permit_name": "סמינר למורות ולגננות הליכות בית יעקב (ע\"ר)",
-   "registrar_name": "סמינר למורות ולגננות הליכות בית יעקב (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m7t4ld4t",
-   "chp": "580079978",
-   "permit_name": "עזר מציון (ע\"ר)",
-   "registrar_name": "עזר מציון (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
-   "id": "mp64m984kw3d",
-   "chp": "580665651",
-   "permit_name": "גמילות חסדים חסדי ישראל דחסידי מודז'יץ (ע\"ר)",
-   "registrar_name": "גמילות חסדים חסדי ישראל דחסידי מודז'יץ (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
-  },
-  {
    "id": "mp64mabaj7ay",
    "chp": "589906114",
    "permit_name": "שירותי בריאות כללית",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
-  },
-  {
-   "id": "mp64mblbjpu6",
-   "chp": "580364131",
-   "permit_name": "כהנא",
-   "registrar_name": "שערי דעת לחינוך הוראה וחסד (ע\"ר)",
-   "entity_type": "company",
-   "biz_type": "עמותה רשומה"
   },
   {
    "id": "mp64meh6yia9",
