@@ -25,7 +25,9 @@ export async function onRequestPut({ request, env, params }) {
     const docType = body.doc_type !== undefined ? body.doc_type : row.doc_type;
     if (!TYPES.includes(docType)) return Response.json({ error: "סיווג לא תקין" }, { status: 400 });
     const note = body.note !== undefined ? String(body.note) : row.note;
-    stmts.push(env.DB.prepare("UPDATE permit_docs SET doc_type=?, note=?, updated_at=datetime('now') WHERE id=?").bind(docType, note, params.id));
+    const metaOnly = Object.keys(body).every(k => ["intel", "pages", "doc_dates"].includes(k));      // עדכון נתוני סריקה / מטא בלבד אינו שינוי של המסמך: לא מעדכן את "עודכן לאחרונה" (כדי שרשימת השיוכים האחרונים תכלול רק שינויים אמיתיים)
+    stmts.push(metaOnly ? env.DB.prepare("UPDATE permit_docs SET doc_type=?, note=? WHERE id=?").bind(docType, note, params.id)
+      : env.DB.prepare("UPDATE permit_docs SET doc_type=?, note=?, updated_at=datetime('now') WHERE id=?").bind(docType, note, params.id));
     if (Array.isArray(body.business_ids)) {
       const ids = await existingBusinessIds(env, body.business_ids);
       const old = {};
