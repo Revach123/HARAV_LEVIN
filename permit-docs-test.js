@@ -248,6 +248,14 @@
   }
 
   // ───────── חלון: צפייה ועריכה של מסמך ─────────
+  // הת"ע מיוחד לאג"ח: תת-שורה לכל מסמך (משויך לאג"ח ואינו ההת"ע הראשי של החברה); השם כולל את סדרות האג"ח
+  function bondDocsOf(bid) {
+    const ser = s => /^\d/.test(s) ? s : s.length === 1 ? s + "'" : s.slice(0, -1) + '"' + s.slice(-1);
+    return S.docs.filter(d => (d.business_ids || []).includes(bid) && (d.bonds || []).length && d.doc_type !== "other" && !slotsOf(d, bid).length)
+      .map(d => { const ss = [...new Set(d.bonds.map(x => bondSeries(x.name)).filter(Boolean))].map(ser), oth = d.bonds.filter(x => !bondSeries(x.name)).map(x => x.symbol || x.name);
+        return { id: d.id, name: d.original_name, label: 'אג"ח ' + [...ss, ...oth].join(" ו-"), list: d.doc_type === "general" ? "general" : "private" }; })
+      .sort((a, b) => a.label.localeCompare(b.label, "he") || a.list.localeCompare(b.list));
+  }
   async function openDoc(docId, fromBiz, fromList) {
     const d = S.byId.get(docId); if (!d) return;
     close("pd-manage");
@@ -1986,7 +1994,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,

@@ -1131,7 +1131,10 @@ function renderAdminTable() {
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
-              </tr>`;
+              </tr>` + ((window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : []).map(x => {
+                const open = `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${x.id}','${b.id}')" title="${escHtml(x.name)}">פתיחה</button>`;
+                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="9" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list === "private" ? open : ""}</td><td style="text-align:center">${x.list === "general" ? open : ""}</td><td></td><td></td></tr>`;
+              }).join("");
           }).join("")}
         </tbody>
       </table>
