@@ -179,6 +179,7 @@ def page_hits(sha, page, pno, a, chps, outdir):
 
 def work(job):
     sha, path, a, chps, outdir = job
+    TESS[0] = a.tesseract          # ב-Windows כל תהליך נטען מחדש: מעבירים את נתיב Tesseract גם אליו
     hits = []
     try:
         doc = fitz.open(path)

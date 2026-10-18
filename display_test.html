@@ -186,7 +186,8 @@ async function withDocLinks(rows, level) {
   return rows.map(r => {
     const l = byChp.get(String(r.chp_number || "").trim()) || byName.get(r.permit_name);
     const id = l && l[level] ? l[level] : "";
-    return { ...r, permit_doc: id ? "יש" : "", _docid: id, _specials: l && l.specials ? l.specials : [] };
+    const bondSubs = ((l && l.bond_docs) || []).filter(x => x.list === level).map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true }));
+    return { ...r, permit_doc: id ? "יש" : "", _docid: id, _specials: l && l.specials ? l.specials : [], _bondSubs: bondSubs };
   });
 }
 
@@ -207,7 +208,7 @@ function groupSubRows(list) {
   for (const r of list) r._isSub = false;
   for (const r of list) if (r._sub && have.has(r._parent)) { if (!kids.has(r._parent)) kids.set(r._parent, []); kids.get(r._parent).push(r); }
   const out = [];
-  for (const r of list) { if (r._sub && have.has(r._parent)) continue; out.push(r); for (const k of kids.get(r) || []) out.push(Object.assign(k, { _isSub: true })); }
+  for (const r of list) { if (r._sub && have.has(r._parent)) continue; out.push(r); for (const k of kids.get(r) || []) out.push(Object.assign(k, { _isSub: true })); for (const k of r._bondSubs || []) out.push(k); }
   return out;
 }
 
@@ -386,10 +387,10 @@ function render(container, state, type, usedSample) {
     for (const row of state.filtered) {
       const tr = el("tr");
       if (row._isSub) tr.className = "sub-row";
-      for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key], row));
+      for (const c of state.cols) { let td; try { td = cellFor(c, row[c.key], row); } catch (e) { td = el("td"); } tr.appendChild(td); }
       tbody.appendChild(tr);
     }
-    title.innerHTML = `${label} <span class="cnt">(${state.filtered.length})</span>`;
+    title.innerHTML = `${label} <span class="cnt">(${state.filtered.filter(r => !r._isSub).length})</span>`;
   };
 
   // סינון (חיפוש כללי + סינון לפי עמודה) ואז מיון

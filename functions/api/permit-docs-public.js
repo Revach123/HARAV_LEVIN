@@ -33,6 +33,28 @@ export async function onRequestGet({ env }) {
         by.set(k, e);
       }
     } catch { /* אין טבלה עדיין */ }
+    try {          // הת"ע מיוחד לאג"ח: תת-שורה לכל מסמך (שמשויך לאג"ח ואינו ההת"ע הראשי של החברה); השם כולל את סדרות האג"ח
+      const bd = await env.DB.prepare(`
+        SELECT x.doc_id, x.name AS bname, x.symbol, d.doc_type, b.chp_number, b.permit_name, b.registrar_name
+        FROM permit_doc_bonds x
+        JOIN permit_docs d ON d.id = x.doc_id
+        JOIN permit_doc_companies c ON c.doc_id = d.id
+        JOIN businesses b ON b.id = c.business_id
+        WHERE d.doc_type != 'other' AND c.slot = '' AND (x.chp = '' OR x.chp = b.chp_number)`).all();
+      const series = n => { const m = String(n || "").replace(/["'׳״`]/g, "").replace(/\s+/g, " ").match(/אגח\s*([א-ת]{1,3}|\d{1,2})(?:\s|$)/); return m ? (/^\d/.test(m[1]) ? m[1] : m[1].length === 1 ? m[1] + "'" : m[1].slice(0, -1) + '"' + m[1].slice(-1)) : ""; };
+      const g = new Map();
+      for (const r of bd.results ?? []) {
+        const k = (r.chp_number || "n:" + (r.permit_name || r.registrar_name)) + "|" + r.doc_id;
+        const e = g.get(k) || { key: r.chp_number || "n:" + (r.permit_name || r.registrar_name), chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "", id: r.doc_id, list: r.doc_type === "general" ? "general" : "private", ser: [], other: [] };
+        const s = series(r.bname); if (s) { if (!e.ser.includes(s)) e.ser.push(s); } else e.other.push(r.symbol || r.bname);
+        g.set(k, e);
+      }
+      for (const e of g.values()) {
+        const en = by.get(e.key) || { chp: e.chp, name: e.name };
+        (en.bond_docs = en.bond_docs || []).push({ id: e.id, list: e.list, label: 'אג"ח ' + [...e.ser, ...e.other].join(" ו-") });
+        by.set(e.key, en);
+      }
+    } catch { /* אין טבלה עדיין */ }
     return Response.json({ links: [...by.values()] }, { headers: CORS });
   } catch (e) {
     return Response.json({ links: [], error: "unavailable" }, { headers: { "Access-Control-Allow-Origin": "*" } });      // לפני מיגרציה 0007
