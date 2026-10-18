@@ -106,7 +106,16 @@ def main():
             cnt["בהחלטה מקומית בלבד: " + later] += 1
             rows.append([sorted(e["files"])[0] if e["files"] else d.get("original_name", ""), d["id"], "בהחלטה מקומית בלבד (לא משויך באתר)", label(only_local), label(site_cos), e["time"], upd, later + " · " + when, " | ".join(status)])
         if only_site:
-            cnt["באתר בלבד: " + when] += 1
+            try:
+                it = json.loads(d.get("intel") or "{}")
+            except ValueError:
+                it = {}
+            tb, man = set(it.get("tb") or []), set(it.get("m") or [])
+            src = lambda i: "פוסט מקורי" if i in tb else ("החלטה מקומית" if i in man else "שיוך ידני באתר")  # noqa: E731
+            kinds = sorted({src(i) for i in only_site})
+            for k in kinds:
+                cnt["באתר בלבד, מקור: " + k] += 1
+            when = when + " · מקור: " + ", ".join(kinds)
             rows.append([d.get("original_name", ""), d["id"], "באתר בלבד (לא בהחלטה המקומית)", label(only_site), label(e["cos"]), e["time"], upd, later + " · " + when, " | ".join(status)])
         if not only_local and not only_site:
             cnt["זהה"] += 1
