@@ -783,6 +783,8 @@
   .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
   /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
+  tr.sub-row td { background:#f7fafa; font-size:.94em; }
+  tr.sub-row td.biz-name { padding-inline-start:26px; }
   .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .big-card { text-align:center; background:#fff; border:2px dashed var(--border); border-radius:8px; padding:16px 18px; min-height:150px; }
   .big-card .ico { display:block; font-size:30px; margin-bottom:4px; }
@@ -1080,11 +1082,11 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${sorted.map(b0 => {
+          ${groupSubs(sorted).map(b0 => {
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             return `
-              <tr>
-                <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
+              <tr${b0._isSub ? ' class="sub-row"' : ""}>
+                <td class="biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -2829,6 +2831,18 @@ function agchSortKey(b) {
   return 1;
 }
 
+// רישומים כפולים לאותה חברה (אותו ח.פ., למשל "מסלול הלכה"): שורה ראשית, והשאר כתתי-שורות מיד אחריה
+function groupSubs(list) {
+  const norm = s => String(s || "").replace(/["'׳״.\-,()]/g, " ").replace(/\s+/g, " ").replace(/\bבע ?מ\b/g, "").trim();
+  const by = new Map();
+  for (const b of businesses) { const k = String(b.chp_number || "").trim(); if (!k) continue; if (!by.has(k)) by.set(k, []); by.get(k).push(b); }
+  const parentOf = new Map();
+  for (const g of by.values()) { if (g.length < 2) continue; const main = g.find(b => norm(b.permit_name) === norm(b.registrar_name)) || g[0]; for (const b of g) if (b !== main) parentOf.set(b.id, main.id); }
+  const have = new Set(list.map(b => b.id)), kids = new Map(), out = [];
+  for (const b of list) if (parentOf.has(b.id) && have.has(parentOf.get(b.id))) { const p = parentOf.get(b.id); if (!kids.has(p)) kids.set(p, []); kids.get(p).push(b); }
+  for (const b of list) { if (parentOf.has(b.id) && have.has(parentOf.get(b.id))) continue; out.push(b); for (const k of kids.get(b.id) || []) out.push({ ...k, _isSub: true }); }
+  return out;
+}
 function filteredAndSorted() {
   const q = search.trim().toLowerCase();
 

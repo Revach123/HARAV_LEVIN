@@ -73,6 +73,7 @@
   tbody tr:nth-child(even){background:var(--row-alt)}
   tbody tr:hover{background:var(--accent-bg)}
   tbody tr:last-child td{border-bottom:none}
+  tbody tr.sub-row td{background:#f7fafa;font-size:.93em;color:#445}tbody tr.sub-row td.name-cell{padding-inline-start:28px}
   th.ctr{text-align:center}
   td.ctr{text-align:center;white-space:nowrap}
   thead th{white-space:normal;line-height:1.25;vertical-align:middle}
@@ -189,6 +190,27 @@ async function withDocLinks(rows, level) {
   });
 }
 
+// רישומים כפולים לאותה חברה (אותו ח.פ., למשל "מסלול הלכה"): שורה אחת ראשית, והשאר כתתי-שורות מתחתיה
+function markSubRows(rows) {
+  const norm = s => String(s || "").replace(/["'׳״.\-,()]/g, " ").replace(/\s+/g, " ").replace(/\bבע ?מ\b/g, "").trim();
+  const by = new Map();
+  for (const r of rows) { const k = String(r.chp_number || "").trim(); if (!k) continue; if (!by.has(k)) by.set(k, []); by.get(k).push(r); }
+  for (const g of by.values()) {
+    if (g.length < 2) continue;
+    const main = g.find(r => norm(r.permit_name) === norm(r.registrar_name)) || g[0];
+    for (const r of g) if (r !== main) { r._sub = true; r._parent = main; }
+  }
+}
+// סדר התצוגה: כל תת-שורה מיד אחרי השורה הראשית שלה (אם השורה הראשית מסוננת החוצה, התת-שורה מוצגת כשורה רגילה)
+function groupSubRows(list) {
+  const have = new Set(list), kids = new Map();
+  for (const r of list) r._isSub = false;
+  for (const r of list) if (r._sub && have.has(r._parent)) { if (!kids.has(r._parent)) kids.set(r._parent, []); kids.get(r._parent).push(r); }
+  const out = [];
+  for (const r of list) { if (r._sub && have.has(r._parent)) continue; out.push(r); for (const k of kids.get(r) || []) out.push(Object.assign(k, { _isSub: true })); }
+  return out;
+}
+
 // ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
 async function mountList(container, type) {
   const topic = type.startsWith("bonds") ? "bonds" : "companies";
@@ -215,7 +237,7 @@ async function mountList(container, type) {
     usedSample = true;
   }
 
-  if (topic === "companies") rows = await withDocLinks(rows, level);
+  if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); }
   const state = { rows, filtered: rows, cols, topic };
   render(container, state, type, usedSample);
 }
@@ -363,6 +385,7 @@ function render(container, state, type, usedSample) {
     }
     for (const row of state.filtered) {
       const tr = el("tr");
+      if (row._isSub) tr.className = "sub-row";
       for (const c of state.cols) tr.appendChild(cellFor(c, row[c.key], row));
       tbody.appendChild(tr);
     }
@@ -414,7 +437,7 @@ function render(container, state, type, usedSample) {
         return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
       }).map(x => x[2]);
     }
-    state.filtered = rows;
+    state.filtered = groupSubRows(rows);
     ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
       th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
     draw();
@@ -538,7 +561,7 @@ const NOWRAP_KEYS = new Set(["symbol","redemption_date","midroog_rating","maalot
 function cellFor(col, val, row) {
   const td = el("td");
   if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
-  if (col.cell === "name") { td.className = "name-cell"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "name") { td.className = "name-cell"; td.textContent = (row && row._isSub ? "↳ " : "") + (val ?? ""); return td; }
   if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
   if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
   if (col.cell === "chg")  {
