@@ -6,3 +6,4 @@ scripts/registry_audit/out/
 
 __pycache__/
 *.pyc
+.wrangler/
