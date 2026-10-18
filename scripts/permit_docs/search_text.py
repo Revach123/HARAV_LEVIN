@@ -53,7 +53,12 @@ def main():
         for sha, n, pg in db.execute("SELECT sha, n, pages FROM hps WHERE hp = ? ORDER BY n DESC", (a.hp.strip(),)):
             print(f"{files.get(sha, sha[:12])} | הופעות: {n} | עמודים: {pg}")
             c += 1
-        ink = [r for r in db.execute("SELECT sha, page, kind, crop FROM ink_hits WHERE value = ?", (a.hp.strip(),))] if db.execute("SELECT 1 FROM sqlite_master WHERE name = 'ink_hits'").fetchone() else []
+        ink = []
+        ink_path = os.path.join(os.path.dirname(a.db), "permit_ink.db")
+        if os.path.exists(ink_path):
+            idb = sqlite3.connect(ink_path, timeout=30)
+            ink = list(idb.execute("SELECT sha, page, kind, crop FROM ink_hits WHERE value = ?", (a.hp.strip(),)))
+            idb.close()
         for sha, pg, kind, crop in ink:
             print(f"{files.get(sha, sha[:12])} | עמוד {pg} | {kind} | תמונה: {crop}")
             c += 1
