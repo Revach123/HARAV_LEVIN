@@ -860,6 +860,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-18"
   },
+  "U10379": {
+   "data": {
+    "chp_number": "513257873",
+    "company_name": "מגה אור",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10379,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
+    "maya_report_id": 1776611,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-18"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
