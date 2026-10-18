@@ -25,6 +25,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from multiprocessing import Pool
 
 import cv2
@@ -53,7 +54,7 @@ def ocr(img, psm=6, digits=False, lang="heb+eng"):
         if digits:
             cmd += ["-c", "tessedit_char_whitelist=0123456789"]
         try:
-            return subprocess.run(cmd, capture_output=True, timeout=120).stdout.decode("utf-8", "replace")
+            return subprocess.run(cmd, capture_output=True, timeout=30).stdout.decode("utf-8", "replace")
         except Exception:  # noqa: BLE001
             return ""
 
@@ -177,15 +178,16 @@ def near_valid(d, chps):
 
 
 def page_hits(sha, page, pno, a, chps, outdir):
+    t0 = time.time()
     img = render(page, a.dpi)
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     H = img.shape[0]
     hits, k = [], 0
 
-    def add(kind, crop, texts, box):
+    def add(kind, crop, stages, box):
         nonlocal k
         found = []
-        for t in texts:
+        for t in (t for stage in stages for t in stage()):
             t2 = t.replace(",", "").replace(" ", "")
             for d in dict.fromkeys(DIGITS.findall(t2)):
                 for cand in ([d] if len(d) == 9 else [d[:9], d[-9:]]):
@@ -194,6 +196,8 @@ def page_hits(sha, page, pno, a, chps, outdir):
                     st, fixed = near_valid(cand, chps)
                     if st:
                         found.append((fixed, st, cand))
+            if any(f[1] == "תקין" for f in found):          # נמצא ח.פ. תקין: אין צורך בעוד קריאות של אותו כתם
+                break
             for mm in NAME.finditer(t):
                 nm = re.sub(r"\s+", " ", mm.group(1)).strip()
                 if len(nm) > 6:
@@ -216,7 +220,10 @@ def page_hits(sha, page, pno, a, chps, outdir):
         crop = img[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         mask = color[max(0, y - pad): y + h + pad, max(0, x - pad): x + w + pad]
         iso = cv2.bitwise_not(mask)             # דיו צבעוני בלבד, שחור על לבן: בלי הטקסט המודפס שמתחת
-        add("חותמת / עט צבעוני", crop, readings(iso) + tilt_readings(iso) + readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY)), (x, y, w, h))
+        if time.time() - t0 > a.page_seconds:
+            print(f"    {sha[:12]} עמוד {pno}: חרג מזמן העמוד ({a.page_seconds} שניות), ממשיך לעמוד הבא", flush=True)
+            return hits
+        add("חותמת / עט צבעוני", crop, [lambda: readings(iso), lambda: tilt_readings(iso), lambda: readings(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY))], (x, y, w, h))
     # 2) כתב יד בדיו כהה, מחוץ לטקסט המודפס
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     ink = (gray < 150).astype(np.uint8) * 255
@@ -229,7 +236,9 @@ def page_hits(sha, page, pno, a, chps, outdir):
             if a.only_bottom and y < H * 0.5:
                 continue
             crop = gray[max(0, y - 10): y + h + 10, max(0, x - 10): x + w + 10]
-            add("כתב יד / דיו כהה", crop, [ocr(crop, 7, digits=True), ocr(crop, 7)], (x, y, w, h))
+            if time.time() - t0 > a.page_seconds:
+                break
+            add("כתב יד / דיו כהה", crop, [lambda: [ocr(crop, 7, digits=True), ocr(crop, 7)]], (x, y, w, h))
     return hits
 
 
@@ -241,6 +250,7 @@ def work(job):
         doc = fitz.open(path)
         for i in range(min(len(doc), a.max_pages)):
             hits += page_hits(sha, doc[i], i + 1, a, chps, outdir)
+            print(f"    {sha[:12]} עמוד {i + 1}/{min(len(doc), a.max_pages)} נבדק", flush=True)
         doc.close()
     except Exception as e:  # noqa: BLE001
         return sha, hits, str(e)
@@ -265,6 +275,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--only-bottom", action="store_true", help="רק החצי התחתון של כל עמוד (שם בדרך כלל החותמת)")
     ap.add_argument("--only", default="", help="רק מסמכים ששם הקובץ שלהם מכיל את הטקסט (למשל AASDFD); בודק מחדש גם אם כבר נבדקו")
+    ap.add_argument("--page-seconds", type=int, default=90, help="מקסימום זמן בדיקה לעמוד")
     ap.add_argument("--tesseract", default=TESS[0])
     a = ap.parse_args()
     TESS[0] = a.tesseract
