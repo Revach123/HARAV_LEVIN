@@ -691,7 +691,7 @@
   }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    const l = S.docs.filter(d => inView(d, Q.view) && srcOk(d) && !Q.skipped.has(d.id) &&
+    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && srcOk(d) && !Q.skipped.has(d.id) && !(S.rev && S.rev.has("doc:" + d.id)) &&
         (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
@@ -818,7 +818,8 @@
         <div style="display:flex;gap:6px;margin-top:5px"><input class="pd-in" id="pd-ext-name" placeholder="שם החברה"><input class="pd-in" id="pd-ext-chp" placeholder="ח.פ." style="max-width:120px"></div>
         <div class="pd-btns" style="margin-top:5px"><button class="pd-btn primary" onclick="PD._unExtAdd('not_in_db')" title="הסטטוס (מחוקה / מוזגה / אינה במאגר) אפשר לשנות ברשימת החברות שאינן במאגר">שיוך</button></div></details>
       <details style="margin-top:6px" ${Q.note ? "open" : ""}><summary class="pd-sub" style="cursor:pointer">הערה</summary><textarea class="pd-in" rows="2" onchange="PD._unNote(this.value)">${E(Q.note)}</textarea></details>
-      <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>`;
+      <div id="pd-un-err" style="color:#c0392b;margin-top:6px"></div>
+      ${uqBar(d)}`;
     const foot = $("pd-un-foot");
     if (foot) foot.innerHTML = `<button class="pd-btn danger" onclick="PD._askDelete('${d.id}')">🗑 מחיקת המסמך</button>${isOther(d) ? `<button class="pd-btn" onclick="PD._unRestore()" title="המסמך חוזר ללשונית 'לא משויכים'">סימון מסמך כהיתר עסקה</button>` : `<button class="pd-btn" onclick="PD._unOtherDoc()" title="עובר ללשונית 'מסמכים אחרים'">סימון: מסמך שאינו היתר עסקה</button>`}`;
     if (keepIn !== null) { const q = $("pd-un-q"); q.value = keepIn; q.focus(); }
@@ -888,7 +889,41 @@
       <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" onclick="PD._unPicker('change','ext','${id}')">שינוי</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unExtDetach('${id}')">ביטול</button></div></div>`;
   }
   const C = { docId: "", bizId: "", t: "" };
-  async function uqAct(bizId, act) { const d = unassignedList()[Q.i]; if (d) return actFor(d.id, bizId, act); }
+  async function uqAct(bizId, act) { const d = unassignedList()[Q.i]; if (d) uqStage({ t: "act", docId: d.id, bid: bizId, act }); }
+  // בחלון הלא משויכים: שיוכים מצטברים ונקלטים רק ב"אישור"; אפשר לשייך לכמה חברות. "שאלת מנהל" מעבירה את המסמך לרשימה נפרדת
+  Q.pend = {};
+  function uqStage(op) {
+    const l = Q.pend[op.docId] || (Q.pend[op.docId] = []);
+    if (!l.some(x => x.t === op.t && x.bid === op.bid && x.act === op.act && x.hp === op.hp && x.extId === op.extId && x.name === op.name)) l.push(op);
+    uqShow(true);
+  }
+  function uqBar(d) {
+    const l = Q.pend[d.id] || [];
+    return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>ממתין לאישור:</b></div>` + l.map((op, i) => `<div class="pd-sub" style="width:100%">• ${E(opLabel(op))} <a href="#" onclick="PD._unUnstage(${i});return false" style="color:#c0392b" title="ביטול הבחירה">✕</a></div>`).join("") : `<div class="pd-sub" style="width:100%">בחרו שיוך אחד או יותר (אפשר לכמה חברות), ואז אישור.</div>`}
+      <input class="pd-in" id="pd-un-qn" placeholder="הערה לשאלת מנהל (אופציונלי)" style="flex:1;min-width:140px">
+      <button class="pd-btn primary" onclick="PD._unOk()" title="מבצע את השיוכים שנבחרו ועובר למסמך הבא">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button>
+      <button class="pd-btn" style="background:#fff3cd;border-color:#e0b84a" onclick="PD._unQ()" title="המסמך עובר לרשימת שאלות מנהל, בלי לבצע את הבחירות">❓ שאלת מנהל</button></div>`;
+  }
+  async function uqOk() {
+    const d = S.byId.get(Q.curId); if (!d) return;
+    const ops = Q.pend[d.id] || [];
+    if (!ops.length && isUnassigned(d)) { const el = $("pd-un-err"); if (el) el.textContent = "בחרו שיוך לפני אישור, או השתמשו ב'דילוג' / 'שאלת מנהל'."; return; }
+    try {
+      for (const op of ops) {
+        if (op.t === "act") await actFor(op.docId, op.bid, op.act);
+        else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
+        else if (op.t === "extnew") { const c = await extEnsure({ chp: op.chp, name: op.name, status: op.status }); await extAssign(op.docId, c.id); }
+      }
+      await setReview("doc:" + d.id, "approved"); CD.lastRev.push({ key: "doc:" + d.id, status: "approved" });
+    } catch (e) { alert("האישור נכשל: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
+    delete Q.pend[d.id]; Q.curId = ""; refresh(); uqShow();
+  }
+  async function uqQuestion() {
+    const d = S.byId.get(Q.curId); if (!d) return; const n = $("pd-un-qn");
+    try { await setReview("doc:" + d.id, "question", (n && n.value ? n.value : "").slice(0, 480)); CD.lastRev.push({ key: "doc:" + d.id, status: "question" }); }
+    catch (e) { alert("השמירה נכשלה: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
+    delete Q.pend[d.id]; Q.curId = ""; uqShow();
+  }
   async function actFor(docId, bizId, act) {
     const d = S.byId.get(docId); if (!d) return;
     const t = act === "only" ? "" : act, cur = t ? slotDoc(bizId, t) : null;
@@ -949,15 +984,16 @@
   const histSet = v => { try { localStorage.setItem(HK, JSON.stringify(v.slice(-40))); } catch { /* בלי אחסון */ } };
   const snapDoc = d => ({ specials: { ...(d.specials || {}) }, id: d.id, name: d.original_name || d.id, ext_ids: [...(d.ext_ids || [])], bonds: (d.bonds || []).map(x => ({ ...x })), business_ids: [...(d.business_ids || [])], slots: { ...(d.slots || {}) }, doc_type: d.doc_type, note: d.note || "" });
   function pushHist(before, what, others, sid) { const h = histGet(); h.push({ ...before, what, others: others || [], sid: sid || "", at: Date.now() }); histSet(h); undoRefresh(); }
-  function lastRevItem() {          // האישור / שאלת המנהל האחרונים: גם אחרי רענון הדף (לפי הזמן ששמור בשרת)
-    let best = null; for (const x of (S.rev || new Map()).values()) if (!best || String(x.updated_at || "") > String(best.updated_at || "")) best = x;
+  function lastRevItem(docKeys) {          // האישור / שאלת המנהל האחרונים: גם אחרי רענון הדף (לפי הזמן ששמור בשרת)
+    let best = null; for (const x of (S.rev || new Map()).values()) { if (x.key.startsWith("doc:") !== !!docKeys) continue; if (!best || String(x.updated_at || "") > String(best.updated_at || "")) best = x; }
     return best;
   }
   function undoRefresh() {
     const e = histGet().slice(-1)[0];
     const html = e ? `<button class="pd-link2" onclick="PD._undo()" title="${E(e.name)}: ${E(e.what)}. מחזיר את המסמך למצב שלפני">↩ ביטול אחרון</button>` : "";
     for (const id of ["pd-un-undo", "pd-mg-undo"]) { const el = $(id); if (el) el.innerHTML = html; }
-    const rv = lastRevItem(), cu = $("pd-cd-undo");
+    const rv = lastRevItem(false), cu = $("pd-cd-undo"), rvd = lastRevItem(true);
+    const un = $("pd-un-undo"); if (un) un.innerHTML = (rvd ? `<button class="pd-link2" onclick="PD._cdUnrev(true)" title="מחזיר את המסמך שאושר / הועבר לשאלת מנהל חזרה לרשימה">↩ ביטול ${rvd.status === "question" ? "שאלת מנהל" : "אישור"} אחרון</button>` : "") + html;
     if (cu) cu.innerHTML = (rv ? `<button class="pd-link2" onclick="PD._cdUnrev()" title="מחזיר את הפריט שאושר / הועבר לשאלת מנהל חזרה לרשימה (שינויים שבוצעו במסמכים מתבטלים בכפתור ביטול אחרון)">↩ ביטול ${rv.status === "question" ? "שאלת מנהל" : "אישור"} אחרון</button>` : "") + html;
   }
   async function refetchDocs(ids) {       // מסמכים אחרים שהקישור שלהם לרשימה הוחלף בצד השרת: טוענים מחדש כדי שהתצוגה לא תישאר ישנה
@@ -1131,6 +1167,7 @@
   const opLabel = op => op.t === "act" ? `שיוך ${docNm(op.docId)} ל${bizName(op.bid)} (${op.act === "only" ? "בלבד" : 'הת"ע ' + SLOT_HE[op.act]})`
     : op.t === "vis" ? `שינוי רישום ${bizName(op.bid)} ל${op.value === "רק פרטי" ? '"רק פרטי"' : op.value === "פרטי" ? '"יש גם פרטי"' : '"רק כללי"'}`
     : op.t === "special" ? `${docNm(op.docId)}: סיווג "אחר" של ${bizName(op.bid)} (${op.title}${op.detail ? ": " + op.detail : ""})`
+    : op.t === "extnew" ? `שיוך ${docNm(op.docId)} לחברה שאינה במאגר: ${op.name || op.chp}`
     : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
     : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
@@ -1181,11 +1218,12 @@
     } catch (e) { alert("האישור נכשל: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
     delete CD.pend[k]; CD.curBiz = ""; cdShow();
   }
-  async function cdUnrev() {
-    const it = lastRevItem(); if (!it) return;
+  async function cdUnrev(docMode) {
+    const it = lastRevItem(docMode); if (!it) return;
     const r = { key: it.key, status: it.status };
     try { await setReview(r.key, ""); } catch (e) { alert("הביטול נכשל: " + e.message); return; }
     CD.lastRev = CD.lastRev.filter(x => x.key !== r.key);
+    if (r.key.startsWith("doc:")) { Q.curId = ""; Q.resume = { id: r.key.slice(4), i: 0 }; uqShow(); return; }
     CD.curBiz = r.key.startsWith("post:") ? r.key : r.key.split(":").slice(1).join(":"); CD.mode = r.key.startsWith("post:") ? "review" : r.key.split(":")[0]; CD.i = 0; CD.resume = null;
     cdShow();
   }
@@ -1449,9 +1487,7 @@
   async function uqExtAdd(st) {
     const d = unassignedList()[Q.i], name = ($("pd-ext-name") || {}).value || "", chp = ($("pd-ext-chp") || {}).value || "";
     if (!d || !(name.trim() || chp.trim())) { const el = $("pd-un-err"); if (el) el.textContent = "יש להקליד שם או ח.פ."; return; }
-    try { const c = await extEnsure({ chp, name, status: st }); await extAssign(d.id, c.id); await uqApplyReplace(d.id); }
-    catch (e) { const el = $("pd-un-err"); if (el) el.textContent = "השיוך נכשל: " + e.message; return; }
-    uqAfter();
+    uqStage({ t: "extnew", docId: d.id, chp, name, status: st });
   }
   async function uqExtDetach(extId) {
     const d = unassignedList()[Q.i]; if (!d) return;
@@ -1878,8 +1914,8 @@
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
       Q.filter = v; clearTimeout(Q._ft);
       Q._ft = setTimeout(() => { const k = unassignedList().findIndex(x => x.id === Q.curId); Q.i = k >= 0 ? k : 0; if (k < 0) Q.curId = ""; uqShow(); }, 300);
-    }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
-    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => { if ($("pd-cd") && CD.curBiz) stage({ t: "ext", docId, hp, extId }); else postExtApply(docId, hp, extId).then(() => { refresh(); if ($("pd-un")) uqAfter(); }).catch(() => {}); }, _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: (d, b) => spEdit(d, b, false), _spSave: spSave, _spDel: spDel, _cdSpecial: (docId, bid) => spEdit(docId, bid, true), _cdOk: cdOk, _cdUnrev: cdUnrev, _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
+    }, _unOk: uqOk, _unQ: uqQuestion, _unUnstage: i => { (Q.pend[Q.curId] || []).splice(i, 1); uqShow(true); }, _unView: v => { Q.view = v; Q.resume = readPos(v); Q.i = 0; Q.curId = ""; uqShow(); },
+    _unExtAdd: uqExtAdd, _unExtDetach: uqExtDetach, _unDetach: uqDetach, _unRestore: uqRestore, _unManage: id => { const d = unassignedList()[Q.i]; if (d) openAssign(d.id, [id], d.doc_type, true); }, _unPicker: uqPicker, _upBond: (id, on) => { const c = U.cur; if (!c || !c.bondSel) return; on ? c.bondSel.add(id) : c.bondSel.delete(id); }, _upNewCo: upNewCo, _upExtCo: upExtCo, openCompanyDash, _postExt: (docId, hp, extId) => { if ($("pd-cd") && CD.curBiz) stage({ t: "ext", docId, hp, extId }); else if ($("pd-un") && Q.curId === docId) uqStage({ t: "ext", docId, hp, extId }); else postExtApply(docId, hp, extId).then(() => refresh()).catch(() => {}); }, _cdType: (docId, dtype) => stage({ t: "type", docId, dtype }), _cdVis: (bid, value) => stage({ t: "vis", bid, value }), _spEdit: (d, b) => spEdit(d, b, false), _spSave: spSave, _spDel: spDel, _cdSpecial: (docId, bid) => spEdit(docId, bid, true), _cdOk: cdOk, _cdUnrev: m => cdUnrev(m === true), _cdQ: cdQuestion, _cdUnstage: i => { (CD.pend[cdKey()] || []).splice(i, 1); cdShow(); }, _cdExtras: (docId, bid) => stage({ t: "extras", docId, bid }), _postAdd: postAdd, _top: topGo, _cdMode: m => { CD.mode = m; CD.curBiz = ""; CD.i = 0; CD.resume = (() => { try { return JSON.parse(localStorage.getItem(cdPosKey()) || "null"); } catch { return null; } })(); cdShow(); }, _cdGo: cdGo, _cdSkip: () => { if (CD.curBiz) CD.skipped.add(CD.curBiz); CD.curBiz = ""; cdShow(); }, _cdFilter: v => { CD.filter = v; clearTimeout(CD._ft); CD._ft = setTimeout(() => { CD.curBiz = ""; CD.i = 0; cdShow(); }, 300); }, _cdSel: id => { CD.selDoc = id; cdShow(); }, _cdAct: (docId, bid, act) => stage({ t: "act", docId, bid, act }), _cdDetach: (docId, bid) => { const d = S.byId.get(docId); stage({ t: d && (d.business_ids || []).includes(bid) ? "detach" : "reject", docId, bid }); }, _legacy: legacyConvert, _mgBond: mgBond, _mgBondSearch: mgBondSearch, _mgBondAdd: mgBondAdd, _mgBondDel: mgBondDel, _unBondDel: bondDel, _unAct: uqAct, _unSetType: uqSetType, _cf: cfChoose,
     _home: goHome, goHome, _openExt: openExt, openExt, _extStatus: extStatus, _extDel: extDel, _dragStart: dragStart, _dragEnd: dragEnd, _dragOver: dragOver, _dragLeave: dragLeave, _drop: dropOn,
     _undo: undoLast, _recent: openRecent, _unassignAll: unassignAll, _asAdd: asAdd, _asDrop: asDrop,
     _unPick: uqPick, _unShared: uqShared, _unAssign: uqAssign, _asType: asType, _asSlot: asSlot, _asDo: asDo, _asNext: asNext,
