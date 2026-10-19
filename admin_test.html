@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=47"></script>
+<script src="/permit-docs-test.js?v=48"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -833,13 +833,16 @@
   .home-top { flex:none !important; height:clamp(64px,9vh,96px); gap:clamp(16px,2.5vw,48px) !important; }
   .home-top .home-card { width:clamp(200px,17vw,320px) !important; }
   .home-mid { flex:none !important; height:clamp(100px,16vh,160px); gap:clamp(16px,2.5vw,48px) !important; }
-  .home-bot { flex:none !important; height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-bot { flex:none !important; height:auto !important; min-height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
   .home-dash .home-grid { gap:clamp(14px,2vw,32px) !important; }
   .home-wrap .home-card .ico { font-size:clamp(18px,3vh,32px) !important; margin-bottom:2px !important; }
   .home-wrap .home-card b { font-size:clamp(15px,1.25vw,24px) !important; }
   .home-mid .home-card .ico { font-size:clamp(24px,4.2vh,44px) !important; }
   .home-mid .home-card b { font-size:clamp(18px,1.7vw,32px) !important; }
-  .home-wrap .idx-row { width:clamp(280px,24vw,460px) !important; }
+  .home-wrap .idx-row { width:clamp(280px,24vw,460px) !important; display:flex; }
+  .home-wrap .idx-box { height:auto; flex:1; overflow:hidden; }
+  .home-wrap .idx-pie svg { width:clamp(70px,11vh,130px) !important; }
+  .home-dash .home-grid { min-height:200px; }
   @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
