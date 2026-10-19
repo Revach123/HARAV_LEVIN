@@ -1839,8 +1839,9 @@
       if (ND.miss === "private" && !miss.includes("private")) continue;
       if (ND.miss === "general" && !miss.includes("general")) continue;
       if (ND.miss === "both" && miss.length < 2) continue;
-      if (ND.sug && !hintDocs(b, SUG_TYPES).length) continue;
-      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length), sug: hintDocs(b, SUG_TYPES) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
+      const ex = extrasOf(b.id).filter(d => !(d.bonds || []).length), sug = hintDocs(b, SUG_TYPES);
+      if (ND.sug && !ex.length && !sug.length) continue;
+      out.push({ b, miss, ex, sug });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
@@ -1871,9 +1872,9 @@
   }
   function ndShow() {
     if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
-    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
-      .filter(([t]) => t !== "e").map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" || (t === "e" && !J.total) ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
-    if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="active">👥 מצטרפים${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
+    $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
+      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')"><span>${l}</span><span class="pd-tabn" ${t === "d" ? 'style="visibility:hidden"' : ""}>${t === "d" ? 0 : ndCount(t)}</span></button>`).join("");
+    if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button class="active"><span>👥 מצטרפים</span>${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
     const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq"].includes(document.activeElement.id) ? document.activeElement.id : "";
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
@@ -1885,12 +1886,13 @@
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
     const rows = ndMissing(), M_ = [["all", "הכל"], ["private", "חסר פרטי"], ["general", "חסר כללי"], ["both", "חסרים שניהם"]];
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span>${S.hp ? `<button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שנמצא בקובץ כלשהו ח.פ. שלהן או שמן">רק עם הצעות נוספות</button>` : ""}</div>
+    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span></div>
+      <div class="pd-nd-bar" style="margin-top:6px"><button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שיש להן שטרות נוספים או הצעות נוספות">חברות עם שטרות/הצעות נוספות</button></div>
       <div class="pd-sub" style="margin-bottom:6px">כל חברה שרשומה ברשימת הפרטי או הכללי צריכה הת"ע משויך מאותו סוג. לחיצה על שורה פותחת את ניהול המסמכים של החברה.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th><th>הצעות נוספות</th></tr></thead><tbody>${rows.map(e => {
+      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th><th>הצעות נוספות</th><th>העלאה</th></tr></thead><tbody>${rows.map(e => {
         const b = e.b, one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">-</span>`; };
         return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td>
-          <td>${one("private")}</td><td>${one("general")}</td><td class="pd-nd-n">${e.ex.length || ""}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(x => (x.d.original_name || x.d.id) + " (" + x.why + ")").join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
+          <td>${one("private")}</td><td>${one("general")}</td><td class="pd-nd-n">${e.ex.length || ""}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(x => (x.d.original_name || x.d.id) + " (" + x.why + ")").join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td><td><button class="pd-mini" onclick="event.stopPropagation();PD._rowUp('${b.id}')" title="העלאת מסמך עבור החברה, ובחירת הת&quot;ע שאליו לקשר">⬆ העלאת מסמך</button></td></tr>`; }).join("") || `<tr><td colspan="7" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
   }
   function ndTabB() {
     const f = ND.q.trim().toLowerCase(), rows = ndDocsB().filter(d => !f || docHay(d).includes(f))
@@ -2123,7 +2125,37 @@
     if (slotsOf(d, M.biz).includes(target)) return;
     await toggleSlot(id, M.biz, target);
   }
-  async function toggleSlot(docId, bizId, t) {
+  // ───────── העלאת מסמך משורת חברה בדשבורד: העלאה, ואז בחירת הת"ע (פרטי / כללי) בחלון שמראה מה כבר קיים ─────────
+  const RU = { biz: "", doc: "" };
+  function rowUpload(bizId) {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/pdf,.pdf";
+    inp.onchange = () => { if (inp.files && inp.files[0]) ruPost(inp.files[0], bizId); };
+    inp.click();
+  }
+  async function ruPost(file, bizId) {
+    RU.biz = bizId; RU.doc = "";
+    overlay("pd-rowup", `<div class="pd-head"><b>העלאת מסמך · ${displayName(bizById(bizId), true)}</b><button class="pd-x" onclick="PD._close('pd-rowup')">✕</button></div><div class="pd-body" id="pd-ru-body"><div class="pd-sub">מעלה את ${E(file.name)}…</div></div>`);
+    try {
+      const buf = await file.arrayBuffer();
+      let doc = await upPost({ buf, file, type: "unknown", note: "" }, [bizId]);
+      if (!(doc.business_ids || []).includes(bizId)) { const r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: [...(doc.business_ids || []), bizId] }); doc = r.doc; }
+      replaceDoc(doc); RU.doc = doc.id; S._fm = null; refresh(); ruPaint();
+    } catch (e) { const b = $("pd-ru-body"); if (b) b.innerHTML = `<div class="pd-empty" style="color:#c0392b">ההעלאה נכשלה: ${E(e.message)}</div>`; }
+  }
+  function ruPaint() {
+    const body = $("pd-ru-body"), d = S.byId.get(RU.doc), b = bizById(RU.biz); if (!body || !d || !b) return;
+    const row = t => { const cur = slotDoc(b.id, t), mine = cur && cur.id === d.id;
+      return `<div class="pd-mg-slot" style="margin-bottom:8px"><h4>הת"ע ${SLOT_HE[t]}</h4>${cur ? `<div class="pd-name">${E(cur.original_name || cur.id)}${mine ? ' <span class="pd-chip" style="background:#1e7e4a">המסמך שהועלה</span>' : ""}</div>` : `<div class="pd-sub">אין מסמך מקושר</div>`}
+        ${mine ? "" : `<button class="pd-btn primary" style="margin-top:6px" onclick="PD._ruPick('${t}')">${cur ? "החלפה במסמך שהועלה" : "קישור המסמך שהועלה"}</button>`}</div>`; };
+    body.innerHTML = `<div class="pd-ok-msg">✓ המסמך הועלה ושויך לחברה: <b>${E(d.original_name || d.id)}</b></div><div class="pd-sub" style="margin:8px 0">לאיזה הת"ע לקשר אותו? (אפשר גם להשאיר כמסמך נוסף)</div>${["private", "general"].map(row).join("")}
+      <div class="pd-btns" style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-rowup')">סיום (כמסמך נוסף)</button><button class="pd-btn" onclick="PD._close('pd-rowup');PD.openDoc('${d.id}','${b.id}')">פתיחת המסמך</button></div>`;
+  }
+  async function ruPick(t) {
+    const prev = slotDoc(RU.biz, t);
+    if (prev && prev.id !== RU.doc && !confirm("להחליף המסמך הקיים?")) return;
+    await toggleSlot(RU.doc, RU.biz, t, true); ruPaint(); if ($("pd-nd-body")) ndShow();
+  }
+  async function toggleSlot(docId, bizId, t, noAsk) {
     const d = S.byId.get(docId); if (!d) return;
     const cur = slotsOf(d, bizId), on = !cur.includes(t);
     const next = on ? [...cur, t] : cur.filter(x => x !== t);
@@ -2133,7 +2165,7 @@
     if (on) {
       prev = slotDoc(bizId, t);
       if (prev && prev.id !== docId) others.push({ id: prev.id, bid: bizId, slot: slotsOf(prev, bizId) });
-      if (prev && prev.id !== docId && !confirm(`כבר מקושר מסמך אחר (${prev.original_name || prev.id}) להת"ע ${SLOT_HE[t]} של החברה. להחליף? המסמך הקודם יעבור למסמכים נוספים.`)) return;
+      if (prev && prev.id !== docId && !noAsk && !confirm(`כבר מקושר מסמך אחר (${prev.original_name || prev.id}) להת"ע ${SLOT_HE[t]} של החברה. להחליף? המסמך הקודם יעבור למסמכים נוספים.`)) return;
       if (d.doc_type === "unknown") patch.doc_type = next.length === 2 ? "both" : t;
       else if (d.doc_type !== "both" && d.doc_type !== t) { if (!confirm(`המסמך מסווג "${TL[d.doc_type] || d.doc_type}". לקשר להת"ע ${SLOT_HE[t]} ולשנות את הסיווג ל"כללי + פרטי"?`)) return; patch.doc_type = "both"; }
       else if (d.doc_type === t && next.length === 2) patch.doc_type = "both";
@@ -2295,7 +2327,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
