@@ -5,7 +5,11 @@
 ולא רק "קובץ מצורף שההורה שלו הוא הפוסט" (כך שהיו שטרות שלא נתפסו).
 
     python old_site_links.py "C:\\...\\backup_..._-db.gz"
-    python old_site_links.py db.gz --uploads "wp-content\\uploads" --known text_index\\permit_text.db
+    python old_site_links.py db.gz --roots "wp-content\\uploads" "C:\\Users\\...\\BACKUP_harav_levin" --known text_index\\permit_text.db
+
+המסמכים לא חייבים להיות באותה תיקייה: הסקריפט מחפש כל קובץ בכל התיקיות וקובצי ה-zip שבשורת --roots
+(לפי הנתיב, ואם אין - לפי שם הקובץ), ומדווח איפה נמצא כל אחד, או שלא נמצא בשום מקום.
+בנוסף: old_orphans.csv = קובצי PDF שנמצאו בתיקיות / בגיבויים ואף פוסט לא מקשר אליהם.
 
 פלט: old_links.csv (שורה לכל פוסט + קבצים שלו), old_links_summary.txt
 """
@@ -17,6 +21,7 @@ import os
 import re
 import sqlite3
 import sys
+import zipfile
 from urllib.parse import unquote
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -43,7 +48,7 @@ def sha_of(path):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("db")
-    ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
+    ap.add_argument("--roots", nargs="*", default=[os.path.join("wp-content", "uploads")], help="תיקיות לחיפוש (וגם קובצי zip בתוכן)")
     ap.add_argument("--known", default=os.path.join("text_index", "permit_text.db"))
     ap.add_argument("--out", default="old_links.csv")
     a = ap.parse_args()
@@ -64,6 +69,46 @@ def main():
         if x["post_type"] == "attachment" and pid in files:
             by_parent.setdefault(x["post_parent"], []).append(files[pid])
 
+    # אינדקס של כל הקבצים בכל התיקיות וקובצי ה-zip: לפי נתיב יחסי ל-uploads, ולפי שם קובץ
+    by_rel, by_base, allpdf = {}, {}, []
+    def add(src, inner, size):
+        norm = inner.replace("\\", "/")
+        i = norm.lower().rfind("uploads/")
+        relp = norm[i + 8:] if i >= 0 else norm
+        ent = (src, inner, size)
+        by_rel.setdefault(relp.lower(), []).append(ent)
+        by_base.setdefault(os.path.basename(norm).lower(), []).append(ent)
+        if norm.lower().endswith(".pdf"):
+            allpdf.append((relp, ent))
+    for root in a.roots:
+        for dp, dn, fn in os.walk(root):
+            for f in fn:
+                fp = os.path.join(dp, f)
+                if f.lower().endswith(".zip"):
+                    try:
+                        with zipfile.ZipFile(fp) as z:
+                            for zi in z.infolist():
+                                if not zi.is_dir():
+                                    add(fp, zi.filename, zi.file_size)
+                    except Exception as e:  # noqa: BLE001
+                        print("  zip לא נקרא:", fp, e)
+                else:
+                    try:
+                        add(fp, fp, os.path.getsize(fp))
+                    except OSError:
+                        pass
+    print(f"באינדקס: {sum(len(v) for v in by_rel.values())} קבצים, מהם PDF: {len(allpdf)}")
+
+    def read_sha(ent):
+        src, inner, _ = ent
+        h = hashlib.sha256()
+        if src == inner:
+            return sha_of(src)
+        with zipfile.ZipFile(src) as z, z.open(inner) as f:
+            for ch in iter(lambda: f.read(1 << 20), b""):
+                h.update(ch)
+        return h.hexdigest()
+
     known = set()
     if os.path.exists(a.known):
         db = sqlite3.connect("file:" + os.path.abspath(a.known).replace("\\", "/") + "?mode=ro", uri=True)
@@ -72,7 +117,7 @@ def main():
     print(f"מסמכים ידועים במאגר המקומי: {len(known)}")
 
     rows, stats = [], {}
-    shas = {}
+    shas, used_ents = {}, set()
     for pid, x in posts.items():
         t = x["post_type"]
         if t not in TYPES or x["post_status"] == "auto-draft":
@@ -96,29 +141,45 @@ def main():
             s["only_url"] += 1          # יש קובץ בתוכן שאינו "מצורף לפוסט": כאן הפספוס של השיטה הישנה
         for u in urls:
             s["files"] += 1
-            p = os.path.join(a.uploads, *u.split("/"))
-            ex = os.path.exists(p)
-            sh = ""
+            cands, how = by_rel.get(u.lower(), []), "נתיב"
+            if not cands:
+                cands, how = by_base.get(os.path.basename(u).lower(), []), "שם קובץ בלבד"
+            ex = bool(cands)
+            sh, where = "", ""
             if ex:
                 s["local"] += 1
-                if p not in shas and p.lower().endswith(".pdf"):
-                    shas[p] = sha_of(p)
-                sh = shas.get(p, "")
+                used_ents.add(cands[0])
+                for c in cands:
+                    used_ents.add(c)
+                key = cands[0]
+                if key not in shas and u.lower().endswith(".pdf"):
+                    try:
+                        shas[key] = read_sha(key)
+                    except Exception:  # noqa: BLE001
+                        shas[key] = ""
+                sh = shas.get(key, "")
+                where = (os.path.basename(key[0]) + " :: " + key[1] if key[0] != key[1] else key[0]) + (f" (+{len(cands) - 1} עותקים)" if len(cands) > 1 else "") + ("" if how == "נתיב" else " [לפי שם בלבד]")
                 if sh in known:
                     s["known"] += 1
                 elif sh:
                     s["notknown"] += 1
             rows.append([TYPES[t], t, pid, x["post_status"], x["post_date"][:10], x["post_title"], x["post_name"], u,
-                         "כן" if u in attached else "לא", "כן" if ex else "לא", sh[:12], "כן" if sh in known else ("לא" if sh else ""), x["post_modified"][:10]])
+                         "כן" if u in attached else "לא", where if ex else "לא נמצא בשום מקום", sh[:12], "כן" if sh in known else ("לא" if sh else ""), x["post_modified"][:10]])
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["סוג", "post_type", "post_id", "סטטוס", "תאריך", "כותרת (חברה)", "slug", "קובץ (נתיב ב-uploads)", "מצורף לפוסט", "קיים מקומית", "חתימה", "במאגר", "עודכן"])
+        w.writerow(["סוג", "post_type", "post_id", "סטטוס", "תאריך", "כותרת (חברה)", "slug", "קובץ (נתיב ב-uploads)", "מצורף לפוסט", "איפה נמצא", "חתימה", "במאגר", "עודכן"])
         w.writerows(rows)
-    lines = ["post_type / סטטוס: פוסטים | עם קישור בתוכן | מהם עם קובץ שאינו מצורף לפוסט | קבצים | קיימים מקומית | ידועים במאגר | לא ידועים במאגר"]
+    orph = [[r_, e[0], e[1], e[2]] for r_, e in allpdf if e not in used_ents]
+    with open("old_orphans.csv", "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["נתיב", "מקור (תיקייה / zip)", "נתיב פנימי", "גודל"])
+        w.writerows(orph)
+    print(f"PDF שנמצאו ואף פוסט לא מקשר אליהם: {len(orph)} (old_orphans.csv)")
+    lines = ["post_type / סטטוס: פוסטים | עם קישור בתוכן | מהם עם קובץ שאינו מצורף לפוסט | קבצים | נמצאו (בכל מקום) | ידועים במאגר | לא ידועים במאגר"]
     for (t, st), s in sorted(stats.items()):
         lines.append(f"{t} / {st}: {s['posts']} | {s['with_url']} | {s['only_url']} | {s['files']} | {s['local']} | {s['known']} | {s['notknown']}")
     uniq = {r[7] for r in rows if r[7]}
-    lines.append(f"\nקבצים ייחודיים בקישורים: {len(uniq)}; שורות: {len(rows)}")
+    lines.append(f"\nקבצים ייחודיים בקישורים: {len(uniq)}; שורות: {len(rows)}; לא נמצאו בשום מקום: {sum(1 for r in rows if r[9] == 'לא נמצא בשום מקום')}")
     txt = "\n".join(lines)
     print(txt)
     open("old_links_summary.txt", "w", encoding="utf-8").write(txt)
