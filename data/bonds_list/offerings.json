@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-18",
+ "updated": "2026-10-19",
  "upcoming": [
   {
    "id": 10358,
@@ -638,52 +638,6 @@
    "chp_number": ""
   },
   {
-   "chp_number": "515846558",
-   "company_name": "ג'נריישן קפיטל",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10364,
-   "is_new_company": false,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774937",
-   "maya_report_id": 1775147,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-15"
-  },
-  {
-   "chp_number": "510400740",
-   "company_name": "דיפלומט",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10366,
-   "is_new_company": false,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775200",
-   "maya_report_id": 1775203,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-15"
-  },
-  {
    "chp_number": "520041005",
    "company_name": "קרדן נדל\"ן",
    "draft_no": null,
@@ -711,52 +665,6 @@
    "company_name": "מגוריט",
    "draft_no": null,
    "draft_title": null,
-   "id": 10370,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775592",
-   "maya_report_id": 1775592,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": "ilBBB+",
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-15"
-  },
-  {
-   "chp_number": "515846558",
-   "company_name": "ג'נריישן קפיטל",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10373,
-   "is_new_company": false,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
-   "maya_report_id": 1776049,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-15"
-  },
-  {
-   "chp_number": "515434074",
-   "company_name": "מגוריט",
-   "draft_no": null,
-   "draft_title": null,
    "id": 10376,
    "is_new_company": false,
    "link_presentation": null,
@@ -776,35 +684,7 @@
    "last_seen": "2026-10-18"
   }
  ],
- "open": [
-  {
-   "begins_at": "2026-10-15T09:30:00",
-   "chp_number": "516046307",
-   "ends_at": "2026-10-15T15:30:00",
-   "interest": 6.82,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 1848,
-   "issuer_name": "סולאיר",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1776073",
-   "offer_number": 1239888,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "security_id": null,
-     "security_name": "אג\"ח ג",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-15"
-  }
- ],
+ "open": [],
  "companies": [
   {
    "chp_number": "1811308",
@@ -930,13 +810,6 @@
    "name": "ג'נריישן קפיטל",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "516046307",
-   "name": "סולאיר",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
