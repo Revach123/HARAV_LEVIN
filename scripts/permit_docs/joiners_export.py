@@ -162,7 +162,7 @@ def ts(x):
         return None
 
 
-def merge(rows, window=120):
+def merge(rows, window=120, diag=None):
     """אותה הגשה שנשמרה בשני התוספים נספרת פעם אחת: אותו אדם, ושעת ההגשה שונה בעד `window` שניות בין cfdb7 ל-advcf7.
     הגשות נפרדות של אותו אדם (גם באותו יום) נשארות נפרדות."""
     def ident(r):
@@ -183,8 +183,13 @@ def merge(rows, window=120):
                 best = c
         if best is None:
             out.append(r)
+            if diag is not None:
+                near = any(abs((t or 0) - (ts(c["תאריך"]) or 0)) <= 86400 for c in by.get(ident(r), []) if t is not None)
+                diag.append((str(r["תאריך"])[:4], bool(digits(r.get("תעודת זהות"))), near))
             continue
         used.add(id(best))
+        if diag is not None:
+            diag.append(("matched", abs(t - ts(best["תאריך"])) if t is not None and ts(best["תאריך"]) is not None else -1, None))
         keep, drop = (r, best) if sum(1 for v in r.values() if v) > sum(1 for v in best.values() if v) else (best, r)
         keep["מפתח"] = keep["מפתח"] + " | " + drop["מפתח"]
         for c, v in drop.items():
@@ -199,10 +204,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("db_gz")
     ap.add_argument("--out", default="joiners_private")
+    ap.add_argument("--diag", action="store_true", help="מדפיס ספירות בלבד: למה הגשות מהתוסף השני לא הותאמו לראשון")
     a = ap.parse_args()
     sql = gzip.open(a.db_gz, "rt", encoding="utf-8", errors="replace").read()
     subs = [s for s in list(read_cfdb7(sql)) + list(read_adv(sql)) if s["טופס"] in FIELD_MAP]
-    joins = merge([to_row(s) for s in subs if s["טופס"] == JOIN_FORM])
+    dg = [] if a.diag else None
+    joins = merge([to_row(s) for s in subs if s["טופס"] == JOIN_FORM], diag=dg)
+    if a.diag:
+        um = [d for d in dg if d[0] != "matched"]
+        mt = sorted(d[1] for d in dg if d[0] == "matched" and d[1] >= 0)
+        print(f"אבחון: הותאמו {len(mt)} זוגות (הפרש שעה: חציוני {mt[len(mt) // 2] if mt else '-'} שניות, 95% עד {mt[int(len(mt) * .95)] if mt else '-'}, מקסימום {mt[-1] if mt else '-'})")
+        print(f"אבחון: לא הותאמו {len(um)} הגשות של התוסף השני; לפי שנה: {dict(collections.Counter(d[0] for d in um))}")
+        print(f"אבחון: מתוכן בלי ת.ז.: {sum(1 for d in um if not d[1])}; יש הגשה של אותו אדם בתוסף הראשון בהפרש של עד יום (סטייה בשעה): {sum(1 for d in um if d[2])}")
     cancels = merge([to_row(s) for s in subs if s["טופס"] == CANCEL_FORM])
     by_mail = collections.defaultdict(list)
     by_tel = collections.defaultdict(list)
