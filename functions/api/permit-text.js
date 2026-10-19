@@ -4,11 +4,16 @@ import { noAuth } from "./_shared/permit-docs.js";
 // GET /api/permit-text?q=ביטוי          → { results: [{ id, name, page, snippet }] }  (FTS; אחרת LIKE)
 // GET /api/permit-text?hp=513429035     → { docs: [{ id, name, n, src, status }] }
 // GET /api/permit-text?hints=1          → { hp: [{ id, hp, src, n }] }  כל ה-ח.פ. שנמצאו, לכל מסמך (להצעות שיוך)
+// GET /api/permit-text?names=1          → { names: [{ id, name, src }] }  שמות שנמצאו במסמכים (טקסט / חותמת / כתב יד), להצעות שיוך לפי שם
 const norm = s => String(s || "").replace(/["'`״׳]/g, "").replace(/\s+/g, " ").trim();
 export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   const u = new URL(request.url);
   try {
+    if (u.searchParams.get("names")) {
+      const r = await env.DB.prepare("SELECT d.id AS id, n.name AS name, n.src AS src FROM permit_doc_name n JOIN permit_docs d ON d.sha256 = n.sha256 WHERE length(n.name) BETWEEN 4 AND 90").all();
+      return Response.json({ names: r.results ?? [] });
+    }
     if (u.searchParams.get("hints")) {
       const r = await env.DB.prepare("SELECT d.id AS id, h.hp AS hp, h.src AS src, h.n AS n FROM permit_doc_hp h JOIN permit_docs d ON d.sha256 = h.sha256").all();
       return Response.json({ hp: r.results ?? [] });
