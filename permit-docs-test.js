@@ -200,7 +200,7 @@
   function close(id) { $(id)?.remove(); if (closers[id]) { closers[id](); delete closers[id]; } }
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    for (const id of ["pd-confirm", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd"]) if ($(id)) { close(id); break; }
+    for (const id of ["pd-confirm", "pd-reg", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd"]) if ($(id)) { close(id); break; }
   });
 
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
@@ -1692,6 +1692,34 @@
 
   // ───────── חלון "ניהול מסמכים" לחברה ─────────
   const M = { biz: "", share: new Set(), move: "", menu: "", bond: "", bondQ: "" };
+  // רישום החברה ברשימות (כללי / פרטי / רק פרטי): תווית, שינוי ומחיקה מהרשימה
+  const regLabel = b => b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
+  function regChange() {
+    const b = bizById(M.biz); if (!b) return;
+    const cur = regLabel(b), btn = (l) => `<button class="pd-btn ${cur === l ? "sel" : ""}" onclick="PD._regSet('${l}')">${l}</button>`;
+    overlay("pd-reg", `<div class="pd-head"><b>רישום החברה · ${displayName(b, true)}</b><button class="pd-x" onclick="PD._close('pd-reg')">✕</button></div>
+      <div class="pd-body"><div class="pd-sub" style="margin-bottom:8px">הרישום הנוכחי: <b>${cur}</b></div>
+        <div class="pd-btns">${btn("פרטי")}${btn("כללי")}${btn("רק פרטי")}</div>
+        <div style="margin-top:18px"><button class="pd-btn danger" onclick="PD._regDel()">מחיקת הרישום</button></div></div>`);
+  }
+  async function regSet(label) {
+    const b = bizById(M.biz); if (!b || regLabel(b) === label) { close("pd-reg"); return; }
+    const vis = label === "כללי" ? "" : label;
+    try {
+      await api("/businesses/" + b.id, "PUT", { ...b, visibility: vis });
+      b.visibility = vis; S._fm = null; close("pd-reg"); refresh(); if ($("pd-manage") && S._paintMg) S._paintMg();
+    } catch (e) { alert("שינוי הרישום נכשל: " + e.message); }
+  }
+  async function regDel() {
+    const b = bizById(M.biz); if (!b) return;
+    if (!confirm("האם אתה בטוח שאתה רוצה למחוק החברה מהרשימה?\n" + (b.permit_name || b.registrar_name || "") + "\n(השטרות שלה יישארו במאגר, ללא שיוך לחברה הזו.)")) return;
+    try {
+      await api("/businesses/" + b.id, "DELETE");
+      businesses = businesses.filter(x => x.id !== b.id);
+      if (typeof logChange === "function") logChange("delete", b, null);
+      close("pd-reg"); close("pd-manage"); S.loaded = false; S.loading = false; await load(); refresh();
+    } catch (e) { alert("המחיקה נכשלה: " + e.message); }
+  }
   function openManage(bizId) {
     if (!bizById(bizId)) return;
     M.biz = bizId; M.share = new Set(); M.move = "";
@@ -2029,9 +2057,9 @@
       return `<div class="pd-mg-slot ${need[t] ? "" : "off"}" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'${t}')"><h4>הת"ע ${SLOT_HE[t]}${need[t] ? "" : ' <span class="pd-sub">(לא נדרש לפי הרישום)</span>'}</h4>${d ? mgCard(d, b)
         : `<div class="pd-mg-empty ${need[t] ? "need" : ""}">${need[t] ? "⚠ אין מסמך מקושר" : "אין מסמך מקושר"}<div class="pd-sub">לקישור: בחרו מסמך מלמטה ולחצו "הת"ע ${SLOT_HE[t]}"</div></div>`}</div>`; };
     const allEx = extrasOf(b.id), bd = allEx.filter(d => (d.bonds || []).length).sort((x, y) => bondKey(x).localeCompare(bondKey(y), "he")), ex = allEx.filter(d => !(d.bonds || []).length);
-    root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b>
+    root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b><span class="pd-chip" style="background:#1a3a5c;margin-inline-start:8px" title="הרישום של החברה ברשימות האתר">רישום: ${regLabel(b)}</span><button class="pd-mini" onclick="PD._regChange()" title="שינוי הרישום או מחיקת החברה מהרשימה">לשינוי</button>
         <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
-      <div class="pd-body"><div class="pd-mg-top">${slotBox("private")}${slotBox("general")}</div>
+      <div class="pd-body"><div class="pd-mg-top">${["private", "general"].filter(t => need[t] || slotDoc(b.id, t)).map(slotBox).join("")}</div>
         ${bd.length ? `<h4 style="margin:18px 0 8px">שטרות אג"ח של החברה (${bd.length})</h4><div class="pd-mg-grid" id="pd-mg-bonds">${bd.map(d => mgCard(d, b)).join("")}</div>` : ""}
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div>${suggestHtml(b.id)}</div>`;
@@ -2234,7 +2262,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
