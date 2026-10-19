@@ -87,6 +87,13 @@ def load_site():
         S["hp"] = {}
 
 
+def load_posts():
+    S["posts"] = {}
+    for r in rcsv(A.posts):
+        if r.get("חתימה"):
+            S["posts"].setdefault(r["חתימה"][:12], []).append((r.get("סוג", ""), r.get("כותרת (חברה בישן)", "")))
+
+
 def build_items():
     items, seen = [], set()
     for r in rcsv(A.plan):
@@ -135,6 +142,40 @@ def slot_holder(b, t, except_doc):
     return None
 
 
+def company_state(bid, doc_id):
+    b = S["biz"].get(bid) or {}
+    vis = b.get("visibility") or ""
+    need = {"private": vis in ("פרטי", "רק פרטי"), "general": vis != "רק פרטי"}
+    linked = [d for d in S["docs"].values() if bid in (d.get("business_ids") or []) and d.get("doc_type") != "other"]
+    slots = {}
+    for t in ("private", "general"):
+        h = next((d for d in linked if t in str((d.get("slots") or {}).get(bid, "")).split(",")), None)
+        slots[t] = h and {"name": h.get("original_name") or h["id"], "self": h["id"] == doc_id}
+    others = [{"name": d.get("original_name") or d["id"], "type": d.get("doc_type"), "slots": [SLOT_HE.get(x, x) for x in str((d.get("slots") or {}).get(bid, "")).split(",") if x], "pages": d.get("pages")}
+              for d in linked if d["id"] != doc_id]
+    return need, slots, others
+
+
+def advice(it, need, slots, others, old_types, doc_type):
+    parts, both = [], False
+    if not others:
+        parts.append("זה המסמך היחיד של החברה במאגר")
+    else:
+        parts.append(f"לחברה יש עוד {len(others)} מסמכים אחרים (ראה למטה)")
+    if old_types:
+        parts.append("באתר הישן הקובץ הזה הופיע כהת\"ע " + " וגם ".join(sorted(set(old_types))))
+    need_he = [SLOT_HE[t] for t in ("private", "general") if need[t]]
+    parts.append("החברה רשומה " + (" + ".join(need_he) if need_he else "") + (" ולכן דורשת גם פרטי וגם כללי" if len(need_he) == 2 else ""))
+    open_ = [t for t in ("private", "general") if need[t] and not slots[t]]
+    if len(open_) == 2 and not others:
+        parts.append("אין לה מסמך אחר, ולכן אם אין סיבה אחרת מומלץ לקשר אותו לשני הסלוטים (כמו שנהוג כשמסמך אחד משמש כללי ופרטי)")
+        both = True
+    elif len(open_) == 2 and set(old_types) >= {"כללי", "פרטי"}:
+        parts.append("האתר הישן הציג אותו לשני הסוגים: מומלץ לשני הסלוטים")
+        both = True
+    return ". ".join(parts) + ".", both, open_
+
+
 def view(it):
     d, b = S["docs"].get(it["doc_id"]) or {}, S["biz"].get(it["business_id"]) or {}
     have = [x for x in str((d.get("slots") or {}).get(it["business_id"], "")).split(",") if x]
@@ -143,14 +184,21 @@ def view(it):
     hps = sorted(S["hp"].get(it["doc_id"], set()))
     mine = "".join(c for c in str(b.get("chp_number") or "") if c.isdigit()).zfill(9) if b.get("chp_number") else ""
     state = "בוצע" if it["slot"] in have else (dec["decision"] if dec and dec["decision"] in ("דולג", "לא מתאים") else "פתוח")
-    return {**it, "company": bname(it["business_id"]), "vis": b.get("visibility") or "כללי", "chp": b.get("chp_number") or "", "entity": b.get("entity_type") or "",
+    need, cslots, others = company_state(it["business_id"], it["doc_id"])
+    sha12 = (d.get("sha256") or "")[:12]
+    old_refs = S.get("posts", {}).get(sha12, [])
+    rec, both, open_ = advice(it, need, cslots, others, [t for t, _ in old_refs if t in ("כללי", "פרטי")], d.get("doc_type"))
+    other_slot = [t for t in open_ if t != it["slot"]]
+    other_items = [{"name": (S["docs"].get(x["doc_id"]) or {}).get("original_name") or x["doc_id"], "slot": SLOT_HE.get(x["slot"], x["slot"])} for x in S["items"] if x["business_id"] == it["business_id"] and x["doc_id"] != it["doc_id"]][:6]
+    return {**it, "need": need, "cslots": cslots, "others": others[:8], "old_refs": [f"{t}: {ti}" for t, ti in old_refs[:6]], "rec": rec, "both": both and bool(other_slot) and not holder, "other_slot": other_slot[0] if other_slot else "",
+            "other_items": other_items, "company": bname(it["business_id"]), "vis": b.get("visibility") or "כללי", "chp": b.get("chp_number") or "", "entity": b.get("entity_type") or "",
             "doc_name": d.get("original_name") or it["doc_id"], "doc_type": d.get("doc_type"), "pages": d.get("pages"),
             "linked": [bname(i) for i in (d.get("business_ids") or [])], "assoc": it["business_id"] in (d.get("business_ids") or []),
             "holder": holder and (holder.get("original_name") or holder["id"]), "hps": hps[:12], "hp_ok": bool(mine and mine in hps), "hp_bad": bool(mine and hps and mine not in hps),
             "state": state, "slot_he": SLOT_HE.get(it["slot"], it["slot"])}
 
 
-def approve(doc_id, biz_id, slot, replace=False):
+def approve(doc_id, biz_id, slot, replace=False, extra=None):
     with LOCK:
         d = site("/permit-docs/" + doc_id)["doc"]
         undo = [{"id": doc_id, "business_ids": d.get("business_ids") or [], "slots": d.get("slots") or {}}]
@@ -164,8 +212,11 @@ def approve(doc_id, biz_id, slot, replace=False):
         if biz_id not in ids:
             ids.append(biz_id)
         have = [x for x in str((d.get("slots") or {}).get(biz_id, "")).split(",") if x]
-        if slot not in have:
-            have.append(slot)
+        for sl in [slot] + ([extra] if extra else []):
+            if extra and sl == extra and slot_holder(biz_id, extra, doc_id):
+                raise RuntimeError("הסלוט השני תפוס במסמך אחר")
+            if sl not in have:
+                have.append(sl)
         with open(A.undo, "a", encoding="utf-8") as f:
             f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "undo": undo}, ensure_ascii=False) + "\n")
         site("/permit-docs/" + doc_id, {"business_ids": ids, "slots": {biz_id: have}})
@@ -214,7 +265,7 @@ class H(BaseHTTPRequestHandler):
                        if t and (t in (b.get("permit_name") or "").lower() or t in (b.get("registrar_name") or "").lower() or (len(dg) >= 4 and dg in str(b.get("chp_number") or "")))][:15]
                 return self.send(200, out)
             if u.path == "/api/reload":
-                load_site(); load_decisions(); build_items()
+                load_site(); load_posts(); load_decisions(); build_items()
                 return self.send(200, {"ok": True})
             return self.send(404, {"error": "לא נמצא"})
         except Exception as e:  # noqa: BLE001
@@ -224,7 +275,7 @@ class H(BaseHTTPRequestHandler):
         try:
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0)) or 0) or b"{}")
             if self.path == "/api/approve":
-                undo = approve(body["doc_id"], body["business_id"], body["slot"], bool(body.get("replace")))
+                undo = approve(body["doc_id"], body["business_id"], body["slot"], bool(body.get("replace")), body.get("extra"))
                 decide(body["key"], "אושר", undo)
                 return self.send(200, {"ok": True})
             if self.path == "/api/skip":
@@ -281,15 +332,21 @@ $("side").innerHTML=`<h2>${E(x.company)}</h2>
 <div class="row"><span class="k">משויך כרגע ל:</span> ${x.linked.length?E(x.linked.join(", ")):"אף חברה"}${x.assoc?"":" <b style='color:#c0392b'>(לא משויך לחברה הזו: יתווסף שיוך)</b>"}</div>
 ${x.old_title?`<div class="row"><span class="k">כותרת באתר הישן:</span> ${E(x.old_title)}</div>`:""}
 <div class="ev ${x.hp_ok?"":"bad"}">${x.hp_ok?"✔ ח.פ. החברה נמצא בתוך המסמך":"ח.פ. החברה לא נמצא בטקסט המסמך"}<br>ראיות: ${E(x.evidence)||"—"}</div>${ev}
+<div class="ev" style="background:#eef3fb;border-color:#b9c9e6"><b>מצב החברה</b><br>
+${["private","general"].map(t=>{const he=t==="private"?"פרטי":"כללי",c=x.cslots[t];return `הת"ע ${he}: ${x.need[t]?"נדרש":"לא נדרש"} — ${c?(c.self?"<b>המסמך הזה</b>":"מקושר: "+E(c.name)):(x.need[t]?"<b style='color:#c0392b'>חסר</b>":"—")}`}).join("<br>")}
+${x.others.length?`<br><span class="k">מסמכים אחרים של החברה:</span><br>${x.others.map(o=>`• ${E(o.name)} (${E(o.type||"")}${o.slots.length?", סלוט: "+E(o.slots.join("+")):", לא מקושר לסלוט"})`).join("<br>")}`:""}
+${x.old_refs.length?`<br><span class="k">בפוסטים של האתר הישן:</span><br>${x.old_refs.map(o=>"• "+E(o)).join("<br>")}`:""}
+${x.other_items.length?`<br><span class="k">הצעות נוספות לחברה:</span><br>${x.other_items.map(o=>`• ${E(o.name)} (${E(o.slot)})`).join("<br>")}`:""}</div>
+<div class="ev" style="background:#fff8e1;border-color:#ecd88a"><b>המלצה:</b> ${E(x.rec)}</div>
 ${x.note?`<div class="ev bad">הערה: ${E(x.note)}</div>`:""}
 ${x.holder?`<div class="ev bad">הסלוט כבר תפוס במסמך: <b>${E(x.holder)}</b></div>`:""}
 ${OVR?`<div class="ev">יאושר עבור: <b>${E(OVR.name)}</b> <button class="btn sk" onclick="OVR=null;card()">ביטול</button></div>`:""}
-${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול הקישור</button>`:`<button class="btn ok" onclick="ok(${x.holder?"true":"false"})">✔ אשר ${x.holder?"והחלף":""} (Enter)</button><br>
+${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול הקישור</button>`:`<button class="btn ok" onclick="ok(${x.holder?"true":"false"})">✔ אשר ${x.holder?"והחלף":""} הת"ע ${E(x.slot_he)} (Enter)</button>${x.both?`<br><button class="btn ok" style="background:#2f6f9f" onclick="ok(false,'${x.other_slot}')">✔ אשר לשני הסלוטים: פרטי + כללי</button>`:""}<br>
 <button class="btn sk" onclick="skip('דולג')">דילוג (→)</button> <button class="btn no" onclick="skip('לא מתאים')">לא מתאים</button>`}
 <hr><div class="k">אשר עבור חברה אחרת (שם / ח.פ.):</div><input id="q" oninput="srch(this.value)" placeholder="חיפוש חברה"><div id="res"></div>
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
 const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}}
-async function ok(rep){const x=vis()[CUR];try{await api("/api/approve",{key:x.key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep});msg("✔ נשמר באתר");await load(true);next()}catch(e){msg("שגיאה: "+e.message)}}
+async function ok(rep,extra){const x=vis()[CUR];try{await api("/api/approve",{key:x.key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null});msg("✔ נשמר באתר");await load(true);next()}catch(e){msg("שגיאה: "+e.message)}}
 async function skip(w){const x=vis()[CUR];await api("/api/skip",{key:x.key,decision:w});await load(true);msg(w)}
 async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});msg("↩ בוטל");await load(true)}catch(e){msg("שגיאה: "+e.message)}}
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
@@ -308,6 +365,7 @@ def main():
     ap.add_argument("--port", type=int, default=8766)
     ap.add_argument("--plan", default="old_vs_site_plan.csv")
     ap.add_argument("--suggest", default="old_vs_site_hp_suggestions.csv")
+    ap.add_argument("--posts", default="old_vs_site_posts.csv")
     ap.add_argument("--decisions", default="link_decisions.jsonl")
     ap.add_argument("--undo", default="link_undo.jsonl")
     ap.add_argument("--password-file", default="admin_password.txt")
@@ -318,6 +376,7 @@ def main():
     TOKEN = TOKEN or getpass.getpass("סיסמת מנהל האתר: ")
     print("טוען מהאתר…")
     load_site()
+    load_posts()
     load_decisions()
     build_items()
     print(f"{len(S['items'])} פריטים. פתח בדפדפן: http://localhost:{A.port}   (עצירה: Ctrl+C)")
