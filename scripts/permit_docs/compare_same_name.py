@@ -122,6 +122,7 @@ def main():
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--out", default=os.path.join("text_index", "השוואת_שמות.csv"))
+    ap.add_argument("--extract", default="", help="תיקייה: לשמור בה העתק של כל קובץ שהפסיקה שלו אינה 'אותו מסמך', ולהדפיס לכל אחד ח.פ. ושורה ראשונה")
     a = ap.parse_args()
     from ocr_pdfs import TESS_DEFAULT
     TESS[0] = TESS_DEFAULT if os.name == "nt" else "tesseract"
@@ -160,6 +161,18 @@ def main():
         else:
             out.append([r["שם קובץ"], r["מיקום"], "לא נקרא", "הקובץ שלנו לא נפתח", ""])
     db.close()
+    if a.extract:
+        os.makedirs(a.extract, exist_ok=True)
+        for i, x in enumerate(r for r in out if r[2] != "אותו מסמך"):
+            try:
+                data = read_candidate(x[1])
+                fn = os.path.join(a.extract, f"{i + 1:02d}_{x[0]}")
+                open(fn, "wb").write(data)
+                ci = cand_info(data)
+                first = re.sub(r"\s+", " ", " ".join(fix_hebrew(pg.get_text()) for pg in fitz.open(stream=data, filetype="pdf"))[:300]).strip()
+                print(f"{fn}: {x[2]} | ח.פ.: {', '.join(sorted(hps_of(ci[1]))) or '—'} | {first[:120]}")
+            except Exception as e:  # noqa: BLE001
+                print(f"{x[0]}: לא חולץ ({e})")
     order = {"שונה": 0, "אין אצלנו קובץ בשם הזה": 1, "לא ברור": 2, "לא נקרא": 3, "אותו מסמך": 4}
     out.sort(key=lambda x: (order.get(x[2], 9), x[0]))
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
