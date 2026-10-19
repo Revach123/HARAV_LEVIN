@@ -1783,7 +1783,7 @@
 
   // ───────── דשבורד חדש (בבנייה, רק בעמוד הבדיקה): שלוש כרטיסיות. א: חברות שחסרים להן שטרות; ב: שטרות שמחכים לשיוך; ג: חברות לא רשומות ─────────
   const ND = { tab: "a", miss: "all", sug: false, gone: false, q: "", sq: "", tq: "" };
-  const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/\b(בע\s*מ|בעמ|ltd|inc)\b/g, " ").replace(/\s+/g, " ").trim();
+  const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/(^|\s)(בע\s*מ|בעמ|ltd|inc)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();          // (\b אינו עובד בעברית)
   const tri = x => { const t = " " + NORMN(x) + " ", o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); return o; };
   function fuzzy(q, name) {          // התאמה מקורבת: הכלה מלאה, או דמיון משולשות אותיות (שינוי קטן בשם)
     const a = NORMN(q), b = NORMN(name); if (!a || !b) return 0;
@@ -1801,11 +1801,52 @@
     }
   }
   const FITS = { private: ["private", "both", "unknown"], general: ["general", "both", "unknown"] };
-  function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. של החברה, אינם מסמך ראשי שלה, וסוגם מתאים לשטר החסר
+  // ───────── הצעות לפי שם החברה שנמצא במסמך ─────────
+  const NSTOP = new Set(["מהדרין", "מכון", "היתר", "עיסקא", "עסקא", "עסקה", "חברה", "חברת", "הנפקות", "בנק", "ביטוח", "השקעות", "גיוס", "הון", "ישראל", "החברה"]);          // שם שכולו מילים כאלה אינו מזהה חברה
+  const NGENERIC_DF = 25;          // שם שמופיע ביותר ממספר הזה של מסמכים הוא כנראה שם כללי (למשל "מכון היתר עסקא למהדרין בע"מ" בכל מסמך), ולא מזהה חברה
+  async function loadNames() {
+    if (S.nameDf !== undefined) return;
+    S.nameDf = null;
+    try {
+      const rows = (await api("/permit-text?names=1")).names || [];
+      S.nameDf = new Map(); S.docNames = new Map();
+      for (const r of rows) {
+        const n = NORMN(r.name); if (n.length < 3) continue;
+        if (!S.nameDf.has(n)) S.nameDf.set(n, new Set()); S.nameDf.get(n).add(r.id);
+        if (!S.docNames.has(r.id)) S.docNames.set(r.id, new Set()); S.docNames.get(r.id).add(n);
+      }
+    } catch { S.nameDf = null; S.docNames = null; }
+  }
+  const nameGeneric = n => !S.nameDf || S.nameDf.get(n).size > NGENERIC_DF;
+  function coKeys(b) {          // שמות החברה לצורך התאמה: בלי בע"מ וגרשיים; לא שם שכולו מילים כלליות
+    return [...new Set([b.permit_name, b.registrar_name].map(NORMN).filter(k => k.length >= 3 && !k.split(" ").every(w => NSTOP.has(w))))];
+  }
+  const nameHit = (docName, key) => docName === key || (key.length >= 6 && (" " + docName + " ").includes(" " + key + " "));          // שם קצר: רק התאמה מלאה; שם ארוך: גם כחלק משורה
+  function nameDocs(b) {          // מסמכים ששם החברה מופיע בהם (שם שאינו כללי)
+    const keys = coKeys(b), out = new Set();
+    if (!S.nameDf || !keys.length) return out;
+    for (const [n, ids] of S.nameDf) if (ids.size <= NGENERIC_DF && keys.some(k => nameHit(n, k))) for (const id of ids) out.add(id);
+    return out;
+  }
+  function coIndex() {
+    if (S._coIdx && S._coIdxN === bizList().length) return S._coIdx;
+    S._coIdxN = bizList().length;
+    return (S._coIdx = bizList().filter(b => !INACTIVE_ST.test(b.registry_status || "")).map(b => ({ b, keys: coKeys(b) })).filter(x => x.keys.length));
+  }
+  function companiesByName(d) {          // חברות ששמן מופיע במסמך
+    const ns = S.docNames && S.docNames.get(d.id); if (!ns) return [];
+    const out = new Map();
+    for (const n of ns) { if (nameGeneric(n)) continue; for (const x of coIndex()) if (x.keys.some(k => nameHit(n, k))) out.set(x.b.id, x.b); }
+    return [...out.values()];
+  }
+  function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה, אינם מסמך ראשי שלה, וסוגם מתאים לשטר החסר: [{ d, why }]
     hpMaps();
-    const ids = S.hpDocs && (b.chp_number || "").trim() ? S.hpDocs.get(hp9(b.chp_number)) : null;
-    if (!ids) return [];
-    return [...ids].map(id => S.byId.get(id)).filter(d => d && d.doc_type !== "other" && !slotsOf(d, b.id).length && miss.some(t => FITS[t].includes(d.doc_type)));
+    const hp = S.hpDocs && (b.chp_number || "").trim() ? S.hpDocs.get(hp9(b.chp_number)) : null, nm = nameDocs(b), out = [];
+    for (const id of new Set([...(hp || []), ...nm])) {
+      const d = S.byId.get(id);
+      if (d && d.doc_type !== "other" && !slotsOf(d, b.id).length && miss.some(t => FITS[t].includes(d.doc_type))) out.push({ d, why: hp && hp.has(id) ? "ח.פ." : "שם החברה" });
+    }
+    return out;
   }
   function ndMissing() {
     const out = [];
@@ -1837,7 +1878,8 @@
     ND.tab = tab || ND.tab || "a"; ndCss();
     overlay("pd-nd", `<div class="pd-head"><div class="pd-tabs" id="pd-nd-tabs"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-nd')">✕</button></div>
       <div class="pd-body" id="pd-nd-body" style="overflow:auto"></div>`, "full");
-    if (!S.loaded) load().then(ndShow); else ndShow();
+    (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(ndShow);
+    if (S.loaded) ndShow();
   }
   function ndShow() {
     if (!$("pd-nd")) return;
@@ -1850,21 +1892,21 @@
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
     const rows = ndMissing(), M_ = [["all", "הכל"], ["private", "חסר פרטי"], ["general", "חסר כללי"], ["both", "חסרים שניהם"]];
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span>${S.hp ? `<button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שנמצא בקובץ כלשהו ח.פ. שלהן">רק עם הצעה לשטר</button>` : ""}</div>
+    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span>${S.hp ? `<button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שנמצא בקובץ כלשהו ח.פ. שלהן או שמן">רק עם הצעה לשטר</button>` : ""}</div>
       <div class="pd-sub" style="margin-bottom:6px">כל חברה שרשומה ברשימת הפרטי או הכללי צריכה הת"ע משויך מאותו סוג. לחיצה על שורה פותחת את ניהול המסמכים של החברה.</div>
       <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>הצעה לשטר</th><th>שטרות נוספים</th></tr></thead><tbody>${rows.map(e => {
         const b = e.b, one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">-</span>`; };
         return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td>
-          <td>${one("private")}</td><td>${one("general")}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(d => d.original_name || d.id).join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td><td class="pd-nd-n">${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
+          <td>${one("private")}</td><td>${one("general")}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(x => (x.d.original_name || x.d.id) + " (" + x.why + ")").join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td><td class="pd-nd-n">${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
   }
   function ndTabB() {
     const f = ND.q.trim().toLowerCase(), rows = ndDocsB().filter(d => !f || docHay(d).includes(f))
       .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
     return `<div class="pd-nd-bar">${ndSearchBox("חיפוש בשטרות: שם קובץ, כותרת, חברה, ח.פ., הערה")}${S.hp ? `<input class="pd-in" id="pd-nd-tq" style="flex:1;min-width:220px" placeholder="חיפוש בתוך הטקסט של כל המסמכים (למשל: מסלול הלכה)" value="${E(ND.tq)}" oninput="PD._ndTq(this.value)" autocomplete="off">` : ""}</div><div id="pd-nd-tres"></div>
-      <div class="pd-sub" style="margin-bottom:6px">שטרות שאינם משויכים לאף חברה. הצעות השיוך לפי ח.פ. שנמצא בתוך המסמך (טקסט, חותמת או כתב יד) ולפי הפוסט והכותרת. לחיצה פותחת את החלון הרגיל לשיוך.</div>
+      <div class="pd-sub" style="margin-bottom:6px">שטרות שאינם משויכים לאף חברה. הצעות השיוך לפי ח.פ. או שם החברה שנמצאו בתוך המסמך (טקסט, חותמת או כתב יד), ולפי הפוסט והכותרת. שמות כלליים שמופיעים במסמכים רבים (כמו שם המכון) מדולגים. לחיצה פותחת את החלון הרגיל לשיוך.</div>
       <table class="pd-nd-tbl"><thead><tr><th>שטר</th><th>כותרת / פוסט</th><th>הצעות שיוך (לפי ח.פ. שנמצא במסמך, ולפי הפוסט)</th><th>הערה</th></tr></thead><tbody>${rows.map(d => {
         const byChp = ndChpMap(), fromHp = hpFound(d).map(h => ({ b: byChp.get(hp9(h.hp)), src: h.src })).filter(x => x.b);
-        const seen = new Set(), sg = [...fromHp.map(x => ({ b: x.b, why: ({ text: "ח.פ. בטקסט", stamp: "ח.פ. בחותמת", hand: "ח.פ. בכתב יד" })[x.src] || "ח.פ." })), ...sugOf(d).map(x => ({ b: bizById(x.id), why: "פוסט / כותרת" }))]
+        const seen = new Set(), sg = [...fromHp.map(x => ({ b: x.b, why: ({ text: "ח.פ. בטקסט", stamp: "ח.פ. בחותמת", hand: "ח.פ. בכתב יד" })[x.src] || "ח.פ." })), ...companiesByName(d).map(b => ({ b, why: "שם החברה במסמך" })), ...sugOf(d).map(x => ({ b: bizById(x.id), why: "פוסט / כותרת" }))]
           .filter(x => x.b && !seen.has(x.b.id) && seen.add(x.b.id));
         return `<tr class="go" onclick="PD._ndOpenDoc('${d.id}')"><td>${E(d.original_name || d.id)}</td><td>${E(postTitle(d))}</td><td>${sg.slice(0, 4).map(x => `<span class="pd-nd-ok" title="${E(x.why)}">${displayName(x.b)}</span>`).join("") || '<span class="pd-sub">אין</span>'}${sg.length > 4 ? ` <span class="pd-sub">+${sg.length - 4}</span>` : ""}</td><td class="pd-sub">${E(d.note || "")}</td></tr>`; }).join("") || `<tr><td colspan="4" class="pd-sub">אין שטרות שמחכים לשיוך.</td></tr>`}</tbody></table>`;
   }
