@@ -21,7 +21,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_text_index import norm_fts  # noqa: E402
 
-MAX_PAGE = 90000          # תווים; D1 מגביל אורך פקודה (100KB), עמוד ארוך יותר נחתך (נספר ומדווח)
+CHUNK = 20000          # תווים; D1 מגביל אורך פקודה ל-100KB (בבתים, ובעברית אות = 2 בתים), לכן עמוד ארוך מתפצל לנתחים בלי לאבד טקסט
 
 
 def q(x):
@@ -38,11 +38,24 @@ def main():
     ap.add_argument("--ink-db", default=os.path.join("text_index", "permit_ink.db"))
     ap.add_argument("--out", default="d1_import")
     ap.add_argument("--all", action="store_true", help="לייצא את כל המסמכים מחדש")
+    ap.add_argument("--skip-imported", default="", help="קובץ JSON עם ה-sha256 שכבר ב-D1 (פלט של wrangler d1 execute --json), כדי לא לייבא אותם שוב")
     ap.add_argument("--part-kb", type=int, default=3000, help="גודל מקסימלי לכל קובץ SQL")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     sp = os.path.join(a.out, "state.json")
     state = {} if a.all or not os.path.exists(sp) else json.load(open(sp, encoding="utf-8"))
+    skip = set()
+    if a.skip_imported:
+        raw = open(a.skip_imported, encoding="utf-8-sig", errors="replace").read()
+        try:
+            data = json.loads(raw[raw.index("["): raw.rindex("]") + 1])
+            skip = {r["sha256"] for blk in data for r in blk.get("results", [])}
+        except (ValueError, KeyError) as e:
+            print(f"קובץ ה-JSON אינו תקין ({e})"); return 1
+        print(f"מדלגים על {len(skip)} מסמכים שכבר ב-D1")
+    for fn in os.listdir(a.out):          # קבצי ייבוא וסימונים ישנים: מתחילים רשימה חדשה
+        if fn.startswith(("part_", "done_")):
+            os.remove(os.path.join(a.out, fn))
     t = ro(a.text_db)
     ink = {}
     if os.path.exists(a.ink_db):
@@ -51,7 +64,7 @@ def main():
             ink.setdefault(sha, []).append((page, val, st, "stamp" if kind.startswith("חותמת") else "hand"))
         i.close()
     docs = {r[0]: r for r in t.execute("SELECT sha, pages, chars, ocr FROM docs")}
-    todo, parts, cur, cur_n, trunc, rows_n = [], [], [], 0, 0, 0
+    todo, parts, cur, cur_n, rows_n = [], [], [], 0, 0
 
     def flush():
         nonlocal cur, cur_n
@@ -60,7 +73,7 @@ def main():
     for sha, (_, pages, chars, ocr) in docs.items():
         hits = sorted(ink.get(sha, []))
         fp = hashlib.md5(f"{pages}|{chars}|{ocr}|{hits}".encode()).hexdigest()
-        if state.get(sha) == fp:
+        if state.get(sha) == fp or sha in skip:
             continue
         block = []
         if sha in state:          # כבר יובא פעם: מוחקים את הישן לפני הכנסה מחדש
@@ -69,12 +82,15 @@ def main():
         block.append(f"INSERT INTO permit_doc_text (sha256, pages, chars, ocr) VALUES ({q(sha)}, {pages or 0}, {chars or 0}, {ocr or 0});")
         for page, text in t.execute("SELECT page, text FROM pages WHERE sha = ? ORDER BY page", (sha,)):
             text = (text or "").replace("\x00", "")
-            if len(text) > MAX_PAGE:
-                text, trunc = text[:MAX_PAGE], trunc + 1
             if not text.strip():
                 continue
-            block.append(f"INSERT OR REPLACE INTO permit_doc_page (sha256, page, text) VALUES ({q(sha)}, {page}, {q(text)});")
-            block.append(f"INSERT INTO permit_doc_fts (text, sha256, page) VALUES ({q(norm_fts(text))}, {q(sha)}, {page});")
+            pieces = [text[k:k + CHUNK] for k in range(0, len(text), CHUNK)]
+            for k, piece in enumerate(pieces):
+                if k == 0:
+                    block.append(f"INSERT OR REPLACE INTO permit_doc_page (sha256, page, text) VALUES ({q(sha)}, {page}, {q(piece)});")
+                else:          # המשך אותו עמוד (עמוד ארוך מתפצל כדי לעמוד במגבלת אורך הפקודה)
+                    block.append(f"UPDATE permit_doc_page SET text = text || {q(piece)} WHERE sha256 = {q(sha)} AND page = {page};")
+                block.append(f"INSERT INTO permit_doc_fts (text, sha256, page) VALUES ({q(norm_fts(piece))}, {q(sha)}, {page});")
         for hp, n, pg in t.execute("SELECT hp, n, pages FROM hps WHERE sha = ?", (sha,)):
             block.append(f"INSERT OR REPLACE INTO permit_doc_hp (sha256, hp, n, pages, src, status) VALUES ({q(sha)}, {q(hp)}, {n or 1}, {q(pg)}, 'text', '');")
         for name, src in dict.fromkeys(t.execute("SELECT name, src FROM names WHERE sha = ?", (sha,))):
@@ -104,7 +120,7 @@ def main():
         state[sha] = fp
     # המצב נשמר רק בקובץ נפרד, והוא יתעדכן בפועל רק אחרי שתאשר שהייבוא הצליח (--commit)
     json.dump(state, open(os.path.join(a.out, "state.pending.json"), "w", encoding="utf-8"))
-    print(f"מסמכים לייבוא: {len(todo)} מתוך {len(docs)} | קובצי SQL: {len(parts)} | שורות: {rows_n} | עמודים שנחתכו (ארוכים מדי): {trunc}")
+    print(f"מסמכים לייבוא: {len(todo)} מתוך {len(docs)} | קובצי SQL: {len(parts)} | שורות: {rows_n}")
     print(f"נכתב בתיקייה {a.out}. להרצה: {a.out}\\run_all.cmd  (או כל קובץ part בנפרד: npx wrangler d1 execute business-registry-db --remote --file=...)")
     print(f"אחרי שהייבוא הצליח, לאשר: python export_text_to_d1.py --commit   (כדי שהפעם הבאה תייצא רק שינויים)")
     return 0
