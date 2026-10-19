@@ -75,6 +75,8 @@
   const bdi = t => `<bdi>${E(t)}</bdi>`;          // כל חלק בנפרד, כדי שסדר המספרים והיחידות לא יתהפך בתוך טקסט עברי
   const sizeHtml = n => bdi(fmtSize(n));
   const metaHtml = d => `<span data-meta="${d.id}" title="${E(datesOf(d).length ? "תאריכים שנמצאו במסמך: " + datesOf(d).map(fmtDate).join(", ") : "")}">${metaText(d).split(" · ").filter(Boolean).map(bdi).join(" · ")}</span>`;
+  const pgHtml = d => `<div class="pd-mg-pg" data-pg="${d.id}">${d.pages ? bdi(d.pages + " עמ'") : ""}</div>`;          // מספר עמודים מתחת לתמונה הממוזערת
+  const dateHtml = d => `<span data-dt="${d.id}">${datesOf(d).length ? bdi(fmtDate(datesOf(d)[0])) : ""}</span>`;
   const metaBusy = new Set();
   async function ensureMeta(docId, pdf) {          // ממלא מספר עמודים ותאריכים פעם אחת לכל מסמך, כשהוא נפתח / נטענת לו תמונה
     const d = S.byId.get(docId); if (!d || d.pages || metaBusy.has(docId) || S.metaOff) return;
@@ -84,6 +86,8 @@
       for (const p of want) { try { text += "\n" + (await (await pdf.getPage(p)).getTextContent()).items.map(x => x.str).join(" "); } catch { /* עמוד בלי טקסט */ } }
       const r = await api("/permit-docs/" + docId, "PUT", { pages: n, doc_dates: extractDates(text) });
       replaceDoc(r.doc); const nd = S.byId.get(docId);
+      document.querySelectorAll(`[data-pg="${docId}"]`).forEach(el => { el.textContent = nd.pages ? nd.pages + " עמ'" : ""; });
+      document.querySelectorAll(`[data-dt="${docId}"]`).forEach(el => { el.textContent = datesOf(nd).length ? fmtDate(datesOf(nd)[0]) : ""; });
       document.querySelectorAll(`[data-meta="${docId}"]`).forEach(el => { el.textContent = metaText(nd); el.title = datesOf(nd).length ? "תאריכים שנמצאו במסמך: " + datesOf(nd).map(fmtDate).join(", ") : ""; });
     } catch (e) { if (/no such column/.test(e.message || "")) S.metaOff = true; }      // לפני מיגרציה 0010: לא מנסים שוב
     metaBusy.delete(docId);
@@ -264,25 +268,37 @@
     const ds = liveDocs(bid).filter(d => d.id !== curId).sort((a, b) => manageOrder(bid).indexOf(a.id) - manageOrder(bid).indexOf(b.id));
     return `<h4>שטרות אחרות של החברה (${ds.length})</h4>` + (ds.length ? ds.map(d => `<div class="pd-co"><a href="#" onclick="PD._goDoc('${d.id}','${bid}');return false" title="${E(d.original_name || "")}">${E(d.original_name || d.id)}</a> <span class="pd-sub">${E(docRole(d, bid))}</span></div>`).join("") : `<div class="pd-sub">אין שטרות אחרים לחברה.</div>`);
   }
-  function suggestHtml(bid, opts) {
+  function sugCard(x, bid) {          // הצעה לשטר ככרטיסייה: תמונה ממוזערת, שם, מקור ההצעה, ואישור שיוך
+    const d = x.d, th = thumbUrls.get(d.id), open = `PD.openDoc('${d.id}','',false,'${bid}')`;
+    return `<div class="pd-mg-card"><div class="pd-mg-l"><div class="pd-mg-th" onclick="${open}" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${th ? `src="${th}"` : ""}><span class="pd-mg-ld" ${th ? 'style="display:none"' : ""}>טוען…</span></div>${pgHtml(d)}</div>
+      <div class="pd-mg-r"><div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="${open}" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
+        <div class="pd-sub">${sizeHtml(d.size)} ${dateHtml(d)}</div>
+        <div class="pd-sub">${E(x.why)} · ${(d.business_ids || []).length ? "משויך: " + E((d.business_ids || []).map(bizName).join(", ")) : "לא משויך"}</div>
+        <div class="pd-btns"><button class="pd-btn primary" onclick="PD._sugAssign('${d.id}','${bid}')" title="שיוך המסמך לחברה (כמסמך נוסף)">✔ אישור שיוך</button><button class="pd-mini" onclick="${open}">צפייה</button></div></div></div>`;
+  }
+  function suggestHtml(bid, narrow) {
     const b = bizById(bid); if (!b) return "";
     const sg = hintDocs(b, ["private", "general"]);
-    return `<h4>הצעות נוספות (${sg.length})</h4>` + (sg.length ? sg.slice(0, 12).map(x => `<div class="pd-co"><a href="#" onclick="PD.openDoc('${x.d.id}');return false" title="${E(x.d.original_name || "")}">${E(x.d.original_name || x.d.id)}</a> <span class="pd-sub">${E(x.why)}${(x.d.business_ids || []).length ? " · משויך: " + E((x.d.business_ids || []).map(bizName).join(", ")) : " · לא משויך"}</span>
-        <button class="pd-link2" onclick="PD._sugAssign('${x.d.id}','${bid}')" title="שיוך המסמך לחברה (כמסמך נוסף)">שיוך לחברה</button></div>`).join("") + (sg.length > 12 ? `<div class="pd-sub">ועוד ${sg.length - 12}</div>` : "")
+    return `<h4 style="margin:18px 0 8px">הצעות נוספות (${sg.length})</h4>` + (sg.length ? `<div class="pd-mg-grid"${narrow ? ' style="grid-template-columns:1fr"' : ""}>${sg.slice(0, 12).map(x => sugCard(x, bid)).join("")}</div>` + (sg.length > 12 ? `<div class="pd-sub">ועוד ${sg.length - 12}</div>` : "")
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
+  }
+  async function sugOk(docId, bid) {          // אישור שיוך מתוך חלון המסמך: המסמך משויך לחברה (כמסמך נוסף) והחלון נפתח מחדש בהקשר החברה, כדי שאפשר יהיה לקשר אותו להת"ע
+    const d = S.byId.get(docId); if (!d) return;
+    if (!(d.business_ids || []).includes(bid) && !(await updateDoc(docId, { business_ids: [...(d.business_ids || []), bid] }))) return;
+    const fl = S.docFromList; S._nav = true; close("pd-doc"); S._nav = false; openDoc(docId, bid, fl);
   }
   async function goDoc(id, bid) { const fl = S.docFromList; S._nav = true; close("pd-doc"); S._nav = false; openDoc(id, bid, fl); }
   async function sugAssign(docId, bid) {
     const d = S.byId.get(docId); if (!d || (d.business_ids || []).includes(bid)) return;
     if (await updateDoc(docId, { business_ids: [...(d.business_ids || []), bid] })) { if ($("pd-doc") && S._paintDoc) S._paintDoc(); if ($("pd-manage") && S._paintMg) S._paintMg(); }
   }
-  async function openDoc(docId, fromBiz, fromList) {
+  async function openDoc(docId, fromBiz, fromList, sugBiz) {
     const d = S.byId.get(docId); if (!d) return;
     close("pd-manage");
     S.docFromList = !!fromList;          // נפתח מהרשימה הראשית: בסגירה חוזרים אליה ולא לחלון הניהול
     let blobUrl = "", fileErr = "";
     overlay("pd-doc", `<div class="pd-body">טוען…</div>`, true);
-    closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); if (fromBiz && !S._nav && !fromList && bizById(fromBiz)) openManage(fromBiz); };
+    closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); const ret = fromBiz || sugBiz; if (ret && !S._nav && !fromList && bizById(ret)) openManage(ret); };
     try {
       const blob = await fetchPdfBlob(docId);
       blobUrl = URL.createObjectURL(blob);
@@ -293,14 +309,16 @@
       const doc = S.byId.get(docId); if (!doc) { close("pd-doc"); return; }
       const side = $("pd-doc-side"), keep = side ? side.scrollTop : 0;
       const ids = doc.business_ids || [];
-      const ctx = fromBiz || ids[0] || "";
+      const ctx = fromBiz || sugBiz || ids[0] || "";
+      const sugOpen = sugBiz && !fromBiz && !ids.includes(sugBiz) && bizById(sugBiz);          // נפתח כהצעה לחברה: כפתור אישור שיוך
+      const sugBar = sugOpen ? `<div class="pd-dup" style="margin:0 0 10px"><b>הצעה לשיוך לחברה: ${displayName(bizById(sugBiz), true)}</b><div class="pd-btns" style="margin-top:8px"><button class="pd-btn primary" onclick="PD._sugOk('${docId}','${sugBiz}')">✔ אישור שיוך</button></div></div>` : "";
       const chips = ids.map(b => `<div class="pd-co"><span>${E(bizName(b))}</span><button class="pd-link" onclick="PD._unassign('${docId}','${b}')" title="ביטול שיוך המסמך לחברה הזו">ביטול שיוך</button></div>`).join("") || `<div class="pd-sub">המסמך לא משויך לאף חברה</div>`;
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
       const slotBtns = fromBiz ? `<h4>קישור לרשימה של ${E(bizName(fromBiz))}</h4><div class="pd-btns">${["private", "general"].map(t => `<button class="pd-btn ${slotsOf(doc, fromBiz).includes(t) ? "sel" : ""}" onclick="PD._slot('${docId}','${fromBiz}','${t}')">${slotsOf(doc, fromBiz).includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`).join("")}</div>` : "";
       const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${sizeHtml(doc.size)}${metaText(doc) ? " · " + metaText(doc).split(" · ").map(bdi).join(" · ") : ""}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
       const sideHtml = `
-            ${slotBtns}${ctx ? otherDocsHtml(ctx, docId) + suggestHtml(ctx) : ""}
+            ${sugBar}${slotBtns}${ctx ? otherDocsHtml(ctx, docId) + suggestHtml(ctx, true) : ""}
             <h4>חברות משויכות (${ids.length})</h4>${chips}
             <div style="margin-top:6px"><input class="pd-in" id="pd-add-q" placeholder="הוספת / שינוי שיוך: שם או ח.פ." oninput="PD._addSearch('${docId}',this.value)" autocomplete="off"><div id="pd-add-res"></div></div>
             <h4>הערה</h4><textarea class="pd-in" id="pd-note" rows="2" onchange="PD._setNote('${docId}',this.value)">${E(doc.note || "")}</textarea>
@@ -313,7 +331,7 @@
         box.dataset.docId = docId;
         box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
       }
-      const s2 = $("pd-doc-side"); if (s2) s2.scrollTop = keep;
+      const s2 = $("pd-doc-side"); if (s2) { s2.scrollTop = keep; s2.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) { img.src = u; if (img.nextElementSibling) img.nextElementSibling.style.display = "none"; } })); }
     };
     S._paintDoc = paint; paint();
     loadNames().then(() => { if (S._paintDoc === paint && $("pd-doc")) paint(); });          // הצעות לפי שם החברה
@@ -2035,10 +2053,10 @@
         ${M.move === d.id ? "" : `<input class="pd-in" placeholder="הוספת חברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','add',this.value)" autocomplete="off">`}</div>` : "";
     const moveBox = M.move === d.id ? `<div class="pd-mg-sh"><input class="pd-in" placeholder="העברה לחברה: שם או ח.פ." oninput="PD._mgSearch('${d.id}','move',this.value)" autocomplete="off"></div>` : "";
     return `<div class="pd-mg-card" draggable="true" ondragstart="PD._dragStart(event,'${d.id}')" ondragend="PD._dragEnd()" title="אפשר לגרור לתיבת הת&quot;ע פרטי / כללי או למסמכים נוספים">
-      <div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div></div>
+      <div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div>${pgHtml(d)}</div>
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
-        <div class="pd-sub">${typeSel} ${sizeHtml(d.size)} · ${metaHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
+        <div class="pd-sub">${typeSel} ${sizeHtml(d.size)} ${dateHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
         <div class="pd-btns">${linkBtns}${spBtn}</div>${sp !== undefined && sp.detail ? `<div class="pd-sub">פירוט: ${E(sp.detail)}</div>` : ""}
         <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(bondLabel(x))} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
         ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
@@ -2212,7 +2230,7 @@
   .pd-mg-card{display:flex;gap:10px;border:1px solid #d6d2ca;border-radius:10px;padding:8px;background:#fff}
   .pd-mg-l{width:150px;flex:none}.pd-mg-r{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
   .pd-mg-th{height:200px;background:#eee;border-radius:6px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
-  .pd-mg-th img{max-width:100%;max-height:100%;display:block}.pd-mg-th img:not([src]){display:none}.pd-mg-ld{position:absolute;font-size:12px;color:#777}
+  .pd-mg-pg{text-align:center;font-size:12px;color:#555;margin-top:3px;min-height:16px}.pd-mg-th img{max-width:100%;max-height:100%;display:block}.pd-mg-th img:not([src]){display:none}.pd-mg-ld{position:absolute;font-size:12px;color:#777}
   .pd-mg-share{display:flex;gap:5px;align-items:center;font-size:12px;margin-top:5px;cursor:pointer}
   .pd-mg-sh{background:#f7f7f5;border-radius:6px;padding:5px}
   .pd-mini{border:1px solid #cfcac0;background:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}.pd-mini.sel{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
@@ -2262,7 +2280,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
