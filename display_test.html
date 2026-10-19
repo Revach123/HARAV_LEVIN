@@ -590,6 +590,7 @@ function cellFor(col, val, row) {
     return td;
   }
   if (col.cell === "bonds") {
+    if (row && row._isSub) { td.className = "ctr"; return td; }          // תת-שורות: בלי סימון יש / אין אג"ח
     // אין אג"ח (טקסט פשוט) | יש אג"ח - מאושר (ירוק ✓) | יש אג"ח - לא מאושר (אדום ✕)
     // תאימות לאחור: אם ה-API הישן שלח רק approved (0/1)
     const st = val || (row && Number(row.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
