@@ -17,6 +17,7 @@ import csv
 import getpass
 import json
 import os
+import queue
 import ssl
 import threading
 import time
@@ -238,17 +239,54 @@ def revert(undo):
             S["docs"][u["id"]] = site("/permit-docs/" + u["id"])["doc"]
 
 
+INFLIGHT = {}
+
+
 def get_pdf(doc_id):
     with PDFL:
         if doc_id in PDFC:
             return PDFC[doc_id]
-    j = site("/permit-docs/" + doc_id + "/file?enc=b64")          # JSON עם base64 (כמו בדשבורד): עובד גם ברשת עם סינון תוכן שחוסמת הורדת PDF
-    data = base64.b64decode(j["data"])
-    with PDFL:
-        PDFC[doc_id] = data
-        while len(PDFC) > 60:
-            PDFC.pop(next(iter(PDFC)))
-    return data
+        ev = INFLIGHT.get(doc_id)
+        mine = ev is None
+        if mine:
+            ev = INFLIGHT[doc_id] = threading.Event()
+    if not mine:          # מישהו כבר מביא את המסמך הזה: מחכים לו במקום להוריד שוב
+        ev.wait(120)
+        with PDFL:
+            if doc_id in PDFC:
+                return PDFC[doc_id]
+    try:
+        j = site("/permit-docs/" + doc_id + "/file?enc=b64")          # JSON עם base64 (כמו בדשבורד): עובד גם ברשת עם סינון תוכן שחוסמת הורדת PDF
+        data = base64.b64decode(j["data"])
+        with PDFL:
+            PDFC[doc_id] = data
+            while len(PDFC) > 80:
+                PDFC.pop(next(iter(PDFC)))
+        return data
+    finally:
+        with PDFL:
+            INFLIGHT.pop(doc_id, None)
+        ev.set()
+
+
+PREQ = queue.Queue()
+
+
+def prefetch_worker():
+    while True:
+        did = PREQ.get()
+        try:
+            get_pdf(did)
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def want(doc_ids):
+    for d in doc_ids:
+        with PDFL:
+            if d in PDFC or d in INFLIGHT:
+                continue
+        PREQ.put(d)
 
 
 class H(BaseHTTPRequestHandler):
@@ -284,6 +322,9 @@ class H(BaseHTTPRequestHandler):
                 out = [{"id": b["id"], "name": bname(b["id"]), "vis": b.get("visibility") or "כללי"} for b in S["biz"].values()
                        if t and (t in (b.get("permit_name") or "").lower() or t in (b.get("registrar_name") or "").lower() or (len(dg) >= 4 and dg in str(b.get("chp_number") or "")))][:15]
                 return self.send(200, out)
+            if u.path == "/api/focus":          # הדפדפן מדווח אילו מסמכים באים בתור: השרת מביא אותם ברקע (כמה במקביל)
+                want([x for x in (q.get("ids") or [""])[0].split(",") if x][:10])
+                return self.send(200, {"ok": True})
             if u.path == "/api/reload":
                 load_site(); load_posts(); load_decisions(); build_items()
                 return self.send(200, {"ok": True})
@@ -347,7 +388,7 @@ let ROT={};try{ROT=JSON.parse(localStorage.getItem("rot")||"{}")}catch(e){}
 function applyRot(){const x=vis()[CUR],d=x?(ROT[x.doc_id]||0):0,w=$("pw"),f=$("pdf");if(!w)return;if(d%180){f.style.width=w.clientHeight+"px";f.style.height=w.clientWidth+"px"}else{f.style.width="100%";f.style.height="100%"}f.style.transform=`translate(-50%,-50%) rotate(${d}deg)`;$("pr").textContent=d?d+"°":""}
 function rot(dir){const x=vis()[CUR];if(!x)return;ROT[x.doc_id]=dir?((ROT[x.doc_id]||0)+dir*90+360)%360:0;try{localStorage.setItem("rot",JSON.stringify(ROT))}catch(e){}applyRot()}
 window.addEventListener("resize",applyRot);
-const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=2;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
+let _pf;function prefetch(){clearTimeout(_pf);_pf=setTimeout(()=>{const v=vis(),ids=[];for(let i=0;i<=8;i++){const x=v[CUR+i];if(x&&!ids.includes(x.doc_id))ids.push(x.doc_id)}fetch("/api/focus?ids="+ids.join(",")).catch(()=>{})},120)}          // בקשה קלה אחת: השרת מביא את המסמכים הבאים ברקע
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
 function card(){if(document.activeElement&&document.activeElement.id==="q"&&$("q").value)return;const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
@@ -410,6 +451,9 @@ def main():
     load_decisions()
     build_items()
     print(f"{len(S['items'])} פריטים. פתח בדפדפן: http://localhost:{A.port}   (עצירה: Ctrl+C)")
+    for _ in range(3):
+        threading.Thread(target=prefetch_worker, daemon=True).start()
+    want([i["doc_id"] for i in S["items"][:8]])
     class Quiet(ThreadingHTTPServer):
         def handle_error(self, request, client_address):          # ביטול חיבור על ידי הדפדפן אינו תקלה: לא מדפיסים traceback
             import sys as _s
