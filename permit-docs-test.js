@@ -278,7 +278,7 @@
   }
   function suggestHtml(bid, narrow) {
     const b = bizById(bid); if (!b) return "";
-    const need = needOf(b), miss = ["private", "general"].filter(t => need[t] && !slotDoc(b.id, t)), sg = hintDocs(b, miss.length ? miss : ["private", "general"]);          // אותם סוגים חסרים כמו בטבלת הדשבורד, כדי שהמספרים יהיו זהים
+    const sg = hintDocs(b, SUG_TYPES);          // אותה רשימה בדיוק כמו בטבלת הדשבורד
     return `<h4 style="margin:18px 0 8px">הצעות נוספות (${sg.length})</h4>` + (sg.length ? `<div class="pd-mg-grid"${narrow ? ' style="grid-template-columns:1fr"' : ""}>${sg.slice(0, 12).map(x => sugCard(x, bid)).join("")}</div>` + (sg.length > 12 ? `<div class="pd-sub">ועוד ${sg.length - 12}</div>` : "")
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
   }
@@ -1816,6 +1816,7 @@
     }
     return out;
   }
+  const SUG_TYPES = ["private", "general"];          // הצעות: כל מסמך לא משויך שנמצא בו ח.פ. או שם החברה, בלי קשר לסוג השטר שחסר
   function ndMissing() {
     const out = [];
     for (const b of bizList()) {
@@ -1825,8 +1826,8 @@
       if (ND.miss === "private" && !miss.includes("private")) continue;
       if (ND.miss === "general" && !miss.includes("general")) continue;
       if (ND.miss === "both" && miss.length < 2) continue;
-      if (ND.sug && !hintDocs(b, miss).length) continue;
-      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length), sug: hintDocs(b, miss) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
+      if (ND.sug && !hintDocs(b, SUG_TYPES).length) continue;
+      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length), sug: hintDocs(b, SUG_TYPES) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
