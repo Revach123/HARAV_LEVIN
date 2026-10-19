@@ -172,6 +172,7 @@
   table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 820px; table-layout: fixed; }
   col.c-num      { width: 36px; }
   col.c-name     { width: 150px; }
+  col.c-permit   { width: 190px; }
   col.c-name-lg  { width: 240px; }
   col.c-pdp      { width: 118px; }
   col.c-pdg      { width: 118px; }
@@ -1104,6 +1105,7 @@ function renderAdminTable() {
       <table class="admin-tbl">
         <colgroup>
           <col class="c-name">
+          <col class="c-permit">
           <col class="c-chp">
           <col class="c-cat">
           <col class="c-biztype">
@@ -1121,6 +1123,7 @@ function renderAdminTable() {
         <thead>
           <tr>
             <th>שם עסק</th>
+            <th>שם בהיתר עסקה</th>
             <th>ח.פ.</th>
             <th>קטגוריה</th>
             <th>סוג עסק</th>
@@ -1141,7 +1144,8 @@ function renderAdminTable() {
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             return `
               <tr${b0._isSub ? ' class="sub-row"' : ""}>
-                <td class="biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? (editingName === b.id ? `<input type="text" id="pn-${b.id}" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="השם בהיתר עסקה (Enter לשמירה, Esc לביטול)" onkeydown="if(event.key==='Enter')this.blur();else if(event.key==='Escape'){editingName=null;render();}" onblur="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : `<button type="button" class="btn-ghost" title="שינוי השם בהיתר עסקה" onclick="permitNameEdit('${b.id}')" style="padding:0 5px;font-size:12px;">✏️</button> ${displayName(b,true)}`) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
+                <td class="biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml((b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
+                <td>${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -1188,7 +1192,7 @@ function renderAdminTable() {
                 </td>
               </tr>` + ((window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : []).map(x => {
                 const open = `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${x.id}','${b.id}')" title="${escHtml(x.name)}">פתיחה</button>`;
-                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="9" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list !== "general" ? open : ""}</td><td style="text-align:center">${x.list !== "private" ? open : ""}</td><td></td><td></td></tr>`;
+                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="10" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list !== "general" ? open : ""}</td><td style="text-align:center">${x.list !== "private" ? open : ""}</td><td></td><td></td></tr>`;
               }).join("");
           }).join("")}
         </tbody>
@@ -2293,11 +2297,7 @@ async function noteScopeChange(id, scope) {
   else await inlineUpdateMany(id, { notes_scope: scope });
   render();
 }
-let editingName = null;
-function permitNameEdit(id) { editingName = id; render(); setTimeout(() => { const i = document.getElementById("pn-" + id); if (i) { i.focus(); i.select(); } }, 0); }
 async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים רק את "שם בהיתר עסקה" (שם הרשם נשאר)
-  if (editingName !== id) return;
-  editingName = null;
   const v = (raw || "").trim(), biz = businesses.find(b => b.id === id);
   if (!biz || !v || v === (biz.permit_name || biz.registrar_name || "").trim()) { render(); return; }
   if (v.length < 4) { showStatus("שם בהיתר עסקה: לפחות 4 תווים"); render(); return; }
