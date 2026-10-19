@@ -69,6 +69,15 @@ def ocr_page(page):
             return ""
 
 
+def read_candidate(loc):
+    """הקובץ מהגיבוי: נתיב רגיל, או 'קובץ.zip :: נתיב בתוך הארכיב'."""
+    if "::" in loc:
+        zp, inner = [x.strip() for x in loc.split("::", 1)]
+        with zipfile.ZipFile(zp) as z:
+            return z.read(inner)
+    return open(loc, "rb").read()
+
+
 def cand_info(data):
     """(עמודים, טקסט מנורמל, האם נעשה OCR). שכבת טקסט אם יש; אחרת OCR של עד 3 עמודים."""
     doc = fitz.open(stream=data, filetype="pdf")
