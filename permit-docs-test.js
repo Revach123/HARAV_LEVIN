@@ -206,6 +206,7 @@
     const c = S.loaded && !S.err ? viewCounts() : null;
     return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
+      <button class="home-card" onclick="PD.openDash()"><span class="ico">📊</span><b>דשבורד חדש</b><span class="sub">חברות שחסרים להן שטרות · שטרות לשיוך · חברות לא רשומות</span></button>
       <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>בדיקת מאגר המסמכים</b><span class="sub">מסמכים לבדיקה · לא משויכים · ניהול שיוכים</span></button>
       <button class="home-card" onclick="PD.openAdminQ()"><span class="ico">🧑‍⚖️</span><b>אישור מנהל${S.loaded && aqCount() ? " (" + aqCount() + ")" : ""}</b><span class="sub">שאלות שהועברו להחלטת מנהל</span></button>
             <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
