@@ -2012,7 +2012,7 @@
     more: () => { J.shown += 300; ndShow(); }, retry: () => { J.err = ""; J.rows = null; ndShow(); },
   };
   const ndAct = {
-    tab: t => { ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
+    tab: t => { if (t !== ND.tab) Object.assign(ND, { miss: "all", sug: false, gone: false, q: "", sq: "", tq: "" }); ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
     miss: k => { ND.miss = k; ndShow(); }, sug: () => { ND.sug = !ND.sug; ndShow(); },
     tq: v => { ND.tq = v; clearTimeout(ND._tt); ND._tt = setTimeout(() => ndTextSearch(v), 350); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
