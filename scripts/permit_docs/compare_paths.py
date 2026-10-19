@@ -18,6 +18,8 @@ import sqlite3
 import sys
 import zipfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 SKIP = re.compile(r"sendpdfcf7_uploads|(^|/)(preview-|document-pdf)", re.I)
 
 
@@ -30,6 +32,7 @@ def main():
     ap.add_argument("--zips", default=os.path.join("wp-content", "updraft", "*uploads*.zip"))
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--db", default=os.path.join("text_index", "permit_text.db"))
+    ap.add_argument("--no-judge", action="store_true", help="בלי שיפוט תוכן (מהיר: רק זיהוי הבדלים)")
     ap.add_argument("--out", default=os.path.join("text_index", "הבדלי_נתיבים.csv"))
     a = ap.parse_args()
     known = set()
@@ -37,7 +40,7 @@ def main():
         db = sqlite3.connect("file:" + os.path.abspath(a.db).replace("\\", "/") + "?mode=ro", uri=True, timeout=30)
         known = {r[0] for r in db.execute("SELECT sha FROM docs")}
         db.close()
-    rows, same, zip_only, total = [], 0, 0, 0
+    rows, same, zip_only, total, pairs = [], 0, 0, 0, {}
     for zp in sorted(glob.glob(a.zips)):
         try:
             z = zipfile.ZipFile(zp)
@@ -56,10 +59,26 @@ def main():
             if sha(ld) == sha(zd):
                 same += 1; continue
             rows.append([rel, len(ld), len(zd), "%04d-%02d-%02d" % zi.date_time[:3], "כן" if sha(ld) in known else "לא", os.path.basename(zp)])
+            pairs[rel] = (ld, zd)
     rows.sort()
+    if not a.no_judge and rows:          # שיפוט תוכן: האם הגרסה בגיבוי היא אותו מסמך או מסמך אחר (טקסט + ח.פ.; OCR לסרוק)
+        import compare_same_name as c
+        from ocr_pdfs import TESS_DEFAULT
+        c.TESS[0] = TESS_DEFAULT if os.name == "nt" else "tesseract"
+        for r in rows:
+            ld, zd = pairs[r[0]]
+            try:
+                v, d = c.compare(c.cand_info(zd), c.cand_info(ld))
+            except Exception as e:  # noqa: BLE001
+                v, d = "לא נקרא", str(e)
+            r.extend([v, d])
+            print(f"  {r[0]}: {v} ({d})", flush=True)
+    else:
+        for r in rows:
+            r.extend(["", ""])
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["נתיב", "גודל מקומי", "גודל בגיבוי", "תאריך בגיבוי", "המקומי במאגר שלנו", "ארכיב"])
+        w.writerow(["נתיב", "גודל מקומי", "גודל בגיבוי", "תאריך בגיבוי", "המקומי במאגר שלנו", "ארכיב", "פסיקה (גיבוי מול מקומי)", "פירוט"])
         w.writerows(rows)
     print(f"נבדקו {total} קבצי PDF בארכיבים: זהים לנתיב המקומי {same}; שונים {len(rows)}; בגיבוי בלבד (אין באותו נתיב מקומית) {zip_only}")
     print(f"נכתב: {a.out}")
