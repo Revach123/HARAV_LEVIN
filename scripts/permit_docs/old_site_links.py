@@ -130,10 +130,10 @@ def main():
             if r_ not in urls:
                 urls.append(r_)
         attached = by_parent.get(pid, [])
-        s = stats.setdefault((t, x["post_status"]), dict(posts=0, with_url=0, only_url=0, files=0, local=0, known=0, notknown=0))
+        s = stats.setdefault((t, x["post_status"]), dict(posts=0, with_url=0, only_url=0, files=0, exact=0, name_only=0, conflict=0, missing=0, known=0, notknown=0))
         s["posts"] += 1
         if not urls:
-            rows.append([TYPES[t], t, pid, x["post_status"], x["post_date"][:10], x["post_title"], x["post_name"], "", "", "", "", "", ""])
+            rows.append([TYPES[t], t, pid, x["post_status"], x["post_date"][:10], x["post_title"], x["post_name"], "", "", "", "", "", "", "", ""])
             continue
         s["with_url"] += 1
         outside = [u for u in urls if u not in attached]
@@ -143,31 +143,41 @@ def main():
             s["files"] += 1
             cands, how = by_rel.get(u.lower(), []), "נתיב"
             if not cands:
-                cands, how = by_base.get(os.path.basename(u).lower(), []), "שם קובץ בלבד"
-            ex = bool(cands)
-            sh, where = "", ""
-            if ex:
-                s["local"] += 1
-                used_ents.add(cands[0])
-                for c in cands:
-                    used_ents.add(c)
-                key = cands[0]
-                if key not in shas and u.lower().endswith(".pdf"):
+                cands, how = by_base.get(os.path.basename(u).lower(), [])[:5], "שם קובץ בלבד"
+            sh_list, where, flag = [], "", ""
+            for c in cands:
+                used_ents.add(c)
+                if c not in shas and u.lower().endswith(".pdf"):
                     try:
-                        shas[key] = read_sha(key)
+                        shas[c] = read_sha(c)
                     except Exception:  # noqa: BLE001
-                        shas[key] = ""
-                sh = shas.get(key, "")
-                where = (os.path.basename(key[0]) + " :: " + key[1] if key[0] != key[1] else key[0]) + (f" (+{len(cands) - 1} עותקים)" if len(cands) > 1 else "") + ("" if how == "נתיב" else " [לפי שם בלבד]")
-                if sh in known:
+                        shas[c] = ""
+                sh_list.append((c, shas.get(c, "")))
+            distinct = {h for _, h in sh_list if h}
+            if cands:
+                c0, h0 = sh_list[0]
+                where = (os.path.basename(c0[0]) + " :: " + c0[1] if c0[0] != c0[1] else c0[0]) + (f" (+{len(cands) - 1} עותקים)" if len(cands) > 1 else "")
+                if how != "נתיב":
+                    flag = "לא מאומת: נמצא רק לפי שם קובץ (יכול להיות מסמך אחר)"
+                    s["name_only"] += 1
+                else:
+                    s["exact"] += 1
+                    if len(distinct) > 1:
+                        flag = "גרסאות שונות באותו נתיב"
+                        s["conflict"] += 1
+                if any(h in known for h in distinct):
                     s["known"] += 1
-                elif sh:
+                elif distinct:
                     s["notknown"] += 1
+            else:
+                s["missing"] += 1
             rows.append([TYPES[t], t, pid, x["post_status"], x["post_date"][:10], x["post_title"], x["post_name"], u,
-                         "כן" if u in attached else "לא", where if ex else "לא נמצא בשום מקום", sh[:12], "כן" if sh in known else ("לא" if sh else ""), x["post_modified"][:10]])
+                         "כן" if u in attached else "לא", where if cands else "לא נמצא בשום מקום", sh_list[0][1][:12] if sh_list else "",
+                         ("כן" if any(h in known for h in distinct) else "לא") if distinct else "", x["post_modified"][:10],
+                         flag, " | ".join(f"{(os.path.basename(c[0]) if c[0] != c[1] else 'תיקייה')}:{h[:12]}" for c, h in sh_list) if len(sh_list) > 1 else ""])
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["סוג", "post_type", "post_id", "סטטוס", "תאריך", "כותרת (חברה)", "slug", "קובץ (נתיב ב-uploads)", "מצורף לפוסט", "איפה נמצא", "חתימה", "במאגר", "עודכן"])
+        w.writerow(["סוג", "post_type", "post_id", "סטטוס", "תאריך", "כותרת (חברה)", "slug", "קובץ (נתיב ב-uploads)", "מצורף לפוסט", "איפה נמצא", "חתימה", "במאגר", "עודכן", "הערה", "כל הגרסאות (מקור:חתימה)"])
         w.writerows(rows)
     orph = [[r_, e[0], e[1], e[2]] for r_, e in allpdf if e not in used_ents]
     with open("old_orphans.csv", "w", encoding="utf-8-sig", newline="") as f:
@@ -175,11 +185,11 @@ def main():
         w.writerow(["נתיב", "מקור (תיקייה / zip)", "נתיב פנימי", "גודל"])
         w.writerows(orph)
     print(f"PDF שנמצאו ואף פוסט לא מקשר אליהם: {len(orph)} (old_orphans.csv)")
-    lines = ["post_type / סטטוס: פוסטים | עם קישור בתוכן | מהם עם קובץ שאינו מצורף לפוסט | קבצים | נמצאו (בכל מקום) | ידועים במאגר | לא ידועים במאגר"]
+    lines = ["post_type / סטטוס: פוסטים | עם קישור בתוכן | מהם עם קובץ שאינו מצורף לפוסט | קבצים | נמצא בנתיב מדויק | נמצא רק לפי שם (לא מאומת) | גרסאות שונות באותו נתיב | לא נמצא בשום מקום | חתימה ידועה במאגר | חתימה לא ידועה"]
     for (t, st), s in sorted(stats.items()):
-        lines.append(f"{t} / {st}: {s['posts']} | {s['with_url']} | {s['only_url']} | {s['files']} | {s['local']} | {s['known']} | {s['notknown']}")
+        lines.append(f"{t} / {st}: {s['posts']} | {s['with_url']} | {s['only_url']} | {s['files']} | {s['exact']} | {s['name_only']} | {s['conflict']} | {s['missing']} | {s['known']} | {s['notknown']}")
     uniq = {r[7] for r in rows if r[7]}
-    lines.append(f"\nקבצים ייחודיים בקישורים: {len(uniq)}; שורות: {len(rows)}; לא נמצאו בשום מקום: {sum(1 for r in rows if r[9] == 'לא נמצא בשום מקום')}")
+    lines.append(f"\nקבצים ייחודיים בקישורים: {len(uniq)}; שורות: {len(rows)}; לא נמצאו בשום מקום: {sum(1 for r in rows if r[9] == 'לא נמצא בשום מקום')}; גרסאות שונות באותו נתיב: {sum(1 for r in rows if r[13] == 'גרסאות שונות באותו נתיב')}")
     txt = "\n".join(lines)
     print(txt)
     open("old_links_summary.txt", "w", encoding="utf-8").write(txt)
