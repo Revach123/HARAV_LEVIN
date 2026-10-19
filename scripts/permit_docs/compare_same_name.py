@@ -131,9 +131,17 @@ def main():
 
     db = sqlite3.connect("file:" + os.path.abspath(a.db).replace("\\", "/") + "?mode=ro", uri=True, timeout=30)
     byname = collections.defaultdict(set)
+    fnames = {}
     for sha, files in db.execute("SELECT sha, files FROM docs"):
+        fnames[sha] = str(files or "")
         for nm in str(files or "").split("|"):
             byname[nm.strip().lower()].add(sha)
+    byhp = collections.defaultdict(set)          # ח.פ. -> מסמכים שלנו שמכילים אותו (גם מסמך בשם אחר)
+    try:
+        for sha, hp in db.execute("SELECT sha, hp FROM hps"):
+            byhp[hp].add(sha)
+    except sqlite3.OperationalError:
+        pass
     skip = SKIP_FORMS if a.keep_names else SKIP
     rows = [r for r in csv.DictReader(open(a.missed, encoding="utf-8-sig"))
             if not skip.search(r["מיקום"].split("::")[-1].strip()) and not skip.search(r["שם קובץ"])]
@@ -142,12 +150,18 @@ def main():
     for r in rows:
         nm = r["שם קובץ"].strip().lower()
         shas = sorted(byname.get(nm, ()))
+        by_name_only = bool(shas)
         try:
             ci = cand_info(read_candidate(r["מיקום"]))
         except Exception as e:  # noqa: BLE001
             out.append([r["שם קובץ"], r["מיקום"], "לא נקרא", str(e), ""]); continue
+        for hp in hps_of(ci[1]):
+            for sh in sorted(byhp.get(hp, ())):
+                if sh not in shas:
+                    shas.append(sh)
+        shas = shas[:12]
         if not shas:
-            out.append([r["שם קובץ"], r["מיקום"], "אין אצלנו קובץ בשם הזה", f"{ci[0]} עמודים", ""]); continue
+            out.append([r["שם קובץ"], r["מיקום"], "אין אצלנו קובץ בשם הזה או עם אותו ח.פ.", f"{ci[0]} עמודים", ""]); continue
         best = None
         for s in shas:
             try:
@@ -160,7 +174,7 @@ def main():
             if best is None or rank < best[0]:
                 best = (rank, v, d, s)
         if best:
-            out.append([r["שם קובץ"], r["מיקום"], best[1], best[2], best[3][:12]])
+            out.append([r["שם קובץ"], r["מיקום"], best[1], best[2], (fnames.get(best[3], "") or best[3][:12])])
         else:
             out.append([r["שם קובץ"], r["מיקום"], "לא נקרא", "הקובץ שלנו לא נפתח", ""])
     db.close()
@@ -176,7 +190,7 @@ def main():
                 print(f"{fn}: {x[2]} | ח.פ.: {', '.join(sorted(hps_of(ci[1]))) or '—'} | {first[:120]}")
             except Exception as e:  # noqa: BLE001
                 print(f"{x[0]}: לא חולץ ({e})")
-    order = {"שונה": 0, "אין אצלנו קובץ בשם הזה": 1, "לא ברור": 2, "לא נקרא": 3, "אותו מסמך": 4}
+    order = {"שונה": 0, "אין אצלנו קובץ בשם הזה או עם אותו ח.פ.": 1, "לא ברור": 2, "לא נקרא": 3, "אותו מסמך": 4}
     out.sort(key=lambda x: (order.get(x[2], 9), x[0]))
     with open(a.out, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
