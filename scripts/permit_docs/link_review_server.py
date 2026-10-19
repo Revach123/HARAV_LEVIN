@@ -258,11 +258,14 @@ class H(BaseHTTPRequestHandler):
         b = body if isinstance(body, bytes) else (body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype)
-        self.send_header("Content-Length", str(len(b)))
-        if cache:
-            self.send_header("Cache-Control", "private, max-age=3600")
-        self.end_headers()
-        self.wfile.write(b)
+        try:
+            self.send_header("Content-Length", str(len(b)))
+            if cache:
+                self.send_header("Cache-Control", "private, max-age=3600")
+            self.end_headers()
+            self.wfile.write(b)
+        except (ConnectionError, OSError):          # הדפדפן ביטל את הבקשה (למשל מעבר מהיר למסמך הבא): לא שגיאה
+            pass
 
     def do_GET(self):
         u = urlparse(self.path)
@@ -403,7 +406,12 @@ def main():
     load_decisions()
     build_items()
     print(f"{len(S['items'])} פריטים. פתח בדפדפן: http://localhost:{A.port}   (עצירה: Ctrl+C)")
-    ThreadingHTTPServer(("127.0.0.1", A.port), H).serve_forever()
+    class Quiet(ThreadingHTTPServer):
+        def handle_error(self, request, client_address):          # ביטול חיבור על ידי הדפדפן אינו תקלה: לא מדפיסים traceback
+            import sys as _s
+            if not isinstance(_s.exc_info()[1], (ConnectionError, OSError)):
+                super().handle_error(request, client_address)
+    Quiet(("127.0.0.1", A.port), H).serve_forever()
 
 
 if __name__ == "__main__":
