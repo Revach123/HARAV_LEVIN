@@ -802,7 +802,7 @@
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
   /* דף ראשי: ממלא את המסך בלי גלילה. למעלה: מצטרפים (ימין) וחיפוש (שמאל); באמצע: הוספה ועדכון (גדולים); למטה: ניהול השטרות (ימין) והעוגות (שמאל, באותו גובה) */
   .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:460px; margin:0 auto; box-sizing:border-box; width:100%; position:relative; z-index:0; }
-  .home-wrap .home-card { border:2px solid #7d8890; border-radius:18px; background:linear-gradient(180deg,#fbfcfd 0%,#dde2e6 50%,#b9c1c8 100%); color:#1f2a30; box-shadow:0 2px 6px rgba(0,0,0,.18); padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
+  .home-wrap .home-card { border:2px solid #8fb7c2; border-radius:18px; background:linear-gradient(180deg,#356477 0%,#274d5b 55%,#1e3e4a 100%); color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
   .home-wrap .home-card .ico { font-size:clamp(24px,4vh,48px); margin-bottom:clamp(2px,.8vh,10px); }
   .home-wrap .home-card b { font-size:clamp(17px,1.5vw,30px); }
   .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
@@ -843,8 +843,12 @@
   .home-wrap .idx-box { height:auto; flex:1; overflow:hidden; }
   .home-wrap .idx-pie svg { width:clamp(70px,11vh,130px) !important; }
   .home-dash .home-grid { min-height:200px; }
-  .home-wrap .home-card b { color:#1f2a30; }
-  .home-wrap .home-card:hover { background:linear-gradient(180deg,#ffffff 0%,#e8ecef 50%,#c6cdd3 100%); border-color:#5d6870; }
+  .home-wrap .home-card b { color:#fff; }
+  .home-wrap .home-card:hover { background:linear-gradient(180deg,#41788d 0%,#2f5d6d 55%,#244a58 100%); border-color:#1fa59a; }
+  body:has(.home-wrap) { background:linear-gradient(180deg,#10222a 0%,#1a3640 100%) fixed; }
+  .home-dash .pd-homeh { color:#fff; }
+  .home-wrap .idx-box { background:linear-gradient(180deg,#244553,#1a323b); border-color:#8fb7c2; color:#e6f1f4; }
+  .home-wrap .idx-sub { color:#b9d3da; } .home-wrap .idx-line span { color:#b9d3da; } .home-wrap .idx-box b { color:#fff; }
   @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
