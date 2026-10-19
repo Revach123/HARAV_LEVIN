@@ -147,6 +147,7 @@ def main():
                     slot_have[b_].setdefault(t_, d)
 
     out, cnt = [], collections.Counter()
+    need_import = set()
     groups = collections.defaultdict(list)          # (חברה, סלוט) -> פוסטים ישנים
     unmatched = []
     for r in posts:
@@ -160,6 +161,7 @@ def main():
             out.append(row + ["הקובץ חסר בגיבוי", "לבקש מהמנהל"]); cnt[(typ, "הקובץ חסר בגיבוי")] += 1
             continue
         if not d:
+            need_import.add(sha)
             out.append(row + ["המסמך לא באתר שלנו", "לייבא"]); cnt[(typ, "המסמך לא באתר שלנו")] += 1
             continue
         if not cands and d:          # השם לא מתאים לאף חברה: ח.פ. שנמצא בתוך המסמך מזהה חברה אחת בדיוק (ושמה דומה במעט לכותרת)
@@ -217,6 +219,10 @@ def main():
         for x in lst:
             cnt[(x[0][0], res.split(" (")[0] + ("" if conf in ("גבוהה", "גבוהה מאוד") or res == "תקין" else f" [ביטחון: {conf}]"))] += 1
             out.append(x[0] + [res, act])
+    with open("old_vs_site_import.csv", "w", encoding="utf-8-sig", newline="") as f:          # מסמכים שהאתר הישן מקשר אליהם ואינם אצלנו (חתימה): להעלאה
+        w = csv.writer(f)
+        w.writerow(["חתימה"])
+        w.writerows([[x] for x in sorted(need_import)])
     with open("old_vs_site_posts.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
         w.writerow(["סוג", "post_id", "סטטוס", "כותרת (חברה בישן)", "קובץ", "חתימה", "התאמת שם", "חברה אצלנו", "הערה מהחילוץ", "מצב", "מה לעשות"])
@@ -279,6 +285,7 @@ def main():
     lines += [f"{k}: {n}" for k, n in bc.most_common()]
     byc = collections.Counter(p[5] for p in plan)
     lines += ["", "פעולות מוצעות לפי ביטחון: " + ", ".join(f"{k}: {v}" for k, v in sorted(byc.items())) + " (old_vs_site_plan.csv)"]
+    lines += [f"מסמכים של הישן שאינם באתר שלנו (להעלאה): {len(need_import)} (old_vs_site_import.csv)"]
     lines += [f"מסמכים שנמצא בהם ח.פ. של חברה שחסר לה סלוט ואין לה פוסט ישן: {len(sug)} שורות (old_vs_site_hp_suggestions.csv)"]
     txt = "\n".join(lines)
     print("\n" + txt)

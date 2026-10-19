@@ -39,6 +39,7 @@ def main():
     ap.add_argument("--out", default="d1_import")
     ap.add_argument("--all", action="store_true", help="לייצא את כל המסמכים מחדש")
     ap.add_argument("--skip-imported", default="", help="קובץ JSON עם ה-sha256 שכבר ב-D1 (פלט של wrangler d1 execute --json), כדי לא לייבא אותם שוב")
+    ap.add_argument("--refresh-hp", action="store_true", help="עם --skip-imported: למסמכים שכבר ב-D1 מעדכן רק את ה-ח.פ. והשמות (כולל חותמות / כתב יד חדשים), בלי לייבא שוב את הטקסט; מסמכים חדשים מיובאים במלואם")
     ap.add_argument("--part-kb", type=int, default=3000, help="גודל מקסימלי לכל קובץ SQL")
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -73,9 +74,29 @@ def main():
     for sha, (_, pages, chars, ocr) in docs.items():
         hits = sorted(ink.get(sha, []))
         fp = hashlib.md5(f"{pages}|{chars}|{ocr}|{hits}".encode()).hexdigest()
-        if state.get(sha) == fp or sha in skip:
+        refresh_only = a.refresh_hp and sha in skip and state.get(sha) != fp
+        if (state.get(sha) == fp or sha in skip) and not refresh_only:
             continue
         block = []
+        if refresh_only:          # כבר ב-D1: רק ח.פ. ושמות (נמחקים ונכתבים מחדש), בלי הטקסט
+            for tb in ("permit_doc_hp", "permit_doc_name"):
+                block.append(f"DELETE FROM {tb} WHERE sha256 = {q(sha)};")
+            for hp, n, pg in t.execute("SELECT hp, n, pages FROM hps WHERE sha = ?", (sha,)):
+                block.append(f"INSERT OR REPLACE INTO permit_doc_hp (sha256, hp, n, pages, src, status) VALUES ({q(sha)}, {q(hp)}, {n or 1}, {q(pg)}, 'text', '');")
+            for name, src in dict.fromkeys(t.execute("SELECT name, src FROM names WHERE sha = ?", (sha,))):
+                if name and len(name) <= 120:
+                    block.append(f"INSERT OR IGNORE INTO permit_doc_name (sha256, name, src) VALUES ({q(sha)}, {q(name)}, 'text');")
+            for page, val, st, src in hits:
+                if st == "שם":
+                    block.append(f"INSERT OR IGNORE INTO permit_doc_name (sha256, name, src) VALUES ({q(sha)}, {q(val)}, {q(src)});")
+                else:
+                    block.append(f"INSERT OR REPLACE INTO permit_doc_hp (sha256, hp, n, pages, src, status) VALUES ({q(sha)}, {q(val)}, 1, {q(str(page))}, {q(src)}, {q(st)});")
+            text_block = "\n".join(block)
+            if cur_n + len(text_block) > a.part_kb * 1024:
+                flush()
+            cur.append(text_block); cur_n += len(text_block); rows_n += len(block)
+            todo.append((sha, fp))
+            continue
         if sha in state:          # כבר יובא פעם: מוחקים את הישן לפני הכנסה מחדש
             for tb in ("permit_doc_text", "permit_doc_page", "permit_doc_hp", "permit_doc_name", "permit_doc_fts"):
                 block.append(f"DELETE FROM {tb} WHERE sha256 = {q(sha)};")
