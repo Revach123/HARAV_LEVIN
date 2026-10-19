@@ -20,6 +20,12 @@ database_id = "c1d082fc-c125-4f62-8b33-9b62d5bda2da"
 binding = "PERMITS"
 bucket_name = "harav-levin-permits"
 
+# אישורי הצטרפות (רשימת המצטרפים, functions/api/joiners.js): דלי R2 פרטי נפרד. הסוד JOINERS_KEY מוגדר ב: wrangler pages secret put JOINERS_KEY --project-name harav-levin
+#   (הדלי חייב להתקיים לפני הפריסה: wrangler r2 bucket create harav-levin-joiners)
+[[r2_buckets]]
+binding = "JOINERS"
+bucket_name = "harav-levin-joiners"
+
 # משתנים רגילים (לא סודות - הקובץ ציבורי). סודות מוגדרים בנפרד:
 #   wrangler pages secret put <שם> --project-name harav-levin
 # שלוחת ימות 6 (functions/api/ivr-company.js):
