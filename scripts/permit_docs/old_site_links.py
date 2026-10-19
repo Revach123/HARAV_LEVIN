@@ -51,6 +51,7 @@ def main():
     ap.add_argument("--roots", nargs="*", default=[os.path.join("wp-content", "uploads")], help="תיקיות לחיפוש (וגם קובצי zip בתוכן)")
     ap.add_argument("--known", default=os.path.join("text_index", "permit_text.db"))
     ap.add_argument("--out", default="old_links.csv")
+    ap.add_argument("--only-shas", default="", help="קובץ CSV עם עמודה 'חתימה' (old_vs_site_import.csv): מחלץ בדיוק את המסמכים האלה (גם אם הם במאגר המקומי) בשביל להעלות אותם לאתר")
     ap.add_argument("--extract", default="", help="תיקייה: מחלץ אליה כל PDF שחתימתו לא במאגר המקומי (קבצים שהתגלו עכשיו: גרסאות שנדרסו, יתומים), בשם <חתימה>__<נתיב>.pdf, כדי להריץ עליהם run_step2.py --extra")
     a = ap.parse_args()
     sql = gzip.open(a.db, "rt", encoding="utf-8", errors="replace").read()
@@ -235,6 +236,7 @@ def main():
         w.writerows(other_refs)
     nk = sum(1 for o in orph if o[4] == "לא")
     print(f"PDF שאף פוסט לא מקשר אליהם: {len(orph)} מחוץ לטפסי ההצטרפות (מהם לא במאגר: {nk}); בתיקיות ממוספרות (טפסים): {n_cf7}")
+    only = {r["חתימה"] for r in csv.DictReader(open(a.only_shas, encoding="utf-8-sig"))} if a.only_shas else set()
     if a.extract:
         os.makedirs(a.extract, exist_ok=True)
         done_sha, listing = set(), []
@@ -244,7 +246,12 @@ def main():
                 sh = hashlib.sha256(data).hexdigest()
             except Exception:  # noqa: BLE001
                 continue
-            if sh in known or sh in done_sha or not data[:5] == b"%PDF-":
+            if only:
+                if sh[:12] not in only:
+                    continue
+            elif sh in known:
+                continue
+            if sh in done_sha or not data[:5] == b"%PDF-":
                 continue
             done_sha.add(sh)
             rel_name = ent[1].replace("\\", "/").split("uploads/")[-1].replace("/", "_")
