@@ -205,7 +205,7 @@
   function homeCards() {
     if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
     const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
-    return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid">
+    return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:640px">
       <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b><span class="sub">לפי הרישום בפרטי / כללי, עם הצעות לשטר</span></button>
       <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b><span class="sub">שטרות שאינם משויכים לאף חברה</span></button>
       <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b><span class="sub">שטר קיים, והחברה אינה ברשימה</span></button>
