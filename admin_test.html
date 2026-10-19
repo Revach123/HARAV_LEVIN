@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=49"></script>
+<script src="/permit-docs-test.js?v=50"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -827,13 +827,13 @@
   .home-band { position:relative; flex:5 1 0; min-height:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); }
   .home-band::before { content:""; position:absolute; z-index:-1; top:calc(-1 * clamp(8px,1.5vh,20px)); bottom:calc(-1 * clamp(8px,1.5vh,20px)); left:calc(50% - 50vw); right:calc(50% - 50vw); background:url(banner.jpg) center/cover no-repeat #3a3a3a; }
   /* כפתורים קטנים יותר עם רווחים ביניהם */
-  .home-wrap { height:auto !important; min-height:0 !important; max-width:min(92vw,1560px) !important; gap:clamp(16px,3vh,34px) !important; padding-bottom:20px; }
+  .home-wrap { height:auto !important; min-height:calc(100vh - 96px) !important; max-width:min(92vw,1560px) !important; gap:clamp(16px,3vh,34px) !important; padding-bottom:0; }
   .home-band { flex:none !important; gap:clamp(14px,2.4vh,28px) !important; }
   .home-band::before { top:calc(-1 * clamp(14px,2.4vh,28px)) !important; bottom:calc(-1 * clamp(14px,2.4vh,28px)) !important; }
   .home-top { flex:none !important; height:clamp(64px,9vh,96px); gap:clamp(16px,2.5vw,48px) !important; }
   .home-top .home-card { width:clamp(200px,17vw,320px) !important; }
   .home-mid { flex:none !important; height:clamp(100px,16vh,160px); gap:clamp(16px,2.5vw,48px) !important; }
-  .home-bot { flex:none !important; height:auto !important; min-height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-bot { margin-top:auto; flex:none !important; height:auto !important; min-height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
   .home-dash .home-grid { gap:clamp(14px,2vw,32px) !important; }
   .home-wrap .home-card .ico { font-size:clamp(18px,3vh,32px) !important; margin-bottom:2px !important; }
   .home-wrap .home-card b { font-size:clamp(15px,1.25vw,24px) !important; }
