@@ -12,6 +12,7 @@
 קבצים: link_decisions.jsonl (החלטות, אפשר להפסיק ולהמשיך), link_undo.jsonl (מצב קודם של כל מסמך שנשנה).
 """
 import argparse
+import base64
 import csv
 import getpass
 import json
@@ -204,7 +205,8 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/items":
                 return self.send(200, [view(i) for i in S["items"]])
             if u.path.startswith("/api/pdf/"):
-                return self.send(200, site("/permit-docs/" + u.path.rsplit("/", 1)[1] + "/file", raw=True), "application/pdf")
+                j = site("/permit-docs/" + u.path.rsplit("/", 1)[1] + "/file?enc=b64")          # JSON עם base64 (כמו בדשבורד): עובד גם ברשת עם סינון תוכן שחוסמת הורדת PDF
+                return self.send(200, base64.b64decode(j["data"]), "application/pdf")
             if u.path == "/api/biz":
                 t = (q.get("q") or [""])[0].strip().lower()
                 dg = "".join(c for c in t if c.isdigit())
