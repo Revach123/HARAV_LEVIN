@@ -1767,7 +1767,7 @@
   }
   const ndDocsB = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other");
   const ndExt = () => S.ext.filter(x => ND.gone || extGroup(x) === "nodb");
-  const ndCount = t => !S.loaded ? "…" : t === "a" ? ndMissing().length : t === "b" ? ndDocsB().length : ndExt().length;
+  const ndCount = t => t === "e" ? J.total : !S.loaded ? "…" : t === "a" ? ndMissing().length : t === "b" ? ndDocsB().length : ndExt().length;
   function ndCss() {
     if ($("pd-nd-css")) return;
     const st = document.createElement("style"); st.id = "pd-nd-css";
@@ -1790,15 +1790,15 @@
   }
   function ndShow() {
     if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
-    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
-      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
-    const body = $("pd-nd-body"), keep = document.activeElement && document.activeElement.id === "pd-nd-q";
+    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"], ["e", "מצטרפים"]]
+      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" || (t === "e" && !J.total) ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
+    const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq"].includes(document.activeElement.id) ? document.activeElement.id : "";
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
       return;
     }
-    body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ndTabC();
-    if (keep) { const q = $("pd-nd-q"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+    body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ND.tab === "e" ? ndTabE() : ndTabC();
+    if (keep) { const q = $(keep); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
   }
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
@@ -1862,6 +1862,60 @@
     $("pd-nd-reg").innerHTML = `<div class="pd-grp" style="color:#c0392b">ברשם החברות / העמותות</div>` + (rs.slice(0, 15).map(r => { const k = digitsOf(r.id), tag = inDb.has(k) ? '<span class="pd-nd-ok">במאגר שלנו</span>' : inExt.has(k) ? '<span class="pd-nd-ok">ברשימת השאינן במאגר</span>' : '<span class="pd-nd-miss">לא במאגר</span>';
       return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
   }
+
+  // ───────── מצטרפים להיתר עיסקא (נתונים אישיים: מנהל בלבד; מפוענחים בשרת ונשארים רק בזיכרון הדף) ─────────
+  const J = { rows: null, total: 0, cancels: 0, loading: false, err: "", q: "", f: "all", shown: 200, open: "" };
+  async function jLoad() {
+    if (J.loading || J.rows) return;
+    J.loading = true; J.err = ""; J.rows = [];
+    try {
+      for (let off = 0; ; off += 400) {
+        const r = await api(`/joiners?offset=${off}&limit=400`);
+        J.total = r.total; J.cancels = r.cancels; J.rows.push(...r.rows);
+        if (ND.tab === "e") ndShow();
+        if (off + 400 >= r.total) break;
+      }
+    } catch (e) { J.err = e.message || "שגיאה"; J.rows = null; }
+    J.loading = false;
+    if (ND.tab === "e") ndShow();
+  }
+  const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
+  function jFiltered() {
+    const f = J.q.trim().toLowerCase(), d = f.replace(/\D/g, "");
+    const dup = new Map(); for (const r of J.rows) if (r.ident_hash) dup.set(r.ident_hash, (dup.get(r.ident_hash) || 0) + 1);
+    const rows = J.rows.filter(r => (J.f === "all" || (J.f === "cancelled" && r.cancelled_at) || (J.f === "file" && r.file_sha256) || (J.f === "nofile" && !r.file_sha256))
+      && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
+    return { rows, dup };
+  }
+  function ndTabE() {
+    if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
+    if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
+    const { rows, dup } = jFiltered(), F = [["all", "הכל"], ["cancelled", "ביטלו"], ["file", "עם קובץ אישור"], ["nofile", "בלי קובץ אישור"]];
+    return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש: שם, טלפון, דוא&quot;ל, ת.ז., חברה" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
+        <span class="pd-btns">${F.map(([k, l]) => `<button class="pd-mini ${J.f === k ? "sel" : ""}" onclick="PD._jF('${k}')">${l}</button>`).join("")}</span></div>
+      <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
+      <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
+        const n = dup.get(r.ident_hash) || 1, open = J.open === r.id;
+        return `<tr class="go" onclick="PD._jOpen('${r.id}')"><td dir="ltr" style="text-align:right">${E((r.submitted_at || "").slice(0, 10))}</td><td><b>${E(jName(r))}</b></td><td dir="ltr" style="text-align:right">${E(r.phone)}</td><td dir="ltr" style="text-align:right">${E(r.email)}</td>
+          <td>${r.cancelled_at ? `<span class="pd-nd-miss">ביטל ${E(r.cancelled_at)}</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
+          <td>${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄 אישור</button>` : '<span class="pd-sub">-</span>'}</td></tr>`
+          + (open ? `<tr><td colspan="6" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">ת.ז.: <b dir="ltr">${E(r.id_number || "-")}</b> · כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span><br>החברות שנבחרו: <b>${E(r.companies || "-")}</b>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${r.extra ? `<br>שדות נוספים: ${E(r.extra)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="6" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table>
+      ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
+  }
+  async function jFile(sha) {
+    const w = window.open("", "_blank");
+    try {
+      const res = await fetch("/api/joiners?file=" + sha, { headers: authH() });
+      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || res.statusText); }
+      const url = URL.createObjectURL(await res.blob());
+      if (w) w.location = url; else window.open(url);
+    } catch (e) { if (w) w.close(); alert("פתיחת הקובץ נכשלה: " + e.message); }
+  }
+  const jAct = {
+    q: v => { J.q = v; J.shown = 200; clearTimeout(J._t); J._t = setTimeout(ndShow, 250); },
+    f: k => { J.f = k; J.shown = 200; ndShow(); }, open: id => { J.open = J.open === id ? "" : id; ndShow(); },
+    more: () => { J.shown += 300; ndShow(); }, retry: () => { J.err = ""; J.rows = null; ndShow(); },
+  };
   const ndAct = {
     tab: t => { ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
@@ -2124,7 +2178,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
