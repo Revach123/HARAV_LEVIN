@@ -311,7 +311,7 @@
       const ids = doc.business_ids || [];
       const ctx = fromBiz || sugBiz || ids[0] || "";
       const sugOpen = sugBiz && !fromBiz && !ids.includes(sugBiz) && bizById(sugBiz);          // נפתח כהצעה לחברה: כפתור אישור שיוך
-      const sugBar = sugOpen ? `<div class="pd-dup" style="margin:0 0 10px"><b>הצעה לשיוך לחברה: ${displayName(bizById(sugBiz), true)}</b><div class="pd-btns" style="margin-top:8px"><button class="pd-btn primary" onclick="PD._sugOk('${docId}','${sugBiz}')">✔ אישור שיוך</button></div></div>` : "";
+      const sugBar = sugOpen ? `<div class="pd-dup" style="margin:0 0 10px"><div class="pd-sub">הצעה לשיוך לחברה (להשוואה מול המסמך):</div><b style="font-size:15px">${displayName(bizById(sugBiz), true)}</b><div style="margin-top:4px">ח.פ.: <b><bdi>${E(bizById(sugBiz).chp_number || "—")}</bdi></b> · רישום: <b>${regLabel(bizById(sugBiz))}</b>${stTag(bizById(sugBiz).registry_status)}</div><div class="pd-btns" style="margin-top:8px"><button class="pd-btn primary" onclick="PD._sugOk('${docId}','${sugBiz}')">✔ אישור שיוך</button></div></div>` : "";
       const chips = ids.map(b => `<div class="pd-co"><span>${E(bizName(b))}</span><button class="pd-link" onclick="PD._unassign('${docId}','${b}')" title="ביטול שיוך המסמך לחברה הזו">ביטול שיוך</button></div>`).join("") || `<div class="pd-sub">המסמך לא משויך לאף חברה</div>`;
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
