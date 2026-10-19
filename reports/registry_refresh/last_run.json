@@ -5,21 +5,21 @@
   "unfound_after_batch": 88,
   "values_lost": 0,
   "empty_before": {
-   "registrar_name": 91,
-   "biz_type": 91
+   "registrar_name": 90,
+   "biz_type": 90
   },
   "empty_after": {
-   "registrar_name": 91,
-   "biz_type": 91
+   "registrar_name": 90,
+   "biz_type": 90
   },
-  "updated": "2026-10-18T07:29:39.939162Z",
+  "updated": "2026-10-19T08:09:39.151485Z",
   "source": "d1",
-  "businesses": 1274,
+  "businesses": 1273,
   "numeric_chp": 1269,
   "found_in_registry": 1181,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2224,
+  "datawise_rows": 2225,
   "datawise_date": "2026-10-16",
   "bond_companies": 363,
   "changes": {
@@ -35,8 +35,8 @@
    "registry_status": 0
   },
   "registry_status_counts": {
-   "לא ידוע": 155,
    "פעילה": 1068,
+   "לא ידוע": 154,
    "מחוסלת/חיסול": 35,
    "בפירוק": 16
   },
@@ -753,11 +753,6 @@
   }
  ],
  "non_numeric_chp": [
-  {
-   "id": "5849/99",
-   "chp": "5849/99",
-   "permit_name": "קופת חולים מאוחדת"
-  },
   {
    "id": "mp64m1itd2mn",
    "chp": "5849/99",
