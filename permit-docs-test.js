@@ -209,9 +209,7 @@
       <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
       <button class="home-card" onclick="PD.openDash()"><span class="ico">📊</span><b>דשבורד חדש</b><span class="sub">חברות שחסרים להן שטרות · שטרות לשיוך · חברות לא רשומות</span></button>
       <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>בדיקת מאגר המסמכים</b><span class="sub">מסמכים לבדיקה · לא משויכים · ניהול שיוכים</span></button>
-      <button class="home-card" onclick="PD.openAdminQ()"><span class="ico">🧑‍⚖️</span><b>אישור מנהל${S.loaded && aqCount() ? " (" + aqCount() + ")" : ""}</b><span class="sub">שאלות שהועברו להחלטת מנהל</span></button>
-            <button class="home-card" onclick="PD.openExt('nodb')"><span class="ico">🏢</span><b>חברות שאינן במאגר (${extCount("nodb")})</b><span class="sub">קיימות, אבל לא במאגר העסקים</span></button>
-      <button class="home-card" onclick="PD.openExt('gone')"><span class="ico">🏚️</span><b>חברות מחוקות (${extCount("gone")})</b><span class="sub">מחוקות / מוזגו / לא קיימות היום</span></button></div>`;
+      <button class="home-card" onclick="PD.openAdminQ()"><span class="ico">🧑‍⚖️</span><b>אישור מנהל${S.loaded && aqCount() ? " (" + aqCount() + ")" : ""}</b><span class="sub">שאלות שהועברו להחלטת מנהל</span></button></div>`;
   }
 
   const openCompany = bizId => openManage(bizId);
@@ -252,7 +250,7 @@
   // ───────── חלון: צפייה ועריכה של מסמך ─────────
   // הת"ע מיוחד לאג"ח: תת-שורה לכל מסמך (משויך לאג"ח ואינו ההת"ע הראשי של החברה); השם כולל את סדרות האג"ח
   function bondDocsOf(bid) {
-    const ser = s => /^\d/.test(s) ? s : s.length === 1 ? s + "'" : s.slice(0, -1) + '"' + s.slice(-1);
+    const ser = bondSer;
     return S.docs.filter(d => (d.business_ids || []).includes(bid) && (d.bonds || []).length && d.doc_type !== "other" && !slotsOf(d, bid).length)
       .map(d => { const ss = [...new Set(d.bonds.map(x => bondSeries(x.name)).filter(Boolean))].map(ser), oth = d.bonds.filter(x => !bondSeries(x.name)).map(x => x.symbol || x.name);
         return { id: d.id, name: d.original_name, label: 'אג"ח ' + [...ss, ...oth].join(" ו-"), list: d.doc_type === "general" ? "general" : d.doc_type === "private" ? "private" : "both" }; })
@@ -546,7 +544,7 @@
           ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
           ${sug.outside.length ? `<h4>${U.addCompany ? "הוספת חברה חדשה למאגר" : "תאגידים במסמך שאינם במאגר"}</h4>` + sug.outside.map(h => { const nm = nameNear(c.text, h); return `<div class="pd-uc ext" style="margin-top:5px"><div class="pd-uc-top" style="cursor:default"><b>${E(nm || "שם החברה לא זוהה במסמך")}</b><div class="pd-sub">ח.פ. ${E(h)} · תאגיד שנמצא במסמך ואינו במאגר${nm ? "" : " (השם יושלם מהרשם)"}</div></div>
             <div class="pd-uc-act"><button class="pd-btn primary" onclick="PD._upNewCo('${h}')" title="שומר את המסמך, פותח את טופס הוספת העסק עם הנתונים (השלמה מהרשם) ומשייך אליו את המסמך אחרי השמירה">הוספת החברה למאגר</button><button class="pd-link2" onclick="PD._upExtCo('${h}')" title="חברה מחוקה / שאינה במאגר: נרשמת ברשימת החברות שאינן במאגר">שיוך כחברה שאינה במאגר</button></div></div>`; }).join("") : (U.addCompany ? `<div class="pd-warnbox">לא נמצא במסמך ח.פ. של תאגיד שאינו במאגר. אפשר לחפש ברשם בשדה "חיפוש חברה אחרת" ולבחור "הוספה למאגר".</div>` : "")}
-          ${c.bonds && c.bonds.length ? `<h4>אג"ח שמוזכרות במסמך</h4>` + c.bonds.map(x => `<label class="pd-cand"><input type="checkbox" ${c.bondSel.has(x.row.id) ? "checked" : ""} onchange="PD._upBond('${E(x.row.id)}',this.checked)"> <span class="pd-grow"><b>${E(x.row.name)}</b> <span class="pd-sub">${E(x.row.symbol)} · נייר ${E(x.row.id)} · ${E(x.row.company)}<br>במסמך: ${E(x.snippet)}</span></span></label>`).join("") : ""}
+          ${c.bonds && c.bonds.length ? `<h4>אג"ח שמוזכרות במסמך</h4>` + c.bonds.map(x => `<label class="pd-cand"><input type="checkbox" ${c.bondSel.has(x.row.id) ? "checked" : ""} onchange="PD._upBond('${E(x.row.id)}',this.checked)"> <span class="pd-grow"><b>${E(x.row.name)}</b> <span class="pd-sub">${E(bondLabel(x.row))} · נייר ${E(x.row.id)} · ${E(x.row.company)}<br>במסמך: ${E(x.snippet)}</span></span></label>`).join("") : ""}
           <input class="pd-in" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-up-res"></div>
           <h4>סיווג</h4><div class="pd-btns">${tb}</div>${sug.typeWhy && !c.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(sug.typeWhy)}</div>` : ""}
           <h4>הערה (אופציונלי)</h4><textarea class="pd-in" rows="2" onchange="PD._upNote(this.value)">${E(c.note)}</textarea>
@@ -584,6 +582,8 @@
     return best;
   }
   // ───────── זיהוי אזכור אג"ח במסמך: "...למטרת השקעה ע"י רכישה או החזקת אג"ח (סדרה ו' של חברה בע"מ)" ─────────
+  const bondSer = x => /^\d/.test(x) ? x : x.length === 1 ? x + "'" : x.slice(0, -1) + '"' + x.slice(-1);
+  const bondLabel = x => { const k = bondSeries(x.name); return k ? 'אג"ח ' + bondSer(k) : (x.name || x.symbol || ""); };          // "אג"ח ח'" ולא סימול הנייר
   const bondSeries = nm => { const m = String(nm || "").replace(/["'׳״`]/g, "").replace(/\s+/g, " ").trim().match(/אגח\s*([א-ת]{1,3}|\d{1,2})(?:\s|$)/); return m ? m[1] : ""; };
   async function findBonds(text) {
     const rows = await bondList(); if (!rows.length || !text) return [];
@@ -611,7 +611,7 @@
   }
   const bondSugHtml = (list, have, fn) => {
     const ok = list.filter(x => !have.has(x.row.id)); if (!ok.length) return "";
-    return `<h4>אג"ח שמוזכרות במסמך</h4>` + ok.map(x => `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.row.name)}</b><div class="pd-sub">${E(x.row.symbol)} · נייר ${E(x.row.id)} · ${E(x.row.company)}</div><div class="pd-sub">במסמך: ${E(x.snippet)}</div></div><div class="pd-uc-act">${fn(x.row.id)}</div></div>`).join("");
+    return `<h4>אג"ח שמוזכרות במסמך</h4>` + ok.map(x => `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.row.name)}</b><div class="pd-sub">${E(bondLabel(x.row))} · נייר ${E(x.row.id)} · ${E(x.row.company)}</div><div class="pd-sub">במסמך: ${E(x.snippet)}</div></div><div class="pd-uc-act">${fn(x.row.id)}</div></div>`).join("");
   };
   async function upPost(c, ids) {          // שמירת המסמך באתר; מסמך זהה שכבר קיים מוחזר כמות שהוא
     const u8 = new Uint8Array(c.buf); let bin = "";
@@ -899,7 +899,7 @@
   }
   function bcard(x, d) {
     const own = (d.business_ids || []).map(bizById).filter(Boolean).some(b => digitsOf(b.chp_number) && digitsOf(b.chp_number) === digitsOf(x.chp));
-    return `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.name || x.id)}</b><div class="pd-sub">אג"ח · ${E(x.symbol)} · נייר ${E(x.id)}</div><div class="pd-sub">${E(x.company)}${x.chp && !own ? ' <span class="pd-st bad">החברה לא משויכת למסמך</span>' : ""}</div></div>
+    return `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.name || x.id)}</b><div class="pd-sub">${E(bondLabel(x))} · נייר ${E(x.id)}</div><div class="pd-sub">${E(x.company)}${x.chp && !own ? ' <span class="pd-st bad">החברה לא משויכת למסמך</span>' : ""}</div></div>
       <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" style="color:#c0392b" onclick="PD._unBondDel('${E(x.id)}')">ביטול</button></div></div>`;
   }
   // ───────── שיוך מסמך לאג"ח, מתוך חלון ניהול מסמכי החברה ─────────
@@ -913,7 +913,7 @@
     let list = rows.filter(r => !have.has(r.id));
     list = qq ? list.filter(r => [r.name, r.symbol, r.id, r.company].some(v => String(v).toLowerCase().includes(qq))) : list.filter(own);
     list.sort((x, y) => (own(y) ? 1 : 0) - (own(x) ? 1 : 0) || String(x.name).localeCompare(String(y.name), "he"));
-    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._mgBondAdd('${docId}','${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(r.symbol)}${own(r) ? "" : " · " + E(r.company)}</span>${own(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
+    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._mgBondAdd('${docId}','${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(bondLabel(r))}${own(r) ? "" : " · " + E(r.company)}</span>${own(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
       || `<div class="pd-sub" style="padding:5px">${qq ? "לא נמצאו אג\"ח" : "אין אג\"ח רשומות לחברה הזו. הקלידו לחיפוש בכל האג\"ח."}</div>`;
   }
   async function mgBondAdd(docId, id) {
@@ -1839,12 +1839,12 @@
     for (const n of ns) { if (nameGeneric(n)) continue; for (const x of coIndex()) if (x.keys.some(k => nameHit(n, k))) out.set(x.b.id, x.b); }
     return [...out.values()];
   }
-  function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה, אינם מסמך ראשי שלה, וסוגם מתאים לשטר החסר: [{ d, why }]
+  function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה ואינם משויכים אליה כלל (מסמך שכבר משויך לחברה, גם כנוסף או לאג"ח, אינו הצעה), וסוגם מתאים לשטר החסר: [{ d, why }]
     hpMaps();
     const hp = S.hpDocs && (b.chp_number || "").trim() ? S.hpDocs.get(hp9(b.chp_number)) : null, nm = nameDocs(b), out = [];
     for (const id of new Set([...(hp || []), ...nm])) {
       const d = S.byId.get(id);
-      if (d && d.doc_type !== "other" && !slotsOf(d, b.id).length && miss.some(t => FITS[t].includes(d.doc_type))) out.push({ d, why: hp && hp.has(id) ? "ח.פ." : "שם החברה" });
+      if (d && d.doc_type !== "other" && !(d.business_ids || []).includes(b.id) && miss.some(t => FITS[t].includes(d.doc_type))) out.push({ d, why: hp && hp.has(id) ? "ח.פ." : "שם החברה" });
     }
     return out;
   }
@@ -2005,7 +2005,7 @@
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
         <div class="pd-sub">${typeSel} ${fmtSize(d.size)} · ${metaHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
         <div class="pd-btns">${linkBtns}${spBtn}</div>${sp !== undefined && sp.detail ? `<div class="pd-sub">פירוט: ${E(sp.detail)}</div>` : ""}
-        <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(x.symbol || x.name)} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
+        <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(bondLabel(x))} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
         ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
         <details class="pd-menu" ${menuOpen ? "open" : ""} ontoggle="PD._menu('${d.id}',this.open)"><summary>⋯ עוד</summary>
           <label class="pd-mg-share"><input type="checkbox" ${shared ? "checked" : ""} onchange="PD._mgShare('${d.id}',this.checked)"> מסמך משותף (כמה חברות)</label>${shareBox}
@@ -2013,6 +2013,7 @@
         <div id="pd-mgs-${d.id}"></div>
       </div></div>`;
   }
+  const bondKey = d => (d.bonds || []).map(x => bondLabel(x)).sort().join(" ו-");
   function paintMg() {
     const root = $("pd-mg"); if (!root) return;
     const b = bizById(M.biz); if (!b) { close("pd-manage"); return; }
@@ -2020,10 +2021,11 @@
     const slotBox = t => { const d = slotDoc(b.id, t);
       return `<div class="pd-mg-slot ${need[t] ? "" : "off"}" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'${t}')"><h4>הת"ע ${SLOT_HE[t]}${need[t] ? "" : ' <span class="pd-sub">(לא נדרש לפי הרישום)</span>'}</h4>${d ? mgCard(d, b)
         : `<div class="pd-mg-empty ${need[t] ? "need" : ""}">${need[t] ? "⚠ אין מסמך מקושר" : "אין מסמך מקושר"}<div class="pd-sub">לקישור: בחרו מסמך מלמטה ולחצו "הת"ע ${SLOT_HE[t]}"</div></div>`}</div>`; };
-    const ex = extrasOf(b.id);
+    const allEx = extrasOf(b.id), bd = allEx.filter(d => (d.bonds || []).length).sort((x, y) => bondKey(x).localeCompare(bondKey(y), "he")), ex = allEx.filter(d => !(d.bonds || []).length);
     root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b>
         <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
       <div class="pd-body"><div class="pd-mg-top">${slotBox("private")}${slotBox("general")}</div>
+        ${bd.length ? `<h4 style="margin:18px 0 8px">שטרות אג"ח של החברה (${bd.length})</h4><div class="pd-mg-grid" id="pd-mg-bonds">${bd.map(d => mgCard(d, b)).join("")}</div>` : ""}
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div></div>`;
     const body = root.querySelector(".pd-body"); if (body) body.scrollTop = keep;
