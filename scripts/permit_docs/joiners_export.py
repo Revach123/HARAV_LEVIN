@@ -35,7 +35,7 @@ FIELD_MAP = {
         "שם פרטי": ["private"],
         "שם משפחה": ["family"],
         "תעודת זהות": ["id-number"],
-        "דוא\"ל": ["your-email", "email"],
+        "דוא\"ל": ["your-email", "email", "youremail", "your-email2"],
         "טלפון": ["tel-760", "tel-780", "tel-860"],
         "חברות שנבחרו": ["companys"],
         "כל החברות": ["לבחירת כל החברות שנרשמו וירשמו בהמשך"],
@@ -154,23 +154,45 @@ def nm(x):
     return re.sub(r"[\s\"'`.\-]+", "", (x or "").lower())
 
 
-def merge(rows):
-    """אותה הגשה שנשמרה בשני התוספים: מפתח זהות = (ת.ז. או טלפון, דוא"ל, יום). נשארת הרשומה המלאה יותר, ושני מפתחות המקור נשמרים."""
-    out = collections.OrderedDict()
-    for r in sorted(rows, key=lambda r: r["תאריך"]):
-        ident = digits(r.get("תעודת זהות")) or digits(r.get("טלפון"))[:10] or nm(r.get("שם פרטי", "") + r.get("שם משפחה", ""))
-        k = (ident, (r.get("דוא\"ל") or "").lower(), r["תאריך"][:10])
-        if k in out:
-            old = out[k]
-            keep, drop = (r, old) if sum(1 for v in r.values() if v) > sum(1 for v in old.values() if v) else (old, r)
-            keep["מפתח"] = keep["מפתח"] + " | " + drop["מפתח"]
-            for c, v in drop.items():
-                if not keep.get(c) and v:
-                    keep[c] = v
-            out[k] = keep
-        else:
-            out[k] = r
-    return list(out.values())
+def ts(x):
+    from datetime import datetime
+    try:
+        return datetime.strptime(str(x)[:19], "%Y-%m-%d %H:%M:%S").timestamp()
+    except ValueError:
+        return None
+
+
+def merge(rows, window=120):
+    """אותה הגשה שנשמרה בשני התוספים נספרת פעם אחת: אותו אדם, ושעת ההגשה שונה בעד `window` שניות בין cfdb7 ל-advcf7.
+    הגשות נפרדות של אותו אדם (גם באותו יום) נשארות נפרדות."""
+    def ident(r):
+        return digits(r.get("תעודת זהות")) or digits(r.get("טלפון"))[:10] or nm(r.get("שם פרטי", "") + r.get("שם משפחה", "")) or (r.get("דוא\"ל") or "").lower()
+    cf = [r for r in rows if r["מקור"] == "cfdb7"]
+    adv = [r for r in rows if r["מקור"] != "cfdb7"]
+    by = collections.defaultdict(list)
+    for r in cf:
+        by[ident(r)].append(r)
+    out, used = list(cf), set()
+    for r in sorted(adv, key=lambda r: r["תאריך"]):
+        t, best = ts(r["תאריך"]), None
+        for c in by.get(ident(r), []):
+            tc = ts(c["תאריך"])
+            if id(c) in used or t is None or tc is None or abs(t - tc) > window:
+                continue
+            if best is None or abs(t - tc) < abs(t - ts(best["תאריך"])):
+                best = c
+        if best is None:
+            out.append(r)
+            continue
+        used.add(id(best))
+        keep, drop = (r, best) if sum(1 for v in r.values() if v) > sum(1 for v in best.values() if v) else (best, r)
+        keep["מפתח"] = keep["מפתח"] + " | " + drop["מפתח"]
+        for c, v in drop.items():
+            if not keep.get(c) and v:
+                keep[c] = v
+        if keep is r:
+            out[out.index(best)] = r
+    return out
 
 
 def main():
