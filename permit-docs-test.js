@@ -1871,8 +1871,9 @@
   }
   function ndShow() {
     if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
-    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"], ["e", "מצטרפים"]]
-      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" || (t === "e" && !J.total) ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
+    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
+      .filter(([t]) => t !== "e").map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" || (t === "e" && !J.total) ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
+    if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="active">👥 מצטרפים${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
     const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq"].includes(document.activeElement.id) ? document.activeElement.id : "";
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }

@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=31"></script>
+<script src="/permit-docs-test.js?v=32"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -803,7 +803,7 @@
   /* דף ראשי: הכל בתוך המסך בלי גלילה; העוגות בצד */
   .home-wrap { display:flex; gap:20px; align-items:flex-start; max-width:1100px; margin:0 auto; box-sizing:border-box; width:100%; overflow:hidden; }
   .home-main { flex:1; min-width:0; }
-  .home-main .home-grid { margin:0 auto 8px !important; max-width:none !important; gap:10px; grid-template-columns:repeat(3,minmax(0,1fr)) !important; }
+  .home-main .home-grid { margin:0 auto 8px !important; max-width:none !important; gap:10px; grid-template-columns:repeat(4,minmax(0,1fr)) !important; }
   .home-main .home-grid + .pd-homeh + .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
   .home-main .home-card { padding:.7rem .8rem; min-width:0; }
   .home-main .home-card .ico { font-size:22px; margin-bottom:4px; }
@@ -1517,6 +1517,7 @@ function renderHome() {
       <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
     </div>${window.PD ? PD.homeCards() : ""}</div>
     <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div>`;
 }
