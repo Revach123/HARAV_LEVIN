@@ -376,14 +376,17 @@ const CF={"גבוהה מאוד":"#1e7e4a","גבוהה":"#3f8f5a","בינונית
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function msg(t){const m=$("msg");m.textContent=t;m.style.display="block";clearTimeout(m._t);m._t=setTimeout(()=>m.style.display="none",3500)}
 async function api(p,b){const r=await fetch(p,b?{method:"POST",body:JSON.stringify(b)}:{});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
-async function load(keep){const k=keep?(vis()[CUR]||{}).key:null;ITEMS=await api("/api/items");const v=vis();          // המפתח של הפריט שמוצג כרגע (לפי הרשימה המסוננת), כדי שרענון ברקע לא יקפיץ לפריט אחר
-if(k){const i=v.findIndex(x=>x.key===k);CUR=i>=0?i:Math.min(CUR,Math.max(0,v.length-1))}else CUR=0;draw()}
+async function load(keep){const items=await api("/api/items");const cur=keep?vis()[CUR]:null;          // המפתח של הפריט שמוצג ברגע שהתשובה הגיעה (ולא ברגע שהבקשה יצאה), כדי שלא נחזור אחורה
+const k=cur&&cur.key,before=cur&&JSON.stringify(cur);ITEMS=items;const v=vis();
+if(k){const i=v.findIndex(x=>x.key===k);CUR=i>=0?i:Math.min(CUR,Math.max(0,v.length-1))}else CUR=0;
+drawTop();const now=vis()[CUR];if(!k||!now||now.key!==k||JSON.stringify(now)!==before)card()}          // הכרטיס מצויר מחדש רק אם משהו בו השתנה
+let _lt;function schedLoad(){clearTimeout(_lt);_lt=setTimeout(()=>{if(!QUEUE.length&&!PEND.size)load(true).catch(()=>{})},1500)}
 function vis(){return ITEMS.filter(x=>!PEND.has(x.key)).filter(x=>TAB==="הכל"||(TAB==="פתוח"?x.state==="פתוח":TAB==="בוצע"?x.state==="בוצע":TAB==="דולג"?(x.state==="דולג"||x.state==="לא מתאים"):x.conf===TAB&&x.state==="פתוח"))}
-function draw(){const v=vis();const cnt=t=>ITEMS.filter(x=>x.conf===t&&x.state==="פתוח").length;
+function draw(){drawTop();card()}
+function drawTop(){const v=vis();const cnt=t=>ITEMS.filter(x=>x.conf===t&&x.state==="פתוח").length;
 $("tabs").innerHTML=["פתוח","בוצע","דולג"].map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${ITEMS.filter(x=>t==="פתוח"?x.state==="פתוח":t==="בוצע"?x.state==="בוצע":(x.state==="דולג"||x.state==="לא מתאים")).length})</button>`).join("")+" | "+Object.keys(CF).map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${cnt(t)})</button>`).join("");
 $("prog").textContent=`  בוצעו ${ITEMS.filter(x=>x.state==="בוצע").length} מתוך ${ITEMS.length}`+(PEND.size?`  ·  ⏳ מעלה לאתר: ${PEND.size}`:"");
-$("list").innerHTML=v.map((x,i)=>`<div class="it ${i===CUR?"cur":""} ${x.state==="בוצע"?"done":x.state==="פתוח"?"":"skip"}" onclick="go(${i})"><span class="cf" style="background:${CF[x.conf]||"#555"}">${x.conf}</span>${E(x.company)}<br><span class="k">${E(x.slot_he)} · ${E(x.doc_name)}</span></div>`).join("")||"<div class='it'>אין פריטים</div>";
-card()}
+$("list").innerHTML=v.map((x,i)=>`<div class="it ${i===CUR?"cur":""} ${x.state==="בוצע"?"done":x.state==="פתוח"?"":"skip"}" onclick="go(${i})"><span class="cf" style="background:${CF[x.conf]||"#555"}">${x.conf}</span>${E(x.company)}<br><span class="k">${E(x.slot_he)} · ${E(x.doc_name)}</span></div>`).join("")||"<div class='it'>אין פריטים</div>"}
 let ROT={};try{ROT=JSON.parse(localStorage.getItem("rot")||"{}")}catch(e){}
 function applyRot(){const x=vis()[CUR],d=x?(ROT[x.doc_id]||0):0,w=$("pw"),f=$("pdf");if(!w)return;if(d%180){f.style.width=w.clientHeight+"px";f.style.height=w.clientWidth+"px"}else{f.style.width="100%";f.style.height="100%"}f.style.transform=`translate(-50%,-50%) rotate(${d}deg)`;$("pr").textContent=d?d+"°":""}
 function rot(dir){const x=vis()[CUR];if(!x)return;ROT[x.doc_id]=dir?((ROT[x.doc_id]||0)+dir*90+360)%360:0;try{localStorage.setItem("rot",JSON.stringify(ROT))}catch(e){}applyRot()}
@@ -417,8 +420,8 @@ function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.co
 PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע, אחת בכל פעם (כדי לא לתפוס את כל חיבורי הדפדפן)
 QUEUE.push({key,name,body});pump()}
 function pump(){if(BUSY||!QUEUE.length)return;BUSY=true;const j=QUEUE.shift();
-api("/api/approve",j.body).then(()=>{PEND.delete(j.key);msg("✔ נשמר באתר: "+j.name)}).catch(e=>{PEND.delete(j.key);msg("שגיאה ב"+j.name+": "+e.message)}).finally(()=>{BUSY=false;if(QUEUE.length)pump();else load(true);draw()})}
-function skip(w){const x=vis()[CUR];if(!x)return;const key=x.key;PEND.add(key);const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();api("/api/skip",{key,decision:w}).then(()=>{PEND.delete(key);return load(true)}).catch(e=>{PEND.delete(key);msg("שגיאה: "+e.message);load(true)})}
+api("/api/approve",j.body).then(()=>{const it=ITEMS.find(x=>x.key===j.key);if(it)it.state="בוצע";PEND.delete(j.key);msg("✔ נשמר באתר: "+j.name)}).catch(e=>{PEND.delete(j.key);msg("שגיאה ב"+j.name+": "+e.message)}).finally(()=>{BUSY=false;drawTop();if(QUEUE.length)pump();else schedLoad()})}
+function skip(w){const x=vis()[CUR];if(!x)return;const key=x.key;PEND.add(key);const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();api("/api/skip",{key,decision:w}).then(()=>{const it=ITEMS.find(x=>x.key===key);if(it)it.state=w;PEND.delete(key);drawTop();schedLoad()}).catch(e=>{PEND.delete(key);msg("שגיאה: "+e.message);schedLoad()})}
 async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});msg("↩ בוטל");await load(true)}catch(e){msg("שגיאה: "+e.message)}}
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
 let _t;function srch(q){clearTimeout(_t);_t=setTimeout(async()=>{const r=await api("/api/biz?q="+encodeURIComponent(q));$("res").innerHTML=r.map(b=>`<div onclick='pick(${JSON.stringify(b)})'>${E(b.name)} <span class="k">${E(b.vis)}</span></div>`).join("")},300)}
