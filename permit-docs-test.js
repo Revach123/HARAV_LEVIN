@@ -282,6 +282,13 @@
     return `<h4 style="margin:18px 0 8px">הצעות נוספות (${sg.length})</h4>` + (sg.length ? `<div class="pd-mg-grid"${narrow ? ' style="grid-template-columns:1fr"' : ""}>${sg.slice(0, 12).map(x => sugCard(x, bid)).join("")}</div>` + (sg.length > 12 ? `<div class="pd-sub">ועוד ${sg.length - 12}</div>` : "")
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
   }
+  const REJ_KEY = "pd_sug_rej";          // הצעות שיוך שבוטלו (מסמך|חברה): לא יוצעו שוב; נשמר בדפדפן הזה
+  const rejSet = () => { try { return new Set(JSON.parse(localStorage.getItem(REJ_KEY) || "[]")); } catch { return new Set(); } };
+  function sugRej(docId, bid) {
+    const r = rejSet(); r.add(docId + "|" + bid);
+    try { localStorage.setItem(REJ_KEY, JSON.stringify([...r])); } catch { /* בלי אחסון */ }
+    close("pd-doc"); if (S._paintMg && $("pd-mg")) S._paintMg(); if ($("pd-nd")) ndShow();
+  }
   async function sugOk(docId, bid) {          // אישור שיוך מתוך חלון המסמך: המסמך משויך לחברה (כמסמך נוסף) והחלון נפתח מחדש בהקשר החברה, כדי שאפשר יהיה לקשר אותו להת"ע
     const d = S.byId.get(docId); if (!d) return;
     if (!(d.business_ids || []).includes(bid) && !(await updateDoc(docId, { business_ids: [...(d.business_ids || []), bid] }))) return;
@@ -311,7 +318,7 @@
       const ids = doc.business_ids || [];
       const ctx = fromBiz || sugBiz || ids[0] || "";
       const sugOpen = sugBiz && !fromBiz && !ids.includes(sugBiz) && bizById(sugBiz);          // נפתח כהצעה לחברה: כפתור אישור שיוך
-      const sugBar = sugOpen ? `<div class="pd-dup" style="margin:0 0 10px"><div class="pd-sub">הצעה לשיוך לחברה (להשוואה מול המסמך):</div><b style="font-size:15px">${displayName(bizById(sugBiz), true)}</b><div style="margin-top:4px">ח.פ.: <b><bdi>${E(bizById(sugBiz).chp_number || "—")}</bdi></b> · רישום: <b>${regLabel(bizById(sugBiz))}</b>${stTag(bizById(sugBiz).registry_status)}</div><div class="pd-btns" style="margin-top:8px"><button class="pd-btn primary" onclick="PD._sugOk('${docId}','${sugBiz}')">✔ אישור שיוך</button></div></div>` : "";
+      const sugBar = sugOpen ? `<div class="pd-dup" style="margin:0 0 10px;cursor:pointer" onclick="if(!event.target.closest('button'))PD.openManage('${sugBiz}')" title="לחיצה: פתיחת נתוני החברה ומסמכיה"><div class="pd-sub">הצעה לשיוך לחברה (להשוואה מול המסמך):</div><b style="font-size:15px">${displayName(bizById(sugBiz), true)}</b><div style="margin-top:4px">ח.פ.: <b><bdi>${E(bizById(sugBiz).chp_number || "—")}</bdi></b> · רישום: <b>${regLabel(bizById(sugBiz))}</b>${stTag(bizById(sugBiz).registry_status)}</div><div class="pd-btns" style="margin-top:8px"><button class="pd-btn primary" onclick="PD._sugOk('${docId}','${sugBiz}')">✔ אישור שיוך</button><button class="pd-btn" onclick="PD._sugRej('${docId}','${sugBiz}')" title="המסמך לא מתאים לחברה הזו: לא יוצע לה שוב">✖ ביטול הצעת שיוך</button></div></div>` : "";
       const chips = ids.map(b => `<div class="pd-co"><span>${E(bizName(b))}</span><button class="pd-link" onclick="PD._unassign('${docId}','${b}')" title="ביטול שיוך המסמך לחברה הזו">ביטול שיוך</button></div>`).join("") || `<div class="pd-sub">המסמך לא משויך לאף חברה</div>`;
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
@@ -1814,11 +1821,11 @@
     return [...out.values()];
   }
   function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה ואינם משויכים אליה כלל (מסמך שכבר משויך לחברה, גם כנוסף או לאג"ח, אינו הצעה), וסוגם מתאים לשטר החסר: [{ d, why }]
-    hpMaps();
+    hpMaps(); const rej = rejSet();
     const hp = S.hpDocs && (b.chp_number || "").trim() ? S.hpDocs.get(hp9(b.chp_number)) : null, nm = nameDocs(b), out = [];
     for (const id of new Set([...(hp || []), ...nm])) {
       const d = S.byId.get(id);
-      if (d && d.doc_type !== "other" && !(d.business_ids || []).includes(b.id) && miss.some(t => FITS[t].includes(d.doc_type))) out.push({ d, why: hp && hp.has(id) ? "ח.פ." : "שם החברה" });
+      if (d && !rej.has(id + "|" + b.id) && d.doc_type !== "other" && !(d.business_ids || []).includes(b.id) && miss.some(t => FITS[t].includes(d.doc_type))) out.push({ d, why: hp && hp.has(id) ? "ח.פ." : "שם החברה" });
     }
     return out;
   }
@@ -2287,7 +2294,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
