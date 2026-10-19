@@ -221,9 +221,10 @@ def approve(doc_id, biz_id, slot, replace=False, extra=None):
                 have.append(sl)
         with open(A.undo, "a", encoding="utf-8") as f:
             f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "undo": undo}, ensure_ascii=False) + "\n")
-        site("/permit-docs/" + doc_id, {"business_ids": ids, "slots": {biz_id: have}})
-        for u in undo:
-            S["docs"][u["id"]] = site("/permit-docs/" + u["id"])["doc"]
+        r = site("/permit-docs/" + doc_id, {"business_ids": ids, "slots": {biz_id: have}})
+        S["docs"][doc_id] = r.get("doc") or d          # תשובת ה-PUT כוללת את המסמך המעודכן: בלי קריאה נוספת
+        if holder:
+            S["docs"][holder["id"]] = site("/permit-docs/" + holder["id"])["doc"]
         return undo
 
 
@@ -329,7 +330,7 @@ input{padding:6px;border:1px solid #aab;border-radius:6px;width:92%}#res div{pad
 <div id="top"><b>אישור קישורי היתרים</b><span id="tabs"></span><span id="prog"></span></div>
 <div id="main"><div id="list"></div><div id="card"><div id="side"></div><div id="pv"><div id="pt"><button onclick="rot(-1)" title="סיבוב שמאלה (Shift+R)">⟲</button><button onclick="rot(1)" title="סיבוב ימינה (R)">⟳</button><button onclick="rot(0)" title="איפוס סיבוב">איפוס</button><span id="pr" style="font-size:13px;color:#667"></span><span style="font-size:12px;color:#889">סיבוב התצוגה בלבד (לא משנה את הקובץ)</span></div><div id="pw"><iframe id="pdf"></iframe></div></div></div></div><div id="msg"></div>
 <script>
-let ITEMS=[],CUR=0,TAB="פתוח",OVR=null;const PEND=new Set();
+let ITEMS=[],CUR=0,TAB="פתוח",OVR=null;const PEND=new Set(),QUEUE=[];let BUSY=false;
 const CF={"גבוהה מאוד":"#1e7e4a","גבוהה":"#3f8f5a","בינונית":"#b8860b","נמוכה":"#c0392b","הצעת ח.פ.":"#3f6ea8"};
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function msg(t){const m=$("msg");m.textContent=t;m.style.display="block";clearTimeout(m._t);m._t=setTimeout(()=>m.style.display="none",3500)}
@@ -345,7 +346,7 @@ let ROT={};try{ROT=JSON.parse(localStorage.getItem("rot")||"{}")}catch(e){}
 function applyRot(){const x=vis()[CUR],d=x?(ROT[x.doc_id]||0):0,w=$("pw"),f=$("pdf");if(!w)return;if(d%180){f.style.width=w.clientHeight+"px";f.style.height=w.clientWidth+"px"}else{f.style.width="100%";f.style.height="100%"}f.style.transform=`translate(-50%,-50%) rotate(${d}deg)`;$("pr").textContent=d?d+"°":""}
 function rot(dir){const x=vis()[CUR];if(!x)return;ROT[x.doc_id]=dir?((ROT[x.doc_id]||0)+dir*90+360)%360:0;try{localStorage.setItem("rot",JSON.stringify(ROT))}catch(e){}applyRot()}
 window.addEventListener("resize",applyRot);
-const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=4;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
+const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=2;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
 function card(){const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
@@ -371,8 +372,10 @@ ${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול �
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
 prefetch();const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}applyRot()}
 function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.company,body={key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null};
-PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע
-api("/api/approve",body).then(()=>{PEND.delete(key);return load(true)}).then(()=>msg("✔ נשמר באתר: "+name)).catch(e=>{PEND.delete(key);msg("שגיאה ב"+name+": "+e.message);load(true)})}
+PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע, אחת בכל פעם (כדי לא לתפוס את כל חיבורי הדפדפן)
+QUEUE.push({key,name,body});pump()}
+function pump(){if(BUSY||!QUEUE.length)return;BUSY=true;const j=QUEUE.shift();
+api("/api/approve",j.body).then(()=>{PEND.delete(j.key);msg("✔ נשמר באתר: "+j.name)}).catch(e=>{PEND.delete(j.key);msg("שגיאה ב"+j.name+": "+e.message)}).finally(()=>{BUSY=false;if(QUEUE.length)pump();else load(true);draw()})}
 function skip(w){const x=vis()[CUR];if(!x)return;const key=x.key;PEND.add(key);const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();api("/api/skip",{key,decision:w}).then(()=>{PEND.delete(key);return load(true)}).catch(e=>{PEND.delete(key);msg("שגיאה: "+e.message);load(true)})}
 async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});msg("↩ בוטל");await load(true)}catch(e){msg("שגיאה: "+e.message)}}
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
