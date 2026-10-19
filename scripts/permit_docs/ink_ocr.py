@@ -18,6 +18,7 @@
 import argparse
 import collections
 import csv
+import hashlib
 import json
 import os
 import re
@@ -307,6 +308,8 @@ def main():
     ap.add_argument("--max-pages", type=int, default=12)
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--only-bottom", action="store_true", help="רק החצי התחתון של כל עמוד (שם בדרך כלל החותמת)")
+    ap.add_argument("--extra", default="", help="תיקייה של קבצי PDF חדשים (שאינם ברשימות הקלט): בודק רק אותם, כל העמודים")
+    ap.add_argument("--full-pass", action="store_true", help="סבב שני: כל העמוד (כתב יד באמצע הטקסט) לכל המסמכים; מחליף את התוצאות של המסמך")
     ap.add_argument("--only", default="", help="רק מסמכים ששם הקובץ שלהם מכיל את הטקסט (למשל AASDFD); בודק מחדש גם אם כבר נבדקו")
     ap.add_argument("--page-seconds", type=int, default=90, help="מקסימום זמן בדיקה לעמוד")
     ap.add_argument("--tesseract", default=TESS[0])
@@ -322,11 +325,22 @@ def main():
         p = m.local_path(a.uploads, guid.get(r["attachment_id"], ""))
         if sha and p and os.path.exists(p):
             docs.setdefault(sha, p)
+    if a.extra:
+        docs = collections.OrderedDict()
+        for fn in sorted(os.listdir(a.extra)):
+            fp = os.path.join(a.extra, fn)
+            if fn.lower().endswith(".pdf") and os.path.isfile(fp):
+                docs.setdefault(hashlib.sha256(open(fp, "rb").read()).hexdigest(), fp)
+    full = a.full_pass or bool(a.extra)          # מסמכים חדשים ו-full-pass: כל העמוד
+    if full:
+        a.only_bottom = False
+    dtab = "ink_done_full" if full else "ink_done"
     chps = {str(b.get("chp_number") or "").zfill(9) for b in json.load(open(a.businesses, encoding="utf-8")) if b.get("chp_number")} if os.path.exists(a.businesses) else set()
     db = sqlite3.connect(os.path.join(a.out, "permit_ink.db"), timeout=60)
     db.execute("CREATE TABLE IF NOT EXISTS ink_hits (sha TEXT, page INT, value TEXT, status TEXT, kind TEXT, raw TEXT, crop TEXT, in_db INT)")
     db.execute("CREATE TABLE IF NOT EXISTS ink_done (sha TEXT PRIMARY KEY)")
-    done = {r[0] for r in db.execute("SELECT sha FROM ink_done")}
+    db.execute("CREATE TABLE IF NOT EXISTS ink_done_full (sha TEXT PRIMARY KEY)")
+    done = {r[0] for r in db.execute(f"SELECT sha FROM {dtab}")}
     if a.only:
         files = doc_files(a.out)
         want = {sha for sha, pth in docs.items() if a.only.lower() in (files.get(sha, "") + " " + os.path.basename(pth)).lower()}
@@ -343,8 +357,10 @@ def main():
         for n, (sha, hits, err) in enumerate(pool.imap_unordered(work, jobs), 1):
             if err:
                 print(f"  {sha[:12]}: {err}")
+            if full:
+                db.execute("DELETE FROM ink_hits WHERE sha=?", (sha,))          # התוצאות של הסבב המלא כוללות גם את החצי התחתון
             db.executemany("INSERT INTO ink_hits VALUES (?,?,?,?,?,?,?,?)", hits)
-            db.execute("INSERT OR REPLACE INTO ink_done VALUES (?)", (sha,))
+            db.execute(f"INSERT OR REPLACE INTO {dtab} VALUES (?)", (sha,))
             total += len(hits)
             if n % 10 == 0:
                 db.commit()

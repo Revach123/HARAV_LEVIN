@@ -20,6 +20,7 @@
 import argparse
 import collections
 import csv
+import hashlib
 import json
 import os
 import re
@@ -147,6 +148,7 @@ def main():
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--max-pages", type=int, default=40)
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--extra", default="", help="תיקייה של קבצי PDF חדשים (שאינם ברשימות הקלט): מעבד רק אותם ומוסיף למאגר הקיים")
     ap.add_argument("--no-ocr", action="store_true", help="בלי OCR חדש (רק שכבת טקסט ו-OCR שכבר קיים)")
     a = ap.parse_args()
 
@@ -164,6 +166,14 @@ def main():
         d["aids"].append(aid)
         d["files"].add(r.get("file", ""))
         d["path"] = d["path"] or (p if p and os.path.exists(p) else None)
+    if a.extra:          # קבצים חדשים בתיקייה (למשל שטרות שהוחלפו באתר החי): כל PDF בתיקייה, לפי תוכן
+        docs = collections.OrderedDict()
+        for fn in sorted(os.listdir(a.extra)):
+            fp = os.path.join(a.extra, fn)
+            if fn.lower().endswith(".pdf") and os.path.isfile(fp):
+                h = hashlib.sha256(open(fp, "rb").read()).hexdigest()
+                d = docs.setdefault(h, {"aids": [], "path": fp, "files": set()})
+                d["files"].add(fn)
     chps = set()
     if os.path.exists(a.businesses):
         chps = {str(b.get("chp_number") or "").zfill(9) for b in json.load(open(a.businesses, encoding="utf-8")) if b.get("chp_number")}

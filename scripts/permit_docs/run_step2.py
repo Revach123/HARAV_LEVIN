@@ -74,12 +74,18 @@ def main():
     ap.add_argument("--ink-only", action="store_true")
     ap.add_argument("--workers", default="2")
     ap.add_argument("--only-bottom", action="store_true")
+    ap.add_argument("--extra", default="", help="תיקייה של קבצי PDF חדשים: מריץ טקסט + חותמות/כתב יד רק עליהם")
+    ap.add_argument("--full-pass", action="store_true", help="סבב שני וארוך: כתב יד על כל העמוד לכל המסמכים")
     a = ap.parse_args()
     if a.check:
         return 0 if check() else 1
     if not check():
         return 1
     lim = ["--limit", "20"] if a.test else []
+    if a.extra:
+        lim += ["--extra", a.extra]
+    if a.full_pass:
+        return run("ink_ocr.py", ["--workers", a.workers, "--full-pass"] + lim)
     rc = 0
     if not a.ink_only:
         rc = run("build_text_index.py", ["--workers", a.workers] + lim)
