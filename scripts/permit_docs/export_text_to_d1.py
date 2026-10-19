@@ -96,10 +96,10 @@ def main():
         with open(os.path.join(a.out, f"part_{k:03d}.sql"), "w", encoding="utf-8", newline="\n") as f:
             f.write(body)
     with open(os.path.join(a.out, "run_all.cmd"), "w", encoding="utf-8", newline="\r\n") as f:
-        f.write("@echo off\r\nREM הרצת כל קובצי הייבוא ל-D1 לפי הסדר. אם קובץ נכשל, הסקריפט עוצר.\r\n")
+        f.write("@echo off\nREM הרצת קובצי הייבוא ל-D1 לפי הסדר. כל קובץ שהושלם מסומן (done_NNN.txt) ובהרצה חוזרת מדלגים עליו; עוצר בשגיאה הראשונה.\n")
         for k in range(1, len(parts) + 1):
-            f.write(f"call npx wrangler d1 execute business-registry-db --remote --file=d1_import\\part_{k:03d}.sql\r\nif errorlevel 1 exit /b 1\r\n")
-        f.write("echo הסתיים\r\n")
+            f.write(f"if not exist {a.out}\\done_{k:03d}.txt (\n  echo === part_{k:03d} ===\n  call npx wrangler d1 execute business-registry-db --remote --yes --file={a.out}\\part_{k:03d}.sql\n  if errorlevel 1 exit /b 1\n  echo ok> {a.out}\\done_{k:03d}.txt\n)\n")
+        f.write("echo הסתיים\n")
     for sha, fp in todo:
         state[sha] = fp
     # המצב נשמר רק בקובץ נפרד, והוא יתעדכן בפועל רק אחרי שתאשר שהייבוא הצליח (--commit)
