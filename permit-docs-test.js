@@ -1718,7 +1718,13 @@
     overlay("pd-reg", `<div class="pd-head"><b>רישום החברה · ${displayName(b, true)}</b><button class="pd-x" onclick="PD._close('pd-reg')">✕</button></div>
       <div class="pd-body"><div class="pd-sub" style="margin-bottom:8px">הרישום הנוכחי: <b>${cur}</b></div>
         <div class="pd-btns">${btn("פרטי")}${btn("כללי")}${btn("רק פרטי")}</div>
+        <div style="margin-top:14px"><button class="pd-btn" onclick="PD._regEdit()" title="פתיחת הרישום בטופס העדכון: שם, ח.פ., קטגוריה ועוד">✏️ עריכת רישום</button></div>
         <div style="margin-top:18px"><button class="pd-btn danger" onclick="PD._regDel()">מחיקת הרישום</button></div></div>`);
+  }
+  function regEdit() {          // קפיצה לטופס העדכון של הרישום (שם, ח.פ. וכו')
+    const b = bizById(M.biz); if (!b) return;
+    S._nav = true; for (const id of ["pd-reg", "pd-manage", "pd-doc", "pd-nd", "pd-un", "pd-company"]) close(id); S._nav = false;
+    if (typeof openForm === "function") openForm(b.id);
   }
   async function regSet(label) {
     const b = bizById(M.biz); if (!b || regLabel(b) === label) { close("pd-reg"); return; }
@@ -2281,7 +2287,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
