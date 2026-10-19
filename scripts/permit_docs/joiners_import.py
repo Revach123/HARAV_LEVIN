@@ -200,10 +200,10 @@ def upload(a):
             open(tmp, "wb").write(read_pdf(it))
             cmd = f'{a.wrangler} r2 object put {a.bucket}/{r2_key(it)} --file "{tmp}" --content-type application/pdf --remote'
             for _ in range(3):
-                r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                r = subprocess.run(cmd, shell=True, capture_output=True, encoding="utf-8", errors="replace")          # בלי זה, ב-Windows הפלט של wrangler (UTF-8) מפוענח כ-cp1255 והסקריפט נופל
                 if r.returncode == 0:
                     return it, ""
-            return it, (r.stderr or r.stdout or "")[-300:]
+            return it, ((r.stderr or "") + (r.stdout or ""))[-300:]
     with ThreadPoolExecutor(a.workers) as ex:
         for it, err in ex.map(one, todo):
             n[0] += 1
