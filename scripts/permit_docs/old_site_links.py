@@ -70,13 +70,14 @@ def main():
             by_parent.setdefault(x["post_parent"], []).append(files[pid])
 
     # אינדקס של כל הקבצים בכל התיקיות וקובצי ה-zip: לפי נתיב יחסי ל-uploads, ולפי שם קובץ
-    by_rel, by_base, allpdf = {}, {}, []
+    by_rel, by_exact, by_base, allpdf = {}, {}, {}, []
     def add(src, inner, size):
         norm = inner.replace("\\", "/")
         i = norm.lower().rfind("uploads/")
         relp = norm[i + 8:] if i >= 0 else norm
         ent = (src, inner, size)
         by_rel.setdefault(relp.lower(), []).append(ent)
+        by_exact.setdefault(relp, []).append(ent)          # באותיות גדולות/קטנות כפי שהן: ב-Windows שני קבצים ששמם שונה רק באותיות נדרסים זה את זה
         by_base.setdefault(os.path.basename(norm).lower(), []).append(ent)
         if norm.lower().endswith(".pdf"):
             allpdf.append((relp, ent))
@@ -149,7 +150,9 @@ def main():
             s["only_url"] += 1          # יש קובץ בתוכן שאינו "מצורף לפוסט": כאן הפספוס של השיטה הישנה
         for u in urls:
             s["files"] += 1
-            cands, how = by_rel.get(u.lower(), []), "נתיב"
+            cands, how = by_exact.get(u, []), "נתיב"
+            if not cands:
+                cands, how = by_rel.get(u.lower(), []), "אותיות"
             if not cands:
                 cands, how = by_base.get(os.path.basename(u).lower(), [])[:5], "שם קובץ בלבד"
             sh_list, where, flag = [], "", ""
@@ -165,7 +168,10 @@ def main():
             if cands:
                 c0, h0 = sh_list[0]
                 where = (os.path.basename(c0[0]) + " :: " + c0[1] if c0[0] != c0[1] else c0[0]) + (f" (+{len(cands) - 1} עותקים)" if len(cands) > 1 else "")
-                if how != "נתיב":
+                if how == "אותיות":
+                    flag = "לא מאומת: נמצא רק בהבדל אותיות גדולות/קטנות בנתיב (יכול להיות מסמך אחר)"
+                    s["name_only"] += 1
+                elif how != "נתיב":
                     flag = "לא מאומת: נמצא רק לפי שם קובץ (יכול להיות מסמך אחר)"
                     s["name_only"] += 1
                 else:
