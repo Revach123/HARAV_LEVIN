@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=38"></script>
+<script src="/permit-docs-test.js?v=39"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -807,7 +807,12 @@
   .home-wrap .home-card b { font-size:clamp(17px,1.5vw,30px); }
   .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
   .home-top { flex:0 0 clamp(80px,15vh,150px); display:flex; justify-content:space-between; gap:20px; }
-  .home-top .home-card { width:clamp(260px,24vw,460px); }
+  .home-top .home-card { width:clamp(260px,24vw,460px); flex:none; }
+  .home-banner { flex:1; min-width:0; border-radius:8px; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#274d5b 0%,#1fa59a 100%) center/cover; }
+  .home-banner.has-img { background-image:linear-gradient(rgba(0,0,0,.18),rgba(0,0,0,.18)), url(banner.jpg); background-size:cover; background-position:center; }
+  .hb-text { display:flex; align-items:center; gap:clamp(10px,1.5vw,28px); width:92%; background:rgba(39,77,91,.78); color:#fff; padding:clamp(6px,1.4vh,16px) clamp(10px,1.5vw,28px); box-sizing:border-box; }
+  .hb-text i { flex:1; height:1px; background:rgba(255,255,255,.7); }
+  .hb-text span { font-size:clamp(20px,2.6vw,48px); font-weight:700; white-space:nowrap; }
   .home-mid { flex:2 1 0; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,20px); }
   .home-mid .home-card .ico { font-size:clamp(34px,7vh,80px); }
   .home-mid .home-card b { font-size:clamp(22px,2.4vw,44px); }
@@ -1526,9 +1531,11 @@ function adminTabs() {
 }
 
 function renderHome() {
+  setTimeout(() => { const im = new Image(); im.onload = () => document.querySelector(".home-banner")?.classList.add("has-img"); im.src = "banner.jpg"; }, 0);      // התמונה מופיעה רק אם הקובץ banner.jpg קיים באתר
   return `<div class="home-wrap">
     <div class="home-top">
       <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
+      <div class="home-banner" aria-hidden="true"><div class="hb-text"><i></i><span>ניהול היתר עיסקא</span><i></i></div></div>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b><span class="sub">חברות, ואיתור בתוך טקסט השטרות</span></button>
     </div>
     <div class="home-mid">
