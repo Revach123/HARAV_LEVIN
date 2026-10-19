@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=32"></script>
+<script src="/permit-docs-test.js?v=33"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -863,6 +863,9 @@
   .ns-item.defunct { opacity:.6; }
   .admin-tabs { display:flex; gap:0; margin:0 0 1.2rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
   .admin-tabs button { flex:1; min-width:150px; padding:.8rem 1rem; font-size:17px; font-weight:700; font-family:inherit; background:transparent; color:var(--navy); border:none; border-top:3px solid transparent; cursor:pointer; transition:.15s; }
+  #pd-nd-tabs button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:78px; }
+  #pd-nd-tabs .pd-tabn { min-width:28px; text-align:center; }
+  .hdr-home { padding:.45rem .9rem; font-family:inherit; font-size:15px; font-weight:700; background:var(--accent-bg); color:var(--accent-dark); border:1px solid var(--border); border-radius:6px; cursor:pointer; margin-inline-start:14px; }
   .admin-tabs button:hover { color:var(--accent-dark); }
   .admin-tabs button.active { color:var(--accent-dark); border-top-color:var(--accent); background:var(--accent-bg); }
 </style>
@@ -871,7 +874,7 @@
 
 <header>
   <div>
-    <a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a>
+    <div style="display:flex;align-items:center"><a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a><button id="home-btn" class="hdr-home" style="display:none" onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button></div>
   </div>
   <div class="hdr-btns"><button id="pw-btn" onclick="openChangePassword()" style="display:none;">🔑 שינוי סיסמה</button><button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button></div>
 </header>
@@ -1011,8 +1014,9 @@ function render() {
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
-  document.getElementById("admin-toggle").textContent =
-    isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
+  document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
+  document.getElementById("admin-toggle").textContent = "כניסת מנהל";
+  document.getElementById("home-btn").style.display = isAdmin && view !== "home" ? "" : "none";
   document.getElementById("pw-btn").style.display = isAdmin ? "" : "none";
 }
 
@@ -1509,7 +1513,7 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs"><button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
 }
 
 function renderHome() {
