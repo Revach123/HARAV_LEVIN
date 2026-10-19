@@ -134,15 +134,15 @@
    "chp_number": "514290345"
   },
   {
-   "id": 10353,
-   "maya_report_id": 1774235,
+   "id": 10381,
+   "maya_report_id": 1776655,
    "company_name": "מגדלי ים תיכון",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776655",
    "link_presentation": null,
    "securities": [
     {
@@ -638,16 +638,16 @@
    "chp_number": ""
   },
   {
-   "chp_number": "520041005",
-   "company_name": "קרדן נדל\"ן",
+   "chp_number": "512719485",
+   "company_name": "מגדלי ים תיכון",
    "draft_no": null,
    "draft_title": null,
-   "id": 10369,
+   "id": 10353,
    "is_new_company": false,
    "link_presentation": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775421",
-   "maya_report_id": 1775421,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
+   "maya_report_id": 1774235,
    "new_company_type": null,
    "securities": [
     {
@@ -658,7 +658,7 @@
     }
    ],
    "carried": true,
-   "last_seen": "2026-10-18"
+   "last_seen": "2026-10-19"
   },
   {
    "chp_number": "515434074",
@@ -684,7 +684,33 @@
    "last_seen": "2026-10-18"
   }
  ],
- "open": [],
+ "open": [
+  {
+   "offer_number": 1217546,
+   "issuer_id": 1083,
+   "issuer_name": "קרדן נדל\"ן",
+   "is_new_company": false,
+   "begins_at": "2026-10-19T09:00:00",
+   "ends_at": "2026-10-19T16:00:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 5.7,
+   "is_variable_interest": false,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1776665",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אג\"ח ז",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "ללא",
+     "maalot_rating": null,
+     "midroog_rating": "A3.il"
+    }
+   ],
+   "chp_number": "520041005"
+  }
+ ],
  "companies": [
   {
    "chp_number": "1811308",
@@ -844,7 +870,7 @@
    "chp_number": "520041005",
    "name": "קרדן נדל\"ן",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
