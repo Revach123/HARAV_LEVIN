@@ -1763,7 +1763,7 @@
   }
 
   // ───────── דשבורד חדש (בבנייה, רק בעמוד הבדיקה): שלוש כרטיסיות. א: חברות שחסרים להן שטרות; ב: שטרות שמחכים לשיוך; ג: חברות לא רשומות ─────────
-  const ND = { tab: "a", miss: "all", sug: false, gone: false, q: "", sq: "", tq: "" };
+  const ND = { tab: "a", miss: "all", sug: false, gone: false, q: "", sq: "", tq: "", fq: "" };
   const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/(^|\s)(בע\s*מ|בעמ|ltd|inc)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();          // (\b אינו עובד בעברית)
   const tri = x => { const t = " " + NORMN(x) + " ", o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); return o; };
   function fuzzy(q, name) {          // התאמה מקורבת: הכלה מלאה, או דמיון משולשות אותיות (שינוי קטן בשם)
@@ -1872,15 +1872,16 @@
   }
   function ndShow() {
     if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
-    $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
-      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')"><span>${l}</span><span class="pd-tabn" ${t === "d" ? 'style="visibility:hidden"' : ""}>${t === "d" ? 0 : ndCount(t)}</span></button>`).join("");
+    $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"], ["f", "חיפוש"]]
+      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')"><span>${l}</span><span class="pd-tabn" ${t === "d" || t === "f" ? 'style="visibility:hidden"' : ""}>${t === "d" || t === "f" ? 0 : ndCount(t)}</span></button>`).join("");
     if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button class="active"><span>👥 מצטרפים</span>${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
-    const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq"].includes(document.activeElement.id) ? document.activeElement.id : "";
+    const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq", "pd-f-q", "pd-nd-tq"].includes(document.activeElement.id) ? document.activeElement.id : "";
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
       return;
     }
-    body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ND.tab === "e" ? ndTabE() : ndTabC();
+    body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ND.tab === "e" ? ndTabE() : ND.tab === "f" ? ndTabF() : ndTabC();
+    if (ND.tab === "f") { if (ND.fq.trim().length >= 2) fSearch(); if (ND.tq.trim().length >= 2) ndTextSearch(ND.tq); }
     if (keep) { const q = $(keep); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
   }
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
@@ -1897,7 +1898,7 @@
   function ndTabB() {
     const f = ND.q.trim().toLowerCase(), rows = ndDocsB().filter(d => !f || docHay(d).includes(f))
       .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש בשטרות: שם קובץ, כותרת, חברה, ח.פ., הערה")}${S.hp ? `<input class="pd-in" id="pd-nd-tq" style="flex:1;min-width:220px" placeholder="חיפוש בתוך הטקסט של כל המסמכים (למשל: מסלול הלכה)" value="${E(ND.tq)}" oninput="PD._ndTq(this.value)" autocomplete="off">` : ""}</div><div id="pd-nd-tres"></div>
+    return `
       <div class="pd-sub" style="margin-bottom:6px">שטרות שאינם משויכים לאף חברה. הצעות השיוך לפי ח.פ. או שם החברה שנמצאו בתוך המסמך (טקסט, חותמת או כתב יד), ולפי הפוסט והכותרת. שמות כלליים שמופיעים במסמכים רבים (כמו שם המכון) מדולגים. לחיצה פותחת את החלון הרגיל לשיוך.</div>
       <table class="pd-nd-tbl"><thead><tr><th>שטר</th><th>כותרת / פוסט</th><th>הצעות שיוך (לפי ח.פ. שנמצא במסמך, ולפי הפוסט)</th><th>הערה</th></tr></thead><tbody>${rows.map(d => {
         const byChp = ndChpMap(), fromHp = hpFound(d).map(h => ({ b: byChp.get(hp9(h.hp)), src: h.src })).filter(x => x.b);
@@ -1918,6 +1919,41 @@
     box.innerHTML = r.length ? `<table class="pd-nd-tbl"><thead><tr><th>מסמך</th><th>עמוד</th><th>קטע</th><th>שיוך</th></tr></thead><tbody>` + r.map(x => {
       const d = S.byId.get(x.id), cos = d ? (d.business_ids || []).map(b => displayName(bizById(b) || { permit_name: "?" })).join(", ") : "";
       return `<tr class="go" onclick="PD.openDoc('${x.id}')"><td>${E(x.name || x.id)}</td><td>${x.page}</td><td class="pd-nd-hl">${E(x.snippet || "").replace(/\[/g, "<mark>").replace(/\]/g, "</mark>")}</td><td class="pd-sub">${cos ? E(cos) : "לא משויך"}</td></tr>`; }).join("") + "</tbody></table>" : '<div class="pd-sub">לא נמצא בטקסט המסמכים</div>';
+  }
+  // ───────── לשונית חיפוש: בצד אחד חברות (מאגר + רשם, התאמה מקורבת), בצד השני חיפוש בתוך טקסט השטרות ─────────
+  function ndTabF() {
+    return `<div class="pd-f-cols"><div class="pd-f-col"><h4>חיפוש חברות (מהמאגר ומהרשם)</h4>
+        <input class="pd-in" id="pd-f-q" value="${E(ND.fq)}" placeholder="שם חברה / שותפות / עמותה, או ח.פ." oninput="PD._fQ(this.value)" autocomplete="off"><div id="pd-f-res" style="margin-top:8px"></div></div>
+      <div class="pd-f-col"><h4>חיפוש בתוך השטרות</h4>
+        <input class="pd-in" id="pd-nd-tq" value="${E(ND.tq)}" placeholder="חיפוש בטקסט של כל המסמכים (למשל: מסלול הלכה)" oninput="PD._ndTq(this.value)" autocomplete="off"><div id="pd-nd-tres" style="margin-top:8px"></div></div></div>`;
+  }
+  const levelColor = { "פרטי": "#7a3b8f", "כללי": "#1e4570", "רק פרטי": "#b8860b" };
+  function fCard(b, sc) {
+    const need = needOf(b), one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok">${SLOT_HE[t]}: קיים</span>` : need[t] ? `<span class="pd-nd-miss">${SLOT_HE[t]}: חסר</span>` : ""; };
+    const lv = regLabel(b), ex = extrasOf(b.id).length, type = b.entity_type || b.biz_type || "";
+    return `<div class="pd-reg" style="cursor:pointer" onclick="PD.openManage('${b.id}')"><div><b>${displayName(b, true)}</b>${stTag(b.registry_status)} <span class="pd-chip" style="background:${levelColor[lv] || "#555"}" title="הרישום ברשימות האתר">${lv}</span>${sc < 1 ? ' <span class="pd-sub">(שם דומה)</span>' : ""}</div>
+      <div class="pd-sub">${E(b.chp_number || "ללא ח.פ.")}${type ? " · " + E(type) : ""}</div>
+      <div class="pd-btns" style="margin-top:4px;align-items:center">${one("private")}${one("general")}${ex ? `<span class="pd-sub">שטרות נוספים: ${ex}</span>` : ""}${!slotDoc(b.id, "private") && !slotDoc(b.id, "general") && !ex ? '<span class="pd-sub">אין שטר</span>' : ""}</div></div>`;
+  }
+  async function fSearch() {
+    const box = $("pd-f-res"), q = ND.fq.trim(); if (!box) return;
+    if (q.length < 2) { box.innerHTML = ""; return; }
+    const seq = ND._fseq = (ND._fseq || 0) + 1, dg = q.replace(/\D/g, "");
+    const local = bizList().map(b => ({ b, sc: (dg.length >= 4 && (b.chp_number || "").includes(dg)) ? 2 : Math.max(fuzzy(q, b.registrar_name), fuzzy(q, b.permit_name), fuzzy(q, displayName(b))) })).filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 15);
+    const exts = S.ext.map(x => ({ x, sc: (dg.length >= 4 && (x.chp || "").includes(dg)) ? 2 : fuzzy(q, x.name) })).filter(r => r.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 6);
+    box.innerHTML = `<div class="pd-grp">במאגר שלנו${local.length ? "" : ": לא נמצא"}</div>` + local.map(r => fCard(r.b, r.sc)).join("") +
+      (exts.length ? `<div class="pd-grp weak">חברות לא רשומות (יש להן שטר)</div>` + exts.map(r => `<div class="pd-reg"><b>${E(r.x.name)}</b> <span class="pd-st bad">${EXT_HE[r.x.status] || r.x.status}</span><div class="pd-sub">${E(r.x.chp || "")} · ${(r.x.doc_ids || []).length} שטרות</div></div>`).join("") : "") +
+      `<div id="pd-f-reg" class="pd-sub" style="margin-top:8px">${q.length >= 3 ? "בודק גם ברשם החברות…" : "הקלד 3 תווים לפחות כדי לחפש גם ברשם"}</div>`;
+    if (q.length < 3) return;
+    let d; try { d = await api("/registry-name-search?q=" + encodeURIComponent(q)); } catch (e) { if (seq === ND._fseq && $("pd-f-reg")) $("pd-f-reg").textContent = "הבדיקה ברשם לא זמינה (" + e.message + ")"; return; }
+    if (seq !== ND._fseq || !$("pd-f-reg")) return;
+    const byChp = new Map(bizList().filter(b => digitsOf(b.chp_number)).map(b => [digitsOf(b.chp_number), b])), shown = new Set(local.map(x => x.b.id)), inExt = new Set(S.ext.map(x => digitsOf(x.chp)).filter(Boolean)), seen = new Set();
+    const rs = (d.results || []).filter(r => !seen.has(digitsOf(r.id)) && seen.add(digitsOf(r.id)));
+    $("pd-f-reg").innerHTML = `<div class="pd-grp" style="color:#c0392b">ברשם החברות / העמותות</div>` + (rs.slice(0, 15).map(r => {
+      const b = byChp.get(digitsOf(r.id)); if (b && shown.has(b.id)) return "";
+      if (b) return fCard(b, 1);
+      const tag = inExt.has(digitsOf(r.id)) ? '<span class="pd-nd-ok">ברשימת הלא רשומות</span>' : '<span class="pd-nd-miss">לא במאגר</span>';
+      return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
   }
   function ndTabC() {
     const q = ND.sq.trim();
@@ -2068,7 +2104,7 @@
     more: () => { J.shown += 300; ndShow(); }, retry: () => { J.err = ""; J.rows = null; ndShow(); },
   };
   const ndAct = {
-    tab: t => { if (t !== ND.tab) Object.assign(ND, { miss: "all", sug: false, gone: false, q: "", sq: "", tq: "" }); ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
+    tab: t => { if (t !== ND.tab) Object.assign(ND, { miss: "all", sug: false, gone: false, q: "", sq: "", tq: "", fq: "" }); ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
     miss: k => { ND.miss = k; ndShow(); }, sug: () => { ND.sug = !ND.sug; ndShow(); },
     tq: v => { ND.tq = v; clearTimeout(ND._tt); ND._tt = setTimeout(() => ndTextSearch(v), 350); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
@@ -2329,6 +2365,7 @@
   .pd-mini{border:1px solid #cfcac0;background:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}.pd-mini.sel{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
   .pd-mini.link.sel{background:#7a3b8f;border-color:#7a3b8f}.pd-mini.danger{color:#c0392b;border-color:#e6a39b}
   @media(max-width:900px){.pd-mg-top{flex-direction:column}.pd-mg-grid{grid-template-columns:1fr}}
+  .pd-f-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pd-f-col{min-width:0}@media(max-width:900px){.pd-f-cols{grid-template-columns:1fr}}
   .pd-homeh{margin:26px 0 10px;font-size:16px;color:#1a3a5c}
   .pd-missing{background:#fdecea;color:#c0392b;border:1px solid #e6a39b;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-ok{background:#fff;border:1px solid #d6d2ca;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap}
@@ -2373,7 +2410,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _fQ: v => { ND.fq = v; clearTimeout(ND._ft); ND._ft = setTimeout(fSearch, 300); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
