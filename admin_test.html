@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=48"></script>
+<script src="/permit-docs-test.js?v=49"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2335,10 +2335,10 @@ function idxBoxHtml() {
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
     body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
     const m = idxMarket;
-    if (m && m.totalValue) {       // כלל האג"ח הקונצרניות בבורסה, לפי שווי שוק
+    if (m && m.totalValue) {       // כלל האג"ח בבורסה, לפי שווי שוק
       const sv = ids => ids.reduce((a, i) => a + (m.values[i] || 0), 0), ids = [...appr.keys()].filter(i => m.values[i]), pids = ids.filter(i => /פרטי/.test(appr.get(i)));
       const p2 = v => Math.round(v * 1000 / m.totalValue) / 10;
-      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח הקונצרניות</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
+      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
     }
   }
   return `<div class="idx-box">${body}</div>`;
