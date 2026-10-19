@@ -45,7 +45,7 @@ def ctx():
 
 def site(path, body=None, method=None, raw=False):
     data = json.dumps(body).encode("utf-8") if body is not None else None
-    req = urllib.request.Request(A.site.rstrip("/") + "/api" + path, data=data, method=method or ("PUT" if data else "GET"),
+    req = urllib.request.Request(A.site.rstrip("/") + ("" if path.startswith("/data/") else "/api") + path, data=data, method=method or ("PUT" if data else "GET"),
                                  headers={"User-Agent": "Mozilla/5.0 (link-review)", "Authorization": "Bearer " + TOKEN, "Content-Type": "application/json"})
     last = None
     for attempt in range(5):
@@ -186,7 +186,7 @@ def view(it):
     dec = S["dec"].get(it["key"])
     hps = sorted(S["hp"].get(it["doc_id"], set()))
     mine = "".join(c for c in str(b.get("chp_number") or "") if c.isdigit()).zfill(9) if b.get("chp_number") else ""
-    state = "בוצע" if it["slot"] in have else (dec["decision"] if dec and dec["decision"] in ("דולג", "לא מתאים") else "פתוח")
+    state = "בוצע" if it["slot"] in have or (dec and dec["decision"] == "אושר-אגח") else (dec["decision"] if dec and dec["decision"] in ("דולג", "לא מתאים") else "פתוח")
     need, cslots, others = company_state(it["business_id"], it["doc_id"])
     sha12 = (d.get("sha256") or "")[:12]
     old_refs = S.get("posts", {}).get(sha12, [])
@@ -229,9 +229,51 @@ def approve(doc_id, biz_id, slot, replace=False, extra=None):
         return undo
 
 
+def bonds_rows():
+    if "bonds" not in S:
+        try:
+            j = site("/data/bonds_list/bonds_all.json")
+            S["bonds"] = [{"id": str(r.get("security_id")), "name": r.get("security_name") or "", "symbol": r.get("symbol") or "",
+                           "company": r.get("company") or r.get("issuer_name") or "", "chp": str(r.get("chp_number") or "")} for r in (j.get("rows") or [])]
+        except Exception:  # noqa: BLE001
+            S["bonds"] = []
+    return S["bonds"]
+
+
+def bonds_search(biz_id, q):
+    dg = lambda v: "".join(c for c in str(v or "") if c.isdigit())
+    mine = dg((S["biz"].get(biz_id) or {}).get("chp_number"))
+    q = (q or "").strip().lower()
+    rows = bonds_rows()
+    own = lambda r: bool(mine) and dg(r["chp"]) == mine
+    out = [r for r in rows if (q and any(q in str(r[k]).lower() for k in ("name", "symbol", "id", "company"))) or (not q and own(r))]
+    out.sort(key=lambda r: (not own(r), r["name"]))
+    return [{**r, "own": own(r)} for r in out[:40]]
+
+
+def approve_bond(doc_id, biz_id, bond):
+    """מסמך הת"ע של אג"ח: משייך את המסמך לאג"ח (ולחברה, בלי לתפוס סלוט פרטי/כללי שלה)."""
+    with LOCK:
+        d = site("/permit-docs/" + doc_id)["doc"]
+        undo = [{"id": doc_id, "business_ids": d.get("business_ids") or [], "slots": d.get("slots") or {}, "bonds": d.get("bonds") or []}]
+        with open(A.undo, "a", encoding="utf-8") as f:
+            f.write(json.dumps({"time": time.strftime("%Y-%m-%d %H:%M:%S"), "undo": undo}, ensure_ascii=False) + "\n")
+        ids = list(d.get("business_ids") or [])
+        if biz_id and biz_id not in ids:
+            ids.append(biz_id)
+        bonds = [x for x in (d.get("bonds") or []) if x.get("id") != bond["id"]] + [bond]
+        r = site("/permit-docs/" + doc_id, {"business_ids": ids, "bonds": bonds})
+        S["docs"][doc_id] = r.get("doc") or d
+        return undo
+
+
 def revert(undo):
     with LOCK:
         for u in reversed(undo):
+            if "bonds" in u:
+                site("/permit-docs/" + u["id"], {"business_ids": u["business_ids"], "bonds": u["bonds"]})
+                S["docs"][u["id"]] = site("/permit-docs/" + u["id"])["doc"]
+                continue
             cur = site("/permit-docs/" + u["id"])["doc"]
             prev = u["slots"]
             body = {b: [x for x in str(prev.get(b, "")).split(",") if x] for b in set(cur.get("slots") or {}) | set(prev)}          # סלוט שלא היה קודם נשלח ריק (אחרת השרת משאיר אותו)
@@ -316,6 +358,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, [view(i) for i in S["items"]])
             if u.path.startswith("/api/pdf/"):
                 return self.send(200, get_pdf(u.path.rsplit("/", 1)[1]), "application/pdf", cache=True)
+            if u.path == "/api/bonds":
+                return self.send(200, bonds_search((q.get("biz") or [""])[0], (q.get("q") or [""])[0]))
             if u.path == "/api/biz":
                 t = (q.get("q") or [""])[0].strip().lower()
                 dg = "".join(c for c in t if c.isdigit())
@@ -338,6 +382,10 @@ class H(BaseHTTPRequestHandler):
             if self.path == "/api/approve":
                 undo = approve(body["doc_id"], body["business_id"], body["slot"], bool(body.get("replace")), body.get("extra"))
                 decide(body["key"], "אושר", undo)
+                return self.send(200, {"ok": True})
+            if self.path == "/api/approve_bond":
+                undo = approve_bond(body["doc_id"], body.get("business_id") or "", body["bond"])
+                decide(body["key"], "אושר-אגח", undo)
                 return self.send(200, {"ok": True})
             if self.path == "/api/skip":
                 decide(body["key"], body.get("decision") or "דולג")
@@ -394,7 +442,7 @@ window.addEventListener("resize",applyRot);
 let _pf;function prefetch(){clearTimeout(_pf);_pf=setTimeout(()=>{const v=vis(),ids=[];for(let i=0;i<=8;i++){const x=v[CUR+i];if(x&&!ids.includes(x.doc_id))ids.push(x.doc_id)}fetch("/api/focus?ids="+ids.join(",")).catch(()=>{})},120)}          // בקשה קלה אחת: השרת מביא את המסמכים הבאים ברקע
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
-function card(){if(document.activeElement&&document.activeElement.id==="q"&&$("q").value)return;const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
+function card(){if(document.activeElement&&(document.activeElement.id==="q"&&$("q").value||document.activeElement.id==="bq"))return;const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
 const ev=x.hp_bad?`<div class="ev bad">⚠ במסמך ח.פ. אחר (${x.hps.join(", ")}) — ייתכן מסמך קבוצה / חברת אם</div>`:"";
 $("side").innerHTML=`<h2>${E(x.company)}</h2>
 <div class="row"><span class="k">רישום:</span> ${E(x.vis)} &nbsp; <span class="k">סלוט לקישור:</span> <b>הת"ע ${E(x.slot_he)}</b> &nbsp; <span class="cf" style="background:${CF[x.conf]||"#555"}">${E(x.conf)}</span></div>
@@ -412,15 +460,19 @@ ${x.note?`<div class="ev bad">הערה: ${E(x.note)}</div>`:""}
 ${x.holder?`<div class="ev bad">הסלוט כבר תפוס במסמך: <b>${E(x.holder)}</b></div>`:""}
 ${OVR?`<div class="ev">יאושר עבור: <b>${E(OVR.name)}</b> <button class="btn sk" onclick="OVR=null;card()">ביטול</button></div>`:""}
 ${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול הקישור</button>`:`<button class="btn ok" onclick="ok(${x.holder?"true":"false"})">✔ אשר ${x.holder?"והחלף":""} הת"ע ${E(x.slot_he)} (Enter)</button>${x.both?`<br><button class="btn ok" style="background:#2f6f9f" onclick="ok(false,'${x.other_slot}')">✔ אשר לשני הסלוטים: פרטי + כללי</button>`:""}<br>
-<button class="btn sk" onclick="skip('דולג')">דילוג (→)</button> <button class="btn no" onclick="skip('לא מתאים')">לא מתאים</button>`}
+<button class="btn sk" onclick="skip('דולג')">דילוג (→)</button> <button class="btn no" onclick="skip('לא מתאים')">לא מתאים</button><br><button class="btn" style="background:#6b4fa0;color:#fff" onclick="bondOpen()">📄 זה היתר של אג"ח (לא של החברה)</button><div id="bp"></div>`}
 <hr><div class="k">אשר עבור חברה אחרת (שם / ח.פ.):</div><input id="q" oninput="srch(this.value)" placeholder="חיפוש חברה"><div id="res"></div>
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
 prefetch();const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}applyRot()}
 function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.company,body={key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null};
 PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע, אחת בכל פעם (כדי לא לתפוס את כל חיבורי הדפדפן)
 QUEUE.push({key,name,body});pump()}
+function bondOpen(){const x=vis()[CUR];if(!x)return;$("bp").innerHTML=`<div class="k" style="margin-top:6px">בחר אג"ח (ברירת מחדל: האג"ח של החברה; אפשר להקליד לחיפוש בכל האג"ח):</div><input id="bq" oninput="bondQ(this.value)" placeholder="שם אג&quot;ח / סמל / חברה"><div id="bres"></div>`;bondQ("");$("bq").focus()}
+let _bt;function bondQ(q){clearTimeout(_bt);_bt=setTimeout(async()=>{const x=vis()[CUR];if(!x)return;const r=await api("/api/bonds?biz="+encodeURIComponent(x.business_id)+"&q="+encodeURIComponent(q));window._BR=r;$("bres").innerHTML=r.length?r.map((b,i)=>`<div onclick="bondPick(${i})" style="padding:5px;border-bottom:1px solid #eee;cursor:pointer">${E(b.name)} <span class="k">${E(b.symbol)}${b.own?" · של החברה":" · "+E(b.company)}</span></div>`).join(""):`<div class="k">לא נמצאו אג"ח</div>`},q?250:0)}
+function bondPick(i){const x=vis()[CUR],b=(window._BR||[])[i];if(!x||!b)return;const key=x.key,name=x.company+" ← "+b.name,body={key,doc_id:x.doc_id,business_id:x.business_id,bond:{id:b.id,name:b.name,symbol:b.symbol,company:b.company,chp:b.chp}};
+PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();QUEUE.push({key,name,body,url:"/api/approve_bond"});pump()}
 function pump(){if(BUSY||!QUEUE.length)return;BUSY=true;const j=QUEUE.shift();
-api("/api/approve",j.body).then(()=>{const it=ITEMS.find(x=>x.key===j.key);if(it)it.state="בוצע";PEND.delete(j.key);msg("✔ נשמר באתר: "+j.name)}).catch(e=>{PEND.delete(j.key);msg("שגיאה ב"+j.name+": "+e.message)}).finally(()=>{BUSY=false;drawTop();if(QUEUE.length)pump();else schedLoad()})}
+api(j.url||"/api/approve",j.body).then(()=>{const it=ITEMS.find(x=>x.key===j.key);if(it)it.state="בוצע";PEND.delete(j.key);msg("✔ נשמר באתר: "+j.name)}).catch(e=>{PEND.delete(j.key);msg("שגיאה ב"+j.name+": "+e.message)}).finally(()=>{BUSY=false;drawTop();if(QUEUE.length)pump();else schedLoad()})}
 function skip(w){const x=vis()[CUR];if(!x)return;const key=x.key;PEND.add(key);const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();api("/api/skip",{key,decision:w}).then(()=>{const it=ITEMS.find(x=>x.key===key);if(it)it.state=w;PEND.delete(key);drawTop();schedLoad()}).catch(e=>{PEND.delete(key);msg("שגיאה: "+e.message);schedLoad()})}
 async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});msg("↩ בוטל");await load(true)}catch(e){msg("שגיאה: "+e.message)}}
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
