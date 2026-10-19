@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=41"></script>
+<script src="/permit-docs-test.js?v=42"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -808,11 +808,6 @@
   .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
   .home-top { flex:0 0 clamp(80px,15vh,150px); display:flex; justify-content:space-between; gap:20px; }
   .home-top .home-card { width:clamp(260px,24vw,460px); flex:none; }
-  .home-banner { flex:1; min-width:0; border-radius:8px; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#274d5b 0%,#1fa59a 100%) center/cover; }
-  .home-banner.has-img { background-image:url(banner.jpg); background-size:cover; background-position:70% 55%; }
-  .hb-text { display:flex; align-items:center; gap:clamp(10px,1.5vw,28px); width:92%; background:rgba(39,77,91,.78); color:#fff; padding:clamp(6px,1.4vh,16px) clamp(10px,1.5vw,28px); box-sizing:border-box; }
-  .hb-text i { flex:1; height:1px; background:rgba(255,255,255,.7); }
-  .hb-text span { font-size:clamp(20px,2.6vw,48px); font-weight:700; white-space:nowrap; }
   .home-mid { flex:2 1 0; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,20px); }
   .home-mid .home-card .ico { font-size:clamp(34px,7vh,80px); }
   .home-mid .home-card b { font-size:clamp(22px,2.4vw,44px); }
@@ -827,21 +822,9 @@
   .home-wrap .idx-line span { font-size:clamp(11px,.85vw,15px); }
   .home-wrap .idx-pie { gap:clamp(8px,1vw,18px); }
   .home-wrap .idx-pie svg { width:clamp(70px,12vh,170px); height:auto; flex:none; }
-  /* חיים לדף הראשי: רקע עדין, כרטיסים עם פס צבע וסמל בעיגול, צל ותנועה */
-  body:has(.home-wrap) { background:radial-gradient(circle at 12% 18%, rgba(31,165,154,.14) 0, transparent 38%), radial-gradient(circle at 88% 82%, rgba(39,77,91,.13) 0, transparent 40%), radial-gradient(rgba(39,77,91,.07) 1.2px, transparent 1.4px) 0 0/22px 22px, linear-gradient(180deg,#f4faf9 0%,#eef4f6 100%); }
-  .home-wrap .home-card { --c:#1fa59a; position:relative; background:#fff; border:1px solid rgba(39,77,91,.14); border-top:4px solid var(--c); border-radius:12px; box-shadow:0 2px 10px rgba(39,77,91,.08); transition:transform .18s, box-shadow .18s; }
-  .home-wrap .home-card:hover { transform:translateY(-3px); box-shadow:0 10px 24px rgba(39,77,91,.18); border-color:var(--c); }
-  .home-wrap .home-card .ico { background:color-mix(in srgb, var(--c) 14%, #fff); border-radius:50%; width:1.7em; height:1.7em; display:flex !important; align-items:center; justify-content:center; line-height:1; }
-  .home-top .home-card:first-child { --c:#7a3b8f; } .home-top .home-card:last-child { --c:#1e4570; }
-  .home-mid .home-card:nth-child(1) { --c:#1e7e4a; } .home-mid .home-card:nth-child(2) { --c:#d98a1b; }
-  .home-dash .home-card:nth-child(1) { --c:#1fa59a; } .home-dash .home-card:nth-child(2) { --c:#3f6ea8; } .home-dash .home-card:nth-child(3) { --c:#b8860b; } .home-dash .home-card:nth-child(4) { --c:#7a3b8f; }
-  .home-dash .pd-homeh { display:flex; align-items:center; gap:10px; color:#274d5b; }
-  .home-dash .pd-homeh::after { content:""; flex:1; height:3px; border-radius:2px; background:linear-gradient(90deg,#1fa59a,transparent); }
-  .home-wrap .idx-box { background:linear-gradient(180deg,#fff,#f1f8f7); border-radius:12px; border-top:4px solid #1fa59a; box-shadow:0 2px 10px rgba(39,77,91,.08); }
-  .home-banner { box-shadow:0 2px 10px rgba(39,77,91,.15); }
-  .home-dash .home-card .ico, .home-top .home-card .ico { font-size:clamp(16px,2.8vh,32px); margin-bottom:2px; }
-  .home-dash .home-card b { font-size:clamp(15px,1.3vw,26px); }
-  .home-dash .home-card, .home-top .home-card { padding:.3rem .6rem; }
+  /* באנר האתר הישן: ברקע הדף הראשי, לכל הרוחב, מאחורי הכפתורים */
+  body:has(.home-wrap) { background:url(banner.jpg) center/cover no-repeat fixed #3a3a3a; }
+  .home-dash .pd-homeh { color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.7); }
   @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
@@ -1546,11 +1529,9 @@ function adminTabs() {
 }
 
 function renderHome() {
-  setTimeout(() => { const im = new Image(); im.onload = () => document.querySelector(".home-banner")?.classList.add("has-img"); im.src = "banner.jpg"; }, 0);      // התמונה מופיעה רק אם הקובץ banner.jpg קיים באתר
   return `<div class="home-wrap">
     <div class="home-top">
       <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
-      <div class="home-banner" aria-hidden="true"><div class="hb-text"><i></i><span>ניהול היתר עיסקא</span><i></i></div></div>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b><span class="sub">חברות, ואיתור בתוך טקסט השטרות</span></button>
     </div>
     <div class="home-mid">
