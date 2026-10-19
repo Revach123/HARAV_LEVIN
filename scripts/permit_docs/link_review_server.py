@@ -335,7 +335,8 @@ const CF={"גבוהה מאוד":"#1e7e4a","גבוהה":"#3f8f5a","בינונית
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function msg(t){const m=$("msg");m.textContent=t;m.style.display="block";clearTimeout(m._t);m._t=setTimeout(()=>m.style.display="none",3500)}
 async function api(p,b){const r=await fetch(p,b?{method:"POST",body:JSON.stringify(b)}:{});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
-async function load(keep){const k=keep&&ITEMS[CUR]&&ITEMS[CUR].key;ITEMS=await api("/api/items");const v=vis();let i=v.findIndex(x=>x.key===k);CUR=i>=0?i:0;draw()}
+async function load(keep){const k=keep?(vis()[CUR]||{}).key:null;ITEMS=await api("/api/items");const v=vis();          // המפתח של הפריט שמוצג כרגע (לפי הרשימה המסוננת), כדי שרענון ברקע לא יקפיץ לפריט אחר
+if(k){const i=v.findIndex(x=>x.key===k);CUR=i>=0?i:Math.min(CUR,Math.max(0,v.length-1))}else CUR=0;draw()}
 function vis(){return ITEMS.filter(x=>!PEND.has(x.key)).filter(x=>TAB==="הכל"||(TAB==="פתוח"?x.state==="פתוח":TAB==="בוצע"?x.state==="בוצע":TAB==="דולג"?(x.state==="דולג"||x.state==="לא מתאים"):x.conf===TAB&&x.state==="פתוח"))}
 function draw(){const v=vis();const cnt=t=>ITEMS.filter(x=>x.conf===t&&x.state==="פתוח").length;
 $("tabs").innerHTML=["פתוח","בוצע","דולג"].map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${ITEMS.filter(x=>t==="פתוח"?x.state==="פתוח":t==="בוצע"?x.state==="בוצע":(x.state==="דולג"||x.state==="לא מתאים")).length})</button>`).join("")+" | "+Object.keys(CF).map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${cnt(t)})</button>`).join("");
@@ -349,7 +350,7 @@ window.addEventListener("resize",applyRot);
 const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=2;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
-function card(){const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
+function card(){if(document.activeElement&&document.activeElement.id==="q"&&$("q").value)return;const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
 const ev=x.hp_bad?`<div class="ev bad">⚠ במסמך ח.פ. אחר (${x.hps.join(", ")}) — ייתכן מסמך קבוצה / חברת אם</div>`:"";
 $("side").innerHTML=`<h2>${E(x.company)}</h2>
 <div class="row"><span class="k">רישום:</span> ${E(x.vis)} &nbsp; <span class="k">סלוט לקישור:</span> <b>הת"ע ${E(x.slot_he)}</b> &nbsp; <span class="cf" style="background:${CF[x.conf]||"#555"}">${E(x.conf)}</span></div>
