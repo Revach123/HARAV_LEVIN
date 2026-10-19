@@ -116,7 +116,15 @@ def main():
         db.close()
     print(f"מסמכים ידועים במאגר המקומי: {len(known)}")
 
-    rows, stats = [], {}
+    rows, stats, other_refs, ref_ents = [], {}, [], set()
+    for pid, x in posts.items():          # קישורים מכל שאר סוגי הפוסטים (דפים, פוסטים, פורטפוליו...): הקובץ אינו יתום אם יש מי שמקשר אליו
+        if x["post_type"] in TYPES or x["post_type"] in ("attachment", "revision", "nav_menu_item"):
+            continue
+        for u in URL.findall(x["post_content"]):
+            r_ = rel(u)
+            other_refs.append([x["post_type"], pid, x["post_status"], x["post_title"], r_])
+            for e in by_rel.get(r_.lower(), []):
+                ref_ents.add(e)
     shas, used_ents = {}, set()
     for pid, x in posts.items():
         t = x["post_type"]
@@ -179,12 +187,44 @@ def main():
         w = csv.writer(f)
         w.writerow(["סוג", "post_type", "post_id", "סטטוס", "תאריך", "כותרת (חברה)", "slug", "קובץ (נתיב ב-uploads)", "מצורף לפוסט", "איפה נמצא", "חתימה", "במאגר", "עודכן", "הערה", "כל הגרסאות (מקור:חתימה)"])
         w.writerows(rows)
-    orph = [[r_, e[0], e[1], e[2]] for r_, e in allpdf if e not in used_ents]
+    try:
+        from find_missed_pdfs import permit_like
+    except Exception:  # noqa: BLE001
+        permit_like = None
+    def read_bytes(ent):
+        src, inner, _ = ent
+        if src == inner:
+            return open(src, "rb").read()
+        with zipfile.ZipFile(src) as z:
+            return z.read(inner)
+    cf7 = re.compile(r"^(?!20\d\d/)\d+/")
+    groups = {}
+    for r_, e in allpdf:
+        if e not in used_ents and e not in ref_ents:
+            groups.setdefault(r_.lower(), []).append((r_, e))
+    n_cf7 = sum(len(v) for k, v in groups.items() if cf7.match(k))
+    orph = []
+    for k, lst in sorted(groups.items()):
+        if cf7.match(k):
+            continue          # תיקיות ממוספרות = אישורי הצטרפות (טפסים), לא שטרות
+        for r_, e in lst:
+            try:
+                data = read_bytes(e)
+                sh = hashlib.sha256(data).hexdigest()
+                looks = permit_like(data) if permit_like else ""
+            except Exception as ex:  # noqa: BLE001
+                sh, looks = "", "לא נקרא"
+            orph.append([r_, os.path.basename(e[0]) if e[0] != e[1] else "תיקייה מקומית", e[2], sh[:12], "כן" if sh in known else "לא", looks])
     with open("old_orphans.csv", "w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["נתיב", "מקור (תיקייה / zip)", "נתיב פנימי", "גודל"])
+        w.writerow(["נתיב", "מקור", "גודל", "חתימה", "במאגר", "נראה כמו"])
         w.writerows(orph)
-    print(f"PDF שנמצאו ואף פוסט לא מקשר אליהם: {len(orph)} (old_orphans.csv)")
+    with open("old_other_refs.csv", "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["post_type", "post_id", "סטטוס", "כותרת", "קובץ"])
+        w.writerows(other_refs)
+    nk = sum(1 for o in orph if o[4] == "לא")
+    print(f"PDF שאף פוסט לא מקשר אליהם: {len(orph)} מחוץ לטפסי ההצטרפות (מהם לא במאגר: {nk}); בתיקיות ממוספרות (טפסים): {n_cf7}")
     lines = ["post_type / סטטוס: פוסטים | עם קישור בתוכן | מהם עם קובץ שאינו מצורף לפוסט | קבצים | נמצא בנתיב מדויק | נמצא רק לפי שם (לא מאומת) | גרסאות שונות באותו נתיב | לא נמצא בשום מקום | חתימה ידועה במאגר | חתימה לא ידועה"]
     for (t, st), s in sorted(stats.items()):
         lines.append(f"{t} / {st}: {s['posts']} | {s['with_url']} | {s['only_url']} | {s['files']} | {s['exact']} | {s['name_only']} | {s['conflict']} | {s['missing']} | {s['known']} | {s['notknown']}")
