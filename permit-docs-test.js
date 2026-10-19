@@ -212,10 +212,10 @@
     if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
     const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
     return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:640px">
-      <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b><span class="sub">לפי הרישום בפרטי / כללי, עם הצעות לשטר</span></button>
-      <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b><span class="sub">שטרות שאינם משויכים לאף חברה</span></button>
-      <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b><span class="sub">שטר קיים, והחברה אינה ברשימה</span></button>
-      <button class="home-card" onclick="PD.openDash('d')"><span class="ico">⬆</span><b>העלאת מסמכי היתר עיסקא</b><span class="sub">העלאה, או העלאה מהירה של כמה קבצים</span></button></div>`;
+      <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b></button>
+      <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b></button>
+      <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b></button>
+      <button class="home-card" onclick="PD.openDash('d')"><span class="ico">⬆</span><b>העלאת מסמכי היתר עיסקא</b></button></div>`;
   }
 
   const openCompany = bizId => openManage(bizId);
