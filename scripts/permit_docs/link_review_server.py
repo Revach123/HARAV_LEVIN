@@ -317,14 +317,14 @@ body{margin:0;font-family:system-ui,Arial,sans-serif;background:#10222a;color:#1
 .it{padding:7px 10px;border-bottom:1px solid #d5dfe3;cursor:pointer;font-size:13px}.it.cur{background:#fff3c4}.it.done{color:#1e7e4a}.it.skip{color:#888;text-decoration:line-through}
 .cf{display:inline-block;border-radius:9px;padding:0 7px;font-size:11px;color:#fff;margin-inline-start:4px}
 #card{flex:1;display:flex;min-width:0;background:#fff}#side{width:430px;padding:14px 16px;overflow:auto;border-inline-end:1px solid #cfd9dd}
-#pdf{flex:1;border:0}h2{margin:0 0 8px;font-size:20px}.row{margin:5px 0;font-size:14px}.k{color:#667;font-size:12px}
+#pv{flex:1;display:flex;flex-direction:column;min-width:0}#pt{padding:4px 10px;background:#eef3f5;border-bottom:1px solid #cfd9dd;display:flex;gap:6px;align-items:center}#pt button{border:0;background:#dbe5ea;border-radius:6px;padding:4px 10px;font-size:16px;cursor:pointer}#pw{flex:1;position:relative;overflow:hidden;background:#777}#pdf{border:0;position:absolute;top:50%;left:50%;width:100%;height:100%;transform:translate(-50%,-50%);background:#fff}h2{margin:0 0 8px;font-size:20px}.row{margin:5px 0;font-size:14px}.k{color:#667;font-size:12px}
 .ev{background:#e9f6ee;border:1px solid #b7dfc6;border-radius:8px;padding:6px 9px;margin:8px 0;font-size:13px}.ev.bad{background:#fdecea;border-color:#f0b9b3}
 .btn{border:0;border-radius:9px;padding:9px 16px;font-size:15px;cursor:pointer;margin:3px 0}.ok{background:#1e7e4a;color:#fff;font-weight:700;font-size:17px}.sk{background:#e4e9ec}.no{background:#c0392b;color:#fff}.un{background:#d98a1b;color:#fff}
 input{padding:6px;border:1px solid #aab;border-radius:6px;width:92%}#res div{padding:5px;border-bottom:1px solid #eee;cursor:pointer}#res div:hover{background:#fff3c4}
 #msg{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 16px;border-radius:8px;display:none}
 </style></head><body>
 <div id="top"><b>אישור קישורי היתרים</b><span id="tabs"></span><span id="prog"></span></div>
-<div id="main"><div id="list"></div><div id="card"><div id="side"></div><iframe id="pdf"></iframe></div></div><div id="msg"></div>
+<div id="main"><div id="list"></div><div id="card"><div id="side"></div><div id="pv"><div id="pt"><button onclick="rot(-1)" title="סיבוב שמאלה (Shift+R)">⟲</button><button onclick="rot(1)" title="סיבוב ימינה (R)">⟳</button><button onclick="rot(0)" title="איפוס סיבוב">איפוס</button><span id="pr" style="font-size:13px;color:#667"></span><span style="font-size:12px;color:#889">סיבוב התצוגה בלבד (לא משנה את הקובץ)</span></div><div id="pw"><iframe id="pdf"></iframe></div></div></div></div><div id="msg"></div>
 <script>
 let ITEMS=[],CUR=0,TAB="פתוח",OVR=null;const PEND=new Set();
 const CF={"גבוהה מאוד":"#1e7e4a","גבוהה":"#3f8f5a","בינונית":"#b8860b","נמוכה":"#c0392b","הצעת ח.פ.":"#3f6ea8"};
@@ -338,6 +338,10 @@ $("tabs").innerHTML=["פתוח","בוצע","דולג"].map(t=>`<button class="ta
 $("prog").textContent=`  בוצעו ${ITEMS.filter(x=>x.state==="בוצע").length} מתוך ${ITEMS.length}`+(PEND.size?`  ·  ⏳ מעלה לאתר: ${PEND.size}`:"");
 $("list").innerHTML=v.map((x,i)=>`<div class="it ${i===CUR?"cur":""} ${x.state==="בוצע"?"done":x.state==="פתוח"?"":"skip"}" onclick="go(${i})"><span class="cf" style="background:${CF[x.conf]||"#555"}">${x.conf}</span>${E(x.company)}<br><span class="k">${E(x.slot_he)} · ${E(x.doc_name)}</span></div>`).join("")||"<div class='it'>אין פריטים</div>";
 card()}
+let ROT={};try{ROT=JSON.parse(localStorage.getItem("rot")||"{}")}catch(e){}
+function applyRot(){const x=vis()[CUR],d=x?(ROT[x.doc_id]||0):0,w=$("pw"),f=$("pdf");if(!w)return;if(d%180){f.style.width=w.clientHeight+"px";f.style.height=w.clientWidth+"px"}else{f.style.width="100%";f.style.height="100%"}f.style.transform=`translate(-50%,-50%) rotate(${d}deg)`;$("pr").textContent=d?d+"°":""}
+function rot(dir){const x=vis()[CUR];if(!x)return;ROT[x.doc_id]=dir?((ROT[x.doc_id]||0)+dir*90+360)%360:0;try{localStorage.setItem("rot",JSON.stringify(ROT))}catch(e){}applyRot()}
+window.addEventListener("resize",applyRot);
 const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=4;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
@@ -362,7 +366,7 @@ ${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול �
 <button class="btn sk" onclick="skip('דולג')">דילוג (→)</button> <button class="btn no" onclick="skip('לא מתאים')">לא מתאים</button>`}
 <hr><div class="k">אשר עבור חברה אחרת (שם / ח.פ.):</div><input id="q" oninput="srch(this.value)" placeholder="חיפוש חברה"><div id="res"></div>
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
-prefetch();const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}}
+prefetch();const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}applyRot()}
 function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.company,body={key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null};
 PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע
 api("/api/approve",body).then(()=>{PEND.delete(key);return load(true)}).then(()=>msg("✔ נשמר באתר: "+name)).catch(e=>{PEND.delete(key);msg("שגיאה ב"+name+": "+e.message);load(true)})}
@@ -371,7 +375,7 @@ async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
 let _t;function srch(q){clearTimeout(_t);_t=setTimeout(async()=>{const r=await api("/api/biz?q="+encodeURIComponent(q));$("res").innerHTML=r.map(b=>`<div onclick='pick(${JSON.stringify(b)})'>${E(b.name)} <span class="k">${E(b.vis)}</span></div>`).join("")},300)}
 function pick(b){OVR=b;card()}
-document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(e.key==="Enter"){const x=vis()[CUR];if(x&&x.state!=="בוצע")ok(!!x.holder)}else if(e.key==="ArrowRight"||e.key==="ArrowLeft"){skipnav(e.key==="ArrowLeft")}});
+document.addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;if(e.key==="r"||e.key==="R"){rot(e.shiftKey?-1:1);return}if(e.key==="Enter"){const x=vis()[CUR];if(x&&x.state!=="בוצע")ok(!!x.holder)}else if(e.key==="ArrowRight"||e.key==="ArrowLeft"){skipnav(e.key==="ArrowLeft")}});
 function skipnav(n){const v=vis();CUR=Math.max(0,Math.min(v.length-1,CUR+(n?1:-1)));OVR=null;draw()}
 load();
 </script></body></html>"""
