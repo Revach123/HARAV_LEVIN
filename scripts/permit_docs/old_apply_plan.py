@@ -7,9 +7,9 @@
     python old_apply_plan.py                       הרצה יבשה, רק ביטחון "גבוהה"
     python old_apply_plan.py --apply               ביצוע
     python old_apply_plan.py --apply --min low     כולל גם ביטחון נמוך (לא מומלץ בלי בדיקה ידנית של הרשימה)
-    python old_apply_plan.py --undo old_apply_log.json --apply     החזרת המצב כפי שהיה לפני הביצוע
+    python old_apply_plan.py --undo old_apply_log.jsonl --apply     החזרת המצב כפי שהיה לפני הביצוע
 
-כל ביצוע נשמר ב-old_apply_log.json (המצב הקודם של כל מסמך שנגענו בו), כך שאפשר לבטל.
+כל ביצוע נשמר ב-old_apply_log.jsonl (שורה לכל מסמך, לפני הכתיבה) (המצב הקודם של כל מסמך שנגענו בו), כך שאפשר לבטל.
 לא מוחק שום מסמך ולא מחליף מסמך שכבר מקושר לסלוט: קישור רק לסלוט שהוא פנוי אצל החברה.
 """
 import argparse
@@ -19,6 +19,7 @@ import getpass
 import json
 import os
 import ssl
+import time
 import urllib.error
 import urllib.request
 
@@ -36,15 +37,20 @@ def call(site, token, path, body=None, method=None):
     data = json.dumps(body).encode("utf-8") if body is not None else None
     req = urllib.request.Request(site.rstrip("/") + "/api" + path, data=data, method=method or ("PUT" if data else "GET"),
                                  headers={"User-Agent": "Mozilla/5.0 (permit-apply)", "Content-Type": "application/json", **({"Authorization": "Bearer " + token} if token else {})})
-    for _ in range(2):
+    last = None
+    for attempt in range(5):          # חיבור איטי / פסק זמן: מנסים שוב (הפעולה אידמפוטנטית: אותו קישור שוב לא משנה כלום)
         try:
-            with urllib.request.urlopen(req, timeout=180, context=ssl_context()) as r:
+            with urllib.request.urlopen(req, timeout=90, context=ssl_context()) as r:
                 return json.loads(r.read().decode("utf-8"))
         except urllib.error.URLError as e:
+            last = e
             if STRICT[0] and isinstance(e.reason, ssl.SSLCertVerificationError) and "key usage" in str(e.reason):
                 STRICT[0] = False
                 continue
-            raise
+        except (TimeoutError, OSError) as e:
+            last = e
+        time.sleep(2 * (attempt + 1))
+    raise last
 
 
 def main():
@@ -56,7 +62,7 @@ def main():
     ap.add_argument("--only", default="all", choices=["link", "all"], help="link = רק קישור לסלוט של מסמך שכבר משויך לחברה (בלי לשייך מסמך לחברה חדשה)")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--undo", default="")
-    ap.add_argument("--log", default="old_apply_log.json")
+    ap.add_argument("--log", default="old_apply_log.jsonl")
     ap.add_argument("--password-file", default="admin_password.txt")
     a = ap.parse_args()
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -65,7 +71,9 @@ def main():
     token = token or getpass.getpass("סיסמת מנהל האתר: ")
 
     if a.undo:
-        log = json.load(open(a.undo, encoding="utf-8"))
+        txt = open(a.undo, encoding="utf-8").read().strip()
+        log = json.loads(txt) if txt.startswith("[") else [json.loads(x) for x in txt.splitlines() if x.strip()]
+        log.reverse()          # מהאחרון לראשון
         print(f"החזרה: {len(log)} מסמכים" + ("" if a.apply else " (הרצה יבשה: הוסף --apply)"))
         for e in log:
             if a.apply:
@@ -106,6 +114,8 @@ def main():
         new_slots = {}
         for r in items:
             b, t = r["business_id"], r["סלוט"]
+            if taken[b].get(t) == doc_id:
+                continue          # כבר מקושר (למשל מהרצה קודמת שנקטעה)
             if taken[b].get(t) and taken[b][t] != doc_id:
                 print(f"  דילוג: אצל {r['חברה']} הסלוט {t} כבר תפוס במסמך אחר"); skipped += 1; continue
             if b not in ids:
@@ -117,15 +127,18 @@ def main():
             taken[b][t] = doc_id
         if not new_slots:
             continue
-        log.append({"id": doc_id, "business_ids": d.get("business_ids") or [], "slots": slots})
+        entry = {"id": doc_id, "business_ids": d.get("business_ids") or [], "slots": slots}
+        log.append(entry)
+        if a.apply:          # נשמר לפני הכתיבה, כדי שגם אם נקטע באמצע אפשר לבטל
+            with open(a.log, "a", encoding="utf-8") as lf:
+                lf.write(json.dumps(entry, ensure_ascii=False) + "\n")
         for b, have in new_slots.items():
             print(f"  {doc_id}: {next(x['חברה'] for x in items if x['business_id'] == b)} -> {','.join(have)}")
         if a.apply:
             call(a.site, token, "/permit-docs/" + doc_id, {"business_ids": ids, "slots": new_slots})
         done += len(new_slots)
     if a.apply and log:
-        json.dump(log, open(a.log, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-        print(f"נשמר {a.log} (לביטול: python old_apply_plan.py --undo {a.log} --apply)")
+        print(f"הלוג נשמר ב-{a.log} (לביטול: python old_apply_plan.py --undo {a.log} --apply)")
     print(f"{'בוצעו' if a.apply else 'היו מבוצעים'}: {done} קישורים; דולגו: {skipped}")
 
 
