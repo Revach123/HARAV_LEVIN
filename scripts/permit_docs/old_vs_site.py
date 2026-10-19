@@ -209,6 +209,15 @@ def main():
             conf = "בינונית"          # שם זהה, אבל המסמך לא משויך לחברה ואין ח.פ. שמאשר: לבדיקה
         if len(shas) > 1:
             res, act = "כמה מסמכים שונים לאותו סלוט", "לבדוק ידנית"
+            ids_ = {x[1]["id"] for x in lst}
+            if not (have and have["id"] in ids_):          # אין בסלוט אף אחד מהגרסאות: מציעים את הפוסט הישן ביותר-חדש (מזהה גבוה = נוצר מאוחר) לבדיקה בדשבורד
+                newest = max(lst, key=lambda x: int(x[0][1]) if str(x[0][1]).isdigit() else 0)
+                d2, r2 = newest[1], newest[0]
+                others = "; ".join(sorted({f"{x[0][1]}:{x[1].get('original_name') or x[1]['id']}" for x in lst if x[1]["id"] != d2["id"]}))
+                plan.append([d2["id"], b, bname(b), t, "שיוך וקישור לסלוט" if b not in (d2.get("business_ids") or []) else "קישור לסלוט", "נמוכה", how, r2[3], r2[8],
+                             ", ".join(bname(i) for i in (d2.get("business_ids") or [])) or "ללא שיוך", mine or "", ", ".join(sorted(hp_by_doc.get(d2["id"], ()))[:4]),
+                             f"כמה גרסאות לאותו סלוט ({len(shas)}): זו החדשה ביותר (פוסט {r2[1]}); האחרות: {others}",
+                             f"לשייך ולקשר את \"{d2.get('original_name') or d2['id']}\" כהת\"ע {SLOT_HE[t]} של {bname(b)}"])
         elif have and have["id"] == d["id"]:
             res, act = "תקין", ""
         elif have:
