@@ -278,7 +278,7 @@
   }
   function suggestHtml(bid, narrow) {
     const b = bizById(bid); if (!b) return "";
-    const sg = hintDocs(b, ["private", "general"]);
+    const need = needOf(b), miss = ["private", "general"].filter(t => need[t] && !slotDoc(b.id, t)), sg = hintDocs(b, miss.length ? miss : ["private", "general"]);          // אותם סוגים חסרים כמו בטבלת הדשבורד, כדי שהמספרים יהיו זהים
     return `<h4 style="margin:18px 0 8px">הצעות נוספות (${sg.length})</h4>` + (sg.length ? `<div class="pd-mg-grid"${narrow ? ' style="grid-template-columns:1fr"' : ""}>${sg.slice(0, 12).map(x => sugCard(x, bid)).join("")}</div>` + (sg.length > 12 ? `<div class="pd-sub">ועוד ${sg.length - 12}</div>` : "")
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
   }
@@ -1772,8 +1772,8 @@
   // ───────── הצעות לפי שם החברה שנמצא במסמך ─────────
   const NSTOP = new Set(["מהדרין", "מכון", "היתר", "עיסקא", "עסקא", "עסקה", "חברה", "חברת", "הנפקות", "בנק", "ביטוח", "השקעות", "גיוס", "הון", "ישראל", "החברה"]);          // שם שכולו מילים כאלה אינו מזהה חברה
   const NGENERIC_DF = 25;          // שם שמופיע ביותר ממספר הזה של מסמכים הוא כנראה שם כללי (למשל "מכון היתר עסקא למהדרין בע"מ" בכל מסמך), ולא מזהה חברה
-  async function loadNames() {
-    if (S.nameDf !== undefined) return;
+  function loadNames() { return S._namesP || (S._namesP = loadNames0()); }          // הבטחה אחת משותפת: מי שמבקש בזמן הטעינה ממתין לסיומה (ולא מקבל "אין הצעות")
+  async function loadNames0() {
     S.nameDf = null;
     try {
       const rows = (await api("/permit-text?names=1")).names || [];
