@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_text_index import fix_hebrew  # noqa: E402
 
 SKIP = re.compile(r"sendpdfcf7_uploads|[/\\]plugins[/\\]|^document-pdf|^preview-", re.I)
+SKIP_FORMS = re.compile(r"sendpdfcf7_uploads", re.I)
 
 
 def norm(t):
@@ -122,6 +123,7 @@ def main():
     ap.add_argument("--uploads", default=os.path.join("wp-content", "uploads"))
     ap.add_argument("--hash-cache", default="hashes_cache.json")
     ap.add_argument("--out", default=os.path.join("text_index", "השוואת_שמות.csv"))
+    ap.add_argument("--keep-names", action="store_true", help="לא לדלג על document-pdf-* / preview-* / plugins (מדלג רק על טפסי ההצטרפות sendpdfcf7_uploads)")
     ap.add_argument("--extract", default="", help="תיקייה: לשמור בה העתק של כל קובץ שהפסיקה שלו אינה 'אותו מסמך', ולהדפיס לכל אחד ח.פ. ושורה ראשונה")
     a = ap.parse_args()
     from ocr_pdfs import TESS_DEFAULT
@@ -132,8 +134,9 @@ def main():
     for sha, files in db.execute("SELECT sha, files FROM docs"):
         for nm in str(files or "").split("|"):
             byname[nm.strip().lower()].add(sha)
+    skip = SKIP_FORMS if a.keep_names else SKIP
     rows = [r for r in csv.DictReader(open(a.missed, encoding="utf-8-sig"))
-            if not SKIP.search(r["מיקום"].split("::")[-1].strip()) and not SKIP.search(r["שם קובץ"])]
+            if not skip.search(r["מיקום"].split("::")[-1].strip()) and not skip.search(r["שם קובץ"])]
     print(f"קבצים להשוואה: {len(rows)}")
     cache, out = {}, []
     for r in rows:
