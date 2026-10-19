@@ -1745,7 +1745,7 @@
   }
 
   // ───────── דשבורד חדש (בבנייה, רק בעמוד הבדיקה): שלוש כרטיסיות. א: חברות שחסרים להן שטרות; ב: שטרות שמחכים לשיוך; ג: חברות לא רשומות ─────────
-  const ND = { tab: "a", miss: "all", extras: false, gone: false, q: "", sq: "" };
+  const ND = { tab: "a", miss: "all", gone: false, q: "", sq: "" };
   const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/\b(בע\s*מ|בעמ|ltd|inc)\b/g, " ").replace(/\s+/g, " ").trim();
   const tri = x => { const t = " " + NORMN(x) + " ", o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); return o; };
   function fuzzy(q, name) {          // התאמה מקורבת: הכלה מלאה, או דמיון משולשות אותיות (שינוי קטן בשם)
@@ -1763,7 +1763,7 @@
       if (ND.miss === "private" && !miss.includes("private")) continue;
       if (ND.miss === "general" && !miss.includes("general")) continue;
       if (ND.miss === "both" && miss.length < 2) continue;
-      out.push({ b, miss, ex: extrasOf(b.id) });
+      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
@@ -1776,7 +1776,7 @@
     if ($("pd-nd-css")) return;
     const st = document.createElement("style"); st.id = "pd-nd-css";
     st.textContent = `.pd-nd-tbl{width:100%;border-collapse:collapse;font-size:13px}.pd-nd-tbl th{position:sticky;top:0;background:#f6f4ee;text-align:right;padding:6px 8px;border-bottom:2px solid #cfcac0}.pd-nd-tbl td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}.pd-nd-tbl tr.go{cursor:pointer}.pd-nd-tbl tr.go:hover{background:#f3f8ff}
-      .pd-nd-miss{display:inline-block;background:#fdecea;color:#b3261e;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ok{display:inline-block;background:#e6f4ea;color:#1e7e4a;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ex{font-size:11.5px;color:#555;margin-top:3px}.pd-nd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}`;
+      .pd-nd-miss{display:inline-block;background:#fdecea;color:#b3261e;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ok{display:inline-block;background:#e6f4ea;color:#1e7e4a;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-n{font-size:20px;font-weight:700;color:#b85c00}.pd-nd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}`;
     document.head.appendChild(st);
   }
   function openDash(tab) {
@@ -1796,13 +1796,12 @@
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
     const rows = ndMissing(), M_ = [["all", "הכל"], ["private", "חסר פרטי"], ["general", "חסר כללי"], ["both", "חסרים שניהם"]];
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span>
-        <label class="pd-sub"><input type="checkbox" ${ND.extras ? "checked" : ""} onchange="PD._ndExtras(this.checked)"> הצג גם את המסמכים הנוספים (שאינם ראשיים)</label></div>
+    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span></div>
       <div class="pd-sub" style="margin-bottom:6px">כל חברה שרשומה ברשימת הפרטי או הכללי צריכה הת"ע משויך מאותו סוג. לחיצה על שורה פותחת את ניהול המסמכים של החברה.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>רשימה</th><th>חסר</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>נוספים</th></tr></thead><tbody>${rows.map(e => {
-        const b = e.b, reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי", one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">לא נדרש</span>`; };
-        return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}${ND.extras && e.ex.length ? `<div class="pd-nd-ex">${e.ex.map(d => "📄 " + E(d.original_name || d.id)).join("<br>")}</div>` : ""}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td><td>${reg}</td>
-          <td>${e.miss.map(t => `<span class="pd-nd-miss">${SLOT_HE[t]}</span>`).join("")}</td><td>${one("private")}</td><td>${one("general")}</td><td>${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="7" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
+      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th></tr></thead><tbody>${rows.map(e => {
+        const b = e.b, one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">-</span>`; };
+        return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td>
+          <td>${one("private")}</td><td>${one("general")}</td><td class="pd-nd-n">${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="5" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
   }
   function ndTabB() {
     const f = ND.q.trim().toLowerCase(), rows = ndDocsB().filter(d => !f || docHay(d).includes(f))
@@ -1843,7 +1842,7 @@
   const ndAct = {
     tab: t => { ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
-    miss: k => { ND.miss = k; ndShow(); }, extras: on => { ND.extras = on; ndShow(); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
+    miss: k => { ND.miss = k; ndShow(); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
     openDoc: id => { savePos("un", id, 0); close("pd-nd"); openUnassigned("un"); },
   };
 
@@ -2099,7 +2098,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndExtras: ndAct.extras, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
