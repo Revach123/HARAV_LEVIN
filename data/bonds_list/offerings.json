@@ -512,15 +512,15 @@
    "chp_number": ""
   },
   {
-   "id": 10356,
-   "maya_report_id": 1774345,
+   "id": 10382,
+   "maya_report_id": 1776758,
    "company_name": "סלדן",
    "is_new_company": true,
    "new_company_type": null,
    "draft_no": 1,
    "draft_title": "טיוטת תשקיף",
    "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1755705",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776758",
    "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
    "securities": [
     {
@@ -648,6 +648,29 @@
    "link_prospectus": null,
    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
    "maya_report_id": 1774235,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-19"
+  },
+  {
+   "chp_number": "",
+   "company_name": "סלדן",
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף",
+   "id": 10356,
+   "is_new_company": true,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1755705",
+   "maya_report_id": 1774345,
    "new_company_type": null,
    "securities": [
     {
@@ -894,6 +917,7 @@
   "ניצנים",
   "נגה נכסים",
   "פישר ברדרס פרופ",
-  "עמרם את נידם"
+  "עמרם את נידם",
+  "סלדן"
  ]
 }
