@@ -51,7 +51,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--site", default="https://harav-levin.pages.dev")
     ap.add_argument("--plan", default="old_vs_site_plan.csv")
-    ap.add_argument("--min", default="high", choices=["high", "low"], help="רמת ביטחון מינימלית (high = גבוהה בלבד)")
+    ap.add_argument("--min", default="high", choices=["veryhigh", "high", "mid", "low"], help="רמת ביטחון מינימלית: veryhigh = גבוהה מאוד (שם + ח.פ. במסמך), high = גבוהה ומעלה (ברירת מחדל), mid = בינונית ומעלה, low = הכל")
     ap.add_argument("--match", default="all", choices=["exact", "all"], help="exact = רק התאמת שם מדויקת (בלי 'דרך המסמך' ובלי 'דומה')")
     ap.add_argument("--only", default="all", choices=["link", "all"], help="link = רק קישור לסלוט של מסמך שכבר משויך לחברה (בלי לשייך מסמך לחברה חדשה)")
     ap.add_argument("--apply", action="store_true")
@@ -74,7 +74,8 @@ def main():
         return
 
     rows = list(csv.DictReader(open(a.plan, encoding="utf-8-sig")))
-    want = {"גבוהה"} if a.min == "high" else {"גבוהה", "נמוכה"}
+    order = ["נמוכה", "בינונית", "גבוהה", "גבוהה מאוד"]
+    want = set(order[{"low": 0, "mid": 1, "high": 2, "veryhigh": 3}[a.min]:])
     rows = [r for r in rows if r["ביטחון"] in want]
     if a.match == "exact":
         rows = [r for r in rows if r["התאמת שם"] == "מדויק"]
