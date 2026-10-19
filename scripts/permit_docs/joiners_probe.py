@@ -27,7 +27,7 @@ def tuples(sql):
             ch = sql[i]
             if inq:
                 if ch == "\\" and i + 1 < n:
-                    cur.append(sql[i + 1]); i += 2; continue
+                    cur.append({"n": "\n", "r": "\r", "0": "\0", "Z": "\x1a"}.get(sql[i + 1], sql[i + 1])); i += 2; continue
                 if ch == "'":
                     if i + 1 < n and sql[i + 1] == "'":
                         cur.append("'"); i += 2; continue

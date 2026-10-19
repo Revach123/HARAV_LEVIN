@@ -7,3 +7,6 @@ scripts/registry_audit/out/
 __pycache__/
 *.pyc
 .wrangler/
+
+# רשימת מצטרפים: פרטים אישיים, לא להעלות לגיט
+joiners_private/
