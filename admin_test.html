@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=37"></script>
+<script src="/permit-docs-test.js?v=38"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -800,25 +800,29 @@
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
-  /* דף ראשי: ממלא את המסך (רוחב וגובה) בלי גלילה; העוגות בצד */
-  .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); align-items:stretch; max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:420px; margin:0 auto; box-sizing:border-box; width:100%; overflow:hidden; }
-  .home-main { flex:1 1 0; min-width:0; min-height:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,18px); }
-  .home-main .home-grid { margin:0 !important; max-width:none !important; gap:clamp(10px,1.2vw,20px); grid-template-columns:repeat(4,minmax(0,1fr)) !important; grid-auto-rows:1fr; flex:1 1 0; min-height:0; }
-  .home-main .home-grid + .pd-homeh + .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; flex:2 1 0; }
-  .home-main .home-card { padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
-  .home-main .home-card .ico { font-size:clamp(26px,4.2vh,50px); margin-bottom:clamp(4px,1vh,12px); }
-  .home-main .home-card b { font-size:clamp(17px,1.5vw,30px); }
-  .home-main .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
-  .home-main .pd-homeh { margin:clamp(2px,1vh,12px) 0 0; font-size:clamp(18px,1.6vw,28px); }
-  .home-wrap .idx-row { flex:none; width:100%; margin:0; justify-content:stretch; }
-  .home-wrap .idx-box { flex-direction:row; flex-wrap:nowrap; justify-content:space-around; gap:clamp(12px,2vw,40px); min-width:0; width:100%; box-sizing:border-box; padding:clamp(10px,2vh,24px) clamp(12px,1.2vw,24px); font-size:clamp(14px,1.1vw,20px); }
-  .home-wrap .idx-sub { font-size:clamp(13px,1vw,18px); }
-  .home-wrap .idx-line span { font-size:clamp(12px,.95vw,17px); }
-  .home-wrap .idx-pie { gap:clamp(10px,1.2vw,22px); }
-  .home-wrap .idx-blk { flex:1; min-width:0; }
-  .home-wrap .idx-pie { justify-content:center; }
-  .home-wrap .idx-pie svg { width:clamp(80px,15vh,190px); height:auto; flex:none; }
-  @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-wrap .idx-box { flex-direction:column; } .home-main .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+  /* דף ראשי: ממלא את המסך בלי גלילה. למעלה: מצטרפים (ימין) וחיפוש (שמאל); באמצע: הוספה ועדכון (גדולים); למטה: ניהול השטרות (ימין) והעוגות (שמאל, באותו גובה) */
+  .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:460px; margin:0 auto; box-sizing:border-box; width:100%; overflow:hidden; }
+  .home-wrap .home-card { padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
+  .home-wrap .home-card .ico { font-size:clamp(24px,4vh,48px); margin-bottom:clamp(2px,.8vh,10px); }
+  .home-wrap .home-card b { font-size:clamp(17px,1.5vw,30px); }
+  .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
+  .home-top { flex:0 0 clamp(80px,15vh,150px); display:flex; justify-content:space-between; gap:20px; }
+  .home-top .home-card { width:clamp(260px,24vw,460px); }
+  .home-mid { flex:2 1 0; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,20px); }
+  .home-mid .home-card .ico { font-size:clamp(34px,7vh,80px); }
+  .home-mid .home-card b { font-size:clamp(22px,2.4vw,44px); }
+  .home-mid .home-card span.sub { font-size:clamp(14px,1.3vw,24px); }
+  .home-bot { flex:3 1 0; min-height:0; display:flex; gap:clamp(12px,1.5vw,28px); align-items:stretch; }
+  .home-dash { flex:1; min-width:0; display:flex; flex-direction:column; gap:clamp(4px,1vh,10px); }
+  .home-dash .pd-homeh { margin:0; font-size:clamp(18px,1.6vw,28px); }
+  .home-dash .home-grid { margin:0 !important; max-width:none !important; flex:1; min-height:0; grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-auto-rows:1fr; gap:clamp(10px,1.2vw,20px); }
+  .home-wrap .idx-row { flex:none; width:clamp(300px,28vw,540px); margin:0; justify-content:stretch; }
+  .home-wrap .idx-box { flex-direction:column; flex-wrap:nowrap; justify-content:space-around; gap:10px; min-width:0; width:100%; box-sizing:border-box; padding:clamp(8px,1.5vh,20px) clamp(10px,1vw,20px); font-size:clamp(13px,1vw,18px); }
+  .home-wrap .idx-sub { font-size:clamp(12px,.95vw,17px); margin-bottom:2px; }
+  .home-wrap .idx-line span { font-size:clamp(11px,.85vw,15px); }
+  .home-wrap .idx-pie { gap:clamp(8px,1vw,18px); }
+  .home-wrap .idx-pie svg { width:clamp(70px,12vh,170px); height:auto; flex:none; }
+  @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
   .idx-box { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
@@ -1013,7 +1017,7 @@ function render() {
   if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "home")       app.innerHTML = renderHome();
-  else if (view === "search")     app.innerHTML = adminTabs() + renderSearch();
+  else if (view === "search")     { app.innerHTML = adminTabs() + (window.PD ? '<div id="pd-sp-body"></div>' : renderSearch()); if (window.PD) PD.searchPage(document.getElementById("pd-sp-body")); }
   else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
   else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
@@ -1518,17 +1522,21 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
 }
 
 function renderHome() {
-  return `<div class="home-wrap"><div class="home-main"><div class="home-grid">
+  return `<div class="home-wrap">
+    <div class="home-top">
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
+      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b><span class="sub">חברות, ואיתור בתוך טקסט השטרות</span></button>
+    </div>
+    <div class="home-mid">
       <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
-      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
-      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
-    </div>${window.PD ? PD.homeCards() : ""}</div>
-    <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div>`;
+    </div>
+    <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
+      <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
 let gsQuery = "", gsBonds = null, gsBondsLoading = false;
@@ -1693,7 +1701,7 @@ function bindEvents() {
     document.getElementById("f-permit")?.addEventListener("input", updatePermitGate);
     document.getElementById("f-reg")?.addEventListener("input", updatePermitGate);
   }
-  if (view === "search") {
+  if (view === "search" && !window.PD) {
     const g = document.getElementById("gs");
     if (g) { let tm; g.addEventListener("input", e => { gsQuery = e.target.value; clearTimeout(tm); tm = setTimeout(runGlobalSearch, 120); }); g.focus(); }
     runGlobalSearch();
