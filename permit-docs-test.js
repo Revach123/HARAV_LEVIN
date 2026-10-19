@@ -204,11 +204,12 @@
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
   function homeCards() {
     if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
-    const c = S.loaded && !S.err ? viewCounts() : null;
-    return `<h3 class="pd-homeh">מסמכי היתר עיסקא</h3><div class="home-grid">
-      <button class="home-card" onclick="PD.openUpload()"><span class="ico">📄</span><b>העלאת היתר עסקה</b><span class="sub">זיהוי חברה מתאימה והצעת שיוך</span></button>
-      <button class="home-card" onclick="PD.openDash()"><span class="ico">📊</span><b>דשבורד חדש</b><span class="sub">חברות שחסרים להן שטרות · שטרות לשיוך · חברות לא רשומות</span></button>
-      <button class="home-card" onclick="PD.openCompanyDash()"><span class="ico">🏛️</span><b>בדיקת מאגר המסמכים</b><span class="sub">מסמכים לבדיקה · לא משויכים · ניהול שיוכים</span></button></div>`;
+    const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
+    return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid">
+      <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b><span class="sub">לפי הרישום בפרטי / כללי, עם הצעות לשטר</span></button>
+      <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b><span class="sub">שטרות שאינם משויכים לאף חברה</span></button>
+      <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b><span class="sub">שטר קיים, והחברה אינה ברשימה</span></button>
+      <button class="home-card" onclick="PD.openDash('d')"><span class="ico">⬆</span><b>העלאת מסמכי היתר עיסקא</b><span class="sub">העלאה, או העלאה מהירה של כמה קבצים</span></button></div>`;
   }
 
   const openCompany = bizId => openManage(bizId);
@@ -749,11 +750,7 @@
   const readPos = v => { try { return JSON.parse(localStorage.getItem(posKey(v)) || "null"); } catch { return null; } };
   const savePos = (v, id, i) => { try { localStorage.setItem(posKey(v), JSON.stringify({ id, i })); } catch { /* בלי אחסון */ } };
   // שלוש הבחירות הראשיות של "בדיקת מאגר המסמכים" (משותפות לחלון לפי מסמכים ולחלון לפי חברות)
-  function topTabs(active) {
-    const vc = viewCounts();
-    return [["intro", "בדיקת סיווג חברות", cdCount("intro")], ["review", "מסמכים לבדיקה", cdCount("review")], ["un", "מסמכים לא משויכים", vc.un + vc.sug], ["manage", "ניהול שיוכים", cdCount("manage")]]
-      .map(([t, l, n]) => `<button class="pd-tab ${active === t ? "sel" : ""}" onclick="PD._top('${t}')">${l} <span class="pd-tabn">${n}</span></button>`).join("");
-  }
+  function topTabs() { return ""; }          // הלשוניות הישנות של "בדיקת מאגר המסמכים" הוסרו (הוחלפו בדשבורד "ניהול שטרות היתר עיסקא")
   function topGo(t) {
     for (const id of ["pd-un", "pd-cd"]) if ($(id)) close(id);
     if (t === "un") openUnassigned("un"); else openCompanyDash(t);
@@ -797,7 +794,7 @@
   async function uqShow(keepSel) {
     const list = unassignedList(), cnt = $("pd-un-count"); if (!$("pd-un")) return;
     const vc = viewCounts(), tabs = $("pd-un-tabs");
-    if (tabs) tabs.innerHTML = topTabs("un") + `<span class="pd-sub" style="margin:0 8px">|</span>` + VIEWS.map(([v, l]) => `<button class="pd-tab sub ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
+    if (tabs) tabs.innerHTML = VIEWS.map(([v, l]) => `<button class="pd-tab sub ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
     const xn = $("pd-un-extn"); if (xn) xn.textContent = extCount("nodb");
     const gn = $("pd-un-gonen"); if (gn) gn.textContent = extCount("gone");
     if (cnt) cnt.innerHTML = `${list.length} מסמכים בתצוגה` + (Q.batch ? ` · <b>רק הקבצים שהועלו עכשיו</b> <button class="pd-link" style="color:#1a3a5c" onclick="PD._unBatchOff()">הצג את כל הלא משויכים</button>` : "");
@@ -1780,16 +1777,21 @@
   }
   function openDash(tab) {
     ND.tab = tab || ND.tab || "a"; ndCss();
-    overlay("pd-nd", `<div class="pd-head"><div class="pd-tabs" id="pd-nd-tabs"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-nd')">✕</button></div>
+    overlay("pd-nd", `<div class="pd-head"><b>ניהול שטרות היתר עיסקא</b><div class="pd-tabs" id="pd-nd-tabs" style="margin-inline-start:14px"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-nd')">✕</button></div>
       <div class="pd-body" id="pd-nd-body" style="overflow:auto"></div>`, "full");
+    closers["pd-nd"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
     (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(ndShow);
     if (S.loaded) ndShow();
   }
   function ndShow() {
     if (!$("pd-nd")) return;
-    $("pd-nd-tabs").innerHTML = [["a", "א · חברות שחסרים להן שטרות"], ["b", "ב · שטרות שמחכים לשיוך"], ["c", "ג · חברות לא רשומות"]]
-      .map(([t, l]) => `<button class="pd-tab ${ND.tab === t ? "sel" : ""}" onclick="PD._ndTab('${t}')">${l} <span class="pd-tabn">${ndCount(t)}</span></button>`).join("");
+    $("pd-nd-tabs").innerHTML = [["a", "א · חברות שחסרים להן שטרות"], ["b", "ב · שטרות שמחכים לשיוך"], ["c", "ג · חברות לא רשומות"], ["d", "ד · העלאת מסמכי היתר עיסקא"]]
+      .map(([t, l]) => `<button class="pd-tab ${ND.tab === t ? "sel" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
     const body = $("pd-nd-body"), keep = document.activeElement && document.activeElement.id === "pd-nd-q";
+    if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
+      if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
+      return;
+    }
     body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ndTabC();
     if (keep) { const q = $("pd-nd-q"); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
   }
