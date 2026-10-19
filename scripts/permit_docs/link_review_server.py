@@ -26,6 +26,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 LOCK = threading.Lock()
+PDFC = {}          # מזהה מסמך -> bytes של ה-PDF (מטמון בזיכרון, כדי שהמסמכים הבאים ייפתחו מיד)
+PDFL = threading.Lock()
 A = None
 TOKEN = ""
 S = {"docs": {}, "biz": {}, "hp": {}, "items": [], "dec": {}, "strict": True}
@@ -235,15 +237,30 @@ def revert(undo):
             S["docs"][u["id"]] = site("/permit-docs/" + u["id"])["doc"]
 
 
+def get_pdf(doc_id):
+    with PDFL:
+        if doc_id in PDFC:
+            return PDFC[doc_id]
+    j = site("/permit-docs/" + doc_id + "/file?enc=b64")          # JSON עם base64 (כמו בדשבורד): עובד גם ברשת עם סינון תוכן שחוסמת הורדת PDF
+    data = base64.b64decode(j["data"])
+    with PDFL:
+        PDFC[doc_id] = data
+        while len(PDFC) > 60:
+            PDFC.pop(next(iter(PDFC)))
+    return data
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
 
-    def send(self, code, body, ctype="application/json; charset=utf-8"):
+    def send(self, code, body, ctype="application/json; charset=utf-8", cache=False):
         b = body if isinstance(body, bytes) else (body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(b)))
+        if cache:
+            self.send_header("Cache-Control", "private, max-age=3600")
         self.end_headers()
         self.wfile.write(b)
 
@@ -256,8 +273,7 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/items":
                 return self.send(200, [view(i) for i in S["items"]])
             if u.path.startswith("/api/pdf/"):
-                j = site("/permit-docs/" + u.path.rsplit("/", 1)[1] + "/file?enc=b64")          # JSON עם base64 (כמו בדשבורד): עובד גם ברשת עם סינון תוכן שחוסמת הורדת PDF
-                return self.send(200, base64.b64decode(j["data"]), "application/pdf")
+                return self.send(200, get_pdf(u.path.rsplit("/", 1)[1]), "application/pdf", cache=True)
             if u.path == "/api/biz":
                 t = (q.get("q") or [""])[0].strip().lower()
                 dg = "".join(c for c in t if c.isdigit())
@@ -322,6 +338,7 @@ $("tabs").innerHTML=["פתוח","בוצע","דולג"].map(t=>`<button class="ta
 $("prog").textContent=`  בוצעו ${ITEMS.filter(x=>x.state==="בוצע").length} מתוך ${ITEMS.length}`+(PEND.size?`  ·  ⏳ מעלה לאתר: ${PEND.size}`:"");
 $("list").innerHTML=v.map((x,i)=>`<div class="it ${i===CUR?"cur":""} ${x.state==="בוצע"?"done":x.state==="פתוח"?"":"skip"}" onclick="go(${i})"><span class="cf" style="background:${CF[x.conf]||"#555"}">${x.conf}</span>${E(x.company)}<br><span class="k">${E(x.slot_he)} · ${E(x.doc_name)}</span></div>`).join("")||"<div class='it'>אין פריטים</div>";
 card()}
+const PRE=new Set();function prefetch(){const v=vis();for(let i=1;i<=4;i++){const x=v[CUR+i];if(x&&!PRE.has(x.doc_id)){PRE.add(x.doc_id);fetch("/api/pdf/"+x.doc_id).catch(()=>PRE.delete(x.doc_id))}}}          // טעינה מראש של המסמכים הבאים
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
 function go(i){CUR=i;OVR=null;draw()}
 function card(){const v=vis(),x=v[CUR];if(!x){$("side").innerHTML="<h2>אין פריט</h2>";$("pdf").src="about:blank";return}
@@ -345,7 +362,7 @@ ${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול �
 <button class="btn sk" onclick="skip('דולג')">דילוג (→)</button> <button class="btn no" onclick="skip('לא מתאים')">לא מתאים</button>`}
 <hr><div class="k">אשר עבור חברה אחרת (שם / ח.פ.):</div><input id="q" oninput="srch(this.value)" placeholder="חיפוש חברה"><div id="res"></div>
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
-const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}}
+prefetch();const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}}
 function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.company,body={key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null};
 PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע
 api("/api/approve",body).then(()=>{PEND.delete(key);return load(true)}).then(()=>msg("✔ נשמר באתר: "+name)).catch(e=>{PEND.delete(key);msg("שגיאה ב"+name+": "+e.message);load(true)})}
