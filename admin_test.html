@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=46"></script>
+<script src="/permit-docs-test.js?v=47"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2317,8 +2317,8 @@ let idxBonds = null, idxMarket = null; const idxCache = {}; let idxLoading = fal
 function idxPie(permit, priv, note1, note2) {
   const gen = Math.max(0, Math.round((permit - priv) * 10) / 10), c = 2 * Math.PI * 38, seg = (from, pct, color) => pct > 0 ? `<circle cx="50" cy="50" r="38" fill="none" stroke="${color}" stroke-width="22" stroke-dasharray="${(c * Math.min(pct, 100) / 100).toFixed(2)} ${c.toFixed(2)}" stroke-dashoffset="${(-c * from / 100).toFixed(2)}" transform="rotate(-90 50 50)"/>` : "";
   return `<div class="idx-pie"><svg viewBox="0 0 100 100" width="96" height="96"><circle cx="50" cy="50" r="38" fill="none" stroke="#e6ecec" stroke-width="22"/>${seg(0, priv, "#1fa59a")}${seg(priv, gen, "#274d5b")}</svg>
-    <div><div class="idx-line"><i style="background:#1fa59a"></i><b>${priv}%</b> עם היתר פרטי<br><span>${note2}</span></div>
-    <div class="idx-line" style="margin-top:6px;"><i style="background:#274d5b"></i><b>${permit}%</b> עם היתר עסקה<br><span>${note1}</span></div></div></div>`;
+    <div><div class="idx-line"><i style="background:#1fa59a"></i><b>${priv}%</b> פרטי</div>
+    <div class="idx-line" style="margin-top:6px;"><i style="background:#274d5b"></i><b>${permit}%</b> הת"ע</div></div></div>`;
 }
 function idxBoxHtml() {
   const d = idxCache.tb60;
@@ -2330,12 +2330,12 @@ function idxBoxHtml() {
     const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
     const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
-    body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60 (לפי משקל הנייר במדד)</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
+    body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
     const m = idxMarket;
     if (m && m.totalValue) {       // כלל האג"ח הקונצרניות בבורסה, לפי שווי שוק
       const sv = ids => ids.reduce((a, i) => a + (m.values[i] || 0), 0), ids = [...appr.keys()].filter(i => m.values[i]), pids = ids.filter(i => /פרטי/.test(appr.get(i)));
       const p2 = v => Math.round(v * 1000 / m.totalValue) / 10;
-      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח הקונצרניות (לפי שווי שוק)</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
+      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח הקונצרניות</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
     }
   }
   return `<div class="idx-box">${body}</div>`;
