@@ -3,6 +3,7 @@
 מבצע את הקישורים מ-old_vs_site_plan.csv באתר (שיוך מסמך לחברה, וקישור לסלוט הפרטי / כללי).
 ברירת מחדל: הרצה יבשה (רק מדפיס מה ישונה, לא כותב כלום). לביצוע אמיתי: --apply.
 
+    python old_apply_plan.py --match exact --only link   הרצה יבשה: רק התאמת שם מדויקת, ורק קישור לסלוט של מסמך שכבר משויך לחברה (הכי בטוח)
     python old_apply_plan.py                       הרצה יבשה, רק ביטחון "גבוהה"
     python old_apply_plan.py --apply               ביצוע
     python old_apply_plan.py --apply --min low     כולל גם ביטחון נמוך (לא מומלץ בלי בדיקה ידנית של הרשימה)
@@ -51,6 +52,8 @@ def main():
     ap.add_argument("--site", default="https://harav-levin.pages.dev")
     ap.add_argument("--plan", default="old_vs_site_plan.csv")
     ap.add_argument("--min", default="high", choices=["high", "low"], help="רמת ביטחון מינימלית (high = גבוהה בלבד)")
+    ap.add_argument("--match", default="all", choices=["exact", "all"], help="exact = רק התאמת שם מדויקת (בלי 'דרך המסמך' ובלי 'דומה')")
+    ap.add_argument("--only", default="all", choices=["link", "all"], help="link = רק קישור לסלוט של מסמך שכבר משויך לחברה (בלי לשייך מסמך לחברה חדשה)")
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--undo", default="")
     ap.add_argument("--log", default="old_apply_log.json")
@@ -73,6 +76,10 @@ def main():
     rows = list(csv.DictReader(open(a.plan, encoding="utf-8-sig")))
     want = {"גבוהה"} if a.min == "high" else {"גבוהה", "נמוכה"}
     rows = [r for r in rows if r["ביטחון"] in want]
+    if a.match == "exact":
+        rows = [r for r in rows if r["התאמת שם"] == "מדויק"]
+    if a.only == "link":
+        rows = [r for r in rows if r["פעולה"] == "קישור לסלוט"]
     by_doc = collections.defaultdict(list)
     for r in rows:
         by_doc[r["doc_id"]].append(r)
