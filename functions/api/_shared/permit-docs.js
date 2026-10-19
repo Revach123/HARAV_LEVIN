@@ -13,28 +13,30 @@ export const cleanSlot = v => SLOTS.filter(x => (Array.isArray(v) ? v : String(v
 // slots: לכל מסמך { מזהה_חברה: "general" | "private" | "general,private" } - רק לחברות שהמסמך מקושר אצלן לרשימה (אחרת המפתח חסר)
 export async function withBusinesses(env, rows) {
   const ids = rows.map(r => r.id);
+  // מסמך בודד / מעט מסמכים (שמירה, פתיחה): שולפים רק את השורות שלהם; לרשימה המלאה שליפה אחת של הכל (בלי אלפי פרמטרים)
+  const few = ids.length > 0 && ids.length <= 40, W = few ? ` WHERE doc_id IN (${ids.map(() => "?").join(",")})` : "", B = few ? ids : [];
   const links = new Map(ids.map(i => [i, []])), slots = new Map(ids.map(i => [i, {}]));
   if (ids.length) {
     // לא משתמשים ב-IN (...) עם אלפי פרמטרים: שליפה אחת של כל הקישורים
     let all;
-    try { all = await env.DB.prepare("SELECT doc_id, business_id, slot FROM permit_doc_companies").all(); }
-    catch { all = await env.DB.prepare("SELECT doc_id, business_id FROM permit_doc_companies").all(); }      // לפני מיגרציה 0007
+    try { all = await env.DB.prepare("SELECT doc_id, business_id, slot FROM permit_doc_companies" + W).bind(...B).all(); }
+    catch { all = await env.DB.prepare("SELECT doc_id, business_id FROM permit_doc_companies" + W).bind(...B).all(); }      // לפני מיגרציה 0007
     for (const l of all.results ?? []) if (links.has(l.doc_id)) { links.get(l.doc_id).push(l.business_id); if (l.slot) slots.get(l.doc_id)[l.business_id] = l.slot; }
   }
   const ext = new Map(ids.map(i => [i, []]));
   if (ids.length) {          // חברות שאינן במאגר (מיגרציה 0008); לפני המיגרציה - ריק
-    try { for (const l of (await env.DB.prepare("SELECT doc_id, ext_id FROM permit_doc_ext").all()).results ?? []) if (ext.has(l.doc_id)) ext.get(l.doc_id).push(l.ext_id); } catch { /* אין טבלה עדיין */ }
+    try { for (const l of (await env.DB.prepare("SELECT doc_id, ext_id FROM permit_doc_ext" + W).bind(...B).all()).results ?? []) if (ext.has(l.doc_id)) ext.get(l.doc_id).push(l.ext_id); } catch { /* אין טבלה עדיין */ }
   }
   const specials = new Map(ids.map(i => [i, {}]));
   if (ids.length) {          // מסמכים ראשיים מיוחדים (מיגרציה 0013): { מזהה_חברה: כותרת }
     let sp;
-    try { sp = await env.DB.prepare("SELECT doc_id, business_id, title, detail FROM permit_doc_special").all(); }
-    catch { try { sp = await env.DB.prepare("SELECT doc_id, business_id, title FROM permit_doc_special").all(); } catch { sp = null; } }      // לפני מיגרציה 0014 / 0013
+    try { sp = await env.DB.prepare("SELECT doc_id, business_id, title, detail FROM permit_doc_special" + W).bind(...B).all(); }
+    catch { try { sp = await env.DB.prepare("SELECT doc_id, business_id, title FROM permit_doc_special" + W).bind(...B).all(); } catch { sp = null; } }      // לפני מיגרציה 0014 / 0013
     for (const l of (sp && sp.results) || []) if (specials.has(l.doc_id)) specials.get(l.doc_id)[l.business_id] = { title: l.title, detail: l.detail || "" };
   }
   const bonds = new Map(ids.map(i => [i, []]));
   if (ids.length) {          // שיוך לאג"ח (מיגרציה 0009)
-    try { for (const l of (await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds").all()).results ?? []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp }); } catch { /* אין טבלה עדיין */ }
+    try { for (const l of (await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds" + W).bind(...B).all()).results ?? []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp }); } catch { /* אין טבלה עדיין */ }
   }
   return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [], specials: specials.get(r.id) || {} }));
 }
