@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=45"></script>
+<script src="/permit-docs-test.js?v=46"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -802,7 +802,7 @@
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
   /* דף ראשי: ממלא את המסך בלי גלילה. למעלה: מצטרפים (ימין) וחיפוש (שמאל); באמצע: הוספה ועדכון (גדולים); למטה: ניהול השטרות (ימין) והעוגות (שמאל, באותו גובה) */
   .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:460px; margin:0 auto; box-sizing:border-box; width:100%; position:relative; z-index:0; }
-  .home-wrap .home-card { border:2px solid #274d5b; border-radius:8px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
+  .home-wrap .home-card { border:2px solid #274d5b; border-radius:18px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
   .home-wrap .home-card .ico { font-size:clamp(24px,4vh,48px); margin-bottom:clamp(2px,.8vh,10px); }
   .home-wrap .home-card b { font-size:clamp(17px,1.5vw,30px); }
   .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
@@ -817,7 +817,7 @@
   .home-dash .pd-homeh { margin:0; font-size:clamp(18px,1.6vw,28px); }
   .home-dash .home-grid { margin:0 !important; max-width:none !important; flex:1; min-height:0; grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-auto-rows:1fr; gap:clamp(10px,1.2vw,20px); }
   .home-wrap .idx-row { flex:none; width:clamp(300px,28vw,540px); margin:0; justify-content:stretch; }
-  .home-wrap .idx-box { border:2px solid #274d5b; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,.18); flex-direction:column; flex-wrap:nowrap; justify-content:space-around; gap:10px; min-width:0; width:100%; box-sizing:border-box; padding:clamp(8px,1.5vh,20px) clamp(10px,1vw,20px); font-size:clamp(13px,1vw,18px); }
+  .home-wrap .idx-box { border:2px solid #274d5b; border-radius:18px; box-shadow:0 2px 6px rgba(0,0,0,.18); flex-direction:column; flex-wrap:nowrap; justify-content:space-around; gap:10px; min-width:0; width:100%; box-sizing:border-box; padding:clamp(8px,1.5vh,20px) clamp(10px,1vw,20px); font-size:clamp(13px,1vw,18px); }
   .home-wrap .idx-sub { font-size:clamp(12px,.95vw,17px); margin-bottom:2px; }
   .home-wrap .idx-line span { font-size:clamp(11px,.85vw,15px); }
   .home-wrap .idx-pie { gap:clamp(8px,1vw,18px); }
@@ -826,6 +826,20 @@
   body:has(.home-wrap) { overflow-x:hidden; }
   .home-band { position:relative; flex:5 1 0; min-height:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); }
   .home-band::before { content:""; position:absolute; z-index:-1; top:calc(-1 * clamp(8px,1.5vh,20px)); bottom:calc(-1 * clamp(8px,1.5vh,20px)); left:calc(50% - 50vw); right:calc(50% - 50vw); background:url(banner.jpg) center/cover no-repeat #3a3a3a; }
+  /* כפתורים קטנים יותר עם רווחים ביניהם */
+  .home-wrap { height:auto !important; min-height:0 !important; max-width:min(92vw,1560px) !important; gap:clamp(16px,3vh,34px) !important; padding-bottom:20px; }
+  .home-band { flex:none !important; gap:clamp(14px,2.4vh,28px) !important; }
+  .home-band::before { top:calc(-1 * clamp(14px,2.4vh,28px)) !important; bottom:calc(-1 * clamp(14px,2.4vh,28px)) !important; }
+  .home-top { flex:none !important; height:clamp(64px,9vh,96px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-top .home-card { width:clamp(200px,17vw,320px) !important; }
+  .home-mid { flex:none !important; height:clamp(100px,16vh,160px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-bot { flex:none !important; height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-dash .home-grid { gap:clamp(14px,2vw,32px) !important; }
+  .home-wrap .home-card .ico { font-size:clamp(18px,3vh,32px) !important; margin-bottom:2px !important; }
+  .home-wrap .home-card b { font-size:clamp(15px,1.25vw,24px) !important; }
+  .home-mid .home-card .ico { font-size:clamp(24px,4.2vh,44px) !important; }
+  .home-mid .home-card b { font-size:clamp(18px,1.7vw,32px) !important; }
+  .home-wrap .idx-row { width:clamp(280px,24vw,460px) !important; }
   @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
