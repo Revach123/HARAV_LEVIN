@@ -159,6 +159,7 @@
     try { const r = await api("/permit-docs"); S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; }
     catch (e) { S.err = e.message || "שגיאה"; S.loaded = true; }
     try { S.ext = (await api("/permit-ext")).companies || []; S.extErr = ""; } catch (e) { S.ext = []; S.extErr = e.message || "שגיאה"; }      // לפני מיגרציה 0008 אין חברות שאינן במאגר
+    try { S.hp = (await api("/permit-text?hints=1")).hp || []; S.hpDocs = null; S.hpBy = null; } catch { S.hp = null; }      // ח.פ. שנמצאו במסמכים (אחרי ייבוא 0015); בלי זה אין הצעות לפי ח.פ.
     try { S.rev = new Map(((await api("/permit-review")).items || []).map(x => [x.key, x])); } catch { S.rev = new Map(); }      // לפני מיגרציה 0012 אין מצבי בדיקה
     S.loading = false;
     refresh();
@@ -1781,7 +1782,7 @@
   }
 
   // ───────── דשבורד חדש (בבנייה, רק בעמוד הבדיקה): שלוש כרטיסיות. א: חברות שחסרים להן שטרות; ב: שטרות שמחכים לשיוך; ג: חברות לא רשומות ─────────
-  const ND = { tab: "a", miss: "all", gone: false, q: "", sq: "" };
+  const ND = { tab: "a", miss: "all", sug: false, gone: false, q: "", sq: "", tq: "" };
   const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/\b(בע\s*מ|בעמ|ltd|inc)\b/g, " ").replace(/\s+/g, " ").trim();
   const tri = x => { const t = " " + NORMN(x) + " ", o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); return o; };
   function fuzzy(q, name) {          // התאמה מקורבת: הכלה מלאה, או דמיון משולשות אותיות (שינוי קטן בשם)
@@ -1789,6 +1790,22 @@
     if (b.includes(a) || a.includes(b)) return 1;
     const ta = tri(a), tb = tri(b); let c = 0; for (const x of ta) if (tb.has(x)) c++;
     return c / Math.max(1, Math.min(ta.size, tb.size) * 0.5 + Math.max(ta.size, tb.size) * 0.5);
+  }
+  const hp9 = x => String(x || "").replace(/\D/g, "").padStart(9, "0");
+  function hpMaps() {          // ח.פ. -> מסמכים שנמצא בהם; מסמך -> ח.פ. שנמצאו בו (עם מקור: text / stamp / hand)
+    if (S.hpDocs || !S.hp) return;
+    S.hpDocs = new Map(); S.hpBy = new Map();
+    for (const r of S.hp) {
+      if (!S.hpDocs.has(r.hp)) S.hpDocs.set(r.hp, new Set()); S.hpDocs.get(r.hp).add(r.id);
+      if (!S.hpBy.has(r.id)) S.hpBy.set(r.id, []); S.hpBy.get(r.id).push(r);
+    }
+  }
+  const FITS = { private: ["private", "both", "unknown"], general: ["general", "both", "unknown"] };
+  function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. של החברה, אינם מסמך ראשי שלה, וסוגם מתאים לשטר החסר
+    hpMaps();
+    const ids = S.hpDocs && (b.chp_number || "").trim() ? S.hpDocs.get(hp9(b.chp_number)) : null;
+    if (!ids) return [];
+    return [...ids].map(id => S.byId.get(id)).filter(d => d && d.doc_type !== "other" && !slotsOf(d, b.id).length && miss.some(t => FITS[t].includes(d.doc_type)));
   }
   function ndMissing() {
     const out = [];
@@ -1799,7 +1816,8 @@
       if (ND.miss === "private" && !miss.includes("private")) continue;
       if (ND.miss === "general" && !miss.includes("general")) continue;
       if (ND.miss === "both" && miss.length < 2) continue;
-      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
+      if (ND.sug && !hintDocs(b, miss).length) continue;
+      out.push({ b, miss, ex: extrasOf(b.id).filter(d => !(d.bonds || []).length), sug: hintDocs(b, miss) });          // מסמכים ששויכו לאג"ח אינם נחשבים "שטרות נוספים"
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
@@ -1812,7 +1830,7 @@
     if ($("pd-nd-css")) return;
     const st = document.createElement("style"); st.id = "pd-nd-css";
     st.textContent = `.pd-nd-tbl{width:100%;border-collapse:collapse;font-size:13px}.pd-nd-tbl th{position:sticky;top:0;background:#f6f4ee;text-align:right;padding:6px 8px;border-bottom:2px solid #cfcac0}.pd-nd-tbl td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}.pd-nd-tbl tr.go{cursor:pointer}.pd-nd-tbl tr.go:hover{background:#f3f8ff}
-      .pd-nd-miss{display:inline-block;background:#fdecea;color:#b3261e;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ok{display:inline-block;background:#e6f4ea;color:#1e7e4a;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-n{font-size:20px;font-weight:700;color:#b85c00}.pd-nd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}`;
+      .pd-nd-miss{display:inline-block;background:#fdecea;color:#b3261e;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ok{display:inline-block;background:#e6f4ea;color:#1e7e4a;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-sug{display:inline-block;background:#fff4d6;color:#7a5a00;border-radius:9px;padding:1px 8px;font-size:12px;cursor:help}.pd-nd-hl mark{background:#ffe58a}.pd-nd-n{font-size:20px;font-weight:700;color:#b85c00}.pd-nd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}`;
     document.head.appendChild(st);
   }
   function openDash(tab) {
@@ -1832,21 +1850,37 @@
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
     const rows = ndMissing(), M_ = [["all", "הכל"], ["private", "חסר פרטי"], ["general", "חסר כללי"], ["both", "חסרים שניהם"]];
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span></div>
+    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span>${S.hp ? `<button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שנמצא בקובץ כלשהו ח.פ. שלהן">רק עם הצעה לשטר</button>` : ""}</div>
       <div class="pd-sub" style="margin-bottom:6px">כל חברה שרשומה ברשימת הפרטי או הכללי צריכה הת"ע משויך מאותו סוג. לחיצה על שורה פותחת את ניהול המסמכים של החברה.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th></tr></thead><tbody>${rows.map(e => {
+      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>הצעה לשטר</th><th>שטרות נוספים</th></tr></thead><tbody>${rows.map(e => {
         const b = e.b, one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">-</span>`; };
         return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td>
-          <td>${one("private")}</td><td>${one("general")}</td><td class="pd-nd-n">${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="5" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
+          <td>${one("private")}</td><td>${one("general")}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(d => d.original_name || d.id).join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td><td class="pd-nd-n">${e.ex.length || ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
   }
   function ndTabB() {
     const f = ND.q.trim().toLowerCase(), rows = ndDocsB().filter(d => !f || docHay(d).includes(f))
       .sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
-    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש בשטרות: שם קובץ, כותרת, חברה, ח.פ., הערה")}</div>
-      <div class="pd-sub" style="margin-bottom:6px">שטרות שאינם משויכים לאף חברה. הצעות השיוך כרגע לפי הפוסט והכותרת; ההצעות לפי ח.פ. ושמות מתוך הטקסט יתווספו אחרי ייבוא הטקסט. לחיצה פותחת את החלון הרגיל לשיוך.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>שטר</th><th>כותרת / פוסט</th><th>הצעות שיוך</th><th>הערה</th></tr></thead><tbody>${rows.map(d => {
-        const sg = sugOf(d).map(x => bizById(x.id)).filter(Boolean).slice(0, 3);
-        return `<tr class="go" onclick="PD._ndOpenDoc('${d.id}')"><td>${E(d.original_name || d.id)}</td><td>${E(postTitle(d))}</td><td>${sg.map(b => `<span class="pd-nd-ok">${displayName(b)}</span>`).join("") || '<span class="pd-sub">אין</span>'}</td><td class="pd-sub">${E(d.note || "")}</td></tr>`; }).join("") || `<tr><td colspan="4" class="pd-sub">אין שטרות שמחכים לשיוך.</td></tr>`}</tbody></table>`;
+    return `<div class="pd-nd-bar">${ndSearchBox("חיפוש בשטרות: שם קובץ, כותרת, חברה, ח.פ., הערה")}${S.hp ? `<input class="pd-in" id="pd-nd-tq" style="flex:1;min-width:220px" placeholder="חיפוש בתוך הטקסט של כל המסמכים (למשל: מסלול הלכה)" value="${E(ND.tq)}" oninput="PD._ndTq(this.value)" autocomplete="off">` : ""}</div><div id="pd-nd-tres"></div>
+      <div class="pd-sub" style="margin-bottom:6px">שטרות שאינם משויכים לאף חברה. הצעות השיוך לפי ח.פ. שנמצא בתוך המסמך (טקסט, חותמת או כתב יד) ולפי הפוסט והכותרת. לחיצה פותחת את החלון הרגיל לשיוך.</div>
+      <table class="pd-nd-tbl"><thead><tr><th>שטר</th><th>כותרת / פוסט</th><th>הצעות שיוך (לפי ח.פ. שנמצא במסמך, ולפי הפוסט)</th><th>הערה</th></tr></thead><tbody>${rows.map(d => {
+        const byChp = ndChpMap(), fromHp = hpFound(d).map(h => ({ b: byChp.get(hp9(h.hp)), src: h.src })).filter(x => x.b);
+        const seen = new Set(), sg = [...fromHp.map(x => ({ b: x.b, why: ({ text: "ח.פ. בטקסט", stamp: "ח.פ. בחותמת", hand: "ח.פ. בכתב יד" })[x.src] || "ח.פ." })), ...sugOf(d).map(x => ({ b: bizById(x.id), why: "פוסט / כותרת" }))]
+          .filter(x => x.b && !seen.has(x.b.id) && seen.add(x.b.id));
+        return `<tr class="go" onclick="PD._ndOpenDoc('${d.id}')"><td>${E(d.original_name || d.id)}</td><td>${E(postTitle(d))}</td><td>${sg.slice(0, 4).map(x => `<span class="pd-nd-ok" title="${E(x.why)}">${displayName(x.b)}</span>`).join("") || '<span class="pd-sub">אין</span>'}${sg.length > 4 ? ` <span class="pd-sub">+${sg.length - 4}</span>` : ""}</td><td class="pd-sub">${E(d.note || "")}</td></tr>`; }).join("") || `<tr><td colspan="4" class="pd-sub">אין שטרות שמחכים לשיוך.</td></tr>`}</tbody></table>`;
+  }
+  function hpFound(d) { hpMaps(); return (S.hpBy && S.hpBy.get(d.id)) || []; }
+  function ndChpMap() { if (!S._chpMap || S._chpN !== bizList().length) { S._chpN = bizList().length; S._chpMap = new Map(bizList().filter(b => (b.chp_number || "").trim()).map(b => [hp9(b.chp_number), b])); } return S._chpMap; }
+  let ndTextSeq = 0;
+  async function ndTextSearch(q) {          // חיפוש בתוך טקסט המסמכים (אינדקס FTS ב-D1)
+    const box = $("pd-nd-tres"), seq = ++ndTextSeq; if (!box) return;
+    q = String(q || "").trim();
+    if (q.length < 2) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="pd-sub">מחפש…</div>';
+    let r; try { r = (await api("/permit-text?q=" + encodeURIComponent(q))).results || []; } catch (e) { if (seq === ndTextSeq) box.innerHTML = `<div class="pd-sub">החיפוש בטקסט לא זמין (${E(e.message)})</div>`; return; }
+    if (seq !== ndTextSeq) return;
+    box.innerHTML = r.length ? `<table class="pd-nd-tbl"><thead><tr><th>מסמך</th><th>עמוד</th><th>קטע</th><th>שיוך</th></tr></thead><tbody>` + r.map(x => {
+      const d = S.byId.get(x.id), cos = d ? (d.business_ids || []).map(b => displayName(bizById(b) || { permit_name: "?" })).join(", ") : "";
+      return `<tr class="go" onclick="PD.openDoc('${x.id}')"><td>${E(x.name || x.id)}</td><td>${x.page}</td><td class="pd-nd-hl">${E(x.snippet || "").replace(/\[/g, "<mark>").replace(/\]/g, "</mark>")}</td><td class="pd-sub">${cos ? E(cos) : "לא משויך"}</td></tr>`; }).join("") + "</tbody></table>" : '<div class="pd-sub">לא נמצא בטקסט המסמכים</div>';
   }
   function ndTabC() {
     const q = ND.sq.trim();
@@ -1878,7 +1912,8 @@
   const ndAct = {
     tab: t => { ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
-    miss: k => { ND.miss = k; ndShow(); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
+    miss: k => { ND.miss = k; ndShow(); }, sug: () => { ND.sug = !ND.sug; ndShow(); },
+    tq: v => { ND.tq = v; clearTimeout(ND._tt); ND._tt = setTimeout(() => ndTextSearch(v), 350); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
     openDoc: id => { savePos("un", id, 0); close("pd-nd"); openUnassigned("un"); },
   };
 
@@ -2134,7 +2169,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
