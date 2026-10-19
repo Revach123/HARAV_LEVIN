@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261016c"></script>
+<script src="/permit-docs.js?v=20261019a"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -783,6 +783,8 @@
   .scard .sbtn:hover { border-color: var(--accent); color: var(--accent-dark); }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
   /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
+  tr.sub-row td { background:#f7fafa; font-size:.94em; }
+  tr.sub-row td.biz-name { padding-inline-start:26px; }
   .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .big-card { text-align:center; background:#fff; border:2px dashed var(--border); border-radius:8px; padding:16px 18px; min-height:150px; }
   .big-card .ico { display:block; font-size:30px; margin-bottom:4px; }
@@ -793,11 +795,55 @@
   .big-nochp .ico { display:block; font-size:30px; margin-bottom:6px; }
   .big-nochp small { display:block; font-size:13px; font-weight:400; color:var(--muted); margin-top:4px; }
   .nochp-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:4px 2px; color:var(--navy); }
-  @media (max-width:700px) { .chp-choice { grid-template-columns:1fr; } }
+  @media (max-width:700px) { .chp-choice { grid-template-columns:1fr !important; } }
   .permit-choice { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .pc-btn { font-family:inherit; font-size:16px; font-weight:700; color:var(--navy); background:#fff; border:2px solid var(--border); border-radius:6px; padding:10px 12px; cursor:pointer; text-align:center; transition:.15s; }
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
+  /* דף ראשי: ממלא את המסך בלי גלילה. למעלה: מצטרפים (ימין) וחיפוש (שמאל); באמצע: הוספה ועדכון (גדולים); למטה: ניהול השטרות (ימין) והעוגות (שמאל, באותו גובה) */
+  .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:460px; margin:0 auto; box-sizing:border-box; width:100%; position:relative; z-index:0; }
+  .home-wrap .home-card { border:2px solid #274d5b; border-radius:18px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0; }
+  .home-wrap .home-card .ico { font-size:clamp(24px,4vh,48px); margin-bottom:clamp(2px,.8vh,10px); }
+  .home-wrap .home-card b { font-size:clamp(17px,1.5vw,30px); }
+  .home-wrap .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
+  .home-top { flex:0 0 clamp(80px,15vh,150px); display:flex; justify-content:space-between; gap:20px; }
+  .home-top .home-card { width:clamp(260px,24vw,460px); flex:none; }
+  .home-mid { flex:1 1 0; min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,20px); }
+  .home-mid .home-card .ico { font-size:clamp(34px,7vh,80px); }
+  .home-mid .home-card b { font-size:clamp(22px,2.4vw,44px); }
+  .home-mid .home-card span.sub { font-size:clamp(14px,1.3vw,24px); }
+  .home-bot { flex:4 1 0; min-height:0; display:flex; gap:clamp(12px,1.5vw,28px); align-items:stretch; }
+  .home-dash { flex:1; min-width:0; display:flex; flex-direction:column; gap:clamp(4px,1vh,10px); }
+  .home-dash .pd-homeh { margin:0; font-size:clamp(18px,1.6vw,28px); }
+  .home-dash .home-grid { margin:0 !important; max-width:none !important; flex:1; min-height:0; grid-template-columns:repeat(2,minmax(0,1fr)) !important; grid-auto-rows:1fr; gap:clamp(10px,1.2vw,20px); }
+  .home-wrap .idx-row { flex:none; width:clamp(300px,28vw,540px); margin:0; justify-content:stretch; }
+  .home-wrap .idx-box { border:2px solid #274d5b; border-radius:18px; box-shadow:0 2px 6px rgba(0,0,0,.18); flex-direction:column; flex-wrap:nowrap; justify-content:space-around; gap:10px; min-width:0; width:100%; box-sizing:border-box; padding:clamp(8px,1.5vh,20px) clamp(10px,1vw,20px); font-size:clamp(13px,1vw,18px); }
+  .home-wrap .idx-sub { font-size:clamp(12px,.95vw,17px); margin-bottom:2px; }
+  .home-wrap .idx-line span { font-size:clamp(11px,.85vw,15px); }
+  .home-wrap .idx-pie { gap:clamp(8px,1vw,18px); }
+  .home-wrap .idx-pie svg { width:clamp(70px,12vh,170px); height:auto; flex:none; }
+  /* באנר האתר הישן: ברקע הדף הראשי, לכל הרוחב, מאחורי הכפתורים */
+  body:has(.home-wrap) { overflow-x:hidden; }
+  .home-band { position:relative; flex:5 1 0; min-height:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); }
+  .home-band::before { content:""; position:absolute; z-index:-1; top:calc(-1 * clamp(8px,1.5vh,20px)); bottom:calc(-1 * clamp(8px,1.5vh,20px)); left:calc(50% - 50vw); right:calc(50% - 50vw); background:url(banner.jpg) center/cover no-repeat #3a3a3a; }
+  /* כפתורים קטנים יותר עם רווחים ביניהם */
+  .home-wrap { height:auto !important; min-height:calc(100vh - 96px) !important; max-width:min(92vw,1560px) !important; gap:clamp(40px,7vh,72px) !important; padding-bottom:0; justify-content:flex-end; }
+  .home-band { flex:none !important; gap:clamp(14px,2.4vh,28px) !important; }
+  .home-band::before { top:calc(-1 * clamp(14px,2.4vh,28px)) !important; bottom:calc(-1 * clamp(14px,2.4vh,28px)) !important; }
+  .home-top { flex:none !important; height:clamp(64px,9vh,96px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-top .home-card { width:clamp(200px,17vw,320px) !important; }
+  .home-mid { flex:none !important; height:clamp(100px,16vh,160px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-bot { flex:none !important; height:auto !important; min-height:clamp(220px,34vh,340px); gap:clamp(16px,2.5vw,48px) !important; }
+  .home-dash .home-grid { gap:clamp(14px,2vw,32px) !important; }
+  .home-wrap .home-card .ico { font-size:clamp(18px,3vh,32px) !important; margin-bottom:2px !important; }
+  .home-wrap .home-card b { font-size:clamp(15px,1.25vw,24px) !important; }
+  .home-mid .home-card .ico { font-size:clamp(24px,4.2vh,44px) !important; }
+  .home-mid .home-card b { font-size:clamp(18px,1.7vw,32px) !important; }
+  .home-wrap .idx-row { width:clamp(280px,24vw,460px) !important; display:flex; }
+  .home-wrap .idx-box { height:auto; flex:1; overflow:hidden; }
+  .home-wrap .idx-pie svg { width:clamp(70px,11vh,130px) !important; }
+  .home-dash .home-grid { min-height:200px; }
+  @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-top, .home-bot { flex-direction:column; } .home-top .home-card, .home-wrap .idx-row { width:100%; } .home-mid { grid-template-columns:1fr; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
   .idx-box { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
@@ -847,6 +893,9 @@
   .ns-item.defunct { opacity:.6; }
   .admin-tabs { display:flex; gap:0; margin:0 0 1.2rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
   .admin-tabs button { flex:1; min-width:150px; padding:.8rem 1rem; font-size:17px; font-weight:700; font-family:inherit; background:transparent; color:var(--navy); border:none; border-top:3px solid transparent; cursor:pointer; transition:.15s; }
+  #pd-nd-tabs button { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; min-height:78px; }
+  #pd-nd-tabs .pd-tabn { min-width:28px; text-align:center; }
+  .hdr-home { padding:.45rem .9rem; font-family:inherit; font-size:15px; font-weight:700; background:var(--accent-bg); color:var(--accent-dark); border:1px solid var(--border); border-radius:6px; cursor:pointer; margin-inline-start:14px; }
   .admin-tabs button:hover { color:var(--accent-dark); }
   .admin-tabs button.active { color:var(--accent-dark); border-top-color:var(--accent); background:var(--accent-bg); }
 </style>
@@ -855,7 +904,7 @@
 
 <header>
   <div>
-    <a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a>
+    <div style="display:flex;align-items:center"><a href="/" class="logo-link"><img id="site-logo" src="logo.png" alt="מכון היתר עסקה למהדרין" onerror="this.style.display='none';document.getElementById('site-title').style.display='';"><h1 id="site-title" style="display:none;">מכון להיתר עסקה למהדרין</h1></a><button id="home-btn" class="hdr-home" style="display:none" onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button></div>
   </div>
   <div class="hdr-btns"><button id="pw-btn" onclick="openChangePassword()" style="display:none;">🔑 שינוי סיסמה</button><button id="admin-toggle" onclick="toggleAdmin()">כניסת מנהל</button></div>
 </header>
@@ -989,13 +1038,15 @@ function render() {
   if      (view === "table")      { location.href = "/"; return; }   // התצוגה הציבורית היא דף נפרד (index.html)
   else if (view === "login")      app.innerHTML = renderLogin();
   else if (view === "home")       app.innerHTML = renderHome();
-  else if (view === "search")     app.innerHTML = adminTabs() + renderSearch();
+  else if (view === "search")     { app.innerHTML = adminTabs() + (window.PD ? '<div id="pd-sp-body"></div>' : renderSearch()); if (window.PD) PD.searchPage(document.getElementById("pd-sp-body")); }
   else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
   else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
+  else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
-  document.getElementById("admin-toggle").textContent =
-    isAdmin ? "יציאה ממנהל" : "כניסת מנהל";
+  document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
+  document.getElementById("admin-toggle").textContent = "כניסת מנהל";
+  document.getElementById("home-btn").style.display = isAdmin && view !== "home" ? "" : "none";
   document.getElementById("pw-btn").style.display = isAdmin ? "" : "none";
 }
 
@@ -1080,11 +1131,11 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${sorted.map(b0 => {
+          ${groupSubs(sorted).map(b0 => {
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             return `
-              <tr>
-                <td class="biz-name">${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
+              <tr${b0._isSub ? ' class="sub-row"' : ""}>
+                <td class="biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? displayName(b,true) : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
                 <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
                 <td>${escHtml(b.category)||"—"}</td>
                 <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
@@ -1129,7 +1180,10 @@ function renderAdminTable() {
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
-              </tr>`;
+              </tr>` + ((window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : []).map(x => {
+                const open = `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${x.id}','${b.id}')" title="${escHtml(x.name)}">פתיחה</button>`;
+                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="9" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list !== "general" ? open : ""}</td><td style="text-align:center">${x.list !== "private" ? open : ""}</td><td></td><td></td></tr>`;
+              }).join("");
           }).join("")}
         </tbody>
       </table>
@@ -1149,7 +1203,7 @@ function renderForm() {
         <button type="button" class="btn-ghost" onclick="PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button></div>` : ""}
 
       <div class="lookup-box" id="lookup-box">
-        <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "")}">
+        <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "grid-template-columns:1.4fr 1fr 1fr;")}">
           <div class="big-card">
             <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
             <div class="lookup-row" id="chp-row">
@@ -1163,7 +1217,7 @@ function renderForm() {
             </div>
             <div id="lookup-out" style="text-align:right;">${lookupOutHtml()}</div>
           </div>
-          ${!isEdit ? `<button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>` : ""}
+          ${!isEdit ? `<button type="button" class="big-nochp" onclick="toggleNoChp()"><span class="ico">🏷️</span>עסק בלי ח.פ.<small>הקלדה ידנית של שם העסק</small></button>${window.PD ? `<button type="button" class="big-nochp" onclick="PD.openUpload({addCompany:true})"><span class="ico">📄</span>הוספה ע"י העלאת היתר עסקה<small>המערכת תסרוק את המסמך ותציע את החברה להוספה</small></button>` : ""}` : ""}
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
@@ -1489,16 +1543,21 @@ function renderCsvImport() {
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש במאגר", "setView('search')")}${window.PD ? t("pd-up", "📄", "הוספת היתר עסקה", "PD.openUpload()") + t("pd-un", "🗂️", "מסמכים לא משויכים", "PD.openUnassigned()") : ""}</div>`;
+  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
 }
 
 function renderHome() {
-  return `<div class="idx-row" id="idx-row">${idxBoxHtml()}</div>
-    <div class="home-grid">
-      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
-      <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
-      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש במאגר</b><span class="sub">חברות ואג"ח, מילה או מספר</span></button>
-    </div>${window.PD ? PD.homeCards() : ""}`;
+  return `<div class="home-wrap"><div class="home-band">
+    <div class="home-top">
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b></button>
+      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
+    </div>
+    <div class="home-mid">
+      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b></button>
+      <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
+    </div></div>
+    <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
+      <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
 let gsQuery = "", gsBonds = null, gsBondsLoading = false;
@@ -1663,7 +1722,7 @@ function bindEvents() {
     document.getElementById("f-permit")?.addEventListener("input", updatePermitGate);
     document.getElementById("f-reg")?.addEventListener("input", updatePermitGate);
   }
-  if (view === "search") {
+  if (view === "search" && !window.PD) {
     const g = document.getElementById("gs");
     if (g) { let tm; g.addEventListener("input", e => { gsQuery = e.target.value; clearTimeout(tm); tm = setTimeout(runGlobalSearch, 120); }); g.focus(); }
     runGlobalSearch();
@@ -2259,10 +2318,10 @@ async function doChangePassword() {
 let idxBonds = null, idxMarket = null; const idxCache = {}; let idxLoading = false;
 // עוגה בתוך עוגה: טבעת חיצונית = אחוז עם היתר עסקה, טבעת פנימית = אחוז עם היתר פרטי (מתוך כלל המדד)
 function idxPie(permit, priv, note1, note2) {
-  const ring = (r, w, pct, color) => { const c = 2 * Math.PI * r; return `<circle cx="50" cy="50" r="${r}" fill="none" stroke="#e6ecec" stroke-width="${w}"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="${w}" stroke-dasharray="${(c * Math.min(pct, 100) / 100).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 50 50)"/>`; };
-  return `<div class="idx-pie"><svg viewBox="0 0 100 100" width="96" height="96">${ring(42, 13, permit, "#274d5b")}${ring(25, 13, priv, "#1fa59a")}</svg>
-    <div><div class="idx-line"><i style="background:#274d5b"></i><b>${permit}%</b> עם היתר עסקה<br><span>${note1}</span></div>
-    <div class="idx-line" style="margin-top:6px;"><i style="background:#1fa59a"></i><b>${priv}%</b> עם היתר פרטי<br><span>${note2}</span></div></div></div>`;
+  const gen = Math.max(0, Math.round((permit - priv) * 10) / 10), c = 2 * Math.PI * 38, seg = (from, pct, color) => pct > 0 ? `<circle cx="50" cy="50" r="38" fill="none" stroke="${color}" stroke-width="22" stroke-dasharray="${(c * Math.min(pct, 100) / 100).toFixed(2)} ${c.toFixed(2)}" stroke-dashoffset="${(-c * from / 100).toFixed(2)}" transform="rotate(-90 50 50)"/>` : "";
+  return `<div class="idx-pie"><svg viewBox="0 0 100 100" width="96" height="96"><circle cx="50" cy="50" r="38" fill="none" stroke="#e6ecec" stroke-width="22"/>${seg(0, priv, "#1fa59a")}${seg(priv, gen, "#274d5b")}</svg>
+    <div><div class="idx-line"><i style="background:#1fa59a"></i><b>${priv}%</b> פרטי</div>
+    <div class="idx-line" style="margin-top:6px;"><i style="background:#274d5b"></i><b>${permit}%</b> הת"ע</div></div></div>`;
 }
 function idxBoxHtml() {
   const d = idxCache.tb60;
@@ -2274,12 +2333,12 @@ function idxBoxHtml() {
     const tw = d.securities.reduce((a, x) => a + x.weight, 0) || 1;
     const hit = d.securities.filter(x => appr.has(x.securityNumber)), prv = hit.filter(x => /פרטי/.test(appr.get(x.securityNumber)));
     const wsum = l => l.reduce((a, x) => a + x.weight, 0), pc = w => Math.round(w * 1000 / tw) / 10;
-    body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60 (לפי משקל הנייר במדד)</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
+    body = `<div class="idx-blk"><div class="idx-sub">תל בונד 60</div>` + idxPie(pc(wsum(hit)), pc(wsum(prv)), `${hit.length} מתוך ${d.securities.length} אג"ח`, `${prv.length} אג"ח`) + `</div>`;
     const m = idxMarket;
-    if (m && m.totalValue) {       // כלל האג"ח הקונצרניות בבורסה, לפי שווי שוק
+    if (m && m.totalValue) {       // כלל האג"ח בבורסה, לפי שווי שוק
       const sv = ids => ids.reduce((a, i) => a + (m.values[i] || 0), 0), ids = [...appr.keys()].filter(i => m.values[i]), pids = ids.filter(i => /פרטי/.test(appr.get(i)));
       const p2 = v => Math.round(v * 1000 / m.totalValue) / 10;
-      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח הקונצרניות (לפי שווי שוק)</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
+      body += `<div class="idx-blk"><div class="idx-sub">כלל האג"ח</div>` + idxPie(p2(sv(ids)), p2(sv(pids)), `${ids.length} מתוך ${m.count} אג"ח`, `${pids.length} אג"ח`) + `</div>`;
     }
   }
   return `<div class="idx-box">${body}</div>`;
@@ -2829,6 +2888,18 @@ function agchSortKey(b) {
   return 1;
 }
 
+// רישומים כפולים לאותה חברה (אותו ח.פ., למשל "מסלול הלכה"): שורה ראשית, והשאר כתתי-שורות מיד אחריה
+function groupSubs(list) {
+  const norm = s => String(s || "").replace(/["'׳״.\-,()]/g, " ").replace(/\s+/g, " ").replace(/\bבע ?מ\b/g, "").trim();
+  const by = new Map();
+  for (const b of businesses) { const k = String(b.chp_number || "").trim(); if (!k) continue; if (!by.has(k)) by.set(k, []); by.get(k).push(b); }
+  const parentOf = new Map();
+  for (const g of by.values()) { if (g.length < 2) continue; const main = g.find(b => norm(b.permit_name) === norm(b.registrar_name)) || g[0]; for (const b of g) if (b !== main) parentOf.set(b.id, main.id); }
+  const have = new Set(list.map(b => b.id)), kids = new Map(), out = [];
+  for (const b of list) if (parentOf.has(b.id) && have.has(parentOf.get(b.id))) { const p = parentOf.get(b.id); if (!kids.has(p)) kids.set(p, []); kids.get(p).push(b); }
+  for (const b of list) { if (parentOf.has(b.id) && have.has(parentOf.get(b.id))) continue; out.push(b); for (const k of kids.get(b.id) || []) out.push({ ...k, _isSub: true }); }
+  return out;
+}
 function filteredAndSorted() {
   const q = search.trim().toLowerCase();
 
