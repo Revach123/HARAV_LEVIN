@@ -44,15 +44,15 @@
    "chp_number": "520028010"
   },
   {
-   "id": 10339,
-   "maya_report_id": 1772082,
+   "id": 10383,
+   "maya_report_id": 1776844,
    "company_name": "חג'ג' נדל\"ן",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1772082",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776844",
    "link_presentation": null,
    "securities": [
     {
@@ -107,15 +107,15 @@
    "chp_number": "512726712"
   },
   {
-   "id": 10368,
-   "maya_report_id": 1775393,
+   "id": 10384,
+   "maya_report_id": 1776813,
    "company_name": "הפניקס גיוסי הו",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775393",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776813",
    "link_presentation": null,
    "securities": [
     {
@@ -638,6 +638,29 @@
    "chp_number": ""
   },
   {
+   "chp_number": "520033309",
+   "company_name": "חג'ג' נדל\"ן",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10339,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1772082",
+   "maya_report_id": 1772082,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-19"
+  },
+  {
    "chp_number": "512719485",
    "company_name": "מגדלי ים תיכון",
    "draft_no": null,
@@ -673,6 +696,35 @@
    "maya_report_id": 1774345,
    "new_company_type": null,
    "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-19"
+  },
+  {
+   "chp_number": "514290345",
+   "company_name": "הפניקס גיוסי הו",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10368,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775393",
+   "maya_report_id": 1775393,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    },
     {
      "maalot_rating": null,
      "midroog_rating": null,
