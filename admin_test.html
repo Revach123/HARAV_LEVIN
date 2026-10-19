@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=52"></script>
+<script src="/permit-docs-test.js?v=53"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2246,14 +2246,17 @@ async function agchChange(id, sel) {
 }
 
 let admSearchTimer = null;
-function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה מחדש אחרי הפסקת הקלדה, עם שמירת הפוקוס
+function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה אחרי הפסקת הקלדה (ולא באמצע), ושדה החיפוש נשאר אותו אלמנט כדי שההקלדה לא תיקטע
   search = v;
   clearTimeout(admSearchTimer);
-  admSearchTimer = setTimeout(() => {
+  const go = () => {
+    if (navigator.scheduling && navigator.scheduling.isInputPending && navigator.scheduling.isInputPending()) { admSearchTimer = setTimeout(go, 120); return; }
+    const old = document.getElementById("adm-srch"), ss = old ? [old.selectionStart, old.selectionEnd] : null;
     render();
-    const el = document.getElementById("adm-srch");
-    if (el) { el.focus(); el.setSelectionRange(v.length, v.length); }
-  }, 250);
+    const n = document.getElementById("adm-srch");
+    if (old && n) { n.replaceWith(old); old.classList.toggle("active", !!search); old.focus(); try { old.setSelectionRange(ss[0], ss[1]); } catch {} }
+  };
+  admSearchTimer = setTimeout(go, 450);
 }
 
 async function inlineUpdate(id, field, value) { return inlineUpdateMany(id, { [field]: value }); }

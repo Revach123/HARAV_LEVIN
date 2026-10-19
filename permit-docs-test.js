@@ -1764,8 +1764,16 @@
 
   // ───────── דשבורד חדש (בבנייה, רק בעמוד הבדיקה): שלוש כרטיסיות. א: חברות שחסרים להן שטרות; ב: שטרות שמחכים לשיוך; ג: חברות לא רשומות ─────────
   const ND = { tab: "a", miss: "all", sug: false, gone: false, q: "", sq: "", tq: "", fq: "" };
-  const NORMN = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/(^|\s)(בע\s*מ|בעמ|ltd|inc)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();          // (\b אינו עובד בעברית)
-  const tri = x => { const t = " " + NORMN(x) + " ", o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); return o; };
+  function later(o, key, fn, delay) {          // הרצה אחרי הפסקת הקלדה, ולא באמצע הקלדה (אם יש קלט ממתין - דוחים עוד): ההקלדה לא נעצרת בגלל החיפוש ברקע
+    clearTimeout(o[key]);
+    const go = () => { if (navigator.scheduling && navigator.scheduling.isInputPending && navigator.scheduling.isInputPending()) { o[key] = setTimeout(go, 120); return; } fn(); };
+    o[key] = setTimeout(go, delay || 450);
+  }
+  const _nm = new Map();
+  const NORMN = x => { const k = String(x || ""); let v = _nm.get(k); if (v === undefined) { v = NORMN0(k); if (_nm.size > 40000) _nm.clear(); _nm.set(k, v); } return v; };
+  const NORMN0 = x => String(x || "").toLowerCase().replace(/["'`״׳.\-,()]/g, " ").replace(/(^|\s)(בע\s*מ|בעמ|ltd|inc)(?=\s|$)/g, " ").replace(/\s+/g, " ").trim();          // (\b אינו עובד בעברית)
+  const _tr = new Map();
+  const tri = x => { const n = NORMN(x); let o = _tr.get(n); if (!o) { const t = " " + n + " "; o = new Set(); for (let i = 0; i + 3 <= t.length; i++) o.add(t.slice(i, i + 3)); if (_tr.size > 40000) _tr.clear(); _tr.set(n, o); } return o; };
   function fuzzy(q, name) {          // התאמה מקורבת: הכלה מלאה, או דמיון משולשות אותיות (שינוי קטן בשם)
     const a = NORMN(q), b = NORMN(name); if (!a || !b) return 0;
     if (b.includes(a) || a.includes(b)) return 1;
@@ -1806,6 +1814,9 @@
   function nameDocs(b) {          // מסמכים ששם החברה מופיע בהם (שם שאינו כללי)
     const keys = coKeys(b), out = new Set();
     if (!S.nameDf || !keys.length) return out;
+    const ck = b.id + "|" + keys.join("|"), cache = S._ndc && S._ndc.df === S.nameDf ? S._ndc : (S._ndc = { df: S.nameDf, m: new Map() });
+    if (cache.m.has(ck)) return cache.m.get(ck);
+    cache.m.set(ck, out);
     for (const [n, ids] of S.nameDf) if (ids.size <= NGENERIC_DF && keys.some(k => nameHit(n, k))) for (const id of ids) out.add(id);
     return out;
   }
@@ -1875,13 +1886,13 @@
     $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
       .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')"><span>${l}</span><span class="pd-tabn" ${t === "d" || t === "f" ? 'style="visibility:hidden"' : ""}>${t === "d" || t === "f" ? 0 : ndCount(t)}</span></button>`).join("");
     if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button class="active"><span>👥 מצטרפים</span>${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
-    const body = $("pd-nd-body"), keep = document.activeElement && ["pd-nd-q", "pd-nd-jq", "pd-f-q", "pd-nd-tq"].includes(document.activeElement.id) ? document.activeElement.id : "";
+    const body = $("pd-nd-body"), keepEl = document.activeElement && ["pd-nd-q", "pd-nd-jq", "pd-f-q", "pd-nd-tq"].includes(document.activeElement.id) && body.contains(document.activeElement) ? document.activeElement : null, ks = keepEl ? [keepEl.selectionStart, keepEl.selectionEnd] : null;
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
       return;
     }
     body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ND.tab === "e" ? ndTabE() : ndTabC();
-    if (keep) { const q = $(keep); if (q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); } }
+    if (keepEl) { const n = $(keepEl.id); if (n) { n.replaceWith(keepEl); keepEl.focus(); try { keepEl.setSelectionRange(ks[0], ks[1]); } catch { /* בלי בחירה */ } } }          // שדה החיפוש נשאר אותו אלמנט: ההקלדה לא נקטעת ולא נאבדים תווים
   }
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
   function ndTabA() {
@@ -2104,15 +2115,15 @@
     } catch (e) { if (w) w.close(); alert("פתיחת הקובץ נכשלה: " + e.message); }
   }
   const jAct = {
-    q: v => { J.q = v; J.shown = 200; clearTimeout(J._t); J._t = setTimeout(ndShow, 250); },
+    q: v => { J.q = v; J.shown = 200; later(J, "_t", ndShow); },
     f: k => { J.f = k; J.shown = 200; ndShow(); }, open: id => { J.open = J.open === id ? "" : id; ndShow(); },
     more: () => { J.shown += 300; ndShow(); }, retry: () => { J.err = ""; J.rows = null; ndShow(); },
   };
   const ndAct = {
     tab: t => { if (t !== ND.tab) Object.assign(ND, { miss: "all", sug: false, gone: false, q: "", sq: "", tq: "", fq: "" }); ND.tab = t; ndShow(); if (t === "c" && ND.sq.trim().length >= 2) ndSearchC(); },
-    q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
+    q: v => { if (ND.tab === "c") ND.sq = v; else ND.q = v; later(ND, "_t", () => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }); },
     miss: k => { ND.miss = k; ndShow(); }, sug: () => { ND.sug = !ND.sug; ndShow(); },
-    tq: v => { ND.tq = v; clearTimeout(ND._tt); ND._tt = setTimeout(() => ndTextSearch(v), 350); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
+    tq: v => { ND.tq = v; later(ND, "_tt", () => ndTextSearch(v)); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
     openDoc: id => { savePos("un", id, 0); openUnassigned("un"); },
   };
 
@@ -2415,7 +2426,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; clearTimeout(ND._ft); ND._ft = setTimeout(fSearch, 300); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
