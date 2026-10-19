@@ -310,16 +310,16 @@ input{padding:6px;border:1px solid #aab;border-radius:6px;width:92%}#res div{pad
 <div id="top"><b>אישור קישורי היתרים</b><span id="tabs"></span><span id="prog"></span></div>
 <div id="main"><div id="list"></div><div id="card"><div id="side"></div><iframe id="pdf"></iframe></div></div><div id="msg"></div>
 <script>
-let ITEMS=[],CUR=0,TAB="פתוח",OVR=null;
+let ITEMS=[],CUR=0,TAB="פתוח",OVR=null;const PEND=new Set();
 const CF={"גבוהה מאוד":"#1e7e4a","גבוהה":"#3f8f5a","בינונית":"#b8860b","נמוכה":"#c0392b","הצעת ח.פ.":"#3f6ea8"};
 const $=id=>document.getElementById(id),E=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function msg(t){const m=$("msg");m.textContent=t;m.style.display="block";clearTimeout(m._t);m._t=setTimeout(()=>m.style.display="none",3500)}
 async function api(p,b){const r=await fetch(p,b?{method:"POST",body:JSON.stringify(b)}:{});const j=await r.json();if(!r.ok)throw new Error(j.error||r.status);return j}
 async function load(keep){const k=keep&&ITEMS[CUR]&&ITEMS[CUR].key;ITEMS=await api("/api/items");const v=vis();let i=v.findIndex(x=>x.key===k);CUR=i>=0?i:0;draw()}
-function vis(){return ITEMS.filter(x=>TAB==="הכל"||(TAB==="פתוח"?x.state==="פתוח":TAB==="בוצע"?x.state==="בוצע":TAB==="דולג"?(x.state==="דולג"||x.state==="לא מתאים"):x.conf===TAB&&x.state==="פתוח"))}
+function vis(){return ITEMS.filter(x=>!PEND.has(x.key)).filter(x=>TAB==="הכל"||(TAB==="פתוח"?x.state==="פתוח":TAB==="בוצע"?x.state==="בוצע":TAB==="דולג"?(x.state==="דולג"||x.state==="לא מתאים"):x.conf===TAB&&x.state==="פתוח"))}
 function draw(){const v=vis();const cnt=t=>ITEMS.filter(x=>x.conf===t&&x.state==="פתוח").length;
 $("tabs").innerHTML=["פתוח","בוצע","דולג"].map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${ITEMS.filter(x=>t==="פתוח"?x.state==="פתוח":t==="בוצע"?x.state==="בוצע":(x.state==="דולג"||x.state==="לא מתאים")).length})</button>`).join("")+" | "+Object.keys(CF).map(t=>`<button class="tab ${TAB===t?"on":""}" onclick="tab('${t}')">${t} (${cnt(t)})</button>`).join("");
-$("prog").textContent=`  בוצעו ${ITEMS.filter(x=>x.state==="בוצע").length} מתוך ${ITEMS.length}`;
+$("prog").textContent=`  בוצעו ${ITEMS.filter(x=>x.state==="בוצע").length} מתוך ${ITEMS.length}`+(PEND.size?`  ·  ⏳ מעלה לאתר: ${PEND.size}`:"");
 $("list").innerHTML=v.map((x,i)=>`<div class="it ${i===CUR?"cur":""} ${x.state==="בוצע"?"done":x.state==="פתוח"?"":"skip"}" onclick="go(${i})"><span class="cf" style="background:${CF[x.conf]||"#555"}">${x.conf}</span>${E(x.company)}<br><span class="k">${E(x.slot_he)} · ${E(x.doc_name)}</span></div>`).join("")||"<div class='it'>אין פריטים</div>";
 card()}
 function tab(t){TAB=t;CUR=0;OVR=null;draw()}
@@ -346,8 +346,10 @@ ${x.state==="בוצע"?`<button class="btn un" onclick="undo()">↩ ביטול �
 <hr><div class="k">אשר עבור חברה אחרת (שם / ח.פ.):</div><input id="q" oninput="srch(this.value)" placeholder="חיפוש חברה"><div id="res"></div>
 <hr><button class="btn sk" onclick="go(Math.max(0,CUR-1))">← הקודם</button> <button class="btn sk" onclick="go(Math.min(vis().length-1,CUR+1))">הבא →</button>`;
 const f=$("pdf");const s="/api/pdf/"+x.doc_id;if(f.dataset.d!==x.doc_id){f.dataset.d=x.doc_id;f.src=s+"#toolbar=0&view=FitH"}}
-async function ok(rep,extra){const x=vis()[CUR];try{await api("/api/approve",{key:x.key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null});msg("✔ נשמר באתר");await load(true);next()}catch(e){msg("שגיאה: "+e.message)}}
-async function skip(w){const x=vis()[CUR];await api("/api/skip",{key:x.key,decision:w});await load(true);msg(w)}
+function ok(rep,extra){const x=vis()[CUR];if(!x)return;const key=x.key,name=x.company,body={key,doc_id:x.doc_id,business_id:OVR?OVR.id:x.business_id,slot:x.slot,replace:rep,extra:extra||null};
+PEND.add(key);OVR=null;const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();          // עוברים מיד לפריט הבא; ההעלאה לאתר ממשיכה ברקע
+api("/api/approve",body).then(()=>{PEND.delete(key);return load(true)}).then(()=>msg("✔ נשמר באתר: "+name)).catch(e=>{PEND.delete(key);msg("שגיאה ב"+name+": "+e.message);load(true)})}
+function skip(w){const x=vis()[CUR];if(!x)return;const key=x.key;PEND.add(key);const n=vis().length;if(CUR>=n)CUR=Math.max(0,n-1);draw();api("/api/skip",{key,decision:w}).then(()=>{PEND.delete(key);return load(true)}).catch(e=>{PEND.delete(key);msg("שגיאה: "+e.message);load(true)})}
 async function undo(){const x=vis()[CUR];try{await api("/api/undo",{key:x.key});msg("↩ בוטל");await load(true)}catch(e){msg("שגיאה: "+e.message)}}
 function next(){const v=vis();if(CUR>=v.length)CUR=Math.max(0,v.length-1);draw()}
 let _t;function srch(q){clearTimeout(_t);_t=setTimeout(async()=>{const r=await api("/api/biz?q="+encodeURIComponent(q));$("res").innerHTML=r.map(b=>`<div onclick='pick(${JSON.stringify(b)})'>${E(b.name)} <span class="k">${E(b.vis)}</span></div>`).join("")},300)}
