@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=15"></script>
+<script src="/permit-docs-test.js?v=16"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -995,6 +995,7 @@ function render() {
   else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
   else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
+  else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
   document.getElementById("admin-toggle").textContent =
     isAdmin ? "יציאה ממנהל" : "כניסת מנהל";

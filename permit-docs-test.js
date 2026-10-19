@@ -1775,18 +1775,23 @@
       .pd-nd-miss{display:inline-block;background:#fdecea;color:#b3261e;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-ok{display:inline-block;background:#e6f4ea;color:#1e7e4a;border-radius:9px;padding:1px 8px;font-size:11.5px;margin-inline-end:4px}.pd-nd-sug{display:inline-block;background:#fff4d6;color:#7a5a00;border-radius:9px;padding:1px 8px;font-size:12px;cursor:help}.pd-nd-hl mark{background:#ffe58a}.pd-nd-n{font-size:20px;font-weight:700;color:#b85c00}.pd-nd-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}`;
     document.head.appendChild(st);
   }
-  function openDash(tab) {
+  function openDash(tab) {          // הדשבורד הוא דף (תצוגה) של הניהול, לא חלון קופץ
     ND.tab = tab || ND.tab || "a"; ndCss();
-    overlay("pd-nd", `<div class="pd-head"><b>ניהול שטרות היתר עיסקא</b><div class="pd-tabs" id="pd-nd-tabs" style="margin-inline-start:14px"></div><span style="flex:1"></span><button class="pd-btn" onclick="PD._home()">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-nd')">✕</button></div>
-      <div class="pd-body" id="pd-nd-body" style="overflow:auto"></div>`, "full");
-    closers["pd-nd"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
+    if (typeof view !== "undefined" && view === "dash") { dashPage(document.getElementById("app")); return; }
+    setView("dash");
+  }
+  function dashPage(app) {          // נקרא מ-render() של דף הניהול; אם הדף כבר מוצג, רק מרעננים את התוכן (כדי לא לאבד העלאה באמצע)
+    if (!app) return;
+    if (!($("pd-nd-body") && $("pd-nd-tabs") && app.contains($("pd-nd-body")))) {
+      app.innerHTML = `<div class="admin-tabs" id="pd-nd-tabs"></div><div id="pd-nd-body"></div>`;
+    }
     (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(ndShow);
     if (S.loaded) ndShow();
   }
   function ndShow() {
-    if (!$("pd-nd")) return;
-    $("pd-nd-tabs").innerHTML = [["a", "א · חברות שחסרים להן שטרות"], ["b", "ב · שטרות שמחכים לשיוך"], ["c", "ג · חברות לא רשומות"], ["d", "ד · העלאת מסמכי היתר עיסקא"]]
-      .map(([t, l]) => `<button class="pd-tab ${ND.tab === t ? "sel" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
+    if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
+    $("pd-nd-tabs").innerHTML = `<button onclick="setView('home')" title="חזרה לדף הראשי של הניהול">🏠 ראשי</button>` + [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
+      .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')">${l} ${t === "d" ? "" : ` <span class="pd-tabn">${ndCount(t)}</span>`}</button>`).join("");
     const body = $("pd-nd-body"), keep = document.activeElement && document.activeElement.id === "pd-nd-q";
     if (ND.tab === "d") {          // העלאה בתוך הלשונית (אותו מנגנון של חלון ההעלאה); לא מציירים מחדש באמצע העלאה
       if (!$("pd-up-body")) { body.innerHTML = '<div id="pd-up-body"></div>'; U.queue = []; U.cur = null; U.preset = null; U.addCompany = false; upPick(); }
@@ -1862,7 +1867,7 @@
     q: v => { clearTimeout(ND._t); if (ND.tab === "c") ND.sq = v; else ND.q = v; ND._t = setTimeout(() => { ndShow(); if (ND.tab === "c" && ND.sq.trim().length >= 2) ndSearchC(); }, 300); },
     miss: k => { ND.miss = k; ndShow(); }, sug: () => { ND.sug = !ND.sug; ndShow(); },
     tq: v => { ND.tq = v; clearTimeout(ND._tt); ND._tt = setTimeout(() => ndTextSearch(v), 350); }, gone: on => { ND.gone = on; ndShow(); if (ND.sq.trim().length >= 2) ndSearchC(); },
-    openDoc: id => { savePos("un", id, 0); close("pd-nd"); openUnassigned("un"); },
+    openDoc: id => { savePos("un", id, 0); openUnassigned("un"); },
   };
 
   const specialTitle = d => (intelOf(d).t || [])[0] || d.source_title || String(d.original_name || "").replace(/\.pdf$/i, "");
@@ -2119,7 +2124,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
