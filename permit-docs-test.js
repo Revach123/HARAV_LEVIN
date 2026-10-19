@@ -1938,26 +1938,65 @@
     const rows = extGroups();
     return `<div class="pd-sub" style="margin-bottom:6px">חברות שיש להן שטר במאגר, אבל אינן ברשימת העסקים. ברירת מחדל בלי מחוקות ומוזגו. "הוספת חברה לרשימה" פותחת את טופס הוספת העסק עם הח.פ., ואחרי השמירה השטרות של החברה משויכים אליה אוטומטית.</div>
       <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>סטטוס</th><th>שטרות</th><th></th></tr></thead><tbody>${rows.map((g, i) => `<tr><td><b>${E(g.name)}</b></td><td dir="ltr" style="text-align:right">${E(g.chp)}</td><td>${EXT_HE[g.status] || g.status}</td>
-        <td class="pd-nd-n">${g.docs.size}</td>
+        <td class="pd-nd-n">${g.docs.size} <button class="pd-mini" onclick="PD._evOpen(${i})" title="הצגת כל השטרות של החברה">הצגה</button></td>
         <td><button class="pd-mini primary" onclick="PD._ndAddCo(${i})" ${digitsOf(g.chp) ? "" : 'title="אין ח.פ.: נפתח טופס עסק בלי ח.פ. עם השם"'}>הוספת חברה לרשימה</button></td></tr>`).join("") || `<tr><td colspan="5" class="pd-sub">הרשימה ריקה.</td></tr>`}</tbody></table>`;
   }
-  function ndAddCo(i) {          // הוספת החברה לרשימת העסקים; אחרי השמירה: שיוך השטרות שלה אליה והסרתה מרשימת "לא רשומות"
-    const g = extGroups()[i]; if (!g) return;
-    const done = async bid => {
+  function extDone(g) {          // אחרי שהחברה נוספה / נבחרה: שיוך כל השטרות שלה אליה והסרתה מרשימת "לא רשומות"
+    return async bid => {
       try {
         for (const id of g.docs) { const d = S.byId.get(id); if (d && !(d.business_ids || []).includes(bid)) await api("/permit-docs/" + id, "PUT", { business_ids: [...(d.business_ids || []), bid] }); }
         for (const id of g.ids) await api("/permit-ext/" + id, "DELETE").catch(() => {});
       } catch (e) { alert("החברה נוספה, אבל שיוך השטרות נכשל: " + e.message); }
-      S.loaded = false; S.loading = false; await load(); openDash("c");
+      close("pd-extv"); S.loaded = false; S.loading = false; await load(); openDash("c");
     };
+  }
+  function extAdd(g, name) {          // הוספה לרשימת העסקים: עם ח.פ. - מהרשם; בלי ח.פ. - טופס "עסק בלי ח.פ." עם השם ממולא (name ריק = טופס חדש)
+    const done = extDone(g);
     if (digitsOf(g.chp)) { addReg(digitsOf(g.chp).padStart(9, "0"), GONE.includes(g.status), done); return; }
-    pendingAdd = { chp: "", added: done };          // בלי ח.פ.: טופס "עסק בלי ח.פ." עם השם ממולא
-    ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
+    pendingAdd = { chp: "", added: done };
+    ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company", "pd-extv"].forEach(close);
     if (typeof openForm === "function") { openForm(null); setTimeout(() => {
       if (typeof toggleNoChp === "function") toggleNoChp();
-      setTimeout(() => { const r = document.getElementById("f-reg"); if (r) { r.value = g.name; r.dispatchEvent(new Event("input", { bubbles: true })); } if (typeof editBiz !== "undefined") editBiz = { ...(editBiz || {}), registrar_name: g.name }; }, 100);
+      if (name) setTimeout(() => { const r = document.getElementById("f-reg"); if (r) { r.value = name; r.dispatchEvent(new Event("input", { bubbles: true })); } if (typeof editBiz !== "undefined") editBiz = { ...(editBiz || {}), registrar_name: name }; }, 100);
     }, 150); }
   }
+  function ndAddCo(i) { const g = extGroups()[i]; if (g) extAdd(g, g.name); }
+  // ───────── הצגת שטרות של חברה לא רשומה: כרטיס החברה (מהרשם / השם המוצע) להוספה לרשימה, חיפוש חברה אחרת, או חברה חדשה ─────────
+  const EV = { i: -1, reg: null };
+  function evGroup() { return extGroups()[EV.i]; }
+  function evOpen(i) {
+    const g = extGroups()[i]; if (!g) return;
+    EV.i = i; EV.reg = null;
+    overlay("pd-extv", `<div class="pd-head"><b>שטרות של ${E(g.name)} (${g.docs.size})</b><button class="pd-x" onclick="PD._close('pd-extv')">✕</button></div><div class="pd-body" id="pd-ev-body"></div>`, true);
+    evPaint();
+    if (digitsOf(g.chp)) api("/lookup?number=" + encodeURIComponent(digitsOf(g.chp).padStart(9, "0"))).then(r => { if (EV.i === i && r && r.found) { EV.reg = r; evPaint(); } }).catch(() => {});
+  }
+  function evPaint() {
+    const body = $("pd-ev-body"), g = evGroup(); if (!body || !g) return;
+    const q = ($("pd-ev-q") || {}).value || "", r = EV.reg;
+    const card = `<div class="pd-dup" style="cursor:pointer;max-width:520px" onclick="PD._evAdd()" title="הוספת החברה לרשימה ושיוך כל השטרות שלה">
+        <div class="pd-sub">${r ? "נתוני החברה מהרשם" : "שם החברה המוצעת"}</div><b style="font-size:16px">${E(r ? r.name : g.name)}</b>
+        <div style="margin-top:4px">${g.chp ? `ח.פ.: <b><bdi>${E(g.chp)}</bdi></b>` : "אין ח.פ."}${r && r.type ? " · " + E(r.type) : ""}${r && r.status ? " · " + E(r.status) : ""}${!r && g.status ? " · " + (EXT_HE[g.status] || E(g.status)) : ""}</div>
+        <div style="margin-top:8px;color:#1e7e4a;font-weight:700">➕ להוספה לרשימה</div></div>`;
+    const docs = [...g.docs].map(id => S.byId.get(id)).filter(Boolean);
+    body.innerHTML = card + `<div style="margin:12px 0 4px"><input class="pd-in" id="pd-ev-q" value="${E(q)}" placeholder="חיפוש חברה אחרת (ח.פ. / שם) לשיוך השטרות אליה" oninput="PD._evSearch(this.value)" autocomplete="off" style="max-width:520px"><div id="pd-ev-res" style="max-width:520px"></div>
+      <button class="pd-btn" style="margin-top:8px" onclick="PD._evNew()">➕ הוספת חברה חדשה</button></div>
+      <h4 style="margin:16px 0 8px">שטרות (${docs.length})</h4><div class="pd-mg-grid">${docs.map(d => { const th = thumbUrls.get(d.id), open = `PD.openDoc('${d.id}','',true)`;
+        return `<div class="pd-mg-card"><div class="pd-mg-l"><div class="pd-mg-th" onclick="${open}"><img data-thumb="${d.id}" alt="" ${th ? `src="${th}"` : ""}><span class="pd-mg-ld" ${th ? 'style="display:none"' : ""}>טוען…</span></div>${pgHtml(d)}</div>
+          <div class="pd-mg-r"><div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="${open}">${E(d.original_name || d.id)}</div><div class="pd-sub">${sizeHtml(d.size)} ${dateHtml(d)}</div><div class="pd-btns"><button class="pd-mini" onclick="${open}">צפייה</button></div></div></div>`; }).join("")}</div>`;
+    body.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) { img.src = u; if (img.nextElementSibling) img.nextElementSibling.style.display = "none"; } }));
+    if (q) evSearch(q);
+  }
+  function evSearch(q) {
+    const g = evGroup(), out = $("pd-ev-res"); if (!g || !out) return;
+    runCompanySearch(q, out, { exclude: () => false, pick: id => evPick(id), mkAdded: () => extDone(g) });
+  }
+  async function evPick(bid) {
+    const g = evGroup(), b = bizById(bid); if (!g || !b) return;
+    if (!confirm(`לשייך את ${g.docs.size} השטרות ל"${displayName(b)}" ולהסיר את "${g.name}" מרשימת החברות הלא רשומות?`)) return;
+    await extDone(g)(bid);
+  }
+  const evAddNew = () => { const g = evGroup(); if (g) extAdd({ ...g, chp: "" }, ""); };
   async function ndSearchC() {          // חיפוש בחברות שלנו (עם התאמה מקורבת) + ברשם החברות
     const box = $("pd-nd-res"), q = ND.sq.trim(); if (!box) return;
     const seq = ND._seq = (ND._seq || 0) + 1, dg = q.replace(/\D/g, "");
@@ -2334,7 +2373,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
