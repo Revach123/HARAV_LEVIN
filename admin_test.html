@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=36"></script>
+<script src="/permit-docs-test.js?v=37"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -801,8 +801,8 @@
   .pc-btn small { display:block; font-size:12px; font-weight:400; color:var(--muted); margin-top:2px; min-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .admin-tbl th, .admin-tbl td { padding-left:8px; padding-right:8px; }
   /* דף ראשי: ממלא את המסך (רוחב וגובה) בלי גלילה; העוגות בצד */
-  .home-wrap { display:flex; gap:clamp(16px,2vw,40px); align-items:stretch; max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:420px; margin:0 auto; box-sizing:border-box; width:100%; overflow:hidden; }
-  .home-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,18px); }
+  .home-wrap { display:flex; flex-direction:column; gap:clamp(8px,1.5vh,20px); align-items:stretch; max-width:min(97vw,1900px); height:calc(100vh - 120px); min-height:420px; margin:0 auto; box-sizing:border-box; width:100%; overflow:hidden; }
+  .home-main { flex:1 1 0; min-width:0; min-height:0; display:flex; flex-direction:column; gap:clamp(8px,1.5vh,18px); }
   .home-main .home-grid { margin:0 !important; max-width:none !important; gap:clamp(10px,1.2vw,20px); grid-template-columns:repeat(4,minmax(0,1fr)) !important; grid-auto-rows:1fr; flex:1 1 0; min-height:0; }
   .home-main .home-grid + .pd-homeh + .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; flex:2 1 0; }
   .home-main .home-card { padding:.5rem .8rem; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
@@ -810,13 +810,15 @@
   .home-main .home-card b { font-size:clamp(17px,1.5vw,30px); }
   .home-main .home-card span.sub { font-size:clamp(13px,1.05vw,19px); }
   .home-main .pd-homeh { margin:clamp(2px,1vh,12px) 0 0; font-size:clamp(18px,1.6vw,28px); }
-  .home-wrap .idx-row { flex:none; width:clamp(340px,27vw,560px); margin:0; justify-content:stretch; }
-  .home-wrap .idx-box { flex-direction:column; flex-wrap:nowrap; justify-content:space-around; gap:16px; min-width:0; width:100%; box-sizing:border-box; padding:clamp(10px,2vh,24px) clamp(12px,1.2vw,24px); font-size:clamp(14px,1.1vw,20px); }
+  .home-wrap .idx-row { flex:none; width:100%; margin:0; justify-content:stretch; }
+  .home-wrap .idx-box { flex-direction:row; flex-wrap:nowrap; justify-content:space-around; gap:clamp(12px,2vw,40px); min-width:0; width:100%; box-sizing:border-box; padding:clamp(10px,2vh,24px) clamp(12px,1.2vw,24px); font-size:clamp(14px,1.1vw,20px); }
   .home-wrap .idx-sub { font-size:clamp(13px,1vw,18px); }
   .home-wrap .idx-line span { font-size:clamp(12px,.95vw,17px); }
   .home-wrap .idx-pie { gap:clamp(10px,1.2vw,22px); }
-  .home-wrap .idx-pie svg { width:clamp(110px,11vw,220px); height:auto; flex:none; }
-  @media (max-width:900px) { .home-wrap { flex-direction:column; height:auto; overflow:visible; } .home-wrap .idx-row { width:100%; } .home-main .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
+  .home-wrap .idx-blk { flex:1; min-width:0; }
+  .home-wrap .idx-pie { justify-content:center; }
+  .home-wrap .idx-pie svg { width:clamp(80px,15vh,190px); height:auto; flex:none; }
+  @media (max-width:900px) { .home-wrap { height:auto; overflow:visible; } .home-wrap .idx-box { flex-direction:column; } .home-main .home-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
   .idx-row { display:flex; justify-content:center; margin:0 0 14px; }
   .idx-box { background:#fff; border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; min-width:230px; }
   .idx-box { display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
