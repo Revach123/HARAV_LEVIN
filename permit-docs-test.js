@@ -148,7 +148,7 @@
 
   function bizAdded(b) {        // נקרא מטופס העסקים אחרי שמירת עסק חדש
     const p = pendingAdd; pendingAdd = null;
-    if (p && b && digitsOf(b.chp_number) === p.chp) p.added(b.id);
+    if (p && b && digitsOf(b.chp_number) === p.chp) p.added(b.id);          // p.chp ריק = חברה בלי ח.פ.: הרישום החדש בלי ח.פ. הוא שלה
   }
 
   // ───────── טעינה ואינדקס ─────────
@@ -1939,17 +1939,24 @@
     return `<div class="pd-sub" style="margin-bottom:6px">חברות שיש להן שטר במאגר, אבל אינן ברשימת העסקים. ברירת מחדל בלי מחוקות ומוזגו. "הוספת חברה לרשימה" פותחת את טופס הוספת העסק עם הח.פ., ואחרי השמירה השטרות של החברה משויכים אליה אוטומטית.</div>
       <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>סטטוס</th><th>שטרות</th><th></th></tr></thead><tbody>${rows.map((g, i) => `<tr><td><b>${E(g.name)}</b></td><td dir="ltr" style="text-align:right">${E(g.chp)}</td><td>${EXT_HE[g.status] || g.status}</td>
         <td class="pd-nd-n">${g.docs.size}</td>
-        <td>${digitsOf(g.chp) ? `<button class="pd-mini primary" onclick="PD._ndAddCo(${i})">הוספת חברה לרשימה</button>` : '<span class="pd-sub" title="אין ח.פ.">-</span>'}</td></tr>`).join("") || `<tr><td colspan="5" class="pd-sub">הרשימה ריקה.</td></tr>`}</tbody></table>`;
+        <td><button class="pd-mini primary" onclick="PD._ndAddCo(${i})" ${digitsOf(g.chp) ? "" : 'title="אין ח.פ.: נפתח טופס עסק בלי ח.פ. עם השם"'}>הוספת חברה לרשימה</button></td></tr>`).join("") || `<tr><td colspan="5" class="pd-sub">הרשימה ריקה.</td></tr>`}</tbody></table>`;
   }
   function ndAddCo(i) {          // הוספת החברה לרשימת העסקים; אחרי השמירה: שיוך השטרות שלה אליה והסרתה מרשימת "לא רשומות"
     const g = extGroups()[i]; if (!g) return;
-    addReg(digitsOf(g.chp).padStart(9, "0"), GONE.includes(g.status), async bid => {
+    const done = async bid => {
       try {
         for (const id of g.docs) { const d = S.byId.get(id); if (d && !(d.business_ids || []).includes(bid)) await api("/permit-docs/" + id, "PUT", { business_ids: [...(d.business_ids || []), bid] }); }
         for (const id of g.ids) await api("/permit-ext/" + id, "DELETE").catch(() => {});
       } catch (e) { alert("החברה נוספה, אבל שיוך השטרות נכשל: " + e.message); }
       S.loaded = false; S.loading = false; await load(); openDash("c");
-    });
+    };
+    if (digitsOf(g.chp)) { addReg(digitsOf(g.chp).padStart(9, "0"), GONE.includes(g.status), done); return; }
+    pendingAdd = { chp: "", added: done };          // בלי ח.פ.: טופס "עסק בלי ח.פ." עם השם ממולא
+    ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
+    if (typeof openForm === "function") { openForm(null); setTimeout(() => {
+      if (typeof toggleNoChp === "function") toggleNoChp();
+      setTimeout(() => { const r = document.getElementById("f-reg"); if (r) { r.value = g.name; r.dispatchEvent(new Event("input", { bubbles: true })); } if (typeof editBiz !== "undefined") editBiz = { ...(editBiz || {}), registrar_name: g.name }; }, 100);
+    }, 150); }
   }
   async function ndSearchC() {          // חיפוש בחברות שלנו (עם התאמה מקורבת) + ברשם החברות
     const box = $("pd-nd-res"), q = ND.sq.trim(); if (!box) return;
