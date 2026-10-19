@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=42"></script>
+<script src="/permit-docs-test.js?v=43"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1531,12 +1531,12 @@ function adminTabs() {
 function renderHome() {
   return `<div class="home-wrap">
     <div class="home-top">
-      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="sub">רשימת המצטרפים (מוצפן)</span></button>
-      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b><span class="sub">חברות, ואיתור בתוך טקסט השטרות</span></button>
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b></button>
+      <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
-      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b><span class="sub">עסק חדש במאגר</span></button>
-      <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b><span class="sub">טבלת כל העסקים, עריכה ומחיקה</span></button>
+      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b></button>
+      <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div>
     <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
