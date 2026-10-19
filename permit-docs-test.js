@@ -490,7 +490,8 @@
         <div style="font-size:34px">📄</div><b>גררו לכאן קובצי PDF או לחצו לבחירה</b>
         <div class="pd-sub">אפשר לבחור כמה קבצים; הם יעברו אחד אחד. אחרי הבחירה המערכת תחפש חברה מתאימה ותציע שיוך.</div>
         <input type="file" id="pd-file" accept="application/pdf,.pdf" multiple style="display:none" onchange="PD._files(this.files)">
-      </div>${U.preset ? `<p class="pd-sub">המסמך ישויך מראש לחברה: <b>${E(bizName(U.preset))}</b> (אפשר לשנות בשלב הבא)</p>` : ""}`;
+      </div>
+      ${U.preset ? "" : `<div class="pd-btns" style="margin-top:12px"><button class="pd-btn" onclick="document.getElementById('pd-bulk').click()" title="מעלה את כל הקבצים בבת אחת בלי שיוך, ואז פותח דשבורד שיוך רק לקבצים האלה">⚡ העלאה מהירה של כמה קבצים, ושיוך בדשבורד</button><input type="file" id="pd-bulk" accept="application/pdf,.pdf" multiple style="display:none" onchange="PD._bulk(this.files)"></div>`}${U.preset ? `<p class="pd-sub">המסמך ישויך מראש לחברה: <b>${E(bizName(U.preset))}</b> (אפשר לשנות בשלב הבא)</p>` : ""}`;
     const dz = $("pd-drop");
     ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("over"); }));
     ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
@@ -660,7 +661,42 @@
 
 
   // ───────── דשבורד מסמכי היתר: לא משויכים / לבדיקה / לחברות שאינן במאגר / מסמכים אחרים ─────────
-  const Q = { bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
+
+  // ───────── העלאה מהירה של כמה קבצים: בלי שיוך ובלי בדיקה אחד אחד, ואחר כך דשבורד שיוך רק לקבצים שהועלו ─────────
+  const BK = { batch: "", ok: [], dup: [], fail: [], total: 0, stop: false };
+  async function bulkRun(files) {
+    const list = [...files].filter(f => /\.pdf$/i.test(f.name) || f.type === "application/pdf");
+    if (!list.length) return;
+    Object.assign(BK, { batch: "upload-" + Date.now().toString(36), ok: [], dup: [], fail: [], total: list.length, stop: false });
+    const body = $("pd-up-body"), paint = (i, cur) => { if (!$("pd-up-body")) return; body.innerHTML = `<div class="pd-empty"><b>מעלה ${list.length} קבצים</b><br><span class="pd-sub">${i} מתוך ${list.length}${cur ? " · " + E(cur) : ""}</span><br><span class="pd-sub">הועלו: ${BK.ok.length} · קיימים כבר: ${BK.dup.length} · נכשלו: ${BK.fail.length}</span></div><div class="pd-btns" style="justify-content:center"><button class="pd-btn" onclick="PD._bulkStop()">עצירה</button></div>`; };
+    for (let i = 0; i < list.length && !BK.stop; i++) {
+      const file = list[i]; paint(i, file.name);
+      try {
+        const buf = await file.arrayBuffer(), sha = await sha256(buf);
+        const ex = await api("/permit-docs?sha=" + sha);
+        if (ex.exists) { BK.dup.push({ name: file.name, doc: ex.doc }); continue; }
+        let sg = [];
+        try { const r = await extractText(buf, 5); sg = suggest(r.text, file.name).cands.slice(0, 5).map(c => ({ id: c.b.id, s: Math.round(c.score * 100) / 100, w: c.why[0] || "" })); } catch { /* בלי טקסט: ללא הצעות */ }
+        const u8 = new Uint8Array(buf); let bin = "";
+        for (let k = 0; k < u8.length; k += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(k, k + 0x8000));
+        const res = await fetch("/api/permit-docs", { method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
+          body: JSON.stringify({ file_b64: btoa(bin), name: file.name, doc_type: "unknown", business_ids: [], source: "upload", source_ref: BK.batch, source_title: file.name, suggest: sg }) });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 409 && data.doc) { BK.dup.push({ name: file.name, doc: data.doc }); continue; }
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        replaceDoc(data.doc); BK.ok.push({ name: file.name, doc: data.doc });
+      } catch (e) { BK.fail.push({ name: file.name, err: e.message || "שגיאה" }); }
+    }
+    refresh();
+    if (!$("pd-up-body")) return;
+    $("pd-up-body").innerHTML = `<div class="pd-ok-msg">${BK.stop ? "העלאה נעצרה. " : ""}הועלו <b>${BK.ok.length}</b> קבצים${BK.dup.length ? `, <b>${BK.dup.length}</b> כבר היו במאגר (לא הועלו שוב)` : ""}${BK.fail.length ? `, <b style="color:#c0392b">${BK.fail.length}</b> נכשלו` : ""}.</div>
+      <div class="pd-btns" style="margin:10px 0">${BK.ok.length ? `<button class="pd-btn primary" onclick="PD._bulkOpen()">פתיחת דשבורד שיוך לקבצים שהועלו (${BK.ok.length})</button>` : ""}<button class="pd-btn" onclick="PD._upPick()">העלאה נוספת</button></div>
+      ${BK.dup.length ? `<h4>כבר במאגר</h4>` + BK.dup.map(x => `<div class="pd-sub">${E(x.name)} · <a href="#" onclick="PD._close('pd-upload');PD.openDoc('${x.doc.id}');return false">פתיחת המסמך הקיים</a> · ${(x.doc.business_ids || []).map(b => E(bizName(b))).join(", ") || "ללא שיוך"}</div>`).join("") : ""}
+      ${BK.fail.length ? `<h4 style="color:#c0392b">נכשלו</h4>` + BK.fail.map(x => `<div class="pd-sub">${E(x.name)}: ${E(x.err)}</div>`).join("") : ""}`;
+  }
+  function bulkOpen() { close("pd-upload"); openUnassigned("un", BK.batch); }
+
+  const Q = { batch: "", bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
   const VIEWS = [["un", "לא משויכים כלל"], ["sug", "עם הצעת שיוך נוספת"], ["other", "מסמכים אחרים"]];
   const ALLV = ["un", "sug", "review", "ext", "gone", "other"];
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
@@ -703,7 +739,7 @@
   }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && srcOk(d) && !Q.skipped.has(d.id) && !(S.rev && S.rev.has("doc:" + d.id)) &&
+    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && (!Q.batch || d.source_ref === Q.batch) && srcOk(d) && !Q.skipped.has(d.id) && !(S.rev && S.rev.has("doc:" + d.id)) &&
         (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
@@ -722,8 +758,8 @@
     for (const id of ["pd-un", "pd-cd", "pd-aq"]) if ($(id)) close(id);
     if (t === "un") openUnassigned("un"); else if (t === "aq") openAdminQ(); else openCompanyDash(t);
   }
-  function openUnassigned(view) {
-    Q.view = view || "un"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
+  function openUnassigned(view, batch) {
+    Q.batch = batch || ""; Q.view = view || "un"; Q.resume = readPos(Q.view); Q.i = 0; Q.curId = ""; Q.filter = ""; Q.shared = false; Q.skipped = new Set(); Q.replace = null;      // דילוג תקף רק לפתיחה הזו של החלון
     overlay("pd-un", `<div class="pd-rv"><div class="pd-viewcol">
         <div class="pd-toolbar">
           <div class="pd-tbrow"><div class="pd-tabs" id="pd-un-tabs"></div><span style="flex:1"></span>
@@ -764,7 +800,7 @@
     if (tabs) tabs.innerHTML = topTabs("un") + `<span class="pd-sub" style="margin:0 8px">|</span>` + VIEWS.map(([v, l]) => `<button class="pd-tab sub ${Q.view === v ? "sel" : ""}" onclick="PD._unView('${v}')">${l} <span class="pd-tabn">${vc[v]}</span></button>`).join("");
     const xn = $("pd-un-extn"); if (xn) xn.textContent = extCount("nodb");
     const gn = $("pd-un-gonen"); if (gn) gn.textContent = extCount("gone");
-    if (cnt) cnt.textContent = `${list.length} מסמכים בתצוגה`;
+    if (cnt) cnt.innerHTML = `${list.length} מסמכים בתצוגה` + (Q.batch ? ` · <b>רק הקבצים שהועלו עכשיו</b> <button class="pd-link" style="color:#1a3a5c" onclick="PD._unBatchOff()">הצג את כל הלא משויכים</button>` : "");
     const pos = $("pd-un-pos"); if (pos) pos.textContent = list.length ? `${Math.min(Q.i, list.length - 1) + 1} / ${list.length}` : "0 / 0";
     const sk = $("pd-un-skipped"); if (sk) sk.innerHTML = Q.skipped.size ? ` · דולגו ${Q.skipped.size} <button class="pd-link" style="color:#1a3a5c" onclick="PD._unUnskip()">הצג אותם שוב</button>` : "";
     if (Q.resume) { const k = list.findIndex(x => x.id === Q.resume.id); Q.i = k >= 0 ? k : Math.min(Q.resume.i || 0, Math.max(0, list.length - 1)); Q.resume = null; }
@@ -2098,7 +2134,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, _ndTab: ndAct.tab, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
