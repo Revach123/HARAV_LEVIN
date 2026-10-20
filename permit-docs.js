@@ -2157,7 +2157,7 @@
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
-    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "כל החברות" + (r.companies ? ": " : "") : "") + (r.companies || "") },
+    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
   ];
   function jFiltered() {
@@ -2204,7 +2204,7 @@
           <td style="white-space:nowrap">${jRecs(r).map((k, i) => `<button class="pd-mini" style="padding:0 3px;margin-inline-end:2px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>`).join("")}</td>
           <td style="white-space:nowrap">${r.cancelled_at ? `<span class="pd-nd-miss" title="תאריך ביטול: ${E(r.cancelled_at)}">ביטל</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div style="display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button>${r.cancelled_at ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)">↩ שחזור</button>` : `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)">⛔ ביטול</button>`} <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></div></td></tr>`
-          + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
+          + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: לבחירת כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
       ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
   }
   async function jFile(sha) {
@@ -2226,7 +2226,7 @@
       <div style="padding:14px;display:grid;gap:8px" id="pd-jf" data-id="${E(id)}">
         ${JF.map(([k, l]) => `<label class="pd-sub">${l}<input class="pd-in" data-k="${k}" value="${E(r[k] || "")}" style="width:100%" ${k === "email" || k === "id_number" || k === "phone" ? 'dir="ltr"' : ""} autocomplete="off"></label><div class="pd-sub" data-e="${k}" style="color:#c0392b"></div>`).join("")}
         <label class="pd-sub">חברות שנבחרו<textarea class="pd-in" data-k="companies" rows="3" style="width:100%">${E(r.companies || "")}</textarea></label>
-        <label class="pd-sub"><input type="checkbox" data-k="all" ${r.all ? "checked" : ""}> כל החברות שנרשמו וירשמו בהמשך</label>
+        <label class="pd-sub"><input type="checkbox" data-k="all" ${r.all ? "checked" : ""}> לבחירת כל החברות שנרשמו וירשמו בהמשך</label>
         <label class="pd-sub">שדות נוספים / הערות<textarea class="pd-in" data-k="extra" rows="2" style="width:100%">${E(r.extra || "")}</textarea></label>
         <label class="pd-sub">${id ? "תאריך ביטול (ריק = לא ביטל)" : "תאריך הרשמה (ריק = היום)"}<input class="pd-in" type="date" data-k="${id ? "cancelled_at" : "submitted_at"}" value="${E(((id ? r.cancelled_at : r.submitted_at) || "").slice(0, 10))}"></label>
         <div class="pd-sub" data-e="cancelled_at submitted_at" id="pd-jerr" style="color:#c0392b"></div>

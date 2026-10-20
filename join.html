@@ -342,7 +342,7 @@ $("fJoin").addEventListener("submit", async e => {
       $("dName").textContent = `${body.first} ${body.last}`; 
       $("mailNote").textContent = (j.mail && body.email) ? ` אישור נשלח אל ${body.email}.` : "";
       $("dWhen").textContent = `תאריך: ${todayIL}`;
-      $("dChoice").textContent = ch.value === "all" ? "התקשרות: כל החברות שנרשמו וירשמו בהמשך" : `התקשרות: ${chosen.size} חברות שנבחרו מהרשימה`;
+      $("dChoice").textContent = ch.value === "all" ? "התקשרות: לבחירת כל החברות שנרשמו וירשמו בהמשך" : `התקשרות: ${chosen.size} חברות שנבחרו מהרשימה`;
       $("printAgree").innerHTML = `<h2>שטר רישום להיתר עיסקא פרטי</h2><p>${esc(body.first)} ${esc(body.last)} · ת.ז. ${esc(body.id)} · ${todayIL}</p>`
         + `<p><b>התקשרות:</b> ${ch.value === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + esc([...chosen].join(", "))}</p>`
         + [...$("agree").querySelectorAll("p")].map(p => `<p>${esc(p.textContent)}</p>`).join("");

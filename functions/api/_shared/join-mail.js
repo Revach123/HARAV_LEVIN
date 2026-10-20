@@ -18,7 +18,7 @@ export function buildConfirmation({ first, last, id, date, all, companies, origi
 <h2 style="margin:0 0 10px;color:#1b8a4b;font-size:22px">הרישום התקבל</h2>
 <p style="margin:0 0 8px;font-size:16px">תודה, ${esc(name)}. פרטי ההצטרפות נשמרו במכון.</p>
 <p style="margin:0 0 4px;font-size:15px">תאריך: ${esc(date)}</p>
-<p style="margin:0;font-size:15px">התקשרות: ${esc(all ? "כל החברות שנרשמו וירשמו בהמשך" : companies.length + " חברות שנבחרו מהרשימה")}</p></div>
+<p style="margin:0;font-size:15px">התקשרות: ${esc(all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : companies.length + " חברות שנבחרו מהרשימה")}</p></div>
 <div style="background:#fff;border:1px solid #e0e8e8;border-radius:14px;padding:18px 20px">
 <h3 style="margin:0 0 8px;font-size:18px">שטר רישום להיתר עיסקא פרטי</h3>
 <p style="margin:0 0 10px;font-size:13px;color:#4a5a5a">${esc(name)} · ת.ז. ${esc(id)} · ${esc(date)}</p>
