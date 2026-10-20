@@ -2112,7 +2112,8 @@
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש: שם, טלפון, דוא&quot;ל, ת.ז., חברה" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <span class="pd-btns">${F.map(([k, l]) => `<button class="pd-mini ${J.f === k ? "sel" : ""}" onclick="PD._jF('${k}')">${l}</button>`).join("")}</span>
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
-        <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button></div>
+        <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
+        <button class="pd-mini" onclick="PD._jImp()">⬆ ייבוא מ-CSV (אתר ישן)</button></div>
       <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <table class="pd-nd-tbl"><thead><tr><th>פעולות</th><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id;
@@ -2189,6 +2190,47 @@
       if (e.status === 404) { J.rows = J.rows.filter(x => x.id !== id); close("pd-jdel"); ndShow(); return; }
       if (b) b.disabled = false; const t = $("pd-jderr"); if (t) t.textContent = e.message || "שגיאה";
     }
+  }
+  // ייבוא הגשות חדשות מייצוא CSV של CFDB7 (האתר הישן): בדיקה מקדימה, ואז הוספת החדשות בלבד
+  function parseCsv(text) {
+    text = text.replace(/^\uFEFF/, "");
+    const first = text.split(/\r?\n/, 1)[0], cnt = c => first.split(c).length;
+    const d = cnt("\t") >= cnt(",") && cnt("\t") >= cnt(";") ? "\t" : cnt(";") > cnt(",") ? ";" : ",";
+    const rows = []; let row = [], f = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === d) { row.push(f); f = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); f = ""; if (row.some(x => x !== "")) rows.push(row); row = []; }
+      else f += c;
+    }
+    row.push(f); if (row.some(x => x !== "")) rows.push(row);
+    if (rows.length < 2) return [];
+    const head = rows[0].map(h => h.trim().toLowerCase().replace(/[_\-\s]+/g, " "));
+    return rows.slice(1).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])));
+  }
+  function jImp() {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".csv,.tsv,.txt,text/csv";
+    inp.onchange = async () => {
+      const file = inp.files[0]; if (!file) return;
+      let rows; try { rows = parseCsv(await file.text()); } catch { rows = []; }
+      if (!rows.length || !("id" in rows[0]) || !("private" in rows[0])) { alert("הקובץ לא נראה כמו ייצוא של טופס ההצטרפות מ-CFDB7 (חסרות העמודות Id ו-Private)."); return; }
+      overlay("pd-jimp", `<div class="pd-head"><b>ייבוא מ-CSV</b></div><div style="padding:14px;line-height:1.8" id="pd-jimp-b">בודק ${rows.length} שורות…</div>`);
+      const run = async dry => { const t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 400) { const r = await api("/joiners-import", "POST", { dry, rows: rows.slice(i, i + 400) }); for (const k in t) t[k] += r[k]; } return t; };
+      try {
+        const t = await run(true), b = $("pd-jimp-b"); if (!b) return;
+        b.innerHTML = `נמצאו <b>${rows.length}</b> שורות בקובץ:<br>חדשות (יתווספו): <b>${t.added}</b><br>כבר קיימות ברשימה (לא ישונו): ${t.existing}<br>דולגו (חסר מזהה, תאריך או פרטים): ${t.skipped}
+          <div class="pd-sub" id="pd-jimp-e" style="color:#c0392b"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">${t.added ? `<button class="pd-btn" id="pd-jimp-go">ייבוא ${t.added} חדשים</button>` : ""}<button class="pd-mini" onclick="PD._close('pd-jimp')">${t.added ? "ביטול" : "סגירה"}</button></div>`;
+        const go = $("pd-jimp-go"); if (go) go.onclick = async () => {
+          go.disabled = true; go.textContent = "מייבא…";
+          try { const r = await run(false); close("pd-jimp"); J.rows = null; J.cl = null; ndShow(); alert(`יובאו ${r.added} מצטרפים חדשים.`); }
+          catch (e) { go.disabled = false; go.textContent = "נסה שוב"; $("pd-jimp-e").textContent = e.message || "שגיאה"; }
+        };
+      } catch (e) { const b = $("pd-jimp-b"); if (b) b.innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span><div style="margin-top:10px"><button class="pd-mini" onclick="PD._close('pd-jimp')">סגירה</button></div>`; }
+    };
+    inp.click();
   }
   async function jCDel(id) {
     const c = (J.cl || []).find(x => x.id === id); if (!c) return;
@@ -2513,7 +2555,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
