@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { onRequest as menu } from '../../functions/api/ivr-menu.js';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
 import { pickEmail, spokenEmail } from '../../functions/api/_shared/spoken-email.js';
-import { onRequestGet as audio } from '../../functions/api/joiner-audio.js';
+import { onRequestGet as audio, toPcmWav } from '../../functions/api/joiner-audio.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
 const inserted = [];
@@ -185,20 +185,40 @@ for (const [said, want] of [['moshe שטרודל גימייל', 'moshe@gmail.com
   ['M O S H E at gmail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gee mail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gmail dot com', 'moshe@gmail.com'],
   ["אם או אס אייץ' אי שטרודל ג'י מייל נקודה קום", 'moshe@gmail.com'], ["אם או אס אייץ' אי שטרודל גימייל קום", 'moshe@gmail.com'],
   ['dee ay en two zero at hotmail dot com', 'dan20@hotmail.com'], ['די איי אן שתיים אפס שטרודל הוטמייל קום', 'dan20@hotmail.com'],
+  // זיהוי עברי שהדביק אותיות למילה אחת: "איי זד זד" -> "איזה זד" = AZZ; אי (E) בודד נשאר E
+  ['איזה זד שטרודל גימייל נקודה קום', 'azz@gmail.com'], ['איזה זד', ''], ['אי זד שטרודל גימייל', 'ez@gmail.com'], ['בי סי די שטרודל גימייל', 'bcd@gmail.com'], ['בלה בלה שטרודל גימייל', ''],
   ['jay dot kay underscore double you at yahoo', 'j.k_w@yahoo.com'], ['אקס וואי זד שטרודל outlook נקודה קום', 'xyz@outlook.com']]) assert.equal(spokenEmail(said), want, said);
 assert.equal(pickEmail(['שגיאה', 'M O S H E at example dot co dot il', 'em oh ess aitch ee at gmail dot com']), 'moshe@gmail.com');   // עדיפות לספק מוכר
 assert.equal(pickEmail(['', '']), '');
+
+// ---- המרת µ-law / A-law ל-PCM (דפדפנים לא מנגנים wav טלפוני) ----
+const lawWav = (fmt, bytes) => { const u = new Uint8Array(44 + bytes.length), v = new DataView(u.buffer); u.set([0x52, 0x49, 0x46, 0x46]); v.setUint32(4, 36 + bytes.length, true); u.set([0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20], 8); v.setUint32(16, 16, true); v.setUint16(20, fmt, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); u.set([0x64, 0x61, 0x74, 0x61], 36); v.setUint32(40, bytes.length, true); u.set(bytes, 44); return u; };
+const mu = toPcmWav(lawWav(7, [0xff, 0x00, 0x80, 0x7f])), mv = new DataView(mu.buffer);
+assert.equal(mv.getUint16(20, true), 1); assert.equal(mv.getUint16(34, true), 16); assert.equal(mu.length, 44 + 8);
+assert.deepEqual([0, 1, 2, 3].map((i) => mv.getInt16(44 + i * 2, true)), [0, -32124, 32124, 0]);       // µ-law: 0xff = +0, 0x00 = -32124, 0x80 = +32124, 0x7f = -0
+const al = toPcmWav(lawWav(6, [0xd5, 0x55])); assert.equal(new DataView(al.buffer).getInt16(44, true), 8); assert.equal(new DataView(al.buffer).getInt16(46, true), -8);   // A-law: 0xd5 = +8, 0x55 = -8
+const pcm = lawWav(1, [1, 2, 3, 4]); assert.equal(toPcmWav(pcm), pcm);                                 // PCM רגיל לא משתנה
 
 // ---- השמעת הקלטה במסך המנהל (joiner-audio): מנהל בלבד, הנתיב מהרשומה ולא מהבקשה ----
 const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
 const aurl = (id, k) => new URL(`https://x/api/joiner-audio?id=${id}&k=${encodeURIComponent(k)}`);
 const areq = (u, auth = 'Bearer pw') => audio({ request: new Request(u, { headers: auth ? { Authorization: auth } : {} }), env: aenv });
-let ra = await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'));
-assert.equal(ra.status, 200); assert.equal(ra.headers.get('content-type'), 'audio/wav'); assert.equal((await ra.arrayBuffer()).byteLength, 60);
-assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'), '')).status, 401);                      // בלי הרשאה
-assert.equal((await areq(aurl(inserted[2].rid, 'כתובת'))).status, 400);                                 // רק שדות הקלטת ...
-assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת מזהה'))).status, 404);                            // אין הקלטה בשדה
-assert.equal((await areq(aurl('wnotthere0000', 'הקלטת שם פרטי'))).status, 404);
+const K = 'הקלטת שם פרטי';
+const sg = await areq(new URL(`https://x/api/joiner-audio?sign=1&id=${inserted[2].rid}&k=${encodeURIComponent(K)}`));
+assert.equal(sg.status, 200); const { url } = await sg.json(); assert.match(url, /exp=\d+&sig=[0-9a-f]{64}$/);
+const play = (u, headers = {}) => audio({ request: new Request(new URL(u, 'https://x'), { headers }), env: aenv });     // בלי הרשאת מנהל: רק החתימה
+let ra = await play(url);
+assert.equal(ra.status, 200); assert.equal(ra.headers.get('content-type'), 'audio/wav'); assert.equal(ra.headers.get('accept-ranges'), 'bytes'); assert.equal((await ra.arrayBuffer()).byteLength, 60);
+ra = await play(url, { Range: 'bytes=10-19' }); assert.equal(ra.status, 206); assert.equal(ra.headers.get('content-range'), 'bytes 10-19/60'); assert.equal((await ra.arrayBuffer()).byteLength, 10);
+assert.equal((await play(url, { Range: 'bytes=0-' })).status, 206);
+assert.equal((await play(url.replace(/sig=[0-9a-f]/, 'sig=0'))).status, 401);                              // חתימה שגויה
+assert.equal((await play(url.replace(/exp=\d+/, 'exp=1000000000'))).status, 401);                          // פג תוקף
+assert.equal((await play(url.replace(/k=[^&]+/, 'k=' + encodeURIComponent('הקלטת כתובת')))).status, 401);   // חתימה של הקלטה אחרת
+assert.equal((await areq(aurl(inserted[2].rid, K), '')).status, 401);                                      // בלי הרשאה ובלי חתימה
+assert.equal((await areq(new URL(`https://x/api/joiner-audio?sign=1&id=${inserted[2].rid}&k=${encodeURIComponent(K)}`), '')).status, 401);   // גם בקשת חתימה דורשת מנהל
+assert.equal((await areq(aurl(inserted[2].rid, 'כתובת'))).status, 400);                                    // רק שדות הקלטת ...
+assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת מזהה'))).status, 404);                               // אין הקלטה בשדה
+assert.equal((await areq(aurl('wnotthere0000', K))).status, 404);
 
 globalThis.fetch = realFetch;
 delete env.AZURE_SPEECH_KEY; delete env.YEMOT_TOKEN;

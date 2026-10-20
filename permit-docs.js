@@ -2125,6 +2125,17 @@
   // הקלטות של מצטרף טלפוני (שדות "הקלטת ..." ב-extra): סמל קטן להשמעה לכל הקלטה
   const J_REC = { "הקלטת שם פרטי": "פרטי", "הקלטת שם משפחה": "משפחה", "הקלטת כתובת": "כתובת", "הקלטת אימייל": "מייל", "הקלטת חברות": "חברות" };
   function jRecs(r) { if (!r.extra || r.extra.indexOf("הקלטת") < 0) return []; try { const x = JSON.parse(r.extra); return Object.keys(J_REC).filter(k => typeof x[k] === "string" && x[k]); } catch { return []; } }
+  const J_RECCOL = { "הקלטת שם פרטי": "first", "הקלטת שם משפחה": "last", "הקלטת כתובת": "addr", "הקלטת אימייל": "email", "הקלטת חברות": "co" };   // הסמל מופיע בעמודה של השדה שהוקלט
+  // ניגון נכשל: בודקים מה השרת החזיר בפועל (הודעת שגיאה / עמוד חסימה / פורמט שמע לא נתמך) ומציגים סיבה מפורשת
+  async function jWhy(url, e) {
+    try {
+      const res = await fetch(url), buf = new Uint8Array(await res.arrayBuffer()), tx = n => String.fromCharCode(...buf.slice(0, n));
+      if (res.status === 418) return "נטפרי חוסם את קובץ השמע (שגיאה 418). יש לבקש מנטפרי לפתוח את הכתובת harav-levin.pages.dev/api/joiner-audio. " + new TextDecoder().decode(buf.slice(0, 200)).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      if (!res.ok) { try { return JSON.parse(new TextDecoder().decode(buf)).error || "שגיאת שרת " + res.status; } catch { return "שגיאת שרת " + res.status; } }
+      if (tx(4) === "RIFF") { const dv = new DataView(buf.buffer); return `הדפדפן לא מנגן את הקובץ (פורמט ${dv.getUint16(20, true)}, ${dv.getUint32(24, true)}Hz, ${dv.getUint16(34, true)} ביט, ${buf.length} בתים)`; }
+      return `התקבל תוכן שאינו קובץ שמע (${res.headers.get("content-type") || "?"}): ${new TextDecoder().decode(buf.slice(0, 80)).replace(/\s+/g, " ")}`;
+    } catch (x) { return (e && e.message || "") + " (בקשת האבחון נכשלה: " + x.message + ")"; }
+  }
   let jAud = null;
   async function jPlay(id, i, btn) {
     const r = J.rows.find(x => x.id === id), k = r && jRecs(r)[i];
@@ -2132,10 +2143,12 @@
     if (jAud) { jAud.pause(); jAud = null; }
     const old = btn.textContent; btn.textContent = "⏳"; btn.disabled = true;
     try {
-      const res = await fetch("/api/joiner-audio?id=" + encodeURIComponent(id) + "&k=" + encodeURIComponent(k), { headers: authH() });
-      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || res.statusText); }
-      jAud = new Audio(URL.createObjectURL(await res.blob()));
-      await jAud.play();
+      // קישור חתום קצר-תוקף (בקשת JSON רגילה), ואז ניגון כרכיב שמע רגיל מהכתובת הזו
+      const res = await fetch("/api/joiner-audio?sign=1&id=" + encodeURIComponent(id) + "&k=" + encodeURIComponent(k), { headers: authH() });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.url) throw new Error(j.error || res.statusText);
+      jAud = new Audio(j.url);
+      try { await jAud.play(); } catch (e) { throw new Error(await jWhy(j.url, e)); }
     } catch (e) { alert("השמעת ההקלטה נכשלה: " + e.message); }
     btn.textContent = old; btn.disabled = false;
   }
@@ -2153,12 +2166,11 @@
     { k: "first", h: "שם פרטי", v: r => r.first },
     { k: "last", h: "שם משפחה", v: r => r.last },
     { k: "id", h: "ת.ז.", nar: 1, ltr: 1, v: r => r.id_number },
-    { k: "phone", h: "טלפון", nar: 1, ltr: 1, v: r => r.phone },
-    { k: "phone2", h: "טלפון נוסף", nar: 1, ltr: 1, v: r => jX(r).phone2 },
+    { k: "phone", h: "טלפון", nar: 1, ltr: 1, v: r => `${r.phone} ${jX(r).phone2}`.trim() },          // הטלפון הנוסף מוצג מתחת לעיקרי (ומסונן יחד איתו)
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
-    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "כל החברות" + (r.companies ? ": " : "") : "") + (r.companies || "") },
+    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
   ];
   function jFiltered() {
@@ -2188,24 +2200,23 @@
     if (J.view === "cancels") return ndCancels();
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
-    const { rows, dup } = jFiltered(), N = J_COLS.length + 5;
-    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:200px;max-width:320px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:120px;max-width:200px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${E(c.v(r) || "")}</td>`;
+    const { rows, dup } = jFiltered(), N = J_COLS.length + 4;
+    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:200px;max-width:320px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:120px;max-width:200px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : E(c.v(r) || "")}${jRecs(r).map((k, i) => J_RECCOL[k] === c.k ? `<button class="pd-mini" style="padding:0 3px;margin-inline-start:4px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>` : "").join("")}</td>`;
     const sel = (fn, cur, opts) => `<select class="pd-in" style="padding:2px;font-size:12px;width:100%" onchange="${fn}(this.value)">${opts.map(([k, l]) => `<option value="${k}"${cur === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
         <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
         <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button></div>
       <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
-      <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12.5px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th>הקלטות</th><th style="white-space:nowrap">סטטוס</th><th style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
-        <tr class="pd-cfrow">${J_COLS.map(c => `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}<th></th>
+      <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12.5px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th style="white-space:nowrap">סטטוס</th><th style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
+        <tr class="pd-cfrow">${J_COLS.map(c => `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
           <th style="padding:2px 4px;top:30px">${sel("PD._jF", J.f, [["all", "הכל"], ["cancelled", "ביטלו"], ["active", "פעילים"]])}</th><th style="padding:2px 4px;top:30px">${sel("PD._jFA", J.fa, [["all", "הכל"], ["file", "יש"], ["nofile", "אין"]])}</th><th class="pd-j-act"></th></tr></thead>
       <tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);
         return `<tr class="go" onclick="PD._jOpen('${r.id}')">${J_COLS.map(c => cell(c, r)).join("")}
-          <td style="white-space:nowrap">${jRecs(r).map((k, i) => `<button class="pd-mini" style="padding:0 4px;margin-inline-end:3px;font-size:11px" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊${E(J_REC[k])}</button>`).join("")}</td>
           <td style="white-space:nowrap">${r.cancelled_at ? `<span class="pd-nd-miss" title="תאריך ביטול: ${E(r.cancelled_at)}">ביטל</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div style="display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button>${r.cancelled_at ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)">↩ שחזור</button>` : `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)">⛔ ביטול</button>`} <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></div></td></tr>`
-          + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
+          + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: לבחירת כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
       ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
   }
   async function jFile(sha) {
@@ -2227,7 +2238,7 @@
       <div style="padding:14px;display:grid;gap:8px" id="pd-jf" data-id="${E(id)}">
         ${JF.map(([k, l]) => `<label class="pd-sub">${l}<input class="pd-in" data-k="${k}" value="${E(r[k] || "")}" style="width:100%" ${k === "email" || k === "id_number" || k === "phone" ? 'dir="ltr"' : ""} autocomplete="off"></label><div class="pd-sub" data-e="${k}" style="color:#c0392b"></div>`).join("")}
         <label class="pd-sub">חברות שנבחרו<textarea class="pd-in" data-k="companies" rows="3" style="width:100%">${E(r.companies || "")}</textarea></label>
-        <label class="pd-sub"><input type="checkbox" data-k="all" ${r.all ? "checked" : ""}> כל החברות שנרשמו וירשמו בהמשך</label>
+        <label class="pd-sub"><input type="checkbox" data-k="all" ${r.all ? "checked" : ""}> לבחירת כל החברות שנרשמו וירשמו בהמשך</label>
         <label class="pd-sub">שדות נוספים / הערות<textarea class="pd-in" data-k="extra" rows="2" style="width:100%">${E(r.extra || "")}</textarea></label>
         <label class="pd-sub">${id ? "תאריך ביטול (ריק = לא ביטל)" : "תאריך הרשמה (ריק = היום)"}<input class="pd-in" type="date" data-k="${id ? "cancelled_at" : "submitted_at"}" value="${E(((id ? r.cancelled_at : r.submitted_at) || "").slice(0, 10))}"></label>
         <div class="pd-sub" data-e="cancelled_at submitted_at" id="pd-jerr" style="color:#c0392b"></div>
