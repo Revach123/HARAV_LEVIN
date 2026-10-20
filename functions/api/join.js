@@ -71,7 +71,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       const task = sendConfirmation(env, email, { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin });
       if (waitUntil) waitUntil(task); else await task;
     }
-    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && env.RESEND_API_KEY && env.MAIL_FROM) });
+    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });
   } catch {
     return reply({ ok: false, error: "אירעה שגיאה בשמירת הטופס. נא לנסות שוב." }, 500);
   }

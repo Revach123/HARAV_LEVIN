@@ -1,9 +1,8 @@
-// מייל אישור הצטרפות (נשלח אוטומטית למי שהשאיר דוא"ל בטופס). שליחה דרך Resend (https://resend.com).
+// מייל אישור הצטרפות (נשלח אוטומטית למי שהשאיר דוא"ל בטופס). השליחה בפועל נעשית באתר הוורדפרס (wp_mail), מכתובת הדומיין.
 // הגדרה ב-Cloudflare Pages (Settings → Variables and Secrets):
-//   RESEND_API_KEY  (סוד)   מפתח ה-API
-//   MAIL_FROM       (רגיל)  למשל:  מכון היתר עיסקא <noreply@iska.co.il>  (הדומיין חייב להיות מאומת ב-Resend)
-//   MAIL_REPLY_TO   (רגיל, אופציונלי)  כתובת למענה
-// בלי RESEND_API_KEY או MAIL_FROM לא נשלח מייל וההרשמה ממשיכה כרגיל.
+//   WP_MAIL_URL     (רגיל)  https://iska.co.il/wp-json/iska/v1/send-confirmation
+//   WP_MAIL_SECRET  (סוד)   אותה סיסמה שמוגדרת בסקריפט בוורדפרס (wp-mail-endpoint.php)
+// בלי שניהם לא נשלח מייל וההרשמה ממשיכה כרגיל.
 import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE } from "./agreement.js";
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -33,12 +32,11 @@ ${AGREEMENT_BEFORE_CHOICE.map(p).join("")}${AGREEMENT_AFTER_CHOICE.map(p).join("
 
 // מחזיר true אם נשלח. לעולם לא זורק (כשל במייל לא פוגע בהרשמה).
 export async function sendConfirmation(env, to, data) {
-  if (!env.RESEND_API_KEY || !env.MAIL_FROM || !to) return false;
+  if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
     const { html, text } = buildConfirmation(data);
-    const body = { from: env.MAIL_FROM, to: [to], subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text };
-    if (env.MAIL_REPLY_TO) body.reply_to = env.MAIL_REPLY_TO;
-    const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: "Bearer " + env.RESEND_API_KEY, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const r = await fetch(env.WP_MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json", "X-Iska-Secret": env.WP_MAIL_SECRET },
+      body: JSON.stringify({ to, subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text }) });
     return r.ok;
   } catch { return false; }
 }
