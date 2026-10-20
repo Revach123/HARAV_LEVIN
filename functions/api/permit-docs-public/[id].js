@@ -1,5 +1,5 @@
 // GET /api/permit-docs-public/:id → קובץ ה-PDF של מסמך שמקושר לרשימה (כללי / פרטי) של חברה. מסמך אחר: 404.
-export async function onRequestGet({ env, params }) {
+export async function onRequestGet({ request, env, params }) {
   if (!env.PERMITS) return new Response("not found", { status: 404 });
   try {
     const row = await env.DB.prepare(`
@@ -12,7 +12,7 @@ export async function onRequestGet({ env, params }) {
     return new Response(obj.body, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(row.original_name || "permit.pdf")}`,
+        "Content-Disposition": `${new URL(request.url).searchParams.get("dl") ? "attachment" : "inline"}; filename*=UTF-8''${encodeURIComponent(row.original_name || "permit.pdf")}`,
         "Cache-Control": "public, max-age=300",
         "Access-Control-Allow-Origin": "*",
       },

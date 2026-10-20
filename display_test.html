@@ -81,6 +81,8 @@
   .name-cell{font-weight:500}
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
+  .doc-cell{display:flex;gap:14px;justify-content:center;align-items:flex-start}.doc-col{display:flex;flex-direction:column;gap:6px;align-items:flex-start}.doc-stack{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  .doc-side{border-inline-start:1px solid #d5dde5;padding-inline-start:12px}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;margin-bottom:3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
@@ -127,8 +129,7 @@ const COLUMNS = {
     { key:"chp_number", px:110,         label:'ח"פ',                 cell:"num",   w:12 },
     { key:"category", px:125,           label:"קטגוריה",                         w:14 },
     { key:"region", px:85,             label:"אזור",                            w:8  },
-    { key:"has_private_permit", px:125, label:"קיים היתר עסקה פרטי", cell:"yesno", w:14, generalOnly:true },
-    { key:"permit_doc", px:105,         label:"היתר עסקה",           cell:"doc",   w:10 },
+    { key:"permit_doc", px:215,         label:"היתר עיסקא",          cell:"doc",   w:18 },
     { key:"bonds_status", px:215,       label:'אג"ח',                cell:"bonds", w:20 },
     { key:"notes", px:230,              label:"הערות",                           w:22 },
   ],
@@ -189,8 +190,9 @@ async function withDocLinks(rows, level) {
     // "פרטי" (both) מופיע גם ברשימת הכללי עם סימון "יש פרטי"; "רק פרטי" רק ברשימת הפרטי. ברשימת הכללי, אם יש מסמך כללי לאותה סדרה - הוא מוצג במקום ה"פרטי"
     const bd = (l && l.bond_docs) || [], genLabels = new Set(bd.filter(x => x.list === "general").map(x => x.label));
     const bondSubs = bd.filter(x => level === "private" ? x.list !== "general" : (x.list === "general" || (x.list === "both" && !genLabels.has(x.label))))
-      .map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true, has_private_permit: level === "general" && x.list === "both" ? "כן" : "" }));
-    return { ...r, permit_doc: id ? "יש" : "", _docid: id, _specials: l && l.specials ? l.specials : [], _bondSubs: bondSubs };
+      .map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true, has_private_permit: level === "general" && x.list === "both" ? "כן" : "", _hasPriv: level === "general" && x.list === "both", permit_doc: x.list === "both" && level === "general" ? "יש · יש פרטי" : "יש" }));
+    const priv = level === "general" && (r.has_private_permit === "כן" || (l && l.private)), privId = level === "general" && l && l.private && l.private !== id ? l.private : "";          // ברשימת הכללי: "יש פרטי" בצד, עם צפייה והורדה להיתר הפרטי
+    return { ...r, permit_doc: [id ? "יש" : "", priv ? "יש פרטי" : ""].filter(Boolean).join(" · "), _docid: id, _privId: privId, _hasPriv: !!priv, _specials: l && l.specials ? l.specials : [], _bondSubs: bondSubs };
   });
 }
 
@@ -219,7 +221,7 @@ function groupSubRows(list) {
 async function mountList(container, type) {
   const topic = type.startsWith("bonds") ? "bonds" : "companies";
   const level = type.split("-")[1];                       // private | general
-  const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general");
+  const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general").map(c => c.cell === "doc" && level === "private" ? { ...c, px: 120, w: 10 } : c);          // ברשימת הפרטי: רק צפייה והורדה, בלי עמודת "יש פרטי" בצד
   container.innerHTML = '<div class="state">טוען…</div>';
 
   let rows = null, usedSample = false;
@@ -486,6 +488,7 @@ function plain(c, r) {
   const v = r[c.key];
   if (c.cell === "bonds") return v || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
   if (c.cell === "yesno") return v === "כן" ? "כן" : "לא";
+  if (c.cell === "doc") return v || "";
   if (colKind(c) === "number") { const n = parseFloat(String(v ?? "").replace(/,/g, "")); return isNaN(n) ? "" : parseFloat(n.toFixed(2)); }
   return v == null ? "" : v;
 }
@@ -577,11 +580,15 @@ function cellFor(col, val, row) {
     td.textContent = (n > 0 ? "+" : "") + n.toFixed(2) + "%";
     return td;
   }
-  if (col.cell === "doc") {     // קישור למסמך היתר העסקה (נפתח בלשונית חדשה)
+  if (col.cell === "doc") {     // היתר עיסקא: צפייה והורדה, אחד מתחת לשני; ברשימת הכללי, אם יש גם פרטי - "יש פרטי" בצד (גם הוא עם צפייה והורדה)
     td.className = "ctr";
-    const main = row && row._docid ? `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(row._docid)}" target="_blank" rel="noopener">📄 צפייה</a>` : "";
-    const extra = ((row && row._specials) || []).map(x => `<div><a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(x.id)}" target="_blank" rel="noopener" title="${esc(x.detail || x.title)}">📄 ${esc(x.title)}</a>${x.detail ? `<div style="font-size:11px;color:#666;max-width:220px">${esc(x.detail)}</div>` : ""}</div>`).join("");
-    td.innerHTML = main || extra ? main + extra : '<span class="bonds-none">—</span>';
+    const lnk = (id, label, dl) => `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener"${dl ? " download" : ""}>${label}</a>`;
+    const stack = id => `<div class="doc-stack">${lnk(id, "📄 צפייה")}${lnk(id, "⬇ הורדה", 1)}</div>`;
+    const main = row && row._docid ? stack(row._docid) : "";
+    const extra = ((row && row._specials) || []).map(x => `<div class="doc-sp" title="${esc(x.detail || x.title)}"><div class="doc-sp-t">${esc(x.title)}</div>${stack(x.id)}${x.detail ? `<div style="font-size:11px;color:#666;max-width:220px">${esc(x.detail)}</div>` : ""}</div>`).join("");
+    const left = main || extra ? `<div class="doc-col">${main}${extra}</div>` : '<span class="bonds-none">—</span>';
+    const side = row && (row._hasPriv || row._privId) ? `<div class="doc-side"><div class="doc-tag">יש פרטי</div>${row._privId ? stack(row._privId) : ""}</div>` : "";
+    td.innerHTML = `<div class="doc-cell">${left}${side}</div>`;
     return td;
   }
   if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא
