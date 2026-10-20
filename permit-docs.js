@@ -2132,9 +2132,11 @@
     if (jAud) { jAud.pause(); jAud = null; }
     const old = btn.textContent; btn.textContent = "⏳"; btn.disabled = true;
     try {
-      const res = await fetch("/api/joiner-audio?id=" + encodeURIComponent(id) + "&k=" + encodeURIComponent(k), { headers: authH() });
-      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || res.statusText); }
-      jAud = new Audio(URL.createObjectURL(await res.blob()));
+      // קישור חתום קצר-תוקף (בקשת JSON רגילה), ואז ניגון כרכיב שמע רגיל מהכתובת הזו
+      const res = await fetch("/api/joiner-audio?sign=1&id=" + encodeURIComponent(id) + "&k=" + encodeURIComponent(k), { headers: authH() });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok || !j.url) throw new Error(j.error || res.statusText);
+      jAud = new Audio(j.url);
       await jAud.play();
     } catch (e) { alert("השמעת ההקלטה נכשלה: " + e.message); }
     btn.textContent = old; btn.disabled = false;
