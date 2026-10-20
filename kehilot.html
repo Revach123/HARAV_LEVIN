@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#274d5b">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>מכון היתר עיסקא למהדרין</title>
+<style>
+  /* דף פתיחה לעמדות "קהילות" ולמסכי נייד. תצוגת הרשימות היא kiosk.html, ההרשמה היא join.html. */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--navy:#274d5b;--accent:#2aada1;--accent-dark:#1e8f85;--accent-bg:#e9f6f5;--accent-border:#b9e3de;
+    --border:#dfe7e8;--text:#3b3d3d;--muted:#6a7c82}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);
+    font-size:18px;line-height:1.6;-webkit-tap-highlight-color:transparent;min-height:100vh;
+    padding:0 max(1rem,env(safe-area-inset-left)) max(1.5rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-right))}
+  .wrap{max-width:560px;margin:0 auto}
+  .hero{text-align:center;padding:1.2rem 0 .9rem;border-bottom:2px solid var(--accent-border);margin-bottom:1.3rem}
+  .hero img{height:112px;width:auto;display:block;margin:0 auto .5rem}
+  .hero .sub{font-size:19px;color:var(--navy);font-weight:700;line-height:1.35}
+  body:not([data-view=home]) .hero img{height:64px}
+  .view{display:none}
+  body[data-view=home] #v-home,body[data-view=about] #v-about,body[data-view=lists] #v-lists{display:block}
+
+  .big{display:flex;align-items:center;justify-content:space-between;gap:.8rem;width:100%;min-height:68px;padding:.7rem 1.1rem;margin-bottom:.8rem;
+    font:inherit;font-size:22px;font-weight:700;line-height:1.25;color:var(--navy);text-decoration:none;text-align:right;
+    background:#fff;border:2px solid var(--accent-border);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);cursor:pointer}
+  .big::after{content:"\2039";font-size:30px;line-height:1;color:var(--accent-dark);flex:none}
+  .big:active{background:var(--accent-bg);border-color:var(--accent)}
+  .big.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  .big.primary::after{color:#fff}
+  .big.primary:active{background:var(--accent-dark);border-color:var(--accent-dark)}
+  .big small{display:block;font-size:15px;font-weight:400;color:var(--muted);margin-top:.1rem}
+  .big.primary small{color:#d4ecea}
+  .big.ext::after{content:"\2197";font-size:22px}
+  a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+  .back{display:inline-flex;align-items:center;gap:.4rem;min-height:48px;padding:0 .9rem;margin-bottom:.9rem;font:inherit;font-size:18px;font-weight:700;
+    color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .back::before{content:"\203A";font-size:26px;line-height:1}
+  h2{font-size:23px;color:var(--navy);margin:.2rem 0 .8rem;line-height:1.3}
+  .group-title{font-size:17px;font-weight:700;color:var(--muted);margin:1.1rem 0 .5rem}
+  .card{background:#fff;border:1px solid var(--border);border-inline-start:6px solid var(--accent);border-radius:14px;padding:1rem 1.1rem;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .card p{margin-bottom:.85rem}
+  .card p:last-child{margin-bottom:0}
+  .card .lead{font-size:19px;font-weight:700;color:var(--navy)}
+  .card .contact{padding:.7rem .9rem;background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:10px;font-weight:700;color:var(--navy);overflow-wrap:anywhere}
+  .card .contact a{color:var(--accent-dark)}
+  .card .foot{font-size:16px;color:var(--muted)}
+  .foot-links{margin-top:1.4rem;padding-top:1rem;border-top:2px solid var(--accent-border);text-align:center;font-size:17px;color:var(--muted)}
+  .foot-links a{color:var(--accent-dark);font-weight:700;display:inline-block;min-height:44px;padding:.5rem .5rem}
+</style>
+</head>
+<body data-view="home">
+<div class="wrap">
+  <header class="hero">
+    <img src="logo.png" alt="מכון היתר עיסקא למהדרין">
+    <div class="sub">שע"י ועד ההלכה "גלאט הון"</div>
+  </header>
+
+  <!-- ראשי -->
+  <section class="view" id="v-home" aria-label="דף ראשי">
+    <a class="big" href="#about">מי אנחנו?</a>
+    <a class="big primary" href="join.html"><span>רישום להיתר עיסקא<small>מילוי טופס ההצטרפות</small></span></a>
+    <a class="big" href="#lists">רשימות החברות החתומות על היתר עיסקא</a>
+    <div class="foot-links">
+      <div>טלפון: <a href="tel:0527117041" dir="ltr">052-7117041</a></div>
+      <div><a href="join.html#cancel">ביטול הצטרפות</a></div>
+    </div>
+  </section>
+
+  <!-- מי אנחנו -->
+  <section class="view" id="v-about" aria-label="מי אנחנו">
+    <a class="back" href="#">חזרה</a>
+    <h2>מי אנחנו?</h2>
+    <div class="card">
+      <p>בס"ד</p>
+      <p class="lead">מכון היתר עיסקא למהדרין שע"י ועד ההלכה "גלאט הון"</p>
+      <p>ניתן להצטרף באמצעות המכון להיתר עיסקא פרטי עם חברות וגופים שונים שנרשמו במכון.</p>
+      <p>בדף נפרד תראו את רשימת החברות והגופים שחתמו על היתר עיסקא, רשימה של היתר עיסקא כללי הכולל גם אלה שלא נרשמו למכון, ורשימה של היתר עיסקא פרטי שבה רשומים רק אלו שנרשמו במכון להיתר עיסקא פרטי.</p>
+      <p>דרך רישום זה ניתן להתקשר בהיתר עיסקא פרטי – בנוגע לקניית אגחי"ם של חברות הנסחרות בבורסה, תשלומי ריבית לחברת חשמל, גז וכו' ועוד, והכל בכפוף לנוסח ההיתר עיסקא של החברה, והשטר רישום להיתר עיסקא פרטי של החברה, והשטר רישום של הלקוח.</p>
+      <p>הרישום מתייחס לחברות וגופים שכבר חתמו על היתר עיסקא, ורשומים במכון ברשימת היתר עיסקא פרטי, וגם לאלו העתידים להירשם.</p>
+      <p>בנוסף לכך, נכלל גם ברישום זה הסכמה והתחייבות להחלת היתר עיסקא בין כל מי שנרשם לבין כל אדם ו/או כל גוף אחר שנרשם, לגבי כל חשש ריבית שיווצר ביניהם. פרטי ההיתר עיסקא שיחולו הם לפי נוסח ההיתר עיסקא המעודכן של המכון, הניתן לחברות, בהתאמה. עי' הבהרה בהמשך לגבי תוקף ההלכתי בזה.</p>
+      <p>יש לקרוא היטב את כל פרטי שטר הרישום.</p>
+      <p>המטרה ברישום לגבי "חברות" – הוא לתת תוקף הלכתי וחוקי ברור להיתר עיסקא שהחברה חתומה עליו – ביחס למי שנרשם במכון.</p>
+      <p>לגבי עמותות (ברשימות מסומן עם כוכבית אחת*), חנויות ועסקים (ברשימות מסומן עם שני כוכביות**), ואנשים פרטיים (לא מופיעים ברשימה) – יש לשאול מורה הוראה אם ומתי להסתמך על רישום זה.</p>
+      <p>יש לציין שהמטרה ברישום להיתר עיסקא פרטי בנוגע לחברות שאינם שומרי תו"מ הוא עבור מי שנזקק להסתמך על היתר עיסקא, אבל עדיף לימנע מכך במקום שאפשר.<br>יש אומרים שבנוסף לאישור על ההת"ע, ראוי למקבל המעות לעשות קנין סודר כל פעם בעת ביצוע עיסקה, כדי להקנות נכסיו ועסקיו לנותן לפי תנאי ההת"ע.<br>חשוב להדגיש, שעיקרו של היתר עיסקא הוא, שבתמורת הכסף [או החוב הכספי], מקנה המתחייב לצד השני חלק בנכסיו ובעסקיו המניבים רווח (בכפוף לנוסח ההיתר עיסקא).</p>
+      <p>ולכן יש לשים לב: המתחייב תוספת על הקרן, ואין לו עסק או נכס בשיעור שיווי הקרן האמור להניב רווח כשיעור הרווח שסוכם (דהיינו מה שנקרא "ריבית" בלשון ההסכם הרגיל), אינו יכול להסתמך על היתר עיסקא.</p>
+      <p>בנוגע לפעילות מול בנקים יש לציין, שלכל הבנקים בארץ ישראל יש היתר עיסקא, אמנם יש בהם כמה דרגות בכשרותם. בכל הבנקים ניתן לבקש לחתום על היתר עיסקא באופן פרטי, יש בחתימת הלקוח לבד, ויש בתוספת חתימת מנהל הסניף או מורשה חתימה, המאשרים שפעולות החשבון או העיסקה (כגון משכנתא) כפופה להיתר עיסקא של הבנק.</p>
+      <p>לקבלת שטרות היתר עיסקא כללים ופרטיים של חברות, ניתן לפנות לכתובת הדוא"ל של המכון. כמו כן ניתן לקבל רשימת מסלולי השקעה המאושרים המעודכנים.</p>
+      <p>כל פעילות המכון היא על פי הנחיות ועד ההלכה לקרנות והשקעות שע"י דייני ביה"ד הגר"נ קרליץ והגר"ש וואזנר זצ"ל (גלאט הון).</p>
+      <p class="contact">מכון היתר עיסקא למהדרין<br>דוא"ל: <a href="mailto:SL5742214@gmail.com" dir="ltr">SL5742214@gmail.com</a><br>טלפון: <a href="tel:0527117041" dir="ltr">052-7117041</a></p>
+      <p class="foot">* ניתן לבטל את ההצטרפות להיתר עיסקא באמצעות שליחת מייל למכון, או דרך <a href="join.html#cancel" style="color:var(--accent-dark);font-weight:700">טופס הביטול</a>.</p>
+    </div>
+    <a class="big primary" href="join.html" style="margin-top:1rem">רישום להיתר עיסקא</a>
+  </section>
+
+  <!-- רשימות -->
+  <section class="view" id="v-lists" aria-label="רשימות">
+    <a class="back" href="#">חזרה</a>
+    <h2>רשימות החברות החתומות על היתר עיסקא</h2>
+    <div class="group-title">חברות</div>
+    <a class="big" href="kiosk.html?type=companies-general&amp;back=1">רשימת חברות עם היתר עיסקא כללי</a>
+    <a class="big" href="kiosk.html?type=companies-private&amp;back=1">רשימת חברות עם היתר עיסקא פרטי</a>
+    <div class="group-title">אגרות חוב</div>
+    <a class="big" href="kiosk.html?type=bonds-general&amp;back=1">רשימת אג"ח עם היתר עיסקא כללי</a>
+    <a class="big" href="kiosk.html?type=bonds-private&amp;back=1">רשימת אג"ח עם היתר עיסקא פרטי</a>
+    <div class="group-title">רשימות נוספות (נפתחות באתר המכון)</div>
+    <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%A2%D7%95%D7%93%D7%95%D7%AA-%D7%A1%D7%9C-%D7%9E%D7%90%D7%95%D7%A9%D7%A8%D7%95%D7%AA/?hideheader">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים</a>
+    <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%95%D7%AA-%D7%97%D7%99%D7%A1%D7%9B%D7%95%D7%9F-%D7%A7%D7%A8%D7%A0%D7%95%D7%AA-%D7%A0%D7%90%D7%9E%D7%A0%D7%95%D7%AA-%D7%95%D7%A7%D7%A8/?hideheader">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל מאושרים</a>
+  </section>
+</div>
+
+<script>
+// ניווט לפי ה-hash (#about / #lists), כך שכפתור "חזרה" של המכשיר עובד.
+(function () {
+  function show() {
+    var h = location.hash.replace("#", "");
+    var v = (h === "about" || h === "lists") ? h : "home";
+    document.body.setAttribute("data-view", v);
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", show);
+  show();
+})();
+</script>
+</body>
+</html>

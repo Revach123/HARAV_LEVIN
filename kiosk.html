@@ -57,11 +57,24 @@
   .note{margin-top:.55rem;padding:.45rem .65rem;background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;border-radius:8px;font-size:15px}
   .state{text-align:center;color:var(--muted);padding:3rem 1rem;font-size:20px}
   .more{display:block;margin:1.2rem auto 2rem;font:inherit;font-size:19px;font-weight:700;min-height:56px;padding:0 2.2rem;border:2px solid var(--accent);border-radius:12px;background:#fff;color:var(--accent-dark);cursor:pointer}
+  /* חזרה לדף kehilot (מופיע רק כשהדף נפתח עם ?back=1) */
+  .backlink{display:none;align-items:center;gap:.35rem;min-height:44px;margin-bottom:.45rem;padding:0 .9rem;font:inherit;font-size:17px;font-weight:700;color:var(--navy);text-decoration:none;
+    background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .backlink::before{content:"\203A";font-size:24px;line-height:1}
+  body.has-back .backlink{display:inline-flex}
+  /* כרטיס בפורמט המסך של נדרים פלוס: תווית: ערך */
+  .card.fmt{border:2px solid #9aa6a9;border-inline-start:2px solid #9aa6a9;border-radius:16px;padding:.8rem 1rem;box-shadow:none}
+  .card.fmt .ln{display:block;font-size:18px;line-height:1.55;color:var(--muted)}
+  .card.fmt .ln b{font-weight:700;color:var(--navy);overflow-wrap:anywhere}
+  .card.fmt .ln.name{font-size:20px}
+  .card.fmt .ln.name b{color:var(--accent-dark)}
+  .card.fmt .ln .bad{color:var(--red)} .card.fmt .ln .good{color:var(--green)}
   .top-btn{position:fixed;inset-inline-start:1rem;bottom:1rem;z-index:30;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:26px;cursor:pointer;display:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}
 </style>
 </head>
 <body>
 <div class="top">
+  <a class="backlink" href="kehilot.html#lists">חזרה לרשימות</a>
   <div class="row1">
     <img src="logo.png" alt="" onerror="this.style.display='none'">
     <div class="main" id="mainTabs">
@@ -95,6 +108,7 @@ const PAGE = 48;
 const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 if (params.has("hideheader")) document.body.classList.add("hideheader");
+if (params.has("back")) document.body.classList.add("has-back");
 if (params.get("nav") === "0") { $("mainTabs").style.display = "none"; $("subTabs").style.display = "none"; }
 
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
@@ -109,20 +123,20 @@ const cache = {};
 function row(label, val) { return val === "" || val == null ? "" : `<dt>${label}</dt><dd>${esc(val)}</dd>`; }
 function note(r) { return r.notes ? `<div class="note">${esc(r.notes)}</div>` : ""; }
 
+// שורה בפורמט "תווית: ערך" (כמו במסך של נדרים פלוס). שורה בלי ערך לא מוצגת.
+function ln(label, val, cls) { return val === "" || val == null ? "" : `<span class="ln ${cls || ""}">${esc(label)}: <b>${val}</b></span>`; }
 function companyCard(r) {
   const st = r.bonds_status || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
-  const cls = /לא מאושר/.test(st) ? "warn" : /מאושר/.test(st) ? "ok" : "no";
-  const priv = r.has_private_permit ? `<span class="chip">${esc(r.has_private_permit === "כן" ? "יש גם היתר עסקה פרטי" : r.has_private_permit)}</span>` : "";
-  return `<article class="card"><h3>${esc(r.permit_name)}</h3>
-    <div class="chips"><span class="chip ${cls}">${esc(st)}</span>${priv}</div>
-    <dl>${row('ח"פ', r.chp_number)}${row("קטגוריה", r.category)}${row("אזור", r.region)}</dl>${note(r)}</article>`;
+  const cls = /לא מאושר/.test(st) ? "bad" : /מאושר/.test(st) ? "good" : "";
+  const priv = r.has_private_permit ? (r.has_private_permit === "כן" ? "יש גם היתר עיסקא פרטי" : r.has_private_permit) : "";
+  return `<article class="card fmt">${ln("שם חברה", esc(r.permit_name), "name")}${ln("מספר", esc(r.chp_number))}${ln("עיסוק", esc(r.category))}${ln("אזור", esc(r.region))}
+    ${ln('אג"ח וני"ע', `<span class="${cls}">${esc(st)}</span>`)}${ln("היתר פרטי", esc(priv))}${ln("הערות", esc(r.notes))}</article>`;
 }
 function bondCard(r) {
   const rating = [r.midroog_rating && "מידרוג " + r.midroog_rating, r.maalot_rating && "מעלות " + r.maalot_rating].filter(Boolean).join(" · ");
-  return `<article class="card"><h3>${esc(r.security_name)}</h3><div class="sub">${esc(r.company)}</div>
-    <div class="chips">${r.symbol ? `<span class="chip">${esc(r.symbol)}</span>` : ""}${r.security_type ? `<span class="chip no">${esc(r.security_type)}</span>` : ""}</div>
-    <dl>${row("מספר נייר", r.security_id)}${row("ריבית", pct(r.annual_interest))}${row("מועד פדיון", r.redemption_date)}${row("הצמדה", r.linkage)}
-    ${row("שער אחרון", num(r.last_price))}${row("תשואה לפדיון", pct(r.ytm_gross))}${row("תשואה שנתית", pct(r.annual_yield))}${row("דירוג", rating)}</dl>${note(r)}</article>`;
+  return `<article class="card fmt">${ln('אג"ח', esc(r.security_name), "name")}${ln("חברה", esc(r.company))}${ln("סימול", esc(r.symbol))}${ln("מספר נייר", esc(r.security_id))}${ln("סוג נייר", esc(r.security_type))}
+    ${ln("ריבית", esc(pct(r.annual_interest)))}${ln("מועד פדיון", esc(r.redemption_date))}${ln("הצמדה", esc(r.linkage))}${ln("שער אחרון", esc(num(r.last_price)))}
+    ${ln("תשואה לפדיון", esc(pct(r.ytm_gross)))}${ln("תשואה שנתית", esc(pct(r.annual_yield)))}${ln("דירוג", esc(rating))}${ln("הערות", esc(r.notes))}</article>`;
 }
 
 function haystack(r) {

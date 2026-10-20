@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#274d5b">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>רישום להיתר עיסקא פרטי</title>
+<style>
+  /* טופס הרשמה וטופס ביטול, מותאמים לנייד. שולחים ל-/api/join ול-/api/join-cancel (נכנסים לרשימת המצטרפים במסך המנהל). */
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:400;font-display:swap;
+    src:url(fonts/alef/alef-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+200C-2010,U+20AA,U+25CC,U+FB1D-FB4F}
+  @font-face{font-family:'Alef';font-style:normal;font-weight:700;font-display:swap;
+    src:url(fonts/alef/alef-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--navy:#274d5b;--accent:#2aada1;--accent-dark:#1e8f85;--accent-bg:#e9f6f5;--accent-border:#b9e3de;
+    --border:#dfe7e8;--text:#3b3d3d;--muted:#6a7c82;--red:#c0392b;--green:#1e8f4e}
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);font-size:18px;line-height:1.6;
+    -webkit-tap-highlight-color:transparent;padding:0 max(1rem,env(safe-area-inset-left)) max(2rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-right))}
+  .wrap{max-width:600px;margin:0 auto}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 0;margin-bottom:.8rem;border-bottom:2px solid var(--accent-border)}
+  .top img{height:52px;width:auto}
+  .back{display:inline-flex;align-items:center;gap:.35rem;min-height:46px;padding:0 .9rem;font:inherit;font-size:17px;font-weight:700;color:var(--navy);text-decoration:none;
+    background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .back::before{content:"\203A";font-size:24px;line-height:1}
+  h1{font-size:25px;line-height:1.3;color:var(--navy);margin-bottom:.3rem}
+  .warn{font-size:19px;font-weight:700;color:var(--red);margin-bottom:1rem}
+  .view{display:none}
+  body[data-view=join] #v-join,body[data-view=cancel] #v-cancel,body[data-view=done] #v-done,body[data-view=cdone] #v-cdone{display:block}
+  .field{margin-bottom:.9rem}
+  label.lbl{display:block;font-weight:700;color:var(--navy);margin-bottom:.25rem;font-size:17px}
+  .req{color:var(--red)}
+  input[type=text],input[type=tel],input[type=email],input[type=search]{width:100%;min-height:54px;font:inherit;font-size:18px;padding:.4rem .9rem;color:var(--navy);background:#fff;
+    border:2px solid var(--accent-border);border-radius:12px}
+  input:focus{outline:none;border-color:var(--accent)}
+  input[readonly]{background:#eef3f3;color:var(--muted)}
+  input.bad{border-color:var(--red)}
+  .err{display:none;color:var(--red);font-size:15px;margin-top:.2rem}
+  .err.on{display:block}
+  .hint{font-size:15px;color:var(--muted);margin-top:.2rem}
+  .hp{position:absolute;inset-inline-start:-9999px;width:1px;height:1px;overflow:hidden}
+  .agree{background:#fff;border:1px solid var(--border);border-inline-start:6px solid var(--accent);border-radius:14px;padding:1rem 1.1rem;margin:1.2rem 0 1rem;font-size:17px;line-height:1.7}
+  .agree p{margin-bottom:.7rem}
+  .agree .bold{font-weight:700;color:var(--navy)}
+  .choice{display:flex;flex-direction:column;gap:.5rem;margin:.4rem 0 .6rem}
+  .opt,.check{display:flex;align-items:flex-start;gap:.7rem;min-height:54px;padding:.7rem .9rem;background:#fff;border:2px solid var(--accent-border);border-radius:12px;cursor:pointer;font-size:18px}
+  .opt input,.check input{width:26px;height:26px;margin-top:.1rem;flex:none;accent-color:var(--accent-dark)}
+  .opt:has(input:checked),.check:has(input:checked){border-color:var(--accent);background:var(--accent-bg)}
+  .picker{display:none;margin:.3rem 0 .8rem}
+  .picker.on{display:block}
+  .plist{max-height:300px;overflow-y:auto;background:#fff;border:2px solid var(--accent-border);border-radius:12px;margin-top:.5rem;-webkit-overflow-scrolling:touch}
+  .plist label{display:flex;align-items:center;gap:.7rem;min-height:50px;padding:.4rem .8rem;border-bottom:1px solid var(--border);font-size:17px;cursor:pointer}
+  .plist label:last-child{border-bottom:0}
+  .plist input{width:24px;height:24px;flex:none;accent-color:var(--accent-dark)}
+  .pmeta{display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:16px;color:var(--muted);margin-top:.4rem}
+  .link{background:none;border:0;font:inherit;font-size:16px;font-weight:700;color:var(--accent-dark);cursor:pointer;min-height:44px;padding:0 .4rem}
+  .btn{display:block;width:100%;min-height:62px;margin-top:1rem;font:inherit;font-size:22px;font-weight:700;color:#fff;background:var(--navy);border:0;border-radius:14px;cursor:pointer}
+  .btn:active{background:var(--accent-dark)}
+  .btn[disabled]{opacity:.6;cursor:default}
+  .btn.light{color:var(--navy);background:#fff;border:2px solid var(--accent-border)}
+  .btn.danger{background:var(--red)}
+  .formerr{display:none;margin-top:.8rem;padding:.7rem .9rem;color:var(--red);background:#fdeceb;border:1px solid #f2c4c0;border-radius:10px;font-weight:700}
+  .formerr.on{display:block}
+  .box{background:#fff;border:1px solid var(--border);border-inline-start:6px solid var(--green);border-radius:14px;padding:1.1rem 1.2rem;margin-top:.5rem}
+  .box h2{color:var(--green);font-size:24px;margin-bottom:.4rem}
+  .ref{display:inline-block;margin-top:.5rem;padding:.2rem .8rem;font-weight:700;letter-spacing:.08em;color:var(--navy);background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:8px;direction:ltr}
+  .sumline{margin-top:.3rem}
+  .sep{margin:1.8rem 0 1rem;border:0;border-top:2px solid var(--accent-border)}
+  #printAgree{display:none}
+  @media print{
+    body{background:#fff;padding:0} .top,.btn,.back,.noprint{display:none!important}
+    body[data-view=done] #printAgree{display:block;margin-top:1rem;font-size:14px;line-height:1.5}
+    .box{border:1px solid #999}
+  }
+</style>
+</head>
+<body data-view="join">
+<div class="wrap">
+  <div class="top">
+    <img src="logo.png" alt="מכון היתר עיסקא למהדרין">
+    <a class="back" href="kehilot.html">חזרה</a>
+  </div>
+
+  <!-- הרשמה -->
+  <section class="view" id="v-join" aria-label="רישום לקוח להיתר עיסקא פרטי">
+    <h1>רישום לקוח להיתר עיסקא פרטי</h1>
+    <p class="warn">יש לקרוא היטב את השטר!</p>
+    <form id="fJoin" novalidate autocomplete="on">
+      <div class="field"><label class="lbl" for="first">שם פרטי <span class="req">*</span></label>
+        <input id="first" name="first" type="text" autocomplete="given-name" maxlength="40" required><div class="err" data-for="first"></div></div>
+      <div class="field"><label class="lbl" for="last">שם משפחה <span class="req">*</span></label>
+        <input id="last" name="last" type="text" autocomplete="family-name" maxlength="40" required><div class="err" data-for="last"></div></div>
+      <div class="field"><label class="lbl" for="idn">תעודת זהות <span class="req">*</span></label>
+        <input id="idn" name="id" type="text" inputmode="numeric" autocomplete="off" maxlength="12" required><div class="err" data-for="id"></div></div>
+      <div class="field"><label class="lbl" for="fdate">תאריך</label>
+        <input id="fdate" type="text" readonly tabindex="-1" aria-readonly="true"></div>
+      <div class="field"><label class="lbl" for="phone">טלפון <span class="req">*</span></label>
+        <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" style="text-align:right" required><div class="err" data-for="phone"></div></div>
+      <div class="field"><label class="lbl" for="phone2">טלפון נוסף</label>
+        <input id="phone2" name="phone2" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="phone2"></div></div>
+      <div class="field"><label class="lbl" for="email">אימייל</label>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="email"></div></div>
+      <div class="field"><label class="lbl" for="fax">פקס</label>
+        <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"></div>
+      <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
+        <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
+      <div class="hp" aria-hidden="true"><label>אל תמלאו שדה זה<input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
+
+      <!-- נוסח השטר: מילה במילה כפי שנמסר. ה-sha256 של הטקסט הזה נשמר עם כל הרשמה (מה הוצג למצטרף). -->
+      <div class="agree" id="agree">
+        <p class="bold">הריני מצהיר ומתחייב בזה,</p>
+        <p>הואיל ויתכן שאעשה, או עשיתי, עסקאות עם מדינה/חברה/עירייה/מוסד/ וכל גוף או בעל עסק (להלן ה"חברה"), כולל רכישת והחזקת אג"ח ושאר ניי"ע בכל אופן שהוא, וכן כל סוג עיסקה שתהיה (להלן עיסקה), ויתכן שיש או יהיה בעסקאות אלה חשש איסור ריבית,</p>
+        <p>והואיל והחברה הביעה את הסכמתה להתקשרות באופן פרטי על פי היתר עיסקא עם מי שמעוניין בכך, וזאת ע"י חתימתה על שטר רישום חברה להיתר עיסקא פרטי, או בכל דרך שהיא, ושם החברה מופיעה ברשימת מכון היתר עיסקא למהדרין ו/או ברשימת מכון כת"ר לכלכלה על פי התורה (להלן המכון),</p>
+        <p>והואיל וברצוני שכל עיסקה תהיה כפופה לתנאי ופרטי ההיתר עיסקא של החברה, ולתנאים שבשטר רישום של החברה, ולתנאים דלהלן בשטר זה (להלן "הסכם הנפרד"),</p>
+        <p>ע"כ אני מצהיר ומתחייב כדלהלן.</p>
+        <p>א. התקשרותי על פי הסכם הנפרד היא [נא לסמן אחת משני האפשרויות],</p>
+        <div class="choice" role="radiogroup" aria-label="בחירת חברות">
+          <label class="opt"><input type="radio" name="choice" value="all"><span>לבחירת כל החברות שנרשמו וירשמו בהמשך</span></label>
+          <label class="opt"><input type="radio" name="choice" value="list"><span>לבחירה מתוך רשימה:</span></label>
+        </div>
+        <div class="err" data-for="choice"></div>
+        <div class="picker" id="picker">
+          <input id="psearch" type="search" inputmode="search" placeholder="חיפוש חברה לפי שם" autocomplete="off" aria-label="חיפוש חברה">
+          <div class="plist" id="plist" role="group" aria-label="רשימת חברות"></div>
+          <div class="pmeta"><span id="pcount">לא נבחרו חברות</span><button type="button" class="link" id="pclear">נקה בחירה</button></div>
+          <div class="err" data-for="companies"></div>
+        </div>
+        <p>ב. אני מאשר למכון להעמיד לעיון החברות איתן ביקשתי להתקשר בהסכם הנפרד, את כל פרטי האישיים שנמסרו על ידי למכון בשביל ההסכם הנפרד.</p>
+        <p>ג. אני מתחייב למסור לחברות איתן בקשתי להתקשר בהסכם נפרד זה, על פי דרישתן, מידע אמיתי על שיעור ותקופת האחזקה של העיסקה, ולהחזיר להן כספים שלפי תנאי הסכם נפרד זה הם שולמו על ידן שלא כדין.</p>
+        <p>ד. במקרה של קנית עיסקה ביד שניה, שיש בה התחייבות עם חשש ריבית, או במקרה שבתחילת קנית העיסקה היה בה התחייבות עם חשש ריבית, יחולו כל תנאי הסכם הנפרד כשזה מתאפשר, בזמן הנכון ובאופן המותר, ובקנין בהנאת מחילת המלוה ו/או בשאר קנין המועיל.</p>
+        <p>ה. במקרה הנ"ל של סעיף ד' אני מצהיר ששיעור הקניה וההחזקה של העיסקה תהיה רק בשיעור המותר לגבייה על פי ההלכה היהודית, ובאופן שאין בה שום חשש איסור בהחזקתו. כמו כן כל התחייבות של החברה אלי שאינה יכולה ליכלל לפי ההלכה בתנאי הסכם הנפרד, כגון התחייבות שמחושבת בגין תקופה קודמת של החזקת העיסקה באופן שהיה בה חשש איסור - במידה ובשיעור שלא יהיה ניתן להכליל אותה בתנאי היתר העיסקא והסכם הנפרד - , וכן כל אופן אחר כיוצ"ב, אינני רוצה לזכות בה והריני מוותר עליה.</p>
+        <p>ו. במידה שבתנאי הסכם הנפרד החתום ע"י החברה יש התחייבות של החברה ו/או תנאי נאמנות המוטל על החברה שיש בהם חשש איסור, הריני מוותר לחברה על תנאים אלה, ובית הדין יכולים להקל על החברה לפי כללי ההלכה על פי שקול דעתם, בכל הנוגע להתחייבויות ותנאי הנאמנות של החברה.</p>
+        <p>ז. במכירת עיסקה על ידי, כל התחייבות אסורה של החברה כלפי הקונה, במידה וקיימת, אינה בבקשתי ולא בשליחותי אלא ע"ד החברה בלבד.</p>
+        <p>ח. בכל מקרה של עסקה עם חשש ריבית ביני לבין אדם פרטי אחר שגם הוא נרשם במכון, ולא סודר בינינו ולא חל עלינו היתר עיסקא אחר כדין וכהלכה, יחול על העסקה ההיתר עיסקא המעודכן של המכון הניתן לחברות, בהתאמה.</p>
+        <p>ט. אני מודה כי כל הקנינים וההתחייבויות שאפשר לבצעם עכשיו נעשו באופן המועיל ביותר על פי ההלכה, מעכשיו, ובבית דין חשוב, על פי משפטי התנאים, דלא כאסמכתא ודלא כטופסי דשטרי. כמו כן עשיית העיסקה עם החברה תחשב כהודאה ואישור שכל הקנינים וההתחייבויות הנצרכים עבור הסכם הנפרד נעשו באופן המועיל.</p>
+      </div>
+
+      <label class="check"><input type="checkbox" id="consent"><span>קראתי את שטר רישום להיתר עיסקא ואני מאשר את התנאים <span class="req">*</span></span></label>
+      <div class="err" data-for="consent"></div>
+      <div class="formerr" id="joinErr" role="alert"></div>
+      <button class="btn" type="submit" id="joinBtn">שליחה</button>
+    </form>
+    <hr class="sep">
+    <button class="btn light" type="button" id="toCancel">ביטול הצטרפות קיימת</button>
+  </section>
+
+  <!-- אישור הרשמה -->
+  <section class="view" id="v-done" aria-label="הרישום התקבל">
+    <div class="box" role="status">
+      <h2>הרישום התקבל</h2>
+      <p>תודה, <span id="dName"></span>. פרטי ההצטרפות נשמרו במכון.</p>
+      <p class="sumline">מספר אסמכתא: <span class="ref" id="dRef"></span></p>
+      <p class="sumline" id="dWhen"></p>
+      <p class="sumline" id="dChoice"></p>
+    </div>
+    <button class="btn light noprint" type="button" id="printBtn">שמירת אישור (הדפסה / PDF)</button>
+    <a class="btn noprint" href="kehilot.html" style="text-align:center;text-decoration:none;line-height:62px;min-height:62px">חזרה לדף הראשי</a>
+    <div id="printAgree"></div>
+  </section>
+
+  <!-- ביטול -->
+  <section class="view" id="v-cancel" aria-label="טופס ביטול">
+    <h1>טופס ביטול</h1>
+    <p class="warn" style="color:var(--navy)">הרוצה לבטל את הרישום נא למלא את השטר</p>
+    <form id="fCancel" novalidate>
+      <div class="field"><label class="lbl" for="cname">שם <span class="req">*</span></label>
+        <input id="cname" type="text" autocomplete="name" maxlength="80" required><div class="err" data-for="cname"></div></div>
+      <div class="field"><label class="lbl" for="cemail">אימייל</label>
+        <input id="cemail" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="cemail"></div></div>
+      <div class="field"><label class="lbl" for="cphone">טלפון</label>
+        <input id="cphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="cphone"></div></div>
+      <div class="field"><label class="lbl" for="cid">תעודת זהות (לא חובה)</label>
+        <input id="cid" type="text" inputmode="numeric" autocomplete="off" maxlength="12"><div class="hint">מומלץ למלא: מאפשר לזהות את ההצטרפות המדויקת ולבטל אותה.</div><div class="err" data-for="cid"></div></div>
+      <div class="field"><label class="lbl" for="cdate">תאריך</label>
+        <input id="cdate" type="text" readonly tabindex="-1" aria-readonly="true"></div>
+      <div class="hp" aria-hidden="true"><label>אל תמלאו שדה זה<input id="cwebsite" type="text" tabindex="-1" autocomplete="off"></label></div>
+      <div class="formerr" id="cancelErr" role="alert"></div>
+      <button class="btn danger" type="submit" id="cancelBtn">אני רוצה לבטל את העיסקה</button>
+    </form>
+    <hr class="sep">
+    <button class="btn light" type="button" id="toJoin">חזרה לטופס ההרשמה</button>
+  </section>
+
+  <section class="view" id="v-cdone" aria-label="בקשת הביטול התקבלה">
+    <div class="box" role="status"><h2>בקשת הביטול התקבלה</h2><p>הבקשה נשמרה במכון ותטופל. אם נדרש, ניצור קשר.</p></div>
+    <a class="btn" href="kehilot.html" style="text-align:center;text-decoration:none;line-height:62px;min-height:62px">חזרה לדף הראשי</a>
+  </section>
+</div>
+
+<script>
+const API_BASE = /pages\.dev$|localhost|127\.0\.0\.1/.test(location.hostname) ? "" : "https://harav-levin.pages.dev";
+const AGREEMENT_VERSION = "2026-10-20";
+const $ = id => document.getElementById(id);
+const loadedAt = Date.now();
+const norm = s => String(s ?? "").toLowerCase().replace(/["'״׳]/g, "").replace(/\s+/g, " ").trim();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+
+// ── תצוגות לפי hash: (ריק) = הרשמה, #cancel = ביטול ──
+function route() {
+  document.body.setAttribute("data-view", location.hash === "#cancel" ? "cancel" : "join");
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+$("toCancel").onclick = () => { location.hash = "cancel"; };
+$("toJoin").onclick = () => { history.replaceState(null, "", location.pathname + location.search); route(); };
+route();
+
+const todayIL = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date());
+$("fdate").value = todayIL; $("cdate").value = todayIL;
+
+// ── תעודת זהות (אותו אימות כמו בשרת) ──
+function validId(v) {
+  const d = String(v || "").replace(/\D/g, ""); if (d.length < 5 || d.length > 9) return false;
+  const p = d.padStart(9, "0"); let s = 0;
+  for (let i = 0; i < 9; i++) { let n = +p[i] * (i % 2 ? 2 : 1); if (n > 9) n -= 9; s += n; }
+  return s % 10 === 0;
+}
+function validPhone(v) { let d = String(v || "").replace(/\D/g, ""); if (d.startsWith("972")) d = "0" + d.slice(3); return /^0\d{8,9}$/.test(d); }
+const validEmail = v => /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/.test(v);
+
+function setErrs(map, form) {
+  form.querySelectorAll(".err").forEach(e => { e.textContent = ""; e.classList.remove("on"); });
+  form.querySelectorAll("input.bad").forEach(i => i.classList.remove("bad"));
+  let firstEl = null;
+  for (const [k, msg] of Object.entries(map)) {
+    const e = form.querySelector(`.err[data-for="${k}"]`); if (e) { e.textContent = msg; e.classList.add("on"); }
+    const inp = form.querySelector(`[name="${k}"],#${k}`); if (inp && inp.classList) inp.classList.add("bad");
+    if (!firstEl) firstEl = e || inp;
+  }
+  if (firstEl) firstEl.scrollIntoView({ block: "center", behavior: "smooth" });
+}
+
+// שגיאה בשדה נעלמת ברגע שמתחילים לתקן אותו
+document.addEventListener("input", e => {
+  const el = e.target; if (!el.classList) return; el.classList.remove("bad");
+  const k = el.name || el.id, box = el.closest("form") && el.closest("form").querySelector(`.err[data-for="${k}"]`);
+  if (box) { box.textContent = ""; box.classList.remove("on"); }
+});
+document.addEventListener("change", e => {
+  const el = e.target; if (!el.name && el.id !== "consent") return;
+  const k = el.name === "choice" ? "choice" : el.id === "consent" ? "consent" : "", box = k && document.querySelector(`.err[data-for="${k}"]`);
+  if (box) { box.textContent = ""; box.classList.remove("on"); }
+});
+
+// ── בחירת חברות מתוך רשימה ──
+let companies = null; const chosen = new Set();
+async function loadCompanies() {
+  if (companies) return;
+  $("plist").innerHTML = '<div style="padding:1rem;color:var(--muted)">טוען רשימה…</div>';
+  try {
+    const j = await fetch(`${API_BASE}/api/lists?type=companies-private`).then(r => r.json());
+    if (!j || !j.ok) throw 0;
+    companies = [...new Set(j.rows.map(r => String(r.permit_name || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  } catch { companies = null; $("plist").innerHTML = '<div style="padding:1rem;color:var(--red)">לא ניתן לטעון את הרשימה כרגע. נסו שוב בעוד רגע.</div>'; return; }
+  renderList();
+}
+function renderList() {
+  if (!companies) return;
+  const terms = norm($("psearch").value).split(" ").filter(Boolean);
+  const view = terms.length ? companies.filter(n => { const h = norm(n); return terms.every(t => h.includes(t)); }) : companies;
+  const shown = view.slice(0, 120);
+  $("plist").innerHTML = shown.map((n, i) => `<label><input type="checkbox" data-n="${esc(n)}" ${chosen.has(n) ? "checked" : ""}><span>${esc(n)}</span></label>`).join("")
+    + (view.length > shown.length ? `<div style="padding:.7rem 1rem;color:var(--muted)">מוצגות ${shown.length} מתוך ${view.length}. הקלידו כדי לצמצם.</div>` : "")
+    + (!view.length ? '<div style="padding:1rem;color:var(--muted)">לא נמצאו חברות</div>' : "");
+  updCount();
+}
+function updCount() { $("pcount").textContent = chosen.size ? `נבחרו ${chosen.size} חברות` : "לא נבחרו חברות"; }
+$("plist").addEventListener("change", e => { const c = e.target.closest("input[data-n]"); if (!c) return; c.checked ? chosen.add(c.dataset.n) : chosen.delete(c.dataset.n); updCount(); });
+let st; $("psearch").addEventListener("input", () => { clearTimeout(st); st = setTimeout(renderList, 200); });
+$("pclear").onclick = () => { chosen.clear(); renderList(); };
+document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListener("change", () => {
+  const list = document.querySelector('input[name="choice"]:checked').value === "list";
+  $("picker").classList.toggle("on", list); if (list) loadCompanies();
+}));
+
+// נוסח השטר הקבוע בלבד (הפסקאות ושתי אפשרויות הבחירה), בלי מצב הטופס, כדי שה-sha256 יהיה זהה לכל מצטרף באותה גרסה
+function agreementText() {
+  return [...$("agree").querySelectorAll("p, .opt span")].map(n => n.textContent.replace(/\s+/g, " ").trim()).join("\n");
+}
+async function sha256Hex(text) {
+  try { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join(""); } catch { return ""; }
+}
+async function post(path, body) {
+  const r = await fetch(API_BASE + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let j = null; try { j = await r.json(); } catch {}
+  return { status: r.status, j };
+}
+
+// ── שליחת הרשמה ──
+$("fJoin").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = $("fJoin"), v = n => f.elements[n].value.trim();
+  const errs = {};
+  if (v("first").length < 2) errs.first = "נא למלא שם פרטי";
+  if (v("last").length < 2) errs.last = "נא למלא שם משפחה";
+  if (!validId(v("id"))) errs.id = "מספר תעודת הזהות אינו תקין";
+  if (!validPhone(v("phone"))) errs.phone = "מספר הטלפון אינו תקין";
+  if (v("phone2") && !validPhone(v("phone2"))) errs.phone2 = "מספר הטלפון הנוסף אינו תקין";
+  if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה";
+  if (v("address").length < 3) errs.address = "נא למלא כתובת";
+  const ch = f.querySelector('input[name="choice"]:checked');
+  if (!ch) errs.choice = "נא לבחור אחת משתי האפשרויות";
+  else if (ch.value === "list" && !chosen.size) errs.companies = "נא לבחור לפחות חברה אחת";
+  if (!$("consent").checked) errs.consent = "יש לאשר את תנאי שטר הרישום";
+  setErrs(errs, f); $("joinErr").classList.remove("on");
+  if (Object.keys(errs).length) return;
+  const btn = $("joinBtn"); btn.disabled = true; btn.textContent = "שולח…";
+  try {
+    const text = agreementText();
+    const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), address: v("address"),
+      choice: ch.value, companies: ch.value === "list" ? [...chosen] : [], consent: true, agreement_version: AGREEMENT_VERSION, agreement_sha256: await sha256Hex(text),
+      form_date: todayIL, t: Date.now() - loadedAt, website: $("website").value };
+    const { status, j } = await post("/api/join", body);
+    if (j && j.ok) {
+      $("dName").textContent = `${body.first} ${body.last}`; $("dRef").textContent = j.ref || "";
+      $("dWhen").textContent = `תאריך: ${todayIL}`;
+      $("dChoice").textContent = ch.value === "all" ? "התקשרות: כל החברות שנרשמו וירשמו בהמשך" : `התקשרות: ${chosen.size} חברות שנבחרו מהרשימה`;
+      $("printAgree").innerHTML = `<h2>שטר רישום להיתר עיסקא פרטי</h2><p>${esc(body.first)} ${esc(body.last)} · ת.ז. ${esc(body.id)} · ${todayIL} · אסמכתא ${esc(j.ref || "")}</p>`
+        + `<p><b>התקשרות:</b> ${ch.value === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + esc([...chosen].join(", "))}</p>`
+        + [...$("agree").querySelectorAll("p")].map(p => `<p>${esc(p.textContent)}</p>`).join("");
+      document.body.setAttribute("data-view", "done"); window.scrollTo(0, 0);
+      return;
+    }
+    if (j && j.errors) { setErrs(j.errors, f); return; }
+    $("joinErr").textContent = (j && j.error) || (status >= 500 ? "אירעה שגיאה בשרת. נא לנסות שוב בעוד רגע." : "השליחה נכשלה. נא לבדוק את החיבור ולנסות שוב.");
+    $("joinErr").classList.add("on");
+  } catch {
+    $("joinErr").textContent = "השליחה נכשלה. נא לבדוק את החיבור ולנסות שוב."; $("joinErr").classList.add("on");
+  } finally { btn.disabled = false; btn.textContent = "שליחה"; }
+});
+$("printBtn").onclick = () => window.print();
+
+// ── שליחת ביטול ──
+$("fCancel").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = $("fCancel"), errs = {};
+  const name = $("cname").value.trim(), phone = $("cphone").value.trim(), email = $("cemail").value.trim(), id = $("cid").value.trim();
+  if (name.length < 2) errs.cname = "נא למלא שם";
+  if (!phone && !email) errs.cphone = "נא למלא טלפון או דוא\"ל";
+  if (phone && !validPhone(phone)) errs.cphone = "מספר הטלפון אינו תקין";
+  if (email && !validEmail(email)) errs.cemail = "כתובת הדוא\"ל אינה תקינה";
+  if (id && !validId(id)) errs.cid = "מספר תעודת הזהות אינו תקין";
+  setErrs(errs, f); $("cancelErr").classList.remove("on");
+  if (Object.keys(errs).length) return;
+  if (!confirm("לבטל את ההצטרפות להיתר עיסקא?")) return;
+  const btn = $("cancelBtn"); btn.disabled = true; btn.textContent = "שולח…";
+  try {
+    const { status, j } = await post("/api/join-cancel", { name, phone, email, id, form_date: todayIL, t: Date.now() - loadedAt, website: $("cwebsite").value });
+    if (j && j.ok) { document.body.setAttribute("data-view", "cdone"); window.scrollTo(0, 0); return; }
+    if (j && j.errors) { const m = {}; for (const [k, t] of Object.entries(j.errors)) m[{ name: "cname", phone: "cphone", email: "cemail", id: "cid" }[k] || k] = t; setErrs(m, f); return; }
+    $("cancelErr").textContent = (j && j.error) || "השליחה נכשלה. נא לנסות שוב."; $("cancelErr").classList.add("on");
+  } catch { $("cancelErr").textContent = "השליחה נכשלה. נא לבדוק את החיבור ולנסות שוב."; $("cancelErr").classList.add("on"); }
+  finally { btn.disabled = false; btn.textContent = "אני רוצה לבטל את העיסקה"; }
+});
+</script>
+</body>
+</html>
