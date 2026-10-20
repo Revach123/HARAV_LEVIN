@@ -1,0 +1,15 @@
+<!-- הדבקה בוורדפרס (Avada → Code Block / "בלוק קוד"). מציג את טופס ההרשמה והביטול החדש, ומתאים את הגובה אוטומטית. -->
+<iframe id="iska-join" src="https://harav-levin.pages.dev/join.html?embed=1" title="הצטרפות להיתר עיסקא פרטי"
+  style="width:100%;border:0;min-height:900px;display:block" scrolling="no" allow="clipboard-write"></iframe>
+<script>
+(function () {
+  var f = document.getElementById("iska-join");
+  window.addEventListener("message", function (e) {
+    if (e.origin !== "https://harav-levin.pages.dev" || !e.data) return;
+    if (e.data.type === "iska-join-height" && e.data.h) f.style.height = (e.data.h + 20) + "px";
+    if (e.data.type === "iska-join-top") { var r = f.getBoundingClientRect(); if (r.top < 0) window.scrollTo({ top: window.pageYOffset + r.top - 80, behavior: "smooth" }); }
+  });
+  // קישור ישיר לביטול: iska.co.il/…/?cancel  ->  פותח את טופס הביטול
+  if (/[?&]cancel\b/.test(location.search)) f.src += "#cancel";
+})();
+</script>

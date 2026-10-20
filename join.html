@@ -72,6 +72,8 @@
   .ref{display:inline-block;margin-top:.5rem;padding:.2rem .8rem;font-weight:700;letter-spacing:.08em;color:var(--navy);background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:8px;direction:ltr}
   .sumline{margin-top:.3rem}
   .sep{margin:1.8rem 0 1rem;border:0;border-top:2px solid var(--accent-border)}
+  body.embed .top,body.embed .back,body.embed .noprint.home{display:none!important}
+  body.embed{padding-top:.5rem}
   #printAgree{display:none}
   @media print{
     body{background:#fff;padding:0} .top,.btn,.back,.noprint{display:none!important}
@@ -159,7 +161,7 @@
       <p class="sumline" id="dChoice"></p>
     </div>
     <button class="btn light noprint" type="button" id="printBtn">שמירת אישור (הדפסה / PDF)</button>
-    <a class="btn noprint" href="kehilot.html" style="text-align:center;text-decoration:none;line-height:62px;min-height:62px">חזרה לדף הראשי</a>
+    <a class="btn noprint home" href="kehilot.html" style="text-align:center;text-decoration:none;line-height:62px;min-height:62px">חזרה לדף הראשי</a>
     <div id="printAgree"></div>
   </section>
 
@@ -362,6 +364,15 @@ $("fCancel").addEventListener("submit", async e => {
   } catch { $("cancelErr").textContent = "השליחה נכשלה. נא לבדוק את החיבור ולנסות שוב."; $("cancelErr").classList.add("on"); }
   finally { btn.disabled = false; btn.textContent = "אני רוצה לבטל את העיסקה"; }
 });
+
+// ── הטמעה באתר וורדפרס (iframe): ?embed=1 מסתיר כותרת וקישורי חזרה, ומדווח גובה לדף המארח ──
+if (new URLSearchParams(location.search).has("embed")) {
+  document.body.classList.add("embed");
+  let lastH = 0;
+  const sendH = () => { const h = Math.ceil(document.documentElement.scrollHeight); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-join-height", h }, "*"); } catch {} } };
+  new ResizeObserver(sendH).observe(document.body); window.addEventListener("load", sendH); setInterval(sendH, 700);
+  const _vs = new MutationObserver(() => parent.postMessage({ type: "iska-join-top" }, "*")); _vs.observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
+}
 </script>
 </body>
 </html>
