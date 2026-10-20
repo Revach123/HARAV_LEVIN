@@ -2067,7 +2067,7 @@
   }
 
   // ───────── מצטרפים להיתר עיסקא (נתונים אישיים: מנהל בלבד; מפוענחים בשרת ונשארים רק בזיכרון הדף) ─────────
-  const J = { rows: null, total: 0, cancels: 0, loading: false, err: "", q: "", f: "all", shown: 200, open: "" };
+  const J = { rows: null, total: 0, cancels: 0, loading: false, err: "", q: "", f: "all", shown: 200, open: "", view: "list", cl: null, clErr: "" };
   async function jLoad() {
     if (J.loading || J.rows) return;
     J.loading = true; J.err = ""; J.rows = [];
@@ -2090,13 +2090,29 @@
       && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
     return { rows, dup };
   }
+  async function jLoadCancels() {
+    J.clErr = ""; J.cl = null;
+    try { J.cl = (await api("/joiner-cancels")).rows; J.cancels = J.cl.length; } catch (e) { J.clErr = e.message || "שגיאה"; J.cl = []; }
+    if (ND.tab === "e") ndShow();
+  }
+  function ndCancels() {
+    const back = `<button class="pd-mini" onclick="PD._jView('list')">← חזרה לרשימת המצטרפים</button>`;
+    if (!J.cl) { return `<div class="pd-nd-bar">${back}</div><div class="pd-sub" style="margin:12px 0">טוען בקשות ביטול…</div>`; }
+    return `<div class="pd-nd-bar">${back}</div>${J.clErr ? `<div class="pd-sub" style="color:#c0392b;margin:8px 0">${E(J.clErr)}</div>` : ""}
+      <div class="pd-sub" style="margin-bottom:6px">${J.cl.length} בקשות ביטול. "הותאם" = נמצא מצטרף עם אותה ת.ז. והוא סומן כמבוטל אוטומטית. אחרת יש לחפש את המצטרף ולסמן ידנית (עריכה ← תאריך ביטול).</div>
+      <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>ת.ז.</th><th>סטטוס</th><th>פעולות</th></tr></thead><tbody>${J.cl.map(c => `<tr><td dir="ltr" style="text-align:right">${E((c.requested_at || "").slice(0, 16))}</td><td><b>${E(c.name || "-")}</b></td><td dir="ltr" style="text-align:right">${E(c.phone)}</td><td dir="ltr" style="text-align:right">${E(c.email)}</td><td dir="ltr" style="text-align:right">${E(c.id_number || "-")}</td>
+        <td>${c.matched ? '<span class="pd-nd-sug">הותאם וסומן כמבוטל</span>' : '<span class="pd-nd-miss">לא הותאם</span>'}${c.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
+        <td style="white-space:nowrap"><button class="pd-mini" onclick="PD._jFind('${c.id}')">🔍 חיפוש מצטרף</button> <button class="pd-mini" style="color:#c0392b" onclick="PD._jCDel('${c.id}')">🗑 מחיקה</button></td></tr>`).join("") || `<tr><td colspan="7" class="pd-sub">אין בקשות ביטול.</td></tr>`}</tbody></table>`;
+  }
   function ndTabE() {
+    if (J.view === "cancels") return ndCancels();
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
     const { rows, dup } = jFiltered(), F = [["all", "הכל"], ["cancelled", "ביטלו"], ["file", "עם קובץ אישור"], ["nofile", "בלי קובץ אישור"]];
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש: שם, טלפון, דוא&quot;ל, ת.ז., חברה" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <span class="pd-btns">${F.map(([k, l]) => `<button class="pd-mini ${J.f === k ? "sel" : ""}" onclick="PD._jF('${k}')">${l}</button>`).join("")}</span>
-        <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button></div>
+        <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
+        <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button></div>
       <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th><th>פעולות</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id;
@@ -2165,7 +2181,18 @@
       if (b) b.disabled = false; const t = $("pd-jderr"); if (t) t.textContent = e.message || "שגיאה";
     }
   }
+  async function jCDel(id) {
+    const c = (J.cl || []).find(x => x.id === id); if (!c) return;
+    if (!confirm(`למחוק את בקשת הביטול של ${c.name || "(בלי שם)"}? הפעולה אינה הפיכה.`)) return;
+    try { await api("/joiner-cancels?id=" + encodeURIComponent(id), "DELETE"); } catch (e) { if (e.status !== 404) { alert(e.message || "שגיאה"); return; } }
+    J.cl = J.cl.filter(x => x.id !== id); J.cancels = J.cl.length; ndShow();
+  }
+  function jFind(id) {      // עובר לרשימת המצטרפים, מסונן לפי ת.ז. / טלפון / דוא"ל / שם של המבקש
+    const c = (J.cl || []).find(x => x.id === id); if (!c) return;
+    J.q = c.id_number || c.phone || c.email || c.name || ""; J.f = "all"; J.shown = 200; J.view = "list"; ndShow();
+  }
   const jAct = {
+    view: v => { J.view = v; if (v === "cancels") jLoadCancels(); ndShow(); },
     q: v => { J.q = v; J.shown = 200; later(J, "_t", ndShow); },
     f: k => { J.f = k; J.shown = 200; ndShow(); }, open: id => { J.open = J.open === id ? "" : id; ndShow(); },
     more: () => { J.shown += 300; ndShow(); }, retry: () => { J.err = ""; J.rows = null; ndShow(); },
@@ -2477,7 +2504,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
