@@ -22,9 +22,10 @@ import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_share
 import { AGREEMENT_KEYS, unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
-import { normalizeId, normalizePhone, jerusalemNow, newRowId, validEmail, clean } from './_shared/join-common.js';
+import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean } from './_shared/join-common.js';
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
 import { sendConfirmation } from './_shared/join-mail.js';
+import { pickEmail, spokenEmail } from './_shared/spoken-email.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -224,22 +225,25 @@ async function emailStep({ v, env, P, folder, recFile }) {
   }
   const key = `em${n}`;
   if (!has(v, key) || empty(v[key])) return rec(key);
-  const email = spokenEmail(await transcribeOne(env, v, key, folder, recFile));
+  const email = pickEmail(await transcribeLangs(env, v, key, folder, recFile));
   if (email) { v.emok = email; v.emf = key; return { email }; }
   v.emn = String(n + 1);                           // לא תקין: "מייל לא תקין" ושואלים שוב (מהניסיון השני - עם אפשרות להמשיך בלי)
   if (n + 1 >= 2) return { ask: readTap(`${P('join:badEmail')}.${P('join:emailRetry')}`, `ems${n + 1}`, ['1', '2'], { empty: EMPTY }) };
   return rec(`em${n + 1}`, `${P('join:badEmail')}.`);
 }
 
-async function transcribeOne(env, v, key, folder, recFile) {
+// הקלטה אחת מזוהה בכמה שפות (עברית + אנגלית אמריקאית + בריטית): אותיות באנגלית מזוהות רק בזיהוי האנגלי, מילים בעברית רק בעברית.
+const EMAIL_LANGS = ['he-IL', 'en-US', 'en-GB'];
+async function transcribeLangs(env, v, key, folder, recFile) {
   try {
     const value = String(v[key] || '');
     const rec = await downloadRecording(env, [
       ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
       `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
     ]);
-    return rec ? clean(await azureTranscribe(env, rec.bytes), 200).replace(/[.,!?]+$/g, '').trim() : '';
-  } catch { return ''; }
+    if (!rec) return [];
+    return await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, rec.bytes, l), 200).replace(/[,!?]+$/g, '').trim()));
+  } catch { return []; }
 }
 
 // הקלטה -> טקסט, במקביל לכל ההקלטות. אין מחיקה של ההקלטה (בניגוד לחיפוש), כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
@@ -259,19 +263,7 @@ async function transcribeAll(env, v, folder, recFile, want) {
   return out;
 }
 
-// אימייל מדובר -> כתובת. מכיר "שטרודל" (@), "נקודה"/"דוט" (.), "קום" (com), "קו תחתון", "מקף", ושמות ספקים נפוצים
-// (gmail / hotmail / yahoo / outlook). דומיין בלי סיומת מקבל אוטומטית ".com". מחזיר '' אם התוצאה אינה אימייל תקין.
-export function spokenEmail(t) {
-  let e = String(t || '').toLowerCase().trim()
-    .replace(/ג['׳’]?י\s?מ?ייל|ג['׳’]?ימל|\bg\s?mail\b/g, 'gmail')
-    .replace(/הוטמייל|הוטמיל|\bhot\s?mail\b/g, 'hotmail').replace(/יאהו|\byahoo\b/g, 'yahoo').replace(/אאוטלוק|אוטלוק|\boutlook\b/g, 'outlook')
-    .replace(/שטרודל|\bat sign\b|\bat\b/g, '@').replace(/נקודה|דוט|\bdot\b/g, '.')
-    .replace(/(^|[\s.])קום(?![א-ת])/g, '$1com').replace(/קו תחתון/g, '_').replace(/מקף|\bdash\b/g, '-')
-    .replace(/[\s,;:]+/g, '').replace(/\.{2,}/g, '.').replace(/\.$/, '');
-  const at = e.indexOf('@');
-  if (at > 0 && at === e.lastIndexOf('@') && !e.slice(at + 1).includes('.')) e += '.com';
-  return validEmail(e) ? e : '';
-}
+export { spokenEmail };
 
 async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', callId }) {
   const key = await importKeyForWrite(env);
