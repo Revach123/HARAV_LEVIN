@@ -36,6 +36,83 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:askId": {
+  "text": "הקישו את מספר תעודת הזהות שלכם, ואחריו סולמית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_6f4550e76c786a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askList": {
+  "text": "לאחר הצליל, אמרו את שמות החברות שאליהן אתם מבקשים להצטרף",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_d6e5b4a157d76a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askName": {
+  "text": "לאחר הצליל, אמרו את שמכם הפרטי ושם המשפחה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b9265c6fbd9c6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askPhone": {
+  "text": "לא זוהה מספר הטלפון שלכם. הקישו את מספר הטלפון, ואחריו סולמית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_552b95f70aed6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:badId": {
+  "text": "מספר תעודת הזהות אינו תקין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_10cbb7c9b56c6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:badPhone": {
+  "text": "מספר הטלפון אינו תקין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_d4b1cdc0a76d6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:cancelled": {
+  "text": "הבקשה בוטלה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_e5faf53c6b226a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:choice": {
+  "text": "להצטרפות לכל החברות הקישו 1. להצטרפות לחברות מסוימות בלבד הקישו 2",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_2982ff89810e6a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:declare": {
+  "text": "אני מצהיר ומתחייב, כי אני מבקש להצטרף להיתר עיסקא פרטי, בכפוף לכל התנאים שבשטר הרישום המלא של המכון, אותו אני מאשר. לאישור הקישו 1. לביטול הקישו 2",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_9e746c624e096a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:done": {
+  "text": "הבקשה התקבלה. תודה רבה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_3177dd4ad2036a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:error": {
+  "text": "אירעה שגיאה. אנא נסו שוב מאוחר יותר",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_0ba28cd431a16a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
  "mainMenu": {
   "text": "שלום וברכה, הגעת למכון היתר עיסקא למהדרין. להצטרפות להיתר עסקה פרטי הקישו 1. לחיפוש חברות הקישו 2",
   "voice": "he-IL-AvriNeural",
