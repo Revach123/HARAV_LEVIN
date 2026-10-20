@@ -82,10 +82,10 @@
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   td.name-cell.sub{padding-inline-start:26px}.sub-arrow{display:inline-block;margin-inline-end:6px;color:#6b7c8a;font-weight:700}
-  .doc-cell{display:grid;grid-template-columns:96px;gap:0 14px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:96px 96px}
+  .doc-cell{display:grid;grid-template-columns:40px;gap:0 14px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:40px 56px}
   .doc-col,.doc-side{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-height:1px}.doc-stack{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
   .doc-side{border-inline-start:1px solid #d5dde5;padding-inline-start:12px;margin-inline-start:-12px;align-self:stretch}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
-  .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-ic{display:inline-block;width:18px;text-align:center}
+  .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   td.wrapok{white-space:normal}td.wrapok .badge-yes,td.wrapok .badge-bad,td.wrapok .badge-offer{white-space:normal;font-size:11.5px;line-height:1.3;padding:1px 6px}
@@ -133,7 +133,7 @@ const COLUMNS = {
     { key:"chp_number", px:95,         label:'ח"פ',                 cell:"num",   w:12 },
     { key:"category", px:105,           label:"קטגוריה",                         w:14 },
     { key:"region", px:70,             label:"אזור",                            w:8  },
-    { key:"permit_doc", px:200,         label:"היתר עיסקא",          cell:"doc",   w:18 },
+    { key:"permit_doc", px:130,         label:"היתר עיסקא",          cell:"doc",   w:18 },
     { key:"bonds_status", px:130,       label:'אג"ח',                cell:"bonds", w:20 },
     { key:"notes", px:215,              label:"הערות",                           w:22 },
   ],
@@ -180,6 +180,9 @@ const el = (t, c, h) => { const e=document.createElement(t); if(c)e.className=c;
 const fmtPct = v => { if (v === null || v === undefined || v === "") return ""; const n = Number(v); return Number.isFinite(n) ? String(parseFloat(n.toFixed(2))) : String(v); };
 const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
+// סמלים מקובלים: עין = צפייה; חץ אל מגש (תוך תיבה) = הורדה
+const ICON_VIEW = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_DL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
 // הורדה כ-JSON (base64) ושמירה מקומית: רשתות עם סינון תוכן (נטפרי) חוסמות הורדת PDF ישירה ומחזירות דף חסימה (.htm). אם זה נכשל - נופלים להורדה הישירה
 async function pdDownload(ev, id) {
   ev.preventDefault();
@@ -226,8 +229,8 @@ async function withDocLinks(rows, level) {
     // "פרטי" (both) מופיע גם ברשימת הכללי עם סימון "יש פרטי"; "רק פרטי" רק ברשימת הפרטי. ברשימת הכללי, אם יש מסמך כללי לאותה סדרה - הוא מוצג במקום ה"פרטי"
     const bd = (l && l.bond_docs) || [], genLabels = new Set(bd.filter(x => x.list === "general").map(x => x.label));
     const bondSubs = bd.filter(x => level === "private" ? x.list !== "general" : (x.list === "general" || (x.list === "both" && !genLabels.has(x.label))))
-      .map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true, _gen: level === "general", has_private_permit: level === "general" && x.list === "both" ? "כן" : "", _hasPriv: level === "general" && x.list === "both", permit_doc: x.list === "both" && level === "general" ? "יש · יש פרטי" : "יש" }));
-    const priv = level === "general" && (r.has_private_permit === "כן" || (l && l.private)), privId = level === "general" && l && l.private && l.private !== id ? l.private : "";          // ברשימת הכללי: "יש פרטי" בצד, עם צפייה והורדה להיתר הפרטי
+      .map(x => ({ permit_name: x.label, registrar_name: x.label, _docid: x.id, _isSub: true, _bondRow: true, _gen: level === "general", has_private_permit: level === "general" && x.list === "both" ? "כן" : "", _hasPriv: level === "general" && x.list === "both", _privId: level === "general" && x.list === "both" ? x.id : "", permit_doc: x.list === "both" && level === "general" ? "יש · יש פרטי" : "יש" }));
+    const priv = level === "general" && (r.has_private_permit === "כן" || (l && l.private)), privId = level === "general" && l && l.private ? l.private : "";          // ברשימת הכללי: "יש פרטי" בצד, עם צפייה והורדה להיתר הפרטי
     return { ...r, permit_doc: [id ? "יש" : "", priv ? "יש פרטי" : ""].filter(Boolean).join(" · "), _docid: id, _gen: level === "general", _privId: privId, _hasPriv: !!priv, _specials: l && l.specials ? l.specials : [], _bondSubs: bondSubs };
   });
 }
@@ -257,7 +260,7 @@ function groupSubRows(list) {
 async function mountList(container, type) {
   const topic = type.startsWith("bonds") ? "bonds" : "companies";
   const level = type.split("-")[1];                       // private | general
-  const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general").map(c => c.cell === "doc" && level === "private" ? { ...c, px: 120, w: 10 } : c);          // ברשימת הפרטי: רק צפייה והורדה, בלי עמודת "יש פרטי" בצד
+  const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general").map(c => c.cell === "doc" && level === "private" ? { ...c, px: 90, w: 8 } : c);          // ברשימת הפרטי: רק צפייה והורדה, בלי עמודת "יש פרטי" בצד
   container.innerHTML = '<div class="state">טוען…</div>';
 
   let rows = null, usedSample = false;
@@ -624,8 +627,8 @@ function cellFor(col, val, row) {
   }
   if (col.cell === "doc") {     // היתר עיסקא: צפייה והורדה, אחד מתחת לשני; ברשימת הכללי, אם יש גם פרטי - "יש פרטי" בצד (גם הוא עם צפייה והורדה)
     td.className = "ctr";
-    const lnk = (id, ic, label, dl) => `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener" onclick="return ${dl ? "pdDownload" : "pdView"}(event,'${esc(id)}')"${dl ? " download" : ""}><span class="doc-ic">${ic}</span>${label}</a>`;
-    const stack = id => `<div class="doc-stack">${lnk(id, "📄", "צפייה")}${lnk(id, "⬇", "הורדה", 1)}</div>`;
+    const lnk = (id, ic, label, dl) => `<a class="doc-link doc-btn" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener" title="${label}" aria-label="${label}" onclick="return ${dl ? "pdDownload" : "pdView"}(event,'${esc(id)}')"${dl ? " download" : ""}>${ic}</a>`;
+    const stack = id => `<div class="doc-stack">${lnk(id, ICON_VIEW, "צפייה")}${lnk(id, ICON_DL, "הורדה", 1)}</div>`;
     const main = row && row._docid ? stack(row._docid) : "";
     const extra = ((row && row._specials) || []).map(x => `<div class="doc-sp" title="${esc(x.detail || x.title)}"><div class="doc-sp-t">${esc(x.title)}</div>${stack(x.id)}${x.detail ? `<div style="font-size:11px;color:#666;max-width:220px">${esc(x.detail)}</div>` : ""}</div>`).join("");
     const hasSide = !!(row && (row._hasPriv || row._privId));
