@@ -2126,6 +2126,15 @@
   const J_REC = { "הקלטת שם פרטי": "פרטי", "הקלטת שם משפחה": "משפחה", "הקלטת כתובת": "כתובת", "הקלטת אימייל": "מייל", "הקלטת חברות": "חברות" };
   function jRecs(r) { if (!r.extra || r.extra.indexOf("הקלטת") < 0) return []; try { const x = JSON.parse(r.extra); return Object.keys(J_REC).filter(k => typeof x[k] === "string" && x[k]); } catch { return []; } }
   const J_RECCOL = { "הקלטת שם פרטי": "first", "הקלטת שם משפחה": "last", "הקלטת כתובת": "addr", "הקלטת אימייל": "email", "הקלטת חברות": "co" };   // הסמל מופיע בעמודה של השדה שהוקלט
+  // ניגון נכשל: בודקים מה השרת החזיר בפועל (הודעת שגיאה / עמוד חסימה / פורמט שמע לא נתמך) ומציגים סיבה מפורשת
+  async function jWhy(url, e) {
+    try {
+      const res = await fetch(url), buf = new Uint8Array(await res.arrayBuffer()), tx = n => String.fromCharCode(...buf.slice(0, n));
+      if (!res.ok) { try { return JSON.parse(new TextDecoder().decode(buf)).error || "שגיאת שרת " + res.status; } catch { return "שגיאת שרת " + res.status; } }
+      if (tx(4) === "RIFF") { const dv = new DataView(buf.buffer); return `הדפדפן לא מנגן את הקובץ (פורמט ${dv.getUint16(20, true)}, ${dv.getUint32(24, true)}Hz, ${dv.getUint16(34, true)} ביט, ${buf.length} בתים)`; }
+      return `התקבל תוכן שאינו קובץ שמע (${res.headers.get("content-type") || "?"}): ${new TextDecoder().decode(buf.slice(0, 80)).replace(/\s+/g, " ")}`;
+    } catch (x) { return (e && e.message || "") + " (בקשת האבחון נכשלה: " + x.message + ")"; }
+  }
   let jAud = null;
   async function jPlay(id, i, btn) {
     const r = J.rows.find(x => x.id === id), k = r && jRecs(r)[i];
@@ -2138,7 +2147,7 @@
       const j = await res.json().catch(() => ({}));
       if (!res.ok || !j.url) throw new Error(j.error || res.statusText);
       jAud = new Audio(j.url);
-      await jAud.play();
+      try { await jAud.play(); } catch (e) { throw new Error(await jWhy(j.url, e)); }
     } catch (e) { alert("השמעת ההקלטה נכשלה: " + e.message); }
     btn.textContent = old; btn.disabled = false;
   }
