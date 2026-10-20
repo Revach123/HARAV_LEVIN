@@ -2254,12 +2254,17 @@
   async function jSync() {
     overlay("pd-jsync", `<div class="pd-head"><b>סנכרון מהאתר הישן</b></div><div style="padding:14px;line-height:1.8" id="pd-jsync-b">מתחבר…</div>`);
     const set = h => { const b = $("pd-jsync-b"); if (b) b.innerHTML = h; };
-    const t = { added: 0, existing: 0, pdfs: 0, back: 0 };
+    const t = { added: 0, existing: 0, pdfs: 0, back: 0, canc: 0 };
     try {
       for (let i = 0; i < 80; i++) {
         const r = await api("/joiners-sync", "POST", { phase: "new" });
         t.added += r.added; t.existing += r.existing; t.pdfs += r.pdfs;
         set(`מושך הגשות חדשות… נוספו ${t.added}, קובצי אישור ${t.pdfs}`);
+        if (!r.more) break;
+      }
+      for (let i = 0; i < 40; i++) {
+        const r = await api("/joiners-sync", "POST", { phase: "cancels" });
+        t.canc += r.added; set(`מושך בקשות ביטול… נוספו ${t.canc}`);
         if (!r.more) break;
       }
       for (let off = 0; off < 400; off += 8) {
@@ -2268,7 +2273,7 @@
         if (!r.more) break;
       }
       J.rows = null; ndShow();
-      set(`הסתיים.<br>מצטרפים חדשים: <b>${t.added}</b><br>קובצי אישור שנוספו: <b>${t.pdfs + t.back}</b><div style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-jsync')">סגירה</button></div>`);
+      set(`הסתיים.<br>מצטרפים חדשים: <b>${t.added}</b><br>קובצי אישור שנוספו: <b>${t.pdfs + t.back}</b><br>בקשות ביטול חדשות: <b>${t.canc}</b>${t.canc ? '<div class="pd-sub">בקשות הביטול מופיעות ב-"בקשות ביטול". מצטרף שביקש ביטול אינו מסומן אוטומטית: השתמש ב-"חיפוש מצטרף" ואז "ביטול".</div>' : ""}<div style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-jsync')">סגירה</button></div>`);
     } catch (e) {
       J.rows = null; ndShow();
       set(`<span style="color:#c0392b">${E(e.message || "שגיאה")}</span><div class="pd-sub" style="margin-top:6px">עד כה נוספו ${t.added} מצטרפים ו-${t.pdfs + t.back} קובצי אישור.</div><div style="margin-top:10px"><button class="pd-mini" onclick="PD._close('pd-jsync')">סגירה</button></div>`);

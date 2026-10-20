@@ -2,6 +2,7 @@
 // סנכרון מצטרפים חדשים וקובצי אישור (PDF) ישירות מהאתר הישן החי (וורדפרס), בלי גיבוי. מנהל בלבד, רק מהאתר עצמו (Origin).
 // דורש בוורדפרס את הקטע wp-sync-endpoint.php (WPCode), ובאתר החדש WP_MAIL_URL ו-WP_MAIL_SECRET (אותה סיסמה).
 //   POST /api/joiners-sync  { phase: "new" }                → עד 8 הגשות חדשות (מעבר ל-"נקודת ההמשך" השמורה). תשובה: { ok, added, existing, pdfs, more }
+//   POST /api/joiners-sync  { phase: "cancels" }            → עד 8 בקשות ביטול חדשות (טופס 118) לטבלת joiner_cancels. תשובה: { ok, added, existing, more }
 //   POST /api/joiners-sync  { phase: "backfill", offset: N } → משלים קובץ אישור למצטרפים אחרונים (90 יום) שחסר להם. תשובה: { ok, checked, pdfs, more }
 // הלקוח קורא שוב ושוב עד more=false. שורה שכבר קיימת (אותו מזהה כמו בייבוא הישן) לא נדרסת.
 import { checkAdmin } from "./_shared/auth.js";
@@ -11,7 +12,7 @@ import { originOk, readJson, clean } from "./_shared/join-common.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
-const BATCH = 8, DEFAULT_SINCE = 5000, SETTING = "cfdb7_last_id_91";
+const BATCH = 8, DEFAULT_SINCE = 5000, SETTING = "cfdb7_last_id_91", SETTING_C = "cfdb7_last_id_118";
 const sha1_16 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-1", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
 const sha256 = async buf => [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(b => b.toString(16).padStart(2, "0")).join("");
 const g = (f, ...names) => { for (const n of names) { const v = String(f[n] ?? "").trim(); if (v) return v; } return ""; };
@@ -77,6 +78,23 @@ export async function onRequestPost({ request, env }) {
         if (sha) { await env.DB.prepare("UPDATE joiners SET file_sha256 = ? WHERE id = ?").bind(sha, r.id).run(); pdfs++; }
       }
       return out({ ok: true, phase: "backfill", checked: rs.length, pdfs, more: rs.length === BATCH && off + BATCH < 2000 });
+    }
+    if (b.phase === "cancels") {
+      const saved = parseInt(await getSetting(env, SETTING_C), 10), since = Number.isFinite(saved) ? saved : 0;
+      const j = await wp(env, "cf7-rows", { form: "118", since_id: String(since), limit: String(BATCH) });
+      let added = 0, existing = 0, last = since;
+      for (const r of j.rows || []) {
+        last = Math.max(last, r.id);
+        const rid = await sha1_16("cancel:cfdb7:" + r.id);       // כמו joiners_import.py: sid("cancel:" + "cfdb7:<Id>")
+        if (await env.DB.prepare("SELECT id FROM joiner_cancels WHERE id = ?").bind(rid).first()) { existing++; continue; }
+        const f = r.fields || {}, when = String(r.date || "").slice(0, 19);
+        const payload = { name: clean(g(f, "your-name"), 80), phone: clean(g(f, "tel-297"), 40), email: clean(g(f, "your-email"), 120), id: "", src: "cfdb7:" + r.id + " (sync)", form_date: clean(g(f, "date-475"), 20) };
+        if (!when || (!payload.name && !payload.phone && !payload.email)) continue;
+        await env.DB.prepare("INSERT INTO joiner_cancels (id, requested_at, matched_joiners, pii) VALUES (?, ?, '', ?)").bind(rid, when, await encryptPii(wkey, rid, payload)).run();
+        added++;
+      }
+      if (last !== since) await setSetting(env, SETTING_C, last);
+      return out({ ok: true, phase: "cancels", added, existing, more: (j.rows || []).length === BATCH });
     }
     // phase "new"
     const saved = parseInt(await getSetting(env, SETTING), 10);
