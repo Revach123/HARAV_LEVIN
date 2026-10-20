@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { onRequest as menu } from '../../functions/api/ivr-menu.js';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
+import { spokenEmail } from '../../functions/api/ivr-join.js';
 import { onRequestGet as audio } from '../../functions/api/joiner-audio.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
@@ -106,8 +107,8 @@ await step(d, /=ad,no,record,/);
 d.ad = '/1/jc2_ad.wav';
 await step(d, /=emq,/);
 d.emq = '1';
-await step(d, /=em,no,record,\/1,jc2_em,no,yes,no,1,15$/);
-d.em = '/1/jc2_em.wav';
+await step(d, /=em0,no,record,\/1,jc2_em0,no,yes,no,1,15$/);
+d.em0 = '/1/jc2_em0.wav';
 await step(d, /=fxq,/);
 d.fxq = '1';
 await step(d, /=fx,no,11,9,/);
@@ -121,34 +122,62 @@ await step({ ...d, ag: '1' }, /הבקשה התקבלה/);
 const p2 = await decryptPii(key, inserted[1].rid, inserted[1].pii);
 assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, '');
 const ex2 = JSON.parse(p2.extra);
-assert.equal(ex2['טלפון נוסף'], '035551234'); assert.equal(ex2['פקס'], '035551235'); assert.equal(ex2['הקלטת אימייל'], '/1/jc2_em'); assert.equal(ex2['הקלטת חברות'], '/1/jc2_cl');
+assert.equal(ex2['טלפון נוסף'], '035551234'); assert.equal(ex2['פקס'], '035551235'); assert.equal(ex2['הקלטת אימייל'], '/1/jc2_em0'); assert.equal(ex2['הקלטת חברות'], '/1/jc2_cl');
 
 // ---- זיהוי הקלטות ב-Azure (fetch מדומה): שם, כתובת, אימייל וחברות נכנסים כטקסט לרישום ----
-const SAID = { fn: 'משה', ln: 'כהן', ad: 'רחוב הרצל 5 בני ברק', em: 'moshe שטרודל gmail נקודה com', cl: 'בנק לאומי, מנורה' };
+const SAID = { fn: 'משה', ln: 'כהן', ad: 'רחוב הרצל 5 בני ברק', cl: 'בנק לאומי, מנורה', em0: 'בלה בלה', em1: 'moshe שטרודל גימייל' };
+const mails = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
   if (url.includes('DownloadFile')) {
-    const path = new URL(url).searchParams.get('path');
-    const tag = Object.keys(SAID).find((k) => path.includes(`_${k}`));
-    const bytes = new Uint8Array(60); bytes.set([0x52, 0x49, 0x46, 0x46]); bytes.set(new TextEncoder().encode(tag || '?'), 44);
+    const tag = new URL(url).searchParams.get('path').replace(/\.wav$/, '').split('_').pop();
+    const bytes = new Uint8Array(60); bytes.set([0x52, 0x49, 0x46, 0x46]); bytes[44] = tag.length; bytes.set(new TextEncoder().encode(tag), 45);
     return new Response(bytes, { status: 200 });
   }
   if (url.includes('FileAction')) throw new Error('הקלטה לא אמורה להימחק');
   if (url.includes('stt.speech.microsoft.com')) {
-    const tag = new TextDecoder().decode(new Uint8Array(await new Response(opts.body).arrayBuffer()).slice(44, 46));
-    return new Response(JSON.stringify({ RecognitionStatus: 'Success', DisplayText: SAID[tag] + '.' }), { status: 200 });
+    const b = new Uint8Array(await new Response(opts.body).arrayBuffer());
+    const tag = new TextDecoder().decode(b.slice(45, 45 + b[44]));
+    return new Response(JSON.stringify(SAID[tag] ? { RecognitionStatus: 'Success', DisplayText: SAID[tag] + '.' } : { RecognitionStatus: 'NoMatch' }), { status: 200 });
   }
+  if (url.includes('send-confirmation')) { mails.push(JSON.parse(opts.body)); return new Response('{}', { status: 200 }); }
   return realFetch(url, opts);
 };
-env.AZURE_SPEECH_KEY = 'k'; env.YEMOT_TOKEN = '1:2';
-const t = { ApiCallId: 'c5', ApiPhone: '0501234567', id: '111111118', fn: '/1/jc5_fn.wav', ln: '/1/jc5_ln.wav', pc: '1', p2q: '2', ad: '/1/jc5_ad.wav', emq: '1', em: '/1/jc5_em.wav', fxq: '2', ch: '2', cl: '/1/jc5_cl.wav', rd: '2' };
-await step({ ...t, ag: '1' }, /הבקשה התקבלה/);
+env.AZURE_SPEECH_KEY = 'k'; env.YEMOT_TOKEN = '1:2'; env.WP_MAIL_URL = 'https://wp/send-confirmation'; env.WP_MAIL_SECRET = 's';
+const t = { ApiCallId: 'c5', ApiPhone: '0501234567', id: '111111118', fn: '/1/jc5_fn.wav', ln: '/1/jc5_ln.wav', pc: '1', p2q: '2', ad: '/1/jc5_ad.wav', emq: '1', fxq: '2', ch: '2', cl: '/1/jc5_cl.wav', rd: '2' };
+await step(t, /=em0,no,record,\/1,jc5_em0,/);
+// מייל לא תקין: "מייל לא תקין" ושואלים שוב (הקלטה חדשה em1)
+await step({ ...t, em0: '/1/jc5_em0.wav' }, /^read=t-מייל לא תקין\.t-לאחר הצליל אמרו את כתבת האימייל.*=em1,no,record,\/1,jc5_em1,/);
+// "גימייל" מוכר כ-gmail, ו-".com" מתווסף אוטומטית
+await step({ ...t, em0: '/1/jc5_em0.wav', em1: '/1/jc5_em1.wav' }, /=ch|=rd|=ag|^id_list/);
+await step({ ...t, em0: '/1/jc5_em0.wav', em1: '/1/jc5_em1.wav', ag: '1' }, /^id_list_message=t-הבקשה התקבלה\.t-נשלח אישור למייל\.t-תודה רבה&go_to_folder=\/&$/);
 const p3 = await decryptPii(key, inserted[2].rid, inserted[2].pii);
 assert.equal(p3.first, 'משה'); assert.equal(p3.last, 'כהן'); assert.equal(p3.email, 'moshe@gmail.com'); assert.equal(p3.companies, 'בנק לאומי, מנורה');
 const ex3 = JSON.parse(p3.extra);
-assert.equal(ex3['כתובת'], 'רחוב הרצל 5 בני ברק'); assert.equal(ex3['הקלטת שם פרטי'], '/1/jc5_fn');   // ההקלטה נשמרת לצד הטקסט
+assert.equal(ex3['כתובת'], 'רחוב הרצל 5 בני ברק'); assert.equal(ex3['הקלטת שם פרטי'], '/1/jc5_fn'); assert.equal(ex3['הקלטת אימייל'], '/1/jc5_em1');
 assert.ok(ex3['זיהוי אוטומטי מהקלטות']);
+assert.equal(mails.length, 1); assert.equal(mails[0].to, 'moshe@gmail.com'); assert.match(mails[0].text, /משה כהן/);   // מייל האישור נשלח לכתובת שאומתה
+
+// שני ניסיונות כושלים: מתווספת אפשרות להמשיך בלי אימייל; הרישום נשמר בלי אימייל ובלי "נשלח אישור"
+SAID.em1 = 'עוד פעם לא נכון';
+const f = { ...t, ApiCallId: 'c6', id: '200000008', fn: '/1/jc6_fn.wav', ln: '/1/jc6_ln.wav', ad: '/1/jc6_ad.wav', cl: '/1/jc6_cl.wav', em0: '/1/jc6_em0.wav', em1: '/1/jc6_em1.wav' };
+{ const { em1, ...f0 } = f; await step(f0, /^read=t-מייל לא תקין\.t-לאחר הצליל.*=em1,no,record/); }              // כישלון ראשון: שואלים שוב
+await step(f, /^read=t-מייל לא תקין\.t-להקלטה נוספת.*הקישו 1.*בלי מייל הקישו 2=ems2,no,1,1,7,No,no,no,,1\.2,/);
+await step({ ...f, ems2: 'NONE' }, /^read=t-להקלטה נוספת.*=ems2,/);                                           // שתיקה: שואלים שוב
+await step({ ...f, ems2: '1' }, /=em2,no,record,\/1,jc6_em2,/);                                           // עוד הקלטה
+await step({ ...f, ems2: '1', em2: '/1/jc6_em2.wav' }, /^read=t-מייל לא תקין\.t-להקלטה נוספת.*=ems3,/);        // כישלון שלישי: שוב האפשרות להמשיך בלי
+await step({ ...f, ems2: '1', em2: '/1/jc6_em2.wav', ems3: '2' }, /=ch|=rd|=ag/);                                                           // המשך בלי אימייל
+const mailsBefore = mails.length;
+await step({ ...f, ems2: '1', em2: '/1/jc6_em2.wav', ems3: '2', ag: '1' }, /^id_list_message=t-הבקשה התקבלה תודה רבה&go_to_folder=\/&$/);
+const p4 = await decryptPii(key, inserted[3].rid, inserted[3].pid ?? inserted[3].pii);
+assert.equal(p4.email, ''); assert.equal(mails.length, mailsBefore);
+assert.equal(JSON.parse(p4.extra)['הקלטת אימייל'], undefined);
+
+// בדיקת הפענוח של אימייל מדובר
+for (const [said, want] of [['moshe שטרודל גימייל', 'moshe@gmail.com'], ['moshe שטרודל ג׳ימייל נקודה קום', 'moshe@gmail.com'], ['moshe@gmail', 'moshe@gmail.com'], ['moshe at gmail dot com', 'moshe@gmail.com'],
+  ['dov שטרודל הוטמייל דוט קום', 'dov@hotmail.com'], ['a.b שטרודל walla.co.il', 'a.b@walla.co.il'], ['בלה בלה', ''], ['moshe', ''], ['', '']]) assert.equal(spokenEmail(said), want, said);
+
 // ---- השמעת הקלטה במסך המנהל (joiner-audio): מנהל בלבד, הנתיב מהרשומה ולא מהבקשה ----
 const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
 const aurl = (id, k) => new URL(`https://x/api/joiner-audio?id=${id}&k=${encodeURIComponent(k)}`);
