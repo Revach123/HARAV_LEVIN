@@ -51,7 +51,7 @@ async function fetchPdf(env, name) {
   const bin = atob(j.b64), buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
   const sha = await sha256(buf), key = `forms/91/${sha}.pdf`;
   await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "application/pdf" } });
-  await env.DB.prepare("INSERT OR REPLACE INTO joiner_files (sha256, original_name, r2_key, size) VALUES (?, ?, ?, ?)").bind(sha, name, key, buf.length).run();
+  await env.DB.prepare("INSERT OR REPLACE INTO joiner_files (sha256, original_name, r2_key, size) VALUES (?, ?, ?, ?)").bind(sha, /\.pdf$/i.test(name) ? name : name + ".pdf", key, buf.length).run();
   return sha;
 }
 

@@ -48,13 +48,29 @@ add_action('rest_api_init', function () {
       if (!iska_sync_ok($req)) return new WP_REST_Response(['ok' => false], 403);
       $form = (int) $req->get_param('form'); if (!in_array($form, [91, 118], true)) return new WP_REST_Response(['ok' => false], 400);
       $name = basename((string) $req->get_param('name'));
-      if (!preg_match('/\.pdf$/i', $name) || strpos($name, '..') !== false) return new WP_REST_Response(['ok' => false], 400);
+      if (!preg_match('/\.pdf$/i', $name)) $name .= '.pdf';   // בטפסים מופיע לעיתים רק שם הקובץ, בלי הסיומת
+      if (strpos($name, '..') !== false) return new WP_REST_Response(['ok' => false], 400);
       $up = wp_upload_dir();
       $dir = realpath($up['basedir'] . '/sendpdfcf7_uploads/' . $form);
       $path = $dir ? realpath($dir . '/' . $name) : false;
       if (!$path || strpos($path, $dir . DIRECTORY_SEPARATOR) !== 0 || !is_file($path)) return new WP_REST_Response(['ok' => false, 'error' => 'not found'], 404);
       if (filesize($path) > 3 * 1024 * 1024) return new WP_REST_Response(['ok' => false, 'error' => 'too big'], 413);
       return new WP_REST_Response(['ok' => true, 'name' => $name, 'b64' => base64_encode(file_get_contents($path))]);
+    },
+  ]);
+
+  // אבחון: שמות קובצי האישור האחרונים בתיקייה (כדי לבדוק התאמה לשמות בטפסים)
+  register_rest_route('iska/v1', '/cf7-pdf-list', [
+    'methods' => 'GET',
+    'permission_callback' => '__return_true',
+    'callback' => function (WP_REST_Request $req) {
+      if (!iska_sync_ok($req)) return new WP_REST_Response(['ok' => false], 403);
+      $form = (int) $req->get_param('form'); if (!in_array($form, [91, 118], true)) return new WP_REST_Response(['ok' => false], 400);
+      $up = wp_upload_dir();
+      $files = glob($up['basedir'] . '/sendpdfcf7_uploads/' . $form . '/*.pdf') ?: [];
+      usort($files, function ($a, $b) { return filemtime($b) - filemtime($a); });
+      $files = array_slice($files, 0, 15);
+      return new WP_REST_Response(['ok' => true, 'dir_exists' => is_dir($up['basedir'] . '/sendpdfcf7_uploads/' . $form), 'files' => array_map('basename', $files)]);
     },
   ]);
 });
