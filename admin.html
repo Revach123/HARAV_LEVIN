@@ -1550,10 +1550,12 @@ function renderCsvImport() {
 //  מסך ראשי + חיפוש במאגר (חברות + אג"ח, חיפוש מקורב)
 // ════════════════════════════════════════════
 // שלוש האפשרויות בראש כל מסך: הוספת עסק / עדכון עסק קיים / חיפוש במאגר
+// סמל "הוספה": פס רוחבי וקו כלפי מעלה (בלי הרגל התחתונה של הפלוס)
+const ADD_ICON = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="#7b5cd6" stroke-width="3.2" stroke-linecap="round" style="vertical-align:-.12em" aria-hidden="true"><path d="M3 18h18"/><path d="M12 18V4"/></svg>';
 function adminTabs() {
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
-  return `<div class="admin-tabs">${t("add", "➕", "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
+  return `<div class="admin-tabs">${t("add", ADD_ICON, "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
 }
 
 function renderHome() {
@@ -1563,7 +1565,7 @@ function renderHome() {
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
-      <button class="home-card" onclick="openForm(null)"><span class="ico">➕</span><b>הוספת עסק</b></button>
+      <button class="home-card" onclick="openForm(null)"><span class="ico">${ADD_ICON}</span><b>הוספת עסק</b></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div></div>
     <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
