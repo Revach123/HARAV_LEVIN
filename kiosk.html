@@ -74,7 +74,7 @@
 </head>
 <body>
 <div class="top">
-  <a class="backlink" href="kehilot.html#lists">חזרה לרשימות</a>
+  <a class="backlink" href="kehilot.html">חזרה לדף הראשי</a>
   <div class="row1">
     <img src="logo.png" alt="" onerror="this.style.display='none'">
     <div class="main" id="mainTabs">
@@ -128,9 +128,11 @@ function ln(label, val, cls) { return val === "" || val == null ? "" : `<span cl
 function companyCard(r) {
   const st = r.bonds_status || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
   const cls = /לא מאושר/.test(st) ? "bad" : /מאושר/.test(st) ? "good" : "";
-  const priv = r.has_private_permit ? (r.has_private_permit === "כן" ? "יש גם היתר עיסקא פרטי" : r.has_private_permit) : "";
+  // בלי כותרות משנה: סטטוס האג"ח מוצג כשורה בפני עצמה, והיתר פרטי מוצג רק כשיש (ברשימת "כללי")
+  const priv = r.has_private_permit === "כן" ? "יש גם היתר עיסקא פרטי" : "";
+  const line = (v, c) => v ? `<span class="ln"><b class="${c || ""}">${esc(v)}</b></span>` : "";
   return `<article class="card fmt">${ln("שם חברה", esc(r.permit_name), "name")}${ln("מספר", esc(r.chp_number))}${ln("עיסוק", esc(r.category))}${ln("אזור", esc(r.region))}
-    ${ln('אג"ח וני"ע', `<span class="${cls}">${esc(st)}</span>`)}${ln("היתר פרטי", esc(priv))}${ln("הערות", esc(r.notes))}</article>`;
+    ${line(st, cls)}${line(priv, "good")}${ln("הערות", esc(r.notes))}</article>`;
 }
 function bondCard(r) {
   const rating = [r.midroog_rating && "מידרוג " + r.midroog_rating, r.maalot_rating && "מעלות " + r.maalot_rating].filter(Boolean).join(" · ");

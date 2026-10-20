@@ -30,7 +30,7 @@
   .hero .sub{font-size:19px;color:var(--navy);font-weight:700;line-height:1.35}
   body:not([data-view=home]) .hero img{height:64px}
   .view{display:none}
-  body[data-view=home] #v-home,body[data-view=about] #v-about,body[data-view=lists] #v-lists{display:block}
+  body[data-view=home] #v-home,body[data-view=about] #v-about,body[data-view=funds] #v-funds{display:block}
 
   .big{display:flex;align-items:center;justify-content:space-between;gap:.8rem;width:100%;min-height:68px;padding:.7rem 1.1rem;margin-bottom:.8rem;
     font:inherit;font-size:22px;font-weight:700;line-height:1.25;color:var(--navy);text-decoration:none;text-align:right;
@@ -72,7 +72,8 @@
   <section class="view" id="v-home" aria-label="דף ראשי">
     <a class="big" href="#about">מי אנחנו?</a>
     <a class="big primary" href="join.html"><span>רישום להיתר עיסקא<small>מילוי טופס ההצטרפות</small></span></a>
-    <a class="big" href="#lists">רשימות החברות החתומות על היתר עיסקא</a>
+    <a class="big" href="kiosk.html?type=companies-general&amp;back=1">רשימת חברות ואג"ח</a>
+    <a class="big" href="#funds">רשימת מסלולים וקרנות מאושרים</a>
     <div class="foot-links">
       <div>טלפון: <a href="tel:0527117041" dir="ltr">052-7117041</a></div>
       <div><a href="join.html#cancel">ביטול הצטרפות</a></div>
@@ -105,28 +106,21 @@
     <a class="big primary" href="join.html" style="margin-top:1rem">רישום להיתר עיסקא</a>
   </section>
 
-  <!-- רשימות -->
-  <section class="view" id="v-lists" aria-label="רשימות">
+  <!-- מסלולים וקרנות מאושרים: שני דפים קיימים באתר המכון (נפתחים בלי כותרת האתר) -->
+  <section class="view" id="v-funds" aria-label="מסלולים וקרנות מאושרים">
     <a class="back" href="#">חזרה</a>
-    <h2>רשימות החברות החתומות על היתר עיסקא</h2>
-    <div class="group-title">חברות</div>
-    <a class="big" href="kiosk.html?type=companies-general&amp;back=1">רשימת חברות עם היתר עיסקא כללי</a>
-    <a class="big" href="kiosk.html?type=companies-private&amp;back=1">רשימת חברות עם היתר עיסקא פרטי</a>
-    <div class="group-title">אגרות חוב</div>
-    <a class="big" href="kiosk.html?type=bonds-general&amp;back=1">רשימת אג"ח עם היתר עיסקא כללי</a>
-    <a class="big" href="kiosk.html?type=bonds-private&amp;back=1">רשימת אג"ח עם היתר עיסקא פרטי</a>
-    <div class="group-title">רשימות נוספות (נפתחות באתר המכון)</div>
+    <h2>רשימת מסלולים וקרנות מאושרים</h2>
     <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%A2%D7%95%D7%93%D7%95%D7%AA-%D7%A1%D7%9C-%D7%9E%D7%90%D7%95%D7%A9%D7%A8%D7%95%D7%AA/?hideheader">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים</a>
     <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%95%D7%AA-%D7%97%D7%99%D7%A1%D7%9B%D7%95%D7%9F-%D7%A7%D7%A8%D7%A0%D7%95%D7%AA-%D7%A0%D7%90%D7%9E%D7%A0%D7%95%D7%AA-%D7%95%D7%A7%D7%A8/?hideheader">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל מאושרים</a>
   </section>
 </div>
 
 <script>
-// ניווט לפי ה-hash (#about / #lists), כך שכפתור "חזרה" של המכשיר עובד.
+// ניווט לפי ה-hash (#about / #funds), כך שכפתור "חזרה" של המכשיר עובד.
 (function () {
   function show() {
     var h = location.hash.replace("#", "");
-    var v = (h === "about" || h === "lists") ? h : "home";
+    var v = (h === "about" || h === "funds") ? h : "home";
     document.body.setAttribute("data-view", v);
     window.scrollTo(0, 0);
   }
