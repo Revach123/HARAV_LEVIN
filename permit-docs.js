@@ -2119,7 +2119,7 @@
         return `<tr class="go" onclick="PD._jOpen('${r.id}')"><td dir="ltr" style="text-align:right">${E((r.submitted_at || "").slice(0, 10))}</td><td><b>${E(jName(r))}</b></td><td dir="ltr" style="text-align:right">${E(r.phone)}</td><td dir="ltr" style="text-align:right">${E(r.email)}</td>
           <td>${r.cancelled_at ? `<span class="pd-nd-miss">ביטל ${E(r.cancelled_at)}</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td>${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄 אישור</button>` : '<span class="pd-sub">-</span>'}</td>
-          <td style="white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button> <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></td></tr>`
+          <td style="white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button> ${r.cancelled_at ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)">↩ שחזור</button>` : `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)">⛔ ביטול</button>`} <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></td></tr>`
           + (open ? `<tr><td colspan="7" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">ת.ז.: <b dir="ltr">${E(r.id_number || "-")}</b> · כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span><br>החברות שנבחרו: <b>${E(r.companies || "-")}</b>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${r.extra ? `<br>שדות נוספים: ${E(r.extra)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="7" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table>
       ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
   }
@@ -2172,6 +2172,16 @@
       <div style="padding:14px;line-height:1.7">למחוק לצמיתות את <b>${E(jName(r))}</b>${r.submitted_at ? " (נרשם " + E(r.submitted_at.slice(0, 10)) + ")" : ""}?<br><span class="pd-sub">הפעולה אינה הפיכה${r.file_sha256 ? ", וקובץ האישור שלו יימחק אם אף מצטרף אחר לא משתמש בו" : ""}.</span>
       <div class="pd-sub" id="pd-jderr" style="color:#c0392b"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" style="background:#c0392b" id="pd-jdgo" onclick="PD._jDelGo('${E(id)}')">מחיקה</button><button class="pd-mini" onclick="PD._close('pd-jdel')">ביטול</button></div></div>`);
+  }
+  // "ביטול" = מחיקה רכה: הרישום נשאר עם תאריך ההרשמה ותאריך הביטול (מוצג "ביטל <תאריך>", וניתן לשחזר)
+  async function jCancel(id, on) {
+    const r = J.rows.find(x => x.id === id); if (!r) return;
+    if (on && !confirm(`לסמן את ${jName(r)} כמבוטל? הרישום יישאר ברשימה עם תאריך הביטול, ואפשר לשחזר אותו.`)) return;
+    try {
+      const d = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);   // תאריך בישראל (בקירוב, מספיק ליום)
+      const res = await api("/joiners?id=" + encodeURIComponent(id), "PUT", { cancelled_at: on ? d : "" });
+      const i = J.rows.findIndex(x => x.id === id); if (i >= 0) J.rows[i] = res.row; ndShow();
+    } catch (e) { alert(e.message || "שגיאה"); }
   }
   async function jDelGo(id) {
     const b = $("pd-jdgo"); if (b) b.disabled = true;
@@ -2504,7 +2514,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
