@@ -520,13 +520,13 @@
   const sha256 = async buf => [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(b => b.toString(16).padStart(2, "0")).join("");
 
   // ───────── חלון: העלאת היתר עסקה ─────────
-  const U = { queue: [], cur: null, preset: null };
+  const U = { queue: [], cur: null, preset: null, jobs: [], jchain: Promise.resolve() };
   function openUpload(opts) {
-    U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null; U.addCompany = !!(opts && opts.addCompany);
+    U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null; U.addCompany = !!(opts && opts.addCompany); U.jobs = U.jobs.filter(j => j.status === "run");
     overlay("pd-upload", `<div class="pd-head"><b>העלאת היתר עסקה</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-upload')">✕</button></div>
-      <div class="pd-body" id="pd-up-body"></div>`, true);
+      <div id="pd-up-bg"></div><div class="pd-body" id="pd-up-body"></div>`, true);
     closers["pd-upload"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
-    upPick();
+    upPick(); upBg();
   }
   function upPick(msg) {
     $("pd-up-body").innerHTML = `
@@ -543,25 +543,37 @@
     dz.addEventListener("drop", e => upFiles(e.dataTransfer.files));
   }
   function upFiles(files) { U.queue = [...files].filter(f => /\.pdf$/i.test(f.name) || f.type === "application/pdf"); if (!U.queue.length) return; upNext(); }
+  // הכנה ברקע של כל קובץ: קריאה, חתימה, בדיקת כפילות וחילוץ טקסט (בתור אחד, כדי לא להעמיס). הקובץ הנוכחי מוצג מיד, וההצעות מגיעות כשהניתוח מסתיים
+  const UP_PREP = new WeakMap(); let UP_CHAIN = Promise.resolve();
+  function upPrep(file) {
+    let o = UP_PREP.get(file); if (o) return o;
+    o = { file }; UP_PREP.set(file, o);
+    o.bufP = file.arrayBuffer().then(b => (o.buf = b));
+    o.promise = UP_CHAIN = UP_CHAIN.then(async () => {
+      try { const buf = await o.bufP; o.sha = await sha256(buf); const ex = await api("/permit-docs?sha=" + o.sha); if (ex.exists) o.dup = ex.doc; } catch (e) { o.err = e.message; }
+      if (!o.dup) { try { const r = await extractText(o.buf, 15); o.text = r.text; o.pages = r.pages; } catch (e) { o.textErr = e.message; } }
+      o.done = true;
+    }).catch(() => { o.done = true; });
+    return o;
+  }
+  const upPrefetch = () => U.queue.slice(0, 2).forEach(upPrep);
   async function upNext() {
     if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url);
     const file = U.queue.shift();
     if (!file) { upPick(U.cur ? "✓ כל הקבצים טופלו." : ""); U.cur = null; return; }
-    const body = $("pd-up-body");
-    body.innerHTML = `<div class="pd-empty">בודק את הקובץ <b>${E(file.name)}</b>…<br><span class="pd-sub" id="pd-up-st">בדיקת כפילות</span>${U.queue.length ? `<br><span class="pd-sub">נותרו בתור: ${U.queue.length}</span>` : ""}</div>`;
-    const st = t => { const el = $("pd-up-st"); if (el) el.textContent = t; };
-    const buf = await file.arrayBuffer();
-    U.cur = { file, buf, url: URL.createObjectURL(file), text: "", sel: new Set(), type: "unknown", note: "", ocr: false };
-    try {
-      const sha = await sha256(buf); U.cur.sha = sha;
-      const ex = await api("/permit-docs?sha=" + sha);
-      if (ex.exists) { upDuplicate(ex.doc); return; }
-    } catch (e) { body.innerHTML = `<div class="pd-empty" style="color:#c0392b">שגיאה: ${E(e.message)}</div><button class="pd-btn" onclick="PD._next()">דילוג</button>`; return; }
-    st("קריאת טקסט מהמסמך");
-    try { const r = await extractText(buf, 15); U.cur.text = r.text; U.cur.pages = r.pages; } catch (e) { U.cur.textErr = e.message; }
+    const o = upPrep(file), buf = await o.bufP;
+    const c = U.cur = { file, buf, url: URL.createObjectURL(file), text: "", sel: new Set(), type: "unknown", note: "", ocr: false, analyzing: !o.done };
+    $("pd-up-body").innerHTML = "";
     upReview(true);
-    const cur = U.cur;
-    findBonds(cur.text).then(b => { if (U.cur === cur && b.length) { cur.bonds = b; cur.bondSel = new Set(b.map(x => x.row.id)); upReview(false); } }).catch(() => {});
+    upPrefetch();
+    o.promise.then(() => {
+      if (U.cur !== c) return;
+      c.analyzing = false; c.sha = o.sha;
+      if (o.dup) { upDuplicate(o.dup); return; }
+      c.text = o.text || ""; c.pages = o.pages; c.textErr = o.textErr;
+      upReview(true);
+      findBonds(c.text).then(b => { if (U.cur === c && b.length) { c.bonds = b; c.bondSel = new Set(b.map(x => x.row.id)); upReview(false); } }).catch(() => {});
+    });
   }
   function upDuplicate(doc) {
     const cos = (doc.business_ids || []).map(b => E(bizName(b))).join(", ") || "ללא שיוך";
@@ -570,13 +582,15 @@
   }
   function upReview(fresh) {
     const c = U.cur;
+    const qEl = $("pd-up-q"), nEl = $("pd-up-note"), q0 = qEl ? qEl.value : "", f0 = document.activeElement && document.activeElement.id;          // התצוגה מתרעננת כשהניתוח ברקע מסתיים: לא מאבדים מה שהמשתמש כבר הקליד
+    if (nEl) c.note = nEl.value;
     if (fresh || !c.sug) {      // ההצעה מחושבת פעם אחת לכל טקסט; בחירות ידניות נשמרות בעת רענון התצוגה
       c.sug = suggest(c.text, c.file.name);
-      c.sel = new Set(); if (U.preset) c.sel.add(U.preset);      // אין בחירה אוטומטית של חברות: המשתמש בוחר
+      if (!c.sel) c.sel = new Set(); if (U.preset) c.sel.add(U.preset);      // אין בחירה אוטומטית של חברות: המשתמש בוחר
       if (!c.typeTouched) c.type = c.sug.type;
     }
     const sug = c.sug;
-    const noText = normText(c.text).length < 40;
+    const noText = !c.analyzing && normText(c.text).length < 40;
     const card = x => `<label class="pd-cand"><input type="checkbox" ${c.sel.has(x.b.id) ? "checked" : ""} onchange="PD._tog('${x.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(x.b, true)}</b> <span class="pd-sub">${E(x.b.chp_number || "")} · ${x.hp ? "התאמה לפי ח.פ." : "התאמה לפי שם"} (${E(x.why.join(", "))})</span>${stTag(x.b.registry_status)}</span></label>`;
     const extra = [...c.sel].filter(id => !sug.cands.some(x => x.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, hp: false, why: ["נבחר ידנית"] }));
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
@@ -586,17 +600,20 @@
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
           ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+          ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות שיוך). אפשר כבר לבחור חברה, סיווג ולשמור.</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
-          ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
+          ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : c.analyzing ? "" : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
           ${sug.outside.length ? `<h4>${U.addCompany ? "הוספת חברה חדשה למאגר" : "תאגידים במסמך שאינם במאגר"}</h4>` + sug.outside.map(h => { const nm = nameNear(c.text, h); return `<div class="pd-uc ext" style="margin-top:5px"><div class="pd-uc-top" style="cursor:default"><b>${E(nm || "שם החברה לא זוהה במסמך")}</b><div class="pd-sub">ח.פ. ${E(h)} · תאגיד שנמצא במסמך ואינו במאגר${nm ? "" : " (השם יושלם מהרשם)"}</div></div>
             <div class="pd-uc-act"><button class="pd-btn primary" onclick="PD._upNewCo('${h}')" title="שומר את המסמך, פותח את טופס הוספת העסק עם הנתונים (השלמה מהרשם) ומשייך אליו את המסמך אחרי השמירה">הוספת החברה למאגר</button><button class="pd-link2" onclick="PD._upExtCo('${h}')" title="חברה מחוקה / שאינה במאגר: נרשמת ברשימת החברות שאינן במאגר">שיוך כחברה שאינה במאגר</button></div></div>`; }).join("") : (U.addCompany ? `<div class="pd-warnbox">לא נמצא במסמך ח.פ. של תאגיד שאינו במאגר. אפשר לחפש ברשם בשדה "חיפוש חברה אחרת" ולבחור "הוספה למאגר".</div>` : "")}
           ${c.bonds && c.bonds.length ? `<h4>אג"ח שמוזכרות במסמך</h4>` + c.bonds.map(x => `<label class="pd-cand"><input type="checkbox" ${c.bondSel.has(x.row.id) ? "checked" : ""} onchange="PD._upBond('${E(x.row.id)}',this.checked)"> <span class="pd-grow"><b>${E(x.row.name)}</b> <span class="pd-sub">${E(bondLabel(x.row))} · נייר ${E(x.row.id)} · ${E(x.row.company)}<br>במסמך: ${E(x.snippet)}</span></span></label>`).join("") : ""}
-          <input class="pd-in" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-up-res"></div>
+          <input class="pd-in" id="pd-up-q" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:6px"><div id="pd-up-res"></div>
           <h4>סיווג</h4><div class="pd-btns">${tb}</div>${sug.typeWhy && !c.typeTouched ? `<div class="pd-sub">הצעה אוטומטית: ${E(sug.typeWhy)}</div>` : ""}
-          <h4>הערה (אופציונלי)</h4><textarea class="pd-in" rows="2" onchange="PD._upNote(this.value)">${E(c.note)}</textarea>
+          <h4>הערה (אופציונלי)</h4><textarea class="pd-in" id="pd-up-note" rows="2" onchange="PD._upNote(this.value)">${E(c.note)}</textarea>
           <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" id="pd-save" onclick="PD._save()">${c.sel.size ? `שמירה ושיוך ל-${c.sel.size} חברות` : "שמירה בלי שיוך"}</button><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
           <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div>
         </div></div>`;
+    if (q0) { const e = $("pd-up-q"); if (e) { e.value = q0; upSearch(q0); } }
+    if (f0 === "pd-up-q" || f0 === "pd-up-note") { const e = $(f0); if (e) { e.focus(); try { e.setSelectionRange(e.value.length, e.value.length); } catch { /* ללא */ } } }
   }
   // התאמות מובילות למעלה (ח.פ. או שם ברור), פחות מתאימות מתחת
   function candGroups(cands, card) {
@@ -689,22 +706,37 @@
       if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick(`✓ נשמר ושויך לחברה שאינה במאגר: ${E(co.name)}`); }
     } catch (e) { const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
-  async function upSave() {
-    const c = U.cur, btn = $("pd-save"); if (btn) btn.disabled = true;
+  // שמירה ברקע: לחיצה על "שמירה" עוברת מיד לקובץ הבא; ההעלאה לאתר ממשיכה בתור, והמצב מוצג בראש החלון
+  function upSave() {
+    const c = U.cur; if (!c) return;
+    const job = { c, ids: [...c.sel], type: c.type, note: c.note || "", name: c.file.name, status: "run", msg: "" };
+    U.jobs.push(job); upBg();
+    if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick("✓ כל הקבצים נשלחו לשמירה. השמירה ממשיכה ברקע."); }
+    U.jchain = U.jchain.then(() => upSend(job));
+  }
+  async function upSend(job) {
+    const c = job.c; job.status = "run"; job.msg = ""; upBg();
     try {
       const u8 = new Uint8Array(c.buf); let bin = "";
       for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
       const res = await fetch("/api/permit-docs", { method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
-        body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: c.type, business_ids: [...c.sel], note: c.note || "" }) });
+        body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: job.type, business_ids: job.ids, note: job.note }) });
       const data = await res.json().catch(() => ({}));
-      if (res.status === 409 && data.doc) { upDuplicate(data.doc); return; }
+      if (res.status === 409 && data.doc) { job.status = "dup"; job.doc = data.doc.id; job.msg = "קובץ זהה כבר קיים (" + (data.doc.original_name || data.doc.id) + ")"; replaceDoc(data.doc); upBg(); return; }
       if (!res.ok) throw new Error(data.error || res.statusText);
-      replaceDoc(data.doc);
-      if (c.bonds && c.bondSel && c.bondSel.size) { try { replaceDoc((await api("/permit-docs/" + data.doc.id, "PUT", { bonds: c.bonds.filter(x => c.bondSel.has(x.row.id)).map(x => x.row) })).doc); } catch (e) { alert("המסמך נשמר, אך שיוך האג\"ח נכשל: " + e.message); } }
-      say("המסמך נשמר"); refresh();
-      if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick(`✓ נשמר: ${E(c.file.name)}`); }
-    } catch (e) { if (btn) btn.disabled = false; const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
+      replaceDoc(data.doc); job.doc = data.doc.id;
+      if (c.bonds && c.bondSel && c.bondSel.size) { try { replaceDoc((await api("/permit-docs/" + data.doc.id, "PUT", { bonds: c.bonds.filter(x => c.bondSel.has(x.row.id)).map(x => x.row) })).doc); } catch (e) { job.msg = "נשמר, אך שיוך האג\"ח נכשל: " + e.message; } }
+      job.status = "ok"; S._fm = null; refresh(); upBg();
+    } catch (e) { job.status = "fail"; job.msg = e.message; upBg(); if (!$("pd-up-bg")) alert("השמירה של " + job.name + " נכשלה: " + e.message); }
   }
+  function upBg() {
+    const el = $("pd-up-bg"); if (!el) return;
+    const run = U.jobs.filter(j => j.status === "run"), ok = U.jobs.filter(j => j.status === "ok").length;
+    const bad = U.jobs.map((j, i) => ({ j, i })).filter(x => x.j.status === "fail" || x.j.status === "dup" || (x.j.status === "ok" && x.j.msg));
+    el.innerHTML = U.jobs.length ? `<div class="pd-sub" style="padding:6px 14px;background:#eef3fb;border-bottom:1px solid #d5e0f0">${run.length ? `⏳ שומר ברקע: ${run.length}` : "✓ אין שמירות פעילות"}${ok ? ` · נשמרו: <b>${ok}</b>` : ""}
+      ${bad.map(({ j, i }) => `<div style="color:${j.status === "fail" ? "#c0392b" : "#7a5a00"}">${j.status === "fail" ? "✗" : "ℹ"} ${E(j.name)}: ${E(j.msg)} ${j.status === "fail" ? `<button class="pd-mini" onclick="PD._upRetry(${i})">נסה שוב</button>` : j.doc ? `<button class="pd-mini" onclick="PD._close('pd-upload');PD.openDoc('${j.doc}')">פתיחה</button>` : ""}</div>`).join("")}</div>` : "";
+  }
+  function upRetry(i) { const j = U.jobs[i]; if (j && j.status === "fail") U.jchain = U.jchain.then(() => upSend(j)); }
 
 
   // ───────── דשבורד מסמכי היתר: לא משויכים / לבדיקה / לחברות שאינן במאגר / מסמכים אחרים ─────────
@@ -743,7 +775,7 @@
   }
   function bulkOpen() { close("pd-upload"); openUnassigned("un", BK.batch); }
 
-  const Q = { batch: "", bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
+  const Q = { batch: "", bondPicker: false, bondQ: "", view: "un", picker: null, replace: null, shared: false, i: 0, skipped: new Set(), curId: "", busy: new Set(), token: 0, sel: new Set(), type: "unknown", typeTouched: false, cands: new Map(), note: "", filter: "", blobUrl: "", readable: null };
   const VIEWS = [["un", "לא משויכים כלל"], ["sug", "עם הצעת שיוך נוספת"], ["other", "מסמכים אחרים"]];
   const ALLV = ["un", "sug", "review", "ext", "gone", "other"];
   const sugOf = d => { try { return JSON.parse(d.suggest || "[]"); } catch { return []; } };
@@ -787,7 +819,7 @@
   }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && (!Q.batch || d.source_ref === Q.batch) && srcOk(d) && !Q.skipped.has(d.id) && !isApproved("doc:" + d.id) &&
+    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && (!Q.batch || d.source_ref === Q.batch) && srcOk(d) && !Q.skipped.has(d.id) && !Q.busy.has(d.id) && !isApproved("doc:" + d.id) &&
         (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
@@ -997,19 +1029,26 @@
     return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>${l.length} שיוכים ממתינים לאישור</b> (מוצגים למעלה)</div>` : `<div class="pd-sub" style="width:100%">בחרו שיוך אחד או יותר (אפשר לכמה חברות), ואז אישור.</div>`}
       <button class="pd-btn primary" onclick="PD._unOk()" title="מבצע את השיוכים שנבחרו ועובר למסמך הבא">✔ אישור${l.length ? " (" + l.length + ")" : ""}</button></div>`;
   }
-  async function uqOk() {
+  async function uqOk() {          // האישור רץ ברקע: עוברים מיד למסמך הבא, והשיוכים נשלחים לאתר בתור
     const d = S.byId.get(Q.curId); if (!d) return;
     const ops = Q.pend[d.id] || [];
     if (!ops.length && isUnassigned(d)) { const el = $("pd-un-err"); if (el) el.textContent = "בחרו שיוך לפני אישור, או השתמשו ב'דילוג'."; return; }
-    try {
-      for (const op of ops) {
-        if (op.t === "act") await actFor(op.docId, op.bid, op.act);
-        else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
-        else if (op.t === "extnew") { const c = await extEnsure({ chp: op.chp, name: op.name, status: op.status }); await extAssign(op.docId, c.id); }
+    delete Q.pend[d.id]; Q.busy.add(d.id); Q.curId = ""; uqShow();
+    Q.chain = (Q.chain || Promise.resolve()).then(async () => {
+      try {
+        for (const op of ops) {
+          if (op.t === "act") await actFor(op.docId, op.bid, op.act);
+          else if (op.t === "ext") await postExtApply(op.docId, op.hp, op.extId);
+          else if (op.t === "extnew") { const c = await extEnsure({ chp: op.chp, name: op.name, status: op.status }); await extAssign(op.docId, c.id); }
+        }
+        await setReview("doc:" + d.id, "approved"); CD.lastRev.push({ key: "doc:" + d.id, status: "approved" });
+        Q.busy.delete(d.id); refresh(); if ($("pd-un")) uqShow(true);
+      } catch (e) {
+        Q.busy.delete(d.id); Q.pend[d.id] = ops;
+        alert("האישור של " + (d.original_name || d.id) + " נכשל: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "") + "\nהמסמך חזר לתור עם השיוכים שבחרתם.");
+        if ($("pd-un")) uqShow(true);
       }
-      await setReview("doc:" + d.id, "approved"); CD.lastRev.push({ key: "doc:" + d.id, status: "approved" });
-    } catch (e) { alert("האישור נכשל: " + e.message + (/no such table/i.test(e.message) ? "\nיש להריץ את מיגרציה 0012 ב-D1." : "")); return; }
-    delete Q.pend[d.id]; Q.curId = ""; refresh(); uqShow();
+    });
   }
   async function actFor(docId, bizId, act) {
     const d = S.byId.get(docId); if (!d) return;
@@ -2400,32 +2439,39 @@
     await toggleSlot(id, M.biz, target);
   }
   // ───────── העלאת מסמך משורת חברה בדשבורד: העלאה, ואז בחירת הת"ע (פרטי / כללי) בחלון שמראה מה כבר קיים ─────────
-  const RU = { biz: "", doc: "" };
+  const RU = { biz: "", doc: "", want: new Set(), err: "", name: "" };
   function rowUpload(bizId) {
     const inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/pdf,.pdf";
     inp.onchange = () => { if (inp.files && inp.files[0]) ruPost(inp.files[0], bizId); };
     inp.click();
   }
   async function ruPost(file, bizId) {
-    RU.biz = bizId; RU.doc = "";
-    overlay("pd-rowup", `<div class="pd-head"><b>העלאת מסמך · ${displayName(bizById(bizId), true)}</b><button class="pd-x" onclick="PD._close('pd-rowup')">✕</button></div><div class="pd-body" id="pd-ru-body"><div class="pd-sub">מעלה את ${E(file.name)}…</div></div>`);
+    RU.biz = bizId; RU.doc = ""; RU.want = new Set(); RU.err = ""; RU.name = file.name;
+    overlay("pd-rowup", `<div class="pd-head"><b>העלאת מסמך · ${displayName(bizById(bizId), true)}</b><button class="pd-x" onclick="PD._close('pd-rowup')">✕</button></div><div class="pd-body" id="pd-ru-body"></div>`);
+    ruPaint();          // הכפתורים זמינים מיד; ההעלאה ברקע, והקישור שנבחר מתבצע כשהיא מסתיימת
     try {
       const buf = await file.arrayBuffer();
       let doc = await upPost({ buf, file, type: "unknown", note: "" }, [bizId]);
       if (!(doc.business_ids || []).includes(bizId)) { const r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: [...(doc.business_ids || []), bizId] }); doc = r.doc; }
-      replaceDoc(doc); RU.doc = doc.id; S._fm = null; refresh(); ruPaint();
-    } catch (e) { const b = $("pd-ru-body"); if (b) b.innerHTML = `<div class="pd-empty" style="color:#c0392b">ההעלאה נכשלה: ${E(e.message)}</div>`; }
+      replaceDoc(doc); RU.doc = doc.id; S._fm = null; refresh();
+      const want = [...RU.want]; RU.want = new Set();
+      for (const t of want) await toggleSlot(RU.doc, RU.biz, t, true);
+      ruPaint(); if (want.length && $("pd-nd-body")) ndShow();
+    } catch (e) { RU.err = e.message; ruPaint(); }
   }
   function ruPaint() {
-    const body = $("pd-ru-body"), d = S.byId.get(RU.doc), b = bizById(RU.biz); if (!body || !d || !b) return;
-    const row = t => { const cur = slotDoc(b.id, t), mine = cur && cur.id === d.id;
+    const body = $("pd-ru-body"), d = RU.doc && S.byId.get(RU.doc), b = bizById(RU.biz); if (!body || !b) return;
+    if (RU.err) { body.innerHTML = `<div class="pd-empty" style="color:#c0392b">ההעלאה נכשלה: ${E(RU.err)}</div>`; return; }
+    const row = t => { const cur = slotDoc(b.id, t), mine = d && cur && cur.id === d.id, want = RU.want.has(t);
       return `<div class="pd-mg-slot" style="margin-bottom:8px"><h4>הת"ע ${SLOT_HE[t]}</h4>${cur ? `<div class="pd-name">${E(cur.original_name || cur.id)}${mine ? ' <span class="pd-chip" style="background:#1e7e4a">המסמך שהועלה</span>' : ""}</div>` : `<div class="pd-sub">אין מסמך מקושר</div>`}
-        ${mine ? "" : `<button class="pd-btn primary" style="margin-top:6px" onclick="PD._ruPick('${t}')">${cur ? "החלפה במסמך שהועלה" : "קישור המסמך שהועלה"}</button>`}</div>`; };
-    body.innerHTML = `<div class="pd-ok-msg">✓ המסמך הועלה ושויך לחברה: <b>${E(d.original_name || d.id)}</b></div><div class="pd-sub" style="margin:8px 0">לאיזה הת"ע לקשר אותו? (אפשר גם להשאיר כמסמך נוסף)</div>${["private", "general"].map(row).join("")}
-      <div class="pd-btns" style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-rowup')">סיום (כמסמך נוסף)</button><button class="pd-btn" onclick="PD._close('pd-rowup');PD.openDoc('${d.id}','${b.id}')">פתיחת המסמך</button></div>`;
+        ${mine ? "" : `<button class="pd-btn ${want ? "sel" : "primary"}" style="margin-top:6px" onclick="PD._ruPick('${t}')">${want ? "✓ יקושר ברגע שההעלאה תסתיים (לחיצה לביטול)" : cur ? "החלפה במסמך שהועלה" : "קישור המסמך שהועלה"}</button>`}</div>`; };
+    body.innerHTML = (d ? `<div class="pd-ok-msg">✓ המסמך הועלה ושויך לחברה: <b>${E(d.original_name || d.id)}</b></div>` : `<div class="pd-sub" style="background:#eef3fb;padding:8px;border-radius:6px">⏳ מעלה את <b>${E(RU.name)}</b> ברקע… אפשר כבר לבחור לאיזה הת"ע לקשר.</div>`) +
+      `<div class="pd-sub" style="margin:8px 0">לאיזה הת"ע לקשר אותו? (אפשר גם להשאיר כמסמך נוסף)</div>${["private", "general"].map(row).join("")}
+      <div class="pd-btns" style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-rowup')">סיום${d ? " (כמסמך נוסף)" : ""}</button>${d ? `<button class="pd-btn" onclick="PD._close('pd-rowup');PD.openDoc('${d.id}','${b.id}')">פתיחת המסמך</button>` : ""}</div>`;
   }
   async function ruPick(t) {
     const prev = slotDoc(RU.biz, t);
+    if (!RU.doc) { if (RU.want.has(t)) RU.want.delete(t); else if (!prev || confirm("להחליף המסמך הקיים?")) RU.want.add(t); ruPaint(); return; }
     if (prev && prev.id !== RU.doc && !confirm("להחליף המסמך הקיים?")) return;
     await toggleSlot(RU.doc, RU.biz, t, true); ruPaint(); if ($("pd-nd-body")) ndShow();
   }
@@ -2604,7 +2650,7 @@
 
   window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upRetry: upRetry, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
