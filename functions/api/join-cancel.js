@@ -4,9 +4,10 @@
 // ת.ז. אופציונלית: אם נמסרה, ומתאימה למצטרף קיים, הוא מסומן אוטומטית כמבוטל (cancelled_at). בלי ת.ז. הבקשה נשמרת והמנהל מתאים ידנית.
 // התשובה זהה בכל המקרים (לא חושפת אם מישהו רשום).
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
+import { sendCancelNotice } from "./_shared/join-mail.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   if (!originOk(request)) return reply({ ok: false, error: "הבקשה לא התקבלה" }, 403);
   const b = await readJson(request, 8 * 1024);
   if (!b) return reply({ ok: false, error: "הבקשה לא תקינה" }, 400);
@@ -35,6 +36,8 @@ export async function onRequestPost({ request, env }) {
     const payload = { name, phone, email, id, src: "site:kehilot", form_date: clean(b.form_date, 20) };
     await env.DB.prepare("INSERT INTO joiner_cancels (id, requested_at, matched_joiners, pii) VALUES (?, ?, ?, ?)")
       .bind(rid, now, matched, await encryptPii(key, rid, payload)).run();
+    const task = sendCancelNotice(env, { name, phone, email, id, when: now, matched: !!matched });
+    if (waitUntil) waitUntil(task); else await task;
     return reply({ ok: true });
   } catch {
     return reply({ ok: false, error: "אירעה שגיאה בשמירת הבקשה. נא לנסות שוב." }, 500);

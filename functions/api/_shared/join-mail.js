@@ -30,13 +30,30 @@ ${AGREEMENT_BEFORE_CHOICE.map(p).join("")}${AGREEMENT_AFTER_CHOICE.map(p).join("
   return { html, text };
 }
 
-// מחזיר true אם נשלח. לעולם לא זורק (כשל במייל לא פוגע בהרשמה).
+// שליחת מייל כללית דרך וורדפרס. מחזיר true אם נשלח. לעולם לא זורק (כשל במייל לא פוגע בשמירת הנתונים).
+export async function sendMail(env, { to, subject, html, text }) {
+  if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
+  try {
+    const r = await fetch(env.WP_MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json", "X-Iska-Secret": env.WP_MAIL_SECRET },
+      body: JSON.stringify({ to, subject, html, text }) });
+    return r.ok;
+  } catch { return false; }
+}
+
 export async function sendConfirmation(env, to, data) {
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
     const { html, text } = buildConfirmation(data);
-    const r = await fetch(env.WP_MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json", "X-Iska-Secret": env.WP_MAIL_SECRET },
-      body: JSON.stringify({ to, subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text }) });
-    return r.ok;
+    return await sendMail(env, { to, subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text });
   } catch { return false; }
+}
+
+// התראה לבעל האתר על בקשת ביטול הצטרפות חדשה
+export const CANCEL_NOTIFY_TO = "sl5742214@gmail.com";
+export async function sendCancelNotice(env, d) {
+  const rows = [["שם", d.name], ["טלפון", d.phone], ["דוא\"ל", d.email], ["ת.ז.", d.id], ["תאריך הבקשה", d.when], ["הותאם מצטרף ונסמן כמבוטל", d.matched ? "כן" : "לא (יש להתאים ידנית)"]].filter(r => r[1]);
+  const html = `<div dir="rtl" style="font-family:Arial,Helvetica,sans-serif;font-size:16px;color:#1f2d2d"><h2 style="color:#b3261e;margin:0 0 10px">בקשת ביטול הצטרפות</h2><table style="border-collapse:collapse">`
+    + rows.map(([k, v]) => `<tr><td style="padding:4px 14px 4px 0;color:#555">${esc(k)}</td><td style="padding:4px 0"><b>${esc(v)}</b></td></tr>`).join("") + `</table></div>`;
+  const text = "בקשת ביטול הצטרפות\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n");
+  return sendMail(env, { to: env.CANCEL_NOTIFY_TO || CANCEL_NOTIFY_TO, subject: "בקשת ביטול הצטרפות להיתר עיסקא: " + (d.name || ""), html, text });
 }
