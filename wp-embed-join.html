@@ -1,15 +1,45 @@
-<!-- הדבקה בוורדפרס (Avada → Code Block / "בלוק קוד"). מציג את טופס ההרשמה והביטול החדש, ומתאים את הגובה אוטומטית. -->
-<iframe id="iska-join" src="https://harav-levin.pages.dev/join.html?embed=1" title="הצטרפות להיתר עיסקא פרטי"
-  style="width:100%;border:0;min-height:300px;display:block" scrolling="no" allow="clipboard-write"></iframe>
+<!-- הדבקה בוורדפרס (Avada → Code Block). מציג את טופס ההרשמה, וכפתור "ביטול הצטרפות" קבוע שפותח חלון ביטול. -->
+<style>
+  /* --iska-top: הגובה שמתחתיו הכפתור "נצמד" אחרי גלילה (גובה כותרות האתר). אם הכפתור מוסתר מאחורי התפריט - להגדיל. */
+  #iska-wrap{--iska-top:110px;direction:rtl}
+  #iska-cancel-bar{position:sticky;top:var(--iska-top);z-index:50;display:flex;justify-content:flex-start;padding:6px 0;background:#fff}
+  #iska-cancel-btn{font:inherit;font-size:16px;font-weight:700;color:#fff;background:#b3261e;border:0;border-radius:8px;padding:10px 22px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+  #iska-cancel-btn:hover{background:#8f1d17}
+  #iska-note{margin:6px 0 14px;padding:12px 18px;background:#eaf6f4;border:1px solid #b9dfd9;border-inline-start:6px solid #2aa597;border-radius:8px;color:#1f4e5f;font-size:20px;font-weight:700;text-align:center}
+  #iska-modal{position:fixed;inset:0;z-index:100000;display:none;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:16px}
+  #iska-modal.on{display:flex}
+  #iska-modal .box{position:relative;background:#fff;border-radius:14px;width:min(640px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+  #iska-modal .hd{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #dde7e7;font-weight:700;font-size:18px;color:#1f3b3b}
+  #iska-modal .x{font-size:28px;line-height:1;background:none;border:0;cursor:pointer;color:#555;padding:0 6px}
+  #iska-modal iframe{border:0;width:100%;height:70vh;min-height:420px}
+</style>
+<div id="iska-wrap">
+  <div id="iska-cancel-bar"><button type="button" id="iska-cancel-btn">ביטול הצטרפות</button></div>
+  <div id="iska-note">יש לקרוא היטב את השטר</div>
+  <iframe id="iska-join" src="https://harav-levin.pages.dev/join.html?embed=1" title="הצטרפות להיתר עיסקא פרטי"
+    style="width:100%;border:0;min-height:300px;display:block" scrolling="no" allow="clipboard-write"></iframe>
+</div>
+<div id="iska-modal" role="dialog" aria-modal="true" aria-label="טופס ביטול הצטרפות">
+  <div class="box"><div class="hd"><span>ביטול הצטרפות</span><button type="button" class="x" id="iska-x" aria-label="סגירה">×</button></div>
+    <iframe id="iska-cancel" title="טופס ביטול" data-src="https://harav-levin.pages.dev/join.html?embed=1#cancel"></iframe></div>
+</div>
 <script>
 (function () {
-  var f = document.getElementById("iska-join");
+  var f = document.getElementById("iska-join"), m = document.getElementById("iska-modal"), c = document.getElementById("iska-cancel");
+  document.body.appendChild(m); // מחוץ למיכלי העיצוב, כדי שיכסה את כל המסך
+  function open() { if (!c.src) c.src = c.dataset.src; m.classList.add("on"); }
+  function shut() { m.classList.remove("on"); }
+  document.getElementById("iska-cancel-btn").onclick = open;
+  document.getElementById("iska-x").onclick = shut;
+  m.addEventListener("mousedown", function (e) { if (e.target === m) shut(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") shut(); });
   window.addEventListener("message", function (e) {
     if (e.origin !== "https://harav-levin.pages.dev" || !e.data) return;
-    if (e.data.type === "iska-join-height" && e.data.h) f.style.height = (e.data.h + 20) + "px";
-    if (e.data.type === "iska-join-top") { var r = f.getBoundingClientRect(); if (r.top < 0) window.scrollTo({ top: window.pageYOffset + r.top - 80, behavior: "smooth" }); }
+    if (e.source === f.contentWindow) {
+      if (e.data.type === "iska-join-height" && e.data.h) f.style.height = (e.data.h + 20) + "px";
+      if (e.data.type === "iska-join-top") { var r = f.getBoundingClientRect(); if (r.top < 0) window.scrollTo({ top: window.pageYOffset + r.top - 140, behavior: "smooth" }); }
+    }
   });
-  // קישור ישיר לביטול: iska.co.il/…/?cancel  ->  פותח את טופס הביטול
-  if (/[?&]cancel\b/.test(location.search)) f.src += "#cancel";
+  if (/[?&]cancel\b/.test(location.search)) open(); // קישור ישיר: ?cancel
 })();
 </script>
