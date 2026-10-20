@@ -9,6 +9,13 @@ export async function onRequestGet({ request, env, params }) {
     if (!row) return new Response("not found", { status: 404 });
     const obj = await env.PERMITS.get(row.file_key);
     if (!obj) return new Response("not found", { status: 404 });
+    // ?enc=b64: הקובץ כ-JSON (base64), לרשתות עם סינון תוכן (נטפרי) שחוסמות הורדת PDF אבל לא JSON
+    if (new URL(request.url).searchParams.get("enc") === "b64") {
+      const u8 = new Uint8Array(await obj.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < u8.length; i += 0x8000) bin += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+      return Response.json({ name: row.original_name || "permit.pdf", data: btoa(bin) }, { headers: { "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*" } });
+    }
     return new Response(obj.body, {
       headers: {
         "Content-Type": "application/pdf",
