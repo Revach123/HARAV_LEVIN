@@ -6,46 +6,68 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-19T08:09:39.151485Z",
+  "updated": "2026-10-20T07:59:45.645108Z",
   "source": "d1",
-  "businesses": 1273,
-  "numeric_chp": 1269,
-  "found_in_registry": 1181,
+  "businesses": 1274,
+  "numeric_chp": 1270,
+  "found_in_registry": 1182,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2225,
-  "datawise_date": "2026-10-16",
+  "datawise_rows": 2224,
+  "datawise_date": "2026-10-19",
   "bond_companies": 363,
   "changes": {
    "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "registry_status_counts": {
-   "פעילה": 1068,
+   "פעילה": 1069,
    "לא ידוע": 154,
    "מחוסלת/חיסול": 35,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mvfvzh40junh",
+   "chp": "510400740",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mvfvzh40junh",
+   "chp": "510400740",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה ציבורית - בע\"מ"
+  },
+  {
+   "id": "mvfvzh40junh",
+   "chp": "510400740",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "אין"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",

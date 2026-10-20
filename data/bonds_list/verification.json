@@ -1,25 +1,12 @@
 {
- "updated": "2026-10-19",
+ "updated": "2026-10-20",
  "status": "ok",
- "datawise_date": "2026-10-16",
+ "datawise_date": "2026-10-19",
  "expected": 756,
  "maya": 756,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
- "dropped_no_terms": [
-  {
-   "security_id": 1161371,
-   "security_name": "מיטב השק אגח ד",
-   "company": "מיטב בית השקעות בע\"מ",
-   "chp_number": "520043795"
-  },
-  {
-   "security_id": 1236934,
-   "security_name": "דור אלון אגח ט",
-   "company": "דור-אלון אנרגיה בישראל (1988) בע\"מ/",
-   "chp_number": "520043878"
-  }
- ]
+ "dropped_no_terms": []
 }

@@ -29,6 +29,35 @@
    "kind": "open",
    "last_seen": "2026-10-19"
   },
+  "O1240852": {
+   "data": {
+    "begins_at": "2026-10-21T10:00:00",
+    "chp_number": "515434074",
+    "ends_at": "2026-10-21T17:00:00",
+    "interest": 0.5,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1668,
+    "issuer_name": "מגוריט",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777064",
+    "offer_number": 1240852,
+    "offer_type": "מחיר",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 879,
+    "securities": [
+     {
+      "linkage_type": "מדד",
+      "maalot_rating": null,
+      "midroog_rating": "A2.il",
+      "security_id": null,
+      "security_name": "אגח יג'",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-20"
+  },
   "U10118": {
    "data": {
     "chp_number": "",
@@ -660,31 +689,6 @@
    "kind": "upcoming",
    "last_seen": "2026-10-20"
   },
-  "U10376": {
-   "data": {
-    "chp_number": "515434074",
-    "company_name": "מגוריט",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10376,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
-    "maya_report_id": 1776338,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilBBB+",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-18"
-  },
   "U10377": {
    "data": {
     "chp_number": "515846558",
@@ -751,31 +755,6 @@
     "securities": [
      {
       "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-20"
-  },
-  "U10380": {
-   "data": {
-    "chp_number": "515434074",
-    "company_name": "מגוריט",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10380,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1776659",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776338",
-    "maya_report_id": 1776659,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilBBB+",
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
@@ -880,6 +859,56 @@
       "name": "",
       "security_type": "אג\"ח"
      },
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-20"
+  },
+  "U10385": {
+   "data": {
+    "chp_number": "515846558",
+    "company_name": "ג'נריישן קפיטל",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10385,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
+    "maya_report_id": 1776940,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilA+",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-20"
+  },
+  "U10386": {
+   "data": {
+    "chp_number": "520033309",
+    "company_name": "חג'ג' נדל\"ן",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10386,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1773850",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777077",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777077",
+    "maya_report_id": 1777077,
+    "new_company_type": null,
+    "securities": [
      {
       "maalot_rating": null,
       "midroog_rating": null,
