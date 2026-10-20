@@ -76,7 +76,7 @@ const permitOf = (n) => rows.findIndex((x) => x.chp_number === n);
 // 1. ללא זיהוי דיבור: ח.פ. בלבד, בלי תפריט
 let env = mkEnv();
 let r = await call(env, {});
-assert.match(r, /^read=t-הקישו את מספר החת פא.*=h1,no,9,5,/); console.log('1a', r);
+assert.match(r, /^read=t-הקישו את מספר החת פא.*=h1,no,10,5,/); console.log('1a', r);
 // בנק לאומי (520018078): נמצא ברישום, ויש לו היתר (פרטי/כללי לפי visibility)
 const bl = rows.find((x) => x.chp_number === '520018078');
 r = await call(env, { h1: '520018078' });
@@ -101,7 +101,7 @@ r = await call(env, { h1: '551111111' }); assert.equal(parts(r)[0], 't-שותפ�
 r = await call(env, { h1: '581111111' }); assert.equal(parts(r)[0], 't-עמותה'); assert.equal(parts(r)[1], 't-עמותת חסד ואמת');
 assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה\.t-לחיפוש נוסף הקישו 1 לסיום הקישו 2=nx1/);
 // nx: 1 -> סבב חדש, 2 -> סיום
-assert.match(await call(env, { h1: '511111111', nx1: '1' }), /=h2,no,9,5,/);
+assert.match(await call(env, { h1: '511111111', nx1: '1' }), /=h2,no,10,5,/);
 assert.match(await call(env, { h1: '511111111', nx1: '2' }), /^id_list_message=t-תודה ולהתראות&go_to_folder=\/5&$/);
 assert.equal(await call(env, { hangup: 'yes' }), '');
 assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?sk=bad'); return (await onRequest({ request: new Request(u), env })).text(); })(), /הרשאה/);
@@ -110,7 +110,7 @@ assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?s
 env = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice' });
 r = await call(env, {});
 assert.match(r, /^read=t-מומלץ לחפש לפי חת פא.*הקישו 1.*הקישו 2 לחיפוש לפי שם החברה=m1,no,1,1,7,No,no,no,,1\.2,/); console.log('2a OK');
-assert.match(await call(env, { m1: '1' }), /=h1,no,9,5,/);
+assert.match(await call(env, { m1: '1' }), /=h1,no,10,5,/);
 // ח.פ. לא קיים -> לפי שם
 r = await call(env, { m1: '1', h1: '111111111' });
 assert.match(r, /^read=t-לא נמצאה חברה במספר הזה\.t-אמרו את שם החברה=s1_1,no,voice$/); console.log('2b', r);
@@ -137,7 +137,7 @@ assert.equal(parts(await call(env, { m1: '2', s1_1: 'חסד ואמת' }))[1], 't
 r = await call(env, { m1: '2', s1_1: 'מנורה בטחון' });
 assert.match(r, /^read=t-הרבה מדי אפשרויות אנא אמרו את השם המלא או חפשו לפי מספר חת פא לאמירת השם המלא הקישו 1 לחיפוש לפי חת פא הקישו 2=t1_1,no,1,1,7,No,no,no,,1\.2,/); console.log('2f', r);
 assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1' }), /^read=t-אמרו שוב את שם החברה=s1_2,no,voice$/);
-assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '2' }), /=h1,no,9,5,/);
+assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '2' }), /=h1,no,10,5,/);
 // שם מלא יותר אחרי ההפניה: תוצאה יחידה
 r = await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1', s1_2: 'מנורה בטחון 7' });
 assert.equal(parts(r)[1], 't-מנורה בטחון 7 בא אם');
@@ -145,7 +145,7 @@ assert.equal(parts(r)[1], 't-מנורה בטחון 7 בא אם');
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
 assert.match(r, /^read=t-לא נמצאה חברה בשם הזה\.t-אמרו שוב את שם החברה=s1_2,no,voice$/);
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ' });
-assert.match(r, /=h1,no,9,5,/); console.log('2g', r);
+assert.match(r, /=h1,no,10,5,/); console.log('2g', r);
 assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
 assert.match(await call(env, { m1: '2', s1_1: '/6/rec001.wav' }), /לא הוגדר נכון/);
 // חיפוש נוסף: סבב 2 מתחיל מהתפריט
