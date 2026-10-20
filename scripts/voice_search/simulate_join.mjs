@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { onRequest as menu } from '../../functions/api/ivr-menu.js';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
-import { spokenEmail } from '../../functions/api/ivr-join.js';
+import { pickEmail, spokenEmail } from '../../functions/api/_shared/spoken-email.js';
 import { onRequestGet as audio } from '../../functions/api/joiner-audio.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
@@ -125,8 +125,9 @@ const ex2 = JSON.parse(p2.extra);
 assert.equal(ex2['טלפון נוסף'], '035551234'); assert.equal(ex2['פקס'], '035551235'); assert.equal(ex2['הקלטת אימייל'], '/1/jc2_em0'); assert.equal(ex2['הקלטת חברות'], '/1/jc2_cl');
 
 // ---- זיהוי הקלטות ב-Azure (fetch מדומה): שם, כתובת, אימייל וחברות נכנסים כטקסט לרישום ----
-const SAID = { fn: 'משה', ln: 'כהן', ad: 'רחוב הרצל 5 בני ברק', cl: 'בנק לאומי, מנורה', em0: 'בלה בלה', em1: 'moshe שטרודל גימייל' };
+const SAID = { fn: 'משה', ln: 'כהן', ad: 'רחוב הרצל 5 בני ברק', cl: 'בנק לאומי, מנורה', em0: 'בלה בלה', em1: { 'he-IL': 'שגיאה', 'en-US': 'M O S H E at gmail dot com', 'en-GB': 'em oh' } };
 const mails = [];
+const langsSeen = new Set();
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts = {}) => {
   url = String(url);
@@ -139,7 +140,9 @@ globalThis.fetch = async (url, opts = {}) => {
   if (url.includes('stt.speech.microsoft.com')) {
     const b = new Uint8Array(await new Response(opts.body).arrayBuffer());
     const tag = new TextDecoder().decode(b.slice(45, 45 + b[44]));
-    return new Response(JSON.stringify(SAID[tag] ? { RecognitionStatus: 'Success', DisplayText: SAID[tag] + '.' } : { RecognitionStatus: 'NoMatch' }), { status: 200 });
+    const said = typeof SAID[tag] === 'object' ? SAID[tag][new URL(url).searchParams.get('language')] : SAID[tag];   // לפי שפת הזיהוי
+    langsSeen.add(new URL(url).searchParams.get('language'));
+    return new Response(JSON.stringify(said ? { RecognitionStatus: 'Success', DisplayText: said + '.' } : { RecognitionStatus: 'NoMatch' }), { status: 200 });
   }
   if (url.includes('send-confirmation')) { mails.push(JSON.parse(opts.body)); return new Response('{}', { status: 200 }); }
   return realFetch(url, opts);
@@ -157,10 +160,11 @@ assert.equal(p3.first, 'משה'); assert.equal(p3.last, 'כהן'); assert.equal(
 const ex3 = JSON.parse(p3.extra);
 assert.equal(ex3['כתובת'], 'רחוב הרצל 5 בני ברק'); assert.equal(ex3['הקלטת שם פרטי'], '/1/jc5_fn'); assert.equal(ex3['הקלטת אימייל'], '/1/jc5_em1');
 assert.ok(ex3['זיהוי אוטומטי מהקלטות']);
+assert.deepEqual([...langsSeen].sort(), ['en-GB', 'en-US', 'he-IL']);                                  // כל הזיהויים נבדקו
 assert.equal(mails.length, 1); assert.equal(mails[0].to, 'moshe@gmail.com'); assert.match(mails[0].text, /משה כהן/);   // מייל האישור נשלח לכתובת שאומתה
 
 // שני ניסיונות כושלים: מתווספת אפשרות להמשיך בלי אימייל; הרישום נשמר בלי אימייל ובלי "נשלח אישור"
-SAID.em1 = 'עוד פעם לא נכון';
+SAID.em1 = 'עוד פעם לא נכון';   // כל השפות: לא תקין
 const f = { ...t, ApiCallId: 'c6', id: '200000008', fn: '/1/jc6_fn.wav', ln: '/1/jc6_ln.wav', ad: '/1/jc6_ad.wav', cl: '/1/jc6_cl.wav', em0: '/1/jc6_em0.wav', em1: '/1/jc6_em1.wav' };
 { const { em1, ...f0 } = f; await step(f0, /^read=t-מייל לא תקין\.t-לאחר הצליל.*=em1,no,record/); }              // כישלון ראשון: שואלים שוב
 await step(f, /^read=t-מייל לא תקין\.t-להקלטה נוספת.*הקישו 1.*בלי מייל הקישו 2=ems2,no,1,1,7,No,no,no,,1\.2,/);
@@ -176,7 +180,14 @@ assert.equal(JSON.parse(p4.extra)['הקלטת אימייל'], undefined);
 
 // בדיקת הפענוח של אימייל מדובר
 for (const [said, want] of [['moshe שטרודל גימייל', 'moshe@gmail.com'], ['moshe שטרודל ג׳ימייל נקודה קום', 'moshe@gmail.com'], ['moshe@gmail', 'moshe@gmail.com'], ['moshe at gmail dot com', 'moshe@gmail.com'],
-  ['dov שטרודל הוטמייל דוט קום', 'dov@hotmail.com'], ['a.b שטרודל walla.co.il', 'a.b@walla.co.il'], ['בלה בלה', ''], ['moshe', ''], ['', '']]) assert.equal(spokenEmail(said), want, said);
+  ['dov שטרודל הוטמייל דוט קום', 'dov@hotmail.com'], ['a.b שטרודל walla.co.il', 'a.b@walla.co.il'], ['בלה בלה', ''], ['moshe', ''], ['', ''],
+  // אות אחר אות: אנגלית אמריקאית / בריטית / עברית במבטא ישראלי
+  ['M O S H E at gmail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gee mail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gmail dot com', 'moshe@gmail.com'],
+  ["אם או אס אייץ' אי שטרודל ג'י מייל נקודה קום", 'moshe@gmail.com'], ["אם או אס אייץ' אי שטרודל גימייל קום", 'moshe@gmail.com'],
+  ['dee ay en two zero at hotmail dot com', 'dan20@hotmail.com'], ['די איי אן שתיים אפס שטרודל הוטמייל קום', 'dan20@hotmail.com'],
+  ['jay dot kay underscore double you at yahoo', 'j.k_w@yahoo.com'], ['אקס וואי זד שטרודל outlook נקודה קום', 'xyz@outlook.com']]) assert.equal(spokenEmail(said), want, said);
+assert.equal(pickEmail(['שגיאה', 'M O S H E at example dot co dot il', 'em oh ess aitch ee at gmail dot com']), 'moshe@gmail.com');   // עדיפות לספק מוכר
+assert.equal(pickEmail(['', '']), '');
 
 // ---- השמעת הקלטה במסך המנהל (joiner-audio): מנהל בלבד, הנתיב מהרשומה ולא מהבקשה ----
 const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
