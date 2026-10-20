@@ -193,12 +193,22 @@ assert.equal(pickEmail(['', '']), '');
 const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
 const aurl = (id, k) => new URL(`https://x/api/joiner-audio?id=${id}&k=${encodeURIComponent(k)}`);
 const areq = (u, auth = 'Bearer pw') => audio({ request: new Request(u, { headers: auth ? { Authorization: auth } : {} }), env: aenv });
-let ra = await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'));
-assert.equal(ra.status, 200); assert.equal(ra.headers.get('content-type'), 'audio/wav'); assert.equal((await ra.arrayBuffer()).byteLength, 60);
-assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'), '')).status, 401);                      // בלי הרשאה
-assert.equal((await areq(aurl(inserted[2].rid, 'כתובת'))).status, 400);                                 // רק שדות הקלטת ...
-assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת מזהה'))).status, 404);                            // אין הקלטה בשדה
-assert.equal((await areq(aurl('wnotthere0000', 'הקלטת שם פרטי'))).status, 404);
+const K = 'הקלטת שם פרטי';
+const sg = await areq(new URL(`https://x/api/joiner-audio?sign=1&id=${inserted[2].rid}&k=${encodeURIComponent(K)}`));
+assert.equal(sg.status, 200); const { url } = await sg.json(); assert.match(url, /exp=\d+&sig=[0-9a-f]{64}$/);
+const play = (u, headers = {}) => audio({ request: new Request(new URL(u, 'https://x'), { headers }), env: aenv });     // בלי הרשאת מנהל: רק החתימה
+let ra = await play(url);
+assert.equal(ra.status, 200); assert.equal(ra.headers.get('content-type'), 'audio/wav'); assert.equal(ra.headers.get('accept-ranges'), 'bytes'); assert.equal((await ra.arrayBuffer()).byteLength, 60);
+ra = await play(url, { Range: 'bytes=10-19' }); assert.equal(ra.status, 206); assert.equal(ra.headers.get('content-range'), 'bytes 10-19/60'); assert.equal((await ra.arrayBuffer()).byteLength, 10);
+assert.equal((await play(url, { Range: 'bytes=0-' })).status, 206);
+assert.equal((await play(url.replace(/sig=[0-9a-f]/, 'sig=0'))).status, 401);                              // חתימה שגויה
+assert.equal((await play(url.replace(/exp=\d+/, 'exp=1000000000'))).status, 401);                          // פג תוקף
+assert.equal((await play(url.replace(/k=[^&]+/, 'k=' + encodeURIComponent('הקלטת כתובת')))).status, 401);   // חתימה של הקלטה אחרת
+assert.equal((await areq(aurl(inserted[2].rid, K), '')).status, 401);                                      // בלי הרשאה ובלי חתימה
+assert.equal((await areq(new URL(`https://x/api/joiner-audio?sign=1&id=${inserted[2].rid}&k=${encodeURIComponent(K)}`), '')).status, 401);   // גם בקשת חתימה דורשת מנהל
+assert.equal((await areq(aurl(inserted[2].rid, 'כתובת'))).status, 400);                                    // רק שדות הקלטת ...
+assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת מזהה'))).status, 404);                               // אין הקלטה בשדה
+assert.equal((await areq(aurl('wnotthere0000', K))).status, 404);
 
 globalThis.fetch = realFetch;
 delete env.AZURE_SPEECH_KEY; delete env.YEMOT_TOKEN;
