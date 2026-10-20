@@ -22,15 +22,17 @@ import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_share
 import { AGREEMENT_KEYS, unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
-import { normalizeId, normalizePhone, jerusalemNow, newRowId, validEmail, clean } from './_shared/join-common.js';
+import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean } from './_shared/join-common.js';
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
+import { sendConfirmation } from './_shared/join-mail.js';
+import { pickEmail, spokenEmail } from './_shared/spoken-email.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
 const AGREEMENT_VERSION = 'טלפוני-1';
 
 // ---- מצב שיחה מוצפן (ivr_join_state) ----
-const STATE_KEYS = ['id', 'fn', 'ln', 'pc', 'ph', 'p2q', 'p2', 'ad', 'emq', 'em', 'fxq', 'fx', 'ch', 'cl', 'rd', 'pl'];
+const STATE_KEYS = ['id', 'fn', 'ln', 'pc', 'ph', 'p2q', 'p2', 'ad', 'emq', 'emn', 'emok', 'emf', 'emskip', 'fxq', 'fx', 'ch', 'cl', 'rd', 'pl'];
 const STATE_TTL_MS = 6 * 3600 * 1000;
 let stateReady = false;
 async function stateKey(env) { try { return await importKeyForWrite(env); } catch { return null; } }
@@ -83,7 +85,7 @@ export async function onRequest({ request, env }) {
   const done = (...keys) => (`id_list_message=${keys.map(P).join('.')}&go_to_folder=${bk}&`);
 
   try {
-    const out = await step({ v, env, P, bk, done });
+    const out = await step({ v, env, P, bk, done, origin: new URL(request.url).origin });
     await saveState(env, callId, v);
     return text(out);
   } catch (e) {
@@ -95,7 +97,7 @@ export async function onRequest({ request, env }) {
 const has = (v, k) => Object.prototype.hasOwnProperty.call(v, k);
 const empty = (x) => !x || x === EMPTY;
 
-async function step({ v, env, P, done }) {
+async function step({ v, env, P, done, origin }) {
   const folder = (env.IVR_JOIN_REC_FOLDER || '/1').replace(/\/$/, '');
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (tag) => `j${call}_${tag}`;
@@ -147,7 +149,12 @@ async function step({ v, env, P, done }) {
 
   // 6. אימייל (רשות, הקלטה: אותיות בקול)
   if ((o = yn('emq', 'join:emailQ'))) return o;
-  if (v.emq === '1' && (o = rec('em', 'join:askEmail', REC_ADDR_MAX))) return o;
+  let email = '';
+  if (v.emq === '1') {
+    const q = await emailStep({ v, env, P, folder, recFile });
+    if (q.ask) return q.ask;
+    email = q.email || '';
+  }
 
   // 7. פקס (רשות)
   if ((o = yn('fxq', 'join:faxQ'))) return o;
@@ -176,17 +183,67 @@ async function step({ v, env, P, done }) {
   if (v.ag === '3') { v.finished = true; return done('join:cancelled'); }
 
   // הקלטות -> טקסט (Azure), לרישום באתר. ההקלטות עצמן נשמרות לבדיקה. בלי הגדרת Azure/ימות נשארות רק ההקלטות.
-  const texts = await transcribeAll(env, v, folder, recFile, { fn: true, ln: true, ad: true, em: v.emq === '1', cl: !all });
-  await save(env, {
-    id, phone, phone2, fax, all, texts, callId: String(v.ApiCallId || ''),
+  // האימייל כבר אומת ונקלט בשלב emailStep (email); ההקלטה שלו נשמרת תחת emf.
+  const texts = await transcribeAll(env, v, folder, recFile, { fn: true, ln: true, ad: true, cl: !all });
+  const saved = await save(env, {
+    id, phone, phone2, fax, all, texts, email, callId: String(v.ApiCallId || ''),
     files: {
       'הקלטת שם פרטי': recPath('fn'), 'הקלטת שם משפחה': recPath('ln'), 'הקלטת כתובת': recPath('ad'),
-      ...(v.emq === '1' ? { 'הקלטת אימייל': recPath('em') } : {}),
+      ...(v.emq === '1' && (email || v.emf) ? { 'הקלטת אימייל': recPath(v.emf || 'em0') } : {}),
       ...(!all ? { 'הקלטת חברות': recPath('cl') } : {}),
     },
   });
   v.finished = true;
-  return done('join:done');
+  // מייל אישור (כמו בטופס באתר) - רק לכתובת שאומתה; "נשלח אישור למייל" מוקרא רק אם המייל באמת נשלח.
+  let mailSent = false;
+  if (saved && email) {
+    const companies = all ? [] : (texts.cl ? texts.cl.split(/\s*[,،]\s*|\s+ו(?=[א-ת])/).filter(Boolean) : ['(לפי ההקלטה)']);
+    mailSent = await sendConfirmation(env, email, {
+      first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'),
+      all, companies, origin,
+    });
+  }
+  return mailSent ? done('join:received', 'join:mailSent', 'join:thanks') : done('join:done');
+}
+
+// אימייל: הקלטה ← Azure ← בדיקת תקינות. לא תקין: "מייל לא תקין" ושואלים שוב; אחרי שני ניסיונות כושלים מתווספת אפשרות להמשיך בלי אימייל.
+// emn = מספר הניסיונות הכושלים (נשמר גם בשרת), em<n> = ההקלטה של ניסיון n, ems<n> = בחירה אחרי כישלון (1 = שוב, 2 = בלי אימייל).
+async function emailStep({ v, env, P, folder, recFile }) {
+  if (v.emok) return { email: v.emok };
+  if (v.emskip === '1') return {};
+  const rec = (key, prefix = '') => ({ ask: readRecord(prefix + P('join:askEmail'), key, folder, recFile(key), REC_MIN, REC_ADDR_MAX) });
+  if (!sttConfigured(env)) {                       // אי אפשר לאמת: נשמרת ההקלטה בלבד
+    if (!has(v, 'em0') || empty(v.em0)) return rec('em0');
+    v.emf = 'em0';
+    return {};
+  }
+  const n = Number(v.emn || 0);
+  if (n >= 2) {
+    const sk = `ems${n}`;
+    if (v[sk] === '2') { v.emskip = '1'; return {}; }
+    if (v[sk] !== '1') return { ask: readTap(P('join:emailRetry'), sk, ['1', '2'], { empty: EMPTY }) };
+  }
+  const key = `em${n}`;
+  if (!has(v, key) || empty(v[key])) return rec(key);
+  const email = pickEmail(await transcribeLangs(env, v, key, folder, recFile));
+  if (email) { v.emok = email; v.emf = key; return { email }; }
+  v.emn = String(n + 1);                           // לא תקין: "מייל לא תקין" ושואלים שוב (מהניסיון השני - עם אפשרות להמשיך בלי)
+  if (n + 1 >= 2) return { ask: readTap(`${P('join:badEmail')}.${P('join:emailRetry')}`, `ems${n + 1}`, ['1', '2'], { empty: EMPTY }) };
+  return rec(`em${n + 1}`, `${P('join:badEmail')}.`);
+}
+
+// הקלטה אחת מזוהה בכמה שפות (עברית + אנגלית אמריקאית + בריטית): אותיות באנגלית מזוהות רק בזיהוי האנגלי, מילים בעברית רק בעברית.
+const EMAIL_LANGS = ['he-IL', 'en-US', 'en-GB'];
+async function transcribeLangs(env, v, key, folder, recFile) {
+  try {
+    const value = String(v[key] || '');
+    const rec = await downloadRecording(env, [
+      ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
+      `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
+    ]);
+    if (!rec) return [];
+    return await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, rec.bytes, l), 200).replace(/[,!?]+$/g, '').trim()));
+  } catch { return []; }
 }
 
 // הקלטה -> טקסט, במקביל לכל ההקלטות. אין מחיקה של ההקלטה (בניגוד לחיפוש), כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
@@ -206,22 +263,15 @@ async function transcribeAll(env, v, folder, recFile, want) {
   return out;
 }
 
-// אימייל מדובר: "שטרודל"/"נקודה"/"קו תחתון"/"מקף" -> סימנים, בלי רווחים. מחזיר '' אם לא נראה כמו אימייל תקין.
-export function spokenEmail(t) {
-  const e = String(t || '').toLowerCase()
-    .replace(/שטרודל|at sign|\bat\b/g, '@').replace(/נקודה|\bdot\b/g, '.')
-    .replace(/קו תחתון/g, '_').replace(/מקף|\bdash\b/g, '-')
-    .replace(/\s+/g, '').replace(/[,;:]/g, '');
-  return validEmail(e) ? e : '';
-}
+export { spokenEmail };
 
-async function save(env, { id, phone, phone2, fax, all, files, texts = {}, callId }) {
+async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', callId }) {
   const key = await importKeyForWrite(env);
   const ih = await identHash(env, id);
   // הגנה מקריאה כפולה: אותה ת.ז. שנרשמה ב-3 הדקות האחרונות לא נרשמת שוב
   const recent = await env.DB.prepare('SELECT id FROM joiners WHERE ident_hash = ? AND submitted_at >= ? LIMIT 1')
     .bind(ih, jerusalemNow(new Date(Date.now() - 3 * 60000))).first();
-  if (recent) return;
+  if (recent) return false;
 
   const rid = newRowId(), now = jerusalemNow();
   // אותם שדות כמו הטופס באתר (join.js). שמות, כתובת ואימייל נמסרים בקול, ולכן נשמרים כהקלטות (נתיב בימות).
@@ -232,19 +282,19 @@ async function save(env, { id, phone, phone2, fax, all, files, texts = {}, callI
     'כתובת': texts.ad || '(ראו הקלטת כתובת)',
     ...files,
     ...(Object.values(texts).some(Boolean) ? { 'זיהוי אוטומטי מהקלטות': 'כן - יש לבדוק מול ההקלטה' } : {}),
-    ...(texts.em && !spokenEmail(texts.em) ? { 'אימייל (זיהוי אוטומטי, לא תקין)': texts.em } : {}),
     'מזהה שיחה': callId,
     'גרסת שטר': AGREEMENT_VERSION,
     'אושרו התנאים': 'כן (בהקשה, בנוסח ההצהרה הטלפוני)',
   };
   const payload = {
     first: texts.fn || 'טלפוני (ראו הקלטת שם פרטי)', last: texts.ln || '(ראו הקלטת שם משפחה)', phone,
-    email: spokenEmail(texts.em), id, ip: '',
+    email, id, ip: '',
     companies: all ? '' : (texts.cl || '(ראו הקלטת חברות)'), all: all ? 'כן' : '',
     pdf: '', extra: JSON.stringify(extra), src: 'ivr',
   };
   await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
     .bind(rid, now, ih, await encryptPii(key, rid, payload)).run();
+  return true;
 }
 
 const text = (body) => new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });

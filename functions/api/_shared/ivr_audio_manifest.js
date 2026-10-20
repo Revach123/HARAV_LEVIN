@@ -211,6 +211,13 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
+ "join:badEmail": {
+  "text": "מֵיְיל לֹא תָּקִין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_a689d8f903fbe21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:badId": {
   "text": "מִסְפַּר תְּעוּדַת הַזֶּהוּת אֵינוֹ תָּקִין",
   "voice": "he-IL-AvriNeural",
@@ -260,6 +267,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:emailRetry": {
+  "text": "לְהַקְלָטָה נוֹסֶפֶת שֶׁל הַמֵּיְיל הַקִּישׁוּ 1. לְהֶמְשֵׁךְ בְּלִי מֵיְיל הַקִּישׁוּ 2",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_8b53914cd5c8e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:error": {
   "text": "אֵירְעָה שְׁגִיאָה. אָנָּא נַסּוּ שׁוּב מְאוּחָר יוֹתֵר",
   "voice": "he-IL-AvriNeural",
@@ -274,6 +288,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:mailSent": {
+  "text": "נִשְׁלַח אִישּׁוּר לַמֵּיְיל",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_81ada425eb29e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:phone2Q": {
   "text": "לְהוֹסָפַת מִסְפַּר טֶלֶפוֹן נוֹסָף הַקִּישׁוּ 1. לְהֶמְשֵׁךְ בְּלִי טֶלֶפוֹן נוֹסָף הַקִּישׁוּ 2",
   "voice": "he-IL-AvriNeural",
@@ -285,6 +306,20 @@ export default {
   "text": "לְשִׁימוּשׁ בְּמִסְפַּר הַטֶּלֶפוֹן שֶׁמִּמֶּנּוּ אַתֶּם מִתְקַשְּׁרִים הַקִּישׁוּ 1. לְהַקָּשַׁת מִסְפָּר אַחֵר הַקִּישׁוּ 2",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_72a1385bca106c1a286a",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:received": {
+  "text": "הַבַּקָּשָׁה הִתְקַבְּלָה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_e59b3b606516e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:thanks": {
+  "text": "תּוֹדָה רַבָּה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_a401c30bf9f6e21a05dc",
   "pron": "",
   "phoneme": false
  },

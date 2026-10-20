@@ -52,10 +52,10 @@ export async function deleteRecording(env, path) {
   } catch (e) { /* ניקוי best-effort */ }
 }
 
-export async function azureTranscribe(env, wav) {
+export async function azureTranscribe(env, wav, language = 'he-IL') {
   const region = env.AZURE_SPEECH_REGION || 'eastus';
   const url = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1`
-    + '?language=he-IL&format=simple&profanity=raw';
+    + `?language=${language}&format=simple&profanity=raw`;
   const t = withTimeout(TIMEOUT_MS);
   try {
     const res = await fetch(url, {
