@@ -82,7 +82,8 @@ async function route(ctx) {
     const nx = `nx${r}`;
     if (has(v, nx)) {
       if (v[nx] === '1') continue;                  // חיפוש נוסף -> הסבב הבא
-      return `id_list_message=${P('bye')}&go_to_folder=${back(env, v)}&`;
+      if (v[nx] === '2') return `id_list_message=${P('bye')}&go_to_folder=${back(env, v)}&`;
+      return readNext(r, []);                       // שתיקה / ערך אחר: שואלים שוב, בלי הגבלה
     }
     return await round(ctx, r);
   }
@@ -97,7 +98,7 @@ async function round(ctx, r) {
 
   // תפריט פותח: 1 = לפי ח.פ. (מומלץ), 2 = לפי שם.
   const mKey = `m${r}`;
-  if (!has(v, mKey)) return readTapRaw(P('menu'), mKey, ['1', '2']);
+  if (v[mKey] !== '1' && v[mKey] !== '2') return readTapRaw(P('menu'), mKey, ['1', '2']);   // שתיקה: שואלים שוב
 
   let note = [];
   if (v[mKey] === '1') {
@@ -119,10 +120,10 @@ async function round(ctx, r) {
 async function chpStep(ctx, r, note, fallbackToName) {
   const { v, env, rows } = ctx;
   const hKey = `h${r}`;
-  if (!has(v, hKey)) {
+  if (!has(v, hKey) || v[hKey] === CFG.EMPTY_VAL) {     // לא הוקש כלום: שואלים שוב, בלי הגבלה
     return { body: readTapRaw(msg(notes(note), P('askChp')), hKey, null, { max: 10, min: 5 }) };
   }
-  const items = v[hKey] === CFG.EMPTY_VAL ? [] : await searchByChp(env, v[hKey], rows);
+  const items = await searchByChp(env, v[hKey], rows);
   if (items.length) return { body: listing(ctx, r, items) };
   if (fallbackToName && ctx.voice) return { note: ['noChp'] };
   return { body: readNext(r, ['noChp']) };
@@ -137,6 +138,9 @@ async function nameStep(ctx, r, note) {
       return { body: readSpeech(env, v, r, a, msg(notes(note), P(a === 1 ? 'ask1' : 'ask2'))) };
     }
 
+    if (v[sKey] === CFG.EMPTY_VAL) {                   // לא נאמר / לא הוקלט כלום: שואלים שוב את אותה שאלה, בלי הגבלה
+      return { body: readSpeech(env, v, r, a, msg(notes(['noHear']), P(a === 1 ? 'ask1' : 'ask2'))) };
+    }
     let spoken = String(v[sKey]);
     if (record && spoken !== CFG.EMPTY_VAL) spoken = await recognize(env, v, r, a, spoken);
     else if (looksLikeRecording(spoken)) {
@@ -149,7 +153,7 @@ async function nameStep(ctx, r, note) {
     if (found.tooMany) {
       // יותר מ-MAX_LIST תוצאות: לא מקריאים. מציעים שם מלא יותר, או ח.פ.
       const tKey = `t${r}_${a}`;
-      if (!has(v, tKey)) return { body: readTapRaw(P('tooMany'), tKey, ['1', '2']) };
+      if (v[tKey] !== '1' && v[tKey] !== '2') return { body: readTapRaw(P('tooMany'), tKey, ['1', '2']) };
       if (v[tKey] === '2') return { goChp: true };
       note = [];
       continue;
@@ -215,7 +219,7 @@ async function recognize(env, v, r, a, value) {
     `${folder}/${file}.wav`,
     `${folder}/${file}`,
   ]);
-  await sttPut(env, callId, slot, text);
+  if (text) await sttPut(env, callId, slot, text);       // תוצאה ריקה לא נשמרת: שאלה חוזרת באותו משתנה תזוהה מחדש
   return text;
 }
 
