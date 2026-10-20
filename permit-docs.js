@@ -204,7 +204,7 @@
   function close(id) { $(id)?.remove(); if (closers[id]) { closers[id](); delete closers[id]; } }
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    for (const id of ["pd-confirm", "pd-reg", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd"]) if ($(id)) { close(id); break; }
+    for (const id of ["pd-confirm", "pd-reg", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd", "pd-jedit", "pd-jdel"]) if ($(id)) { close(id); break; }
   });
 
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
@@ -2095,14 +2095,16 @@
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
     const { rows, dup } = jFiltered(), F = [["all", "הכל"], ["cancelled", "ביטלו"], ["file", "עם קובץ אישור"], ["nofile", "בלי קובץ אישור"]];
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש: שם, טלפון, דוא&quot;ל, ת.ז., חברה" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
-        <span class="pd-btns">${F.map(([k, l]) => `<button class="pd-mini ${J.f === k ? "sel" : ""}" onclick="PD._jF('${k}')">${l}</button>`).join("")}</span></div>
+        <span class="pd-btns">${F.map(([k, l]) => `<button class="pd-mini ${J.f === k ? "sel" : ""}" onclick="PD._jF('${k}')">${l}</button>`).join("")}</span>
+        <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button></div>
       <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
+      <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th><th>פעולות</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id;
         return `<tr class="go" onclick="PD._jOpen('${r.id}')"><td dir="ltr" style="text-align:right">${E((r.submitted_at || "").slice(0, 10))}</td><td><b>${E(jName(r))}</b></td><td dir="ltr" style="text-align:right">${E(r.phone)}</td><td dir="ltr" style="text-align:right">${E(r.email)}</td>
           <td>${r.cancelled_at ? `<span class="pd-nd-miss">ביטל ${E(r.cancelled_at)}</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
-          <td>${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄 אישור</button>` : '<span class="pd-sub">-</span>'}</td></tr>`
-          + (open ? `<tr><td colspan="6" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">ת.ז.: <b dir="ltr">${E(r.id_number || "-")}</b> · כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span><br>החברות שנבחרו: <b>${E(r.companies || "-")}</b>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${r.extra ? `<br>שדות נוספים: ${E(r.extra)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="6" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table>
+          <td>${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄 אישור</button>` : '<span class="pd-sub">-</span>'}</td>
+          <td style="white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button> <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></td></tr>`
+          + (open ? `<tr><td colspan="7" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">ת.ז.: <b dir="ltr">${E(r.id_number || "-")}</b> · כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span><br>החברות שנבחרו: <b>${E(r.companies || "-")}</b>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${r.extra ? `<br>שדות נוספים: ${E(r.extra)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="7" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table>
       ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
   }
   async function jFile(sha) {
@@ -2113,6 +2115,55 @@
       const url = URL.createObjectURL(await res.blob());
       if (w) w.location = url; else window.open(url);
     } catch (e) { if (w) w.close(); alert("פתיחת הקובץ נכשלה: " + e.message); }
+  }
+  // עריכה / הוספה / מחיקה ידנית של מצטרף (מנהל בלבד; השרת מצפין מחדש את הפרטים)
+  const JF = [["first", "שם פרטי"], ["last", "שם משפחה"], ["id_number", "ת.ז."], ["phone", "טלפון"], ["email", "דוא\"ל (אנגלית)"]];
+  function jEdit(id) {
+    const r = id ? J.rows.find(x => x.id === id) : { first: "", last: "", id_number: "", phone: "", email: "", companies: "", all: "", extra: "", cancelled_at: "", submitted_at: "" };
+    if (!r) return;
+    if (r.undecryptable) { alert("לא ניתן לערוך רשומה שלא פוענחה."); return; }
+    overlay("pd-jedit", `<div class="pd-head"><b>${id ? "עריכת מצטרף: " + E(jName(r)) : "הוספת מצטרף ידנית"}</b></div>
+      <div style="padding:14px;display:grid;gap:8px" id="pd-jf" data-id="${E(id)}">
+        ${JF.map(([k, l]) => `<label class="pd-sub">${l}<input class="pd-in" data-k="${k}" value="${E(r[k] || "")}" style="width:100%" ${k === "email" || k === "id_number" || k === "phone" ? 'dir="ltr"' : ""} autocomplete="off"></label><div class="pd-sub" data-e="${k}" style="color:#c0392b"></div>`).join("")}
+        <label class="pd-sub">חברות שנבחרו<textarea class="pd-in" data-k="companies" rows="3" style="width:100%">${E(r.companies || "")}</textarea></label>
+        <label class="pd-sub"><input type="checkbox" data-k="all" ${r.all ? "checked" : ""}> כל החברות שנרשמו וירשמו בהמשך</label>
+        <label class="pd-sub">שדות נוספים / הערות<textarea class="pd-in" data-k="extra" rows="2" style="width:100%">${E(r.extra || "")}</textarea></label>
+        <label class="pd-sub">${id ? "תאריך ביטול (ריק = לא ביטל)" : "תאריך הרשמה (ריק = היום)"}<input class="pd-in" type="date" data-k="${id ? "cancelled_at" : "submitted_at"}" value="${E(((id ? r.cancelled_at : r.submitted_at) || "").slice(0, 10))}"></label>
+        <div class="pd-sub" data-e="cancelled_at submitted_at" id="pd-jerr" style="color:#c0392b"></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end"><button class="pd-btn" id="pd-jsave" onclick="PD._jSave()">שמירה</button><button class="pd-mini" onclick="PD._close('pd-jedit')">ביטול</button></div>
+      </div>`);
+  }
+  async function jSave() {
+    const box = $("pd-jf"); if (!box) return;
+    const id = box.dataset.id, b = {};
+    box.querySelectorAll("[data-k]").forEach(el => { b[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; });
+    box.querySelectorAll("[data-e]").forEach(el => { el.textContent = ""; });
+    const btn = $("pd-jsave"); btn.disabled = true;
+    try {
+      const r = id ? await api("/joiners?id=" + encodeURIComponent(id), "PUT", b) : await api("/joiners", "POST", b);
+      if (id) { const i = J.rows.findIndex(x => x.id === id); if (i >= 0) J.rows[i] = r.row; } else { J.rows.unshift(r.row); J.total++; }
+      close("pd-jedit"); ndShow();
+    } catch (e) {
+      btn.disabled = false;
+      const errs = (e.data && e.data.errors) || null;
+      if (errs) for (const [k, m] of Object.entries(errs)) { const t = box.querySelector(`[data-e~="${k}"]`) || $("pd-jerr"); if (t) t.textContent = m; }
+      else { $("pd-jerr").textContent = e.message || "שגיאה"; }
+    }
+  }
+  function jDel(id) {
+    const r = J.rows.find(x => x.id === id); if (!r) return;
+    overlay("pd-jdel", `<div class="pd-head" style="background:#c0392b;color:#fff"><b>מחיקת מצטרף</b></div>
+      <div style="padding:14px;line-height:1.7">למחוק לצמיתות את <b>${E(jName(r))}</b>${r.submitted_at ? " (נרשם " + E(r.submitted_at.slice(0, 10)) + ")" : ""}?<br><span class="pd-sub">הפעולה אינה הפיכה${r.file_sha256 ? ", וקובץ האישור שלו יימחק אם אף מצטרף אחר לא משתמש בו" : ""}.</span>
+      <div class="pd-sub" id="pd-jderr" style="color:#c0392b"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" style="background:#c0392b" id="pd-jdgo" onclick="PD._jDelGo('${E(id)}')">מחיקה</button><button class="pd-mini" onclick="PD._close('pd-jdel')">ביטול</button></div></div>`);
+  }
+  async function jDelGo(id) {
+    const b = $("pd-jdgo"); if (b) b.disabled = true;
+    try { await api("/joiners?id=" + encodeURIComponent(id), "DELETE"); J.rows = J.rows.filter(x => x.id !== id); J.total--; if (J.open === id) J.open = ""; close("pd-jdel"); ndShow(); }
+    catch (e) {
+      if (e.status === 404) { J.rows = J.rows.filter(x => x.id !== id); close("pd-jdel"); ndShow(); return; }
+      if (b) b.disabled = false; const t = $("pd-jderr"); if (t) t.textContent = e.message || "שגיאה";
+    }
   }
   const jAct = {
     q: v => { J.q = v; J.shown = 200; later(J, "_t", ndShow); },
@@ -2426,7 +2477,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
