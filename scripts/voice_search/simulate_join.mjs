@@ -6,14 +6,24 @@ import { onRequest as join } from '../../functions/api/ivr-join.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
 const inserted = [];
-const DB = { prepare: (sql) => ({ bind: (...a) => ({
-  first: async () => (sql.startsWith('SELECT') ? inserted.find((r) => r.ih === a[0]) || null : null),
-  run: async () => { if (sql.startsWith('INSERT')) inserted.push({ rid: a[0], ih: a[2], pii: a[3] }); return {}; },
-}) }) };
+const states = new Map();
+const DB = { prepare: (sql) => ({
+  run: async () => ({}),                                                   // CREATE TABLE
+  bind: (...a) => ({
+    first: async () => (sql.includes('FROM joiners') ? inserted.find((r) => r.ih === a[0]) || null
+      : sql.includes('ivr_join_state') ? (states.has(a[0]) ? { data: states.get(a[0]) } : null) : null),
+    run: async () => {
+      if (sql.startsWith('INSERT INTO joiners')) inserted.push({ rid: a[0], ih: a[2], pii: a[3] });
+      else if (sql.startsWith('INSERT OR REPLACE INTO ivr_join_state')) states.set(a[0], a[1]);
+      else if (sql.startsWith('DELETE FROM ivr_join_state WHERE call_id')) states.delete(a[0]);
+      return {};
+    },
+  }),
+}) };
 const env = { IVR_SECRET: 'S', IVR_SECRET_NEW: 'N', IVR_AUDIO_OFF: '1', JOINERS_KEY: Buffer.alloc(32, 7).toString('base64'), DB };
 
 // ניקוד מוסר מהפלט כדי שההשוואות יישארו קריאות
-const plain = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
+const plain = (x) => x.replace(/[ְ-ׇ]/g, '');
 const run = async (fn, vars) => {
   const u = new URL('https://x/api/x');
   for (const [k, v] of Object.entries({ sk: 'N', ApiCallId: 'c1', ...vars })) u.searchParams.set(k, v);
@@ -31,45 +41,93 @@ assert.match(await run(menu, { sk: 'bad' }), /שגיאת הרשאה/);
 assert.match(await run(menu, { sk: 'S' }), /^read=/);                 // גם הסוד הישן תקף
 assert.equal(await run(menu, { hangup: 'yes' }), '');
 
-// ---- הצטרפות: מסלול מלא (כל החברות) ----
+// ---- הצטרפות: כל שדות הטופס באתר ----
+// כל תשובה נוספת מתווספת למשתנים (כמו שימות עושה); ApiPhone = מספר המתקשר.
 const base = { ApiPhone: '0501234567' };
-let r = await run(join, base);                                         assert.match(r, /^read=t-הקישו את מספר תעודת הזהות.*=id,no,10,5,/);
-r = await run(join, { ...base, id: '123' });                           assert.match(r, /^read=t-מספר תעודת הזהות אינו תקין\.t-הקישו.*=id,no,10,5,/);   // לא תקין: שואלים שוב, בלי הגבלה
-r = await run(join, { ...base, id: 'NONE' });                          assert.match(r, /^read=t-הקישו את מספר תעודת הזהות.*=id,/);                    // שתיקה: שואלים שוב
-r = await run(join, { ...base, id: '123456782' });                     assert.match(r, /^read=.*=nm,no,record,\/1,jc1_nm,no,yes,no,1,8$/);
-r = await run(join, { ...base, id: '123456782', nm: 'NONE' });         assert.match(r, /=nm,no,record,/);                                              // לא הוקלט: שואלים שוב
-r = await run(join, { ...base, id: '123456782', nm: '/1/jc1_nm.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
-r = await run(join, { ...base, id: '123456782', nm: '/1/jc1_nm.wav', ch: 'NONE' });  assert.match(r, /=ch,no,1,1,/);
-const full = { ...base, id: '123456782', nm: '/1/jc1_nm.wav', ch: '1' };
-r = await run(join, full);                                             assert.match(r, /=rd,no,1,1,/);
-r = await run(join, { ...full, rd: 'NONE' });                          assert.match(r, /=rd,no,1,1,/);
-r = await run(join, { ...full, rd: '1' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1);   // 14 פסקאות + הצהרה
-assert.match(r, /=ag,no,1,1,/);
-r = await run(join, { ...full, rd: '2' });                             assert.match(r, /=ag,no,1,1,/);
-r = await run(join, { ...full, rd: '2', ag: 'NONE' });                 assert.match(r, /=ag,no,1,1,/);                                                 // לא נענה: שואלים שוב
-full.rd = '2';
-r = await run(join, { ...full, ag: '2' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1); assert.match(r, /=ag,no,1,1,7,No,no,no,,1\.2\.3,/);   // שמיעה חוזרת
-r = await run(join, { ...full, ag: 'NONE' });                          assert.equal(r.split('=')[1].split('.').length, 1);                                // שתיקה: רק ההצהרה
-r = await run(join, { ...full, ag: '3' });                             assert.match(r, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
+const step = async (vars, re) => { const r = await run(join, vars); assert.match(r, re, r); return r; };
+const KEY = (k) => new RegExp(`=${k},`);
+let c = { ...base };
+await step(c, /^read=t-הקישו את מספר תעודת הזהות.*=id,no,10,5,/);
+await step({ ...c, id: '123' }, /^read=t-מספר תעודת הזהות אינו תקין\.t-הקישו.*=id,no,10,5,/);   // לא תקין: שואלים שוב, בלי הגבלה
+await step({ ...c, id: 'NONE' }, /^read=t-הקישו את מספר תעודת הזהות.*=id,/);                      // שתיקה: שואלים שוב
+c.id = '123456782';
+await step(c, /^read=t-לאחר הצליל אמרו את שמכם הפרטי=fn,no,record,\/1,jc1_fn,no,yes,no,1,8$/);
+await step({ ...c, fn: 'NONE' }, KEY('fn'));
+c.fn = '/1/jc1_fn.wav';
+await step(c, /^read=t-לאחר הצליל אמרו את שם המשפחה=ln,no,record,\/1,jc1_ln,/);
+c.ln = '/1/jc1_ln.wav';
+await step(c, /^read=t-לשימוש במספר הטלפון.*=pc,no,1,1,7,No,no,no,,1\.2,/);
+c.pc = '1';
+await step(c, /^read=t-להוספת מספר טלפון נוסף.*=p2q,/);
+c.p2q = '2';
+await step(c, /=ad,no,record,\/1,jc1_ad,no,yes,no,1,15$/);
+c.ad = '/1/jc1_ad.wav';
+await step(c, /=emq,/);
+c.emq = '2';
+await step(c, /=fxq,/);
+c.fxq = '2';
+await step(c, /=ch,no,1,1,7,No,no,no,,1\.2,/);
+await step({ ...c, ch: 'NONE' }, /=ch,no,1,1,/);
+c.ch = '1';
+await step(c, /=rd,no,1,1,/);
+await step({ ...c, rd: 'NONE' }, /=rd,no,1,1,/);
+const r1 = await step({ ...c, rd: '1' }, /=ag,no,1,1,7,No,no,no,,1\.2\.3,/);
+assert.equal(r1.split('=')[1].split('.').length, 14 + 1);                  // 14 פסקאות + הצהרה
+c.rd = '2';
+await step(c, /=ag,no,1,1,/);
+await step({ ...c, ag: 'NONE' }, /=ag,no,1,1,/);                          // לא נענה: שואלים שוב
+const r2 = await step({ ...c, ag: '2' }, /=ag,no,1,1,7,No,no,no,,1\.2\.3,/);  // שמיעה חוזרת
+assert.equal(r2.split('=')[1].split('.').length, 14 + 1);
+const r3 = await run(join, { ...c, ag: 'NONE' });                          assert.equal(r3.split('=')[1].split('.').length, 1);   // שתיקה: רק ההצהרה
+await step({ ...c, ag: '3' }, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 0);
-r = await run(join, { ...full, ag: '1' });                             assert.match(r, /^id_list_message=t-הבקשה התקבלה תודה רבה&go_to_folder=\/&$/);
+await step({ ...c, ag: '1' }, /^id_list_message=t-הבקשה התקבלה תודה רבה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 1);
+assert.equal(states.size, 0);                                              // המצב השמור נמחק בסיום
 const key = await importKeyForWrite(env);
 const p = await decryptPii(key, inserted[0].rid, inserted[0].pii);
 assert.equal(p.id, '123456782'); assert.equal(p.phone, '0501234567'); assert.equal(p.all, 'כן'); assert.equal(p.src, 'ivr');
-assert.equal(JSON.parse(p.extra)['הקלטת שם'], '/1/jc1_nm');
-await run(join, { ...full, ag: '1' });                                 assert.equal(inserted.length, 1);  // כפילות תוך 3 דקות לא נרשמת
+const ex = JSON.parse(p.extra);
+assert.equal(ex['הקלטת שם פרטי'], '/1/jc1_fn'); assert.equal(ex['הקלטת שם משפחה'], '/1/jc1_ln'); assert.equal(ex['הקלטת כתובת'], '/1/jc1_ad');
+await run(join, { ...c, ag: '1' });                                        assert.equal(inserted.length, 1);  // כפילות תוך 3 דקות לא נרשמת
 
-// ---- הצטרפות: חברות מסוימות, בלי מספר מתקשר ----
-const v2 = { ApiCallId: 'c2', ApiPhone: 'unknown', bk: '/' };
-r = await run(join, { ...v2, id: '039337423' });                       assert.match(r, /=ph,no,11,9,/);
-r = await run(join, { ...v2, id: '039337423', ph: '12' });             assert.match(r, /^read=t-מספר הטלפון אינו תקין\..*=ph,/);
-const v3 = { ...v2, id: '039337423', ph: '052-7654321', nm: '/1/jc2_nm.wav', ch: '2' };
-r = await run(join, v3);                                               assert.match(r, /=cl,no,record,\/1,jc2_cl,no,yes,no,1,30$/);
-r = await run(join, { ...v3, cl: 'NONE' });                            assert.match(r, /=cl,no,record,/);
-r = await run(join, { ...v3, cl: '/1/jc2_cl.wav', rd: '2', ag: '1' }); assert.match(r, /הבקשה התקבלה/);
+// ---- הצטרפות: כל האפשרויות (טלפון אחר, טלפון נוסף, אימייל, פקס, חברות מסוימות), בלי מספר מתקשר ----
+const d = { ApiCallId: 'c2', ApiPhone: 'unknown', bk: '/', id: '039337423', fn: '/1/jc2_fn.wav', ln: '/1/jc2_ln.wav' };
+await step(d, /=ph,no,11,9,/);                                             // אין מספר מתקשר: מקישים טלפון
+await step({ ...d, ph: '12' }, /^read=t-מספר הטלפון אינו תקין\..*=ph,/);
+d.ph = '052-7654321';
+await step(d, /=p2q,/);
+d.p2q = '1';
+await step(d, /=p2,no,11,9,/);
+d.p2 = '03-5551234';
+await step(d, /=ad,no,record,/);
+d.ad = '/1/jc2_ad.wav';
+await step(d, /=emq,/);
+d.emq = '1';
+await step(d, /=em,no,record,\/1,jc2_em,no,yes,no,1,15$/);
+d.em = '/1/jc2_em.wav';
+await step(d, /=fxq,/);
+d.fxq = '1';
+await step(d, /=fx,no,11,9,/);
+d.fx = '0355 51235'.replace(/\D/g, '');
+await step(d, /=ch,/);
+d.ch = '2';
+await step(d, /=cl,no,record,\/1,jc2_cl,no,yes,no,1,30$/);
+await step({ ...d, cl: 'NONE' }, /=cl,no,record,/);
+d.cl = '/1/jc2_cl.wav'; d.rd = '2';
+await step({ ...d, ag: '1' }, /הבקשה התקבלה/);
 const p2 = await decryptPii(key, inserted[1].rid, inserted[1].pii);
-assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/1/jc2_cl');
+assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, '');
+const ex2 = JSON.parse(p2.extra);
+assert.equal(ex2['טלפון נוסף'], '035551234'); assert.equal(ex2['פקס'], '035551235'); assert.equal(ex2['הקלטת אימייל'], '/1/jc2_em'); assert.equal(ex2['הקלטת חברות'], '/1/jc2_cl');
+
+// ---- ימות מפעילה את השלוחה מחדש באמצע השיחה (בלי משתנים): ממשיכים מאותה נקודה, לא מההתחלה ----
+const rs = { ApiCallId: 'c9', ApiPhone: '0501234567', id: '123456782', fn: '/1/jc9_fn.wav', ln: '/1/jc9_ln.wav', pc: '1', p2q: '2', ad: '/1/jc9_ad.wav', emq: '2', fxq: '2', ch: '1' };
+await step(rs, /=rd,/);                                                    // נשמר
+await step({ ApiCallId: 'c9', ApiPhone: '0501234567' }, /=rd,/);           // התחלה מחדש: ממשיכים מ-rd ולא שואלים ת.ז.
+await step({ ...rs, rd: '1' }, /=ag,/);                                    // השטר הושמע (pl נשמר)
+const rs2 = await run(join, { ApiCallId: 'c9', ApiPhone: '0501234567' });  // התחלה מחדש אחרי ההקראה: רק ההצהרה, לא השטר שוב
+assert.match(rs2, /=ag,/); assert.equal(rs2.split('=')[1].split('.').length, 1);
 
 // ---- הרשאה ----
 assert.match(await run(join, { sk: 'bad' }), /שגיאת הרשאה/);
