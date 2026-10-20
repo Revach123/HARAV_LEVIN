@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-19",
+ "updated": "2026-10-20",
  "upcoming": [
   {
    "id": 10358,
@@ -761,29 +761,31 @@
  ],
  "open": [
   {
-   "offer_number": 1217546,
+   "begins_at": "2026-10-19T09:00:00",
+   "chp_number": "520041005",
+   "ends_at": "2026-10-19T16:00:00",
+   "interest": 5.7,
+   "is_new_company": false,
+   "is_variable_interest": false,
    "issuer_id": 1083,
    "issuer_name": "קרדן נדל\"ן",
-   "is_new_company": false,
-   "begins_at": "2026-10-19T09:00:00",
-   "ends_at": "2026-10-19T16:00:00",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1776665",
+   "offer_number": 1217546,
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 5.7,
-   "is_variable_interest": false,
    "price_per_unit": 1000,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1776665",
    "securities": [
     {
-     "security_id": null,
-     "security_name": "אג\"ח ז",
-     "security_type": "אג\"ח קונצרני",
      "linkage_type": "ללא",
      "maalot_rating": null,
-     "midroog_rating": "A3.il"
+     "midroog_rating": "A3.il",
+     "security_id": null,
+     "security_name": "אג\"ח ז",
+     "security_type": "אג\"ח קונצרני"
     }
    ],
-   "chp_number": "520041005"
+   "carried": true,
+   "last_seen": "2026-10-19"
   }
  ],
  "companies": [
