@@ -2259,7 +2259,7 @@
       for (let i = 0; i < 80; i++) {
         const r = await api("/joiners-sync", "POST", { phase: "new" });
         t.added += r.added; t.existing += r.existing; t.pdfs += r.pdfs;
-        set(`מושך הגשות חדשות… נוספו ${t.added}, קובצי אישור ${t.pdfs}`);
+        set(`מושך הגשות חדשות… נבדק עד מספר ${r.last_id} מתוך ${r.wp_max_id || "?"}<br>נוספו ${t.added}, כבר קיימים ${t.existing}, קובצי אישור ${t.pdfs}`);
         if (!r.more) break;
       }
       for (let i = 0; i < 40; i++) {
