@@ -33,8 +33,8 @@ assert.equal(await run(menu, { hangup: 'yes' }), '');
 
 // ---- הצטרפות: מסלול מלא (כל החברות) ----
 const base = { ApiPhone: '0501234567' };
-let r = await run(join, base);                                         assert.match(r, /=id1,no,9,5,/);
-r = await run(join, { ...base, id1: '123' });                          assert.match(r, /=id2,no,9,5,/);   // לא תקין -> ניסיון נוסף
+let r = await run(join, base);                                         assert.match(r, /=id1,no,10,5,/);
+r = await run(join, { ...base, id1: '123' });                          assert.match(r, /=id2,no,10,5,/);   // לא תקין -> ניסיון נוסף
 r = await run(join, { ...base, id1: '123', id2: '123456782' });        assert.match(r, /^read=.*=nm1,no,record,\/1,jc1_nm1,no,yes,no,1,8$/);
 r = await run(join, { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
 const full = { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav', ch: '1' };
@@ -54,7 +54,7 @@ await run(join, { ...full, ag: '1' });                                 assert.eq
 
 // ---- הצטרפות: חברות מסוימות, בלי מספר מתקשר, בלי חזרה לשורש ----
 const v2 = { ApiCallId: 'c2', ApiPhone: 'unknown', bk: '/' };
-r = await run(join, { ...v2, id1: '039337423' });                      assert.match(r, /=ph1,no,10,9,/);
+r = await run(join, { ...v2, id1: '039337423' });                      assert.match(r, /=ph1,no,11,9,/);
 const v3 = { ...v2, id1: '039337423', ph1: '052-7654321', nm1: 'NONE' };
 r = await run(join, v3);                                               assert.match(r, /=nm2,no,record/);
 const v4 = { ...v3, nm2: '/1/jc2_nm2.wav', ch: '2' };

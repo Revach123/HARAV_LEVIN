@@ -55,7 +55,7 @@ async function step({ v, env, P, done }) {
   let id = '';
   for (let a = 1; a <= MAX_ID_TRIES; a++) {
     const k = `id${a}`;
-    if (!has(v, k)) return readTap(a === 1 ? P('join:askId') : `${P('join:badId')}.${P('join:askId')}`, k, null, { max: 9, min: 5, empty: EMPTY });
+    if (!has(v, k)) return readTap(a === 1 ? P('join:askId') : `${P('join:badId')}.${P('join:askId')}`, k, null, { max: 10, min: 5, empty: EMPTY });
     id = empty(v[k]) ? '' : normalizeId(v[k]);
     if (id) break;
   }
@@ -66,7 +66,7 @@ async function step({ v, env, P, done }) {
   if (!phone) {
     for (let a = 1; a <= MAX_ID_TRIES; a++) {
       const k = `ph${a}`;
-      if (!has(v, k)) return readTap(a === 1 ? P('join:askPhone') : `${P('join:badPhone')}.${P('join:askPhone')}`, k, null, { max: 10, min: 9, empty: EMPTY });
+      if (!has(v, k)) return readTap(a === 1 ? P('join:askPhone') : `${P('join:badPhone')}.${P('join:askPhone')}`, k, null, { max: 11, min: 9, empty: EMPTY });
       phone = empty(v[k]) ? '' : normalizePhone(v[k]);
       if (phone) break;
     }

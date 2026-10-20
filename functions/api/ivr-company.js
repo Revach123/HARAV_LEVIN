@@ -120,7 +120,7 @@ async function chpStep(ctx, r, note, fallbackToName) {
   const { v, env, rows } = ctx;
   const hKey = `h${r}`;
   if (!has(v, hKey)) {
-    return { body: readTapRaw(msg(notes(note), P('askChp')), hKey, null, { max: 9, min: 5 }) };
+    return { body: readTapRaw(msg(notes(note), P('askChp')), hKey, null, { max: 10, min: 5 }) };
   }
   const items = v[hKey] === CFG.EMPTY_VAL ? [] : await searchByChp(env, v[hKey], rows);
   if (items.length) return { body: listing(ctx, r, items) };
