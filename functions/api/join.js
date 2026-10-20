@@ -6,12 +6,13 @@
 //   תשובה: { ok: true, ref } - מספר אסמכתא קצר, בלי שום פרט אישי.
 // הפרטים האישיים מוצפנים כאן (AES-256-GCM, המפתח JOINERS_KEY) באותו פורמט של joiners_import.py, ונכתבים לטבלה joiners (migrations/0017).
 // בלוגים לא נרשם שום פרט אישי.
+import { sendConfirmation } from "./_shared/join-mail.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
 
 const MAX_BODY = 40 * 1024, MAX_COMPANIES = 300, MIN_FILL_MS = 4000;
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   if (!originOk(request)) return reply({ ok: false, error: "הבקשה לא התקבלה" }, 403);
   const b = await readJson(request, MAX_BODY);
   if (!b) return reply({ ok: false, error: "הבקשה לא תקינה" }, 400);
@@ -66,7 +67,11 @@ export async function onRequestPost({ request, env }) {
     };
     await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
       .bind(rid, now, ih, await encryptPii(key, rid, payload)).run();
-    return reply({ ok: true, ref: rid.slice(-6).toUpperCase() });
+    if (email) {
+      const task = sendConfirmation(env, email, { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin });
+      if (waitUntil) waitUntil(task); else await task;
+    }
+    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && env.RESEND_API_KEY && env.MAIL_FROM) });
   } catch {
     return reply({ ok: false, error: "אירעה שגיאה בשמירת הטופס. נא לנסות שוב." }, 500);
   }
