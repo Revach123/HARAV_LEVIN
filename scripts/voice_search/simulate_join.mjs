@@ -48,7 +48,9 @@ assert.match(r, /=ag,no,1,1,/);
 r = await run(join, { ...full, rd: '2' });                             assert.match(r, /=ag,no,1,1,/);
 r = await run(join, { ...full, rd: '2', ag: 'NONE' });                 assert.match(r, /=ag,no,1,1,/);                                                 // לא נענה: שואלים שוב
 full.rd = '2';
-r = await run(join, { ...full, ag: '2' });                             assert.match(r, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
+r = await run(join, { ...full, ag: '2' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1); assert.match(r, /=ag,no,1,1,7,No,no,no,,1\.2\.3,/);   // שמיעה חוזרת
+r = await run(join, { ...full, ag: 'NONE' });                          assert.equal(r.split('=')[1].split('.').length, 1);                                // שתיקה: רק ההצהרה
+r = await run(join, { ...full, ag: '3' });                             assert.match(r, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 0);
 r = await run(join, { ...full, ag: '1' });                             assert.match(r, /^id_list_message=t-הבקשה התקבלה תודה רבה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 1);

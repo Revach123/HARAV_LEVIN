@@ -10,7 +10,7 @@
 //    cl      הקלטת שמות החברות (רק ב-ch=2)
 //  כל שאלה שלא נענתה נשאלת שוב ושוב (אותו משתנה), בלי הגבלת ניסיונות.
 //    rd      1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
-//    ag      הצהרה: 1 = מאשר ונרשם, 2 = ביטול
+//    ag      הצהרה: 1 = מאשר ונרשם, 2 = שמיעה חוזרת של השטר המלא, 3 = ביטול
 //  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /1); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
 //  ext.ini:  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: IVR_SECRET (או IVR_SECRET_NEW), JOINERS_KEY, binding DB.
@@ -81,11 +81,13 @@ async function step({ v, env, P, done }) {
 
   // 5. הקראת השטר המלא (אופציונלית) והצהרה והסכמה
   if (v.rd !== '1' && v.rd !== '2') return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
-  if (v.ag !== '1' && v.ag !== '2') {
-    const full = v.rd === '1' ? AGREEMENT_KEYS.map(P).join('.') + '.' : '';   // rd=1: הקראת השטר המלא לפני ההצהרה
-    return readTap(full + P('join:declare'), 'ag', ['1', '2'], { empty: EMPTY });
+  if (v.ag !== '1' && v.ag !== '3') {
+    // ag=2 = שמיעה חוזרת של השטר המלא (ואז שוב ההצהרה). שתיקה / ערך אחר: ההצהרה לבדה נשאלת שוב.
+    const replay = v.ag === '2' || (!has(v, 'ag') && v.rd === '1');
+    const full = replay ? AGREEMENT_KEYS.map(P).join('.') + '.' : '';
+    return readTap(full + P('join:declare'), 'ag', ['1', '2', '3'], { empty: EMPTY });
   }
-  if (v.ag === '2') return done('join:cancelled');
+  if (v.ag === '3') return done('join:cancelled');
 
   await save(env, { id, phone, all, nameFile, listFile, callId: String(v.ApiCallId || '') });
   return done('join:done');
