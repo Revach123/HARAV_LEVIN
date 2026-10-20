@@ -2130,6 +2130,7 @@
   async function jWhy(url, e) {
     try {
       const res = await fetch(url), buf = new Uint8Array(await res.arrayBuffer()), tx = n => String.fromCharCode(...buf.slice(0, n));
+      if (res.status === 418) return "נטפרי חוסם את קובץ השמע (שגיאה 418). יש לבקש מנטפרי לפתוח את הכתובת harav-levin.pages.dev/api/joiner-audio. " + new TextDecoder().decode(buf.slice(0, 200)).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
       if (!res.ok) { try { return JSON.parse(new TextDecoder().decode(buf)).error || "שגיאת שרת " + res.status; } catch { return "שגיאת שרת " + res.status; } }
       if (tx(4) === "RIFF") { const dv = new DataView(buf.buffer); return `הדפדפן לא מנגן את הקובץ (פורמט ${dv.getUint16(20, true)}, ${dv.getUint32(24, true)}Hz, ${dv.getUint16(34, true)} ביט, ${buf.length} בתים)`; }
       return `התקבל תוכן שאינו קובץ שמע (${res.headers.get("content-type") || "?"}): ${new TextDecoder().decode(buf.slice(0, 80)).replace(/\s+/g, " ")}`;

@@ -23,6 +23,27 @@ const HE_LETTERS = {
   'אר': 'r', 'אס': 's', 'טי': 't', 'טיי': 't', 'יו': 'u', 'וי': 'v', 'ויי': 'v',
   'דאבליו': 'w', 'דבליו': 'w', 'דאבלו': 'w', 'אקס': 'x', 'אקז': 'x', 'וואי': 'y', 'זד': 'z', 'זי': 'z',
 };
+// זיהוי דיבור בעברית מדביק לפעמים כמה אותיות למילה אחת ("איי זד" -> "איזה"): מפרקים אסימון עברי לשמות אותיות.
+// וריאנטים נוספים של זיהוי (זה / זט = Z). אסימון שמתחיל ב"אי" (ולא "איי") ויש אחריו עוד - ה"איי" של האות A שאיבדה יוד.
+const HE_PIECES = { ...HE_LETTERS, 'זה': 'z', 'זט': 'z', 'זת': 'z' };
+function segmentHebrew(tok) {
+  const t = /^אי(?!י)./.test(tok) ? 'איי' + tok.slice(2) : tok;
+  const memo = new Map();
+  const go = (i) => {
+    if (i === t.length) return [];
+    if (memo.has(i)) return memo.get(i);
+    let best = null;
+    for (const [name, letter] of Object.entries(HE_PIECES).sort((a, b) => b[0].length - a[0].length)) {
+      if (!t.startsWith(name, i)) continue;
+      const rest = go(i + name.length);
+      if (rest) { best = [letter, ...rest]; break; }
+    }
+    memo.set(i, best);
+    return best;
+  };
+  const r = /^[א-ת'׳]+$/.test(tok) ? go(0) : null;
+  return r && r.length ? r.join('') : '';
+}
 const DIGITS = {
   zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9',
   'אפס': '0', 'אחד': '1', 'שתיים': '2', 'שניים': '2', 'שלוש': '3', 'ארבע': '4', 'חמש': '5', 'שש': '6', 'שבע': '7', 'שמונה': '8', 'תשע': '9',
@@ -38,7 +59,7 @@ export function spokenEmail(t) {
   e = e.split(/[\s,;:]+/).filter(Boolean).map((tok) => {
     const bare = tok.replace(/[.]+$/, '').replace(/^[.]+/, (m) => m);      // נקודה בסוף אסימון היא פיסוק של הזיהוי
     if (/^[a-z]$/.test(bare)) return bare;
-    return EN_LETTERS[bare] || HE_LETTERS[bare] || DIGITS[bare] || tok;
+    return EN_LETTERS[bare] || HE_LETTERS[bare] || DIGITS[bare] || segmentHebrew(bare) || tok;
   }).join('');
   e = e.replace(/(^|[^א-ת])קום(?![א-ת])/g, '$1com').replace(/\.{2,}/g, '.').replace(/\.$/, '');
   e = e.replace(/@(gmail|hotmail|yahoo|outlook|walla|icloud)(com)$/, '@$1.$2');       // "גימייל קום" בלי "נקודה"
