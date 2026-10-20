@@ -185,6 +185,8 @@ for (const [said, want] of [['moshe שטרודל גימייל', 'moshe@gmail.com
   ['M O S H E at gmail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gee mail dot com', 'moshe@gmail.com'], ['em oh ess aitch ee at gmail dot com', 'moshe@gmail.com'],
   ["אם או אס אייץ' אי שטרודל ג'י מייל נקודה קום", 'moshe@gmail.com'], ["אם או אס אייץ' אי שטרודל גימייל קום", 'moshe@gmail.com'],
   ['dee ay en two zero at hotmail dot com', 'dan20@hotmail.com'], ['די איי אן שתיים אפס שטרודל הוטמייל קום', 'dan20@hotmail.com'],
+  // זיהוי עברי שהדביק אותיות למילה אחת: "איי זד זד" -> "איזה זד" = AZZ; אי (E) בודד נשאר E
+  ['איזה זד שטרודל גימייל נקודה קום', 'azz@gmail.com'], ['איזה זד', ''], ['אי זד שטרודל גימייל', 'ez@gmail.com'], ['בי סי די שטרודל גימייל', 'bcd@gmail.com'], ['בלה בלה שטרודל גימייל', ''],
   ['jay dot kay underscore double you at yahoo', 'j.k_w@yahoo.com'], ['אקס וואי זד שטרודל outlook נקודה קום', 'xyz@outlook.com']]) assert.equal(spokenEmail(said), want, said);
 assert.equal(pickEmail(['שגיאה', 'M O S H E at example dot co dot il', 'em oh ess aitch ee at gmail dot com']), 'moshe@gmail.com');   // עדיפות לספק מוכר
 assert.equal(pickEmail(['', '']), '');
