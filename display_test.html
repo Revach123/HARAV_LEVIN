@@ -439,7 +439,8 @@ function render(container, state, type, usedSample) {
     const ea = a === "" || a == null, eb = b === "" || b == null;
     if (ea || eb) return ea && eb ? 0 : ea ? 1 : -1;      // ריקים תמיד בסוף
     if (typeof a === "number" && typeof b === "number") return a - b;
-    return String(a).localeCompare(String(b), "he", { numeric: true });
+    const k = v => String(v).replace(/^[\s"'`״׳“”‘’]+/, "");          // מיון א-ב: בלי גרשיים בתחילת המילה הראשונה
+    return k(a).localeCompare(k(b), "he", { numeric: true });
   };
   const pass = (r, skipKey) => {
     const q = search.value.trim().toLowerCase();

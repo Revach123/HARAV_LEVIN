@@ -73,7 +73,8 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
     if (reg) name = !permit || sameName(reg, permit) ? reg : `${reg} (${permit})`;
     return { ...rest, permit_name: name };
   });
-  return out.sort((a, b) => a.permit_name.localeCompare(b.permit_name, "he"));
+  const key = n => String(n || "").replace(/^[\s"'`״׳“”‘’]+/, "");          // מיון א-ב: מדלגים על גרשיים בתחילת המילה הראשונה
+  return out.sort((a, b) => key(a.permit_name).localeCompare(key(b.permit_name), "he"));
 }
 
 // המרת שורות ל-CSV עם BOM (כדי שאקסל יזהה UTF-8 ויציג עברית)
