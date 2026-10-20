@@ -18,7 +18,7 @@
 //  דרישות: env.IVR_SECRET, binding DB (טבלת businesses - מצב היתר העסקה).
 //  מאגר הרישום: binding DB1 = company-info-db (בלעדיו נופלים לטבלת businesses בלבד).
 //  זיהוי חיצוני: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, YEMOT_TOKEN (או YEMOT_TTS).
-//  סוד: IVR_SECRET (קו ישן) או IVR_SECRET_NEW (קו חדש). פרמטר אופציונלי מהשלוחה: bk=<תיקיית חזרה> (api_add_1=bk=/).
+//  סוד: IVR_SECRET (קו ישן) או IVR_SECRET_NEW (קו חדש). פרמטר אופציונלי מהשלוחה: bk=<תיקיית חזרה> (api_add_1=bk=/), rf=<תיקיית ההקלטות> (api_add_2=rf=/2).
 //  אופציונלי: IVR_AUDIO_OFF=1 (בלי קבצי שמע של Azure), IVR_VOICE_READ_OPTS, IVR_REC_FOLDER (ברירת מחדל /6), IVR_REC_MAX_SEC (8),
 //             IVR_REC_MIN_SEC (1), IVR_BACK_FOLDER (ברירת מחדל /5).
 // ============================================================================
@@ -194,13 +194,13 @@ function readSpeech(env, v, r, a, msgParts) {
   const min = intEnv(env.IVR_REC_MIN_SEC, CFG.REC_MIN_SEC);
   const limits = max > 0 ? `,${min},${max}` : '';           // IVR_REC_MAX_SEC=0 -> בלי הגבלה
   const tail = (env.IVR_VOICE_READ_OPTS || `no,record,{folder},{file},no,yes,no${limits}`)
-    .replace('{folder}', recFolder(env)).replace('{file}', recFile(v, r, a))
+    .replace('{folder}', recFolder(env, v)).replace('{file}', recFile(v, r, a))
     .replace('{min}', String(min)).replace('{max}', String(max));
   return `read=${msgParts}=s${r}_${a},${tail}`;
 }
 
 const intEnv = (val, dflt) => { const n = parseInt(val, 10); return Number.isFinite(n) ? n : dflt; };
-const recFolder = (env) => (env.IVR_REC_FOLDER || '/6').replace(/\/$/, '');
+const recFolder = (env, v) => folderParam(v || {}, 'rf', env.IVR_REC_FOLDER || '/6').replace(/\/$/, '');   // rf=<תיקייה> (api_add_2=rf=/2) דורס
 const recFile = (v, r, a) => `r${String(v.ApiCallId || 'x').replace(/\W/g, '')}_${r}_${a}`;
 
 // הקלטה -> טקסט (עם מטמון לשיחה, כי כל שלב הוא בקשה חדשה).
@@ -209,7 +209,7 @@ async function recognize(env, v, r, a, value) {
   const slot = r * 10 + a;
   const cached = await sttGet(env, callId, slot);
   if (cached !== null) return cached;
-  const folder = recFolder(env), file = recFile(v, r, a);
+  const folder = recFolder(env, v), file = recFile(v, r, a);
   const { text } = await transcribeRecording(env, [
     ...(looksLikeRecording(value) ? [value] : []),
     `${folder}/${file}.wav`,
