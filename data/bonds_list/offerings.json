@@ -176,27 +176,6 @@
    "chp_number": "1811308"
   },
   {
-   "id": 10385,
-   "maya_report_id": 1776940,
-   "company_name": "ג'נריישן קפיטל",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": "ilA+",
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "515846558"
-  },
-  {
    "id": 10375,
    "maya_report_id": 1776319,
    "company_name": "דיפלומט",
@@ -752,6 +731,29 @@
    "securities": [
     {
      "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-20"
+  },
+  {
+   "chp_number": "515846558",
+   "company_name": "ג'נריישן קפיטל",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10385,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
+   "maya_report_id": 1776940,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilA+",
      "midroog_rating": null,
      "name": "",
      "security_type": "אג\"ח"
