@@ -2153,8 +2153,7 @@
     { k: "first", h: "שם פרטי", v: r => r.first },
     { k: "last", h: "שם משפחה", v: r => r.last },
     { k: "id", h: "ת.ז.", nar: 1, ltr: 1, v: r => r.id_number },
-    { k: "phone", h: "טלפון", nar: 1, ltr: 1, v: r => r.phone },
-    { k: "phone2", h: "טלפון נוסף", nar: 1, ltr: 1, v: r => jX(r).phone2 },
+    { k: "phone", h: "טלפון", nar: 1, ltr: 1, v: r => `${r.phone} ${jX(r).phone2}`.trim() },          // הטלפון הנוסף מוצג מתחת לעיקרי (ומסונן יחד איתו)
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
@@ -2189,7 +2188,7 @@
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
     const { rows, dup } = jFiltered(), N = J_COLS.length + 5;
-    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:200px;max-width:320px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:120px;max-width:200px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${E(c.v(r) || "")}</td>`;
+    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:200px;max-width:320px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:120px;max-width:200px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : E(c.v(r) || "")}</td>`;
     const sel = (fn, cur, opts) => `<select class="pd-in" style="padding:2px;font-size:12px;width:100%" onchange="${fn}(this.value)">${opts.map(([k, l]) => `<option value="${k}"${cur === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
@@ -2202,7 +2201,7 @@
       <tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);
         return `<tr class="go" onclick="PD._jOpen('${r.id}')">${J_COLS.map(c => cell(c, r)).join("")}
-          <td style="white-space:nowrap">${jRecs(r).map((k, i) => `<button class="pd-mini" style="padding:0 4px;margin-inline-end:3px;font-size:11px" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊${E(J_REC[k])}</button>`).join("")}</td>
+          <td style="white-space:nowrap">${jRecs(r).map((k, i) => `<button class="pd-mini" style="padding:0 3px;margin-inline-end:2px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>`).join("")}</td>
           <td style="white-space:nowrap">${r.cancelled_at ? `<span class="pd-nd-miss" title="תאריך ביטול: ${E(r.cancelled_at)}">ביטל</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div style="display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button>${r.cancelled_at ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)">↩ שחזור</button>` : `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)">⛔ ביטול</button>`} <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></div></td></tr>`
           + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
