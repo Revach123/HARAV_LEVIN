@@ -1,0 +1,1 @@
+UPDATE businesses SET registry_status = '', biz_type = '', tase_has_agch = '' WHERE id = 'mvfvzh40junh';
