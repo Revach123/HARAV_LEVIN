@@ -2083,6 +2083,23 @@
     if (ND.tab === "e") ndShow();
   }
   const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
+  // הקלטות של מצטרף טלפוני (שדות "הקלטת ..." ב-extra): סמל קטן להשמעה לכל הקלטה
+  const J_REC = { "הקלטת שם פרטי": "פרטי", "הקלטת שם משפחה": "משפחה", "הקלטת כתובת": "כתובת", "הקלטת אימייל": "מייל", "הקלטת חברות": "חברות" };
+  function jRecs(r) { if (!r.extra || r.extra.indexOf("הקלטת") < 0) return []; try { const x = JSON.parse(r.extra); return Object.keys(J_REC).filter(k => typeof x[k] === "string" && x[k]); } catch { return []; } }
+  let jAud = null;
+  async function jPlay(id, i, btn) {
+    const r = J.rows.find(x => x.id === id), k = r && jRecs(r)[i];
+    if (!k) return;
+    if (jAud) { jAud.pause(); jAud = null; }
+    const old = btn.textContent; btn.textContent = "⏳"; btn.disabled = true;
+    try {
+      const res = await fetch("/api/joiner-audio?id=" + encodeURIComponent(id) + "&k=" + encodeURIComponent(k), { headers: authH() });
+      if (!res.ok) { const j = await res.json().catch(() => ({})); throw new Error(j.error || res.statusText); }
+      jAud = new Audio(URL.createObjectURL(await res.blob()));
+      await jAud.play();
+    } catch (e) { alert("השמעת ההקלטה נכשלה: " + e.message); }
+    btn.textContent = old; btn.disabled = false;
+  }
   function jFiltered() {
     const f = J.q.trim().toLowerCase(), d = f.replace(/\D/g, "");
     const dup = new Map(); for (const r of J.rows) if (r.ident_hash) dup.set(r.ident_hash, (dup.get(r.ident_hash) || 0) + 1);
@@ -2117,7 +2134,7 @@
       <div class="pd-sub" style="margin-bottom:6px">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <table class="pd-nd-tbl"><thead><tr><th>תאריך</th><th>שם</th><th>טלפון</th><th>דוא"ל</th><th>סטטוס</th><th>אישור</th><th class="pd-j-act">פעולות</th></tr></thead><tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id;
-        return `<tr class="go" onclick="PD._jOpen('${r.id}')"><td dir="ltr" style="text-align:right">${E((r.submitted_at || "").slice(0, 10))}</td><td><b>${E(jName(r))}</b></td><td dir="ltr" style="text-align:right">${E(r.phone)}</td><td dir="ltr" style="text-align:right;overflow-wrap:anywhere;min-width:130px;max-width:190px">${E(r.email)}</td>
+        return `<tr class="go" onclick="PD._jOpen('${r.id}')"><td dir="ltr" style="text-align:right">${E((r.submitted_at || "").slice(0, 10))}</td><td><b>${E(jName(r))}</b>${jRecs(r).map((k, i) => `<button class="pd-mini" style="padding:0 4px;margin-inline-start:4px;font-size:11px" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊${E(J_REC[k])}</button>`).join("")}</td><td dir="ltr" style="text-align:right">${E(r.phone)}</td><td dir="ltr" style="text-align:right;overflow-wrap:anywhere;min-width:130px;max-width:190px">${E(r.email)}</td>
           <td>${r.cancelled_at ? `<span class="pd-nd-miss">ביטל ${E(r.cancelled_at)}</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td>${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄 אישור</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div style="display:flex;gap:4px;flex-wrap:nowrap;white-space:nowrap"><button class="pd-mini" onclick="event.stopPropagation();PD._jEdit('${r.id}')">✏️ עריכה</button>${r.cancelled_at ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)">↩ שחזור</button>` : `<button class="pd-mini" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)">⛔ ביטול</button>`} <button class="pd-mini" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')">🗑 מחיקה</button></div></td></tr>`
           + (open ? `<tr><td colspan="7" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">ת.ז.: <b dir="ltr">${E(r.id_number || "-")}</b> · כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span><br>החברות שנבחרו: <b>${E(r.companies || "-")}</b>${r.all ? " · סימן: כל החברות שנרשמו וירשמו בהמשך" : ""}${r.extra ? `<br>שדות נוספים: ${E(r.extra)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="7" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table>
@@ -2555,7 +2572,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
