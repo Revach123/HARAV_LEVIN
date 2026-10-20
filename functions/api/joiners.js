@@ -7,19 +7,11 @@ import { normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jer
 // GET /api/joiners?file=<sha256>           → קובץ אישור ההצטרפות (PDF) מהדלי הפרטי (רק קובץ שרשום ב-joiner_files)
 // POST   /api/joiners                      → הוספת מצטרף ידנית (מנהל). גוף: { first, last, id, phone, email, companies, all, extra, submitted_at }
 // PUT    /api/joiners?id=<מזהה>            → עריכת מצטרף (מנהל): שדות שנשלחו בלבד. { first, last, id_number, phone, email, companies, all, extra, cancelled_at }
-// DELETE /api/joiners?id=<מזהה>            → "מחיקה" רכה (מנהל): הרשומה נשארת עם deleted_at (תאריך המחיקה). שחזור: PUT עם { deleted_at: "" }
+// DELETE /api/joiners?id=<מזהה>            → מחיקת מצטרף (מנהל), כולל קובץ האישור שלו אם אף מצטרף אחר לא משתמש בו
 // כתיבה: רק מנהל, רק מהאתר עצמו (Origin), ורק בפורמט JSON. שדה שלא שונה נשמר כמו שהוא (גם אם הוא בפורמט ישן, כמו טלפון עם מקף).
 const H = { "Cache-Control": "no-store" };
-// העמודה deleted_at נוספת אוטומטית בפעם הראשונה (מחיקה רכה: הרשומה נשמרת עם תאריך מחיקה)
-let colReady = false;
-async function ensureCol(env) {
-  if (colReady) return;
-  try { await env.DB.prepare("SELECT deleted_at FROM joiners LIMIT 1").first(); }
-  catch { await env.DB.prepare("ALTER TABLE joiners ADD COLUMN deleted_at TEXT NOT NULL DEFAULT ''").run(); }
-  colReady = true;
-}
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
-const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at: r.cancelled_at, deleted_at: r.deleted_at || "", file_sha256: r.file_sha256, ident_hash: r.ident_hash,
+const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at: r.cancelled_at, file_sha256: r.file_sha256, ident_hash: r.ident_hash,
   first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "",
   undecryptable: !p.first && !p.last && !p.email && !p.phone ? 1 : 0 });
 export async function onRequestGet({ request, env }) {
@@ -38,10 +30,9 @@ export async function onRequestGet({ request, env }) {
     const offset = Math.max(0, parseInt(u.searchParams.get("offset") || "0", 10) || 0), limit = Math.min(500, Math.max(1, parseInt(u.searchParams.get("limit") || "400", 10) || 400));
     let key;
     try { key = await importKey(env); } catch { return Response.json({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, { status: 503, headers: H }); }
-    await ensureCol(env);
     const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiners").first()).n;
     const cancels = (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiner_cancels").first()).n;
-    const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, deleted_at, file_sha256, ident_hash, pii FROM joiners ORDER BY submitted_at DESC, id LIMIT ? OFFSET ?").bind(limit, offset).all()).results ?? [];
+    const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, file_sha256, ident_hash, pii FROM joiners ORDER BY submitted_at DESC, id LIMIT ? OFFSET ?").bind(limit, offset).all()).results ?? [];
     const rows = [];
     let bad = 0;
     for (const r of rs) {
@@ -107,8 +98,7 @@ export async function onRequestPut({ request, env }) {
   const b = await readJson(request, 40 * 1024); if (!id || !b) return out({ error: "הבקשה לא תקינה" }, 400);
   let rkey, wkey; try { rkey = await importKey(env); wkey = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
   try {
-    await ensureCol(env);
-    const r = await env.DB.prepare("SELECT id, submitted_at, cancelled_at, deleted_at, file_sha256, ident_hash, pii FROM joiners WHERE id = ?").bind(id).first();
+    const r = await env.DB.prepare("SELECT id, submitted_at, cancelled_at, file_sha256, ident_hash, pii FROM joiners WHERE id = ?").bind(id).first();
     if (!r) return out({ error: "המצטרף לא נמצא (ייתכן שנמחק)" }, 404);
     let old; try { old = await decryptPii(rkey, r.id, r.pii); } catch { return out({ error: "לא ניתן לפענח את הרשומה, ולכן לא ניתן לערוך אותה" }, 409); }
     const { errors, v } = checkFields(b, old);
@@ -121,9 +111,8 @@ export async function onRequestPut({ request, env }) {
     if (Object.keys(errors).length) return out({ ok: false, errors }, 422);
     const p = { ...old, ...v };
     const ih = "id" in v ? await identHash(env, v.id) : r.ident_hash;
-    const deleted = "deleted_at" in b && !String(b.deleted_at || "").trim() ? "" : r.deleted_at;   // שחזור מצטרף שנמחק
-    await env.DB.prepare("UPDATE joiners SET pii = ?, ident_hash = ?, cancelled_at = ?, deleted_at = ? WHERE id = ?").bind(await encryptPii(wkey, r.id, p), ih, cancelled, deleted || "", r.id).run();
-    return out({ ok: true, row: toRow({ ...r, cancelled_at: cancelled, deleted_at: deleted || "", ident_hash: ih }, p) });
+    await env.DB.prepare("UPDATE joiners SET pii = ?, ident_hash = ?, cancelled_at = ? WHERE id = ?").bind(await encryptPii(wkey, r.id, p), ih, cancelled, r.id).run();
+    return out({ ok: true, row: toRow({ ...r, cancelled_at: cancelled, ident_hash: ih }, p) });
   } catch { return out({ error: "שגיאה בשמירה" }, 500); }
 }
 
@@ -132,11 +121,17 @@ export async function onRequestDelete({ request, env }) {
   const id = new URL(request.url).searchParams.get("id") || "";
   if (!id) return out({ error: "חסר מזהה" }, 400);
   try {
-    await ensureCol(env);
-    const r = await env.DB.prepare("SELECT id, deleted_at FROM joiners WHERE id = ?").bind(id).first();
-    if (!r) return out({ error: "המצטרף לא נמצא" }, 404);
-    const when = r.deleted_at || jerusalemNow();
-    if (!r.deleted_at) await env.DB.prepare("UPDATE joiners SET deleted_at = ? WHERE id = ?").bind(when, id).run();
-    return out({ ok: true, deleted_at: when });
+    const r = await env.DB.prepare("SELECT id, file_sha256 FROM joiners WHERE id = ?").bind(id).first();
+    if (!r) return out({ error: "המצטרף לא נמצא (ייתכן שכבר נמחק)" }, 404);
+    await env.DB.prepare("DELETE FROM joiners WHERE id = ?").bind(id).run();
+    let fileDeleted = false;
+    if (r.file_sha256) {
+      const other = await env.DB.prepare("SELECT id FROM joiners WHERE file_sha256 = ? LIMIT 1").bind(r.file_sha256).first();
+      if (!other) {
+        const f = await env.DB.prepare("SELECT r2_key FROM joiner_files WHERE sha256 = ?").bind(r.file_sha256).first();
+        if (f) { try { if (env.JOINERS) await env.JOINERS.delete(f.r2_key); } catch {} await env.DB.prepare("DELETE FROM joiner_files WHERE sha256 = ?").bind(r.file_sha256).run(); fileDeleted = true; }
+      }
+    }
+    return out({ ok: true, fileDeleted });
   } catch { return out({ error: "שגיאה במחיקה" }, 500); }
 }
