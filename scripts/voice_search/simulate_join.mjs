@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { onRequest as menu } from '../../functions/api/ivr-menu.js';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
 import { pickEmail, spokenEmail } from '../../functions/api/_shared/spoken-email.js';
-import { onRequestGet as audio } from '../../functions/api/joiner-audio.js';
+import { onRequestGet as audio, toPcmWav } from '../../functions/api/joiner-audio.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
 const inserted = [];
@@ -188,6 +188,14 @@ for (const [said, want] of [['moshe שטרודל גימייל', 'moshe@gmail.com
   ['jay dot kay underscore double you at yahoo', 'j.k_w@yahoo.com'], ['אקס וואי זד שטרודל outlook נקודה קום', 'xyz@outlook.com']]) assert.equal(spokenEmail(said), want, said);
 assert.equal(pickEmail(['שגיאה', 'M O S H E at example dot co dot il', 'em oh ess aitch ee at gmail dot com']), 'moshe@gmail.com');   // עדיפות לספק מוכר
 assert.equal(pickEmail(['', '']), '');
+
+// ---- המרת µ-law / A-law ל-PCM (דפדפנים לא מנגנים wav טלפוני) ----
+const lawWav = (fmt, bytes) => { const u = new Uint8Array(44 + bytes.length), v = new DataView(u.buffer); u.set([0x52, 0x49, 0x46, 0x46]); v.setUint32(4, 36 + bytes.length, true); u.set([0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20], 8); v.setUint32(16, 16, true); v.setUint16(20, fmt, true); v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 8000, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true); u.set([0x64, 0x61, 0x74, 0x61], 36); v.setUint32(40, bytes.length, true); u.set(bytes, 44); return u; };
+const mu = toPcmWav(lawWav(7, [0xff, 0x00, 0x80, 0x7f])), mv = new DataView(mu.buffer);
+assert.equal(mv.getUint16(20, true), 1); assert.equal(mv.getUint16(34, true), 16); assert.equal(mu.length, 44 + 8);
+assert.deepEqual([0, 1, 2, 3].map((i) => mv.getInt16(44 + i * 2, true)), [0, -32124, 32124, 0]);       // µ-law: 0xff = +0, 0x00 = -32124, 0x80 = +32124, 0x7f = -0
+const al = toPcmWav(lawWav(6, [0xd5, 0x55])); assert.equal(new DataView(al.buffer).getInt16(44, true), 8); assert.equal(new DataView(al.buffer).getInt16(46, true), -8);   // A-law: 0xd5 = +8, 0x55 = -8
+const pcm = lawWav(1, [1, 2, 3, 4]); assert.equal(toPcmWav(pcm), pcm);                                 // PCM רגיל לא משתנה
 
 // ---- השמעת הקלטה במסך המנהל (joiner-audio): מנהל בלבד, הנתיב מהרשומה ולא מהבקשה ----
 const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
