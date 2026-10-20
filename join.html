@@ -87,6 +87,8 @@
   body.embed .warn{margin:.2rem 0 1rem;padding:.9rem 1.1rem;background:#fdeceb;border:1px solid #f2b8b3;border-inline-start:6px solid #c0392b;border-radius:8px;color:#c0392b;font-size:20px;font-weight:700;text-align:center}
   body.embed #v-join>h1,body.embed #toCancel,body.embed #toJoin,body.embed #v-join .sep,body.embed #v-cancel .sep,body.embed #v-cancel>h1{display:none}
   #printAgree{display:none}
+  #printAgree.show{display:block;margin-top:1rem;padding:1rem 1.1rem;background:#fff;border:1px solid var(--border);border-radius:14px;font-size:16px;line-height:1.6}
+  #printAgree h2{font-size:20px;margin-bottom:.4rem;color:var(--navy)} #printAgree p{margin:.4rem 0}
   @media print{
     body{background:#fff;padding:0} .top,.btn,.back,.noprint{display:none!important}
     body[data-view=done] #printAgree{display:block;margin-top:1rem;font-size:14px;line-height:1.5}
@@ -174,7 +176,7 @@
       <p class="sumline" id="dWhen"></p>
       <p class="sumline" id="dChoice"></p>
     </div>
-    <button class="btn light noprint" type="button" id="printBtn">שמירת אישור (הדפסה / PDF)</button>
+    <button class="btn light noprint" type="button" id="printBtn">להצגת האישור</button>
     <a class="btn noprint home" href="kehilot.html" style="text-align:center;text-decoration:none;line-height:62px;min-height:62px">חזרה לדף הראשי</a>
     <div id="printAgree"></div>
   </section>
@@ -354,7 +356,7 @@ $("fJoin").addEventListener("submit", async e => {
     $("joinErr").textContent = "השליחה נכשלה. נא לבדוק את החיבור ולנסות שוב."; $("joinErr").classList.add("on");
   } finally { btn.disabled = false; btn.textContent = "שליחה"; }
 });
-$("printBtn").onclick = () => window.print();
+$("printBtn").onclick = () => { const on = $("printAgree").classList.toggle("show"); $("printBtn").textContent = on ? "הסתרת האישור" : "להצגת האישור"; if (on) $("printAgree").scrollIntoView({ behavior: "smooth", block: "start" }); };
 
 // ── שליחת ביטול ──
 $("fCancel").addEventListener("submit", async e => {
