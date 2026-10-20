@@ -25,12 +25,16 @@ export default {
  "baam": {
   "text": "בָּא אַם",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_74363ed407cf"
+  "path": "/99/c6_74363ed407cf6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "bye": {
   "text": "תודה ולהתראות",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_00f2a0901252"
+  "path": "/99/c6_00f2a09012526a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "mainMenu": {
   "text": "שלום וברכה, הגעת למכון היתר עיסקא למהדרין. להצטרפות להיתר עסקה פרטי הקישו 1. לחיפוש חברות הקישו 2",
@@ -49,7 +53,9 @@ export default {
  "next": {
   "text": "לחיפוש נוסף הקישו 1. לסיום הקישו 2",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_430d980ad66f"
+  "path": "/99/c6_430d980ad66f6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "noChp": {
   "text": "לא נמצאה חֶבְרָה במספר הזה",
@@ -61,7 +67,9 @@ export default {
  "noHear": {
   "text": "לא הצלחתי להבין",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_02e40cef4692"
+  "path": "/99/c6_02e40cef46926a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "noMatch": {
   "text": "לא נמצאה חֶבְרָה מתאימה",
@@ -87,22 +95,30 @@ export default {
  "permit:general": {
   "text": "קיים היתר עסקה כללי",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_047f395e3e5f"
+  "path": "/99/c6_047f395e3e5f6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "permit:none": {
   "text": "לא קיים היתר עסקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_1a4e24d34135"
+  "path": "/99/c6_1a4e24d341356a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "permit:private": {
   "text": "לעסק זה יש רק היתר עסקה פרטי",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_69ea58ba352d"
+  "path": "/99/c6_69ea58ba352d6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "permit:private2": {
   "text": "ההיתר עסקה תקף רק למי שחתם על היתר עסקה פרטי",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_b041ab352254"
+  "path": "/99/c6_b041ab3522546a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "tooMany": {
   "text": "הרבה מדי אפשרויות. אנא אמרו את השם המלא, או חפשו לפי מספר חֶת פֵּא. לאמירת השם המלא הקישו 1. לחיפוש לפי חֶת פֵּא הקישו 2",
@@ -156,41 +172,57 @@ export default {
  "type:עמותה": {
   "text": "עמותה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_987d565584a4"
+  "path": "/99/c6_987d565584a46a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:עמותה מחוקה": {
   "text": "עמותה מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_0ca31e8ccc30"
+  "path": "/99/c6_0ca31e8ccc306a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות": {
   "text": "שותפות",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_06655e9c5806"
+  "path": "/99/c6_06655e9c58066a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות כללית": {
   "text": "שותפות כללית",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_e61430b4de35"
+  "path": "/99/c6_e61430b4de356a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות כללית מחוקה": {
   "text": "שותפות כללית מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_181009b0804f"
+  "path": "/99/c6_181009b0804f6a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות מוגבלת": {
   "text": "שותפות מוגבלת",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_3be9bd914da3"
+  "path": "/99/c6_3be9bd914da36a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות מוגבלת מחוקה": {
   "text": "שותפות מוגבלת מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_9daa3d5ff4a5"
+  "path": "/99/c6_9daa3d5ff4a56a4e147f",
+  "pron": "",
+  "phoneme": false
  },
  "type:שותפות מחוקה": {
   "text": "שותפות מחוקה",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_05d10921422f"
+  "path": "/99/c6_05d10921422f6a4e147f",
+  "pron": "",
+  "phoneme": false
  }
 };
