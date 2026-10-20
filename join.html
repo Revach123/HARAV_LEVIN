@@ -73,7 +73,8 @@
   .sumline{margin-top:.3rem}
   .sep{margin:1.8rem 0 1rem;border:0;border-top:2px solid var(--accent-border)}
   body.embed .top,body.embed .back,body.embed .noprint.home{display:none!important}
-  body.embed{padding-top:.5rem}
+  body.embed{padding:.5rem .25rem 0;background:transparent}
+  body.embed .wrap{max-width:720px}
   #printAgree{display:none}
   @media print{
     body{background:#fff;padding:0} .top,.btn,.back,.noprint{display:none!important}
@@ -369,7 +370,7 @@ $("fCancel").addEventListener("submit", async e => {
 if (new URLSearchParams(location.search).has("embed")) {
   document.body.classList.add("embed");
   let lastH = 0;
-  const sendH = () => { const h = Math.ceil(document.documentElement.scrollHeight); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-join-height", h }, "*"); } catch {} } };
+  const sendH = () => { const h = Math.ceil(document.body.getBoundingClientRect().height + 8); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-join-height", h }, "*"); } catch {} } };
   new ResizeObserver(sendH).observe(document.body); window.addEventListener("load", sendH); setInterval(sendH, 700);
   const _vs = new MutationObserver(() => parent.postMessage({ type: "iska-join-top" }, "*")); _vs.observe(document.body, { attributes: true, attributeFilter: ["data-view"] });
 }
