@@ -74,8 +74,16 @@
   .sep{margin:1.8rem 0 1rem;border:0;border-top:2px solid var(--accent-border)}
   body.embed .top,body.embed .back,body.embed .noprint.home{display:none!important}
   body.embed{padding:.5rem .25rem 0;background:transparent}
-  body.embed .wrap{max-width:720px}
-  body.embed .warn{display:none}
+  @media (min-width:860px){
+    .wrap{max-width:900px}
+    .fgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:1.2rem}
+    .fgrid .field:has(#address){grid-column:1/-1}
+    .btn{max-width:420px;margin-inline:auto}
+    .fgrid .field{margin-bottom:.55rem}
+    .fgrid input{min-height:46px}
+  }
+  body.embed .wrap{max-width:900px}
+  body.embed .warn,body.embed #v-join>h1{display:none}
   #printAgree{display:none}
   @media print{
     body{background:#fff;padding:0} .top,.btn,.back,.noprint{display:none!important}
@@ -96,6 +104,7 @@
     <h1>רישום לקוח להיתר עיסקא פרטי</h1>
     <p class="warn">יש לקרוא היטב את השטר!</p>
     <form id="fJoin" novalidate autocomplete="on">
+      <div class="fgrid">
       <div class="field"><label class="lbl" for="first">שם פרטי <span class="req">*</span></label>
         <input id="first" name="first" type="text" autocomplete="given-name" maxlength="40" required><div class="err" data-for="first"></div></div>
       <div class="field"><label class="lbl" for="last">שם משפחה <span class="req">*</span></label>
@@ -114,6 +123,7 @@
         <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"></div>
       <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
         <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
+      </div>
       <div class="hp" aria-hidden="true"><label>אל תמלאו שדה זה<input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
 
       <!-- נוסח השטר: מילה במילה כפי שנמסר. ה-sha256 של הטקסט הזה נשמר עם כל הרשמה (מה הוצג למצטרף). -->
