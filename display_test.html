@@ -87,6 +87,7 @@
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
+  td.wrapok{white-space:normal}td.wrapok .badge-yes,td.wrapok .badge-bad,td.wrapok .badge-offer{white-space:normal;font-size:11.5px;line-height:1.3;padding:1px 6px}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
   .bond-note{font-size:12px;color:var(--muted);margin-top:3px;white-space:normal;line-height:1.3}
   .bonds-none{color:var(--muted);font-size:15px}
@@ -127,13 +128,13 @@ const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same 
 // הגדרת העמודות לכל סוג רשימה
 const COLUMNS = {
   companies: [
-    { key:"permit_name", px:240,        label:"שם החברה",            cell:"name",  w:28 },
-    { key:"chp_number", px:110,         label:'ח"פ',                 cell:"num",   w:12 },
-    { key:"category", px:125,           label:"קטגוריה",                         w:14 },
-    { key:"region", px:85,             label:"אזור",                            w:8  },
-    { key:"permit_doc", px:215,         label:"היתר עיסקא",          cell:"doc",   w:18 },
-    { key:"bonds_status", px:215,       label:'אג"ח',                cell:"bonds", w:20 },
-    { key:"notes", px:230,              label:"הערות",                           w:22 },
+    { key:"permit_name", px:200,        label:"שם החברה",            cell:"name",  w:28 },
+    { key:"chp_number", px:95,         label:'ח"פ',                 cell:"num",   w:12 },
+    { key:"category", px:105,           label:"קטגוריה",                         w:14 },
+    { key:"region", px:70,             label:"אזור",                            w:8  },
+    { key:"permit_doc", px:200,         label:"היתר עיסקא",          cell:"doc",   w:18 },
+    { key:"bonds_status", px:130,       label:'אג"ח',                cell:"bonds", w:20 },
+    { key:"notes", px:215,              label:"הערות",                           w:22 },
   ],
   bonds: [   // מפתחות לפי הקבצים הסטטיים data/bonds_list/*.json (נבנים מדף החברה במאיה)
     { key:"security_name", px:165,  label:'אג"ח',                 cell:"name",  w:15 },
@@ -621,7 +622,7 @@ function cellFor(col, val, row) {
     // אין אג"ח (טקסט פשוט) | יש אג"ח - מאושר (ירוק ✓) | יש אג"ח - לא מאושר (אדום ✕)
     // תאימות לאחור: אם ה-API הישן שלח רק approved (0/1)
     const st = val || (row && Number(row.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
-    td.className = "ctr";
+    td.className = "ctr wrapok";          // עמודה צרה: הסימון והערתו נשברים לשורות במקום להרחיב את הטבלה
     if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
     else if (st.includes("בהנפקה"))       td.innerHTML = `<span class="badge-offer">${esc(st)}</span>`;   // יש אג"ח בהנפקה / בהנפקה עתידית
     else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
