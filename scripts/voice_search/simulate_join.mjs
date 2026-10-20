@@ -22,8 +22,8 @@ const run = async (fn, vars) => {
 
 // ---- תפריט ראשי ----
 assert.match(await run(menu, {}), /^read=t-שלום וברכה.*=mm,no,1,1,7,No,no,no,,1\.2,,Ok,NONE,$/);
-assert.equal(await run(menu, { mm: '1' }), 'go_to_folder=/7&');
-assert.equal(await run(menu, { mm: '2' }), 'go_to_folder=/6&');
+assert.equal(await run(menu, { mm: '1' }), 'go_to_folder=/1&');
+assert.equal(await run(menu, { mm: '2' }), 'go_to_folder=/2&');
 assert.equal(await run(menu, { mm: '2', join: '/5', search: '/8' }), 'go_to_folder=/8&');
 assert.match(await run(menu, { mm: '9' }), /^read=.*=mm2,/);
 assert.match(await run(menu, { mm: '9', mm2: '0', mm3: 'NONE' }), /^id_list_message=t-תודה ולהתראות&hangup=yes&$/);
@@ -35,9 +35,9 @@ assert.equal(await run(menu, { hangup: 'yes' }), '');
 const base = { ApiPhone: '0501234567' };
 let r = await run(join, base);                                         assert.match(r, /=id1,no,9,5,/);
 r = await run(join, { ...base, id1: '123' });                          assert.match(r, /=id2,no,9,5,/);   // לא תקין -> ניסיון נוסף
-r = await run(join, { ...base, id1: '123', id2: '123456782' });        assert.match(r, /^read=.*=nm1,no,record,\/7,jc1_nm1,no,yes,no,1,8$/);
-r = await run(join, { ...base, id1: '123', id2: '123456782', nm1: '/7/jc1_nm1.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
-const full = { ...base, id1: '123', id2: '123456782', nm1: '/7/jc1_nm1.wav', ch: '1' };
+r = await run(join, { ...base, id1: '123', id2: '123456782' });        assert.match(r, /^read=.*=nm1,no,record,\/1,jc1_nm1,no,yes,no,1,8$/);
+r = await run(join, { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
+const full = { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav', ch: '1' };
 r = await run(join, full);                                             assert.match(r, /=rd,no,1,1,/);
 r = await run(join, { ...full, rd: '1' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1);   // 14 פסקאות + הצהרה
 r = await run(join, { ...full, rd: '2' });                             assert.match(r, /=ag,no,1,1,/);
@@ -49,7 +49,7 @@ assert.equal(inserted.length, 1);
 const key = await importKeyForWrite(env);
 const p = await decryptPii(key, inserted[0].rid, inserted[0].pii);
 assert.equal(p.id, '123456782'); assert.equal(p.phone, '0501234567'); assert.equal(p.all, 'כן'); assert.equal(p.src, 'ivr');
-assert.equal(JSON.parse(p.extra)['הקלטת שם'], '/7/jc1_nm1');
+assert.equal(JSON.parse(p.extra)['הקלטת שם'], '/1/jc1_nm1');
 await run(join, { ...full, ag: '1' });                                 assert.equal(inserted.length, 1);  // כפילות תוך 3 דקות לא נרשמת
 
 // ---- הצטרפות: חברות מסוימות, בלי מספר מתקשר, בלי חזרה לשורש ----
@@ -57,11 +57,11 @@ const v2 = { ApiCallId: 'c2', ApiPhone: 'unknown', bk: '/' };
 r = await run(join, { ...v2, id1: '039337423' });                      assert.match(r, /=ph1,no,10,9,/);
 const v3 = { ...v2, id1: '039337423', ph1: '052-7654321', nm1: 'NONE' };
 r = await run(join, v3);                                               assert.match(r, /=nm2,no,record/);
-const v4 = { ...v3, nm2: '/7/jc2_nm2.wav', ch: '2' };
-r = await run(join, v4);                                               assert.match(r, /=cl1,no,record,\/7,jc2_cl1,no,yes,no,1,30$/);
-r = await run(join, { ...v4, cl1: '/7/jc2_cl1.wav', rd: '2', ag: '1' });        assert.match(r, /הבקשה התקבלה/);
+const v4 = { ...v3, nm2: '/1/jc2_nm2.wav', ch: '2' };
+r = await run(join, v4);                                               assert.match(r, /=cl1,no,record,\/1,jc2_cl1,no,yes,no,1,30$/);
+r = await run(join, { ...v4, cl1: '/1/jc2_cl1.wav', rd: '2', ag: '1' });        assert.match(r, /הבקשה התקבלה/);
 const p2 = await decryptPii(key, inserted[1].rid, inserted[1].pii);
-assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/7/jc2_cl1');
+assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/1/jc2_cl1');
 
 // ---- כשלונות ----
 r = await run(join, { ApiCallId: 'c3', id1: '1', id2: '2', id3: '3' });

@@ -1,7 +1,7 @@
 // ============================================================================
 //  functions/api/ivr-join.js — הצטרפות להיתר עסקה פרטי בטלפון (ימות המשיח)
 //
-//  שלוחת api (ברירת מחדל /7). נרשם באותה טבלה ובאותה הצפנה כמו הטופס באתר (join.js), עם src = "ivr".
+//  שלוחת api (ברירת מחדל /1). נרשם באותה טבלה ובאותה הצפנה כמו הטופס באתר (join.js), עם src = "ivr".
 //  זרימה (בלי מצב בשרת - הכול נגזר מהמשתנים שימות מחזירה בכל קריאה):
 //    id<a>   תעודת זהות (הקשה, עד 3 ניסיונות, בדיקת ספרת ביקורת)
 //    ph<a>   טלפון - רק אם מספר המתקשר (ApiPhone) לא זוהה
@@ -10,7 +10,7 @@
 //    cl<a>   הקלטת שמות החברות (רק ב-ch=2)
 //    rd      1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
 //    ag      הצהרה: 1 = מאשר ונרשם, 2 = ביטול
-//  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /7); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
+//  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /1); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
 //  ext.ini:  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: IVR_SECRET (או IVR_SECRET_NEW), JOINERS_KEY, binding DB.
 // ============================================================================
@@ -46,7 +46,7 @@ const has = (v, k) => Object.prototype.hasOwnProperty.call(v, k);
 const empty = (x) => !x || x === EMPTY;
 
 async function step({ v, env, P, done }) {
-  const folder = (env.IVR_JOIN_REC_FOLDER || '/7').replace(/\/$/, '');
+  const folder = (env.IVR_JOIN_REC_FOLDER || '/1').replace(/\/$/, '');
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (tag) => `j${call}_${tag}`;
   const recPath = (tag) => `${folder}/${recFile(tag)}`;
