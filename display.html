@@ -634,7 +634,7 @@ function cellFor(col, val, row) {
     const hasSide = !!(row && (row._hasPriv || row._privId));
     const left = main || extra ? `<div class="doc-col">${hasSide ? '<div class="doc-tag"></div>' : ""}${main}${extra}</div>` : '<div class="doc-col"><span class="bonds-none">—</span></div>';          // התג הריק שומר על אותו גובה לצפייה/הורדה משני הצדדים
     const side = hasSide ? `<div class="doc-side"><div class="doc-tag">יש פרטי</div>${row._privId ? stack(row._privId) : ""}</div>` : "";
-    td.innerHTML = `<div class="doc-cell${hasSide ? " two" : ""}">${left}${side}</div>`;
+    td.innerHTML = `<div class="doc-cell${row && row._gen ? " two" : ""}">${left}${side}</div>`;
     return td;
   }
   if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא
