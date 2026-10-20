@@ -8,13 +8,14 @@
 //    nm<a>   הקלטת שם פרטי ושם משפחה (עד 2 ניסיונות)
 //    ch      1 = כל החברות, 2 = חברות מסוימות
 //    cl<a>   הקלטת שמות החברות (רק ב-ch=2)
+//    rd      1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
 //    ag      הצהרה: 1 = מאשר ונרשם, 2 = ביטול
 //  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /7); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
 //  ext.ini:  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: IVR_SECRET (או IVR_SECRET_NEW), JOINERS_KEY, binding DB.
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
-import { unit } from './_shared/ivr_phrases.js';
+import { AGREEMENT_KEYS, unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, jerusalemNow, newRowId } from './_shared/join-common.js';
@@ -96,7 +97,11 @@ async function step({ v, env, P, done }) {
   }
 
   // 5. הצהרה והסכמה
-  if (!has(v, 'ag')) return readTap(P('join:declare'), 'ag', ['1', '2'], { empty: EMPTY });
+  if (!has(v, 'rd')) return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
+  if (!has(v, 'ag')) {
+    const full = v.rd === '1' ? AGREEMENT_KEYS.map(P).join('.') + '.' : '';   // rd=1: הקראת השטר המלא לפני ההצהרה
+    return readTap(full + P('join:declare'), 'ag', ['1', '2'], { empty: EMPTY });
+  }
   if (v.ag !== '1') return done('join:cancelled');
 
   await save(env, { id, phone, all, nameFile, listFile, callId: String(v.ApiCallId || '') });

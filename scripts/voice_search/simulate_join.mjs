@@ -12,10 +12,12 @@ const DB = { prepare: (sql) => ({ bind: (...a) => ({
 }) }) };
 const env = { IVR_SECRET: 'S', IVR_SECRET_NEW: 'N', IVR_AUDIO_OFF: '1', JOINERS_KEY: Buffer.alloc(32, 7).toString('base64'), DB };
 
+// ניקוד מוסר מהפלט כדי שההשוואות יישארו קריאות
+const plain = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
 const run = async (fn, vars) => {
   const u = new URL('https://x/api/x');
   for (const [k, v] of Object.entries({ sk: 'N', ApiCallId: 'c1', ...vars })) u.searchParams.set(k, v);
-  return (await fn({ request: new Request(u), env })).text();
+  return plain(await (await fn({ request: new Request(u), env })).text());
 };
 
 // ---- תפריט ראשי ----
@@ -36,7 +38,10 @@ r = await run(join, { ...base, id1: '123' });                          assert.ma
 r = await run(join, { ...base, id1: '123', id2: '123456782' });        assert.match(r, /^read=.*=nm1,no,record,\/7,jc1_nm1,no,yes,no,1,8$/);
 r = await run(join, { ...base, id1: '123', id2: '123456782', nm1: '/7/jc1_nm1.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
 const full = { ...base, id1: '123', id2: '123456782', nm1: '/7/jc1_nm1.wav', ch: '1' };
-r = await run(join, full);                                             assert.match(r, /=ag,no,1,1,/);
+r = await run(join, full);                                             assert.match(r, /=rd,no,1,1,/);
+r = await run(join, { ...full, rd: '1' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1);   // 14 פסקאות + הצהרה
+r = await run(join, { ...full, rd: '2' });                             assert.match(r, /=ag,no,1,1,/);
+full.rd = '2';
 r = await run(join, { ...full, ag: '2' });                             assert.match(r, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 0);
 r = await run(join, { ...full, ag: '1' });                             assert.match(r, /^id_list_message=t-הבקשה התקבלה תודה רבה&go_to_folder=\/&$/);
@@ -54,7 +59,7 @@ const v3 = { ...v2, id1: '039337423', ph1: '052-7654321', nm1: 'NONE' };
 r = await run(join, v3);                                               assert.match(r, /=nm2,no,record/);
 const v4 = { ...v3, nm2: '/7/jc2_nm2.wav', ch: '2' };
 r = await run(join, v4);                                               assert.match(r, /=cl1,no,record,\/7,jc2_cl1,no,yes,no,1,30$/);
-r = await run(join, { ...v4, cl1: '/7/jc2_cl1.wav', ag: '1' });        assert.match(r, /הבקשה התקבלה/);
+r = await run(join, { ...v4, cl1: '/7/jc2_cl1.wav', rd: '2', ag: '1' });        assert.match(r, /הבקשה התקבלה/);
 const p2 = await decryptPii(key, inserted[1].rid, inserted[1].pii);
 assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/7/jc2_cl1');
 
