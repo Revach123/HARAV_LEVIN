@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { onRequest as menu } from '../../functions/api/ivr-menu.js';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
+import { onRequestGet as audio } from '../../functions/api/joiner-audio.js';
 import { importKeyForWrite, decryptPii } from '../../functions/api/_shared/joiners-crypto.js';
 
 const inserted = [];
@@ -10,7 +11,8 @@ const states = new Map();
 const DB = { prepare: (sql) => ({
   run: async () => ({}),                                                   // CREATE TABLE
   bind: (...a) => ({
-    first: async () => (sql.includes('FROM joiners') ? inserted.find((r) => r.ih === a[0]) || null
+    first: async () => (sql.includes('FROM joiners WHERE id = ?') ? (inserted.find((r) => r.rid === a[0]) ? { id: a[0], pii: inserted.find((r) => r.rid === a[0]).pii } : null)
+      : sql.includes('FROM joiners') ? inserted.find((r) => r.ih === a[0]) || null
       : sql.includes('ivr_join_state') ? (states.has(a[0]) ? { data: states.get(a[0]) } : null) : null),
     run: async () => {
       if (sql.startsWith('INSERT INTO joiners')) inserted.push({ rid: a[0], ih: a[2], pii: a[3] });
@@ -147,6 +149,17 @@ assert.equal(p3.first, 'משה'); assert.equal(p3.last, 'כהן'); assert.equal(
 const ex3 = JSON.parse(p3.extra);
 assert.equal(ex3['כתובת'], 'רחוב הרצל 5 בני ברק'); assert.equal(ex3['הקלטת שם פרטי'], '/1/jc5_fn');   // ההקלטה נשמרת לצד הטקסט
 assert.ok(ex3['זיהוי אוטומטי מהקלטות']);
+// ---- השמעת הקלטה במסך המנהל (joiner-audio): מנהל בלבד, הנתיב מהרשומה ולא מהבקשה ----
+const aenv = { ...env, ADMIN_PASSWORD: 'pw' };
+const aurl = (id, k) => new URL(`https://x/api/joiner-audio?id=${id}&k=${encodeURIComponent(k)}`);
+const areq = (u, auth = 'Bearer pw') => audio({ request: new Request(u, { headers: auth ? { Authorization: auth } : {} }), env: aenv });
+let ra = await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'));
+assert.equal(ra.status, 200); assert.equal(ra.headers.get('content-type'), 'audio/wav'); assert.equal((await ra.arrayBuffer()).byteLength, 60);
+assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת שם פרטי'), '')).status, 401);                      // בלי הרשאה
+assert.equal((await areq(aurl(inserted[2].rid, 'כתובת'))).status, 400);                                 // רק שדות הקלטת ...
+assert.equal((await areq(aurl(inserted[2].rid, 'הקלטת מזהה'))).status, 404);                            // אין הקלטה בשדה
+assert.equal((await areq(aurl('wnotthere0000', 'הקלטת שם פרטי'))).status, 404);
+
 globalThis.fetch = realFetch;
 delete env.AZURE_SPEECH_KEY; delete env.YEMOT_TOKEN;
 
