@@ -197,6 +197,21 @@ async function pdDownload(ev, id) {
   finally { a.style.opacity = ""; a.style.pointerEvents = ""; }
   return false;
 }
+// צפייה באותה דרך: הקובץ כ-JSON (base64) ופתיחה בלשונית חדשה כ-blob. הלשונית נפתחת מיד (כדי שלא תיחסם כחלון קופץ), ואם הטעינה נכשלה - עוברת לקישור הישיר
+async function pdView(ev, id) {
+  ev.preventDefault();
+  const direct = `${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}`, w = window.open("", "_blank");
+  if (!w) { window.location.href = direct; return false; }
+  try { w.document.title = "טוען…"; w.document.body.innerHTML = '<p style="font:16px sans-serif;text-align:center;margin-top:30vh" dir="rtl">טוען את המסמך…</p>'; } catch (e) { /* ללא */ }
+  try {
+    const r = await fetch(direct + "?enc=b64");
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json(), bin = atob(j.data), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    w.location.href = URL.createObjectURL(new Blob([u8], { type: "application/pdf" }));
+  } catch (e) { w.location.href = direct; }
+  return false;
+}
 // קישורי מסמכי היתר עסקה: ברשימת הפרטי - ההיתר הפרטי של החברה, ברשימת הכללי - ההיתר הכללי (רק מסמך שמקושר לרשימה בניהול)
 let docLinksP = null;
 function docLinks() {
@@ -608,7 +623,7 @@ function cellFor(col, val, row) {
   }
   if (col.cell === "doc") {     // היתר עיסקא: צפייה והורדה, אחד מתחת לשני; ברשימת הכללי, אם יש גם פרטי - "יש פרטי" בצד (גם הוא עם צפייה והורדה)
     td.className = "ctr";
-    const lnk = (id, ic, label, dl) => `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener"${dl ? ` download onclick="return pdDownload(event,'${esc(id)}')"` : ""}><span class="doc-ic">${ic}</span>${label}</a>`;
+    const lnk = (id, ic, label, dl) => `<a class="doc-link" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener" onclick="return ${dl ? "pdDownload" : "pdView"}(event,'${esc(id)}')"${dl ? " download" : ""}><span class="doc-ic">${ic}</span>${label}</a>`;
     const stack = id => `<div class="doc-stack">${lnk(id, "📄", "צפייה")}${lnk(id, "⬇", "הורדה", 1)}</div>`;
     const main = row && row._docid ? stack(row._docid) : "";
     const extra = ((row && row._specials) || []).map(x => `<div class="doc-sp" title="${esc(x.detail || x.title)}"><div class="doc-sp-t">${esc(x.title)}</div>${stack(x.id)}${x.detail ? `<div style="font-size:11px;color:#666;max-width:220px">${esc(x.detail)}</div>` : ""}</div>`).join("");
