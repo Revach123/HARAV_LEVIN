@@ -25,7 +25,8 @@ export async function onRequestGet({ request, env }) {
       const row = await env.DB.prepare("SELECT r2_key FROM joiner_files WHERE sha256 = ?").bind(sha).first();
       const obj = row ? await env.JOINERS.get(row.r2_key) : null;
       if (!obj) return Response.json({ error: "הקובץ לא נמצא (ייתכן שעדיין לא הועלה ל-R2)" }, { status: 404, headers: H });
-      return new Response(obj.body, { headers: { "Content-Type": "application/pdf", "Content-Disposition": "inline", ...H } });
+      const html = /\.html$/i.test(row.r2_key);   // אישורים שנוצרו באתר החדש הם HTML; מהאתר הישן PDF
+      return new Response(obj.body, { headers: { "Content-Type": html ? "text/html; charset=utf-8" : "application/pdf", "Content-Disposition": "inline", ...(html ? { "Content-Security-Policy": "sandbox; default-src 'none'; img-src https:; style-src 'unsafe-inline'" } : {}), ...H } });
     }
     const offset = Math.max(0, parseInt(u.searchParams.get("offset") || "0", 10) || 0), limit = Math.min(500, Math.max(1, parseInt(u.searchParams.get("limit") || "400", 10) || 400));
     let key;

@@ -6,11 +6,23 @@
 //   תשובה: { ok: true, ref } - מספר אסמכתא קצר, בלי שום פרט אישי.
 // הפרטים האישיים מוצפנים כאן (AES-256-GCM, המפתח JOINERS_KEY) באותו פורמט של joiners_import.py, ונכתבים לטבלה joiners (migrations/0017).
 // בלוגים לא נרשם שום פרט אישי.
-import { sendConfirmation } from "./_shared/join-mail.js";
+import { sendConfirmation, buildConfirmation } from "./_shared/join-mail.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
 
 const MAX_BODY = 40 * 1024, MAX_COMPANIES = 300, MIN_FILL_MS = 4000;
+
+async function saveConfirmationFile(env, conf) {
+  if (!env.JOINERS) return "";
+  try {
+    const html = buildConfirmation(conf).html, buf = new TextEncoder().encode(html);
+    const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
+    const key = `forms/site/${sha}.html`;
+    await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
+    await env.DB.prepare("INSERT OR REPLACE INTO joiner_files (sha256, original_name, r2_key, size) VALUES (?, ?, ?, ?)").bind(sha, "אישור הצטרפות.html", key, buf.length).run();
+    return sha;
+  } catch { return ""; }
+}
 
 export async function onRequestPost({ request, env, waitUntil }) {
   if (!originOk(request)) return reply({ ok: false, error: "הבקשה לא התקבלה" }, 403);
@@ -65,10 +77,13 @@ export async function onRequestPost({ request, env, waitUntil }) {
       all: choice === "all" ? "כן" : "",
       pdf: "", extra: JSON.stringify(extra), src: "site:kehilot",
     };
-    await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
-      .bind(rid, now, ih, await encryptPii(key, rid, payload)).run();
+    // קובץ האישור נשמר (HTML, בדלי הפרטי) ומשויך למצטרף; נכשל ההעלאה - ההרשמה נשמרת בלי קובץ
+    const conf = { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin };
+    const sha = await saveConfirmationFile(env, conf);
+    await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', ?, ?, ?)")
+      .bind(rid, now, sha, ih, await encryptPii(key, rid, payload)).run();
     if (email) {
-      const task = sendConfirmation(env, email, { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin });
+      const task = sendConfirmation(env, email, conf);
       if (waitUntil) waitUntil(task); else await task;
     }
     return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });
