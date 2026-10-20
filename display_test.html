@@ -81,6 +81,7 @@
   .name-cell{font-weight:500}
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
+  td.name-cell.sub{padding-inline-start:26px}.sub-arrow{display:inline-block;margin-inline-end:6px;color:#6b7c8a;font-weight:700}
   .doc-cell{display:grid;grid-template-columns:96px;gap:0 14px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:96px 96px}
   .doc-col,.doc-side{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-height:1px}.doc-stack{display:flex;flex-direction:column;gap:5px;align-items:flex-start}
   .doc-side{border-inline-start:1px solid #d5dde5;padding-inline-start:12px;margin-inline-start:-12px;align-self:stretch}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
@@ -588,7 +589,12 @@ const NOWRAP_KEYS = new Set(["symbol","redemption_date","midroog_rating","maalot
 function cellFor(col, val, row) {
   const td = el("td");
   if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
-  if (col.cell === "name") { td.className = "name-cell"; td.textContent = (row && row._isSub ? "↳ " : "") + (val ?? ""); return td; }
+  if (col.cell === "name") {
+    td.className = "name-cell";
+    if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)
+    else td.textContent = val ?? "";
+    return td;
+  }
   if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
   if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
   if (col.cell === "chg")  {
