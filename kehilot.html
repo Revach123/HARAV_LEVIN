@@ -25,12 +25,20 @@
     font-size:18px;line-height:1.6;-webkit-tap-highlight-color:transparent;min-height:100vh;
     padding:0 max(1rem,env(safe-area-inset-left)) max(1.5rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-right))}
   .wrap{max-width:560px;margin:0 auto}
-  .hero{text-align:center;padding:1.2rem 0 .9rem;border-bottom:2px solid var(--accent-border);margin-bottom:1.3rem}
-  .hero img{height:112px;width:auto;display:block;margin:0 auto .5rem}
-  .hero .sub{font-size:19px;color:var(--navy);font-weight:700;line-height:1.35}
-  body:not([data-view=home]) .hero img{height:64px}
-  .view{display:none}
-  body[data-view=home] #v-home,body[data-view=about] #v-about,body[data-view=funds] #v-funds{display:block}
+  .hero{text-align:center;padding:.7rem 0 .6rem;border-bottom:2px solid var(--accent-border);margin-bottom:1rem}
+  .hero img{height:68px;width:auto;display:block;margin:0 auto .3rem}
+  .hero .sub{font-size:17px;color:var(--navy);font-weight:700;line-height:1.35}
+    .view{display:none}
+  body[data-view=home] #v-home,body[data-view=funds] #v-funds{display:block}
+  /* כפתורים קבועים בתחתית המסך (רק בדף הראשי); הטקסט נגלל מאחוריהם */
+  .dock{display:none;position:fixed;inset-inline:0;bottom:0;z-index:30;background:#fff;border-top:2px solid var(--accent-border);
+    box-shadow:0 -4px 14px rgba(0,0,0,.08);padding:.6rem max(1rem,env(safe-area-inset-right)) max(.6rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}
+  body[data-view=home] .dock{display:block}
+  .dock-in{max-width:560px;margin:0 auto}
+  .dock .big{min-height:54px;margin:0;padding:.4rem .9rem;font-size:19px;justify-content:center;text-align:center}
+  .dock .big::after{display:none}
+  .dock .row2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.5rem}
+  .dock .row2 .big{font-size:17px;min-height:58px}
 
   .big{display:flex;align-items:center;justify-content:space-between;gap:.8rem;width:100%;min-height:68px;padding:.7rem 1.1rem;margin-bottom:.8rem;
     font:inherit;font-size:22px;font-weight:700;line-height:1.25;color:var(--navy);text-decoration:none;text-align:right;
@@ -69,21 +77,7 @@
   </header>
 
   <!-- ראשי -->
-  <section class="view" id="v-home" aria-label="דף ראשי">
-    <a class="big" href="#about">מי אנחנו?</a>
-    <a class="big primary" href="join.html"><span>רישום להיתר עיסקא<small>מילוי טופס ההצטרפות</small></span></a>
-    <a class="big" href="kiosk.html?type=companies-private&amp;back=1">רשימת חברות ואג"ח</a>
-    <a class="big" href="#funds">רשימת מסלולים וקרנות מאושרים</a>
-    <div class="foot-links">
-      <div>טלפון: <a href="tel:0527117041" dir="ltr">052-7117041</a></div>
-      <div><a href="join.html#cancel">ביטול הצטרפות</a></div>
-    </div>
-  </section>
-
-  <!-- מי אנחנו -->
-  <section class="view" id="v-about" aria-label="מי אנחנו">
-    <a class="back" href="#">חזרה</a>
-    <h2>מי אנחנו?</h2>
+  <section class="view" id="v-home" aria-label="מי אנחנו">
     <div class="card">
       <p>בס"ד</p>
       <p class="lead">מכון היתר עיסקא למהדרין שע"י ועד ההלכה "גלאט הון"</p>
@@ -103,8 +97,10 @@
       <p class="contact">מכון היתר עיסקא למהדרין<br>דוא"ל: <a href="mailto:SL5742214@gmail.com" dir="ltr">SL5742214@gmail.com</a><br>טלפון: <a href="tel:0527117041" dir="ltr">052-7117041</a></p>
       <p class="foot">* ניתן לבטל את ההצטרפות להיתר עיסקא באמצעות שליחת מייל למכון, או דרך <a href="join.html#cancel" style="color:var(--accent-dark);font-weight:700">טופס הביטול</a>.</p>
     </div>
-    <a class="big primary" href="join.html" style="margin-top:1rem">רישום להיתר עיסקא</a>
   </section>
+
+  <!-- מי אנחנו -->
+  
 
   <!-- מסלולים וקרנות מאושרים: שני דפים קיימים באתר המכון (נפתחים בלי כותרת האתר) -->
   <section class="view" id="v-funds" aria-label="מסלולים וקרנות מאושרים">
@@ -115,16 +111,33 @@
   </section>
 </div>
 
+<nav class="dock" id="dock" aria-label="תפריט ראשי">
+  <div class="dock-in">
+    <a class="big primary" href="join.html">רישום להיתר עיסקא</a>
+    <div class="row2">
+      <a class="big" href="kiosk.html?type=companies-private&amp;back=1">רשימת חברות ואג"ח</a>
+      <a class="big" href="#funds">רשימת מסלולים וקרנות מאושרים</a>
+    </div>
+  </div>
+</nav>
+
 <script>
-// ניווט לפי ה-hash (#about / #funds), כך שכפתור "חזרה" של המכשיר עובד.
+// ניווט לפי ה-hash (#funds), כך שכפתור "חזרה" של המכשיר עובד.
 (function () {
   function show() {
     var h = location.hash.replace("#", "");
-    var v = (h === "about" || h === "funds") ? h : "home";
+    var v = h === "funds" ? h : "home";
     document.body.setAttribute("data-view", v);
+    pad();
     window.scrollTo(0, 0);
   }
+  // מרווח בתחתית הדף כדי שסוף הטקסט (טלפון ודוא"ל) לא יוסתר מאחורי הכפתורים הקבועים
+  function pad() {
+    var d = document.getElementById("dock");
+    document.body.style.paddingBottom = document.body.getAttribute("data-view") === "home" ? (d.offsetHeight + 16) + "px" : "";
+  }
   window.addEventListener("hashchange", show);
+  window.addEventListener("resize", pad);
   show();
 })();
 </script>
