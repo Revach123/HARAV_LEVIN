@@ -82,9 +82,9 @@
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   td.name-cell.sub{padding-inline-start:26px}.sub-arrow{display:inline-block;margin-inline-end:6px;color:#6b7c8a;font-weight:700}
-  .doc-cell{display:grid;grid-template-columns:74px;gap:0 12px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:74px 86px}
+  .doc-cell{display:grid;grid-template-columns:74px;gap:0 12px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:74px 74px;gap:0 16px}
   .doc-col,.doc-side{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-height:1px}.doc-stack{display:flex;flex-direction:row;gap:6px;align-items:center}
-  .doc-side{border-inline-start:1px solid #d5dde5;padding-inline-start:12px;margin-inline-start:-12px;align-self:stretch}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
+  .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:-9px;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
@@ -634,7 +634,7 @@ function cellFor(col, val, row) {
     const hasSide = !!(row && (row._hasPriv || row._privId));
     const left = main || extra ? `<div class="doc-col">${hasSide ? '<div class="doc-tag"></div>' : ""}${main}${extra}</div>` : '<div class="doc-col"><span class="bonds-none">—</span></div>';          // התג הריק שומר על אותו גובה לצפייה/הורדה משני הצדדים
     const side = hasSide ? `<div class="doc-side"><div class="doc-tag">יש פרטי</div>${row._privId ? stack(row._privId) : ""}</div>` : "";
-    td.innerHTML = `<div class="doc-cell${row && row._gen ? " two" : ""}">${left}${side}</div>`;
+    td.innerHTML = `<div class="doc-cell${hasSide ? " two" : ""}">${left}${side}</div>`;
     return td;
   }
   if (col.cell === "yesno") {   // קיים היתר עסקה פרטי: כן / לא
