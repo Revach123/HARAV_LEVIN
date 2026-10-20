@@ -25,22 +25,28 @@ assert.match(await run(menu, {}), /^read=t-שלום וברכה.*=mm,no,1,1,7,No,
 assert.equal(await run(menu, { mm: '1' }), 'go_to_folder=/1&');
 assert.equal(await run(menu, { mm: '2' }), 'go_to_folder=/2&');
 assert.equal(await run(menu, { mm: '2', join: '/5', search: '/8' }), 'go_to_folder=/8&');
-assert.match(await run(menu, { mm: '9' }), /^read=.*=mm2,/);
-assert.match(await run(menu, { mm: '9', mm2: '0', mm3: 'NONE' }), /^id_list_message=t-תודה ולהתראות&hangup=yes&$/);
+// שתיקה / ערך אחר: שואלים שוב ושוב, בלי הגבלה ובלי ניתוק
+for (const mm of ['9', 'NONE', '0']) assert.match(await run(menu, { mm }), /^read=.*=mm,no,1,1,7,/);
 assert.match(await run(menu, { sk: 'bad' }), /שגיאת הרשאה/);
 assert.match(await run(menu, { sk: 'S' }), /^read=/);                 // גם הסוד הישן תקף
 assert.equal(await run(menu, { hangup: 'yes' }), '');
 
 // ---- הצטרפות: מסלול מלא (כל החברות) ----
 const base = { ApiPhone: '0501234567' };
-let r = await run(join, base);                                         assert.match(r, /=id1,no,10,5,/);
-r = await run(join, { ...base, id1: '123' });                          assert.match(r, /=id2,no,10,5,/);   // לא תקין -> ניסיון נוסף
-r = await run(join, { ...base, id1: '123', id2: '123456782' });        assert.match(r, /^read=.*=nm1,no,record,\/1,jc1_nm1,no,yes,no,1,8$/);
-r = await run(join, { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
-const full = { ...base, id1: '123', id2: '123456782', nm1: '/1/jc1_nm1.wav', ch: '1' };
+let r = await run(join, base);                                         assert.match(r, /^read=t-הקישו את מספר תעודת הזהות.*=id,no,10,5,/);
+r = await run(join, { ...base, id: '123' });                           assert.match(r, /^read=t-מספר תעודת הזהות אינו תקין\.t-הקישו.*=id,no,10,5,/);   // לא תקין: שואלים שוב, בלי הגבלה
+r = await run(join, { ...base, id: 'NONE' });                          assert.match(r, /^read=t-הקישו את מספר תעודת הזהות.*=id,/);                    // שתיקה: שואלים שוב
+r = await run(join, { ...base, id: '123456782' });                     assert.match(r, /^read=.*=nm,no,record,\/1,jc1_nm,no,yes,no,1,8$/);
+r = await run(join, { ...base, id: '123456782', nm: 'NONE' });         assert.match(r, /=nm,no,record,/);                                              // לא הוקלט: שואלים שוב
+r = await run(join, { ...base, id: '123456782', nm: '/1/jc1_nm.wav' });  assert.match(r, /=ch,no,1,1,7,No,no,no,,1\.2,/);
+r = await run(join, { ...base, id: '123456782', nm: '/1/jc1_nm.wav', ch: 'NONE' });  assert.match(r, /=ch,no,1,1,/);
+const full = { ...base, id: '123456782', nm: '/1/jc1_nm.wav', ch: '1' };
 r = await run(join, full);                                             assert.match(r, /=rd,no,1,1,/);
+r = await run(join, { ...full, rd: 'NONE' });                          assert.match(r, /=rd,no,1,1,/);
 r = await run(join, { ...full, rd: '1' });                             assert.equal(r.split('=')[1].split('.').length, 14 + 1);   // 14 פסקאות + הצהרה
+assert.match(r, /=ag,no,1,1,/);
 r = await run(join, { ...full, rd: '2' });                             assert.match(r, /=ag,no,1,1,/);
+r = await run(join, { ...full, rd: '2', ag: 'NONE' });                 assert.match(r, /=ag,no,1,1,/);                                                 // לא נענה: שואלים שוב
 full.rd = '2';
 r = await run(join, { ...full, ag: '2' });                             assert.match(r, /^id_list_message=t-הבקשה בוטלה&go_to_folder=\/&$/);
 assert.equal(inserted.length, 0);
@@ -49,22 +55,20 @@ assert.equal(inserted.length, 1);
 const key = await importKeyForWrite(env);
 const p = await decryptPii(key, inserted[0].rid, inserted[0].pii);
 assert.equal(p.id, '123456782'); assert.equal(p.phone, '0501234567'); assert.equal(p.all, 'כן'); assert.equal(p.src, 'ivr');
-assert.equal(JSON.parse(p.extra)['הקלטת שם'], '/1/jc1_nm1');
+assert.equal(JSON.parse(p.extra)['הקלטת שם'], '/1/jc1_nm');
 await run(join, { ...full, ag: '1' });                                 assert.equal(inserted.length, 1);  // כפילות תוך 3 דקות לא נרשמת
 
-// ---- הצטרפות: חברות מסוימות, בלי מספר מתקשר, בלי חזרה לשורש ----
+// ---- הצטרפות: חברות מסוימות, בלי מספר מתקשר ----
 const v2 = { ApiCallId: 'c2', ApiPhone: 'unknown', bk: '/' };
-r = await run(join, { ...v2, id1: '039337423' });                      assert.match(r, /=ph1,no,11,9,/);
-const v3 = { ...v2, id1: '039337423', ph1: '052-7654321', nm1: 'NONE' };
-r = await run(join, v3);                                               assert.match(r, /=nm2,no,record/);
-const v4 = { ...v3, nm2: '/1/jc2_nm2.wav', ch: '2' };
-r = await run(join, v4);                                               assert.match(r, /=cl1,no,record,\/1,jc2_cl1,no,yes,no,1,30$/);
-r = await run(join, { ...v4, cl1: '/1/jc2_cl1.wav', rd: '2', ag: '1' });        assert.match(r, /הבקשה התקבלה/);
+r = await run(join, { ...v2, id: '039337423' });                       assert.match(r, /=ph,no,11,9,/);
+r = await run(join, { ...v2, id: '039337423', ph: '12' });             assert.match(r, /^read=t-מספר הטלפון אינו תקין\..*=ph,/);
+const v3 = { ...v2, id: '039337423', ph: '052-7654321', nm: '/1/jc2_nm.wav', ch: '2' };
+r = await run(join, v3);                                               assert.match(r, /=cl,no,record,\/1,jc2_cl,no,yes,no,1,30$/);
+r = await run(join, { ...v3, cl: 'NONE' });                            assert.match(r, /=cl,no,record,/);
+r = await run(join, { ...v3, cl: '/1/jc2_cl.wav', rd: '2', ag: '1' }); assert.match(r, /הבקשה התקבלה/);
 const p2 = await decryptPii(key, inserted[1].rid, inserted[1].pii);
-assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/1/jc2_cl1');
+assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, ''); assert.equal(JSON.parse(p2.extra)['הקלטת חברות'], '/1/jc2_cl');
 
-// ---- כשלונות ----
-r = await run(join, { ApiCallId: 'c3', id1: '1', id2: '2', id3: '3' });
-assert.match(r, /^id_list_message=t-מספר תעודת הזהות אינו תקין&go_to_folder=\/&$/);
+// ---- הרשאה ----
 assert.match(await run(join, { sk: 'bad' }), /שגיאת הרשאה/);
 console.log('ok');

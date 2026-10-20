@@ -10,13 +10,12 @@
 //    api_add_0=sk=<IVR_SECRET_NEW>
 //    api_add_1=join=/1        (אופציונלי)
 //    api_add_2=search=/2      (אופציונלי)
-//  בלי מצב בשרת: ניסיון מס' a מחזיר את הערך במשתנה mm (a=1), mm2, mm3. אחרי שלושה ניסיונות שגויים - ניתוק.
+//  בלי מצב בשרת: הבחירה במשתנה mm. כל ערך אחר (שתיקה וכו') - השאלה נשאלת שוב, בלי הגבלה.
 // ============================================================================
 import { folderParam, parseYemot, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 
-const MAX_TRIES = 3;
 const EMPTY = 'NONE';
 
 export async function onRequest({ request, env }) {
@@ -28,13 +27,10 @@ export async function onRequest({ request, env }) {
   const P = (key) => unit(key, mf);
   const join = folderParam(v, 'join', '/1'), search = folderParam(v, 'search', '/2');
 
-  for (let a = 1; a <= MAX_TRIES; a++) {
-    const key = a === 1 ? 'mm' : `mm${a}`;
-    if (!Object.prototype.hasOwnProperty.call(v, key)) return text(readTap(P('mainMenu'), key, ['1', '2'], { empty: EMPTY }));
-    if (v[key] === '1') return text(`go_to_folder=${join}&`);
-    if (v[key] === '2') return text(`go_to_folder=${search}&`);
-  }
-  return text(`id_list_message=${P('bye')}&hangup=yes&`);
+  // שאלה שלא נענתה (שתיקה / ערך אחר) נשאלת שוב ושוב, באותו משתנה, בלי הגבלה.
+  if (v.mm === '1') return text(`go_to_folder=${join}&`);
+  if (v.mm === '2') return text(`go_to_folder=${search}&`);
+  return text(readTap(P('mainMenu'), 'mm', ['1', '2'], { empty: EMPTY }));
 }
 
 const text = (body) => new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });

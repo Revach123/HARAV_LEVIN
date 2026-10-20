@@ -144,10 +144,16 @@ assert.equal(parts(r)[1], 't-מנורה בטחון 7 בא אם');
 // לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
 assert.match(r, /^read=t-לא נמצאה חברה בשם הזה\.t-אמרו שוב את שם החברה=s1_2,no,voice$/);
-r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ' });
+r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ' });
 assert.match(r, /=h1,no,10,5,/); console.log('2g', r);
-assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'NONE', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
+assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
 assert.match(await call(env, { m1: '2', s1_1: '/6/rec001.wav' }), /לא הוגדר נכון/);
+// שאלה שלא נענתה (NONE) נשאלת שוב ושוב, באותו משתנה
+assert.match(await call(env, { m1: 'NONE' }), /^read=t-מומלץ.*=m1,no,1,1,/);
+assert.match(await call(env, { m1: '2', s1_1: 'NONE' }), /^read=t-לא הצלחתי להבין\.t-אמרו את שם החברה=s1_1,no,voice$/);
+assert.match(await call(env, { m1: '1', h1: 'NONE' }), /^read=t-הקישו את מספר החת פא.*=h1,no,10,5,/);
+assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: 'NONE' }), /^read=t-לחיפוש נוסף.*=nx1,/);
+assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: 'NONE' }), /=t1_1,no,1,1,/);
 // חיפוש נוסף: סבב 2 מתחיל מהתפריט
 assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: '1' }), /=m2,no,1,1,/);
 

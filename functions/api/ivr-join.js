@@ -3,11 +3,12 @@
 //
 //  שלוחת api (ברירת מחדל /1). נרשם באותה טבלה ובאותה הצפנה כמו הטופס באתר (join.js), עם src = "ivr".
 //  זרימה (בלי מצב בשרת - הכול נגזר מהמשתנים שימות מחזירה בכל קריאה):
-//    id<a>   תעודת זהות (הקשה, עד 3 ניסיונות, בדיקת ספרת ביקורת)
-//    ph<a>   טלפון - רק אם מספר המתקשר (ApiPhone) לא זוהה
-//    nm<a>   הקלטת שם פרטי ושם משפחה (עד 2 ניסיונות)
+//    id      תעודת זהות (הקשה, בדיקת ספרת ביקורת)
+//    ph      טלפון - רק אם מספר המתקשר (ApiPhone) לא זוהה
+//    nm      הקלטת שם פרטי ושם משפחה
 //    ch      1 = כל החברות, 2 = חברות מסוימות
-//    cl<a>   הקלטת שמות החברות (רק ב-ch=2)
+//    cl      הקלטת שמות החברות (רק ב-ch=2)
+//  כל שאלה שלא נענתה נשאלת שוב ושוב (אותו משתנה), בלי הגבלת ניסיונות.
 //    rd      1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
 //    ag      הצהרה: 1 = מאשר ונרשם, 2 = ביטול
 //  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /1); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
@@ -21,7 +22,7 @@ import { importKeyForWrite, encryptPii, identHash } from './_shared/joiners-cryp
 import { normalizeId, normalizePhone, jerusalemNow, newRowId } from './_shared/join-common.js';
 
 const EMPTY = 'NONE';
-const MAX_ID_TRIES = 3, MAX_NAME_TRIES = 2, REC_MIN = 1, REC_MAX = 8, REC_LIST_MAX = 30;
+const REC_MIN = 1, REC_MAX = 8, REC_LIST_MAX = 30;
 const AGREEMENT_VERSION = 'טלפוני-1';
 
 export async function onRequest({ request, env }) {
@@ -50,59 +51,41 @@ async function step({ v, env, P, done }) {
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (tag) => `j${call}_${tag}`;
   const recPath = (tag) => `${folder}/${recFile(tag)}`;
+  // כל שאלה שלא נענתה (שתיקה או ערך לא תקין) נשאלת שוב ושוב באותו משתנה, בלי הגבלת ניסיונות.
+  // הערה לפני השאלה החוזרת (ערך לא תקין) רק כשהמתקשר אכן הקיש/אמר משהו.
+  const again = (bad, key) => (has(v, key) && !empty(v[key]) ? `${P(bad)}.` : '');
 
   // 1. תעודת זהות
-  let id = '';
-  for (let a = 1; a <= MAX_ID_TRIES; a++) {
-    const k = `id${a}`;
-    if (!has(v, k)) return readTap(a === 1 ? P('join:askId') : `${P('join:badId')}.${P('join:askId')}`, k, null, { max: 10, min: 5, empty: EMPTY });
-    id = empty(v[k]) ? '' : normalizeId(v[k]);
-    if (id) break;
-  }
-  if (!id) return done('join:badId');
+  const id = has(v, 'id') && !empty(v.id) ? normalizeId(v.id) : '';
+  if (!id) return readTap(again('join:badId', 'id') + P('join:askId'), 'id', null, { max: 10, min: 5, empty: EMPTY });
 
   // 2. טלפון: מספר המתקשר, ואם לא זוהה - הקשה
   let phone = normalizePhone(v.ApiPhone);
   if (!phone) {
-    for (let a = 1; a <= MAX_ID_TRIES; a++) {
-      const k = `ph${a}`;
-      if (!has(v, k)) return readTap(a === 1 ? P('join:askPhone') : `${P('join:badPhone')}.${P('join:askPhone')}`, k, null, { max: 11, min: 9, empty: EMPTY });
-      phone = empty(v[k]) ? '' : normalizePhone(v[k]);
-      if (phone) break;
-    }
-    if (!phone) return done('join:badPhone');
+    phone = has(v, 'ph') && !empty(v.ph) ? normalizePhone(v.ph) : '';
+    if (!phone) return readTap(again('join:badPhone', 'ph') + P('join:askPhone'), 'ph', null, { max: 11, min: 9, empty: EMPTY });
   }
 
   // 3. שם (הקלטה)
-  let nameFile = '';
-  for (let a = 1; a <= MAX_NAME_TRIES; a++) {
-    const k = `nm${a}`;
-    if (!has(v, k)) return readRecord(P('join:askName'), k, folder, recFile(`nm${a}`), REC_MIN, REC_MAX);
-    if (!empty(v[k])) { nameFile = recPath(`nm${a}`); break; }
-  }
-  if (!nameFile) return done('join:error');
+  if (!has(v, 'nm') || empty(v.nm)) return readRecord(P('join:askName'), 'nm', folder, recFile('nm'), REC_MIN, REC_MAX);
+  const nameFile = recPath('nm');
 
   // 4. כל החברות / חברות מסוימות
-  if (!has(v, 'ch')) return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
-  if (v.ch !== '1' && v.ch !== '2') return done('join:cancelled');
+  if (v.ch !== '1' && v.ch !== '2') return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
   const all = v.ch === '1';
   let listFile = '';
   if (!all) {
-    for (let a = 1; a <= MAX_NAME_TRIES; a++) {
-      const k = `cl${a}`;
-      if (!has(v, k)) return readRecord(P('join:askList'), k, folder, recFile(`cl${a}`), REC_MIN, REC_LIST_MAX);
-      if (!empty(v[k])) { listFile = recPath(`cl${a}`); break; }
-    }
-    if (!listFile) return done('join:error');
+    if (!has(v, 'cl') || empty(v.cl)) return readRecord(P('join:askList'), 'cl', folder, recFile('cl'), REC_MIN, REC_LIST_MAX);
+    listFile = recPath('cl');
   }
 
-  // 5. הצהרה והסכמה
-  if (!has(v, 'rd')) return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
-  if (!has(v, 'ag')) {
+  // 5. הקראת השטר המלא (אופציונלית) והצהרה והסכמה
+  if (v.rd !== '1' && v.rd !== '2') return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
+  if (v.ag !== '1' && v.ag !== '2') {
     const full = v.rd === '1' ? AGREEMENT_KEYS.map(P).join('.') + '.' : '';   // rd=1: הקראת השטר המלא לפני ההצהרה
     return readTap(full + P('join:declare'), 'ag', ['1', '2'], { empty: EMPTY });
   }
-  if (v.ag !== '1') return done('join:cancelled');
+  if (v.ag === '2') return done('join:cancelled');
 
   await save(env, { id, phone, all, nameFile, listFile, callId: String(v.ApiCallId || '') });
   return done('join:done');
