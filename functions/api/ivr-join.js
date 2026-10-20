@@ -22,7 +22,8 @@ import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_share
 import { AGREEMENT_KEYS, unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
-import { normalizeId, normalizePhone, jerusalemNow, newRowId } from './_shared/join-common.js';
+import { normalizeId, normalizePhone, jerusalemNow, newRowId, validEmail, clean } from './_shared/join-common.js';
+import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -174,8 +175,10 @@ async function step({ v, env, P, done }) {
   }
   if (v.ag === '3') { v.finished = true; return done('join:cancelled'); }
 
+  // הקלטות -> טקסט (Azure), לרישום באתר. ההקלטות עצמן נשמרות לבדיקה. בלי הגדרת Azure/ימות נשארות רק ההקלטות.
+  const texts = await transcribeAll(env, v, folder, recFile, { fn: true, ln: true, ad: true, em: v.emq === '1', cl: !all });
   await save(env, {
-    id, phone, phone2, fax, all, callId: String(v.ApiCallId || ''),
+    id, phone, phone2, fax, all, texts, callId: String(v.ApiCallId || ''),
     files: {
       'הקלטת שם פרטי': recPath('fn'), 'הקלטת שם משפחה': recPath('ln'), 'הקלטת כתובת': recPath('ad'),
       ...(v.emq === '1' ? { 'הקלטת אימייל': recPath('em') } : {}),
@@ -186,7 +189,33 @@ async function step({ v, env, P, done }) {
   return done('join:done');
 }
 
-async function save(env, { id, phone, phone2, fax, all, files, callId }) {
+// הקלטה -> טקסט, במקביל לכל ההקלטות. אין מחיקה של ההקלטה (בניגוד לחיפוש), כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
+async function transcribeAll(env, v, folder, recFile, want) {
+  const out = {};
+  if (!sttConfigured(env)) return out;
+  await Promise.all(Object.keys(want).filter((k) => want[k]).map(async (k) => {
+    try {
+      const value = String(v[k] || '');
+      const rec = await downloadRecording(env, [
+        ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
+        `${folder}/${recFile(k)}.wav`, `${folder}/${recFile(k)}`,
+      ]);
+      if (rec) out[k] = clean(await azureTranscribe(env, rec.bytes), 200).replace(/[.,!?]+$/g, '').trim();
+    } catch { /* נשארים עם ההקלטה בלבד */ }
+  }));
+  return out;
+}
+
+// אימייל מדובר: "שטרודל"/"נקודה"/"קו תחתון"/"מקף" -> סימנים, בלי רווחים. מחזיר '' אם לא נראה כמו אימייל תקין.
+export function spokenEmail(t) {
+  const e = String(t || '').toLowerCase()
+    .replace(/שטרודל|at sign|\bat\b/g, '@').replace(/נקודה|\bdot\b/g, '.')
+    .replace(/קו תחתון/g, '_').replace(/מקף|\bdash\b/g, '-')
+    .replace(/\s+/g, '').replace(/[,;:]/g, '');
+  return validEmail(e) ? e : '';
+}
+
+async function save(env, { id, phone, phone2, fax, all, files, texts = {}, callId }) {
   const key = await importKeyForWrite(env);
   const ih = await identHash(env, id);
   // הגנה מקריאה כפולה: אותה ת.ז. שנרשמה ב-3 הדקות האחרונות לא נרשמת שוב
@@ -200,15 +229,18 @@ async function save(env, { id, phone, phone2, fax, all, files, callId }) {
     'ערוץ': 'טלפון (ימות המשיח)',
     ...(phone2 ? { 'טלפון נוסף': phone2 } : {}),
     ...(fax ? { 'פקס': fax } : {}),
-    'כתובת': '(ראו הקלטת כתובת)',
+    'כתובת': texts.ad || '(ראו הקלטת כתובת)',
     ...files,
+    ...(Object.values(texts).some(Boolean) ? { 'זיהוי אוטומטי מהקלטות': 'כן - יש לבדוק מול ההקלטה' } : {}),
+    ...(texts.em && !spokenEmail(texts.em) ? { 'אימייל (זיהוי אוטומטי, לא תקין)': texts.em } : {}),
     'מזהה שיחה': callId,
     'גרסת שטר': AGREEMENT_VERSION,
     'אושרו התנאים': 'כן (בהקשה, בנוסח ההצהרה הטלפוני)',
   };
   const payload = {
-    first: 'טלפוני (ראו הקלטת שם פרטי)', last: '(ראו הקלטת שם משפחה)', phone, email: '', id, ip: '',
-    companies: all ? '' : '(ראו הקלטת חברות)', all: all ? 'כן' : '',
+    first: texts.fn || 'טלפוני (ראו הקלטת שם פרטי)', last: texts.ln || '(ראו הקלטת שם משפחה)', phone,
+    email: spokenEmail(texts.em), id, ip: '',
+    companies: all ? '' : (texts.cl || '(ראו הקלטת חברות)'), all: all ? 'כן' : '',
     pdf: '', extra: JSON.stringify(extra), src: 'ivr',
   };
   await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")

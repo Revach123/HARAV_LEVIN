@@ -121,6 +121,35 @@ assert.equal(p2.phone, '0527654321'); assert.equal(p2.all, '');
 const ex2 = JSON.parse(p2.extra);
 assert.equal(ex2['טלפון נוסף'], '035551234'); assert.equal(ex2['פקס'], '035551235'); assert.equal(ex2['הקלטת אימייל'], '/1/jc2_em'); assert.equal(ex2['הקלטת חברות'], '/1/jc2_cl');
 
+// ---- זיהוי הקלטות ב-Azure (fetch מדומה): שם, כתובת, אימייל וחברות נכנסים כטקסט לרישום ----
+const SAID = { fn: 'משה', ln: 'כהן', ad: 'רחוב הרצל 5 בני ברק', em: 'moshe שטרודל gmail נקודה com', cl: 'בנק לאומי, מנורה' };
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url, opts = {}) => {
+  url = String(url);
+  if (url.includes('DownloadFile')) {
+    const path = new URL(url).searchParams.get('path');
+    const tag = Object.keys(SAID).find((k) => path.includes(`_${k}`));
+    const bytes = new Uint8Array(60); bytes.set([0x52, 0x49, 0x46, 0x46]); bytes.set(new TextEncoder().encode(tag || '?'), 44);
+    return new Response(bytes, { status: 200 });
+  }
+  if (url.includes('FileAction')) throw new Error('הקלטה לא אמורה להימחק');
+  if (url.includes('stt.speech.microsoft.com')) {
+    const tag = new TextDecoder().decode(new Uint8Array(await new Response(opts.body).arrayBuffer()).slice(44, 46));
+    return new Response(JSON.stringify({ RecognitionStatus: 'Success', DisplayText: SAID[tag] + '.' }), { status: 200 });
+  }
+  return realFetch(url, opts);
+};
+env.AZURE_SPEECH_KEY = 'k'; env.YEMOT_TOKEN = '1:2';
+const t = { ApiCallId: 'c5', ApiPhone: '0501234567', id: '111111118', fn: '/1/jc5_fn.wav', ln: '/1/jc5_ln.wav', pc: '1', p2q: '2', ad: '/1/jc5_ad.wav', emq: '1', em: '/1/jc5_em.wav', fxq: '2', ch: '2', cl: '/1/jc5_cl.wav', rd: '2' };
+await step({ ...t, ag: '1' }, /הבקשה התקבלה/);
+const p3 = await decryptPii(key, inserted[2].rid, inserted[2].pii);
+assert.equal(p3.first, 'משה'); assert.equal(p3.last, 'כהן'); assert.equal(p3.email, 'moshe@gmail.com'); assert.equal(p3.companies, 'בנק לאומי, מנורה');
+const ex3 = JSON.parse(p3.extra);
+assert.equal(ex3['כתובת'], 'רחוב הרצל 5 בני ברק'); assert.equal(ex3['הקלטת שם פרטי'], '/1/jc5_fn');   // ההקלטה נשמרת לצד הטקסט
+assert.ok(ex3['זיהוי אוטומטי מהקלטות']);
+globalThis.fetch = realFetch;
+delete env.AZURE_SPEECH_KEY; delete env.YEMOT_TOKEN;
+
 // ---- ימות מפעילה את השלוחה מחדש באמצע השיחה (בלי משתנים): ממשיכים מאותה נקודה, לא מההתחלה ----
 const rs = { ApiCallId: 'c9', ApiPhone: '0501234567', id: '123456782', fn: '/1/jc9_fn.wav', ln: '/1/jc9_ln.wav', pc: '1', p2q: '2', ad: '/1/jc9_ad.wav', emq: '2', fxq: '2', ch: '1' };
 await step(rs, /=rd,/);                                                    // נשמר
