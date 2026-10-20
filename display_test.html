@@ -82,9 +82,9 @@
   .num{font-variant-numeric:tabular-nums;text-align:center;direction:ltr;white-space:nowrap}
   .up{color:var(--accent-dark)} .down{color:var(--red)}
   td.name-cell.sub{padding-inline-start:26px}.sub-arrow{display:inline-block;margin-inline-end:6px;color:#6b7c8a;font-weight:700}
-  .doc-cell{display:grid;grid-template-columns:74px;gap:0 12px;justify-content:center;align-items:start;text-align:start}.doc-cell.two{grid-template-columns:74px 74px;gap:0 16px}
-  .doc-col,.doc-side{display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-height:1px}.doc-stack{display:flex;flex-direction:row;gap:6px;align-items:center}
-  .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:-9px;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444}
+  .doc-cell{display:grid;grid-template-columns:1fr;width:100%;align-items:start}.doc-cell.two{grid-template-columns:1fr 1fr}
+  .doc-col,.doc-side{display:flex;flex-direction:column;gap:8px;align-items:center;min-height:1px}.doc-stack{display:flex;flex-direction:row;gap:6px;align-items:center;justify-content:center}
+  .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444;text-align:center}
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
@@ -133,7 +133,7 @@ const COLUMNS = {
     { key:"chp_number", px:95,         label:'ח"פ',                 cell:"num",   w:12 },
     { key:"category", px:105,           label:"קטגוריה",                         w:14 },
     { key:"region", px:70,             label:"אזור",                            w:8  },
-    { key:"permit_doc", px:200,         label:"היתר עיסקא",          cell:"doc",   w:18 },
+    { key:"permit_doc", px:190,         label:"היתר עיסקא",          cell:"doc",   w:18 },
     { key:"bonds_status", px:130,       label:'אג"ח',                cell:"bonds", w:20 },
     { key:"notes", px:215,              label:"הערות",                           w:22 },
   ],
