@@ -17,9 +17,10 @@ export function normalizePhone(v) {
   if (d.startsWith("972")) d = "0" + d.slice(3);
   return /^0\d{8,9}$/.test(d) ? d : "";
 }
-export const validEmail = v => v.length <= 120 && /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/.test(v);
+// אותיות לועזיות בלבד (תווי ASCII ללא רווחים)
+export const validEmail = v => v.length <= 120 && /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v) && !/[<>"']/.test(v);
 // טקסט חופשי: מסיר תווי בקרה, מקצץ רווחים ומגביל אורך
-export const clean = (v, max) => String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f‎‏‪-‮]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
+export const clean = (v, max) => String(v == null ? "" : v).replace(/[\u0000-\u001f\u007f\u200e\u200f\u202a-\u202e]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 
 // הבקשה חייבת לבוא מהאתר עצמו (Origin זהה למארח), מכתובות האתר הידועות, או מ-localhost בפיתוח. בקשה בלי Origin (כלי שורת פקודה) נדחית.
 const ALLOWED = ["harav-levin.pages.dev", "iska.co.il", "www.iska.co.il"];

@@ -105,7 +105,7 @@
       <div class="field"><label class="lbl" for="phone2">טלפון נוסף</label>
         <input id="phone2" name="phone2" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="phone2"></div></div>
       <div class="field"><label class="lbl" for="email">אימייל</label>
-        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="email"></div></div>
+        <input id="email" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" name="email" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="email"></div></div>
       <div class="field"><label class="lbl" for="fax">פקס</label>
         <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"></div>
       <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
@@ -172,7 +172,7 @@
       <div class="field"><label class="lbl" for="cname">שם <span class="req">*</span></label>
         <input id="cname" type="text" autocomplete="name" maxlength="80" required><div class="err" data-for="cname"></div></div>
       <div class="field"><label class="lbl" for="cemail">אימייל</label>
-        <input id="cemail" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="cemail"></div></div>
+        <input id="cemail" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" type="email" inputmode="email" autocomplete="email" maxlength="120" dir="ltr" style="text-align:right"><div class="err" data-for="cemail"></div></div>
       <div class="field"><label class="lbl" for="cphone">טלפון</label>
         <input id="cphone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="cphone"></div></div>
       <div class="field"><label class="lbl" for="cid">תעודת זהות (לא חובה)</label>
@@ -222,7 +222,7 @@ function validId(v) {
   return s % 10 === 0;
 }
 function validPhone(v) { let d = String(v || "").replace(/\D/g, ""); if (d.startsWith("972")) d = "0" + d.slice(3); return /^0\d{8,9}$/.test(d); }
-const validEmail = v => /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']{2,}$/.test(v);
+const validEmail = v => /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v) && !/[<>"']/.test(v);   // אותיות לועזיות בלבד
 
 function setErrs(map, form) {
   form.querySelectorAll(".err").forEach(e => { e.textContent = ""; e.classList.remove("on"); });
@@ -236,6 +236,10 @@ function setErrs(map, form) {
   if (firstEl) firstEl.scrollIntoView({ block: "center", behavior: "smooth" });
 }
 
+// אימייל: רק תווים לועזיים (אותיות עבריות ורווחים נמחקים בהקלדה ובהדבקה). שאר השדות חופשיים.
+document.querySelectorAll("#email,#cemail").forEach(el => el.addEventListener("input", () => {
+  const c = el.value.replace(/[^\x21-\x7e]/g, ""); if (c !== el.value) el.value = c;
+}));
 // שגיאה בשדה נעלמת ברגע שמתחילים לתקן אותו
 document.addEventListener("input", e => {
   const el = e.target; if (!el.classList) return; el.classList.remove("bad");
@@ -302,7 +306,7 @@ $("fJoin").addEventListener("submit", async e => {
   if (!validId(v("id"))) errs.id = "מספר תעודת הזהות אינו תקין";
   if (!validPhone(v("phone"))) errs.phone = "מספר הטלפון אינו תקין";
   if (v("phone2") && !validPhone(v("phone2"))) errs.phone2 = "מספר הטלפון הנוסף אינו תקין";
-  if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה";
+  if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה (באותיות באנגלית בלבד)";
   if (v("address").length < 3) errs.address = "נא למלא כתובת";
   const ch = f.querySelector('input[name="choice"]:checked');
   if (!ch) errs.choice = "נא לבחור אחת משתי האפשרויות";
@@ -344,7 +348,7 @@ $("fCancel").addEventListener("submit", async e => {
   if (name.length < 2) errs.cname = "נא למלא שם";
   if (!phone && !email) errs.cphone = "נא למלא טלפון או דוא\"ל";
   if (phone && !validPhone(phone)) errs.cphone = "מספר הטלפון אינו תקין";
-  if (email && !validEmail(email)) errs.cemail = "כתובת הדוא\"ל אינה תקינה";
+  if (email && !validEmail(email)) errs.cemail = "כתובת הדוא\"ל אינה תקינה (באותיות באנגלית בלבד)";
   if (id && !validId(id)) errs.cid = "מספר תעודת הזהות אינו תקין";
   setErrs(errs, f); $("cancelErr").classList.remove("on");
   if (Object.keys(errs).length) return;
