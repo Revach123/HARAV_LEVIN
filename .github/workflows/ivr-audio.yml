@@ -14,6 +14,10 @@ on:
         description: "dry-run: רק רשימה (בלי Azure ובלי ימות)"
         type: boolean
         default: true
+      force:
+        description: "force: מפיק ומעלה מחדש את כל הביטויים (למעבר לחשבון ימות חדש)"
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -54,13 +58,15 @@ jobs:
           AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
           YEMOT_TTS: ${{ secrets.YEMOT_TTS }}
           DRY: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && inputs.force }}
         run: |
           if [ "$DRY" = "true" ]; then
             python scripts/ivr_audio/build_audio.py --phrases "$RUNNER_TEMP/phrases.json" --dry-run
           elif [ -z "$AZURE_SPEECH_KEY" ] || [ -z "$YEMOT_TTS" ]; then
             echo "חסרים secrets (AZURE_SPEECH_KEY / YEMOT_TTS) בריפו הזה - מדלגים. ההקראה נשארת ב-TTS של ימות."
           else
-            python scripts/ivr_audio/build_audio.py --phrases "$RUNNER_TEMP/phrases.json"
+            if [ "$FORCE" = "true" ]; then F="--force"; else F=""; fi
+            python scripts/ivr_audio/build_audio.py --phrases "$RUNNER_TEMP/phrases.json" $F
           fi
 
       # המניפסט נשמר רק מה שהועלה בפועל. push שנוגע רק במניפסט לא מפעיל שוב את ה-workflow (paths).

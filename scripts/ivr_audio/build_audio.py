@@ -131,6 +131,7 @@ def main():
     ap.add_argument("--manifest", default=DEFAULT_MANIFEST)
     ap.add_argument("--folder", default=None, help="שלוחת קבצי השמע בימות (ברירת מחדל: מקובץ הביטויים)")
     ap.add_argument("--dry-run", action="store_true", help="רשימה בלבד, בלי Azure ובלי ימות")
+    ap.add_argument("--force", action="store_true", help="מפיק ומעלה מחדש את כל הביטויים (למשל במעבר לחשבון ימות חדש)")
     a = ap.parse_args()
 
     with open(a.phrases, encoding="utf-8") as f:
@@ -145,7 +146,7 @@ def main():
 
     # ביטוי מיושן: טקסט/קול השתנו, או (אם יש בו מילה עם הגייה) חתימת ההגיות השתנתה
     todo = [(k, t) for k, t in data["phrases"].items()
-            if not (k in manifest and manifest[k].get("text") == t and manifest[k].get("voice") == voice
+            if a.force or not (k in manifest and manifest[k].get("text") == t and manifest[k].get("voice") == voice
                     and (not uses_pron(t) or manifest[k].get("pron", "") == sig))]
     chars = sum(len(t) for _, t in todo)
     print(f"ביטויים: {len(data['phrases'])} | חדשים או ששונו: {len(todo)} | תווים: {chars} | קול: {voice} | שלוחה: {folder}")
