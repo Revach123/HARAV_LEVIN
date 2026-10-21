@@ -899,6 +899,56 @@
    "kind": "upcoming",
    "last_seen": "2026-10-21"
   },
+  "U10387": {
+   "data": {
+    "chp_number": "520044314",
+    "company_name": "פרטנר",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10387,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777220",
+    "maya_report_id": 1777220,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-21"
+  },
+  "U10388": {
+   "data": {
+    "chp_number": "516561875",
+    "company_name": "הראל ריביות",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10388,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777226,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-21"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",

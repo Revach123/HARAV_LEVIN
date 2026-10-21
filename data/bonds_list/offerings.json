@@ -239,6 +239,27 @@
    "chp_number": "520042847"
   },
   {
+   "id": 10387,
+   "maya_report_id": 1777220,
+   "company_name": "פרטנר",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777220",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520044314"
+  },
+  {
    "id": 10121,
    "maya_report_id": 1747128,
    "company_name": "יסודות איתנים",
@@ -300,6 +321,27 @@
     }
    ],
    "chp_number": "515541415"
+  },
+  {
+   "id": 10388,
+   "maya_report_id": 1777226,
+   "company_name": "הראל ריביות",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "516561875"
   },
   {
    "id": 9973,
@@ -924,6 +966,13 @@
    ]
   },
   {
+   "chp_number": "516561875",
+   "name": "הראל ריביות",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
    "chp_number": "517207239",
    "name": "מיכל פקדונות",
    "statuses": [
@@ -961,6 +1010,13 @@
   {
    "chp_number": "520042847",
    "name": "אלון רבוע כחול",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "520044314",
+   "name": "פרטנר",
    "statuses": [
     "הנפקה עתידית"
    ]
