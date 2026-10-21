@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1187913": {
+   "data": {
+    "begins_at": "2026-10-21T09:00:00",
+    "chp_number": "515846558",
+    "ends_at": "2026-10-21T16:00:00",
+    "interest": 3.48,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1769,
+    "issuer_name": "ג'נריישן קפיטל",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777085",
+    "offer_number": 1187913,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "מדד",
+      "maalot_rating": "ilA+",
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אג\"ח ה'",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-21"
+  },
   "O1217546": {
    "data": {
     "begins_at": "2026-10-19T09:00:00",
@@ -56,7 +85,7 @@
     ]
    },
    "kind": "open",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10118": {
    "data": {
@@ -81,7 +110,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10121": {
    "data": {
@@ -106,7 +135,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10128": {
    "data": {
@@ -131,7 +160,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10131": {
    "data": {
@@ -156,7 +185,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10225": {
    "data": {
@@ -181,7 +210,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10227": {
    "data": {
@@ -206,7 +235,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10237": {
    "data": {
@@ -231,7 +260,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10243": {
    "data": {
@@ -256,7 +285,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10259": {
    "data": {
@@ -281,7 +310,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10287": {
    "data": {
@@ -306,7 +335,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10289": {
    "data": {
@@ -331,7 +360,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10296": {
    "data": {
@@ -356,7 +385,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10300": {
    "data": {
@@ -381,7 +410,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10316": {
    "data": {
@@ -406,7 +435,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10319": {
    "data": {
@@ -431,7 +460,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10329": {
    "data": {
@@ -456,7 +485,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10339": {
    "data": {
@@ -531,7 +560,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10356": {
    "data": {
@@ -581,7 +610,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10368": {
    "data": {
@@ -637,7 +666,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10372": {
    "data": {
@@ -662,7 +691,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10375": {
    "data": {
@@ -687,32 +716,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
-  },
-  "U10377": {
-   "data": {
-    "chp_number": "515846558",
-    "company_name": "ג'נריישן קפיטל",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10377,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
-    "maya_report_id": 1776435,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10378": {
    "data": {
@@ -737,7 +741,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10379": {
    "data": {
@@ -762,7 +766,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10381": {
    "data": {
@@ -787,7 +791,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10382": {
    "data": {
@@ -812,7 +816,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10383": {
    "data": {
@@ -868,32 +872,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
-  },
-  "U10385": {
-   "data": {
-    "chp_number": "515846558",
-    "company_name": "ג'נריישן קפיטל",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10385,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1775147",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1776435",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776049",
-    "maya_report_id": 1776940,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilA+",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U10386": {
    "data": {
@@ -918,7 +897,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   },
   "U9973": {
    "data": {
@@ -943,7 +922,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-20"
+   "last_seen": "2026-10-21"
   }
  }
 }

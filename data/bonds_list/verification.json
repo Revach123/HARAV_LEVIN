@@ -1,12 +1,19 @@
 {
- "updated": "2026-10-20",
+ "updated": "2026-10-21",
  "status": "ok",
- "datawise_date": "2026-10-19",
- "expected": 756,
- "maya": 756,
+ "datawise_date": "2026-10-20",
+ "expected": 757,
+ "maya": 757,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
- "dropped_no_terms": []
+ "dropped_no_terms": [
+  {
+   "security_id": 1181007,
+   "security_name": "ביג אגח יט",
+   "company": "ביג מרכזי קניות בע\"מ",
+   "chp_number": "513623314"
+  }
+ ]
 }
