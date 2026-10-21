@@ -134,27 +134,6 @@
    "chp_number": "514290345"
   },
   {
-   "id": 10381,
-   "maya_report_id": 1776655,
-   "company_name": "מגדלי ים תיכון",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776655",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "512719485"
-  },
-  {
    "id": 10378,
    "maya_report_id": 1776492,
    "company_name": "אקסטל לימיטד",
@@ -176,25 +155,25 @@
    "chp_number": "1811308"
   },
   {
-   "id": 10375,
-   "maya_report_id": 1776319,
-   "company_name": "דיפלומט",
+   "id": 10389,
+   "maya_report_id": 1777280,
+   "company_name": "ריט אזורים ליוי",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
    "securities": [
     {
      "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilA-",
      "midroog_rating": null
     }
    ],
-   "chp_number": "510400740"
+   "chp_number": "516117181"
   },
   {
    "id": 10128,
@@ -736,6 +715,52 @@
    "last_seen": "2026-10-19"
   },
   {
+   "chp_number": "510400740",
+   "company_name": "דיפלומט",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10375,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
+   "maya_report_id": 1776319,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-21"
+  },
+  {
+   "chp_number": "512719485",
+   "company_name": "מגדלי ים תיכון",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10381,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776655",
+   "maya_report_id": 1776655,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-21"
+  },
+  {
    "chp_number": "520033309",
    "company_name": "חג'ג' נדל\"ן",
    "draft_no": null,
@@ -963,6 +988,13 @@
    "name": "ג'נריישן קפיטל",
    "statuses": [
     "בהנפקה"
+   ]
+  },
+  {
+   "chp_number": "516117181",
+   "name": "ריט אזורים ליוי",
+   "statuses": [
+    "הנפקה עתידית"
    ]
   },
   {
