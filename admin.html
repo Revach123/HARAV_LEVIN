@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261024i"></script>
+<script src="/permit-docs.js?v=20261024j"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1207,8 +1207,12 @@ function renderAdminTable() {
                     <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
                     <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
                     <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>אג"ח מסוימים</option>
-                    <option value="__pick__">⚙ בחירת אג"ח…</option>
-                  </select>
+                  </select>${b.agch_approved === BOND_PICK ? (() => {
+                    const sel = (window.PD && PD.apprOf) ? PD.apprOf(b.chp_number) : [];
+                    const sc = { private: " (רק פרטי)", general: " (רק כללי)" };
+                    return `<div style="margin-top:4px"><button type="button" class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="openBondPicker('${b.id}')">לבחירת אג"ח</button></div>`
+                      + (sel.length ? `<div style="margin-top:3px;font-size:11.5px;line-height:1.5;color:var(--text);white-space:normal">${sel.map(x => escHtml(PD.bondLabel(x)) + (sc[x.scope] || "")).join("<br>")}</div>` : `<div style="margin-top:3px;font-size:11.5px;color:var(--red);white-space:normal">לא נבחרו אג"ח</div>`);
+                  })() : ""}
                 </td>
                 ${window.PD ? PD.slotCells(b) : "<td></td><td></td>"}
                 <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}</td>
