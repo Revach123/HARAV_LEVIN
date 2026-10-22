@@ -556,10 +556,10 @@
       ${msg ? `<div class="pd-ok-msg">${msg}</div>` : ""}
       <div class="pd-drop" id="pd-drop" onclick="document.getElementById('pd-file').click()">
         <div style="font-size:34px">📄</div><b>גררו לכאן קובצי PDF או לחצו לבחירה</b>
-        <div class="pd-sub">אפשר לבחור כמה קבצים; הם יעברו אחד אחד. אחרי הבחירה המערכת תחפש חברה מתאימה ותציע שיוך.</div>
+        <div class="pd-sub" style="font-weight:700;color:#1a3a5c">אפשר להעלות כמה קבצים בבת אחת (בחירה מרובה או גרירה של כמה קבצים).</div><div class="pd-sub">הקבצים יופיעו כתמונות ממוזערות, ואחרי הבחירה המערכת תחפש חברה מתאימה ותציע שיוך לכל קובץ.</div>
         <input type="file" id="pd-file" accept="application/pdf,.pdf" multiple style="display:none" onchange="PD._files(this.files)">
       </div>
-      ${U.preset ? "" : `<div class="pd-btns" style="margin-top:12px"><button class="pd-btn" onclick="document.getElementById('pd-bulk').click()" title="מעלה את כל הקבצים בבת אחת בלי שיוך, ואז פותח דשבורד שיוך רק לקבצים האלה">⚡ העלאה מהירה של כמה קבצים, ושיוך בדשבורד</button><input type="file" id="pd-bulk" accept="application/pdf,.pdf" multiple style="display:none" onchange="PD._bulk(this.files)"></div>`}${U.preset ? `<p class="pd-sub">המסמך ישויך מראש לחברה: <b>${E(bizName(U.preset))}</b> (אפשר לשנות בשלב הבא)</p>` : ""}`;
+      ${U.preset ? `<p class="pd-sub">המסמך ישויך מראש לחברה: <b>${E(bizName(U.preset))}</b> (אפשר לשנות בשלב הבא)</p>` : ""}`;
     const dz = $("pd-drop");
     ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("over"); }));
     ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
