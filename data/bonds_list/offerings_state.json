@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1173640": {
+   "data": {
+    "begins_at": "2026-10-22T09:00:00",
+    "chp_number": "510400740",
+    "ends_at": "2026-10-22T16:00:00",
+    "interest": 4.49,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1867,
+    "issuer_name": "דיפלומט",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777320",
+    "offer_number": 1173640,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": "ilA+",
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אגח א",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-22"
+  },
   "O1187913": {
    "data": {
     "begins_at": "2026-10-21T09:00:00",
@@ -58,6 +87,35 @@
    "kind": "open",
    "last_seen": "2026-10-19"
   },
+  "O1217678": {
+   "data": {
+    "begins_at": "2026-10-22T09:00:00",
+    "chp_number": "512719485",
+    "ends_at": "2026-10-22T16:00:00",
+    "interest": 4.89,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1614,
+    "issuer_name": "מגדלי ים תיכון",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777307",
+    "offer_number": 1217678,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": "A2.il",
+      "security_id": null,
+      "security_name": "אג\"ח ח'",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-22"
+  },
   "O1240852": {
    "data": {
     "begins_at": "2026-10-21T10:00:00",
@@ -110,7 +168,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10121": {
    "data": {
@@ -135,7 +193,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10128": {
    "data": {
@@ -160,7 +218,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10131": {
    "data": {
@@ -185,7 +243,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10225": {
    "data": {
@@ -210,7 +268,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10227": {
    "data": {
@@ -235,7 +293,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10237": {
    "data": {
@@ -260,7 +318,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10243": {
    "data": {
@@ -285,7 +343,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10259": {
    "data": {
@@ -310,7 +368,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10287": {
    "data": {
@@ -335,7 +393,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10289": {
    "data": {
@@ -360,7 +418,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10296": {
    "data": {
@@ -385,7 +443,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10300": {
    "data": {
@@ -410,7 +468,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10316": {
    "data": {
@@ -435,7 +493,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10319": {
    "data": {
@@ -460,7 +518,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10329": {
    "data": {
@@ -485,7 +543,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10339": {
    "data": {
@@ -499,31 +557,6 @@
     "link_prospectus": null,
     "link_trust_indenture": "https://maya.tase.co.il/he/reports/1772082",
     "maya_report_id": 1772082,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-19"
-  },
-  "U10353": {
-   "data": {
-    "chp_number": "512719485",
-    "company_name": "מגדלי ים תיכון",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10353,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
-    "maya_report_id": 1774235,
     "new_company_type": null,
     "securities": [
      {
@@ -560,7 +593,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10356": {
    "data": {
@@ -610,7 +643,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10368": {
    "data": {
@@ -666,7 +699,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10372": {
    "data": {
@@ -691,32 +724,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
-  },
-  "U10375": {
-   "data": {
-    "chp_number": "510400740",
-    "company_name": "דיפלומט",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10375,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
-    "maya_report_id": 1776319,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10378": {
    "data": {
@@ -741,7 +749,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10379": {
    "data": {
@@ -766,32 +774,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
-  },
-  "U10381": {
-   "data": {
-    "chp_number": "512719485",
-    "company_name": "מגדלי ים תיכון",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10381,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776655",
-    "maya_report_id": 1776655,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10382": {
    "data": {
@@ -816,7 +799,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10383": {
    "data": {
@@ -872,7 +855,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   },
   "U10386": {
    "data": {
@@ -897,7 +880,107 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
+  },
+  "U10387": {
+   "data": {
+    "chp_number": "520044314",
+    "company_name": "פרטנר",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10387,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777220",
+    "maya_report_id": 1777220,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-22"
+  },
+  "U10388": {
+   "data": {
+    "chp_number": "516561875",
+    "company_name": "הראל ריביות",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10388,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777226,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-22"
+  },
+  "U10389": {
+   "data": {
+    "chp_number": "516117181",
+    "company_name": "ריט אזורים ליוי",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10389,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+    "maya_report_id": 1777280,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilA-",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-22"
+  },
+  "U10390": {
+   "data": {
+    "chp_number": "516117181",
+    "company_name": "ריט אזורים ליוי",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10390,
+    "is_new_company": false,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+    "maya_report_id": 1777410,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilA-",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-22"
   },
   "U9973": {
    "data": {
@@ -922,7 +1005,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-21"
+   "last_seen": "2026-10-22"
   }
  }
 }

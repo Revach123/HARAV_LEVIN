@@ -1,0 +1,1 @@
+UPDATE businesses SET biz_type = 'חברה ציבורית - בע"מ' WHERE id = 'mp64l97wmqn2';

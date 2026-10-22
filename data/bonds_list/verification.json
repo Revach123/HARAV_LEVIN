@@ -1,7 +1,7 @@
 {
- "updated": "2026-10-21",
+ "updated": "2026-10-22",
  "status": "ok",
- "datawise_date": "2026-10-20",
+ "datawise_date": "2026-10-21",
  "expected": 757,
  "maya": 757,
  "missing_in_maya": [],
@@ -10,10 +10,16 @@
  "limit": 22,
  "dropped_no_terms": [
   {
-   "security_id": 1181007,
-   "security_name": "ביג אגח יט",
-   "company": "ביג מרכזי קניות בע\"מ",
-   "chp_number": "513623314"
+   "security_id": 1243096,
+   "security_name": "מז טפ הנפ נד 73",
+   "company": "מזרחי טפחות חברה להנפקות בע\"מ",
+   "chp_number": "520032046"
+  },
+  {
+   "security_id": 1243104,
+   "security_name": "מז טפ הנפמסחרי6",
+   "company": "מזרחי טפחות חברה להנפקות בע\"מ",
+   "chp_number": "520032046"
   }
  ]
 }

@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-21",
+ "updated": "2026-10-22",
  "upcoming": [
   {
    "id": 10358,
@@ -134,27 +134,6 @@
    "chp_number": "514290345"
   },
   {
-   "id": 10381,
-   "maya_report_id": 1776655,
-   "company_name": "מגדלי ים תיכון",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776655",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "512719485"
-  },
-  {
    "id": 10378,
    "maya_report_id": 1776492,
    "company_name": "אקסטל לימיטד",
@@ -176,25 +155,25 @@
    "chp_number": "1811308"
   },
   {
-   "id": 10375,
-   "maya_report_id": 1776319,
-   "company_name": "דיפלומט",
+   "id": 10390,
+   "maya_report_id": 1777410,
+   "company_name": "ריט אזורים ליוי",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776319",
-   "link_presentation": "https://maya.tase.co.il/he/reports/1775203",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
    "securities": [
     {
      "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilA-",
      "midroog_rating": null
     }
    ],
-   "chp_number": "510400740"
+   "chp_number": "516117181"
   },
   {
    "id": 10128,
@@ -237,6 +216,27 @@
     }
    ],
    "chp_number": "520042847"
+  },
+  {
+   "id": 10387,
+   "maya_report_id": 1777220,
+   "company_name": "פרטנר",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777220",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520044314"
   },
   {
    "id": 10121,
@@ -300,6 +300,27 @@
     }
    ],
    "chp_number": "515541415"
+  },
+  {
+   "id": 10388,
+   "maya_report_id": 1777226,
+   "company_name": "הראל ריביות",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "516561875"
   },
   {
    "id": 9973,
@@ -619,29 +640,6 @@
    "last_seen": "2026-10-19"
   },
   {
-   "chp_number": "512719485",
-   "company_name": "מגדלי ים תיכון",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10353,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1774235",
-   "maya_report_id": 1774235,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-19"
-  },
-  {
    "chp_number": "",
    "company_name": "סלדן",
    "draft_no": 1,
@@ -715,58 +713,108 @@
    ],
    "carried": true,
    "last_seen": "2026-10-20"
+  },
+  {
+   "chp_number": "516117181",
+   "company_name": "ריט אזורים ליוי",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10389,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+   "maya_report_id": 1777280,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilA-",
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-22"
   }
  ],
  "open": [
   {
-   "offer_number": 1240852,
-   "issuer_id": 1668,
-   "issuer_name": "מגוריט",
+   "offer_number": 1217678,
+   "issuer_id": 1614,
+   "issuer_name": "מגדלי ים תיכון",
    "is_new_company": false,
-   "begins_at": "2026-10-21T10:00:00",
-   "ends_at": "2026-10-21T17:00:00",
-   "offer_type": "מחיר",
+   "begins_at": "2026-10-22T09:00:00",
+   "ends_at": "2026-10-22T16:00:00",
+   "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 0.5,
+   "interest": 4.89,
    "is_variable_interest": false,
-   "price_per_unit": 879,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777064",
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777307",
    "securities": [
     {
      "security_id": null,
-     "security_name": "אגח יג'",
+     "security_name": "אג\"ח ח'",
      "security_type": "אג\"ח קונצרני",
-     "linkage_type": "מדד",
+     "linkage_type": "ללא",
      "maalot_rating": null,
      "midroog_rating": "A2.il"
     }
    ],
-   "chp_number": "515434074"
+   "chp_number": "512719485"
   },
   {
-   "offer_number": 1187913,
-   "issuer_id": 1769,
-   "issuer_name": "ג'נריישן קפיטל",
+   "offer_number": 1173640,
+   "issuer_id": 1867,
+   "issuer_name": "דיפלומט",
    "is_new_company": false,
-   "begins_at": "2026-10-21T09:00:00",
-   "ends_at": "2026-10-21T16:00:00",
+   "begins_at": "2026-10-22T09:00:00",
+   "ends_at": "2026-10-22T16:00:00",
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 3.48,
+   "interest": 4.49,
    "is_variable_interest": false,
    "price_per_unit": 1000,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777085",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777320",
    "securities": [
     {
      "security_id": null,
-     "security_name": "אג\"ח ה'",
+     "security_name": "אגח א",
      "security_type": "אג\"ח קונצרני",
-     "linkage_type": "מדד",
+     "linkage_type": "ללא",
      "maalot_rating": "ilA+",
      "midroog_rating": null
     }
    ],
-   "chp_number": "515846558"
+   "chp_number": "510400740"
+  },
+  {
+   "begins_at": "2026-10-21T09:00:00",
+   "chp_number": "515846558",
+   "ends_at": "2026-10-21T16:00:00",
+   "interest": 3.48,
+   "is_new_company": false,
+   "is_variable_interest": false,
+   "issuer_id": 1769,
+   "issuer_name": "ג'נריישן קפיטל",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777085",
+   "offer_number": 1187913,
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "price_per_unit": 1000,
+   "securities": [
+    {
+     "linkage_type": "מדד",
+     "maalot_rating": "ilA+",
+     "midroog_rating": null,
+     "security_id": null,
+     "security_name": "אג\"ח ה'",
+     "security_type": "אג\"ח קונצרני"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-21"
   },
   {
    "begins_at": "2026-10-19T09:00:00",
@@ -794,6 +842,33 @@
    ],
    "carried": true,
    "last_seen": "2026-10-19"
+  },
+  {
+   "begins_at": "2026-10-21T10:00:00",
+   "chp_number": "515434074",
+   "ends_at": "2026-10-21T17:00:00",
+   "interest": 0.5,
+   "is_new_company": false,
+   "is_variable_interest": false,
+   "issuer_id": 1668,
+   "issuer_name": "מגוריט",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777064",
+   "offer_number": 1240852,
+   "offer_type": "מחיר",
+   "offering_type": "הצעה אחידה",
+   "price_per_unit": 879,
+   "securities": [
+    {
+     "linkage_type": "מדד",
+     "maalot_rating": null,
+     "midroog_rating": "A2.il",
+     "security_id": null,
+     "security_name": "אגח יג'",
+     "security_type": "אג\"ח קונצרני"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-21"
   }
  ],
  "companies": [
@@ -815,7 +890,7 @@
    "chp_number": "510400740",
    "name": "דיפלומט",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
@@ -843,7 +918,7 @@
    "chp_number": "512719485",
    "name": "מגדלי ים תיכון",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
@@ -924,6 +999,20 @@
    ]
   },
   {
+   "chp_number": "516117181",
+   "name": "ריט אזורים ליוי",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "516561875",
+   "name": "הראל ריביות",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
    "chp_number": "517207239",
    "name": "מיכל פקדונות",
    "statuses": [
@@ -961,6 +1050,13 @@
   {
    "chp_number": "520042847",
    "name": "אלון רבוע כחול",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "520044314",
+   "name": "פרטנר",
    "statuses": [
     "הנפקה עתידית"
    ]
