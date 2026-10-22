@@ -634,6 +634,15 @@
     try { const blob = await fetchPdfBlob(id), v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<iframe src="${URL.createObjectURL(blob)}#toolbar=0&navpanes=0&view=FitH" title="המסמך" style="width:100%;height:100%;border:0;background:#fff"></iframe>`; }
     catch (e) { const v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<div class="pd-empty" style="color:#fff">הקובץ לא נטען: ${E(e.message)}</div>`; }
   }
+  const AC_VIS = { "": "רק כללי", "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי" };
+  function acBizCard(b, why, on, inline) {          // כרטיסייה שלמה לעסק קיים (כמו לחברה חדשה): שם, ח.פ., קטגוריה, אזור, סוג, סטטוס, רישום ומצב ההיתרים
+    const have = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok">קיים</span>` : (t === "private" ? b.visibility === "פרטי" || b.visibility === "רק פרטי" : b.visibility !== "רק פרטי") ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">לא נדרש</span>`; };
+    const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
+    const line = [b.chp_number ? "ח.פ. " + b.chp_number : "", b.category, b.region, b.biz_type].filter(x => String(x || "").trim()).map(E).join(" · ");
+    return `<div class="pd-ac-card pd-ac-bc${on ? " on" : ""}" data-pick="${b.id}"${inline ? ` onclick="PD._acPick('biz','${b.id}')"` : ""}><div><b>${displayName(b, true)}</b> ${stTag(b.registry_status)}${why ? ` <span class="pd-tag">${E(why)}</span>` : ""}</div>
+      ${reg && pn && reg !== pn ? `<div class="pd-sub">שם ברשם: ${E(reg)}</div>` : ""}${line ? `<div class="pd-sub">${line}</div>` : ""}
+      <div class="pd-sub">${E(AC_VIS[b.visibility || ""] || b.visibility || "")} · הת"ע פרטי: ${have("private")} · הת"ע כללי: ${have("general")}${(b.notes || "").trim() ? " · הערה: " + E(b.notes) : ""}</div></div>`;
+  }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }
   function acBig() {
     const c = U.cur; if (!c) return;
@@ -663,7 +672,7 @@
     if (fresh || !c.sug) c.sug = suggest(c.text, c.file.name);
     if (U.preset && !c.pickInit) { c.pickInit = true; if (!c.pick && bizById(U.preset)) c.pick = { kind: "biz", id: U.preset }; }          // העלאה משורת חברה: החברה נבחרת אוטומטית
     const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40;
-    const cardB = x => { const b = x.b, on = c.pick && c.pick.kind === "biz" && c.pick.id === b.id; return `<div class="pd-ac-card${on ? " on" : ""}" onclick="PD._acPick('biz','${b.id}')"><b>${displayName(b, true)}</b>${stTag(b.registry_status)}<div class="pd-sub">${E(b.chp_number || "")} · ${x.hp ? "לפי ח.פ. במסמך" : "לפי שם"}</div></div>`; };
+    const cardB = x => acBizCard(x.b, x.hp ? "לפי ח.פ. במסמך" : "לפי שם", c.pick && c.pick.kind === "biz" && c.pick.id === x.b.id, true);
     const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div></div>`; };
     const cards = [...sug.cands.slice(0, 20).map(cardB), ...sug.outside.map(cardN)].join("");
     $("pd-up-body").innerHTML = `<div class="pd-ac">
@@ -712,7 +721,7 @@
   function upTog(id, on) { on ? U.cur.sel.add(id) : U.cur.sel.delete(id); const b = $("pd-save"); if (b) b.textContent = U.cur.sel.size ? `שמירה ושיוך ל-${U.cur.sel.size} חברות` : "שמירה בלי שיוך"; }
   function upSearch(q) {
     const out = $("pd-up-res"); if (!out) return;
-    if (U.addCompany) return runCompanySearch(q, out, { exclude: () => false, pick: id => acPick("biz", id), newpick: (hp, name) => acPick("new", hp, name) });
+    if (U.addCompany) return runCompanySearch(q, out, { exclude: () => false, card: b => acBizCard(b, "", U.cur && U.cur.pick && U.cur.pick.kind === "biz" && U.cur.pick.id === b.id, false), pick: id => acPick("biz", id), newpick: (hp, name) => acPick("new", hp, name) });
     runCompanySearch(q, out, { exclude: x => U.cur.sel.has(x), pick: id => { U.cur.sel.add(id); upReview(); },
       mark: r => { U.cur.note = (U.cur.note ? U.cur.note + " | " : "") + markText(r); upReview(); } });
   }
@@ -2687,7 +2696,7 @@
   css.textContent = `
   .pd-na{color:#a0a0a0}
   .pd-ac{display:flex;flex-direction:column;gap:10px;padding:4px 2px}.pd-ac-main{display:flex;gap:14px;align-items:flex-start}.pd-ac-thumb{position:relative;flex:0 0 170px;height:235px;border:1px solid #cfcac0;border-radius:6px;overflow:hidden;cursor:zoom-in;background:#fff}.pd-ac-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}.pd-ac-zoom{position:absolute;bottom:0;inset-inline:0;background:rgba(26,58,92,.78);color:#fff;font-size:12px;text-align:center;padding:3px}
-  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}
+  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-ac-bc .pd-sub{margin-top:2px}
   .pd-ac-topcard{border:2px solid #1a7f73;border-radius:10px;padding:10px 12px;background:#f3faf8}.pd-ac-det{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 14px;font-size:13px;margin:6px 0 8px;padding:6px 8px;background:#fff;border:1px solid #d7e6e3;border-radius:6px}.pd-ac-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.pd-ac-row{display:flex;gap:10px;margin-bottom:8px}.pd-ac-col{flex:1;display:flex;flex-direction:column;gap:4px}.pd-ac-btn{width:100%;padding:10px;font-size:16px;font-weight:700;border:1px solid #1a7f73;border-radius:8px;background:#fff;color:#1a5f56;cursor:pointer}.pd-ac-btn:hover{background:#1a7f73;color:#fff}.pd-ac-btn.both{display:flex}.pd-ac-plus{display:inline-block}.pd-ac-btn{display:flex;flex-direction:column;align-items:center;gap:4px}.pd-ac-col .pd-ac-btn{flex:1}.pd-ac-t{font-size:16px}.pd-ac-warn{display:block;font-size:12px;font-weight:400;color:#8a5a00;background:#fff8e6;border:1px solid #ecd88a;border-radius:6px;padding:3px 8px;width:calc(100% - 16px)}.pd-ac-btn:hover .pd-ac-warn{color:#8a5a00}.pd-ac-lnk{display:inline-block;color:#0645ad;text-decoration:underline;cursor:pointer;margin-inline-start:6px}
   .pd-viewhead{padding:6px 12px;background:#faf9f6;border-bottom:1px solid #e0ddd8;font-size:13px}
   .pd-cdgrid{display:grid;grid-template-columns:1fr;gap:8px}
