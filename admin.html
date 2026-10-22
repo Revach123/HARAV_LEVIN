@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261023c"></script>
+<script src="/permit-docs.js?v=20261024a"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1252,6 +1252,7 @@ function renderForm() {
         </div>
       </div>
 
+      <div id="sim-warn"></div>
       <div id="form-after-permit">
       <div class="field-row">
         <div class="field">
@@ -1553,6 +1554,7 @@ function renderCsvImport() {
 // סמל "הוספה": פס רוחבי וקו כלפי מעלה (בלי הרגל התחתונה של הפלוס)
 const ADD_ICON = '<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="#7b5cd6" stroke-width="3.2" stroke-linecap="round" style="vertical-align:-.12em" aria-hidden="true"><path d="M3 18h18"/><path d="M12 18V4"/></svg>';
 function adminTabs() {
+  if (view === "form" && window.PD && PD.hideTabs && PD.hideTabs()) return "";          // הוספת עסק מתוך העלאת מסמך: בלי הלשוניות למעלה
   const cur = view === "search" ? "search" : (view === "form" && !(editBiz && editBiz.id) ? "add" : "update");
   const t = (id, ico, label, fn) => `<button class="${cur === id ? "active" : ""}" onclick="${fn}">${ico} ${label}</button>`;
   return `<div class="admin-tabs">${t("add", ADD_ICON, "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
@@ -1798,6 +1800,7 @@ function setView(v) {
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (v === "form" && view !== "form") formDirty = false;
   view = v;
+  if (window.PD && PD.onView) PD.onView(v);          // המשך העלאת קבצים אחרי הוספת עסק מתוך חלון ההעלאה
   if (v !== "csv-import") {
     csvStep = "upload"; csvHeaders = []; csvRows = []; csvColMap = {};
     csvErrors = []; csvImported = 0; csvDeleted = 0;
@@ -1866,6 +1869,12 @@ function showChpPart() {                          // מציג את החלק המ
   set("nochp-bar", noChp);
   updateFormGate();
 }
+function updateSimilar() {          // הוספת עסק חדש: אזהרה "קיים עסק(ים) ברשימה על שם..." עם רשימת העסקים בשם דומה
+  const el = document.getElementById("sim-warn"); if (!el) return;
+  if (!window.PD || !PD.simHtml || (editBiz && editBiz.id)) { el.innerHTML = ""; return; }
+  const names = [...new Set(["f-reg", "f-permit"].map(i => (document.getElementById(i)?.value || "").trim()).filter(Boolean))];
+  el.innerHTML = names.map(n => PD.simHtml(n)).join("");
+}
 function updatePermitGate() {          // שאר הטופס נפתח רק אחרי בחירה: "שם מהרשם" או שם אחר של 4 תווים לפחות
   const w = document.getElementById("form-after-permit"); if (!w) return;
   const isEdit = !!editBiz?.id;
@@ -1875,6 +1884,7 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
   const hint = document.getElementById("permit-hint"); if (hint) hint.style.color = (permitMode === "other" && v.length < 4 && v.length > 0) ? "var(--red)" : "var(--light)";
+  updateSimilar();
 }
 function formScopePick(v) {            // "היכן להציג את ההערה" בטופס: כפתורי בחירה
   const h = document.getElementById("f-notes-scope"); if (h) h.value = v;

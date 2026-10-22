@@ -227,11 +227,10 @@
   function homeCards() {
     if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
     const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
-    return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:640px">
+    return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px">
       <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b></button>
       <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b></button>
-      <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b></button>
-      <button class="home-card" onclick="PD.openDash('d')"><span class="ico">⬆</span><b>העלאת מסמכי היתר עיסקא</b></button></div>`;
+      <button class="home-card" onclick="PD.openDash('c')"><span class="ico">🏢</span><b>חברות לא רשומות${n("c")}</b></button></div>`;
   }
 
   const openCompany = bizId => openManage(bizId);
@@ -538,13 +537,21 @@
   // ───────── חלון: העלאת היתר עסקה ─────────
   const U = { queue: [], cur: null, preset: null, jobs: [], jchain: Promise.resolve() };
   function openUpload(opts) {
-    U.queue = []; U.cur = null; U.preset = opts && opts.bizId || null; U.addCompany = !!(opts && opts.addCompany); U.jobs = U.jobs.filter(j => j.status === "run");
+    if (!(opts && opts.resume)) { U.queue = []; U.cur = null; U.list = null; U.formFlow = false; U.keep = false; }
+    U.preset = opts && opts.bizId || null; U.addCompany = !!(opts && opts.addCompany); U.jobs = U.jobs.filter(j => j.status === "run");
     overlay("pd-upload", `<div class="pd-head"><b>העלאת היתר עסקה</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-upload')">✕</button></div>
-      <div id="pd-up-bg"></div><div class="pd-body" id="pd-up-body"></div>`, true);
-    closers["pd-upload"] = () => { if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null; };
-    upPick(); upBg();
+      <div id="pd-up-bg"></div><div class="pd-body" id="pd-up-body"></div>`, U.addCompany ? "full" : true);
+    if (U.addCompany) $("pd-upload").querySelector(".pd-box").classList.add("fs");          // תופס את כל המסך
+    closers["pd-upload"] = () => {
+      if (U.keep) { U.keep = false; return; }          // מעבר זמני לטופס הוספת עסק: ממשיכים אחריו באותה רשימת קבצים
+      acCleanup();
+      if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url); U.cur = null;
+    };
+    if (opts && opts.resume && U.list) { upBg(); acNextOrEnd(true); } else { upPick(); upBg(); }
   }
+  function acCleanup() { if (U.list) U.list.forEach(e => { if (e.c && e.c.url) { try { URL.revokeObjectURL(e.c.url); } catch { /* ללא */ } } }); U.list = null; U.formFlow = false; }
   function upPick(msg) {
+    $("pd-up-body").classList.remove("acfs");
     $("pd-up-body").innerHTML = `
       ${msg ? `<div class="pd-ok-msg">${msg}</div>` : ""}
       <div class="pd-drop" id="pd-drop" onclick="document.getElementById('pd-file').click()">
@@ -558,7 +565,11 @@
     ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("over"); }));
     dz.addEventListener("drop", e => upFiles(e.dataTransfer.files));
   }
-  function upFiles(files) { U.queue = [...files].filter(f => /\.pdf$/i.test(f.name) || f.type === "application/pdf"); if (!U.queue.length) return; upNext(); }
+  function upFiles(files) {
+    const fl = [...files].filter(f => /\.pdf$/i.test(f.name) || f.type === "application/pdf"); if (!fl.length) return;
+    if (U.addCompany) { acStart(fl); return; }
+    U.queue = fl; upNext();
+  }
   // הכנה ברקע של כל קובץ: קריאה, חתימה, בדיקת כפילות וחילוץ טקסט (בתור אחד, כדי לא להעמיס). הקובץ הנוכחי מוצג מיד, וההצעות מגיעות כשהניתוח מסתיים
   const UP_PREP = new WeakMap(); let UP_CHAIN = Promise.resolve();
   function upPrep(file) {
@@ -574,6 +585,7 @@
   }
   const upPrefetch = () => U.queue.slice(0, 2).forEach(upPrep);
   async function upNext() {
+    if (U.addCompany && U.list) return acSkip();
     if (U.cur && U.cur.url) URL.revokeObjectURL(U.cur.url);
     const file = U.queue.shift();
     if (!file) { upPick(U.cur ? "✓ כל הקבצים טופלו." : ""); U.cur = null; return; }
@@ -672,10 +684,8 @@
     const c = U.cur; if (!c) return;
     const job = { c, ids: [], type: c.type || "unknown", note: c.note || "", name: c.file.name, status: "run", msg: "", ext: { chp: hp, name: name || nameNear(c.text, hp) || hp, status: status || "not_in_db" } };
     U.jobs.push(job); upBg();
-    if (U.queue.length) upNext();
-    else if (U.preset) { close("pd-upload"); }
-    else { U.cur = { ...c, url: "" }; upPick("✓ המסמך נשלח לשמירה ושיוך לחברה שאינה במאגר."); }
     U.jchain = U.jchain.then(() => upSend(job));
+    acDone();
   }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }
   function acBig() {
@@ -710,31 +720,100 @@
       ${body}
       ${isNew && !nc ? `<div style="margin:8px 0 0"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}</div>`;
   }
+  // ───────── ריבוי קבצים: רשימת קבצים (U.list) עם תמונות ממוזערות בצד, המסמך הנוכחי באמצע והכרטיסיות בצד שמאל; מעבר בין קבצים בלחיצה על התמונה הממוזערת ─────────
+  function similarBiz(name, excludeId) {          // עסקים ברשימה בשם דומה לשם שמוקלד (הכלה או דמיון מקורב); לאזהרה "קיים עסק ברשימה על שם..." לפני הוספת עסק חדש
+    const q = String(name || "").trim(); if (NORMN(q).length < 3) return [];
+    return bizList().filter(b => b.id !== excludeId).map(b => ({ b, sc: Math.max(fuzzy(q, b.registrar_name || ""), fuzzy(q, b.permit_name || "")) })).filter(x => x.sc >= 0.62).sort((x, y) => y.sc - x.sc).slice(0, 6).map(x => x.b);
+  }
+  const simHtml = (name, excludeId) => { const l = similarBiz(name, excludeId); return l.length ? `<div class="pd-ac-sim">⚠ קיים עסק${l.length > 1 ? "ים" : ""} ברשימה על שם דומה:<ul>${l.map(b => `<li>${displayName(b, true)} <span class="pd-sub">${E((b.chp_number || "").trim() || "בלי ח.פ.")}</span></li>`).join("")}</ul></div>` : ""; };
+  function acStart(files) {
+    U.list = files.map(f => ({ file: f, st: "pending", c: null })); U.idx = 0;
+    if (U.list.length > 1) U.list.forEach((_, i) => acThumb(i));
+    acShow(0);
+  }
+  async function acMake(e) {
+    const o = upPrep(e.file), buf = await o.bufP;
+    const c = e.c = { file: e.file, buf, url: URL.createObjectURL(e.file), text: "", sel: new Set(), type: "unknown", note: "", ocr: false, analyzing: !o.done, entry: e };
+    const fin = () => {
+      c.analyzing = false; c.sha = o.sha; c.dupDoc = o.dup || null;
+      if (!o.dup) { c.text = o.text || ""; c.pages = o.pages; c.textErr = o.textErr; }
+      if (U.cur === c) upReviewAC(true);
+      if (!o.dup) findBonds(c.text).then(bb => { if (bb.length) c.bonds = bb; }).catch(() => {});
+    };
+    if (o.done) fin(); else o.promise.then(fin);
+    return c;
+  }
+  async function acShow(i) {
+    if (!U.list || !U.list[i]) return;
+    U.idx = i; const e = U.list[i];
+    if (!e.c) await acMake(e);
+    U.cur = e.c;
+    for (let k = 1; k <= 3; k++) { const n = U.list[i + k]; if (n && n.st === "pending") upPrep(n.file); }          // הכנה מראש של הקבצים הבאים
+    upReviewAC(true);
+  }
+  function acNextOrEnd() {
+    if (!U.list) return;
+    let n = U.list.findIndex((e, i) => i > U.idx && e.st === "pending");
+    if (n < 0) n = U.list.findIndex(e => e.st === "pending");
+    if (n >= 0) return acShow(n);
+    acFinish();
+  }
+  function acSkip() { if (U.list && U.list[U.idx]) U.list[U.idx].st = "skip"; acNextOrEnd(); }
+  function acDone() { if (U.list && U.list[U.idx]) U.list[U.idx].st = "sent"; acNextOrEnd(); }
+  function acFinish() {
+    if (U.preset) { close("pd-upload"); return; }          // העלאה משורת חברה: חוזרים לטבלה
+    U.cur = null;
+    if ($("pd-up-body")) { upPick("✓ כל הקבצים טופלו. השמירה ממשיכה ברקע."); }
+  }
+  let TH_CHAIN = Promise.resolve();
+  function acThumb(i) {
+    const e = U.list && U.list[i]; if (!e || e.thumb !== undefined) return; e.thumb = "";
+    TH_CHAIN = TH_CHAIN.then(async () => {
+      try {
+        const buf = await upPrep(e.file).bufP, pdf = await pdfDoc(buf), page = await pdf.getPage(1), v0 = page.getViewport({ scale: 1 }), vp = page.getViewport({ scale: 220 / v0.width });
+        const cv = document.createElement("canvas"); cv.width = vp.width; cv.height = vp.height;
+        await page.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+        e.thumb = cv.toDataURL("image/jpeg", 0.7);
+        const img = $("pd-thi-" + i); if (img) { img.src = e.thumb; img.style.display = "block"; const ph = $("pd-thp-" + i); if (ph) ph.style.display = "none"; }
+      } catch { /* בלי תצוגה ממוזערת: נשאר שם הקובץ */ }
+    });
+  }
+  const acThumbs = () => !U.list || U.list.length < 2 ? "" : `<div class="pd-ac-thumbs">${U.list.map((e, i) => `<div class="pd-ac-th ${i === U.idx ? "on" : ""} st-${e.st}" onclick="PD._acShow(${i})" title="${E(e.file.name)}"><img id="pd-thi-${i}" alt="" style="${e.thumb ? "display:block" : "display:none"}"${e.thumb ? ` src="${e.thumb}"` : ""}><div class="pd-ac-thp" id="pd-thp-${i}" style="${e.thumb ? "display:none" : ""}">📄</div><div class="pd-ac-thn">${E(e.file.name)}</div>${e.st === "sent" ? '<span class="pd-ac-thb ok">✓</span>' : e.st === "skip" ? '<span class="pd-ac-thb sk">דולג</span>' : ""}</div>`).join("")}</div>`;
   function upReviewAC(fresh) {
     const c = U.cur; if (!c) return;
     const qEl = $("pd-up-q"), q0 = qEl ? qEl.value : "", f0 = document.activeElement && document.activeElement.id;          // התצוגה מתרעננת כשהניתוח ברקע מסתיים: לא מאבדים מה שהוקלד
+    const keepView = $("pd-ac-frame") && $("pd-ac-frame").dataset.u === c.url;
     if (fresh || !c.sug) c.sug = suggest(c.text, c.file.name);
     if (U.preset && !c.pickInit) { c.pickInit = true; if (!c.pick && bizById(U.preset)) c.pick = { kind: "biz", id: U.preset }; }          // העלאה משורת חברה: החברה נבחרת אוטומטית
-    const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40;
+    const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40, pend = U.list ? U.list.filter(e => e.st === "pending").length : 0;
     const cardB = x => acBizCard(x.b, x.hp ? "לפי ח.פ. במסמך" : "לפי שם", c.pick && c.pick.kind === "biz" && c.pick.id === x.b.id, true);
-    const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div></div>`; };
+    const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><div><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span></div><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div>${simHtml(nm)}</div>`; };
     const cards = [...sug.cands.slice(0, 20).map(cardB), ...sug.outside.map(cardN)].join("");
-    $("pd-up-body").innerHTML = `<div class="pd-ac">
-      <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
-      ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
-      ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
-      <div id="pd-ac-top">${acTop(c)}</div>
-      <div class="pd-ac-main">
-        <div class="pd-ac-thumb" onclick="PD._acBig()" title="לחיצה להצגה גדולה"><iframe src="${c.url}#toolbar=0&navpanes=0&view=Fit" tabindex="-1" title="תצוגה מקדימה"></iframe><div class="pd-ac-zoom">🔍 הגדלה</div></div>
+    const body = $("pd-up-body"); body.classList.add("acfs");
+    const side = `${U.list && U.list.length > 1 ? `<div class="pd-sub">קובץ ${U.idx + 1} מתוך ${U.list.length} · ממתינים: ${pend}</div>` : ""}
+        ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
+        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}). אפשר לשייך אותו מחדש.</div>` : ""}
+        ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+        <div id="pd-ac-top">${acTop(c)}</div>
         <div class="pd-ac-sugs">
           <h4>חברות מוצעות לפי הכתוב במסמך</h4>
           ${cards ? `<div class="pd-ac-grid">${cards}</div>` : (c.analyzing ? "" : `<div class="pd-sub">לא זוהתה חברה במסמך. אפשר לחפש ידנית.</div>`)}
           <input class="pd-in" id="pd-up-q" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:8px"><div id="pd-up-res"></div>
-          <div style="margin-top:8px">${c.ncOpen ? `<div class="pd-ac-nc"><b>עסק חדש בלי ח.פ.</b><div style="display:flex;gap:6px;margin-top:4px"><input class="pd-in" id="pd-ac-ncn" value="${E(c.ncVal || "")}" placeholder="שם העסק" oninput="PD._acNcVal(this.value)" onkeydown="if(event.key==='Enter')PD._acNcGo()" autocomplete="off" style="flex:1"><button class="pd-btn primary" onclick="PD._acNcGo()">המשך</button><button class="pd-btn" onclick="PD._acNc(0)">ביטול</button></div></div>` : `<button class="pd-btn" onclick="PD._acNc(1)" title="הוספת עסק חדש שאין לו ח.פ.: מקלידים שם, ובוחרים פרטי / כללי / משותף">🏷️ עסק חדש בלי ח.פ.</button>`}</div>
+          <div style="margin-top:8px">${c.ncOpen ? `<div class="pd-ac-nc"><b>עסק חדש בלי ח.פ.</b><div style="display:flex;gap:6px;margin-top:4px"><input class="pd-in" id="pd-ac-ncn" value="${E(c.ncVal || "")}" placeholder="שם העסק" oninput="PD._acNcVal(this.value)" onkeydown="if(event.key==='Enter')PD._acNcGo()" autocomplete="off" style="flex:1"><button class="pd-btn primary" onclick="PD._acNcGo()">המשך</button><button class="pd-btn" onclick="PD._acNc(0)">ביטול</button></div><div id="pd-ac-ncsim">${simHtml(c.ncVal || "")}</div></div>` : `<button class="pd-btn" onclick="PD._acNc(1)" title="הוספת עסק חדש שאין לו ח.פ.: מקלידים שם, ובוחרים פרטי / כללי / משותף">🏷️ עסק חדש בלי ח.פ.</button>`}</div>
         </div>
-      </div>
-      <div class="pd-btns"><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
-      <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div></div>`;
+        <div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
+        <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div>`;
+    const multi = !!(U.list && U.list.length > 1);
+    if (keepView) {          // המסמך עצמו לא נטען מחדש: מרעננים רק את התמונות הממוזערות ואת הכרטיסיות
+      $("pd-ac-root").className = "pd-ac " + (multi ? "multi" : "single");
+      $("pd-ac-thw").innerHTML = acThumbs(); $("pd-ac-side").innerHTML = side;
+      $("pd-ac-fname").textContent = `${c.file.name} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}`;
+    } else {
+      body.innerHTML = `<div class="pd-ac ${multi ? "multi" : "single"}" id="pd-ac-root"><div id="pd-ac-thw">${acThumbs()}</div>
+        <div class="pd-ac-view" id="pd-ac-viewbox"><div class="pd-sub" style="padding:2px 6px" id="pd-ac-fname">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}</div></div>
+        <div class="pd-ac-side" id="pd-ac-side">${side}</div></div>`;
+      const f = document.createElement("iframe"); f.id = "pd-ac-frame"; f.dataset.u = c.url; f.title = "המסמך"; f.src = `${c.url}#navpanes=0&view=FitH`; $("pd-ac-viewbox").appendChild(f);
+    }
     if (q0) { const e = $("pd-up-q"); if (e) { e.value = q0; upSearch(q0); } }
     if (f0 === "pd-up-q" || f0 === "pd-ac-ncn") { const e = $(f0); if (e) { e.focus(); try { e.setSelectionRange(e.value.length, e.value.length); } catch { /* ללא */ } } }
   }
@@ -753,10 +832,8 @@
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
     if (bz && slots.some(t => acState(bz, t).cls === "na")) job.vis = { id, value: "פרטי" };          // החברה לא רשומה בסוג הזה: משנים את הרישום ל"יש פרטי" (כלומר גם פרטי וגם כללי)
     U.jobs.push(job); upBg();
-    if (U.queue.length) upNext();
-    else if (U.preset) { close("pd-upload"); say("המסמך נשלח לשמירה ושיוך (ברקע)"); }          // העלאה משורת חברה: חוזרים לטבלה
-    else { U.cur = { ...c, url: "" }; upPick("✓ המסמך נשלח לשמירה ושיוך. הפעולה ממשיכה ברקע."); }
     U.jchain = U.jchain.then(() => upSend(job));
+    acDone();          // עוברים מיד לקובץ הבא (או סיום)
   }
   // התאמות מובילות למעלה (ח.פ. או שם ברור), פחות מתאימות מתחת
   function candGroups(cands, card) {
@@ -835,6 +912,7 @@
     try {
       if (o && o.type) c.type = o.type;
       const doc = await upPost(c, [...c.sel]); replaceDoc(doc);
+      if (U.list && U.list[U.idx]) { U.list[U.idx].st = "sent"; U.keep = true; U.formFlow = true; }          // הקובץ הועלה: אחרי יצירת העסק חוזרים לחלון ההעלאה ועוברים לקובץ הבא
       const type = c.type, vis = o && o.slots ? (o.slots.length === 2 ? "פרטי" : o.slots[0] === "private" ? "רק פרטי" : "") : undefined;
       const cb = async bid => {
         try { const d = S.byId.get(doc.id), r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: [...new Set([...((d && d.business_ids) || []), bid])], doc_type: type, ...(o && o.slots ? { slots: { [bid]: o.slots } } : {}) }); replaceDoc(r.doc); refresh(); }
@@ -2090,7 +2168,7 @@
   }
   function ndShow() {
     if (!$("pd-nd-body") || !$("pd-nd-tabs")) return;
-    $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"], ["d", "העלאת מסמכי היתר עיסקא"]]
+    $("pd-nd-tabs").innerHTML = [["a", "חברות שחסרים להן שטרות"], ["b", "שטרות שמחכים לשיוך"], ["c", "חברות לא רשומות"]]
       .map(([t, l]) => `<button class="${ND.tab === t ? "active" : ""}" onclick="PD._ndTab('${t}')"><span>${l}</span><span class="pd-tabn" ${t === "d" || t === "f" ? 'style="visibility:hidden"' : ""}>${t === "d" || t === "f" ? 0 : ndCount(t)}</span></button>`).join("");
     if (ND.tab === "e") $("pd-nd-tabs").innerHTML = `<button class="active"><span>👥 מצטרפים</span>${J.total ? ` <span class="pd-tabn">${ndCount("e")}</span>` : ""}</button>`;          // מצטרפים: מסך נפרד, לא לשונית של ניהול השטרות
     const body = $("pd-nd-body"), keepEl = document.activeElement && (["pd-nd-q", "pd-nd-jq", "pd-f-q", "pd-nd-tq"].includes(document.activeElement.id) || /^pd-cf-/.test(document.activeElement.id)) && body.contains(document.activeElement) ? document.activeElement : null, ks = keepEl ? [keepEl.selectionStart, keepEl.selectionEnd] : null;
@@ -2772,8 +2850,11 @@
   const css = document.createElement("style");
   css.textContent = `
   .pd-na{color:#a0a0a0}
-  .pd-ac{display:flex;flex-direction:column;gap:10px;padding:4px 2px}.pd-ac-main{display:flex;gap:14px;align-items:flex-start}.pd-ac-thumb{position:relative;flex:0 0 170px;height:235px;border:1px solid #cfcac0;border-radius:6px;overflow:hidden;cursor:zoom-in;background:#fff}.pd-ac-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}.pd-ac-zoom{position:absolute;bottom:0;inset-inline:0;background:rgba(26,58,92,.78);color:#fff;font-size:12px;text-align:center;padding:3px}
-  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-chipx-s2>span.chg,.pd-chipx.big .pd-chipx-s2>span.chg{background:#eaf2fd;color:#1a5fb4;font-weight:700}.pd-chipx.big.chg{border-color:#1a5fb4;border-style:dashed}.pd-chipx.big.chg .pd-chipx-s{background:#eaf2fd;color:#1a5fb4;font-size:15px}.pd-ac-nc{border:1px dashed #c0392b;border-radius:8px;padding:8px 10px;background:#fff8f7}.pd-ac-addbtn{background:#1e7e4a !important;border-color:#1e7e4a !important;color:#fff !important;font-weight:700}.pd-ac-addbtn:hover{background:#176a3d !important}.pd-ac-plain{background:none !important;border:1px solid #cfcac0 !important;color:#555 !important;font-size:12px !important;padding:2px 8px !important}
+  .pd-box.wide.full.fs{width:100vw;height:100vh;max-height:100vh;border-radius:0}#pd-up-body.acfs{display:flex;flex:1;min-height:0;padding:8px 10px;overflow:hidden}
+  .pd-ac{display:flex;flex-direction:row;gap:12px;width:100%;height:100%;min-height:0}.pd-ac #pd-ac-thw{display:contents}.pd-ac-thumbs{flex:0 0 132px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-inline-end:4px}.pd-ac-view{flex:1 1 50%;min-width:0;display:flex;flex-direction:column}.pd-ac-view iframe{flex:1;width:100%;border:1px solid #cfcac0;border-radius:6px;background:#777}.pd-ac.multi .pd-ac-view{flex:1 1 44%}.pd-ac-side{flex:1 1 50%;min-width:0;overflow-y:auto;padding-inline-start:6px}.pd-ac.multi .pd-ac-side{flex:1 1 38%}
+  .pd-ac-th{position:relative;border:2px solid #d5d0c6;border-radius:8px;background:#fff;cursor:pointer;padding:3px;text-align:center}.pd-ac-th.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd}.pd-ac-th img{width:100%;height:auto;border-radius:4px}.pd-ac-thp{font-size:32px;padding:14px 0}.pd-ac-thn{font-size:11px;color:#555;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pd-ac-th.st-sent,.pd-ac-th.st-skip{opacity:.65}.pd-ac-thb{position:absolute;top:4px;inset-inline-start:4px;font-size:11px;font-weight:700;border-radius:8px;padding:0 6px;color:#fff}.pd-ac-thb.ok{background:#1e7e4a}.pd-ac-thb.sk{background:#888}
+  .pd-ac-main{display:flex;gap:14px;align-items:flex-start}.pd-ac-thumb{position:relative;flex:0 0 170px;height:235px;border:1px solid #cfcac0;border-radius:6px;overflow:hidden;cursor:zoom-in;background:#fff}.pd-ac-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}.pd-ac-zoom{position:absolute;bottom:0;inset-inline:0;background:rgba(26,58,92,.78);color:#fff;font-size:12px;text-align:center;padding:3px}
+  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-ac-sim{margin-top:6px;padding:6px 10px;background:#fff4d6;border:1px solid #e8c36a;border-radius:6px;color:#7a4d00;font-size:13px}.pd-ac-sim ul{margin:3px 18px 0}.pd-chipx-s2>span.chg,.pd-chipx.big .pd-chipx-s2>span.chg{background:#eaf2fd;color:#1a5fb4;font-weight:700}.pd-chipx.big.chg{border-color:#1a5fb4;border-style:dashed}.pd-chipx.big.chg .pd-chipx-s{background:#eaf2fd;color:#1a5fb4;font-size:15px}.pd-ac-nc{border:1px dashed #c0392b;border-radius:8px;padding:8px 10px;background:#fff8f7}.pd-ac-addbtn{background:#1e7e4a !important;border-color:#1e7e4a !important;color:#fff !important;font-weight:700}.pd-ac-addbtn:hover{background:#176a3d !important}.pd-ac-plain{background:none !important;border:1px solid #cfcac0 !important;color:#555 !important;font-size:12px !important;padding:2px 8px !important}
   .pd-ac-grid,.pd-ac #pd-up-res,.pd-ac #pd-up-res .pd-regbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;align-items:start}.pd-ac-grid .pd-ac-card,.pd-ac #pd-up-res .pd-ac-card{margin:0;height:100%;box-sizing:border-box}.pd-ac #pd-up-res{margin-top:8px}.pd-ac #pd-up-res .pd-grp,.pd-ac #pd-up-res>.pd-sub,.pd-ac #pd-up-res>.pd-regbox,.pd-ac #pd-up-res .pd-regbox>.pd-grp,.pd-ac #pd-up-res .pd-regbox>.pd-sub{grid-column:1/-1}.pd-ac-bc .pd-sub{margin-top:2px}.pd-ac-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
   .pd-chipx{display:inline-flex;flex-direction:column;align-items:center;min-width:64px;border-radius:8px;overflow:hidden;border:1px solid #cfcac0;font-size:12px;line-height:1.3;background:#fff}.pd-chipx-t{padding:1px 8px;background:#f1efe9;color:#333;font-weight:600;width:100%;text-align:center;box-sizing:border-box}.pd-chipx-s{padding:1px 8px;font-weight:700;width:100%;text-align:center;box-sizing:border-box}
   .pd-chipx.ok{border-color:#9ccfae}.pd-chipx.ok .pd-chipx-s{background:#e3f4e8;color:#1e7e4a;font-size:14px}.pd-chipx.miss{border-color:#eab0a8}.pd-chipx.miss .pd-chipx-s{background:#fdecea;color:#c0392b}.pd-chipx.na .pd-chipx-s{background:#f4f4f4;color:#888;font-weight:400}
@@ -2884,9 +2965,9 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
