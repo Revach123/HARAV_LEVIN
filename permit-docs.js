@@ -634,18 +634,27 @@
     try { const blob = await fetchPdfBlob(id), v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<iframe src="${URL.createObjectURL(blob)}#toolbar=0&navpanes=0&view=FitH" title="המסמך" style="width:100%;height:100%;border:0;background:#fff"></iframe>`; }
     catch (e) { const v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<div class="pd-empty" style="color:#fff">הקובץ לא נטען: ${E(e.message)}</div>`; }
   }
-  function acChip(b, t) {          // שבב מצב הת"ע: סמל מסמך, כיתוב פרטי / כללי מעל, וסימן: ✓ ירוק אם קיים, "חסר" אדום אם חסר, "לא נדרש" אפור
-    const he = t === "private" ? "פרטי" : "כללי", d = slotDoc(b.id, t), need = t === "private" ? b.visibility === "פרטי" || b.visibility === "רק פרטי" : b.visibility !== "רק פרטי";
-    const cls = d ? "ok" : need ? "miss" : "na", st = d ? "✓" : need ? "חסר" : "לא נדרש";
-    return `<span class="pd-chipx ${cls}" title="הת&quot;ע ${he}: ${d ? "קיים" : need ? "חסר" : "לא נדרש"}"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">${st}</span></span>`;
+  const AC_VIS = { "": "רק כללי", "פרטי": "יש פרטי", "רק פרטי": "רק פרטי" };
+  function acState(b, t) {          // מצב הת"ע של סוג אחד: ok (קיים) / miss (חסר) / na (לא נדרש)
+    const d = slotDoc(b.id, t), need = t === "private" ? b.visibility === "פרטי" || b.visibility === "רק פרטי" : b.visibility !== "רק פרטי";
+    const cls = d ? "ok" : need ? "miss" : "na";
+    return { d, cls, st: d ? "✓" : need ? "חסר" : "לא נדרש" };
   }
-  const AC_VIS = { "": "רק כללי", "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי" };
+  function acChip(b, t) {          // שבב מצב: סמל מסמך, כיתוב פרטי / כללי מעל, וסימן: ✓ ירוק אם קיים, "חסר" אדום אם חסר, "לא נדרש" אפור
+    const he = t === "private" ? "פרטי" : "כללי", x = acState(b, t);
+    return `<span class="pd-chipx ${x.cls}" title="הת&quot;ע ${he}: ${x.d ? "קיים" : x.cls === "miss" ? "חסר" : "לא נדרש"}"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">${x.st}</span></span>`;
+  }
+  const acShared = b => { const dp = slotDoc(b.id, "private"), dg = slotDoc(b.id, "general"); return !!(dp && dg && dp.id === dg.id); };
+  function acChips(b) {          // מסמך משותף לפרטי ולכללי: שבב אחד מחובר עם הכיתוב "מסמך משותף"
+    if (acShared(b)) return `<span class="pd-chipx shared ok" title="מסמך משותף: פרטי + כללי"><span class="pd-chipx-t">📄 מסמך משותף</span><span class="pd-chipx-s2"><span>פרטי ✓</span><span>כללי ✓</span></span></span>`;
+    return acChip(b, "private") + acChip(b, "general");
+  }
   function acBizCard(b, why, on, inline) {          // כרטיסייה שלמה לעסק קיים (כמו לחברה חדשה): שם, ח.פ., קטגוריה, אזור, סוג, סטטוס, רישום ומצב ההיתרים
     const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
     const line = [b.chp_number ? "ח.פ. " + b.chp_number : "", b.category, b.region, b.biz_type].filter(x => String(x || "").trim()).map(E).join(" · ");
     return `<div class="pd-ac-card pd-ac-bc${on ? " on" : ""}" data-pick="${b.id}"${inline ? ` onclick="PD._acPick('biz','${b.id}')"` : ""}><div><b>${displayName(b, true)}</b> ${stTag(b.registry_status)}${why ? ` <span class="pd-tag">${E(why)}</span>` : ""}</div>
       ${reg && pn && reg !== pn ? `<div class="pd-sub">שם ברשם: ${E(reg)}</div>` : ""}${line ? `<div class="pd-sub">${line}</div>` : ""}
-      <div class="pd-ac-chips">${acChip(b, "private")}${acChip(b, "general")}<span class="pd-sub">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}${(b.notes || "").trim() ? " · הערה: " + E(b.notes) : ""}</span></div></div>`;
+      <div class="pd-sub" style="font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div><div class="pd-ac-chips">${acChips(b)}</div>${(b.notes || "").trim() ? `<div class="pd-sub">הערה: ${E(b.notes)}</div>` : ""}</div>`;
   }
   function acExt(hp, name, status) {          // שיוך המסמך בלבד: לחברה שאינה במאגר (נרשמת ברשימת החברות שאינן במאגר), בלי להוסיף אותה למאגר
     const c = U.cur; if (!c) return;
@@ -664,19 +673,23 @@
   function acTop(c) {
     const p = c.pick; if (!p) return "";
     const isNew = p.kind === "new", b = isNew ? null : bizById(p.id); if (!isNew && !b) return "";
-    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר <span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD._acDoc('${cur.id}')">הצגת השטר הקיים</span></span>` : ""; };          // בתוך הכפתור עצמו
-    const wp = warn("private", ""), wg = warn("general", ""), wb = [warn("private", 'הת"ע פרטי'), warn("general", 'הת"ע כללי')].join("");
-    const VIS = { "": 'רק כללי', "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי" };
+    const lnk = d => `<span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD._acDoc('${d.id}')">הצגת השטר הקיים</span>`;
+    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר ${lnk(cur)}</span>` : ""; };
     const det = !b ? "" : (() => {          // כרטיסיית פרטי העסק (עסק קיים במאגר)
       const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
-      const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], ["ח.פ.", b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["רישום ברשימות", VIS[b.visibility || ""] || b.visibility], ['אישור אג"ח', b.agch_approved], ["הערה", b.notes]]
+      const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], ["ח.פ.", b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["אישור אג\"ח", b.agch_approved], ["הערה", b.notes]]
         .filter(x => String(x[1] || "").trim());
-      return `<div class="pd-ac-det">${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}<div class="pd-ac-chips" style="grid-column:1/-1">${acChip(b, "private")}${acChip(b, "general")}</div></div>`;
+      return `<div class="pd-ac-det"><div style="grid-column:1/-1;font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div>${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}</div>`;
     })();
+    // הפיצרים הם גם כפתורי הבחירה: פרטי / כללי / מסמך משותף. הסטטוס (✓ / חסר / לא נדרש) והאזהרה על שטר קיים בתוך הפיצר
+    const big = t => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
+      return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b ? warn(t, "") : ""}</button>`; };
+    const sp = b ? acState(b, "private") : null, sg = b ? acState(b, "general") : null;
+    const both = `<button type="button" class="pd-chipx big wide both ${b ? (acShared(b) ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> מסמך משותף</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls}">פרטי ${sp.st}</span><span class="${sg.cls}">כללי ${sg.st}</span></span>${warn("private", 'הת"ע פרטי')}${warn("general", 'הת"ע כללי')}` : `<span class="pd-chipx-s2"><span>פרטי + כללי</span></span>`}</button>`;
     return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${isNew ? "ח.פ. " + E(p.hp) : E(b.chp_number || "")}</span>${isNew ? ' <span class="pd-tag red">חברה חדשה: תתווסף למאגר</span>' : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
-      ${det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (הלחיצה שומרת ועוברת הלאה)</div>
-      <div class="pd-ac-row"><div class="pd-ac-col"><button class="pd-ac-btn" onclick="PD._acGo('private')"><span class="pd-ac-t">פרטי</span>${wp}</button></div><div class="pd-ac-col"><button class="pd-ac-btn" onclick="PD._acGo('general')"><span class="pd-ac-t">כללי</span>${wg}</button></div></div>
-      ${isNew ? `<div style="margin:2px 0 8px"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}<button class="pd-ac-btn both" onclick="PD._acGo('both')"><span class="pd-ac-t"><span class="pd-ac-plus">${PLUS_T}</span> מסמך משותף: פרטי + כללי</span>${wb}</button></div>`;
+      ${det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (לחיצה על פיצר שומרת ועוברת הלאה)</div>
+      <div class="pd-ac-row">${big("private")}${big("general")}</div>${both}
+      ${isNew ? `<div style="margin:8px 0 0"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}</div>`;
   }
   function upReviewAC(fresh) {
     const c = U.cur; if (!c) return;
@@ -2714,6 +2727,8 @@
   .pd-ac-grid,.pd-ac #pd-up-res,.pd-ac #pd-up-res .pd-regbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;align-items:start}.pd-ac-grid .pd-ac-card,.pd-ac #pd-up-res .pd-ac-card{margin:0;height:100%;box-sizing:border-box}.pd-ac #pd-up-res{margin-top:8px}.pd-ac #pd-up-res .pd-grp,.pd-ac #pd-up-res>.pd-sub,.pd-ac #pd-up-res>.pd-regbox,.pd-ac #pd-up-res .pd-regbox>.pd-grp,.pd-ac #pd-up-res .pd-regbox>.pd-sub{grid-column:1/-1}.pd-ac-bc .pd-sub{margin-top:2px}.pd-ac-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
   .pd-chipx{display:inline-flex;flex-direction:column;align-items:center;min-width:64px;border-radius:8px;overflow:hidden;border:1px solid #cfcac0;font-size:12px;line-height:1.3;background:#fff}.pd-chipx-t{padding:1px 8px;background:#f1efe9;color:#333;font-weight:600;width:100%;text-align:center;box-sizing:border-box}.pd-chipx-s{padding:1px 8px;font-weight:700;width:100%;text-align:center;box-sizing:border-box}
   .pd-chipx.ok{border-color:#9ccfae}.pd-chipx.ok .pd-chipx-s{background:#e3f4e8;color:#1e7e4a;font-size:14px}.pd-chipx.miss{border-color:#eab0a8}.pd-chipx.miss .pd-chipx-s{background:#fdecea;color:#c0392b}.pd-chipx.na .pd-chipx-s{background:#f4f4f4;color:#888;font-weight:400}
+  .pd-chipx-s2{display:flex;width:100%}.pd-chipx-s2>span{flex:1;padding:1px 8px;text-align:center;font-weight:700;background:#e3f4e8;color:#1e7e4a;white-space:nowrap}.pd-chipx-s2>span+span{border-inline-start:1px solid #9ccfae}.pd-chipx.shared{min-width:130px}.pd-chipx-s2>span.miss{background:#fdecea;color:#c0392b}.pd-chipx-s2>span.na{background:#f4f4f4;color:#888;font-weight:400}
+  button.pd-chipx{font-family:inherit;padding:0;cursor:pointer;text-align:center}.pd-chipx.big{flex:1;min-width:0;font-size:15px;border-width:2px;border-radius:10px}.pd-chipx.big .pd-chipx-t{font-size:17px;padding:6px 10px}.pd-chipx.big .pd-chipx-s{font-size:18px;padding:6px 10px}.pd-chipx.big:hover{box-shadow:0 0 0 3px #bfe3dd}.pd-chipx.big.new .pd-chipx-t{padding:14px 10px;background:#fff}.pd-chipx.big.wide{display:flex;width:100%;margin-top:6px}.pd-chipx.big .pd-chipx-s2>span{padding:6px 10px;font-size:15px}.pd-chipx.big .pd-ac-warn{width:calc(100% - 12px);margin:4px 6px;box-sizing:border-box;text-align:start}.pd-chipx.big.both .pd-chipx-t{font-size:17px}.pd-chipx.new{border-color:#1a7f73}
   .pd-ac-topcard{border:2px solid #1a7f73;border-radius:10px;padding:10px 12px;background:#f3faf8}.pd-ac-det{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:2px 14px;font-size:13px;margin:6px 0 8px;padding:6px 8px;background:#fff;border:1px solid #d7e6e3;border-radius:6px}.pd-ac-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.pd-ac-row{display:flex;gap:10px;margin-bottom:8px}.pd-ac-col{flex:1;display:flex;flex-direction:column;gap:4px}.pd-ac-btn{width:100%;padding:10px;font-size:16px;font-weight:700;border:1px solid #1a7f73;border-radius:8px;background:#fff;color:#1a5f56;cursor:pointer}.pd-ac-btn:hover{background:#1a7f73;color:#fff}.pd-ac-btn.both{display:flex}.pd-ac-plus{display:inline-block}.pd-ac-btn{display:flex;flex-direction:column;align-items:center;gap:4px}.pd-ac-col .pd-ac-btn{flex:1}.pd-ac-t{font-size:16px}.pd-ac-warn{display:block;font-size:12px;font-weight:400;color:#8a5a00;background:#fff8e6;border:1px solid #ecd88a;border-radius:6px;padding:3px 8px;width:calc(100% - 16px)}.pd-ac-btn:hover .pd-ac-warn{color:#8a5a00}.pd-ac-lnk{display:inline-block;color:#0645ad;text-decoration:underline;cursor:pointer;margin-inline-start:6px}
   .pd-viewhead{padding:6px 12px;background:#faf9f6;border-bottom:1px solid #e0ddd8;font-size:13px}
   .pd-cdgrid{display:grid;grid-template-columns:1fr;gap:8px}
