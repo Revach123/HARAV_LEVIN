@@ -681,14 +681,19 @@
         .filter(x => String(x[1] || "").trim());
       return `<div class="pd-ac-det"><div style="grid-column:1/-1;font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div>${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}</div>`;
     })();
-    // הפיצרים הם גם כפתורי הבחירה: פרטי / כללי / מסמך משותף. הסטטוס (✓ / חסר / לא נדרש) והאזהרה על שטר קיים בתוך הפיצר
-    const big = t => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
-      return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b ? warn(t, "") : ""}</button>`; };
+    // הפיצרים הם גם כפתורי הבחירה. מסמך משותף קיים / חברה חדשה: למעלה "החלפת המסמך המשותף" ומתחתיו פרטי / כללי. אחרת: פרטי / כללי למעלה והמשותף מתחת
+    const sharedFirst = isNew || acShared(b);
+    const big = (t, withWarn) => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
+      return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b && withWarn ? warn(t, "") : ""}</button>`; };
     const sp = b ? acState(b, "private") : null, sg = b ? acState(b, "general") : null;
-    const both = `<button type="button" class="pd-chipx big wide both ${b ? (acShared(b) ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> מסמך משותף</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls}">פרטי ${sp.st}</span><span class="${sg.cls}">כללי ${sg.st}</span></span>${warn("private", 'הת"ע פרטי')}${warn("general", 'הת"ע כללי')}` : `<span class="pd-chipx-s2"><span>פרטי + כללי</span></span>`}</button>`;
+    const bothTitle = b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
+    const bothWarn = !b ? "" : sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "";          // אותו מסמך: קישור אחד להצגה
+    const both = `<button type="button" class="pd-chipx big wide both ${b ? (sharedFirst ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> ${bothTitle}</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls}">פרטי ${sp.st}</span><span class="${sg.cls}">כללי ${sg.st}</span></span>` : ""}${bothWarn}</button>`;
+    const pair = w => `<div class="pd-ac-row">${big("private", w)}${big("general", w)}</div>`;
+    const body = sharedFirst ? `${both}<div class="pd-sub" style="margin:8px 0 4px">או לסמן את המסמך החדש רק כ:</div>${pair(false)}` : `${pair(true)}${both}`;
     return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${isNew ? "ח.פ. " + E(p.hp) : E(b.chp_number || "")}</span>${isNew ? ' <span class="pd-tag red">חברה חדשה: תתווסף למאגר</span>' : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
       ${det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (לחיצה על פיצר שומרת ועוברת הלאה)</div>
-      <div class="pd-ac-row">${big("private")}${big("general")}</div>${both}
+      ${body}
       ${isNew ? `<div style="margin:8px 0 0"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}</div>`;
   }
   function upReviewAC(fresh) {
