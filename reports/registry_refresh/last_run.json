@@ -12,19 +12,19 @@
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-21T08:03:26.337187Z",
+  "updated": "2026-10-22T08:00:13.106446Z",
   "source": "d1",
   "businesses": 1274,
   "numeric_chp": 1270,
   "found_in_registry": 1182,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2227,
-  "datawise_date": "2026-10-20",
+  "datawise_rows": 2226,
+  "datawise_date": "2026-10-21",
   "bond_companies": 363,
   "changes": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 1,
    "tase_has_agch": 0,
    "registry_status": 0
   },
@@ -42,10 +42,18 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mp64l97wmqn2",
+   "chp": "520020942",
+   "field": "biz_type",
+   "old": "חברה ציבורית - בע\"מ",
+   "new": "חברה פרטית - בע\"מ"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
