@@ -2823,7 +2823,7 @@
   .pd-danger{margin-top:18px;padding-top:12px;border-top:1px dashed #e6a39b}
   .pd-drop{border:2px dashed #b8b2a6;border-radius:12px;padding:40px;text-align:center;cursor:pointer;margin:14px}.pd-drop.over{background:#edf7f1;border-color:#1e7e4a}
   .pd-cand{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid #e0ddd8;border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:13px}
-  .pd-tag{background:#e7f1fb;color:#1a3a5c;border-radius:9px;padding:1px 7px;font-size:11px;margin-inline-start:6px;font-weight:400}.pd-tag.warn{background:#fff1d6;color:#8a5a00}
+  .pd-tag{background:#e7f1fb;color:#1a3a5c;border-radius:9px;padding:1px 7px;font-size:11px;margin-inline-start:6px;font-weight:400;white-space:nowrap;display:inline-block}.pd-tag.warn{background:#fff1d6;color:#8a5a00}
   .pd-warnbox{background:#fff6e0;border:1px solid #e8c36a;border-radius:7px;padding:7px 10px;font-size:12.5px;margin:6px 0}
   .pd-dup{background:#fdecea;border:1px solid #e6a39b;border-radius:8px;padding:12px;font-size:13.5px;line-height:1.6}
   .pd-ok-msg{background:#edf7f1;border:1px solid #a8d9bc;border-radius:8px;padding:8px 12px;margin:10px 14px 0}
