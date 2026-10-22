@@ -134,8 +134,8 @@
       (miss.length ? `<div class="pd-grp" style="color:#c0392b">לא במאגר שלנו (נמצאו ברשם)</div>` + miss.slice(0, 8).map(r => `
         <div class="pd-reg"><div><b>${E(r.name)}</b> <span class="pd-tag red">לא במאגר</span>${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div>
           <div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div>
-          <div class="pd-btns" style="margin-top:4px">${o.ext ? `<button class="pd-btn primary" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="הסטטוס (${EXT_HE[extGuess(r.status)]}) נקבע לפי הרשם, ואפשר לשנות אותו ברשימת החברות שאינן במאגר">שיוך</button>` : `<button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>`}
-            <button class="pd-btn" data-addreg="${E(r.id)}" data-name="${E(r.name)}" data-defunct="${r.defunct ? 1 : 0}">${o.newpick ? "בחירה (תתווסף למאגר)" : "הוספה למאגר…"}</button></div></div>`).join("") +
+          <div class="pd-btns" style="margin-top:4px">${o.newpick ? `<button class="pd-btn pd-ac-addbtn" data-addreg="${E(r.id)}" data-name="${E(r.name)}" data-defunct="${r.defunct ? 1 : 0}">➕ הוספת העסק לרשימת המאושרים</button> <button class="pd-mini pd-ac-plain" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="המסמך משויך לחברה בלי להוסיף אותה למאגר (תופיע ברשימת החברות שאינן במאגר)">שיוך המסמך בלבד</button></div></div>` : `${o.ext ? `<button class="pd-btn primary" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="הסטטוס (${EXT_HE[extGuess(r.status)]}) נקבע לפי הרשם, ואפשר לשנות אותו ברשימת החברות שאינן במאגר">שיוך</button>` : `<button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>`}
+            <button class="pd-btn" data-addreg="${E(r.id)}" data-name="${E(r.name)}" data-defunct="${r.defunct ? 1 : 0}">הוספה למאגר…</button></div></div>`}`).join("") +
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
   }
   let pendingAdd = null;
@@ -647,6 +647,15 @@
       ${reg && pn && reg !== pn ? `<div class="pd-sub">שם ברשם: ${E(reg)}</div>` : ""}${line ? `<div class="pd-sub">${line}</div>` : ""}
       <div class="pd-ac-chips">${acChip(b, "private")}${acChip(b, "general")}<span class="pd-sub">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}${(b.notes || "").trim() ? " · הערה: " + E(b.notes) : ""}</span></div></div>`;
   }
+  function acExt(hp, name, status) {          // שיוך המסמך בלבד: לחברה שאינה במאגר (נרשמת ברשימת החברות שאינן במאגר), בלי להוסיף אותה למאגר
+    const c = U.cur; if (!c) return;
+    const job = { c, ids: [], type: c.type || "unknown", note: c.note || "", name: c.file.name, status: "run", msg: "", ext: { chp: hp, name: name || nameNear(c.text, hp) || hp, status: status || "not_in_db" } };
+    U.jobs.push(job); upBg();
+    if (U.queue.length) upNext();
+    else if (U.preset) { close("pd-upload"); }
+    else { U.cur = { ...c, url: "" }; upPick("✓ המסמך נשלח לשמירה ושיוך לחברה שאינה במאגר."); }
+    U.jchain = U.jchain.then(() => upSend(job));
+  }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }
   function acBig() {
     const c = U.cur; if (!c) return;
@@ -667,7 +676,7 @@
     return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${isNew ? "ח.פ. " + E(p.hp) : E(b.chp_number || "")}</span>${isNew ? ' <span class="pd-tag red">חברה חדשה: תתווסף למאגר</span>' : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
       ${det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (הלחיצה שומרת ועוברת הלאה)</div>
       <div class="pd-ac-row"><div class="pd-ac-col"><button class="pd-ac-btn" onclick="PD._acGo('private')"><span class="pd-ac-t">פרטי</span>${wp}</button></div><div class="pd-ac-col"><button class="pd-ac-btn" onclick="PD._acGo('general')"><span class="pd-ac-t">כללי</span>${wg}</button></div></div>
-      <button class="pd-ac-btn both" onclick="PD._acGo('both')"><span class="pd-ac-t"><span class="pd-ac-plus">${PLUS_T}</span> מסמך משותף: פרטי + כללי</span>${wb}</button></div>`;
+      ${isNew ? `<div style="margin:2px 0 8px"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}<button class="pd-ac-btn both" onclick="PD._acGo('both')"><span class="pd-ac-t"><span class="pd-ac-plus">${PLUS_T}</span> מסמך משותף: פרטי + כללי</span>${wb}</button></div>`;
   }
   function upReviewAC(fresh) {
     const c = U.cur; if (!c) return;
@@ -724,7 +733,7 @@
   function upTog(id, on) { on ? U.cur.sel.add(id) : U.cur.sel.delete(id); const b = $("pd-save"); if (b) b.textContent = U.cur.sel.size ? `שמירה ושיוך ל-${U.cur.sel.size} חברות` : "שמירה בלי שיוך"; }
   function upSearch(q) {
     const out = $("pd-up-res"); if (!out) return;
-    if (U.addCompany) return runCompanySearch(q, out, { exclude: () => false, card: b => acBizCard(b, "", U.cur && U.cur.pick && U.cur.pick.kind === "biz" && U.cur.pick.id === b.id, false), pick: id => acPick("biz", id), newpick: (hp, name) => acPick("new", hp, name) });
+    if (U.addCompany) return runCompanySearch(q, out, { exclude: () => false, card: b => acBizCard(b, "", U.cur && U.cur.pick && U.cur.pick.kind === "biz" && U.cur.pick.id === b.id, false), pick: id => acPick("biz", id), newpick: (hp, name) => acPick("new", hp, name), ext: (r, st) => acExt(r.id, r.name, st) });
     runCompanySearch(q, out, { exclude: x => U.cur.sel.has(x), pick: id => { U.cur.sel.add(id); upReview(); },
       mark: r => { U.cur.note = (U.cur.note ? U.cur.note + " | " : "") + markText(r); upReview(); } });
   }
@@ -819,12 +828,14 @@
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.doc) {
         replaceDoc(data.doc); job.doc = data.doc.id;
+        if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
         if (job.slots) { await upLink(job, data.doc); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
         job.status = "dup"; job.msg = "קובץ זהה כבר קיים (" + (data.doc.original_name || data.doc.id) + ")"; upBg(); return;
       }
       if (!res.ok) throw new Error(data.error || res.statusText);
       replaceDoc(data.doc); job.doc = data.doc.id;
       if (job.slots) await upLink(job, data.doc);
+      if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); }
       if (c.bonds && c.bondSel && c.bondSel.size) { try { replaceDoc((await api("/permit-docs/" + data.doc.id, "PUT", { bonds: c.bonds.filter(x => c.bondSel.has(x.row.id)).map(x => x.row) })).doc); } catch (e) { job.msg = "נשמר, אך שיוך האג\"ח נכשל: " + e.message; } }
       job.status = "ok"; S._fm = null; refresh(); upBg(); if (!$("pd-up-bg")) say("המסמך נשמר ושויך: " + job.name);
     } catch (e) { job.status = "fail"; job.msg = e.message; upBg(); if (!$("pd-up-bg")) alert("השמירה של " + job.name + " נכשלה: " + e.message); }
@@ -2699,7 +2710,7 @@
   css.textContent = `
   .pd-na{color:#a0a0a0}
   .pd-ac{display:flex;flex-direction:column;gap:10px;padding:4px 2px}.pd-ac-main{display:flex;gap:14px;align-items:flex-start}.pd-ac-thumb{position:relative;flex:0 0 170px;height:235px;border:1px solid #cfcac0;border-radius:6px;overflow:hidden;cursor:zoom-in;background:#fff}.pd-ac-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}.pd-ac-zoom{position:absolute;bottom:0;inset-inline:0;background:rgba(26,58,92,.78);color:#fff;font-size:12px;text-align:center;padding:3px}
-  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}
+  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-ac-addbtn{background:#1e7e4a !important;border-color:#1e7e4a !important;color:#fff !important;font-weight:700}.pd-ac-addbtn:hover{background:#176a3d !important}.pd-ac-plain{background:none !important;border:1px solid #cfcac0 !important;color:#555 !important;font-size:12px !important;padding:2px 8px !important}
   .pd-ac-grid,.pd-ac #pd-up-res,.pd-ac #pd-up-res .pd-regbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;align-items:start}.pd-ac-grid .pd-ac-card,.pd-ac #pd-up-res .pd-ac-card{margin:0;height:100%;box-sizing:border-box}.pd-ac #pd-up-res{margin-top:8px}.pd-ac #pd-up-res .pd-grp,.pd-ac #pd-up-res>.pd-sub,.pd-ac #pd-up-res>.pd-regbox,.pd-ac #pd-up-res .pd-regbox>.pd-grp,.pd-ac #pd-up-res .pd-regbox>.pd-sub{grid-column:1/-1}.pd-ac-bc .pd-sub{margin-top:2px}.pd-ac-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
   .pd-chipx{display:inline-flex;flex-direction:column;align-items:center;min-width:64px;border-radius:8px;overflow:hidden;border:1px solid #cfcac0;font-size:12px;line-height:1.3;background:#fff}.pd-chipx-t{padding:1px 8px;background:#f1efe9;color:#333;font-weight:600;width:100%;text-align:center;box-sizing:border-box}.pd-chipx-s{padding:1px 8px;font-weight:700;width:100%;text-align:center;box-sizing:border-box}
   .pd-chipx.ok{border-color:#9ccfae}.pd-chipx.ok .pd-chipx-s{background:#e3f4e8;color:#1e7e4a;font-size:14px}.pd-chipx.miss{border-color:#eab0a8}.pd-chipx.miss .pd-chipx-s{background:#fdecea;color:#c0392b}.pd-chipx.na .pd-chipx-s{background:#f4f4f4;color:#888;font-weight:400}
@@ -2810,7 +2821,7 @@
 
   window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
