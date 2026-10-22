@@ -83,12 +83,16 @@ const bondSeries = (name, symbol) => {
   if (!m) return String(symbol || name || "").trim();
   const x = m[1]; return /^\d/.test(x) ? x : x.length === 1 ? x + "'" : x.slice(0, -1) + '"' + x.slice(-1);
 };
-async function addSelectiveNotes(env, rows, scope) {
+async function addSelectiveNotes(request, env, rows, scope) {
   if (!rows.some(r => r._selective)) return;
   let ab;
-  try { ab = (await env.DB.prepare("SELECT chp_number, bond_name, symbol FROM approved_bonds WHERE scope IN (?, 'both') ORDER BY security_id").bind(scope).all()).results ?? []; } catch { return; }      // לפני מיגרציה 0003
+  try { ab = (await env.DB.prepare("SELECT security_id, chp_number, bond_name, symbol FROM approved_bonds WHERE scope IN (?, 'both') ORDER BY security_id").bind(scope).all()).results ?? []; } catch { return; }      // לפני מיגרציה 0003
+  let live = null;          // רק אג"ח שעדיין קיימות ברשימת האג"ח העדכנית (נפדתה / נמחקה = לא נכללת בהערה)
+  try { const url = new URL("/data/bonds_list/bonds_all.json", request.url), res = await (env.ASSETS ? env.ASSETS.fetch(url) : fetch(url)); if (res.ok) live = new Set(((await res.json()).rows || []).map(r => String(r.security_id))); } catch { live = null; }
+  if (live && !live.size) live = null;
   const by = new Map();
-  for (const b of ab) { const k = String(b.chp_number || "").trim(), ser = bondSeries(b.bond_name, b.symbol); if (!k || !ser) continue; if (!by.has(k)) by.set(k, []); if (!by.get(k).includes(ser)) by.get(k).push(ser); }
+  for (const b of ab) {
+    if (live && !live.has(String(b.security_id))) continue; const k = String(b.chp_number || "").trim(), ser = bondSeries(b.bond_name, b.symbol); if (!k || !ser) continue; if (!by.has(k)) by.set(k, []); if (!by.get(k).includes(ser)) by.get(k).push(ser); }
   const heb = x => /^[א-ת]/.test(x) ? 1 : 0;
   for (const r of rows) {
     if (!r._selective) continue;
@@ -225,7 +229,7 @@ export async function onRequestGet(context) {
     }
 
     if (type === "companies-private" || type === "companies-general") {
-      await addSelectiveNotes(env, results, type === "companies-private" ? "private" : "general");
+      await addSelectiveNotes(request, env, results, type === "companies-private" ? "private" : "general");
       results = withRegistrarNames(results, await loadOfferings(request, env));
     }
 
