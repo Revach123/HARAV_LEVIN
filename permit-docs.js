@@ -659,7 +659,7 @@
   const acShared = b => { const dp = slotDoc(b.id, "private"), dg = slotDoc(b.id, "general"); return !!(dp && dg && dp.id === dg.id); };
   function acChips(b) {          // מסמך משותף לפרטי ולכללי: שבב אחד מחובר עם הכיתוב "מסמך משותף"
     if (acShared(b)) return `<span class="pd-chipx shared ok" title="מסמך משותף: פרטי + כללי"><span class="pd-chipx-t">📄 מסמך משותף</span><span class="pd-chipx-s2"><span>פרטי ✓</span><span>כללי ✓</span></span></span>`;
-    return acChip(b, "private") + acChip(b, "general");
+    return ["private", "general"].filter(t => acState(b, t).cls !== "na").map(t => acChip(b, t)).join("");          // סוג שהחברה לא רשומה בו ואין לו מסמך: בלי שבב בכלל
   }
   function acBizCard(b, why, on, inline) {          // כרטיסייה שלמה לעסק קיים (כמו לחברה חדשה): שם, ח.פ., קטגוריה, אזור, סוג, סטטוס, רישום ומצב ההיתרים
     const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
@@ -696,10 +696,12 @@
     // הפיצרים הם גם כפתורי הבחירה. מסמך משותף קיים / חברה חדשה: למעלה "החלפת המסמך המשותף" ומתחתיו פרטי / כללי. אחרת: פרטי / כללי למעלה והמשותף מתחת
     const sharedFirst = isNew || acShared(b);
     const big = (t, withWarn) => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
+      if (x && x.cls === "na") return `<button type="button" class="pd-chipx big chg" onclick="PD._acGo('${t}')" title="שינוי רישום החברה והוספת המסמך כהת&quot;ע ${he}"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">לשנות רישום החברה ל"${he}"</span></button>`;
       return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b && withWarn ? warn(t, "") : ""}</button>`; };
     const sp = b ? acState(b, "private") : null, sg = b ? acState(b, "general") : null;
     const bothTitle = b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
-    const bothWarn = !b ? "" : sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "";          // אותו מסמך: קישור אחד להצגה
+    const needChg = b && (sp.cls === "na" || sg.cls === "na");
+    const bothWarn = !b ? "" : (sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "") + (needChg ? `<span class="pd-ac-warn">רישום החברה ישונה ל"יש פרטי"</span>` : "");          // אותו מסמך: קישור אחד להצגה
     const both = `<button type="button" class="pd-chipx big wide both ${b ? (sharedFirst ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> ${bothTitle}</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls}">פרטי ${sp.st}</span><span class="${sg.cls}">כללי ${sg.st}</span></span>` : ""}${bothWarn}</button>`;
     const pair = w => `<div class="pd-ac-row">${big("private", w)}${big("general", w)}</div>`;
     const body = sharedFirst ? `${both}<div class="pd-sub" style="margin:8px 0 4px">או לסמן את המסמך החדש רק כ:</div>${pair(false)}` : `${pair(true)}${both}`;
@@ -747,8 +749,9 @@
     const slots = kind === "both" ? ["private", "general"] : [kind];
     if (c.pick.kind === "nochp") return upNewCo("", { slots, type: kind, noChp: true, name: c.pick.name });
     if (c.pick.kind === "new") return upNewCo(c.pick.hp, { slots, type: kind });
-    const id = c.pick.id;
+    const id = c.pick.id, bz = bizById(id);
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
+    if (bz && slots.some(t => acState(bz, t).cls === "na")) job.vis = { id, value: "פרטי" };          // החברה לא רשומה בסוג הזה: משנים את הרישום ל"יש פרטי" (כלומר גם פרטי וגם כללי)
     U.jobs.push(job); upBg();
     if (U.queue.length) upNext();
     else if (U.preset) { close("pd-upload"); say("המסמך נשלח לשמירה ושיוך (ברקע)"); }          // העלאה משורת חברה: חוזרים לטבלה
@@ -868,11 +871,13 @@
       if (res.status === 409 && data.doc) {
         replaceDoc(data.doc); job.doc = data.doc.id;
         if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
+        if (job.vis && typeof inlineUpdateMany === "function") await inlineUpdateMany(job.vis.id, { visibility: job.vis.value });
         if (job.slots) { await upLink(job, data.doc); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
         job.status = "dup"; job.msg = "קובץ זהה כבר קיים (" + (data.doc.original_name || data.doc.id) + ")"; upBg(); return;
       }
       if (!res.ok) throw new Error(data.error || res.statusText);
       replaceDoc(data.doc); job.doc = data.doc.id;
+      if (job.vis && typeof inlineUpdateMany === "function") await inlineUpdateMany(job.vis.id, { visibility: job.vis.value });
       if (job.slots) await upLink(job, data.doc);
       if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); }
       if (c.bonds && c.bondSel && c.bondSel.size) { try { replaceDoc((await api("/permit-docs/" + data.doc.id, "PUT", { bonds: c.bonds.filter(x => c.bondSel.has(x.row.id)).map(x => x.row) })).doc); } catch (e) { job.msg = "נשמר, אך שיוך האג\"ח נכשל: " + e.message; } }
@@ -2768,7 +2773,7 @@
   css.textContent = `
   .pd-na{color:#a0a0a0}
   .pd-ac{display:flex;flex-direction:column;gap:10px;padding:4px 2px}.pd-ac-main{display:flex;gap:14px;align-items:flex-start}.pd-ac-thumb{position:relative;flex:0 0 170px;height:235px;border:1px solid #cfcac0;border-radius:6px;overflow:hidden;cursor:zoom-in;background:#fff}.pd-ac-thumb iframe{width:100%;height:100%;border:0;pointer-events:none}.pd-ac-zoom{position:absolute;bottom:0;inset-inline:0;background:rgba(26,58,92,.78);color:#fff;font-size:12px;text-align:center;padding:3px}
-  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-ac-nc{border:1px dashed #c0392b;border-radius:8px;padding:8px 10px;background:#fff8f7}.pd-ac-addbtn{background:#1e7e4a !important;border-color:#1e7e4a !important;color:#fff !important;font-weight:700}.pd-ac-addbtn:hover{background:#176a3d !important}.pd-ac-plain{background:none !important;border:1px solid #cfcac0 !important;color:#555 !important;font-size:12px !important;padding:2px 8px !important}
+  .pd-ac-sugs{flex:1;min-width:0}.pd-ac-card{border:1px solid #d5d0c6;border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;background:#fff}.pd-ac-card:hover{background:#f3f8f7}.pd-ac-card.on{border-color:#1a7f73;box-shadow:0 0 0 2px #bfe3dd;background:#eef8f6}.pd-ac-card.new{border-style:dashed}.pd-chipx.big.chg{border-color:#1a5fb4;border-style:dashed}.pd-chipx.big.chg .pd-chipx-s{background:#eaf2fd;color:#1a5fb4;font-size:15px}.pd-ac-nc{border:1px dashed #c0392b;border-radius:8px;padding:8px 10px;background:#fff8f7}.pd-ac-addbtn{background:#1e7e4a !important;border-color:#1e7e4a !important;color:#fff !important;font-weight:700}.pd-ac-addbtn:hover{background:#176a3d !important}.pd-ac-plain{background:none !important;border:1px solid #cfcac0 !important;color:#555 !important;font-size:12px !important;padding:2px 8px !important}
   .pd-ac-grid,.pd-ac #pd-up-res,.pd-ac #pd-up-res .pd-regbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;align-items:start}.pd-ac-grid .pd-ac-card,.pd-ac #pd-up-res .pd-ac-card{margin:0;height:100%;box-sizing:border-box}.pd-ac #pd-up-res{margin-top:8px}.pd-ac #pd-up-res .pd-grp,.pd-ac #pd-up-res>.pd-sub,.pd-ac #pd-up-res>.pd-regbox,.pd-ac #pd-up-res .pd-regbox>.pd-grp,.pd-ac #pd-up-res .pd-regbox>.pd-sub{grid-column:1/-1}.pd-ac-bc .pd-sub{margin-top:2px}.pd-ac-chips{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:5px}
   .pd-chipx{display:inline-flex;flex-direction:column;align-items:center;min-width:64px;border-radius:8px;overflow:hidden;border:1px solid #cfcac0;font-size:12px;line-height:1.3;background:#fff}.pd-chipx-t{padding:1px 8px;background:#f1efe9;color:#333;font-weight:600;width:100%;text-align:center;box-sizing:border-box}.pd-chipx-s{padding:1px 8px;font-weight:700;width:100%;text-align:center;box-sizing:border-box}
   .pd-chipx.ok{border-color:#9ccfae}.pd-chipx.ok .pd-chipx-s{background:#e3f4e8;color:#1e7e4a;font-size:14px}.pd-chipx.miss{border-color:#eab0a8}.pd-chipx.miss .pd-chipx-s{background:#fdecea;color:#c0392b}.pd-chipx.na .pd-chipx-s{background:#f4f4f4;color:#888;font-weight:400}
