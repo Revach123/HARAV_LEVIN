@@ -102,13 +102,6 @@
   <!-- מי אנחנו -->
   
 
-  <!-- מסלולים וקרנות מאושרים: שני דפים קיימים באתר המכון (נפתחים בלי כותרת האתר) -->
-  <section class="view" id="v-funds" aria-label="מסלולים וקרנות מאושרים">
-    <a class="back" href="#">חזרה</a>
-    <h2>רשימת מסלולים וקרנות מאושרים</h2>
-    <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%A2%D7%95%D7%93%D7%95%D7%AA-%D7%A1%D7%9C-%D7%9E%D7%90%D7%95%D7%A9%D7%A8%D7%95%D7%AA/?hideheader">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים</a>
-    <a class="big ext" href="https://iska.co.il/%D7%A8%D7%A9%D7%99%D7%9E%D7%AA-%D7%AA%D7%95%D7%9B%D7%A0%D7%99%D7%95%D7%AA-%D7%97%D7%99%D7%A1%D7%9B%D7%95%D7%9F-%D7%A7%D7%A8%D7%A0%D7%95%D7%AA-%D7%A0%D7%90%D7%9E%D7%A0%D7%95%D7%AA-%D7%95%D7%A7%D7%A8/?hideheader">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל מאושרים</a>
-  </section>
 </div>
 
 <nav class="dock" id="dock" aria-label="תפריט ראשי">
@@ -116,7 +109,7 @@
     <a class="big primary" href="join.html">רישום להיתר עיסקא</a>
     <div class="row2">
       <a class="big" href="kiosk.html?type=companies-private&amp;back=1">רשימת חברות ואג"ח</a>
-      <a class="big" href="#funds">רשימת מסלולים וקרנות מאושרים</a>
+      <a class="big" href="funds.html">רשימת מסלולים וקרנות מאושרים</a>
     </div>
   </div>
 </nav>
@@ -126,7 +119,8 @@
 (function () {
   function show() {
     var h = location.hash.replace("#", "");
-    var v = h === "funds" ? h : "home";
+    if (h === "funds") { location.replace("funds.html"); return; }
+    var v = "home";
     document.body.setAttribute("data-view", v);
     pad();
     window.scrollTo(0, 0);
