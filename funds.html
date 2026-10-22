@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#274d5b">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>מסלולים וקרנות מאושרים</title>
+<style>
+  @font-face{font-family:'Alef';font-weight:400;font-display:swap;src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
+  @font-face{font-family:'Alef';font-weight:700;font-display:swap;src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--navy:#274d5b;--accent:#2aada1;--accent-border:#b9e3de;--muted:#6a7c82}
+  body{font-family:'Alef','Heebo',system-ui,sans-serif;background:#f4f7f7;color:#3b3d3d;font-size:18px;line-height:1.5;padding:0 .6rem 2rem}
+  .wrap{max-width:1100px;margin:0 auto}
+  .back{display:inline-flex;align-items:center;gap:.4rem;min-height:48px;padding:0 .9rem;margin:.7rem 0;font:inherit;font-size:18px;font-weight:700;color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .back::before{content:"\203A";font-size:26px;line-height:1}
+  h1{font-size:23px;color:var(--navy);margin:.2rem 0 .6rem}
+  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}
+  .tabs button{font:inherit;font-size:17px;font-weight:700;line-height:1.25;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px;padding:.5rem .6rem;min-height:60px;cursor:pointer}
+  .tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+  .upd{font-size:15px;color:var(--muted);margin-bottom:.5rem}
+  .pane{display:none}.pane.on{display:block}
+  .scroller{background:#fff;border:2px solid var(--accent-border);border-radius:10px;overflow:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 230px);touch-action:pan-x pan-y pinch-zoom}
+  .scroller img{display:block;width:100%;min-width:900px;height:auto;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+  .hint{font-size:15px;color:var(--muted);margin-top:.5rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="kehilot.html">חזרה</a>
+  <h1>רשימת מסלולים וקרנות מאושרים</h1>
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-p="a">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
+    <button role="tab" aria-selected="false" data-p="b">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
+  </div>
+  <section class="pane on" id="a">
+    <div class="upd">מעודכן אלול תשפ"ה</div>
+    <div class="scroller"><img src="data/funds/pension.png" alt="רשימת קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים" draggable="false" oncontextmenu="return false"></div>
+  </section>
+  <section class="pane" id="b">
+    <div class="upd">מעודכן אלול תשפ"ה</div>
+    <div class="scroller"><img src="data/funds/savings.png" alt="רשימת תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל מאושרים" draggable="false" oncontextmenu="return false"></div>
+  </section>
+  <p class="hint">אפשר להגדיל בצביטה ולגלול בגרירה</p>
+</div>
+<script>
+document.querySelectorAll(".tabs button").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".tabs button").forEach(function(x){x.setAttribute("aria-selected",x===b?"true":"false")});
+    document.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id===b.dataset.p)});
+  });
+});
+</script>
+</body>
+</html>
