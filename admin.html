@@ -1214,7 +1214,9 @@ function renderAdminTable() {
                 </td>
               </tr>` + bsubs.map((x, xi) => {
                 const open = (d, t) => d ? `<button type="button" class="pd-ok pd-c-${t} pd-sm" onclick="PD.openDoc('${d.id}','${b.id}')" title="${escHtml(d.name)}">📄 פתיחה</button>${x[t].length > 1 ? `<div style="font-size:11px;color:var(--red)">⚠ ${x[t].length} מסמכים</div>` : ""}` : x.need[t] ? `<button type="button" class="pd-missing pd-sm" onclick="PD.openManage('${b.id}')" title="האג&quot;ח נבחרה לרשימה הזו ואין לה שטר">⚠ חסר</button>` : `<span style="color:var(--light)">—</span>`;
-                return `<tr class="bond-sub${alt}${xi === bsubs.length - 1 ? " bs-end" : ""}"><td class="bs bs-first">↳ ${escHtml(x.label)}</td><td class="bs" colspan="6"><span class="bs-tag">הת"ע לאג"ח</span></td><td class="bs" style="text-align:center">${open(x.priv, "private")}</td><td class="bs bs-last" style="text-align:center">${open(x.gen, "general")}</td><td></td><td></td></tr>`;
+                return `<tr class="bond-sub${alt}${xi === bsubs.length - 1 ? " bs-end" : ""}"><td class="bs bs-first">↳ ${escHtml(x.label)}</td><td class="bs" colspan="6"><span class="bs-tag">הת"ע לאג"ח</span></td>${x.priv && x.gen && x.priv.id === x.gen.id && x.private.length === 1 && x.general.length === 1
+                  ? `<td class="bs bs-last" colspan="2" style="text-align:center"><button type="button" class="pd-ok pd-long pd-sm" onclick="PD.openDoc('${x.priv.id}','${b.id}')" title="${escHtml(x.priv.name)} (משותף לפרטי ולכללי)">📄 פתיחה</button></td>`
+                  : `<td class="bs" style="text-align:center">${open(x.priv, "private")}</td><td class="bs bs-last" style="text-align:center">${open(x.gen, "general")}</td>`}<td></td><td></td></tr>`;
               }).join("");
           }).join("")}
         </tbody>
