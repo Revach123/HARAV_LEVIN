@@ -63,6 +63,10 @@ export async function onRequestPut({ request, env, params }) {
       // לכל אג"ח מסמך אחד לכל תפקיד: תפקיד חדש שכבר תפוס אצל מסמך אחר - נדחה (כפילויות ישנות לא נחסמות, כדי שאפשר יהיה לבטל אותן)
       let hasSlot = true;
       try { await env.DB.prepare("SELECT slot FROM permit_doc_bonds LIMIT 1").first(); } catch { hasSlot = false; }
+      if (!hasSlot && body.bonds.some(x => x && x.slot)) {          // מיגרציה 0018 לא הורצה: מוסיפים את העמודה כאן (פעם אחת)
+        try { await env.DB.prepare("ALTER TABLE permit_doc_bonds ADD COLUMN slot TEXT NOT NULL DEFAULT ''").run(); hasSlot = true; }
+        catch (e) { return Response.json({ error: "לא ניתן לשמור פרטי / כללי לאג\"ח: חסרה מיגרציה 0018 (" + (e && e.message || "") + ")" }, { status: 500 }); }
+      }
       const roles = v => [...new Set(String(v || "").split(",").map(x => x.trim()).filter(x => x === "private" || x === "general"))].sort();
       const cur = new Map(((await env.DB.prepare(`SELECT security_id${hasSlot ? ", slot" : ""} FROM permit_doc_bonds WHERE doc_id = ?`).bind(params.id).all()).results ?? []).map(r => [r.security_id, roles(r.slot)]));
       const ROLE_HE = { private: "פרטי", general: "כללי" };

@@ -1259,7 +1259,8 @@
       if (tk.length) { alert(`ל${bondLabel(r)} (${r.name}) כבר משויך מסמך ${SLOT_HE[t]}: "${tk[0].original_name || tk[0].id}".\nלכל אג"ח מסמך אחד לכל רשימה - יש לבטל קודם את השיוך הקיים.`); return; }
     }
     const next = cur ? d.bonds.map(x => x.id === r.id ? { ...x, slot } : x) : [...(d.bonds || []), { id: r.id, name: r.name, symbol: r.symbol, company: r.company, chp: r.chp, slot }];
-    try { const before = snapDoc(d); replaceDoc((await api("/permit-docs/" + docId, "PUT", { bonds: next })).doc); pushHist(before, (cur ? "עודכן שיוך לאג\"ח " : "שויך לאג\"ח ") + r.name); }
+    try { const before = snapDoc(d); const nd = (await api("/permit-docs/" + docId, "PUT", { bonds: next })).doc; replaceDoc(nd); pushHist(before, (cur ? "עודכן שיוך לאג\"ח " : "שויך לאג\"ח ") + r.name);
+      const got = nd && bLink(nd, r.id); if (got && bRoles(got.slot).join(",") !== bRoles(slot).join(",")) alert("השיוך נשמר, אבל הסימון פרטי / כללי לא נשמר בשרת (חסרה מיגרציה 0018 ב-D1?)"); }
     catch (e) { alert("שיוך האג\"ח נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0009 ב-D1)" : "")); return; }
     paintMg();
   }
