@@ -208,7 +208,7 @@
   function close(id) { $(id)?.remove(); if (closers[id]) { closers[id](); delete closers[id]; } }
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
-    for (const id of ["pd-confirm", "pd-reg", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd", "pd-jedit", "pd-jdel"]) if ($(id)) { close(id); break; }
+    for (const id of ["pd-ac-doc", "pd-ac-big", "pd-confirm", "pd-reg", "pd-ext", "pd-recent", "pd-assign", "pd-doc", "pd-upload", "pd-manage", "pd-company", "pd-cd", "pd-jedit", "pd-jdel"]) if ($(id)) { close(id); break; }
   });
 
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
@@ -628,6 +628,12 @@
     upReviewAC(false);
     const t = $("pd-ac-top"); if (t) t.scrollIntoView({ block: "nearest" });
   }
+  async function acDoc(id) {          // הצגת שטר קיים: רק המסמך וכפתור "חזור" לחלון ההוספה (בלי כל פרטי הניהול של המסמך)
+    const d = S.byId.get(id);
+    overlay("pd-ac-doc", `<div class="pd-head"><button class="pd-btn" onclick="PD._close('pd-ac-doc')">← חזור</button><b style="margin-inline-start:12px">${E(d ? (d.original_name || d.id) : "")}</b></div><div style="height:84vh;background:#777" id="pd-ac-doc-v"><div class="pd-empty" style="color:#fff">טוען מסמך…</div></div>`, true);
+    try { const blob = await fetchPdfBlob(id), v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<iframe src="${URL.createObjectURL(blob)}#toolbar=0&navpanes=0&view=FitH" title="המסמך" style="width:100%;height:100%;border:0;background:#fff"></iframe>`; }
+    catch (e) { const v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<div class="pd-empty" style="color:#fff">הקובץ לא נטען: ${E(e.message)}</div>`; }
+  }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }
   function acBig() {
     const c = U.cur; if (!c) return;
@@ -636,7 +642,7 @@
   function acTop(c) {
     const p = c.pick; if (!p) return "";
     const isNew = p.kind === "new", b = isNew ? null : bizById(p.id); if (!isNew && !b) return "";
-    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר <span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD.openDoc('${cur.id}')">הצגת השטר הקיים</span></span>` : ""; };          // בתוך הכפתור עצמו
+    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר <span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD._acDoc('${cur.id}')">הצגת השטר הקיים</span></span>` : ""; };          // בתוך הכפתור עצמו
     const wp = warn("private", ""), wg = warn("general", ""), wb = [warn("private", 'הת"ע פרטי'), warn("general", 'הת"ע כללי')].join("");
     const VIS = { "": 'רק כללי', "פרטי": "יש גם פרטי", "רק פרטי": "רק פרטי" };
     const det = !b ? "" : (() => {          // כרטיסיית פרטי העסק (עסק קיים במאגר)
@@ -2789,7 +2795,7 @@
 
   window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
