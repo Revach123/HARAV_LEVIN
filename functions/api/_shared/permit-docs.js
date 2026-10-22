@@ -36,7 +36,10 @@ export async function withBusinesses(env, rows) {
   }
   const bonds = new Map(ids.map(i => [i, []]));
   if (ids.length) {          // שיוך לאג"ח (מיגרציה 0009)
-    try { for (const l of (await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds" + W).bind(...B).all()).results ?? []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp }); } catch { /* אין טבלה עדיין */ }
+    let bl = null;
+    try { bl = await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp, slot FROM permit_doc_bonds" + W).bind(...B).all(); }
+    catch { try { bl = await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds" + W).bind(...B).all(); } catch { bl = null; } }      // לפני מיגרציה 0018 / 0009
+    for (const l of (bl && bl.results) || []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp, slot: l.slot || "" });
   }
   return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [], specials: specials.get(r.id) || {} }));
 }

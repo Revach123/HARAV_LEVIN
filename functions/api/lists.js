@@ -63,7 +63,7 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
     if (hit.length === 1) { const cur = byRow.get(hit[0]); if (cur !== "open") byRow.set(hit[0], o.kind); }
   }
   const out = rows.map(r => {
-    const { _registrar, _bonds_note_all, ...rest } = r;
+    const { _registrar, _bonds_note_all, _selective, ...rest } = r;
     // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית), והערת אישור האג"ח חוזרת להופיע
     const off = rest.bonds_status === 'אין אג"ח' ? (offerings.byChp.get(String(rest.chp_number || "").trim()) || byRow.get(r)) : "";
     if (off) { rest.bonds_status = off === "open" ? 'יש אג"ח בהנפקה' : 'יש אג"ח בהנפקה עתידית'; rest.bonds_note = _bonds_note_all || ""; }
@@ -75,6 +75,29 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
   });
   const key = n => String(n || "").replace(/^[\s"'`״׳“”‘’]+/, "");          // מיון א-ב: מדלגים על גרשיים בתחילת המילה הראשונה
   return out.sort((a, b) => key(a.permit_name).localeCompare(key(b.permit_name), "he"));
+}
+
+// "בחירת אג"ח מסוימים": הערה אוטומטית "רק לאג"ח ו', ז' בלבד" לפי האג"ח שנבחרו לרשימה הזו (approved_bonds), לפני הערה ידנית אם יש
+const bondSeries = (name, symbol) => {
+  const m = String(name || "").replace(/["'׳״`]/g, "").replace(/\s+/g, " ").trim().match(/אגח\s*([א-ת]{1,3}|\d{1,2})$/);
+  if (!m) return String(symbol || name || "").trim();
+  const x = m[1]; return /^\d/.test(x) ? x : x.length === 1 ? x + "'" : x.slice(0, -1) + '"' + x.slice(-1);
+};
+async function addSelectiveNotes(env, rows, scope) {
+  if (!rows.some(r => r._selective)) return;
+  let ab;
+  try { ab = (await env.DB.prepare("SELECT chp_number, bond_name, symbol FROM approved_bonds WHERE scope IN (?, 'both') ORDER BY security_id").bind(scope).all()).results ?? []; } catch { return; }      // לפני מיגרציה 0003
+  const by = new Map();
+  for (const b of ab) { const k = String(b.chp_number || "").trim(), ser = bondSeries(b.bond_name, b.symbol); if (!k || !ser) continue; if (!by.has(k)) by.set(k, []); if (!by.get(k).includes(ser)) by.get(k).push(ser); }
+  const heb = x => /^[א-ת]/.test(x) ? 1 : 0;
+  for (const r of rows) {
+    if (!r._selective) continue;
+    const list = (by.get(String(r.chp_number || "").trim()) || []).sort((a, b) => heb(b) - heb(a) || a.localeCompare(b, "he", { numeric: true }));
+    if (!list.length) continue;
+    const auto = `רק לאג"ח ${list.join(", ")} בלבד`;
+    r.bonds_note = r.bonds_note ? auto + "; " + r.bonds_note : auto;
+    r._bonds_note_all = r._bonds_note_all ? auto + "; " + r._bonds_note_all : auto;
+  }
 }
 
 // המרת שורות ל-CSV עם BOM (כדי שאקסל יזהה UTF-8 ויציג עברית)
@@ -162,6 +185,7 @@ export async function onRequestGet(context) {
                ${bondsStatusExpr} AS bonds_status,
                ${bondsNoteExpr} AS bonds_note,
                ${bondsNoteAll} AS _bonds_note_all,
+               CASE WHEN ${selective} THEN 1 ELSE 0 END AS _selective,
                ${notesOut} AS notes
         FROM businesses
         WHERE ${whereClause} ${liquidated}
@@ -200,7 +224,10 @@ export async function onRequestGet(context) {
       if (last) throw last;
     }
 
-    if (type === "companies-private" || type === "companies-general") results = withRegistrarNames(results, await loadOfferings(request, env));
+    if (type === "companies-private" || type === "companies-general") {
+      await addSelectiveNotes(env, results, type === "companies-private" ? "private" : "general");
+      results = withRegistrarNames(results, await loadOfferings(request, env));
+    }
 
     if (format === "csv") {
       return csvResponse(results, type);
