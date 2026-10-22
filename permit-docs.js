@@ -182,7 +182,8 @@
     catch (e) { S.err = e.message || "שגיאה"; S.loaded = true; }
     try { S.ext = (await api("/permit-ext")).companies || []; S.extErr = ""; } catch (e) { S.ext = []; S.extErr = e.message || "שגיאה"; }      // לפני מיגרציה 0008 אין חברות שאינן במאגר
     try { S.hp = (await api("/permit-text?hints=1")).hp || []; S.hpDocs = null; S.hpBy = null; } catch { S.hp = null; }      // ח.פ. שנמצאו במסמכים (אחרי ייבוא 0015); בלי זה אין הצעות לפי ח.פ.
-    try { S.rev = new Map(((await api("/permit-review")).items || []).map(x => [x.key, x])); } catch { S.rev = new Map(); }      // לפני מיגרציה 0012 אין מצבי בדיקה
+    try { S.rev = new Map(((await api("/permit-review")).items || []).map(x => [x.key, x])); } catch { S.rev = new Map(); }
+    await apprReload();      // לפני מיגרציה 0012 אין מצבי בדיקה
     S.loading = false;
     refresh();
   }
@@ -269,13 +270,29 @@
   }
 
   // ───────── חלון: צפייה ועריכה של מסמך ─────────
-  // הת"ע מיוחד לאג"ח: תת-שורה לכל מסמך (משויך לאג"ח ואינו ההת"ע הראשי של החברה); השם כולל את סדרות האג"ח
+  // הת"ע מיוחד לאג"ח: תת-שורה לכל אג"ח שיש לה מסמך אצל החברה, עם המסמך הפרטי והכללי שלה (לפי השיוך לאג"ח; שיוך שטרם סווג - לפי סיווג המסמך).
+  // גם מסמך שהוא ההת"ע הראשי של החברה נספר, אם שויך לאג"ח
+  async function apprReload() {          // אג"ח שנבחרו ידנית ("בחירת אג"ח מסוימים"): ח.פ. -> [{ id, name, symbol, scope }]
+    const m = new Map();
+    try { for (const r of (await api("/approved-bonds")).rows || []) { const k = digitsOf(r.chp_number); if (!m.has(k)) m.set(k, []); m.get(k).push({ id: String(r.security_id), name: r.bond_name || "", symbol: r.symbol || "", scope: r.scope }); } } catch { /* בלי טבלה */ }
+    S.appr = m;
+  }
   function bondDocsOf(bid) {
-    const ser = bondSer;
-    return S.docs.filter(d => (d.business_ids || []).includes(bid) && (d.bonds || []).length && d.doc_type !== "other" && !slotsOf(d, bid).length)
-      .map(d => { const ss = [...new Set(d.bonds.map(x => bondSeries(x.name)).filter(Boolean))].map(ser), oth = d.bonds.filter(x => !bondSeries(x.name)).map(x => x.symbol || x.name);
-        return { id: d.id, name: d.original_name, label: 'אג"ח ' + [...ss, ...oth].join(" ו-"), list: d.doc_type === "general" ? "general" : d.doc_type === "private" ? "private" : "both" }; })
-      .sort((a, b) => a.label.localeCompare(b.label, "he") || a.list.localeCompare(b.list));
+    const by = new Map(), b = bizById(bid);
+    // תת-שורה לכל אג"ח שנבחרה לחברה (גם בלי שטר), עם הרשימות שבהן היא מאושרת
+    if (b && b.agch_approved === 'בחירת אג"ח מסוימים' && S.appr) for (const x of S.appr.get(digitsOf(b.chp_number)) || [])
+      by.set(x.id, { bond: x.id, label: bondLabel(x), private: [], general: [], need: { private: x.scope !== "general", general: x.scope !== "private" } });
+    for (const d of S.docs) {
+      if (!(d.business_ids || []).includes(bid) || d.doc_type === "other") continue;
+      for (const x of d.bonds || []) {
+        let rl = bRoles(x.slot);
+        if (!rl.length) rl = d.doc_type === "general" ? ["general"] : d.doc_type === "private" ? ["private"] : ["general", "private"];
+        const e = by.get(x.id) || { bond: x.id, label: bondLabel(x), private: [], general: [] };
+        for (const t of rl) if (!e[t].some(y => y.id === d.id)) e[t].push({ id: d.id, name: d.original_name || d.id });
+        by.set(x.id, e);
+      }
+    }
+    return [...by.values()].map(e => ({ need: { private: false, general: false }, ...e, priv: e.private[0] || null, gen: e.general[0] || null })).sort((a, b) => a.label.localeCompare(b.label, "he"));
   }
   // "שטרות אחרות של החברה" ו"הצעות נוספות" (בחלון המסמך ובחלון ניהול המסמכים של החברה)
   const docRole = (d, bid) => { const sl = slotsOf(d, bid); return sl.length ? sl.map(t => `הת"ע ${SLOT_HE[t]}`).join(" + ") : (d.bonds || []).length ? bondKey(d) : "נוסף"; };
@@ -2720,7 +2737,7 @@
       <div class="pd-mg-l"><div class="pd-mg-th" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>טוען…</span></div>${pgHtml(d)}</div>
       <div class="pd-mg-r">
         <div class="pd-name" style="cursor:pointer;text-decoration:underline" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול">${E(d.original_name || d.id)}</div>
-        <div class="pd-sub">${sizeHtml(d.size)} ${dateHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note).slice(0, 60) : ""}</div>
+        <div class="pd-sub">${sizeHtml(d.size)} ${dateHtml(d)}${others.length ? ` · משותף עם ${others.length} חברות` : ""}${d.note ? " · " + E(d.note.slice(0, 60)) : ""}</div>
         <div class="pd-btns">${linkBtns}${spBtn}</div>${sp !== undefined && sp.detail ? `<div class="pd-sub">פירוט: ${E(sp.detail)}</div>` : ""}
         <div class="pd-btns" style="align-items:center">${(d.bonds || []).map(x => `<span class="pd-chip" style="background:#3f6ea8" title="${E(x.company)}">${E(bondLabel(x))}${bRoles(x.slot).length ? " · " + bRoles(x.slot).map(t => SLOT_HE[t]).join(" + ") : " · טרם סווג"} <a href="#" style="color:#fff;text-decoration:none" onclick="PD._mgBondDel('${d.id}','${E(x.id)}');return false" title="ביטול השיוך לאג&quot;ח">✕</a></span>`).join("")}<button class="pd-mini ${M.bond === d.id ? "sel" : ""}" onclick="PD._mgBond('${d.id}')" title="שיוך המסמך לאג&quot;ח של החברה">+ שיוך לאג"ח</button></div>
         ${M.bond === d.id ? `<div class="pd-mg-sh"><input class="pd-in" id="pd-mgb-${d.id}" value="${E(M.bondQ)}" placeholder="אג&quot;ח של החברה (או הקלידו לחיפוש בכל האג&quot;ח)" oninput="PD._mgBondSearch('${d.id}',this.value)" autocomplete="off"><div id="pd-mgbr-${d.id}" style="max-height:200px;overflow:auto"></div></div>` : ""}
@@ -3021,7 +3038,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { apprReload, onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,

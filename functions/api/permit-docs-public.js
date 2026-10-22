@@ -33,26 +33,28 @@ export async function onRequestGet({ env }) {
         by.set(k, e);
       }
     } catch { /* אין טבלה עדיין */ }
-    try {          // הת"ע מיוחד לאג"ח: תת-שורה לכל מסמך (שמשויך לאג"ח ואינו ההת"ע הראשי של החברה); השם כולל את סדרות האג"ח
-      const bd = await env.DB.prepare(`
-        SELECT x.doc_id, x.name AS bname, x.symbol, d.doc_type, b.chp_number, b.permit_name, b.registrar_name
+    try {          // הת"ע מיוחד לאג"ח: תת-שורה לכל אג"ח ומסמך שלה (גם אם המסמך הוא ההת"ע הראשי של החברה). הרשימה לפי שיוך המסמך לאג"ח (מיגרציה 0018):
+                   // פרטי -> "both" (כמו היתר פרטי: מופיע גם בכללי עם סימון), כללי -> "general", משותף -> שניהם; שיוך שטרם סווג - לפי סיווג המסמך
+      const q = slot => `
+        SELECT DISTINCT x.doc_id, x.security_id, x.name AS bname, x.symbol, ${slot ? "x.slot" : "'' AS slot"}, d.doc_type, b.chp_number, b.permit_name, b.registrar_name
         FROM permit_doc_bonds x
         JOIN permit_docs d ON d.id = x.doc_id
         JOIN permit_doc_companies c ON c.doc_id = d.id
         JOIN businesses b ON b.id = c.business_id
-        WHERE d.doc_type != 'other' AND c.slot = '' AND (x.chp = '' OR x.chp = b.chp_number)`).all();
+        WHERE d.doc_type != 'other' AND (x.chp = '' OR x.chp = b.chp_number)`;
+      let bd; try { bd = await env.DB.prepare(q(true)).all(); } catch { bd = await env.DB.prepare(q(false)).all(); }
       const series = n => { const m = String(n || "").replace(/["'׳״`]/g, "").replace(/\s+/g, " ").match(/אגח\s*([א-ת]{1,3}|\d{1,2})(?:\s|$)/); return m ? (/^\d/.test(m[1]) ? m[1] : m[1].length === 1 ? m[1] + "'" : m[1].slice(0, -1) + '"' + m[1].slice(-1)) : ""; };
-      const g = new Map();
+      const seen = new Set();
       for (const r of bd.results ?? []) {
-        const k = (r.chp_number || "n:" + (r.permit_name || r.registrar_name)) + "|" + r.doc_id;
-        const e = g.get(k) || { key: r.chp_number || "n:" + (r.permit_name || r.registrar_name), chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "", id: r.doc_id, list: r.doc_type === "general" ? "general" : r.doc_type === "private" ? "private" : "both", ser: [], other: [] };
-        const s = series(r.bname); if (s) { if (!e.ser.includes(s)) e.ser.push(s); } else e.other.push(r.symbol || r.bname);
-        g.set(k, e);
-      }
-      for (const e of g.values()) {
-        const en = by.get(e.key) || { chp: e.chp, name: e.name };
-        (en.bond_docs = en.bond_docs || []).push({ id: e.id, list: e.list, label: 'אג"ח ' + [...e.ser, ...e.other].join(" ו-") });
-        by.set(e.key, en);
+        const key = r.chp_number || "n:" + (r.permit_name || r.registrar_name), s = series(r.bname), label = 'אג"ח ' + (s || r.symbol || r.bname);
+        const rl = String(r.slot || "").split(",").filter(x => x === "private" || x === "general");
+        const lists = rl.length ? rl.map(t => t === "general" ? "general" : "both") : [r.doc_type === "general" ? "general" : r.doc_type === "private" ? "private" : "both"];
+        const en = by.get(key) || { chp: r.chp_number || "", name: r.permit_name || r.registrar_name || "" };
+        for (const list of lists) {
+          const k = key + "|" + r.security_id + "|" + r.doc_id + "|" + list; if (seen.has(k)) continue; seen.add(k);
+          (en.bond_docs = en.bond_docs || []).push({ id: r.doc_id, list, label });
+        }
+        by.set(key, en);
       }
     } catch { /* אין טבלה עדיין */ }
     return Response.json({ links: [...by.values()] }, { headers: CORS });

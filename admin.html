@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261024f"></script>
+<script src="/permit-docs.js?v=20261024g"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1189,8 +1189,8 @@ function renderAdminTable() {
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
               </tr>` + ((window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : []).map(x => {
-                const open = `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${x.id}','${b.id}')" title="${escHtml(x.name)}">פתיחה</button>`;
-                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="6" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list !== "general" ? open : ""}</td><td style="text-align:center">${x.list !== "private" ? open : ""}</td><td></td><td></td></tr>`;
+                const open = (d, t) => d ? `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${d.id}','${b.id}')" title="${escHtml(d.name)}">פתיחה</button>${x[t].length > 1 ? `<div style="font-size:11px;color:var(--red)">⚠ ${x[t].length} מסמכים</div>` : ""}` : x.need[t] ? `<button type="button" class="pd-missing" onclick="PD.openManage('${b.id}')" title="האג&quot;ח נבחרה לרשימה הזו ואין לה שטר">⚠ חסר</button>` : `<span style="color:var(--light)">—</span>`;
+                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="6" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${open(x.priv, "private")}</td><td style="text-align:center">${open(x.gen, "general")}</td><td></td><td></td></tr>`;
               }).join("");
           }).join("")}
         </tbody>
@@ -2203,6 +2203,7 @@ async function saveBondPicker() {
       ? "נשמר ✓ הרשימה נבנית עכשיו; האג\"ח יופיעו בעוד כדקה-שתיים"
       : "נשמר ✓ (לא ניתן להפעיל בנייה מיידית - הרשימה תתעדכן בריצה הבאה של bonds-list)");
     closeBondPicker();
+    if (window.PD && PD.apprReload) PD.apprReload().then(() => { if (view === "admin") render(); });
   } catch (e) {
     if (e.message === "Unauthorized") { handleUnauth(); return; }
     showStatus("שגיאה בשמירה: " + e.message);
