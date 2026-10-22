@@ -59,6 +59,13 @@ export async function onRequestPut({ request, env, params }) {
       for (const x of [...new Set(body.ext_ids.map(String))].filter(i => have.has(i))) stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_ext (doc_id, ext_id) VALUES (?, ?)").bind(params.id, x));
     }
     if (Array.isArray(body.bonds)) {        // שיוך לאג"ח: החלפה מלאה { id, name, symbol, company, chp }
+      // לכל אג"ח מסמך אחד בלבד: אג"ח חדשה למסמך הזה שכבר משויכת למסמך אחר - נדחית (שיוכים כפולים ישנים לא נחסמים, כדי שאפשר יהיה לבטל אותם)
+      const cur = new Set(((await env.DB.prepare("SELECT security_id FROM permit_doc_bonds WHERE doc_id = ?").bind(params.id).all()).results ?? []).map(r => r.security_id));
+      for (const x of body.bonds.slice(0, 300)) {
+        const sid = String(x && x.id || "").trim(); if (!sid || cur.has(sid)) continue;
+        const o = await env.DB.prepare("SELECT b.doc_id, d.original_name FROM permit_doc_bonds b LEFT JOIN permit_docs d ON d.id = b.doc_id WHERE b.security_id = ? AND b.doc_id != ? LIMIT 1").bind(sid, params.id).first();
+        if (o) return Response.json({ error: `האג"ח ${x.name || sid} כבר משויכת למסמך "${o.original_name || o.doc_id}". לכל אג"ח מסמך אחד בלבד` }, { status: 409 });
+      }
       stmts.push(env.DB.prepare("DELETE FROM permit_doc_bonds WHERE doc_id = ?").bind(params.id));
       const seen = new Set();
       for (const x of body.bonds.slice(0, 300)) {
