@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#274d5b">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>מסלולים וקרנות מאושרים</title>
@@ -11,6 +11,7 @@
   @font-face{font-family:'Alef';font-weight:700;font-display:swap;src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{--navy:#274d5b;--accent:#2aada1;--accent-border:#b9e3de;--muted:#6a7c82}
+  html,body{touch-action:pan-x pan-y}
   body{font-family:'Alef','Heebo',system-ui,sans-serif;background:#f4f7f7;color:#3b3d3d;font-size:18px;line-height:1.5;padding:0 .6rem 2rem}
   .wrap{max-width:1100px;margin:0 auto}
   .top{position:sticky;top:0;z-index:10;background:#f4f7f7;margin:0 -.6rem;padding:0 .6rem .1rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
@@ -27,9 +28,8 @@
   .tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
   .upd{font-size:15px;color:var(--muted);margin-bottom:.5rem}
   .pane{display:none}.pane.on{display:block}
-  .scroller{background:#fff;border:2px solid var(--accent-border);border-radius:10px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
-  .scroller img{cursor:zoom-in}.scroller.z img{width:220%;cursor:zoom-out}
-  .scroller img{display:block;width:100%;height:auto;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+  .scroller{background:#fff;border:2px solid var(--accent-border);border-radius:10px;overflow:hidden;touch-action:pan-y}
+  .scroller img{display:block;width:100%;height:auto;transform-origin:0 0;will-change:transform;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
   .hint{font-size:15px;color:var(--muted);margin-top:.5rem;text-align:center}
 </style>
 </head>
@@ -51,7 +51,32 @@
   </section>
 </div>
 <script>
-document.querySelectorAll(".scroller").forEach(function(c){c.addEventListener("click",function(){var z=c.classList.toggle("z");if(z)c.scrollLeft=c.scrollWidth;else c.scrollLeft=0;});});
+// הגדלה בצביטה (שתי אצבעות) רק של התמונה, לא של הדף; גרירה באצבע אחת כשהתמונה מוגדלת; במחשב: Ctrl + גלגלת. אין הגדלה בלחיצה.
+["gesturestart","gesturechange","gestureend"].forEach(function(e){document.addEventListener(e,function(ev){ev.preventDefault()},{passive:false})});          // iOS: בלי הגדלת הדף
+document.querySelectorAll(".scroller").forEach(function(c){
+  var img=c.querySelector("img"),s=1,tx=0,ty=0,MAX=5,g=null;
+  function apply(){
+    var w=c.clientWidth,h=img.offsetHeight;
+    tx=Math.min(0,Math.max(w-w*s,tx));ty=Math.min(0,Math.max(h-h*s,ty));
+    img.style.transform=s===1?"":"translate("+tx+"px,"+ty+"px) scale("+s+")";
+    c.style.touchAction=s>1?"none":"pan-y";
+  }
+  function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
+  function mid(t){var r=c.getBoundingClientRect();return{x:(t[0].clientX+t[1].clientX)/2-r.left,y:(t[0].clientY+t[1].clientY)/2-r.top}}
+  function zoomAt(ns,m){ns=Math.min(MAX,Math.max(1,ns));var px=(m.x-tx)/s,py=(m.y-ty)/s;s=ns;tx=m.x-px*s;ty=m.y-py*s;apply()}
+  c.addEventListener("touchstart",function(e){
+    if(e.touches.length===2){g={d:dist(e.touches),s:s,pan:false}}
+    else if(e.touches.length===1&&s>1){g={pan:true,x:e.touches[0].clientX,y:e.touches[0].clientY}}
+  },{passive:true});
+  c.addEventListener("touchmove",function(e){
+    if(!g)return;
+    if(e.touches.length===2&&g.d){e.preventDefault();zoomAt(g.s*dist(e.touches)/g.d,mid(e.touches))}
+    else if(e.touches.length===1&&g.pan&&s>1){e.preventDefault();tx+=e.touches[0].clientX-g.x;ty+=e.touches[0].clientY-g.y;g.x=e.touches[0].clientX;g.y=e.touches[0].clientY;apply()}
+  },{passive:false});
+  c.addEventListener("touchend",function(e){if(e.touches.length===0)g=null;else if(e.touches.length===1&&s>1)g={pan:true,x:e.touches[0].clientX,y:e.touches[0].clientY};else g=null});
+  c.addEventListener("wheel",function(e){if(!e.ctrlKey)return;e.preventDefault();var r=c.getBoundingClientRect();zoomAt(s*Math.exp(-e.deltaY*0.01),{x:e.clientX-r.left,y:e.clientY-r.top})},{passive:false});
+  window.addEventListener("resize",apply);
+});
 document.querySelectorAll(".tabs button").forEach(function(b){
   b.addEventListener("click",function(){
     document.querySelectorAll(".tabs button").forEach(function(x){x.setAttribute("aria-selected",x===b?"true":"false")});
