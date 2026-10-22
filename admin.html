@@ -798,12 +798,14 @@
   .admin-tbl tbody tr:nth-child(even) { background: transparent; }
   .admin-tbl tbody tr.alt, .admin-tbl tbody tr.bond-sub.alt:hover { background: var(--row-alt); }
   .admin-tbl tbody tr.bond-sub:not(.alt):hover { background: transparent; }
-  /* קבוצת חברה + תת-שורות אג"ח: בלי קו ביניהן, מסגרת סביב הקבוצה, ופס כחול בצד ימין לכל אורכה */
-  .admin-tbl tbody tr.has-bonds td, .admin-tbl tbody tr.bond-sub td { border-bottom: 0; }
-  .admin-tbl tbody tr.has-bonds td { border-top: 1.5px solid #8fa9c9; }
-  .admin-tbl tbody tr.has-bonds td:first-child, .admin-tbl tbody tr.bond-sub td:first-child { border-right: 1.5px solid #8fa9c9; box-shadow: inset -4px 0 0 #3f6ea8; }
-  .admin-tbl tbody tr.has-bonds td:last-child, .admin-tbl tbody tr.bond-sub td:last-child { border-left: 1.5px solid #8fa9c9; }
-  .admin-tbl tbody tr.bond-sub.bs-end td { border-bottom: 1.5px solid #8fa9c9; padding-bottom: 8px; }
+  /* חברה + תת-שורות אג"ח: בלי קו ביניהן; פס כחול בצד ימין מהחברה עד האג"ח האחרונה, שמתעקל פנימה בתחתית */
+  .admin-tbl tbody tr.has-bonds td { border-bottom: 0; padding-bottom: 6px; }
+  .admin-tbl tbody tr.bond-sub td { border-bottom: 0; }
+  .admin-tbl tbody tr.bond-sub.bs-end td { border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .admin-tbl tbody tr.has-bonds td:first-child, .admin-tbl tbody tr.bond-sub:not(.bs-end) td:first-child { box-shadow: inset -4px 0 0 #3f6ea8; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child { position: relative; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child::before { content: ""; position: absolute; right: 0; top: 0; bottom: 20px; width: 4px; background: #3f6ea8; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child::after { content: ""; position: absolute; right: 0; bottom: 4px; width: 30px; height: 16px; border-right: 4px solid #3f6ea8; border-bottom: 4px solid #3f6ea8; border-bottom-right-radius: 14px; box-sizing: border-box; }
   tbody tr.bond-sub td { padding-top:3px; padding-bottom:3px; border-top:0; border-bottom:0; background:transparent; font-size:12.5px; }
   tbody tr.bond-sub td.bs { background:#f2f5f9; }
   tbody tr.bond-sub td.bs-first { background:linear-gradient(to left, transparent 28px, #f2f5f9 28px); padding-inline-start:36px; color:#1a3a5c; font-weight:500; white-space:nowrap; }
