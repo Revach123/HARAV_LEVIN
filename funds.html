@@ -13,6 +13,12 @@
   :root{--navy:#274d5b;--accent:#2aada1;--accent-border:#b9e3de;--muted:#6a7c82}
   body{font-family:'Alef','Heebo',system-ui,sans-serif;background:#f4f7f7;color:#3b3d3d;font-size:18px;line-height:1.5;padding:0 .6rem 2rem}
   .wrap{max-width:1100px;margin:0 auto}
+  .top{position:sticky;top:0;z-index:10;background:#f4f7f7;margin:0 -.6rem;padding:0 .6rem .1rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .top .back{margin:.5rem 0 .3rem;min-height:44px}
+  .top h1{font-size:20px;margin:.1rem 0 .4rem}
+  .top .tabs{margin-bottom:.5rem}
+  .top .tabs button{min-height:52px;font-size:16px}
+  .upd{margin-top:.6rem}
   .back{display:inline-flex;align-items:center;gap:.4rem;min-height:48px;padding:0 .9rem;margin:.7rem 0;font:inherit;font-size:18px;font-weight:700;color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
   .back::before{content:"\203A";font-size:26px;line-height:1}
   h1{font-size:23px;color:var(--navy);margin:.2rem 0 .6rem}
@@ -28,12 +34,12 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="kehilot.html">חזרה</a>
+  <header class="top"><a class="back" href="kehilot.html">חזרה</a>
   <h1>רשימת מסלולים וקרנות מאושרים</h1>
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-p="a">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
     <button role="tab" aria-selected="false" data-p="b">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
-  </div>
+  </div></header>
   <section class="pane on" id="a">
     <div class="upd">מעודכן אלול תשפ"ה</div>
     <div class="scroller"><img src="data/funds/pension.png" alt="רשימת קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים" draggable="false" oncontextmenu="return false"></div>
