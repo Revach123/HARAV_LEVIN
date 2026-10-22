@@ -647,6 +647,7 @@
     const c = U.cur; if (!c) return;
     const qEl = $("pd-up-q"), q0 = qEl ? qEl.value : "", f0 = document.activeElement && document.activeElement.id;          // התצוגה מתרעננת כשהניתוח ברקע מסתיים: לא מאבדים מה שהוקלד
     if (fresh || !c.sug) c.sug = suggest(c.text, c.file.name);
+    if (U.preset && !c.pickInit) { c.pickInit = true; if (!c.pick && bizById(U.preset)) c.pick = { kind: "biz", id: U.preset }; }          // העלאה משורת חברה: החברה נבחרת אוטומטית
     const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40;
     const cardB = x => { const b = x.b, on = c.pick && c.pick.kind === "biz" && c.pick.id === b.id; return `<div class="pd-ac-card${on ? " on" : ""}" onclick="PD._acPick('biz','${b.id}')"><b>${displayName(b, true)}</b>${stTag(b.registry_status)}<div class="pd-sub">${E(b.chp_number || "")} · ${x.hp ? "לפי ח.פ. במסמך" : "לפי שם"}</div></div>`; };
     const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div></div>`; };
@@ -676,7 +677,9 @@
     const id = c.pick.id;
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
     U.jobs.push(job); upBg();
-    if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick("✓ המסמך נשלח לשמירה ושיוך. הפעולה ממשיכה ברקע."); }
+    if (U.queue.length) upNext();
+    else if (U.preset) { close("pd-upload"); say("המסמך נשלח לשמירה ושיוך (ברקע)"); }          // העלאה משורת חברה: חוזרים לטבלה
+    else { U.cur = { ...c, url: "" }; upPick("✓ המסמך נשלח לשמירה ושיוך. הפעולה ממשיכה ברקע."); }
     U.jchain = U.jchain.then(() => upSend(job));
   }
   // התאמות מובילות למעלה (ח.פ. או שם ברור), פחות מתאימות מתחת
@@ -797,7 +800,7 @@
       replaceDoc(data.doc); job.doc = data.doc.id;
       if (job.slots) await upLink(job, data.doc);
       if (c.bonds && c.bondSel && c.bondSel.size) { try { replaceDoc((await api("/permit-docs/" + data.doc.id, "PUT", { bonds: c.bonds.filter(x => c.bondSel.has(x.row.id)).map(x => x.row) })).doc); } catch (e) { job.msg = "נשמר, אך שיוך האג\"ח נכשל: " + e.message; } }
-      job.status = "ok"; S._fm = null; refresh(); upBg();
+      job.status = "ok"; S._fm = null; refresh(); upBg(); if (!$("pd-up-bg")) say("המסמך נשמר ושויך: " + job.name);
     } catch (e) { job.status = "fail"; job.msg = e.message; upBg(); if (!$("pd-up-bg")) alert("השמירה של " + job.name + " נכשלה: " + e.message); }
   }
   async function upLink(job, doc) {          // שיוך לסלוט (פרטי / כללי / שניהם); השטר הקיים באותו סלוט עובר למסמכים נוספים (השרת מחליף), וטוענים אותו מחדש
@@ -1786,7 +1789,13 @@
   function extraCell(b) {
     const w = ready(); if (w) return w;
     const n = extrasOf(b.id).length;
-    return `<button type="button" class="pd-ok" onclick="PD.openManage('${b.id}')">🗂 ניהול מסמכים${n ? ` <span class="pd-chip" style="background:#b85c00">${n} לבדיקה</span>` : ""}</button>`;
+    return `<button type="button" class="pd-ok" onclick="PD.openManage('${b.id}')">🗂 ניהול מסמכים${n ? ` <span class="pd-chip" style="background:#b85c00">${n} לבדיקה</span>` : ""}</button>
+      <div style="margin-top:3px"><button type="button" class="pd-link" style="font-size:12px" onclick="PD._upNew('${b.id}')" title="בחירת קובץ; אחרי הבחירה נפתח חלון ההוספה עם החברה הזו כבר נבחרת, ונשאר לבחור פרטי / כללי / משותף">⬆ העלאת מסמך חדש</button></div>`;
+  }
+  function upNewFor(bizId) {          // העלאת מסמך חדש מהשורה בטבלת העדכון: אחרי בחירת הקובץ נפתח חלון ההוספה, והחברה כבר נבחרה (כרטיסייה בראש החלון)
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = "application/pdf,.pdf"; inp.multiple = true;
+    inp.onchange = () => { if (inp.files && inp.files.length) { openUpload({ addCompany: true, bizId }); upFiles(inp.files); } };
+    inp.click();
   }
 
   // מצב מסמכי ההיתר של חברה, לסינון בטבלת הניהול: review = צריכה החלטה ידנית (כמה מועמדים לרשימה בלי קישור, או מסמך בלי סיווג);
@@ -2772,7 +2781,7 @@
 
   window.PD = { searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _upRetry: upRetry, _acPick: acPick, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
