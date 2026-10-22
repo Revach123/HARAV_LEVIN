@@ -155,8 +155,8 @@
    "chp_number": "1811308"
   },
   {
-   "id": 10389,
-   "maya_report_id": 1777280,
+   "id": 10390,
+   "maya_report_id": 1777410,
    "company_name": "ריט אזורים ליוי",
    "is_new_company": false,
    "new_company_type": null,
@@ -713,6 +713,29 @@
    ],
    "carried": true,
    "last_seen": "2026-10-20"
+  },
+  {
+   "chp_number": "516117181",
+   "company_name": "ריט אזורים ליוי",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10389,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+   "maya_report_id": 1777280,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilA-",
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-22"
   }
  ],
  "open": [
