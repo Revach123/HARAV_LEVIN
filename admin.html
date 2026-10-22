@@ -808,12 +808,13 @@
   .admin-tbl tbody tr.bond-sub.bs-end td:first-child::after { content: ""; position: absolute; right: 0; bottom: 4px; width: 30px; height: 16px; border-right: 4px solid #3f6ea8; border-bottom: 4px solid #3f6ea8; border-bottom-right-radius: 14px; box-sizing: border-box; }
   tbody tr.bond-sub td { padding-top:3px; padding-bottom:3px; border-top:0; border-bottom:0; background:transparent; font-size:12.5px; }
   tbody tr.bond-sub td.bs { background:#f2f5f9; }
-  tbody tr.bond-sub td.bs-first { background:linear-gradient(to left, transparent 28px, #2b3440 28px, #2b3440 29.5px, #f2f5f9 29.5px); padding-inline-start:36px; color:#1a3a5c; font-weight:500; white-space:nowrap; }
-  /* מסגרת כהה סביב בלוק האג"ח: מהצדדים ומתחת (פתוחה למעלה, אל שורת החברה) */
-  tbody tr.bond-sub td.bs-last { box-shadow: inset 1.5px 0 0 #2b3440; }
-  tbody tr.bond-sub.bs-end td.bs { background: linear-gradient(#2b3440,#2b3440) left calc(100% - 7px) / 100% 1.5px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 7px) no-repeat; }
-  tbody tr.bond-sub.bs-end td.bs.bs-first { background: linear-gradient(#2b3440,#2b3440) left calc(100% - 7px) / calc(100% - 28px) 1.5px no-repeat, linear-gradient(to left, transparent 28px, #2b3440 28px, #2b3440 29.5px, #f2f5f9 29.5px) top / 100% calc(100% - 7px) no-repeat; }
-  tbody tr.bond-sub.bs-end td.bs.bs-last { box-shadow: none; background: linear-gradient(#2b3440,#2b3440) left top / 1.5px calc(100% - 5.5px) no-repeat, linear-gradient(#2b3440,#2b3440) left calc(100% - 7px) / 100% 1.5px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 7px) no-repeat; }
+  tbody tr.bond-sub td.bs-first { background:linear-gradient(to left, transparent 28px, #f2f5f9 28px); padding-inline-start:36px; color:#1a3a5c; font-weight:500; white-space:nowrap; }
+  /* המשך הפס הכחול: יורד בצד ימין, ממשיך מתחת לתת-השורות, ועולה בצד שמאל עד תחתית שורת החברה (פינות מעוגלות) */
+  tbody tr.bond-sub td.bs-last { box-shadow: inset 4px 0 0 #3f6ea8; }
+  tbody tr.bond-sub.bs-end td.bs { background: linear-gradient(#3f6ea8,#3f6ea8) left calc(100% - 4px) / 100% 4px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-first { background: linear-gradient(#3f6ea8,#3f6ea8) left calc(100% - 4px) / calc(100% - 28px) 4px no-repeat, linear-gradient(to left, transparent 28px, #f2f5f9 28px) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-last { position: relative; box-shadow: none; background: linear-gradient(#3f6ea8,#3f6ea8) right calc(100% - 4px) / calc(100% - 16px) 4px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-last::after { content: ""; position: absolute; left: 0; top: 0; bottom: 4px; width: 16px; border-left: 4px solid #3f6ea8; border-bottom: 4px solid #3f6ea8; border-bottom-left-radius: 14px; box-sizing: border-box; }
   tr.bond-sub .bs-tag { font-size:11px; color:var(--muted); }
   .pd-sm { padding:1px 7px !important; font-size:11.5px !important; }
   .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
