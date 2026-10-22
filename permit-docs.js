@@ -1211,6 +1211,7 @@
     catch { bondRows = []; }
     return bondRows;
   }
+  const bondOwners = (sid, except) => S.docs.filter(d => d.id !== except && (d.bonds || []).some(x => x.id === sid));          // לכל אג"ח מסמך אחד בלבד
   function bcard(x, d) {
     const own = (d.business_ids || []).map(bizById).filter(Boolean).some(b => digitsOf(b.chp_number) && digitsOf(b.chp_number) === digitsOf(x.chp));
     return `<div class="pd-uc bond"><div class="pd-uc-top" style="cursor:default"><b>${E(x.name || x.id)}</b><div class="pd-sub">${E(bondLabel(x))} · נייר ${E(x.id)}</div><div class="pd-sub">${E(x.company)}${x.chp && !own ? ' <span class="pd-st bad">החברה לא משויכת למסמך</span>' : ""}</div></div>
@@ -1227,11 +1228,15 @@
     let list = rows.filter(r => !have.has(r.id));
     list = qq ? list.filter(r => [r.name, r.symbol, r.id, r.company].some(v => String(v).toLowerCase().includes(qq))) : list.filter(own);
     list.sort((x, y) => (own(y) ? 1 : 0) - (own(x) ? 1 : 0) || String(x.name).localeCompare(String(y.name), "he"));
-    out.innerHTML = list.slice(0, 40).map(r => `<button class="pd-pick" onclick="PD._mgBondAdd('${docId}','${E(r.id)}')">${E(r.name)} <span class="pd-sub">${E(bondLabel(r))}${own(r) ? "" : " · " + E(r.company)}</span>${own(r) ? ' <span class="pd-tag">של החברה</span>' : ""}</button>`).join("")
+    out.innerHTML = list.slice(0, 40).map(r => { const tk = bondOwners(r.id, docId).length;
+      return `<button class="pd-pick" ${tk ? 'disabled style="opacity:.55;cursor:not-allowed" title="כבר משויך מסמך לאג&quot;ח הזו"' : `onclick="PD._mgBondAdd('${docId}','${E(r.id)}')"`}>${E(r.name)} <span class="pd-sub">${E(bondLabel(r))}${own(r) ? "" : " · " + E(r.company)}</span>${own(r) ? ' <span class="pd-tag">של החברה</span>' : ""}${tk ? ' <span class="pd-tag">משויך כבר מסמך</span>' : ""}</button>`; }).join("")
       || `<div class="pd-sub" style="padding:5px">${qq ? "לא נמצאו אג\"ח" : "אין אג\"ח רשומות לחברה הזו. הקלידו לחיפוש בכל האג\"ח."}</div>`;
   }
   async function mgBondAdd(docId, id) {
     const d = S.byId.get(docId), r = (await bondList()).find(x => x.id === id); if (!d || !r) return;
+    if ((d.bonds || []).some(x => x.id === id)) return;
+    const taken = bondOwners(id, docId);
+    if (taken.length) { alert(`${bondLabel(r)} (${r.name}) כבר משויכת למסמך "${taken[0].original_name || taken[0].id}".\nלכל אג"ח אפשר לשייך מסמך אחד בלבד - יש לבטל קודם את השיוך הקיים.`); return; }
     try { const before = snapDoc(d); replaceDoc((await api("/permit-docs/" + docId, "PUT", { bonds: [...(d.bonds || []), r] })).doc); pushHist(before, "שויך לאג\"ח " + r.name); }
     catch (e) { alert("שיוך האג\"ח נכשל: " + e.message + (/no such table/.test(e.message) ? " (חסרה מיגרציה 0009 ב-D1)" : "")); return; }
     paintMg();
@@ -2711,9 +2716,20 @@
       return `<div class="pd-mg-slot ${need[t] ? "" : "off"}" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'${t}')"><h4>הת"ע ${SLOT_HE[t]}${need[t] ? "" : ' <span class="pd-sub">(לא נדרש לפי הרישום)</span>'}</h4>${d ? mgCard(d, b)
         : `<div class="pd-mg-empty ${need[t] ? "need" : ""}">${need[t] ? "⚠ אין מסמך מקושר" : "אין מסמך מקושר"}<div class="pd-sub">לקישור: בחרו מסמך מלמטה ולחצו "הת"ע ${SLOT_HE[t]}"</div></div>`}</div>`; };
     const allEx = extrasOf(b.id), bd = allEx.filter(d => (d.bonds || []).length).sort((x, y) => bondKey(x).localeCompare(bondKey(y), "he")), ex = allEx.filter(d => !(d.bonds || []).length);
+    // תיבות אג"ח (קטנות, בצד שמאל): אג"ח של החברה לפי ח.פ. + אג"ח שמשויכות למסמכי החברה. בכל תיבה מסמך אחד
+    if (!bondRows) bondList().then(() => { if (M.biz === b.id) paintMg(); });
+    const bmap = new Map((bondRows || []).filter(r => digitsOf(r.chp) && digitsOf(r.chp) === digitsOf(b.chp_number)).map(r => [r.id, r]));
+    for (const d of bd) for (const x of d.bonds) if (!bmap.has(x.id)) bmap.set(x.id, x);
+    const bonds = [...bmap.values()].sort((x, y) => bondLabel(x).localeCompare(bondLabel(y), "he"));
+    const bmini = (d, x) => `<div class="pd-mg-bdoc"><div class="pd-mg-bth" onclick="PD.openDoc('${d.id}','${b.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>…</span></div>
+      <div style="min-width:0"><div class="pd-name" style="cursor:pointer;text-decoration:underline;font-size:12px;overflow-wrap:anywhere" onclick="PD.openDoc('${d.id}','${b.id}')">${E(d.original_name || d.id)}</div><button class="pd-link2" style="color:#c0392b" onclick="PD._mgBondDel('${d.id}','${E(x.id)}')">ביטול שיוך</button></div></div>`;
+    const bslot = x => { const ds = bondOwners(x.id);
+      return `<div class="pd-mg-bslot ${ds.length > 1 ? "dup" : ""}" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'bond:${E(x.id)}')"><h5>${E(bondLabel(x))} <span class="pd-sub">${E(x.symbol || x.id)}</span></h5>
+        ${ds.length ? ds.map(d => bmini(d, x)).join("") + (ds.length > 1 ? `<div class="pd-sub" style="color:#c0392b;font-weight:600">⚠ ${ds.length} מסמכים לאותה אג"ח - יש להשאיר אחד</div>` : "") : `<div class="pd-mg-bempty">אין מסמך · גררו לכאן</div>`}</div>`; };
+    const bcol = bonds.length ? `<div class="pd-mg-bcol"><h4>שטרות אג"ח (${bonds.filter(x => bondOwners(x.id).length).length}/${bonds.length})</h4>${bonds.map(bslot).join("")}</div>` : "";
     root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b><span class="pd-chip" style="background:#1a3a5c;margin-inline-start:8px" title="הרישום של החברה ברשימות האתר">רישום: ${regLabel(b)}</span><button class="pd-mini" onclick="PD._regChange()" title="שינוי הרישום או מחיקת החברה מהרשימה">לשינוי</button>
         <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
-      <div class="pd-body"><div class="pd-mg-top">${["private", "general"].filter(t => need[t] || slotDoc(b.id, t)).map(slotBox).join("")}</div>
+      <div class="pd-body"><div class="pd-mg-top">${["private", "general"].filter(t => need[t] || slotDoc(b.id, t)).map(slotBox).join("")}${bcol}</div>
         ${bd.length ? `<h4 style="margin:18px 0 8px">שטרות אג"ח של החברה (${bd.length})</h4><div class="pd-mg-grid" id="pd-mg-bonds">${bd.map(d => mgCard(d, b)).join("")}</div>` : ""}
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div>${suggestHtml(b.id)}</div>`;
@@ -2741,6 +2757,7 @@
     const id = dragId || (ev.dataTransfer && ev.dataTransfer.getData("text/plain")); dragId = "";
     const d = S.byId.get(id); if (!d || !M.biz) return;
     if (target === "extra") return toExtras(id);
+    if (target.startsWith("bond:")) return mgBondAdd(id, target.slice(5));
     if (slotsOf(d, M.biz).includes(target)) return;
     await toggleSlot(id, M.biz, target);
   }
@@ -2919,7 +2936,11 @@
   .pd-mg-sh{background:#f7f7f5;border-radius:6px;padding:5px}
   .pd-mini{border:1px solid #cfcac0;background:#fff;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer}.pd-mini.sel{background:#1a3a5c;color:#fff;border-color:#1a3a5c}
   .pd-mini.link.sel{background:#7a3b8f;border-color:#7a3b8f}.pd-mini.danger{color:#c0392b;border-color:#e6a39b}
-  @media(max-width:900px){.pd-mg-top{flex-direction:column}.pd-mg-grid{grid-template-columns:1fr}}
+  .pd-mg-bcol{flex:none;width:250px;display:flex;flex-direction:column;gap:6px;max-height:440px;overflow:auto}.pd-mg-bcol>h4{margin:0;font-size:13px;color:#1a3a5c}
+  .pd-mg-bslot{border:2px solid #9db7d8;border-radius:8px;padding:5px 7px;background:#f4f8fd}.pd-mg-bslot.dup{border-color:#e6a39b;background:#fdf4f3}.pd-mg-bslot h5{margin:0 0 4px;font-size:12.5px;color:#1a3a5c}
+  .pd-mg-bempty{border:1.5px dashed #cfcac0;border-radius:6px;padding:7px;text-align:center;font-size:12px;color:#777}
+  .pd-mg-bdoc{display:flex;gap:6px;align-items:center;margin-bottom:3px}.pd-mg-bth{width:42px;height:54px;flex:none;background:#eee;border-radius:4px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}.pd-mg-bth img{max-width:100%;max-height:100%;display:block}.pd-mg-bth img:not([src]){display:none}.pd-mg-bth .pd-mg-ld{font-size:9px;line-height:1.1;text-align:center}
+  @media(max-width:900px){.pd-mg-bcol{width:auto;max-height:none}.pd-mg-top{flex-direction:column}.pd-mg-grid{grid-template-columns:1fr}}
   .pd-f-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pd-f-col{min-width:0}@media(max-width:900px){.pd-f-cols{grid-template-columns:1fr}}
   .pd-homeh{margin:26px 0 10px;font-size:16px;color:#1a3a5c}
   .pd-missing{background:#fdecea;color:#c0392b;border:1px solid #e6a39b;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
