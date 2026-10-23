@@ -352,6 +352,18 @@ def cmd_apply(a):
         return
     rows = [r for r in csv.DictReader(open("old_categories_plan.csv", encoding="utf-8-sig")) if r["business_id"] and r["ביטחון"] in order]
     cur = {b["id"]: b for b in (lambda x: x if isinstance(x, list) else x.get("businesses", []))(call(a.site, "", "/businesses"))}
+    cats = collections.defaultdict(list)
+    for r in rows:
+        if r["קטגוריה"] not in cats[r["business_id"]]:
+            cats[r["business_id"]].append(r["קטגוריה"])
+    conflict = {k: [c for c in v if c != "שונות"] for k, v in cats.items()}
+    conflict = {k: v for k, v in conflict.items() if len(v) > 1}
+    if conflict:
+        with open("old_categories_conflicts.csv", "w", encoding="utf-8-sig", newline="") as f:
+            w = csv.writer(f); w.writerow(["עסק", "business_id", "קטגוריות בישן", "תיבחר (הראשונה)"])
+            for k, v in sorted(conflict.items(), key=lambda x: x[1]):
+                w.writerow([next((r["עסק"] for r in rows if r["business_id"] == k), ""), k, " | ".join(v), v[0]])
+        print(f"⚠ {len(conflict)} עסקים עם כמה קטגוריות ספציפיות בישן (נבחרת הראשונה): old_categories_conflicts.csv")
     todo, seen = [], set()
     for r in rows:
         b = cur.get(r["business_id"])
