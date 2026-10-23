@@ -14,46 +14,43 @@
   :root{--navy:#274d5b;--accent:#2aada1;--accent-dark:#1e8f85;--accent-bg:#e9f6f5;--accent-border:#b9e3de;--border:#dfe7e8;--text:#3b3d3d;--muted:#6a7c82}
   html{-webkit-text-size-adjust:100%}
   body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);font-size:17px;line-height:1.5;padding:0 .8rem 2rem}
-  .wrap{max-width:1000px;margin:0 auto}
-  .top{position:sticky;top:0;z-index:10;background:#f4f7f7;margin:0 -.8rem;padding:.5rem .8rem .5rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-  h1{font-size:22px;color:var(--navy);margin:.2rem 0 .5rem}
-  .bar{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
-  .bar input,.bar select{font:inherit;font-size:16px;padding:.45rem .7rem;border:2px solid var(--accent-border);border-radius:10px;background:#fff;color:var(--text);min-height:44px}
-  .bar input{flex:1;min-width:180px}.bar select{min-width:200px}
-  .cnt{font-size:14px;color:var(--muted);margin-inline-start:auto}
-  .chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.5rem}
-  .chip{font:inherit;font-size:15px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:999px;padding:.2rem .8rem;cursor:pointer}
-  .chip.on{background:var(--navy);border-color:var(--navy);color:#fff}.chip small{font-weight:400;opacity:.75;margin-inline-start:.3rem}
-  .cat{margin:1.1rem 0 .3rem;font-size:19px;font-weight:700;color:var(--navy);border-bottom:2px solid var(--accent-border);padding-bottom:.2rem}
+  .wrap{max-width:1100px;margin:0 auto}
+  .hero{background:linear-gradient(135deg,#1d3b46,#274d5b 60%,#35616f);color:#fff;text-align:center;margin:0 -.8rem 1.2rem;padding:1.6rem .8rem 1.3rem}
+  .hero h1{font-size:30px;font-weight:700;margin:0}.hero .bc{font-size:14px;opacity:.8;margin-top:.3rem}
+  .layout{display:grid;grid-template-columns:250px 1fr;gap:2rem;align-items:start}
+  .side{position:sticky;top:.6rem}
+  .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:17px;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:.65rem .4rem;cursor:pointer;text-align:start}
+  .side button::after{content:"\2039";font-size:20px;color:var(--muted);order:2;margin-inline-start:.4rem}
+  .side button small{color:var(--muted);font-size:13px;margin-inline-start:auto;padding-inline:.5rem}
+  .side button:hover{background:#eef4f5}.side button.on{font-weight:700;color:var(--accent-dark);border-bottom-color:var(--accent)}
+  .bar{margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+  .bar input{flex:1;min-width:180px;font:inherit;font-size:16px;padding:.5rem .8rem;border:2px solid var(--accent-border);border-radius:10px;background:#fff;color:var(--text);min-height:44px}
+  .cnt{font-size:14px;color:var(--muted)}
+  .cat{margin:1.6rem 0 .4rem;font-size:22px;font-weight:700;color:var(--navy);text-align:center;border-bottom:2px solid var(--accent-border);padding-bottom:.3rem}
   .cat small{font-size:14px;color:var(--muted);font-weight:400;margin-inline-start:.4rem}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.5rem}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:.6rem;background:#fff;border:1px solid var(--border);border-radius:10px;padding:.45rem .7rem}
-  .nm{min-width:0;font-weight:700;overflow-wrap:anywhere}.nm .p{display:block;font-size:13px;font-weight:400;color:var(--muted)}
-  .docs{display:grid;grid-template-columns:76px 76px;gap:0 10px;flex:none;align-items:start}
-  .col{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:1px}
-  .col.side{position:relative}.col.side::before{content:"";position:absolute;inset-block:0;inset-inline-start:-6px;border-inline-start:1px solid var(--border)}
-  .tag{font-size:12px;font-weight:700;color:var(--navy);line-height:16px;height:16px}
+  .it{text-align:center;padding:.9rem .5rem;border-bottom:1px solid #edf1f2}
+  .nm{font-size:21px;color:#2f6270;overflow-wrap:anywhere}.nm .p{display:block;font-size:14px;color:var(--muted)}
+  .act{display:flex;justify-content:center;gap:1.4rem;flex-wrap:wrap;margin-top:.35rem}
+  .grp{display:flex;align-items:center;gap:.4rem;font-size:13px;color:var(--navy);font-weight:700}
   .pair{display:flex;gap:5px}
   a.ic{display:inline-flex;width:34px;height:32px;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:6px;background:#fff;color:var(--accent-dark);text-decoration:none}
   a.ic:hover{background:var(--accent-bg)}
-  .none{color:#a8b3b6;font-size:15px;text-align:center}
+  .none{color:#a8b3b6;font-size:14px;font-weight:400}
   .state{padding:2rem;text-align:center;color:var(--muted)}
-  @media(max-width:560px){.grid{grid-template-columns:1fr}}
-  body.embed .top{position:static;box-shadow:none}body.embed h1{display:none}
+  @media(max-width:760px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem}.side button{width:auto;white-space:nowrap;border:2px solid var(--accent-border);border-radius:999px;padding:.25rem .8rem}.side button::after{display:none}.side button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.hero h1{font-size:24px}}
+  body.embed .hero{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
-    <h1>רשימת שטרות היתר עסקה</h1>
-    <div class="bar">
-      <input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה">
-      <select id="cat" aria-label="בחירת קטגוריה"><option value="">כל הקטגוריות</option></select>
-      <span class="cnt" id="cnt"></span>
-    </div>
-    <div class="chips" id="chips"></div>
-  </header>
-  <main id="list"><div class="state">טוען…</div></main>
+  <header class="hero"><h1>רשימת שטרות היתר עסקה</h1><div class="bc">דף הבית « שטרות היתר עסקה</div></header>
+  <div class="layout">
+    <nav class="side" id="side" aria-label="קטגוריות"></nav>
+    <main>
+      <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
+      <div id="list"><div class="state">טוען…</div></div>
+    </main>
+  </div>
 </div>
 <script>
 const API_BASE = "https://harav-levin.pages.dev";
@@ -101,25 +98,21 @@ function draw() {
   const q = Q.trim().toLowerCase(), cats = new Map();
   for (const r of ROWS) cats.set(r.cat, (cats.get(r.cat) || 0) + 1);
   const names = [...cats.keys()].sort((a, b) => a.localeCompare(b, "he"));
-  const sel = document.getElementById("cat");
-  if (sel.options.length !== names.length + 1) sel.innerHTML = '<option value="">כל הקטגוריות</option>' + names.map(c => `<option value="${esc(c)}">${esc(c)} (${cats.get(c)})</option>`).join("");
-  sel.value = CAT;
-  document.getElementById("chips").innerHTML = names.map(c => `<button class="chip${c === CAT ? " on" : ""}" data-c="${esc(c)}">${esc(c)}<small>${cats.get(c)}</small></button>`).join("");
+  document.getElementById("side").innerHTML = `<button data-c=""${CAT ? "" : ' class="on"'}>כל הקטגוריות<small>${ROWS.length}</small></button>` + names.map(c => `<button data-c="${esc(c)}"${c === CAT ? ' class="on"' : ""}>${esc(c)}<small>${cats.get(c)}</small></button>`).join("");
   const rows = ROWS.filter(r => (!CAT || r.cat === CAT) && (!q || r.hay.includes(q)));
   document.getElementById("cnt").textContent = rows.length + " חברות";
   const by = new Map();
   for (const r of rows) { if (!by.has(r.cat)) by.set(r.cat, []); by.get(r.cat).push(r); }
-  const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2><div class="grid">${by.get(c).map(r => {
+  const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}${by.get(c).sort((x, y) => nameOf(x.b).main.replace(/["'׳״]/g, "").localeCompare(nameOf(y.b).main.replace(/["'׳״]/g, ""), "he")).map(r => {
     const n = nameOf(r.b), hasP = r.priv || r.b.visibility === "פרטי" || r.b.visibility === "רק פרטי";
-    const gen = r.gen ? pair(r.gen) : '<div class="none">—</div>';
-    const side = hasP ? `<div class="col side"><div class="tag">יש פרטי</div>${r.priv ? pair(r.priv) : ""}</div>` : "";
-    return `<div class="row"><div class="nm">${esc(n.main)}${n.sub ? `<span class="p">${esc(n.sub)}</span>` : ""}</div><div class="docs"><div class="col">${hasP ? '<div class="tag"></div>' : ""}${gen}</div>${side}</div></div>`;
-  }).join("")}</div>`).join("");
+    const gen = r.gen ? `<div class="grp">כללי ${pair(r.gen)}</div>` : "";
+    const priv = r.priv ? `<div class="grp">פרטי ${pair(r.priv)}</div>` : hasP ? '<div class="grp none">יש פרטי</div>' : "";
+    return `<div class="it"><div class="nm">${esc(n.main)}${n.sub ? `<span class="p">${esc(n.sub)}</span>` : ""}</div><div class="act">${gen}${priv}${gen || priv ? "" : '<div class="grp none">—</div>'}</div></div>`;
+  }).join("")}`).join("");
   document.getElementById("list").innerHTML = out || '<div class="state">לא נמצאו חברות</div>';
 }
 document.getElementById("q").addEventListener("input", e => { Q = e.target.value; draw(); });
-document.getElementById("cat").addEventListener("change", e => { CAT = e.target.value; location.hash = CAT ? "cat=" + encodeURIComponent(CAT) : ""; draw(); });
-document.getElementById("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; CAT = CAT === b.dataset.c ? "" : b.dataset.c; location.hash = CAT ? "cat=" + encodeURIComponent(CAT) : ""; draw(); });
+document.getElementById("side").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; CAT = b.dataset.c; location.hash = CAT ? "cat=" + encodeURIComponent(CAT) : ""; draw(); });
 
 (async () => {
   try {
