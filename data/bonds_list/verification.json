@@ -1,25 +1,19 @@
 {
- "updated": "2026-10-22",
+ "updated": "2026-10-23",
  "status": "ok",
- "datawise_date": "2026-10-21",
- "expected": 757,
- "maya": 757,
+ "datawise_date": "2026-10-22",
+ "expected": 759,
+ "maya": 759,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
  "dropped_no_terms": [
   {
-   "security_id": 1243096,
-   "security_name": "מז טפ הנפ נד 73",
-   "company": "מזרחי טפחות חברה להנפקות בע\"מ",
-   "chp_number": "520032046"
-  },
-  {
-   "security_id": 1243104,
-   "security_name": "מז טפ הנפמסחרי6",
-   "company": "מזרחי טפחות חברה להנפקות בע\"מ",
-   "chp_number": "520032046"
+   "security_id": 1243898,
+   "security_name": "בינל הנפ מסחרי5",
+   "company": "הבינלאומי הראשון הנפקות בע\"מ",
+   "chp_number": "513141879"
   }
  ]
 }
