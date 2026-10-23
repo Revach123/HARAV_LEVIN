@@ -108,14 +108,21 @@ def load_db(path):
 
 def cmd_extract(a):
     posts, meta = load_db(a.db)
-    cands = [p for p in posts.values() if "שטרות" in p["post_title"] and ("היתר" in p["post_title"]) and p["post_type"] in ("page", "post")]
-    cands.sort(key=lambda p: (p["post_status"] != "publish", -len(p["post_content"])))
-    lines = ["== דפים שנמצאו (כותרת מכילה 'שטרות' ו'היתר') =="]
-    for p in cands:
-        lines.append(f"{p['ID']}\t{p['post_type']}\t{p['post_status']}\t{p['post_title']}\tתוכן: {len(p['post_content'])} תווים\tmeta גדולים: {len(meta.get(p['ID'], []))}")
+    DOCT = {"main_ducuments", "main_documents", "privet_ducuments", "company", "product", "attachment", "revision", "nav_menu_item"}
+    def score(p):          # ככל שהכותרת קרובה ל"שטרות היתר עסקה" ויש בה תוכן
+        t = html.unescape(p["post_title"])
+        return (("שטר" in t) * 2 + ("היתר" in t) + ("עיסקא" in t or "עסקא" in t)) * 10 + (p["post_type"] == "page") * 5 + (p["post_status"] == "publish") * 3 + min(len(p["post_content"]) // 2000, 5)
+    cands = [p for p in posts.values() if p["post_type"] not in DOCT and any(w in html.unescape(p["post_title"]) for w in ("שטר", "היתר", "עיסקא", "עסקא"))]
+    cands.sort(key=lambda p: -score(p))
+    cnt = collections.Counter(p["post_type"] for p in posts.values())
+    lines = ["== סוגי פוסטים בגיבוי: " + ", ".join(f"{k}={v}" for k, v in cnt.most_common(15)), "", "== פוסטים/דפים עם 'שטר' / 'היתר' / 'עיסקא' בכותרת (לפי התאמה) =="]
+    for p in cands[:40]:
+        lines.append(f"{p['ID']}\t{p['post_type']}\t{p['post_status']}\t{html.unescape(p['post_title'])}\tתוכן: {len(p['post_content'])} תווים\tmeta גדולים: {len(meta.get(p['ID'], []))}")
+    pg = [p for p in posts.values() if p["post_type"] == "page"]
+    lines += ["", f"== כל הדפים (page) בגיבוי: {len(pg)} =="] + [f"{p['ID']}\t{p['post_status']}\t{html.unescape(p['post_title'])}\t{len(p['post_content'])}" for p in sorted(pg, key=lambda x: html.unescape(x['post_title']))[:150]]
     pid = a.post or (cands[0]["ID"] if cands else None)
     if not pid or pid not in posts:
-        print("\n".join(lines)); print("לא נמצא דף. ציין --post <מזהה>."); open("old_categories_probe.txt", "w", encoding="utf-8").write("\n".join(lines)); return
+        print("\n".join(lines)); print("לא נמצא דף אוטומטית. ציין --post <מזהה> לפי הרשימה למעלה (ואם הדף לא ברשימה - להדביק לי את old_categories_probe.txt)."); open("old_categories_probe.txt", "w", encoding="utf-8").write("\n".join(lines)); return
     p = posts[pid]
     srcs = [("post_content", p["post_content"])]
     for k, v in meta.get(pid, []):
