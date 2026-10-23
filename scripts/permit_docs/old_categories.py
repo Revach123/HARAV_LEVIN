@@ -279,7 +279,12 @@ def call(site, token, path, body=None, method=None):
             with urllib.request.urlopen(req, timeout=90, context=ctx()) as r:
                 return json.loads(r.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
-            raise RuntimeError(f"{e.code}: {e.read().decode('utf-8', 'replace')[:200]}")
+            msg = f"{e.code}: {e.read().decode('utf-8', 'replace')[:200]}"
+            if e.code in (500, 502, 503, 504, 429) and attempt < 4:          # תקלת רשת זמנית ב-D1 ("Network connection lost") - הכתיבה אידמפוטנטית, אפשר לנסות שוב
+                last = RuntimeError(msg)
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise RuntimeError(msg)
         except urllib.error.URLError as e:
             last = e
             if STRICT[0] and isinstance(e.reason, ssl.SSLCertVerificationError) and "key usage" in str(e.reason):
