@@ -6,6 +6,8 @@
   1. python old_categories.py extract "…-db.gz" [--post מזהה]
        מוצא את הדף בגיבוי, מפרק אותו לקטגוריות ופריטים → old_categories.csv + old_categories_probe.txt
        (אם הפירוק לא נראה נכון: להדביק את old_categories_probe.txt בשיחה)
+  1ב. python old_categories.py terms "…-db.gz" [--taxonomy שם]
+       אם הקטגוריות באתר הישן הן קטגוריות (טקסונומיה) שמוצמדות לפוסטים של השטרות: קורא אותן מהגיבוי → old_categories.csv (במקום extract)
   2. python old_categories.py match
        משווה לעסקים באתר (GET /api/businesses) → old_categories_plan.csv (עסק לכל פריט, ביטחון, קטגוריה נוכחית) + סיכום
   3. python old_categories.py apply            הרצה יבשה (רק מדפיס)
@@ -159,6 +161,69 @@ def cmd_extract(a):
     print("\nנכתבו: old_categories.csv, old_categories_probe.txt")
 
 
+def cmd_terms(a):
+    """הקטגוריות של האתר הישן הן טקסונומיה (קטגוריות) שמוצמדת לפוסטים של השטרות (main_ducuments / privet_ducuments ...): נקרא את הקשר פוסט<->קטגוריה."""
+    sql = gzip.open(a.db, "rt", encoding="utf-8", errors="replace").read()
+    def table(name, cols):
+        c = columns(sql, name)
+        ix = {k: c.index(k) for k in cols if k in c}
+        return [{k: r[i] for k, i in ix.items()} for r in inserts(sql, name)]
+    pc = columns(sql, "wp_posts")
+    pix = {k: pc.index(k) for k in ("ID", "post_title", "post_type", "post_status", "post_content") if k in pc}
+    posts = {}
+    for r in inserts(sql, "wp_posts"):
+        posts[r[pix["ID"]]] = {k: r[i] for k, i in pix.items()}
+    terms = {t["term_id"]: t for t in table("wp_terms", ["term_id", "name", "slug"])}
+    tax = {t["term_taxonomy_id"]: t for t in table("wp_term_taxonomy", ["term_taxonomy_id", "term_id", "taxonomy", "parent", "count"])}
+    rel = table("wp_term_relationships", ["object_id", "term_taxonomy_id"])
+    tname = lambda ttid: html.unescape(terms.get(tax[ttid]["term_id"], {}).get("name", "")) if ttid in tax else ""
+    def path(ttid):
+        names, seen = [], set()
+        while ttid in tax and ttid not in seen:
+            seen.add(ttid); names.append(tname(ttid))
+            par = tax[ttid].get("parent", "0")
+            ttid = next((k for k, v in tax.items() if v["term_id"] == par and par not in ("", "0")), None)
+        return " › ".join(reversed([n for n in names if n]))
+    DOC = set(a.types.split(","))
+    use = collections.defaultdict(lambda: collections.Counter())        # taxonomy -> סוג פוסט -> כמות
+    by_post = collections.defaultdict(list)
+    for r in rel:
+        t, post = tax.get(r["term_taxonomy_id"]), posts.get(r["object_id"])
+        if not t or not post or post["post_status"] != "publish":
+            continue
+        use[t["taxonomy"]][post["post_type"]] += 1
+        by_post[(post["ID"], t["taxonomy"])].append(r["term_taxonomy_id"])
+    lines = ["== טקסונומיות בגיבוי (לפי סוג פוסט) =="]
+    for tx, c in sorted(use.items(), key=lambda x: -sum(x[1].values())):
+        n_terms = sum(1 for v in tax.values() if v["taxonomy"] == tx)
+        lines.append(f"{tx}: {n_terms} קטגוריות; " + ", ".join(f"{k}={v}" for k, v in c.most_common(6)))
+    cand = {tx: sum(v for k, v in c.items() if k in DOC) for tx, c in use.items() if tx not in ("nav_menu", "post_format", "link_category")}
+    chosen = a.taxonomy or (max(cand, key=cand.get) if cand and max(cand.values()) > 0 else "")
+    lines.append(f"\nטקסונומיה שנבחרה: {chosen or '(לא נמצאה; ציין --taxonomy)'}")
+    rows, seen = [], set()
+    cnt = collections.Counter()
+    for (pid, tx), ttids in by_post.items():
+        if tx != chosen or posts[pid]["post_type"] not in DOC:
+            continue
+        post = posts[pid]
+        m = re.search(r"https?://[^\s\"'<>)\\]+\.pdf", post["post_content"], re.I)
+        for tt in ttids:
+            cat = path(tt)
+            key = (cat, norm(html.unescape(post["post_title"])))
+            if key in seen:
+                continue
+            seen.add(key); cnt[cat] += 1
+            rows.append((cat, html.unescape(post["post_title"]).strip(), m.group(0) if m else "", post["post_type"]))
+    with open("old_categories.csv", "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f); w.writerow(["קטגוריה", "פריט", "קישור", "מקור"]); w.writerows(sorted(rows))
+    multi = collections.Counter(r[1] for r in rows)
+    lines += [f"{len(rows)} שורות (קטגוריה + שם פוסט) ב-{len(cnt)} קטגוריות; פריטים בכמה קטגוריות: {sum(1 for v in multi.values() if v > 1)}", ""]
+    lines += [f"{n:5d}  {c}" for c, n in cnt.most_common(80)]
+    open("old_categories_probe.txt", "w", encoding="utf-8").write("\n".join(lines))
+    print("\n".join(lines[:90]))
+    print("\nנכתבו: old_categories.csv, old_categories_probe.txt")
+
+
 # ───────── התאמה לעסקים באתר ─────────
 def norm(x):
     x = str(x or "").lower()
@@ -288,11 +353,12 @@ def main():
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest="cmd", required=True)
     e = sp.add_parser("extract"); e.add_argument("db"); e.add_argument("--post")
+    t = sp.add_parser("terms"); t.add_argument("db"); t.add_argument("--taxonomy", default=""); t.add_argument("--types", default="main_ducuments,main_documents,privet_ducuments,company")
     m = sp.add_parser("match"); m.add_argument("--site", default="https://harav-levin.pages.dev"); m.add_argument("--csv", default="old_categories.csv")
     p = sp.add_parser("apply"); p.add_argument("--site", default="https://harav-levin.pages.dev"); p.add_argument("--go", action="store_true")
     p.add_argument("--min", default="high", choices=["high", "mid", "low"]); p.add_argument("--undo", default=""); p.add_argument("--password-file", default="admin_password.txt")
     a = ap.parse_args()
-    {"extract": cmd_extract, "match": cmd_match, "apply": cmd_apply}[a.cmd](a)
+    {"extract": cmd_extract, "terms": cmd_terms, "match": cmd_match, "apply": cmd_apply}[a.cmd](a)
 
 
 if __name__ == "__main__":
