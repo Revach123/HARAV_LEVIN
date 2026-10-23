@@ -1,4 +1,5 @@
 import { checkAdmin } from "./_shared/auth.js";
+import { normalizePcat } from "./_shared/pcat.js";
 // GET  /api/businesses        → list all (public)
 // POST /api/businesses        → create new (admin only)
 
@@ -55,8 +56,8 @@ export async function onRequestPost({ request, env }) {
       ).bind(...vals).run();
     }
 
-    if (body.permits_category !== undefined) {          // קטגוריה עבור רשימת השטרות (migrations/0019); לפני המיגרציה מתעלמים
-      try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(String(body.permits_category || "").trim(), id).run(); }
+    {          // קטגוריה עבור רשימת השטרות (migrations/0019); עסק חדש בלי קטגוריה נכנס אוטומטית ל"שונות" (או "עיריות"); לפני המיגרציה מתעלמים
+      try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(normalizePcat(body.permits_category, permit_name, registrar_name), id).run(); }
       catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
     }
     return Response.json({ success: true });
