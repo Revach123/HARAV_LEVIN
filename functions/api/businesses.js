@@ -55,6 +55,10 @@ export async function onRequestPost({ request, env }) {
       ).bind(...vals).run();
     }
 
+    if (body.permits_category !== undefined) {          // קטגוריה עבור רשימת השטרות (migrations/0019); לפני המיגרציה מתעלמים
+      try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(String(body.permits_category || "").trim(), id).run(); }
+      catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
+    }
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
