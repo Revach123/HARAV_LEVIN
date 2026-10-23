@@ -6,52 +6,73 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-22T08:00:13.106446Z",
+  "updated": "2026-10-23T07:59:03.750851Z",
   "source": "d1",
-  "businesses": 1274,
-  "numeric_chp": 1270,
-  "found_in_registry": 1182,
+  "businesses": 1275,
+  "numeric_chp": 1271,
+  "found_in_registry": 1183,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2226,
-  "datawise_date": "2026-10-21",
+  "datawise_rows": 2228,
+  "datawise_date": "2026-10-22",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 0,
+   "registrar_name": 1,
    "biz_type": 1,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "registry_status_counts": {
-   "פעילה": 1069,
+   "פעילה": 1070,
    "לא ידוע": 154,
    "מחוסלת/חיסול": 35,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 2,
   "problems": []
  },
  "changes": [
   {
-   "id": "mp64l97wmqn2",
-   "chp": "520020942",
+   "id": "mp64kdff1ejr",
+   "chp": "515897775",
+   "field": "registrar_name",
+   "old": "וויצ'ק פאנד 1  בע\"מ",
+   "new": "פיינדיט טכנולוגיות בע\"מ"
+  },
+  {
+   "id": "mvknz08moxdk",
+   "chp": "511772154",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mvknz08moxdk",
+   "chp": "511772154",
    "field": "biz_type",
-   "old": "חברה ציבורית - בע\"מ",
+   "old": "",
    "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mvknz08moxdk",
+   "chp": "511772154",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "אין"
   }
  ],
  "not_found": [
