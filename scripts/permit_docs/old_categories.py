@@ -397,6 +397,10 @@ def norm_cats(cats):
     return spec if spec else ["שונות"]
 
 
+# עסק שבשמו עירייה / מועצה איזורית (או מקומית) - "עיריות" (לא "עירית X" בשם קופה: רק "עירייה" / "עיריה" / "עיריית")
+RE_MUNI = re.compile(r"(?:^|[\s\-–(])(?:עירייה|עיריה|עיריית)(?=$|[\s\-–)])|מועצה\s+(?:איזורית|אזורית|מקומית)")
+
+
 def cmd_normalize(a):
     token = os.environ.get("ADMIN_PASSWORD") or ""
     if not token and os.path.exists(a.password_file):
@@ -411,12 +415,18 @@ def cmd_normalize(a):
             continue
         cur = [x.strip() for x in (b.get("permits_category") or "").split("|") if x.strip()]
         want = "|".join(norm_cats(cur))
+        if want == "שונות" and (RE_MUNI.search(b.get("permit_name") or "") or RE_MUNI.search(b.get("registrar_name") or "")):
+            want = "עיריות"          # בלי קטגוריה אחרת + עירייה / מועצה בשם
         if "|".join(cur) != want:
             todo.append((b, want))
     print(f"{len(todo)} עסקים לעדכון ({'כתיבה' if a.go else 'הרצה יבשה'}): "
           f"{sum(1 for b, w in todo if w == 'שונות' and not (b.get('permits_category') or '').strip())} בלי קטגוריה ← שונות, "
           f"{sum(1 for b, w in todo if (b.get('permits_category') or '').strip())} עם קטגוריה - מורידים 'שונות'")
-    for b, w in todo[:25]:
+    muni = [b for b, w in todo if w == "עיריות"]
+    print(f"מתוכם 'עיריות' (עירייה / מועצה בשם): {len(muni)}")
+    for b in muni:
+        print(f"  עיריות ← {b.get('permit_name') or b.get('registrar_name')}  (קטגוריה באתר: {b.get('category') or ''})")
+    for b, w in [x for x in todo if x[1] != "עיריות"][:25]:
         print(f"  {b.get('permit_name') or b.get('registrar_name')}: '{b.get('permits_category') or ''}' ← '{w}'")
     if not a.go:
         print("(לביצוע: normalize --go)"); return
