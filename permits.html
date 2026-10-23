@@ -19,6 +19,7 @@
   .hero h1{font-size:30px;font-weight:700;margin:0}.hero .bc{font-size:14px;opacity:.8;margin-top:.3rem}
   .stick{position:sticky;top:0;z-index:20;background:#f4f7f7;margin:0 -.8rem 1rem;padding:.5rem .8rem .4rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
   .stick .bar{max-width:760px;margin:0 auto}
+  .curcat{font-size:21px;font-weight:700;color:var(--navy);text-align:center;margin-top:.45rem;padding-top:.35rem;border-top:2px solid var(--accent-border)}
   .tabs{display:flex;justify-content:center;gap:.5rem;margin:0 0 .5rem;flex-wrap:wrap}
   .tabs button{font:inherit;font-size:17px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:999px;padding:.3rem 1.4rem;cursor:pointer}
   .tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff}
@@ -55,6 +56,7 @@
   <div class="stick" id="stick">
     <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות פרטיים</button><button role="tab" data-t="general">שטרות כלליים</button></div>
     <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
+    <h2 class="curcat" id="curcat" hidden></h2>
   </div>
   <div class="layout">
     <nav class="side" id="side" aria-label="קטגוריות"></nav>
@@ -138,6 +140,7 @@ async function draw() {
   document.getElementById("side").innerHTML = `<button data-c=""${CAT ? "" : ' class="on"'}>כל הקטגוריות<small>${ROWS.length}</small></button>` + names.map(c => `<button data-c="${esc(c)}"${c === CAT ? ' class="on"' : ""}>${esc(c)}<small>${cats.get(c)}</small></button>`).join("");
   const rows = ROWS.filter(r => (!CAT || r.cat === CAT) && (!q || r.hay.includes(q)));
   document.getElementById("cnt").textContent = rows.length + " חברות";
+  const cc = document.getElementById("curcat"); cc.hidden = !CAT; cc.textContent = CAT;          // כותרת הקטגוריה הנבחרת: קבועה בראש הדף
   const by = new Map();
   for (const r of rows) { if (!by.has(r.cat)) by.set(r.cat, []); by.get(r.cat).push(r); }
   const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}<div class="items">${by.get(c).sort((x, y) => qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
