@@ -198,12 +198,13 @@ def cmd_terms(a):
         n_terms = sum(1 for v in tax.values() if v["taxonomy"] == tx)
         lines.append(f"{tx}: {n_terms} קטגוריות; " + ", ".join(f"{k}={v}" for k, v in c.most_common(6)))
     cand = {tx: sum(v for k, v in c.items() if k in DOC) for tx, c in use.items() if tx not in ("nav_menu", "post_format", "link_category")}
-    chosen = a.taxonomy or (max(cand, key=cand.get) if cand and max(cand.values()) > 0 else "")
-    lines.append(f"\nטקסונומיה שנבחרה: {chosen or '(לא נמצאה; ציין --taxonomy)'}")
+    chosen = a.taxonomy or "general_categry,privet_category"
+    chosen_set = {x.strip() for x in chosen.split(",") if x.strip()}
+    lines.append(f"\nטקסונומיות שנבחרו: {', '.join(sorted(chosen_set))}")
     rows, seen = [], set()
     cnt = collections.Counter()
     for (pid, tx), ttids in by_post.items():
-        if tx != chosen or posts[pid]["post_type"] not in DOC:
+        if tx not in chosen_set or posts[pid]["post_type"] not in DOC:
             continue
         post = posts[pid]
         m = re.search(r"https?://[^\s\"'<>)\\]+\.pdf", post["post_content"], re.I)
@@ -214,8 +215,17 @@ def cmd_terms(a):
                 continue
             seen.add(key); cnt[cat] += 1
             rows.append((cat, html.unescape(post["post_title"]).strip(), m.group(0) if m else "", post["post_type"]))
+    rows.sort(key=lambda r: (r[0] == "שונות", r[0], r[1]))         # "שונות" אחרון: אם לפריט יש קטגוריה ספציפית היא תנצח
     with open("old_categories.csv", "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f); w.writerow(["קטגוריה", "פריט", "קישור", "מקור"]); w.writerows(sorted(rows))
+        w = csv.writer(f); w.writerow(["קטגוריה", "פריט", "קישור", "מקור"]); w.writerows(rows)
+    bykey = collections.defaultdict(set)
+    for r in rows:
+        bykey[norm(r[1])].add(r[0])
+    with open("old_categories_multi.csv", "w", encoding="utf-8-sig", newline="") as f:
+        w = csv.writer(f); w.writerow(["פריט", "קטגוריות"])
+        for r in rows:
+            if len(bykey[norm(r[1])]) > 1 and bykey.get(norm(r[1])) is not None:
+                w.writerow([r[1], " | ".join(sorted(bykey.pop(norm(r[1]))))])
     multi = collections.Counter(r[1] for r in rows)
     lines += [f"{len(rows)} שורות (קטגוריה + שם פוסט) ב-{len(cnt)} קטגוריות; פריטים בכמה קטגוריות: {sum(1 for v in multi.values() if v > 1)}", ""]
     lines += [f"{n:5d}  {c}" for c, n in cnt.most_common(80)]
