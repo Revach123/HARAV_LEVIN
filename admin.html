@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261024j"></script>
+<script src="/permit-docs.js?v=20261025a"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1285,6 +1285,16 @@ function renderForm() {
 
       <div id="sim-warn"></div>
       <div id="form-after-permit">
+      <div class="field">
+        <label>קטגוריה עבור רשימת השטרות <span style="color:var(--light);font-weight:400">(אפשר לבחור קיימת או להקליד חדשה)</span></label>
+        <input type="text" id="f-pcat" value="${escHtml(b.permits_category||"")}" placeholder="קטגוריה בדף רשימת השטרות" list="pcat-list" autocomplete="off">
+        <datalist id="pcat-list">
+          ${[...new Set(businesses.map(x=>(x.permits_category||"").trim()).filter(Boolean))]
+            .sort((a,c)=>a.localeCompare(c,"he"))
+            .map(n=>`<option value="${escHtml(n)}">`)
+            .join("")}
+        </datalist>
+      </div>
       <div class="field-row">
         <div class="field">
           <label>קטגוריה</label>
@@ -2432,7 +2442,7 @@ async function idxLoad() {
 let changeLog = []; let chgSeq = 0;
 try { changeLog = JSON.parse(sessionStorage.getItem("chglog") || "[]"); chgSeq = changeLog.reduce((m, e) => Math.max(m, e.n), 0); } catch {}
 const saveLog = () => { try { sessionStorage.setItem("chglog", JSON.stringify(changeLog.slice(-200))); } catch {} };
-const CHG_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: "ח.פ.", category: "קטגוריה", region: "אזור", notes: "הערה", notes_scope: "היכן להציג הערה", visibility: "פרטי/כללי", agch_approved: "אישור אג\"ח", biz_type: "סוג עסק" };
+const CHG_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: "ח.פ.", category: "קטגוריה", permits_category: "קטגוריה לרשימת השטרות", region: "אזור", notes: "הערה", notes_scope: "היכן להציג הערה", visibility: "פרטי/כללי", agch_approved: "אישור אג\"ח", biz_type: "סוג עסק" };
 const CHG_SCOPE = { companies: "חברות", bonds: "אג\"ח", both: "שתיהן" };
 const chgVal = (f, v) => v === undefined || v === null || v === "" ? (f === "visibility" ? "רק כללי" : "ריק") : f === "notes_scope" ? (CHG_SCOPE[v] || v) : f === "visibility" && v === "פרטי" ? "יש גם פרטי" : v;
 const chgName = b => ((b.permit_name || b.registrar_name || "") + "").trim() || "(ללא שם)";
@@ -2614,6 +2624,7 @@ async function doSave() {
     registrar_name: regName,
     permit_name:    permitName,
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
+    permits_category: (document.getElementById("f-pcat")?.value    || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),
     notes:          (document.getElementById("f-notes")?.value     || "").trim(),
     notes_scope:    (document.getElementById("f-notes")?.value || "").trim() ? (document.getElementById("f-notes-scope")?.value || "").trim() : "",

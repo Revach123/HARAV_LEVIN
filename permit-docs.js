@@ -139,18 +139,19 @@
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
   }
   let pendingAdd = null;
-  function addReg(id, defunct, added, vis) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא; אם יש added - אחרי השמירה הוא משייך אוטומטית
+  function addReg(id, defunct, added, vis, pcat) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא; אם יש added - אחרי השמירה הוא משייך אוטומטית
     if (defunct && !confirm("החברה מחוסלת / נמחקה ברשם. להוסיף אותה למאגר בכל זאת?")) return;
     pendingAdd = added ? { chp: digitsOf(id), added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm === "function") {
       openForm(null);
       setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150);
-      if (vis !== undefined) for (const ms of [250, 900, 2000]) setTimeout(() => { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }, ms);          // פרטי / כללי לפי בחירת סוג השטר בחלון ההעלאה
+      if (vis !== undefined) for (const ms of [250, 900, 2000]) setTimeout(() => { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }, ms);
+      if (pcat) for (const ms of [250, 900, 2000]) setTimeout(() => { const f = document.getElementById("f-pcat"); if (f && !f.value) f.value = pcat; }, ms);          // קטגוריה לרשימת השטרות שנבחרה בחלון ההעלאה          // פרטי / כללי לפי בחירת סוג השטר בחלון ההעלאה
     }
   }
 
-  function addNoChp(name, added, vis) {        // הוספת עסק חדש בלי ח.פ.: פותח את טופס "הוספת עסק" במצב "עסק בלי ח.פ." עם השם ממולא; אחרי השמירה משייך אוטומטית (החדש בלי ח.פ. הוא שלנו)
+  function addNoChp(name, added, vis, pcat) {        // הוספת עסק חדש בלי ח.פ.: פותח את טופס "הוספת עסק" במצב "עסק בלי ח.פ." עם השם ממולא; אחרי השמירה משייך אוטומטית (החדש בלי ח.פ. הוא שלנו)
     pendingAdd = added ? { chp: "", added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm !== "function") return;
@@ -159,6 +160,7 @@
       if (typeof toggleNoChp === "function" && typeof noChp !== "undefined" && !noChp) toggleNoChp();
       const f = document.getElementById("f-permit"); if (f && !f.value) { f.value = name; f.dispatchEvent(new Event("input", { bubbles: true })); }
       if (vis !== undefined) { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }
+      if (pcat) { const f = document.getElementById("f-pcat"); if (f && !f.value) f.value = pcat; }
     };
     for (const ms of [150, 500, 1200]) setTimeout(fill, ms);
   }
@@ -704,6 +706,20 @@
     U.jchain = U.jchain.then(() => upSend(job));
     acDone();
   }
+  const pcatList = () => [...new Set(bizList().map(x => (x.permits_category || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  function pcatSelect(cur) {          // "קטגוריה עבור רשימת השטרות": בחירת קיימת או יצירת חדשה
+    const l = pcatList(); if (cur && !l.includes(cur)) l.push(cur);
+    return `<select class="pd-in pd-ac-pcat" onchange="PD._acPcat(this)"><option value="">— ללא קטגוריה —</option>${l.map(x => `<option value="${E(x)}"${x === cur ? " selected" : ""}>${E(x)}</option>`).join("")}<option value="__new">➕ קטגוריה חדשה…</option></select>`;
+  }
+  async function acPcat(sel) {
+    const c = U.cur; if (!c || !c.pick) return;
+    let v = sel.value;
+    if (v === "__new") { v = (prompt("שם הקטגוריה החדשה (לרשימת השטרות):") || "").trim(); if (!v) { upReviewAC(false); return; } }
+    if (c.pick.kind === "biz") {
+      if (typeof inlineUpdateMany === "function") await inlineUpdateMany(c.pick.id, { permits_category: v });
+    } else c.pick.pcat = v;
+    upReviewAC(false);
+  }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }
   function acBig() {
     const c = U.cur; if (!c) return;
@@ -718,7 +734,7 @@
       const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
       const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], ["ח.פ.", b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["אישור אג\"ח", b.agch_approved], ["הערה", b.notes]]
         .filter(x => String(x[1] || "").trim());
-      return `<div class="pd-ac-det"><div style="grid-column:1/-1;font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div>${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}</div>`;
+      return `<div class="pd-ac-det"><div style="grid-column:1/-1;font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div><div style="grid-column:1/-1"><span class="pd-sub">קטגוריה עבור רשימת השטרות:</span> ${pcatSelect((b.permits_category || "").trim())}</div>${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}</div>`;
     })();
     // הפיצרים הם גם כפתורי הבחירה. מסמך משותף קיים / חברה חדשה: למעלה "החלפת המסמך המשותף" ומתחתיו פרטי / כללי. אחרת: פרטי / כללי למעלה והמשותף מתחת
     const sharedFirst = isNew || acShared(b);
@@ -733,7 +749,7 @@
     const pair = w => `<div class="pd-ac-row">${big("private", w)}${big("general", w)}</div>`;
     const body = sharedFirst ? `${both}<div class="pd-sub" style="margin:8px 0 4px">או לסמן את המסמך החדש רק כ:</div>${pair(false)}` : `${pair(true)}${both}`;
     return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${nc ? "בלי ח.פ." : isNew ? "ח.פ. " + E(p.hp) : E(b.chp_number || "")}</span>${isNew ? ` <span class="pd-tag red">${nc ? "עסק חדש בלי ח.פ.: יתווסף למאגר" : "חברה חדשה: תתווסף למאגר"}</span>` : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
-      ${det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (לחיצה על פיצר שומרת ועוברת הלאה)</div>
+      ${isNew ? `<div class="pd-ac-det"><div style="grid-column:1/-1"><span class="pd-sub">קטגוריה עבור רשימת השטרות:</span> ${pcatSelect(p.pcat || "")}</div></div>` : det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (לחיצה על פיצר שומרת ועוברת הלאה)</div>
       ${body}
       ${isNew && !nc ? `<div style="margin:8px 0 0"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}</div>`;
   }
@@ -843,8 +859,8 @@
   function acGo(kind) {          // לחיצה על פרטי / כללי / משותף: שמירה ברקע ומעבר לקובץ הבא
     const c = U.cur; if (!c || !c.pick) return;
     const slots = kind === "both" ? ["private", "general"] : [kind];
-    if (c.pick.kind === "nochp") return upNewCo("", { slots, type: kind, noChp: true, name: c.pick.name });
-    if (c.pick.kind === "new") return upNewCo(c.pick.hp, { slots, type: kind });
+    if (c.pick.kind === "nochp") return upNewCo("", { slots, type: kind, noChp: true, name: c.pick.name, pcat: c.pick.pcat });
+    if (c.pick.kind === "new") return upNewCo(c.pick.hp, { slots, type: kind, pcat: c.pick.pcat });
     const id = c.pick.id, bz = bizById(id);
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
     if (bz && slots.some(t => acState(bz, t).cls === "na")) job.vis = { id, value: "פרטי" };          // החברה לא רשומה בסוג הזה: משנים את הרישום ל"יש פרטי" (כלומר גם פרטי וגם כללי)
@@ -935,7 +951,7 @@
         try { const d = S.byId.get(doc.id), r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: [...new Set([...((d && d.business_ids) || []), bid])], doc_type: type, ...(o && o.slots ? { slots: { [bid]: o.slots } } : {}) }); replaceDoc(r.doc); refresh(); }
         catch (e) { alert("החברה נוספה, אך שיוך המסמך נכשל: " + e.message); }
       };
-      if (o && o.noChp) addNoChp(o.name, cb, vis); else addReg(hp, false, cb, vis);
+      if (o && o.noChp) addNoChp(o.name, cb, vis, o.pcat); else addReg(hp, false, cb, vis, o && o.pcat);
     } catch (e) { const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
   async function upExtCo(hp) {
@@ -3041,7 +3057,7 @@
 
   window.PD = { apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
-    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
+    _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },
     _unFilter: v => {          // סינון מושהה, והמסמך המוצג לא נטען מחדש אם הוא עדיין ברשימה
