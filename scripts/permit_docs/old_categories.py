@@ -356,22 +356,22 @@ def cmd_apply(a):
     for r in rows:
         if r["קטגוריה"] not in cats[r["business_id"]]:
             cats[r["business_id"]].append(r["קטגוריה"])
-    conflict = {k: [c for c in v if c != "שונות"] for k, v in cats.items()}
-    conflict = {k: v for k, v in conflict.items() if len(v) > 1}
+    conflict = {k: v for k, v in cats.items() if len(v) > 1}
     if conflict:
         with open("old_categories_conflicts.csv", "w", encoding="utf-8-sig", newline="") as f:
-            w = csv.writer(f); w.writerow(["עסק", "business_id", "קטגוריות בישן", "תיבחר (הראשונה)"])
+            w = csv.writer(f); w.writerow(["עסק", "business_id", "קטגוריות בישן", "יישמר"])
             for k, v in sorted(conflict.items(), key=lambda x: x[1]):
-                w.writerow([next((r["עסק"] for r in rows if r["business_id"] == k), ""), k, " | ".join(v), v[0]])
-        print(f"⚠ {len(conflict)} עסקים עם כמה קטגוריות ספציפיות בישן (נבחרת הראשונה): old_categories_conflicts.csv")
+                w.writerow([next((r["עסק"] for r in rows if r["business_id"] == k), ""), k, " | ".join(v), "|".join(v)])
+        print(f"⚠ {len(conflict)} עסקים עם כמה קטגוריות ספציפיות בישן (כולן יישמרו, מופרדות ב-|): old_categories_conflicts.csv")
     todo, seen = [], set()
     for r in rows:
         b = cur.get(r["business_id"])
         if not b or r["business_id"] in seen:
             continue
         seen.add(r["business_id"])
-        if (b.get("permits_category") or "") != r["קטגוריה"]:
-            todo.append((b, r["קטגוריה"]))
+        want = "|".join(cats[r["business_id"]])          # כל הקטגוריות שהיו לעסק באתר הישן
+        if (b.get("permits_category") or "") != want:
+            todo.append((b, want))
     print(f"{len(todo)} עסקים לעדכון מתוך {len(rows)} התאמות ({'כתיבה' if a.go else 'הרצה יבשה'})")
     for b, c in todo[:25]:
         print(f"  {b.get('permit_name') or b.get('registrar_name')}: '{b.get('permits_category') or ''}' ← '{c}'")
