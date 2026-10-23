@@ -385,6 +385,45 @@ SKIP_ITEM_HP = {("איילון חברה לביטוח", "520030677")}
 SKIP_BIZ_NAMES = {"מסלול הלכה"}
 
 
+def norm_cats(cats):
+    """בלי קטגוריה = "שונות"; עם קטגוריה ספציפית = בלי "שונות"."""
+    c = [x for x in cats if x]
+    spec = [x for x in c if x != "שונות"]
+    return spec if spec else ["שונות"]
+
+
+def cmd_normalize(a):
+    token = os.environ.get("ADMIN_PASSWORD") or ""
+    if not token and os.path.exists(a.password_file):
+        token = (open(a.password_file, encoding="utf-8").readline() or "").strip()
+    if a.go and not token:
+        token = getpass.getpass("סיסמת מנהל האתר: ")
+    biz = call(a.site, "", "/businesses")
+    biz = biz if isinstance(biz, list) else biz.get("businesses", [])
+    todo = []
+    for b in biz:
+        if (b.get("permit_name") or b.get("registrar_name") or "").strip() in SKIP_BIZ_NAMES:
+            continue
+        cur = [x.strip() for x in (b.get("permits_category") or "").split("|") if x.strip()]
+        want = "|".join(norm_cats(cur))
+        if "|".join(cur) != want:
+            todo.append((b, want))
+    print(f"{len(todo)} עסקים לעדכון ({'כתיבה' if a.go else 'הרצה יבשה'}): "
+          f"{sum(1 for b, w in todo if w == 'שונות' and not (b.get('permits_category') or '').strip())} בלי קטגוריה ← שונות, "
+          f"{sum(1 for b, w in todo if (b.get('permits_category') or '').strip())} עם קטגוריה - מורידים 'שונות'")
+    for b, w in todo[:25]:
+        print(f"  {b.get('permit_name') or b.get('registrar_name')}: '{b.get('permits_category') or ''}' ← '{w}'")
+    if not a.go:
+        print("(לביצוע: normalize --go)"); return
+    with open("old_categories_log.jsonl", "a", encoding="utf-8") as lg:
+        for i, (b, w) in enumerate(todo, 1):
+            lg.write(json.dumps({"id": b["id"], "before": b.get("permits_category") or "", "after": w}, ensure_ascii=False) + "\n"); lg.flush()
+            call(a.site, token, "/businesses/" + b["id"], {**b, "permits_category": w})
+            if i % 25 == 0:
+                print(f"  {i}/{len(todo)}")
+    print("הסתיים. (החזרה: apply --go --undo old_categories_log.jsonl)")
+
+
 def cmd_rename(a):
     token = os.environ.get("ADMIN_PASSWORD") or ""
     if not token and os.path.exists(a.password_file):
@@ -450,7 +489,7 @@ def cmd_apply(a):
         if not b or r["business_id"] in seen:
             continue
         seen.add(r["business_id"])
-        want = "|".join(cats[r["business_id"]])          # כל הקטגוריות שהיו לעסק באתר הישן
+        want = "|".join(norm_cats(cats[r["business_id"]]))          # כל הקטגוריות שהיו לעסק באתר הישן
         if (b.get("permits_category") or "") != want:
             todo.append((b, want))
     print(f"{len(todo)} עסקים לעדכון מתוך {len(rows)} התאמות ({'כתיבה' if a.go else 'הרצה יבשה'})")
@@ -474,10 +513,11 @@ def main():
     t = sp.add_parser("terms"); t.add_argument("db"); t.add_argument("--taxonomy", default=""); t.add_argument("--types", default="main_ducuments,main_documents,privet_ducuments,company")
     m = sp.add_parser("match"); m.add_argument("--posts", default="old_vs_site_posts.csv"); m.add_argument("--site", default="https://harav-levin.pages.dev"); m.add_argument("--csv", default="old_categories.csv")
     rn = sp.add_parser("rename"); rn.add_argument("--site", default="https://harav-levin.pages.dev"); rn.add_argument("--go", action="store_true"); rn.add_argument("--password-file", default="admin_password.txt")
+    nz = sp.add_parser("normalize"); nz.add_argument("--site", default="https://harav-levin.pages.dev"); nz.add_argument("--go", action="store_true"); nz.add_argument("--password-file", default="admin_password.txt")
     p = sp.add_parser("apply"); p.add_argument("--site", default="https://harav-levin.pages.dev"); p.add_argument("--go", action="store_true")
     p.add_argument("--min", default="high", choices=["high", "mid", "low"]); p.add_argument("--undo", default=""); p.add_argument("--password-file", default="admin_password.txt")
     a = ap.parse_args()
-    {"extract": cmd_extract, "terms": cmd_terms, "match": cmd_match, "apply": cmd_apply, "rename": cmd_rename}[a.cmd](a)
+    {"extract": cmd_extract, "terms": cmd_terms, "match": cmd_match, "apply": cmd_apply, "rename": cmd_rename, "normalize": cmd_normalize}[a.cmd](a)
 
 
 if __name__ == "__main__":

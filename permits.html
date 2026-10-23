@@ -107,11 +107,13 @@ async function loadTab(level) {
   const lr = await fetch(`${API_BASE}/api/lists?type=companies-${level}`).then(r => r.json());
   const rows = [];
   for (const b of lr.rows || []) {
-    const cats = String(b.permits_category || "").split("|").map(x => x.trim()).filter(Boolean);
-    if (!cats.length || (b.permit_name || b._registrar) === "מסלול הלכה") continue;
+    let cats = String(b.permits_category || "").split("|").map(x => x.trim()).filter(Boolean).filter(x => x !== "שונות");          // בלי קטגוריה = "שונות"; עם קטגוריה ספציפית - לא ב"שונות"
+    if (!cats.length) cats = ["שונות"];
+    if ((b.permit_name || b._registrar) === "מסלול הלכה") continue;
     const l = byChp.get(String(b.chp_number || "").trim()) || byName.get(b.permit_name) || {};
     const gen = level === "general";
     const row = { name: b.permit_name || b._registrar || "—", doc: l[level] || "", priv: gen ? (l.private || "") : "", hasPriv: gen && (b.has_private_permit === "כן" || !!l.private), specials: l.specials || [], hay: `${b.permit_name || ""} ${b._registrar || ""} ${b.chp_number || ""}`.toLowerCase() };
+    if (!row.doc && !row.priv && !row.specials.length) continue;          // רק חברה עם שטר משויך
     for (const cat of cats) rows.push({ ...row, cat });
   }
   return LISTS[level] = rows;
