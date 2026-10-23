@@ -31,16 +31,17 @@
   .cnt{font-size:14px;color:var(--muted)}
   .cat{margin:1.6rem 0 .4rem;font-size:22px;font-weight:700;color:var(--navy);text-align:center;border-bottom:2px solid var(--accent-border);padding-bottom:.3rem}
   .cat small{font-size:14px;color:var(--muted);font-weight:400;margin-inline-start:.4rem}
-  .it{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.3rem 1.1rem;text-align:center;padding:.7rem .5rem;border-bottom:1px solid #edf1f2}
-  .nm{font-size:21px;color:#2f6270;overflow-wrap:anywhere}.nm .p{display:block;font-size:14px;color:var(--muted)}
-  .act{display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap}
-  .grp{display:flex;align-items:center;gap:.4rem;font-size:13px;color:var(--navy);font-weight:700}
-  .pair{display:flex;gap:5px}
+  .items{column-count:2;column-gap:2.2rem}
+  .it{display:flex;justify-content:flex-start;align-items:center;gap:.8rem;break-inside:avoid;padding:.6rem .5rem;border-bottom:1px solid #edf1f2}
+  .nm{flex:0 1 auto;min-width:min(170px,100%);font-size:20px;color:#2f6270;overflow-wrap:anywhere;text-align:start}.nm .p{display:block;font-size:14px;color:var(--muted)}
+  .act{flex:none;display:flex;justify-content:flex-start;align-items:flex-start;gap:.9rem}
+  .grp{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;color:var(--navy);font-weight:700;min-width:44px}
+  .pair{display:flex;flex-direction:column;gap:4px}
   a.ic{display:inline-flex;width:34px;height:32px;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:6px;background:#fff;color:var(--accent-dark);text-decoration:none}
   a.ic:hover{background:var(--accent-bg)}
   .none{color:#a8b3b6;font-size:14px;font-weight:400}
   .state{padding:2rem;text-align:center;color:var(--muted)}
-  @media(max-width:760px){.layout{grid-template-columns:1fr}.side{position:static;display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem}.side button{width:auto;white-space:nowrap;border:2px solid var(--accent-border);border-radius:999px;padding:.25rem .8rem}.side button::after{display:none}.side button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.hero h1{font-size:24px}}
+  @media(max-width:760px){.items{column-count:1}.layout{grid-template-columns:1fr}.side{position:static;display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem}.side button{width:auto;white-space:nowrap;border:2px solid var(--accent-border);border-radius:999px;padding:.25rem .8rem}.side button::after{display:none}.side button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.hero h1{font-size:24px}}
   body.embed .hero{display:none}
   .sp{font-size:13px;color:var(--navy);margin-top:.35rem}.sp b{display:block}
 </style>
@@ -134,13 +135,13 @@ async function draw() {
   document.getElementById("cnt").textContent = rows.length + " חברות";
   const by = new Map();
   for (const r of rows) { if (!by.has(r.cat)) by.set(r.cat, []); by.get(r.cat).push(r); }
-  const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}${by.get(c).sort((x, y) => qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
+  const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}<div class="items">${by.get(c).sort((x, y) => qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
     const two = !!(r.doc && r.priv);          // שני מסמכים (ברשימת הכללי): כיתוב רק אז, כדי להבדיל ביניהם
     const main = r.doc ? `<div class="grp">${two ? "כללי " : ""}${pair(r.doc)}</div>` : "";
     const side = r.hasPriv ? `<div class="grp">${r.priv ? (two ? "פרטי " : "") + pair(r.priv) : '<span class="none">יש פרטי</span>'}</div>` : "";
     const sp = r.specials.map(x => `<div class="grp"><span>${esc(x.title)}</span> ${pair(x.id)}</div>`).join("");
     return `<div class="it"><div class="nm">${esc(r.name)}</div><div class="act">${main}${side}${sp}${main || side || sp ? "" : '<div class="grp none">—</div>'}</div></div>`;
-  }).join("")}`).join("");
+  }).join("")}</div>`).join("");
   list.innerHTML = out || '<div class="state">לא נמצאו חברות</div>';
 }
 function setHash() { location.hash = `t=${TAB}` + (CAT ? "&cat=" + encodeURIComponent(CAT) : ""); }
