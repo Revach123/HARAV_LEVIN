@@ -210,14 +210,14 @@ def cmd_terms(a):
         m = re.search(r"https?://[^\s\"'<>)\\]+\.pdf", post["post_content"], re.I)
         for tt in ttids:
             cat = path(tt)
-            key = (cat, norm(html.unescape(post["post_title"])))
+            key = (cat, pid)
             if key in seen:
                 continue
             seen.add(key); cnt[cat] += 1
-            rows.append((cat, html.unescape(post["post_title"]).strip(), m.group(0) if m else "", post["post_type"]))
+            rows.append((cat, html.unescape(post["post_title"]).strip(), m.group(0) if m else "", post["post_type"], pid))
     rows.sort(key=lambda r: (r[0] == "שונות", r[0], r[1]))         # "שונות" אחרון: אם לפריט יש קטגוריה ספציפית היא תנצח
     with open("old_categories.csv", "w", encoding="utf-8-sig", newline="") as f:
-        w = csv.writer(f); w.writerow(["קטגוריה", "פריט", "קישור", "מקור"]); w.writerows(rows)
+        w = csv.writer(f); w.writerow(["קטגוריה", "פריט", "קישור", "מקור", "post_id"]); w.writerows(rows)
     bykey = collections.defaultdict(set)
     for r in rows:
         bykey[norm(r[1])].add(r[0])
@@ -289,11 +289,26 @@ def cmd_match(a):
             by_hp[hp.lstrip("0")].append(b)
     names = list(by_name)
     rows = [r for r in csv.DictReader(open(a.csv, encoding="utf-8-sig"))]
+    # שיוך המסמכים שכבר נעשה: פוסט ישן -> מסמך -> החברה שהמסמך משויך אליה (מ-old_vs_site_posts.csv)
+    docmap = {}
+    if a.posts and os.path.exists(a.posts):
+        for x in csv.DictReader(open(a.posts, encoding="utf-8-sig")):
+            hps = re.findall(r"\((\d{7,9})\)", x.get("חברה אצלנו", "")) or re.findall(r"המסמך משויך: [^()]*\((\d{7,9})\)", x.get("מצב", ""))
+            if len(set(hps)) == 1:
+                docmap[x["post_id"]] = hps[0]
+        print(f"שיוך מסמכים: {len(docmap)} פוסטים ישנים עם חברה מזוהה מהמסמך ({a.posts})")
     out, cnt = [], collections.Counter()
     for r in rows:
         item = r["פריט"]
         found, how, conf = [], "", ""
-        for d in re.findall(r"\d{7,9}", item):
+        dh = docmap.get(r.get("post_id", ""))
+        if dh and by_hp.get(dh.lstrip("0")):
+            found, how, conf = by_hp[dh.lstrip("0")], "דרך המסמך המשויך", "גבוה"
+            nm = by_name.get(norm(item), [])
+            if nm and not ({b["id"] for b in nm} & {b["id"] for b in found}):
+                how += " (⚠ השם מצביע על: " + (nm[0].get("permit_name") or nm[0].get("registrar_name") or "") + ")"
+                cnt["⚠ שם מול מסמך שונים"] += 1
+        for d in ([] if found else re.findall(r"\d{7,9}", item)):
             if by_hp.get(d.lstrip("0")):
                 found, how, conf = by_hp[d.lstrip("0")], "ח.פ. בטקסט", "גבוה"
                 break
@@ -364,7 +379,7 @@ def main():
     sp = ap.add_subparsers(dest="cmd", required=True)
     e = sp.add_parser("extract"); e.add_argument("db"); e.add_argument("--post")
     t = sp.add_parser("terms"); t.add_argument("db"); t.add_argument("--taxonomy", default=""); t.add_argument("--types", default="main_ducuments,main_documents,privet_ducuments,company")
-    m = sp.add_parser("match"); m.add_argument("--site", default="https://harav-levin.pages.dev"); m.add_argument("--csv", default="old_categories.csv")
+    m = sp.add_parser("match"); m.add_argument("--posts", default="old_vs_site_posts.csv"); m.add_argument("--site", default="https://harav-levin.pages.dev"); m.add_argument("--csv", default="old_categories.csv")
     p = sp.add_parser("apply"); p.add_argument("--site", default="https://harav-levin.pages.dev"); p.add_argument("--go", action="store_true")
     p.add_argument("--min", default="high", choices=["high", "mid", "low"]); p.add_argument("--undo", default=""); p.add_argument("--password-file", default="admin_password.txt")
     a = ap.parse_args()
