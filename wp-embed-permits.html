@@ -6,6 +6,9 @@
 <script>
 (function () {
   var f = document.getElementById("iska-permits");
+  // לשונית הפתיחה לפי כתובת הדף / הכותרת: "כללי" = שטרות כלליים, אחרת פרטיים (אפשר לכפות עם data-tab="general" / "private" על ה-iframe)
+  var P = decodeURIComponent(location.pathname) + " " + document.title, T = f.getAttribute("data-tab") || (P.indexOf("כללי") !== -1 ? "general" : "private");
+  f.src = f.src.replace(/#t=\w+/, "#t=" + T);
   function fit() { f.style.height = Math.max(560, window.innerHeight - (Number(f.getAttribute("data-offset")) || 140)) + "px"; }
   fit(); window.addEventListener("resize", fit);
 })();
