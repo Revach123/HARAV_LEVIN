@@ -171,7 +171,7 @@ export async function onRequestGet(context) {
       // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות/מחוקות (מחוסלת.../חיסול.../מחוקה/נגרעה מהמרשם) לא מוצגות;
       // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
-      const build = (withStatus, withScope) => {
+      const build = (withStatus, withScope, withPcat = false) => {
         const hideNote = withScope ? `COALESCE(notes_scope,'') = 'bonds'` : `0`;
         const bondsNoteAll = `CASE WHEN ${hideNote} THEN '' ELSE ${bondsNoteExprBase} END`;
         const bondsNoteExpr = `CASE WHEN ${hideNote} OR NOT (${hasBonds}) THEN '' ELSE ${bondsNoteExprBase} END`;   // חברה בלי אג"ח: אין הערת אישור אג"ח
@@ -190,13 +190,13 @@ export async function onRequestGet(context) {
                ${bondsNoteExpr} AS bonds_note,
                ${bondsNoteAll} AS _bonds_note_all,
                CASE WHEN ${selective} THEN 1 ELSE 0 END AS _selective,
-               ${notesOut} AS notes
+               ${notesOut} AS notes${withPcat ? ",\n               COALESCE(permits_category,'') AS permits_category" : ""}
         FROM businesses
         WHERE ${whereClause} ${liquidated}
         ORDER BY permit_name`;
       };
-      sql = build(true, true);
-      sqlVariants = [build(true, false), build(false, true), build(false, false)];   // כשעמודה עדיין לא קיימת במסד (registry_status / notes_scope)
+      sql = build(true, true, true);
+      sqlVariants = [build(true, false, true), build(false, true, true), build(false, false, true), build(true, true), build(true, false), build(false, true), build(false, false)];   // כשעמודה עדיין לא קיימת במסד (registry_status / notes_scope / permits_category)
     }
 
 
