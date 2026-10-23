@@ -335,6 +335,42 @@ def cmd_match(a):
     print("נכתב old_categories_plan.csv (לבדוק את 'בינוני' / 'נמוך' / 'לא נמצא' לפני apply)")
 
 
+# תיקוני שם באתר החדש (השם הישן נכון): שם בהיתר עסקה <- הניסוח הנכון
+RENAMES = [
+    ("ריאליה MANAGEMENTS", "ריאליה MANAGEMENT"),
+    ("גדעון קוהן - ניהול ויעוץ פינסי כהלכה", "גדעון קוהן - ניהול ויעוץ פיננסי כהלכה"),
+    ("קלאסי שוז - טוכובר ניחמה", "קלאסי שוז - טוכובר נחמה"),
+]
+# שורות שלא נכתבות: (פריט בדף הישן, ח.פ.) - הקטגוריה שייכת רק לחברה המתאימה; וכל העסק "מסלול הלכה" (אינו חברה)
+SKIP_ITEM_HP = {("איילון חברה לביטוח", "520030677")}
+SKIP_BIZ_NAMES = {"מסלול הלכה"}
+
+
+def cmd_rename(a):
+    token = os.environ.get("ADMIN_PASSWORD") or ""
+    if not token and os.path.exists(a.password_file):
+        token = (open(a.password_file, encoding="utf-8").readline() or "").strip()
+    if a.go and not token:
+        token = getpass.getpass("סיסמת מנהל האתר: ")
+    biz = call(a.site, "", "/businesses")
+    biz = biz if isinstance(biz, list) else biz.get("businesses", [])
+    todo = []
+    for old, new in RENAMES:
+        hit = [b for b in biz if norm(b.get("permit_name")) == norm(old) or norm(b.get("registrar_name")) == norm(old)]
+        if not hit:
+            print(f"לא נמצא עסק בשם '{old}' (אולי כבר תוקן)")
+        todo += [(b, new) for b in hit]
+    for b, new in todo:
+        print(f"  {b['id']}: שם בהיתר '{b.get('permit_name') or ''}' (ברשם: '{b.get('registrar_name') or ''}') ← '{new}'")
+    if not a.go:
+        print("(לביצוע: rename --go)"); return
+    with open("old_categories_rename_log.jsonl", "a", encoding="utf-8") as lg:
+        for b, new in todo:
+            lg.write(json.dumps({"id": b["id"], "before": b.get("permit_name") or "", "after": new}, ensure_ascii=False) + "\n"); lg.flush()
+            call(a.site, token, "/businesses/" + b["id"], {**b, "permit_name": new})
+    print("הסתיים. אחר כך: python old_categories.py match")
+
+
 def cmd_apply(a):
     order = {"high": ["גבוה"], "mid": ["גבוה", "בינוני"], "low": ["גבוה", "בינוני", "נמוך"]}[a.min]
     token = os.environ.get("ADMIN_PASSWORD") or ""
@@ -350,7 +386,8 @@ def cmd_apply(a):
                 b = next(x for x in cur if x["id"] == line["id"])
                 call(a.site, token, "/businesses/" + line["id"], {**b, "permits_category": line["before"]})
         return
-    rows = [r for r in csv.DictReader(open("old_categories_plan.csv", encoding="utf-8-sig")) if r["business_id"] and r["ביטחון"] in order]
+    rows = [r for r in csv.DictReader(open("old_categories_plan.csv", encoding="utf-8-sig")) if r["business_id"] and r["ביטחון"] in order
+            and (r["פריט בדף הישן"], re.sub(r"\D", "", r["ח.פ."])) not in SKIP_ITEM_HP and r["עסק"].strip() not in SKIP_BIZ_NAMES]
     cur = {b["id"]: b for b in (lambda x: x if isinstance(x, list) else x.get("businesses", []))(call(a.site, "", "/businesses"))}
     cats = collections.defaultdict(list)
     for r in rows:
@@ -392,10 +429,11 @@ def main():
     e = sp.add_parser("extract"); e.add_argument("db"); e.add_argument("--post")
     t = sp.add_parser("terms"); t.add_argument("db"); t.add_argument("--taxonomy", default=""); t.add_argument("--types", default="main_ducuments,main_documents,privet_ducuments,company")
     m = sp.add_parser("match"); m.add_argument("--posts", default="old_vs_site_posts.csv"); m.add_argument("--site", default="https://harav-levin.pages.dev"); m.add_argument("--csv", default="old_categories.csv")
+    rn = sp.add_parser("rename"); rn.add_argument("--site", default="https://harav-levin.pages.dev"); rn.add_argument("--go", action="store_true"); rn.add_argument("--password-file", default="admin_password.txt")
     p = sp.add_parser("apply"); p.add_argument("--site", default="https://harav-levin.pages.dev"); p.add_argument("--go", action="store_true")
     p.add_argument("--min", default="high", choices=["high", "mid", "low"]); p.add_argument("--undo", default=""); p.add_argument("--password-file", default="admin_password.txt")
     a = ap.parse_args()
-    {"extract": cmd_extract, "terms": cmd_terms, "match": cmd_match, "apply": cmd_apply}[a.cmd](a)
+    {"extract": cmd_extract, "terms": cmd_terms, "match": cmd_match, "apply": cmd_apply, "rename": cmd_rename}[a.cmd](a)
 
 
 if __name__ == "__main__":
