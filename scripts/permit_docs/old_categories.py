@@ -311,13 +311,21 @@ def cmd_match(a):
     names = list(by_name)
     rows = [r for r in csv.DictReader(open(a.csv, encoding="utf-8-sig"))]
     # שיוך המסמכים שכבר נעשה: פוסט ישן -> מסמך -> החברה שהמסמך משויך אליה (מ-old_vs_site_posts.csv)
-    docmap = {}
+    docmap, docname = {}, {}
     if a.posts and os.path.exists(a.posts):
         for x in csv.DictReader(open(a.posts, encoding="utf-8-sig")):
             hps = re.findall(r"\((\d{7,9})\)", x.get("חברה אצלנו", "")) or re.findall(r"המסמך משויך: [^()]*\((\d{7,9})\)", x.get("מצב", ""))
             if len(set(hps)) == 1:
                 docmap[x["post_id"]] = hps[0]
-        print(f"שיוך מסמכים: {len(docmap)} פוסטים ישנים עם חברה מזוהה מהמסמך ({a.posts})")
+                continue
+            # עסק בלי ח.פ.: המסמך משויך לעסק לפי שם בלבד
+            own = x.get("חברה אצלנו", "").strip()
+            if not own:
+                m = re.search(r"המסמך משויך: (.+)\)\s*$", x.get("מצב", ""))
+                own = m.group(1).strip() if m else ""
+            if own and "; " not in own and ", " not in own and own != "ללא שיוך" and not re.search(r"\(\d{7,9}\)", own):
+                docname[x["post_id"]] = own
+        print(f"שיוך מסמכים: {len(docmap)} פוסטים ישנים עם חברה מזוהה מהמסמך לפי ח.פ., ועוד {len(docname)} לפי שם (עסקים בלי ח.פ.) ({a.posts})")
     out, cnt = [], collections.Counter()
     for r in rows:
         item = r["פריט"]
@@ -329,6 +337,11 @@ def cmd_match(a):
             if nm and not ({b["id"] for b in nm} & {b["id"] for b in found}):
                 how += " (⚠ השם מצביע על: " + (nm[0].get("permit_name") or nm[0].get("registrar_name") or "") + ")"
                 cnt["⚠ שם מול מסמך שונים"] += 1
+        dn = docname.get(r.get("post_id", ""))
+        if not found and dn:
+            cand = {b["id"]: b for b in by_full.get(norm_full(dn), []) + by_name.get(norm(dn), [])}
+            if len(cand) == 1:
+                found, how, conf = list(cand.values()), "דרך המסמך המשויך (לפי שם, בלי ח.פ.)", "גבוה"
         for d in ([] if found else re.findall(r"\d{7,9}", item)):
             if by_hp.get(d.lstrip("0")):
                 found, how, conf = by_hp[d.lstrip("0")], "ח.פ. בטקסט", "גבוה"
