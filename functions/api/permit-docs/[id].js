@@ -58,13 +58,39 @@ export async function onRequestPut({ request, env, params }) {
       stmts.push(env.DB.prepare("DELETE FROM permit_doc_ext WHERE doc_id = ?").bind(params.id));
       for (const x of [...new Set(body.ext_ids.map(String))].filter(i => have.has(i))) stmts.push(env.DB.prepare("INSERT OR IGNORE INTO permit_doc_ext (doc_id, ext_id) VALUES (?, ?)").bind(params.id, x));
     }
-    if (Array.isArray(body.bonds)) {        // שיוך לאג"ח: החלפה מלאה { id, name, symbol, company, chp }
-      stmts.push(env.DB.prepare("DELETE FROM permit_doc_bonds WHERE doc_id = ?").bind(params.id));
-      const seen = new Set();
+    if (Array.isArray(body.bonds)) {        // שיוך לאג"ח: החלפה מלאה { id, name, symbol, company, chp, slot }
+      // slot = תפקיד המסמך לאג"ח: private / general / general,private (משותף), ריק = טרם סווג (מיגרציה 0018).
+      // לכל אג"ח מסמך אחד לכל תפקיד: תפקיד חדש שכבר תפוס אצל מסמך אחר - נדחה (כפילויות ישנות לא נחסמות, כדי שאפשר יהיה לבטל אותן)
+      let hasSlot = true;
+      try { await env.DB.prepare("SELECT slot FROM permit_doc_bonds LIMIT 1").first(); } catch { hasSlot = false; }
+      if (!hasSlot && body.bonds.some(x => x && x.slot)) {          // מיגרציה 0018 לא הורצה: מוסיפים את העמודה כאן (פעם אחת)
+        try { await env.DB.prepare("ALTER TABLE permit_doc_bonds ADD COLUMN slot TEXT NOT NULL DEFAULT ''").run(); hasSlot = true; }
+        catch (e) { return Response.json({ error: "לא ניתן לשמור פרטי / כללי לאג\"ח: חסרה מיגרציה 0018 (" + (e && e.message || "") + ")" }, { status: 500 }); }
+      }
+      const roles = v => [...new Set(String(v || "").split(",").map(x => x.trim()).filter(x => x === "private" || x === "general"))].sort();
+      const cur = new Map(((await env.DB.prepare(`SELECT security_id${hasSlot ? ", slot" : ""} FROM permit_doc_bonds WHERE doc_id = ?`).bind(params.id).all()).results ?? []).map(r => [r.security_id, roles(r.slot)]));
+      const ROLE_HE = { private: "פרטי", general: "כללי" };
+      const items = [], seen = new Set();
       for (const x of body.bonds.slice(0, 300)) {
         const sid = String(x && x.id || "").trim(); if (!sid || seen.has(sid)) continue; seen.add(sid);
-        stmts.push(env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp) VALUES (?,?,?,?,?,?)")
-          .bind(params.id, sid, String(x.name || "").slice(0, 200), String(x.symbol || "").slice(0, 60), String(x.company || "").slice(0, 200), String(x.chp || "").slice(0, 20)));
+        const rl = roles(x.slot), was = cur.get(sid);
+        if (hasSlot) {
+          for (const r of rl) {
+            if (was && was.includes(r)) continue;
+            const o = await env.DB.prepare("SELECT b.doc_id, d.original_name FROM permit_doc_bonds b LEFT JOIN permit_docs d ON d.id = b.doc_id WHERE b.security_id = ? AND b.doc_id != ? AND (',' || b.slot || ',') LIKE ? LIMIT 1").bind(sid, params.id, `%,${r},%`).first();
+            if (o) return Response.json({ error: `לאג"ח ${x.name || sid} כבר משויך מסמך ${ROLE_HE[r]} ("${o.original_name || o.doc_id}"). לכל אג"ח מסמך אחד לכל רשימה` }, { status: 409 });
+          }
+        } else if (!was) {
+          const o = await env.DB.prepare("SELECT b.doc_id, d.original_name FROM permit_doc_bonds b LEFT JOIN permit_docs d ON d.id = b.doc_id WHERE b.security_id = ? AND b.doc_id != ? LIMIT 1").bind(sid, params.id).first();
+          if (o) return Response.json({ error: `האג"ח ${x.name || sid} כבר משויכת למסמך "${o.original_name || o.doc_id}" (להפרדה לפרטי / כללי חסרה מיגרציה 0018)` }, { status: 409 });
+        }
+        items.push({ x, sid, slot: rl.join(",") });
+      }
+      stmts.push(env.DB.prepare("DELETE FROM permit_doc_bonds WHERE doc_id = ?").bind(params.id));
+      for (const { x, sid, slot } of items) {
+        const vals = [params.id, sid, String(x.name || "").slice(0, 200), String(x.symbol || "").slice(0, 60), String(x.company || "").slice(0, 200), String(x.chp || "").slice(0, 20)];
+        stmts.push(hasSlot ? env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp, slot) VALUES (?,?,?,?,?,?,?)").bind(...vals, slot)
+          : env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp) VALUES (?,?,?,?,?,?)").bind(...vals));
       }
     }
     if (body.intel !== undefined) {          // מידע מהסריקה המקומית (מיגרציה 0011)

@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-22",
+ "updated": "2026-10-23",
  "upcoming": [
   {
    "id": 10358,
@@ -105,33 +105,6 @@
     }
    ],
    "chp_number": "512726712"
-  },
-  {
-   "id": 10384,
-   "maya_report_id": 1776813,
-   "company_name": "הפניקס גיוסי הו",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776813",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    },
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "514290345"
   },
   {
    "id": 10378,
@@ -621,81 +594,6 @@
    "company_name": "חג'ג' נדל\"ן",
    "draft_no": null,
    "draft_title": null,
-   "id": 10339,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1772082",
-   "maya_report_id": 1772082,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-19"
-  },
-  {
-   "chp_number": "",
-   "company_name": "סלדן",
-   "draft_no": 1,
-   "draft_title": "טיוטת תשקיף",
-   "id": 10356,
-   "is_new_company": true,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1755705",
-   "maya_report_id": 1774345,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-19"
-  },
-  {
-   "chp_number": "514290345",
-   "company_name": "הפניקס גיוסי הו",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10368,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775393",
-   "maya_report_id": 1775393,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    },
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-19"
-  },
-  {
-   "chp_number": "520033309",
-   "company_name": "חג'ג' נדל\"ן",
-   "draft_no": null,
-   "draft_title": null,
    "id": 10383,
    "is_new_company": false,
    "link_presentation": null,
@@ -740,54 +638,131 @@
  ],
  "open": [
   {
-   "offer_number": 1217678,
-   "issuer_id": 1614,
-   "issuer_name": "מגדלי ים תיכון",
+   "offer_number": 1230242,
+   "issuer_id": 1527,
+   "issuer_name": "הפניקס גיוסי הו",
    "is_new_company": false,
-   "begins_at": "2026-10-22T09:00:00",
-   "ends_at": "2026-10-22T16:00:00",
+   "begins_at": "2026-10-22T13:30:00",
+   "ends_at": "2026-10-23T12:00:00",
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 4.89,
+   "interest": 4.44,
    "is_variable_interest": false,
    "price_per_unit": 1000,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777307",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777452",
    "securities": [
     {
      "security_id": null,
-     "security_name": "אג\"ח ח'",
+     "security_name": "אגח י\"ט",
      "security_type": "אג\"ח קונצרני",
      "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": "A2.il"
+     "maalot_rating": "ilAA",
+     "midroog_rating": "Aa2.il"
     }
    ],
-   "chp_number": "512719485"
+   "chp_number": "514290345"
   },
   {
-   "offer_number": 1173640,
-   "issuer_id": 1867,
-   "issuer_name": "דיפלומט",
+   "offer_number": 1240563,
+   "issuer_id": 1527,
+   "issuer_name": "הפניקס גיוסי הו",
    "is_new_company": false,
-   "begins_at": "2026-10-22T09:00:00",
-   "ends_at": "2026-10-22T16:00:00",
+   "begins_at": "2026-10-22T13:30:00",
+   "ends_at": "2026-10-23T12:00:00",
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 4.49,
+   "interest": 2.56,
    "is_variable_interest": false,
    "price_per_unit": 1000,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777320",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777452",
    "securities": [
     {
      "security_id": null,
-     "security_name": "אגח א",
+     "security_name": "אגח כ",
      "security_type": "אג\"ח קונצרני",
-     "linkage_type": "ללא",
-     "maalot_rating": "ilA+",
-     "midroog_rating": null
+     "linkage_type": "מדד",
+     "maalot_rating": "ilAA",
+     "midroog_rating": "Aa2.il"
     }
    ],
-   "chp_number": "510400740"
+   "chp_number": "514290345"
+  },
+  {
+   "offer_number": 1230242,
+   "issuer_id": 1527,
+   "issuer_name": "הפניקס גיוסי הו",
+   "is_new_company": false,
+   "begins_at": "2026-10-22T13:30:00",
+   "ends_at": "2026-10-23T11:00:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 4.44,
+   "is_variable_interest": false,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777496",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אגח יט",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "ללא",
+     "maalot_rating": "ilAA",
+     "midroog_rating": "Aa2.il"
+    }
+   ],
+   "chp_number": "514290345"
+  },
+  {
+   "offer_number": 1240563,
+   "issuer_id": 1527,
+   "issuer_name": "הפניקס גיוסי הו",
+   "is_new_company": false,
+   "begins_at": "2026-10-22T13:30:00",
+   "ends_at": "2026-10-23T11:00:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 2.56,
+   "is_variable_interest": false,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777496",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אגח כ",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "מדד",
+     "maalot_rating": "ilAA",
+     "midroog_rating": "Aa2.il"
+    }
+   ],
+   "chp_number": "514290345"
+  },
+  {
+   "begins_at": "2026-10-22T09:00:00",
+   "chp_number": "510400740",
+   "ends_at": "2026-10-22T16:00:00",
+   "interest": 4.49,
+   "is_new_company": false,
+   "is_variable_interest": false,
+   "issuer_id": 1867,
+   "issuer_name": "דיפלומט",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777320",
+   "offer_number": 1173640,
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "price_per_unit": 1000,
+   "securities": [
+    {
+     "linkage_type": "ללא",
+     "maalot_rating": "ilA+",
+     "midroog_rating": null,
+     "security_id": null,
+     "security_name": "אגח א",
+     "security_type": "אג\"ח קונצרני"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-22"
   },
   {
    "begins_at": "2026-10-21T09:00:00",
@@ -817,16 +792,16 @@
    "last_seen": "2026-10-21"
   },
   {
-   "begins_at": "2026-10-19T09:00:00",
-   "chp_number": "520041005",
-   "ends_at": "2026-10-19T16:00:00",
-   "interest": 5.7,
+   "begins_at": "2026-10-22T09:00:00",
+   "chp_number": "512719485",
+   "ends_at": "2026-10-22T16:00:00",
+   "interest": 4.89,
    "is_new_company": false,
    "is_variable_interest": false,
-   "issuer_id": 1083,
-   "issuer_name": "קרדן נדל\"ן",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1776665",
-   "offer_number": 1217546,
+   "issuer_id": 1614,
+   "issuer_name": "מגדלי ים תיכון",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1777307",
+   "offer_number": 1217678,
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
    "price_per_unit": 1000,
@@ -834,14 +809,14 @@
     {
      "linkage_type": "ללא",
      "maalot_rating": null,
-     "midroog_rating": "A3.il",
+     "midroog_rating": "A2.il",
      "security_id": null,
-     "security_name": "אג\"ח ז",
+     "security_name": "אג\"ח ח'",
      "security_type": "אג\"ח קונצרני"
     }
    ],
    "carried": true,
-   "last_seen": "2026-10-19"
+   "last_seen": "2026-10-22"
   },
   {
    "begins_at": "2026-10-21T10:00:00",
@@ -939,7 +914,7 @@
    "chp_number": "514290345",
    "name": "הפניקס גיוסי הו",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
@@ -1041,13 +1016,6 @@
    ]
   },
   {
-   "chp_number": "520041005",
-   "name": "קרדן נדל\"ן",
-   "statuses": [
-    "בהנפקה"
-   ]
-  },
-  {
    "chp_number": "520042847",
    "name": "אלון רבוע כחול",
    "statuses": [
@@ -1075,7 +1043,6 @@
   "ניצנים",
   "נגה נכסים",
   "פישר ברדרס פרופ",
-  "עמרם את נידם",
-  "סלדן"
+  "עמרם את נידם"
  ]
 }

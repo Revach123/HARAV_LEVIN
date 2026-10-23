@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261024b"></script>
+<script src="/permit-docs.js?v=20261024j"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -174,10 +174,21 @@
   col.c-name     { width: 150px; }
   col.c-permit   { width: 190px; }
   col.c-name-lg  { width: 240px; }
-  col.c-pdp      { width: 118px; }
-  col.c-pdg      { width: 118px; }
+  col.c-pdp      { width: 84px; }
+  col.c-pdg      { width: 84px; }
   col.c-pdx      { width: 150px; }
   col.c-chp      { width: 80px; }
+  col.c-name2    { width: 318px; }
+  col.c-details  { width: 235px; }
+  td.biz-cell, td.det-cell { white-space: normal; vertical-align: top; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; align-items: center; }
+  .kv .k { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .kv .v { min-width: 0; overflow-wrap: anywhere; }
+  .pn-same { font-size: 12px; color: var(--muted); }
+  .pn-edit { border: 0; background: none; cursor: pointer; font-size: 12px; padding: 0 2px; opacity: .75; }
+  .pn-edit:hover { opacity: 1; }
+  td.det-cell .kv .v { font-size: 12px; }
+  td.biz-cell .kv .v.biz-name { white-space: normal; }
   col.c-cat      { width: 80px; }
   col.c-biztype  { width: 80px; }
   col.c-region   { width: 50px; }
@@ -786,6 +797,29 @@
   /* ── שלוש האפשרויות בראש כל מסך ניהול (כמו לשוניות האתר) ── */
   tr.sub-row td { background:#f7fafa; font-size:.94em; }
   tr.sub-row td.biz-name { padding-inline-start:26px; }
+  /* תת-שורות אג"ח: צרות, ופס צבע שלא מגיע לקצוות הטבלה (מתחיל בהזחה מימין ונגמר אחרי עמודת הת"ע כללי) */
+  .admin-tbl tbody tr:nth-child(even) { background: transparent; }
+  .admin-tbl tbody tr.alt, .admin-tbl tbody tr.bond-sub.alt:hover { background: var(--row-alt); }
+  .admin-tbl tbody tr.bond-sub:not(.alt):hover { background: transparent; }
+  /* חברה + תת-שורות אג"ח: בלי קו ביניהן; פס כחול בצד ימין מהחברה עד האג"ח האחרונה, שמתעקל פנימה בתחתית */
+  .admin-tbl tbody tr.has-bonds td { border-bottom: 0; padding-bottom: 6px; }
+  .admin-tbl tbody tr.bond-sub td { border-bottom: 0; }
+  .admin-tbl tbody tr.bond-sub.bs-end td { border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .admin-tbl tbody tr.has-bonds td:first-child, .admin-tbl tbody tr.bond-sub:not(.bs-end) td:first-child { box-shadow: inset -4px 0 0 #3f6ea8; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child { position: relative; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child::before { content: ""; position: absolute; right: 0; top: 0; bottom: 20px; width: 4px; background: #3f6ea8; }
+  .admin-tbl tbody tr.bond-sub.bs-end td:first-child::after { content: ""; position: absolute; right: 0; bottom: 4px; width: 30px; height: 16px; border-right: 4px solid #3f6ea8; border-bottom: 4px solid #3f6ea8; border-bottom-right-radius: 14px; box-sizing: border-box; }
+  tbody tr.bond-sub td { padding-top:3px; padding-bottom:3px; border-top:0; border-bottom:0; background:transparent; font-size:12.5px; }
+  tbody tr.bond-sub td.bs { background:#f2f5f9; }
+  tbody tr.bond-sub td.bs-first { background:linear-gradient(to left, transparent 28px, #f2f5f9 28px); padding-inline-start:36px; color:#1a3a5c; font-weight:500; white-space:nowrap; }
+  /* המשך הפס הכחול: יורד בצד ימין, ממשיך מתחת לתת-השורות, ועולה בצד שמאל עד תחתית שורת החברה (פינות מעוגלות) */
+  tbody tr.bond-sub td.bs-last { box-shadow: inset 4px 0 0 #3f6ea8; }
+  tbody tr.bond-sub.bs-end td.bs { background: linear-gradient(#3f6ea8,#3f6ea8) left calc(100% - 4px) / 100% 4px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-first { background: linear-gradient(#3f6ea8,#3f6ea8) left calc(100% - 4px) / calc(100% - 28px) 4px no-repeat, linear-gradient(to left, transparent 28px, #f2f5f9 28px) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-last { position: relative; box-shadow: none; background: linear-gradient(#3f6ea8,#3f6ea8) right calc(100% - 4px) / calc(100% - 16px) 4px no-repeat, linear-gradient(#f2f5f9,#f2f5f9) top / 100% calc(100% - 8px) no-repeat; }
+  tbody tr.bond-sub.bs-end td.bs.bs-last::after { content: ""; position: absolute; left: 0; top: 0; bottom: 4px; width: 16px; border-left: 4px solid #3f6ea8; border-bottom: 4px solid #3f6ea8; border-bottom-left-radius: 14px; box-sizing: border-box; }
+  tr.bond-sub .bs-tag { font-size:11px; color:var(--muted); }
+  .pd-sm { padding:1px 7px !important; font-size:11.5px !important; }
   .chp-choice { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .big-card { text-align:center; background:#fff; border:2px dashed var(--border); border-radius:8px; padding:16px 18px; min-height:150px; }
   .big-card .ico { display:block; font-size:30px; margin-bottom:4px; }
@@ -1104,14 +1138,10 @@ function renderAdminTable() {
     <div class="table-wrap">
       <table class="admin-tbl">
         <colgroup>
-          <col class="c-name">
-          <col class="c-permit">
-          <col class="c-chp">
-          <col class="c-cat">
-          <col class="c-biztype">
+          <col class="c-name2">
+          <col class="c-details">
           <col class="c-region">
           <col class="c-notes">
-          <col class="c-regst">
           <col class="c-vis">
           <col class="c-tase">
           <col class="c-agch">
@@ -1123,13 +1153,9 @@ function renderAdminTable() {
         <thead>
           <tr>
             <th>שם עסק</th>
-            <th>שם בהיתר עסקה</th>
-            <th>ח.פ.</th>
-            <th>קטגוריה</th>
-            <th>סוג עסק</th>
+            <th>פרטי העסק</th>
             <th>אזור</th>
             <th>הערות (עריכה ישירה) · היכן להציג</th>
-            <th>סטטוס ברשם</th>
             <th style="text-align:center;">פרטי/כללי</th>
             <th style="text-align:center;">אג"ח בורסה</th>
             <th style="text-align:center;">אישור אג"ח</th>
@@ -1140,15 +1166,15 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${groupSubs(sorted).map(b0 => {
+          ${groupSubs(sorted).map((b0, gi) => {
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
+            const bsubs = (window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : [], alt = gi % 2 ? " alt" : "";          // חברה עם תת-שורות אג"ח: קבוצה אחת (אותו רקע, מסגרת ופס צבע בצד)
             return `
-              <tr${b0._isSub ? ' class="sub-row"' : ""}>
-                <td class="biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml((b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</td>
-                <td>${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</td>
-                <td style="direction:ltr;text-align:right;font-size:12px;color:var(--muted);">${escHtml(b.chp_number)||"—"}</td>
-                <td>${escHtml(b.category)||"—"}</td>
-                <td style="font-size:12px;color:var(--muted);">${escHtml(b.biz_type)||"—"}</td>
+              <tr class="${b0._isSub ? "sub-row" : ""}${alt}${bsubs.length ? " has-bonds" : ""}">
+                <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml((b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div></td>
+                <td class="det-cell"><div class="kv"><span class="k">ח.פ.</span><span class="v" style="direction:ltr;text-align:right;">${escHtml(b.chp_number)||"—"}</span>
+                  <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
+                  <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td>
                   <input type="text" value="${escHtml(b.notes ?? "")}" placeholder="הערה"
@@ -1160,7 +1186,6 @@ function renderAdminTable() {
                   const bt = (v, l) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="noteScopeChange('${b.id}','${v}')">${l}</button>`;
                   return `<span class="sc-btns ${sc?"":"need"}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}</div>
                 </td>
-                <td style="font-size:12px;${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status||"")?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status||"")?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">${escHtml(b.registry_status)||"—"}</td>
                 <td style="text-align:center;">
                   <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
@@ -1182,17 +1207,23 @@ function renderAdminTable() {
                     <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
                     <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
                     <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>אג"ח מסוימים</option>
-                    <option value="__pick__">⚙ בחירת אג"ח…</option>
-                  </select>
+                  </select>${b.agch_approved === BOND_PICK ? (() => {
+                    const sel = (window.PD && PD.apprOf) ? PD.apprOf(b.chp_number) : [];
+                    const sc = { private: " (רק פרטי)", general: " (רק כללי)" };
+                    return `<div style="margin-top:4px"><button type="button" class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="openBondPicker('${b.id}')">לבחירת אג"ח</button></div>`
+                      + (sel.length ? `<div style="margin-top:3px;font-size:11.5px;line-height:1.5;color:var(--text);white-space:normal">${sel.map(x => escHtml(PD.bondLabel(x)) + (sc[x.scope] || "")).join("<br>")}</div>` : `<div style="margin-top:3px;font-size:11.5px;color:var(--red);white-space:normal">לא נבחרו אג"ח</div>`);
+                  })() : ""}
                 </td>
                 ${window.PD ? PD.slotCells(b) : "<td></td><td></td>"}
                 <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}</td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
-              </tr>` + ((window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : []).map(x => {
-                const open = `<button class="btn-ghost" style="padding:2px 8px;font-size:12px" onclick="PD.openDoc('${x.id}','${b.id}')" title="${escHtml(x.name)}">פתיחה</button>`;
-                return `<tr class="sub-row"><td class="biz-name">↳ ${escHtml(x.label)}</td><td colspan="10" style="font-size:12px;color:var(--muted)">הת"ע מיוחד לאג"ח</td><td style="text-align:center">${x.list !== "general" ? open : ""}</td><td style="text-align:center">${x.list !== "private" ? open : ""}</td><td></td><td></td></tr>`;
+              </tr>` + bsubs.map((x, xi) => {
+                const open = (d, t) => d ? `<button type="button" class="pd-ok pd-c-${t} pd-sm" onclick="PD.openDoc('${d.id}','${b.id}')" title="${escHtml(d.name)}">📄 פתיחה</button>${x[t].length > 1 ? `<div style="font-size:11px;color:var(--red)">⚠ ${x[t].length} מסמכים</div>` : ""}` : x.need[t] ? `<button type="button" class="pd-missing pd-sm" onclick="PD.openManage('${b.id}')" title="האג&quot;ח נבחרה לרשימה הזו ואין לה שטר">⚠ חסר</button>` : `<span style="color:var(--light)">—</span>`;
+                return `<tr class="bond-sub${alt}${xi === bsubs.length - 1 ? " bs-end" : ""}"><td class="bs bs-first">↳ ${escHtml(x.label)}</td><td class="bs" colspan="6"><span class="bs-tag">הת"ע לאג"ח</span></td>${x.priv && x.gen && x.priv.id === x.gen.id && x.private.length === 1 && x.general.length === 1
+                  ? `<td class="bs bs-last" colspan="2" style="text-align:center"><button type="button" class="pd-ok pd-long pd-sm" onclick="PD.openDoc('${x.priv.id}','${b.id}')" title="${escHtml(x.priv.name)} (משותף לפרטי ולכללי)">📄 פתיחה</button></td>`
+                  : `<td class="bs" style="text-align:center">${open(x.priv, "private")}</td><td class="bs bs-last" style="text-align:center">${open(x.gen, "general")}</td>`}<td></td><td></td></tr>`;
               }).join("");
           }).join("")}
         </tbody>
@@ -2205,6 +2236,7 @@ async function saveBondPicker() {
       ? "נשמר ✓ הרשימה נבנית עכשיו; האג\"ח יופיעו בעוד כדקה-שתיים"
       : "נשמר ✓ (לא ניתן להפעיל בנייה מיידית - הרשימה תתעדכן בריצה הבאה של bonds-list)");
     closeBondPicker();
+    if (window.PD && PD.apprReload) PD.apprReload().then(() => { if (view === "admin") render(); });
   } catch (e) {
     if (e.message === "Unauthorized") { handleUnauth(); return; }
     showStatus("שגיאה בשמירה: " + e.message);
@@ -2308,6 +2340,14 @@ async function noteScopeChange(id, scope) {
   if (pendingNotes[id] !== undefined) { const v = pendingNotes[id]; delete pendingNotes[id]; await inlineUpdateMany(id, { notes: v, notes_scope: scope }); }
   else await inlineUpdateMany(id, { notes_scope: scope });
   render();
+}
+// שם בהיתר עסקה זהה לשם ברשם (בלי הבדלי בע"מ, רווחים ופיסוק): מוצג "שם זהה בהיתר עסקה" עם עיפרון לעריכה
+const pnNorm = x => String(x || "").replace(/בע"?מ|בע״מ|בע''מ/g, "").replace(/["'׳״`.,\-()]/g, "").replace(/\s+/g, " ").trim();
+function samePermitName(b) { const p = (b.permit_name || "").trim(); return !p || pnNorm(p) === pnNorm(b.registrar_name); }
+function pnEdit(btn) {
+  const v = btn.closest(".pn-same"), inp = v.querySelector("input"), txt = v.querySelector(".pn-txt");
+  if (txt) txt.remove(); btn.remove();
+  inp.style.cssText = inp.dataset.s || ""; inp.focus(); inp.select();
 }
 async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים רק את "שם בהיתר עסקה" (שם הרשם נשאר)
   const v = (raw || "").trim(), biz = businesses.find(b => b.id === id);
