@@ -243,6 +243,22 @@ def norm(x):
     return re.sub(r"\s+", " ", x).strip()
 
 
+def norm_full(x):          # כמו norm אבל תוכן הסוגריים נשמר ("ביוטי בית (רבני אושרית)" = "ביוטי בית - רבני אושרית")
+    return norm(re.sub(r"[()\[\]]", " ", str(x or "")))
+
+
+def prefix_match(item, keys):          # שם אחד הוא תחילת השם השני (במילים שלמות): "א.א. חומרי בניין" מול "א.א. חומרי בניין - איזנברג אברהם"
+    t = item.split()
+    out = []
+    for k in keys:
+        u = k.split()
+        a, b = (t, u) if len(t) <= len(u) else (u, t)
+        if len(a) >= 2 or (len(a) == 1 and len(a[0]) >= 5):
+            if b[:len(a)] == a and k != item:
+                out.append(k)
+    return out
+
+
 STRICT = [True]
 
 
@@ -287,6 +303,11 @@ def cmd_match(a):
         hp = re.sub(r"\D", "", str(b.get("chp_number") or ""))
         if hp:
             by_hp[hp.lstrip("0")].append(b)
+    by_full = collections.defaultdict(list)
+    for b in biz:
+        for n in (b.get("permit_name"), b.get("registrar_name")):
+            if norm_full(n):
+                by_full[norm_full(n)].append(b)
     names = list(by_name)
     rows = [r for r in csv.DictReader(open(a.csv, encoding="utf-8-sig"))]
     # שיוך המסמכים שכבר נעשה: פוסט ישן -> מסמך -> החברה שהמסמך משויך אליה (מ-old_vs_site_posts.csv)
@@ -316,6 +337,11 @@ def cmd_match(a):
             n = norm(item)
             if n in by_name:
                 found, how, conf = by_name[n], "שם זהה", "גבוה"
+            elif norm_full(item) in by_full:
+                found, how, conf = by_full[norm_full(item)], "שם זהה (עם תוכן הסוגריים)", "גבוה"
+            elif n and len({b["id"] for k in prefix_match(norm_full(item), list(by_full)) for b in by_full[k]}) == 1:
+                k = prefix_match(norm_full(item), list(by_full))[0]
+                found, how, conf = by_full[k], "שם כולל / נכלל (" + k + ")", "בינוני"
             elif n:
                 hit = difflib.get_close_matches(n, names, n=3, cutoff=0.86)
                 if hit:
@@ -395,11 +421,16 @@ def cmd_apply(a):
             cats[r["business_id"]].append(r["קטגוריה"])
     conflict = {k: v for k, v in cats.items() if len(v) > 1}
     if conflict:
-        with open("old_categories_conflicts.csv", "w", encoding="utf-8-sig", newline="") as f:
+        cf = "old_categories_conflicts.csv"
+        try:
+            open(cf, "a").close()
+        except PermissionError:          # הקובץ פתוח באקסל
+            cf = "old_categories_conflicts_new.csv"
+        with open(cf, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.writer(f); w.writerow(["עסק", "business_id", "קטגוריות בישן", "יישמר"])
             for k, v in sorted(conflict.items(), key=lambda x: x[1]):
                 w.writerow([next((r["עסק"] for r in rows if r["business_id"] == k), ""), k, " | ".join(v), "|".join(v)])
-        print(f"⚠ {len(conflict)} עסקים עם כמה קטגוריות ספציפיות בישן (כולן יישמרו, מופרדות ב-|): old_categories_conflicts.csv")
+        print(f"⚠ {len(conflict)} עסקים עם כמה קטגוריות ספציפיות בישן (כולן יישמרו, מופרדות ב-|): {cf}")
     todo, seen = [], set()
     for r in rows:
         b = cur.get(r["business_id"])
