@@ -113,6 +113,7 @@ async function loadTab(level) {
     const l = byChp.get(String(b.chp_number || "").trim()) || byName.get(b.permit_name) || {};
     const gen = level === "general";
     const row = { name: b.permit_name || b._registrar || "—", doc: l[level] || "", priv: gen ? (l.private || "") : "", hasPriv: gen && (b.has_private_permit === "כן" || !!l.private), specials: l.specials || [], hay: `${b.permit_name || ""} ${b._registrar || ""} ${b.chp_number || ""}`.toLowerCase() };
+    if (!row.doc && !row.priv && !row.specials.length) continue;          // רק חברה עם שטר משויך
     for (const cat of cats) rows.push({ ...row, cat });
   }
   return LISTS[level] = rows;
