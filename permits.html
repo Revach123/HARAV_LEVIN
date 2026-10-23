@@ -17,16 +17,18 @@
   .wrap{max-width:1100px;margin:0 auto}
   .hero{background:linear-gradient(135deg,#1d3b46,#274d5b 60%,#35616f);color:#fff;text-align:center;margin:0 -.8rem 1.2rem;padding:1.6rem .8rem 1.3rem}
   .hero h1{font-size:30px;font-weight:700;margin:0}.hero .bc{font-size:14px;opacity:.8;margin-top:.3rem}
-  .tabs{display:flex;justify-content:center;gap:.5rem;margin:-.4rem 0 1.2rem;flex-wrap:wrap}
-  .tabs button{font:inherit;font-size:18px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:999px;padding:.4rem 1.6rem;cursor:pointer}
+  .stick{position:sticky;top:0;z-index:20;background:#f4f7f7;margin:0 -.8rem 1rem;padding:.5rem .8rem .4rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .stick .bar{max-width:760px;margin:0 auto}
+  .tabs{display:flex;justify-content:center;gap:.5rem;margin:0 0 .5rem;flex-wrap:wrap}
+  .tabs button{font:inherit;font-size:17px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:999px;padding:.3rem 1.4rem;cursor:pointer}
   .tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:2rem;align-items:start}
-  .side{position:sticky;top:.6rem}
+  .side{position:sticky;top:calc(var(--sh,120px) + .6rem)}
   .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:17px;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:.65rem .4rem;cursor:pointer;text-align:start}
   .side button::after{content:"\2039";font-size:20px;color:var(--muted);order:2;margin-inline-start:.4rem}
   .side button small{color:var(--muted);font-size:13px;margin-inline-start:auto;padding-inline:.5rem}
   .side button:hover{background:#eef4f5}.side button.on{font-weight:700;color:var(--accent-dark);border-bottom-color:var(--accent)}
-  .bar{margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+  .bar{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
   .bar input{flex:1;min-width:180px;font:inherit;font-size:16px;padding:.5rem .8rem;border:2px solid var(--accent-border);border-radius:10px;background:#fff;color:var(--text);min-height:44px}
   .cnt{font-size:14px;color:var(--muted)}
   .cat{margin:1.6rem 0 .4rem;font-size:22px;font-weight:700;color:var(--navy);text-align:center;border-bottom:2px solid var(--accent-border);padding-bottom:.3rem}
@@ -43,17 +45,20 @@
   .state{padding:2rem;text-align:center;color:var(--muted)}
   @media(max-width:760px){.items{column-count:1}.layout{grid-template-columns:1fr}.side{position:static;display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.3rem}.side button{width:auto;white-space:nowrap;border:2px solid var(--accent-border);border-radius:999px;padding:.25rem .8rem}.side button::after{display:none}.side button.on{background:var(--navy);color:#fff;border-color:var(--navy)}.hero h1{font-size:24px}}
   body.embed .hero{display:none}
+  .stick{scroll-margin-top:0}
   .sp{font-size:13px;color:var(--navy);margin-top:.35rem}.sp b{display:block}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="hero"><h1>שטרות היתר עסקה</h1><div class="bc" id="bc">דף הבית « שטרות היתר עסקה</div></header>
-  <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות פרטיים</button><button role="tab" data-t="general">שטרות כלליים</button></div>
+  <div class="stick" id="stick">
+    <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות פרטיים</button><button role="tab" data-t="general">שטרות כלליים</button></div>
+    <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
+  </div>
   <div class="layout">
     <nav class="side" id="side" aria-label="קטגוריות"></nav>
     <main>
-      <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
       <div id="list"><div class="state">טוען…</div></div>
     </main>
   </div>
@@ -148,6 +153,10 @@ function setHash() { location.hash = `t=${TAB}` + (CAT ? "&cat=" + encodeURIComp
 document.getElementById("q").addEventListener("input", e => { Q = e.target.value; draw(); });
 document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; TAB = b.dataset.t; CAT = ""; setHash(); draw(); });
 document.getElementById("side").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; CAT = b.dataset.c; setHash(); draw(); });
+{
+  const sh = () => document.documentElement.style.setProperty("--sh", document.getElementById("stick").offsetHeight + "px");
+  sh(); addEventListener("resize", sh); if (window.ResizeObserver) new ResizeObserver(sh).observe(document.getElementById("stick"));
+}
 {
   const t = /t=(private|general)/.exec(location.hash), m = /cat=([^&]+)/.exec(location.hash);
   if (t) TAB = t[1]; if (m) CAT = decodeURIComponent(m[1]);
