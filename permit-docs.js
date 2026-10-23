@@ -147,7 +147,7 @@
       openForm(null);
       setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150);
       if (vis !== undefined) for (const ms of [250, 900, 2000]) setTimeout(() => { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }, ms);
-      if (pcat) for (const ms of [250, 900, 2000]) setTimeout(() => { const f = document.getElementById("f-pcat"); if (f && !f.value) f.value = pcat; }, ms);          // קטגוריה לרשימת השטרות שנבחרה בחלון ההעלאה          // פרטי / כללי לפי בחירת סוג השטר בחלון ההעלאה
+      if (pcat) for (const ms of [250, 900, 2000]) setTimeout(() => { const f = document.getElementById("f-pcat"); if (f && !f.value) { f.value = pcat; if (window.pcatRender) pcatRender(); } }, ms);          // קטגוריה לרשימת השטרות שנבחרה בחלון ההעלאה          // פרטי / כללי לפי בחירת סוג השטר בחלון ההעלאה
     }
   }
 
@@ -160,7 +160,7 @@
       if (typeof toggleNoChp === "function" && typeof noChp !== "undefined" && !noChp) toggleNoChp();
       const f = document.getElementById("f-permit"); if (f && !f.value) { f.value = name; f.dispatchEvent(new Event("input", { bubbles: true })); }
       if (vis !== undefined) { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }
-      if (pcat) { const f = document.getElementById("f-pcat"); if (f && !f.value) f.value = pcat; }
+      if (pcat) { const f = document.getElementById("f-pcat"); if (f && !f.value) { f.value = pcat; if (window.pcatRender) pcatRender(); } }
     };
     for (const ms of [150, 500, 1200]) setTimeout(fill, ms);
   }
@@ -706,18 +706,25 @@
     U.jchain = U.jchain.then(() => upSend(job));
     acDone();
   }
-  const pcatList = () => [...new Set(bizList().map(x => (x.permits_category || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
-  function pcatSelect(cur) {          // "קטגוריה עבור רשימת השטרות": בחירת קיימת או יצירת חדשה
-    const l = pcatList(); if (cur && !l.includes(cur)) l.push(cur);
-    return `<select class="pd-in pd-ac-pcat" onchange="PD._acPcat(this)"><option value="">— ללא קטגוריה —</option>${l.map(x => `<option value="${E(x)}"${x === cur ? " selected" : ""}>${E(x)}</option>`).join("")}<option value="__new">➕ קטגוריה חדשה…</option></select>`;
+  const PSEP = "|", pcatSp = s => String(s || "").split(PSEP).map(x => x.trim()).filter(Boolean);          // כמה קטגוריות לעסק: מופרדות ב-|
+  const pcatList = () => [...new Set(bizList().flatMap(x => pcatSp(x.permits_category)))].sort((a, b) => a.localeCompare(b, "he"));
+  function pcatSelect(cur) {          // "קטגוריות עבור רשימת השטרות": אפשר כמה; הסרה, בחירת קיימת או יצירת חדשה
+    const cs = pcatSp(cur), l = pcatList().filter(x => !cs.includes(x));
+    return `<span class="pd-pcats">${cs.map((x, i) => `<span class="pd-tag">${E(x)} <a href="#" style="color:#a00;text-decoration:none" onclick="PD._acPcat('del',${i});return false" title="הסר">✕</a></span>`).join(" ") || '<span class="pd-sub">ללא</span>'}</span> <select class="pd-in pd-ac-pcat" onchange="PD._acPcat('add',this)"><option value="">➕ הוספת קטגוריה…</option>${l.map(x => `<option value="${E(x)}">${E(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
   }
-  async function acPcat(sel) {
+  async function acPcat(op, arg) {
     const c = U.cur; if (!c || !c.pick) return;
-    let v = sel.value;
-    if (v === "__new") { v = (prompt("שם הקטגוריה החדשה (לרשימת השטרות):") || "").trim(); if (!v) { upReviewAC(false); return; } }
-    if (c.pick.kind === "biz") {
-      if (typeof inlineUpdateMany === "function") await inlineUpdateMany(c.pick.id, { permits_category: v });
-    } else c.pick.pcat = v;
+    const b = c.pick.kind === "biz" ? bizById(c.pick.id) : null, cs = pcatSp(b ? b.permits_category : c.pick.pcat);
+    if (op === "del") cs.splice(arg, 1);
+    else {
+      let v = arg.value;
+      if (v === "__new") v = (prompt("שם הקטגוריה החדשה (לרשימת השטרות):") || "").trim();
+      if (!v) { upReviewAC(false); return; }
+      if (!cs.includes(v)) cs.push(v);
+    }
+    const val = cs.join(PSEP);
+    if (b) { if (typeof inlineUpdateMany === "function") await inlineUpdateMany(c.pick.id, { permits_category: val }); }
+    else c.pick.pcat = val;
     upReviewAC(false);
   }
   function acUnpick() { if (U.cur) { U.cur.pick = null; upReviewAC(false); } }

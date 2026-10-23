@@ -129,9 +129,10 @@ document.getElementById("chips").addEventListener("click", e => { const b = e.ta
     ]);
     const byChp = new Map(), byName = new Map();
     for (const l of dr.links || []) { if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
-    ROWS = (lr.rows || []).filter(b => (b.permits_category || "").trim() && !INACTIVE.test(b.registry_status || "") && (b.permit_name || b.registrar_name) !== "מסלול הלכה").map(b => {
+    ROWS = (lr.rows || []).filter(b => (b.permits_category || "").trim() && !INACTIVE.test(b.registry_status || "") && (b.permit_name || b.registrar_name) !== "מסלול הלכה").flatMap(b => {
       const l = byChp.get(String(b.chp_number || "").trim()) || byName.get(b.permit_name) || {}, n = nameOf(b);
-      return { b, cat: b.permits_category.trim(), gen: l.general || "", priv: l.private || "", hay: `${n.main} ${n.sub} ${b.chp_number || ""}`.toLowerCase() };
+      return b.permits_category.split("|").map(x => x.trim()).filter(Boolean).map(cat =>          // עסק עם כמה קטגוריות מופיע בכל אחת מהן
+        ({ b, cat, gen: l.general || "", priv: l.private || "", hay: `${n.main} ${n.sub} ${b.chp_number || ""}`.toLowerCase() }));
     });
     const m = /cat=([^&]+)/.exec(location.hash); if (m) CAT = decodeURIComponent(m[1]);
     draw();

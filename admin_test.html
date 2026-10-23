@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>ניהול (בדיקה) · מכון להיתר עסקה למהדרין</title>
+<title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=76"></script>
+<script src="/permit-docs-test.js?v=77"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1065,6 +1065,21 @@ function agchLabel(b) {
   return `<span style="color:var(--muted);">יש אג"ח</span>`;
 }
 
+const PCAT_SEP = "|";                       // כמה קטגוריות לעסק נשמרות בשדה אחד, מופרדות ב-|
+const pcatSplit = s => String(s || "").split(PCAT_SEP).map(x => x.trim()).filter(Boolean);
+function pcatBoxHtml(val) {
+  const cur = pcatSplit(val), all = [...new Set(businesses.flatMap(x => pcatSplit(x.permits_category)))].sort((x, y) => x.localeCompare(y, "he"));
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${cur.map((c, i) => `<span style="background:#e8f0fb;border:1px solid #9bb8e0;border-radius:14px;padding:3px 10px;font-size:.9em">${escHtml(c)} <a href="#" style="color:#a00;text-decoration:none" onclick="pcatDel(${i});return false" title="הסר">✕</a></span>`).join("") || '<span style="color:var(--light)">ללא קטגוריה</span>'}</div>
+    <select onchange="pcatAdd(this)"><option value="">➕ הוספת קטגוריה…</option>${all.filter(x => !cur.includes(x)).map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
+}
+function pcatRender() { const h = document.getElementById("f-pcat"), b = document.getElementById("pcat-box"); if (h && b) b.innerHTML = pcatBoxHtml(h.value); }
+function pcatAdd(sel) {
+  const h = document.getElementById("f-pcat"); let v = sel.value;
+  if (v === "__new") v = (prompt("שם הקטגוריה החדשה (לרשימת השטרות):") || "").trim();
+  if (v) { const cur = pcatSplit(h.value); if (!cur.includes(v)) cur.push(v); h.value = cur.join(PCAT_SEP); }
+  pcatRender();
+}
+function pcatDel(i) { const h = document.getElementById("f-pcat"), cur = pcatSplit(h.value); cur.splice(i, 1); h.value = cur.join(PCAT_SEP); pcatRender(); }
 function escHtml(s) {
   return String(s ?? "")
     .replace(/&/g,"&amp;").replace(/</g,"&lt;")
@@ -1286,14 +1301,9 @@ function renderForm() {
       <div id="sim-warn"></div>
       <div id="form-after-permit">
       <div class="field">
-        <label>קטגוריה עבור רשימת השטרות <span style="color:var(--light);font-weight:400">(אפשר לבחור קיימת או להקליד חדשה)</span></label>
-        <input type="text" id="f-pcat" value="${escHtml(b.permits_category||"")}" placeholder="קטגוריה בדף רשימת השטרות" list="pcat-list" autocomplete="off">
-        <datalist id="pcat-list">
-          ${[...new Set(businesses.map(x=>(x.permits_category||"").trim()).filter(Boolean))]
-            .sort((a,c)=>a.localeCompare(c,"he"))
-            .map(n=>`<option value="${escHtml(n)}">`)
-            .join("")}
-        </datalist>
+        <label>קטגוריות עבור רשימת השטרות <span style="color:var(--light);font-weight:400">(אפשר כמה; לבחור קיימת או ליצור חדשה)</span></label>
+        <input type="hidden" id="f-pcat" value="${escHtml(b.permits_category||"")}">
+        <div id="pcat-box">${pcatBoxHtml(b.permits_category||"")}</div>
       </div>
       <div class="field-row">
         <div class="field">
