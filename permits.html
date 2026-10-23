@@ -31,9 +31,9 @@
   .cnt{font-size:14px;color:var(--muted)}
   .cat{margin:1.6rem 0 .4rem;font-size:22px;font-weight:700;color:var(--navy);text-align:center;border-bottom:2px solid var(--accent-border);padding-bottom:.3rem}
   .cat small{font-size:14px;color:var(--muted);font-weight:400;margin-inline-start:.4rem}
-  .it{text-align:center;padding:.9rem .5rem;border-bottom:1px solid #edf1f2}
+  .it{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.3rem 1.1rem;text-align:center;padding:.7rem .5rem;border-bottom:1px solid #edf1f2}
   .nm{font-size:21px;color:#2f6270;overflow-wrap:anywhere}.nm .p{display:block;font-size:14px;color:var(--muted)}
-  .act{display:flex;justify-content:center;gap:1.4rem;flex-wrap:wrap;margin-top:.35rem}
+  .act{display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap}
   .grp{display:flex;align-items:center;gap:.4rem;font-size:13px;color:var(--navy);font-weight:700}
   .pair{display:flex;gap:5px}
   a.ic{display:inline-flex;width:34px;height:32px;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:6px;background:#fff;color:var(--accent-dark);text-decoration:none}
@@ -133,8 +133,9 @@ async function draw() {
   const by = new Map();
   for (const r of rows) { if (!by.has(r.cat)) by.set(r.cat, []); by.get(r.cat).push(r); }
   const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}${by.get(c).sort((x, y) => qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
-    const main = r.doc ? `<div class="grp">${pair(r.doc)}</div>` : "";
-    const side = r.hasPriv ? `<div class="grp">יש פרטי ${r.priv ? pair(r.priv) : ""}</div>` : "";
+    const two = !!(r.doc && r.priv);          // שני מסמכים (ברשימת הכללי): כיתוב רק אז, כדי להבדיל ביניהם
+    const main = r.doc ? `<div class="grp">${two ? "כללי " : ""}${pair(r.doc)}</div>` : "";
+    const side = r.hasPriv ? `<div class="grp">${r.priv ? (two ? "פרטי " : "") + pair(r.priv) : '<span class="none">יש פרטי</span>'}</div>` : "";
     const sp = r.specials.map(x => `<div class="grp"><span>${esc(x.title)}</span> ${pair(x.id)}</div>`).join("");
     return `<div class="it"><div class="nm">${esc(r.name)}</div><div class="act">${main}${side}${sp}${main || side || sp ? "" : '<div class="grp none">—</div>'}</div></div>`;
   }).join("")}`).join("");
