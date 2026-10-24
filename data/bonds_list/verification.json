@@ -1,19 +1,12 @@
 {
- "updated": "2026-10-23",
+ "updated": "2026-10-24",
  "status": "ok",
- "datawise_date": "2026-10-22",
+ "datawise_date": "2026-10-23",
  "expected": 759,
  "maya": 759,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 22,
- "dropped_no_terms": [
-  {
-   "security_id": 1243898,
-   "security_name": "בינל הנפ מסחרי5",
-   "company": "הבינלאומי הראשון הנפקות בע\"מ",
-   "chp_number": "513141879"
-  }
- ]
+ "dropped_no_terms": []
 }
