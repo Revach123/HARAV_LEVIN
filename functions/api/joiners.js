@@ -12,7 +12,7 @@ import { normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jer
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
 const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at: r.cancelled_at, file_sha256: r.file_sha256, ident_hash: r.ident_hash,
-  first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "",
+  first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "", src: p.src || "",
   undecryptable: !p.first && !p.last && !p.email && !p.phone ? 1 : 0 });
 export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();

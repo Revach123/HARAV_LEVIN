@@ -2469,11 +2469,22 @@
     btn.textContent = old; btn.disabled = false;
   }
   // שדות מתוך extra (JSON שנכתב ע"י הטופס/הטלפון); רשומות ישנות עם טקסט חופשי נשארות בלי שדות מפורקים
+  // מקור ההרשמה: טלפון (ימות) / נדרים / קהילות / אתר (הטופס המוטמע בוורדפרס) / אתר ישן / ידני
+  function jSrc(r, o) {
+    const s = String(r.src || "");
+    if (/טלפון/.test(o["ערוץ"] || "")) return "טלפון";
+    if (/^nedarim/.test(s)) return "נדרים";
+    if (s === "site:embed") return "אתר";
+    if (s === "site:kehilot") return "קהילות";
+    if (/^cfdb7/.test(s)) return "אתר ישן";
+    if (s === "admin") return "ידני";
+    return "";
+  }
   function jX(r) {
     if (r._x) return r._x;
     let o = {}; try { const j = JSON.parse(r.extra || ""); if (j && typeof j === "object" && !Array.isArray(j)) o = j; } catch { /* טקסט חופשי */ }
     const shown = new Set(["כתובת", "טלפון נוסף", "פקס", "ערוץ", ...Object.keys(J_REC)]);
-    return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: /טלפון/.test(o["ערוץ"] || "") ? "טלפון" : "",
+    return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
       rest: Object.keys(o).filter(k => !shown.has(k) && o[k]).map(k => `${k}: ${o[k]}`).join(" · "), raw: Object.keys(o).length ? "" : String(r.extra || "") });
   }
   // עמודות הטבלה: nar = צרה (בלי שבירת שורה), ltr = מספרים/אימייל

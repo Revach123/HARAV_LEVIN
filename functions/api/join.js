@@ -75,7 +75,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       ip: request.headers.get("CF-Connecting-IP") || "",
       companies: companies.join(", "),
       all: choice === "all" ? "כן" : "",
-      pdf: "", extra: JSON.stringify(extra), src: "site:kehilot",
+      pdf: "", extra: JSON.stringify(extra), src: b.channel === "site" ? "site:embed" : "site:kehilot",          // site:embed = הטופס המוטמע באתר (וורדפרס)
     };
     // קובץ האישור נשמר (HTML, בדלי הפרטי) ומשויך למצטרף; נכשל ההעלאה - ההרשמה נשמרת בלי קובץ
     const conf = { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin };

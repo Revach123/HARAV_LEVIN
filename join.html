@@ -336,7 +336,7 @@ $("fJoin").addEventListener("submit", async e => {
     const text = agreementText();
     const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), address: v("address"),
       choice: ch.value, companies: ch.value === "list" ? [...chosen] : [], consent: true, agreement_version: AGREEMENT_VERSION, agreement_sha256: await sha256Hex(text),
-      form_date: todayIL, t: Date.now() - loadedAt, website: $("website").value };
+      form_date: todayIL, t: Date.now() - loadedAt, website: $("website").value, channel: document.body.classList.contains("embed") ? "site" : "kehilot" };
     const { status, j } = await post("/api/join", body);
     if (j && j.ok) {
       $("dName").textContent = `${body.first} ${body.last}`; 
