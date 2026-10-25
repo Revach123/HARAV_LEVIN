@@ -10,7 +10,7 @@ var f=document.getElementById("hl-frame");
 if(!f){f=document.createElement("iframe");f.id="hl-frame";f.style.cssText="width:100%;height:700px;border:0";f.setAttribute("scrolling","no");if(sc&&sc.parentNode){sc.parentNode.insertBefore(f,sc);}else{document.body.appendChild(f);}}
 var P=decodeURIComponent(location.pathname),TY=(sc&&sc.getAttribute("data-type"))||(((P.indexOf("חוב")!==-1||P.indexOf("אגח")!==-1)?"bonds":"companies")+"-"+(P.indexOf("כללי")!==-1?"general":"private"));
 f.src=O+"/display.html?type="+TY;
-var OFFSET=Number(sc&&sc.getAttribute("data-offset"))||140,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
+var OFF0=Number(sc&&sc.getAttribute("data-offset"))||140,OFFSET=OFF0,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -59,7 +59,18 @@ if(d.type==="header"){spec=d;build();f.contentWindow.postMessage({source:"harav-
 if(d.type==="hscroll"){hs=d;buildSb();}
 if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"harav-parent",type:"updShown"},O);}}
 });
+/* גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה), ואם אין כותרת קבועה - data-offset */
+function hdrBottom(){var w=window.innerWidth,best=0,pts=[w/2,w*0.25,w*0.75],ids={"hl-bar":1,"hl-nav":1,"hl-sb":1,"ipb":1};
+for(var p=0;p!==pts.length;p=p+1){var els=document.elementsFromPoint(pts[p],3);
+for(var i=0;i!==els.length;i=i+1){var e=els[i];
+while(e&&e!==document.documentElement){var cs=window.getComputedStyle(e);
+if(cs.position==="fixed"||cs.position==="sticky"){var r=e.getBoundingClientRect();
+if(!ids[e.id]&&r.width>=w*0.6&&r.top<=6&&r.bottom<=260&&r.bottom>best){best=r.bottom;}
+break;}
+e=e.parentNode;}}}
+return Math.round(best);}
 function tick(){
+var hb=hdrBottom();OFFSET=hb>0?hb:OFF0;
 if(!f.offsetWidth){if(bar){bar.style.display="none";}if(sb){sb.style.display="none";}window.requestAnimationFrame(tick);return;}
 var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
 var OH=OFFSET;
