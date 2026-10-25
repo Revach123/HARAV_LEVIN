@@ -282,7 +282,7 @@ title=חיפוש היתר עסקה חברות
 
 דף אחד עם לשוניות פרטי / כללי וקטגוריות בצד (`permits.html`). בוורדפרס: בלוק "קוד" ומדביקים שורה אחת (`wp-embed-permits.html`): `<script src="https://harav-levin.pages.dev/permits-embed.js"></script>`. הרשימה באורך התוכן, והסרגל העליון (לשוניות, חיפוש, כותרת הקטגוריה) ותפריט הקטגוריות נצמדים מתחת לכותרת האתר בגלילה (במחשב, מעל 992 פיקסלים). `data-offset` = גובה הכותרת הקבועה (ברירת מחדל 140); `data-tab="general"` = לשונית פתיחה. קישור ישיר לקטגוריה: `permits.html#t=general&cat=בנקים`.
 - שמות החברות והשיוך ללשונית מגיעים מ-`/api/lists?type=companies-private|general` (כמו `display.html`), והמסמכים מ-`/api/permit-docs-public`; מוצגות רק חברות עם שטר משויך.
-- הקטגוריות: `businesses.permits_category` (כמה קטגוריות מופרדות ב-`|`). בלי קטגוריה = "שונות" ("עיריות" אם בשם עירייה/מועצה), ועם קטגוריה ספציפית אין "שונות" (נאכף בשרת, `functions/api/_shared/pcat.js`).
+- הקטגוריות: `businesses.permits_category` (כמה קטגוריות מופרדות ב-`|`). בלי קטגוריה = "שונות", ועם קטגוריה ספציפית אין "שונות" (נאכף בשרת, `functions/api/_shared/pcat.js`).
 
 ## באיזו רשימה מוצגת ההערה של החברה (notes_scope)
 
