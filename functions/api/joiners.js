@@ -28,6 +28,10 @@ export async function onRequestGet({ request, env }) {
       const html = /\.html$/i.test(row.r2_key);   // אישורים שנוצרו באתר החדש הם HTML; מהאתר הישן PDF
       return new Response(obj.body, { headers: { "Content-Type": html ? "text/html; charset=utf-8" : "application/pdf", "Content-Disposition": "inline", ...(html ? { "Content-Security-Policy": "sandbox; default-src 'none'; img-src https:; style-src 'unsafe-inline'" } : {}), ...H } });
     }
+    if (u.searchParams.get("count")) {          // מספר המצטרפים בלבד (לכפתור בדף הראשי של הניהול), בלי פענוח
+      const c = await env.DB.prepare("SELECT COUNT(*) AS n, SUM(CASE WHEN COALESCE(cancelled_at,'') = '' THEN 1 ELSE 0 END) AS a FROM joiners").first();
+      return Response.json({ total: c.n || 0, active: c.a || 0 }, { headers: H });
+    }
     const offset = Math.max(0, parseInt(u.searchParams.get("offset") || "0", 10) || 0), limit = Math.min(500, Math.max(1, parseInt(u.searchParams.get("limit") || "400", 10) || 400));
     let key;
     try { key = await importKey(env); } catch { return Response.json({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, { status: 503, headers: H }); }
