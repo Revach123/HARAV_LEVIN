@@ -629,7 +629,7 @@
     const d = S.byId.get(doc.id) || doc;
     return (d.business_ids || []).map(id => { const sl = slotsOf(d, id);
       const role = sl.length === 2 ? "משותף פרטי וכללי" : sl[0] === "private" ? "פרטי" : sl[0] === "general" ? "כללי" : "";
-      return `<div style="margin-top:6px">${role ? `שטר זה כרגע מסומן כשטר "${role}"` : "שטר זה כרגע משויך (כמסמך נוסף, לא כהת\"ע פרטי / כללי)"} של חברה <b>${E(bizName(id))}</b>${btn ? ` <button class="pd-mini link" onclick="PD._close('pd-upload');PD.openManage('${id}')">לשינוי</button>` : ""}</div>`; }).join("");
+      return `<div style="margin-top:6px">${role ? `שטר זה כרגע מסומן כשטר "${role}"` : "שטר זה כרגע משויך (כמסמך נוסף, לא כהת\"ע פרטי / כללי)"} של חברה <b>${E(bizName(id))}</b>${btn === "pick" ? ` <button class="pd-mini link" onclick="PD._acPick('biz','${id}')" title="בחירת החברה: למטה מופיעות האפשרויות פרטי / כללי / משותף">לשינוי</button>` : btn ? ` <button class="pd-mini link" onclick="PD._close('pd-upload');PD.openManage('${id}')">לשינוי</button>` : ""}</div>`; }).join("");
   }
   function upDuplicate(doc) {
     $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}).${(doc.business_ids || []).length ? dupRoleHtml(doc, true) : "<br>המסמך עדיין לא משויך לאף חברה."}<div class="pd-sub" style="margin-top:6px">קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div></div>
@@ -847,7 +847,7 @@
     const body = $("pd-up-body"); body.classList.add("acfs");
     const side = `${U.list && U.list.length > 1 ? `<div class="pd-sub">קובץ ${U.idx + 1} מתוך ${U.list.length} · ממתינים: ${pend}</div>` : ""}
         ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
-        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc, false)}<div class="pd-sub" style="margin-top:4px">לשינוי: בוחרים את החברה ולוחצים על הסוג הרצוי למטה.</div></div>` : ""}
+        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc, "pick")}</div>` : ""}
         ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
         <div id="pd-ac-top">${acTop(c)}</div>
         <div class="pd-ac-sugs">
