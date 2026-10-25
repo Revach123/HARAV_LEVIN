@@ -5,7 +5,7 @@
 // ו-iframe באורך התוכן. הסרגל שולט ברשימה שב-iframe בהודעות (setTab / setCat / setQ).
 (function () {
   var sc = document.currentScript, O = sc && sc.src ? new URL(sc.src).origin : "https://harav-levin.pages.dev";
-  var OFFSET = Number(sc && sc.getAttribute("data-offset")) || 140;
+  var OFF0 = Number(sc && sc.getAttribute("data-offset")) || 140, OFFSET = OFF0;
   var P = decodeURIComponent(location.pathname) + " " + document.title;
   var T = (sc && sc.getAttribute("data-tab")) || (P.indexOf("כללי") !== -1 ? "general" : "private");
   var css = document.createElement("style");
@@ -57,11 +57,33 @@
     if (e.data.type === "permits-spec") { spec(e.data); }
   });
   var pinned = false, lastL = -1, lastW = -1;
+  // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
+  function hdrBottom() {
+    var w = window.innerWidth, best = 0, pts = [w / 2, w * 0.25, w * 0.75];
+    for (var p = 0; p < pts.length; p++) {
+      var els = document.elementsFromPoint(pts[p], 3);
+      for (var i = 0; i < els.length; i++) {
+        var e = els[i];
+        while (e && e !== document.documentElement) {
+          var cs = window.getComputedStyle(e);
+          if (cs.position === "fixed" || cs.position === "sticky") {
+            var r = e.getBoundingClientRect();
+            if (e.id !== "ipb" && r.width >= w * 0.6 && r.top <= 6 && r.bottom <= 260 && r.bottom > best) { best = r.bottom; }
+            break;
+          }
+          e = e.parentNode;
+        }
+      }
+    }
+    return Math.round(best);
+  }
   function tick() {
+    var hb = hdrBottom(); OFFSET = hb > 0 ? hb : OFF0;
     var pr = ph.getBoundingClientRect(), fr = f.getBoundingClientRect(), bh = bar.offsetHeight, wide = window.innerWidth >= 992;
     var pin = wide && pr.top < OFFSET && fr.bottom - bh - 60 > OFFSET;
     if (pin) {
       if (!pinned) { ph.style.height = bh + "px"; bar.style.position = "fixed"; bar.style.top = OFFSET + "px"; bar.style.zIndex = "99"; bar.className = "pin"; pinned = true; lastL = lastW = -1; }
+      bar.style.top = OFFSET + "px";
       var l = Math.round(fr.left), w = Math.round(fr.width);
       if (l !== lastL || w !== lastW) { bar.style.left = l + "px"; bar.style.width = w + "px"; lastL = l; lastW = w; }
     } else if (pinned) {
