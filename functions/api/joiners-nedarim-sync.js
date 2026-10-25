@@ -1,5 +1,6 @@
 // functions/api/joiners-nedarim-sync.js
 // קליטת הרשמות מהטופס המאוחסן בנדרים פלוס (קבלת נתונים בלבד - שום דבר לא נשלח אליהם). מנהל בלבד, רק מהאתר עצמו (Origin).
+// במשיכה האוטומטית נשלח גם מייל אישור לכל מצטרף חדש (בלחיצה על הכפתור בניהול - לא; לשם כך "שליחת אישורים").
 // משיכה יומית אוטומטית: .github/workflows/nedarim-sync.yml עם הסוד CRON_SECRET (אותו ערך ב-Cloudflare וב-GitHub).
 // דורש סוד NEDARIM_API_KEY (מפתח npk_… מוגבל להרשאה "משיכת רשומות טופס"). אופציונלי: NEDARIM_MOSAD_ID, NEDARIM_TOFES_ID (ברירת מחדל 7005939 / 800).
 //   POST /api/joiners-nedarim-sync  {}  → עד BATCH רשומות חדשות (מעבר ל"נקודת ההמשך" השמורה). תשובה: { ok, added, existing, more, last_id }
@@ -8,6 +9,7 @@ import { checkAdmin } from "./_shared/auth.js";
 import { noAuth } from "./_shared/permit-docs.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { originOk, readJson, clean } from "./_shared/join-common.js";
+import { sendConfirmation } from "./_shared/join-mail.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
@@ -78,7 +80,11 @@ export async function onRequestPost({ request, env }) {
   try {
     const saved = parseInt(await getSetting(env, SETTING), 10), since = Number.isFinite(saved) ? saved : 0;
     const rows = await pull(env, tofes, since);
-    let added = 0, existing = 0, last = since;
+    // במשיכה היומית האוטומטית: מייל אישור לכל מצטרף חדש עם דוא"ל תקין (פעם אחת - נרשם ב-joiner_mail, כמו בשליחה מהניהול)
+    const mail = cron && env.WP_MAIL_URL && env.WP_MAIL_SECRET;
+    if (mail) await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_mail (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
+    const origin = new URL(request.url).origin, validEmail = v => /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v) && !/[<>"']/.test(v);
+    let added = 0, existing = 0, last = since, mailed = 0, mailFailed = 0;
     for (const r of rows) {
       const n = parseInt(r.ID, 10); if (Number.isFinite(n)) last = Math.max(last, n);
       const rid = await sha1_16("nedarim:" + tofes + ":" + r.ID);
@@ -89,8 +95,13 @@ export async function onRequestPost({ request, env }) {
       await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
         .bind(rid, when, digits ? await identHash(env, digits) : "", await encryptPii(wkey, rid, { ...p, src: "nedarim:" + tofes + ":" + r.ID })).run();
       added++;
+      if (mail && validEmail(p.email)) {
+        const d = when.slice(0, 10).split("-").reverse().join("/");
+        const ok = await sendConfirmation(env, p.email, { first: p.first, last: p.last, id: p.id, date: d, all: false, companies: [], origin, intro: `מצורף אישור על הצטרפותך מתאריך ${d}.` });
+        if (ok) { mailed++; await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(rid).run(); } else mailFailed++;
+      }
     }
     if (last !== since) await setSetting(env, SETTING, last);
-    return out({ ok: true, added, existing, more: rows.length === BATCH, last_id: last });
+    return out({ ok: true, added, existing, mailed, mail_failed: mailFailed, more: rows.length === BATCH, last_id: last });
   } catch (e) { return out({ error: e && e.message ? e.message : "שגיאה בסנכרון" }, 502); }
 }
