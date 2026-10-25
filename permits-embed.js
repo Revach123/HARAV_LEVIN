@@ -32,7 +32,11 @@
   if (sc && sc.parentNode) { sc.parentNode.insertBefore(ph, sc); sc.parentNode.insertBefore(f, sc); } else { document.body.appendChild(ph); document.body.appendChild(f); }
   var tabsEl = bar.querySelector(".ipb-tabs"), q = bar.querySelector("input"), sel = bar.querySelector("select"), cnt = bar.querySelector(".ipb-cnt"), ttl = bar.querySelector(".ipb-title");
   function send(m) { m.source = "harav-parent"; if (f.contentWindow) { f.contentWindow.postMessage(m, O); } }
-  var tabsKey = "", catsKey = "", qt = null;
+  // הלשוניות נבנות מיד (לפני שהרשימה נטענת), כדי שהסרגל לא יגדל ויזיז את הדף כשהנתונים מגיעים
+  var TABS0 = { private: "שטרות היתר עיסקא פרטי", general: "שטרות היתר עיסקא כללי" };
+  var tabsKey = JSON.stringify(TABS0), catsKey = "", qt = null;
+  tabsEl.innerHTML = Object.keys(TABS0).map(function (k) { return '<button type="button" data-t="' + k + '"' + (k === T ? ' class="on"' : "") + ">" + TABS0[k] + "</button>"; }).join("");
+  sel.innerHTML = '<option value="">כל הקטגוריות</option>'; cnt.textContent = "\u00a0";
   tabsEl.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setTab", value: b.getAttribute("data-t") }); } });
   sel.addEventListener("change", function () { send({ type: "setCat", value: sel.value }); });
   q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { send({ type: "setQ", value: q.value }); }, 120); });
