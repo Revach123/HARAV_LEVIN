@@ -2469,11 +2469,11 @@
     btn.textContent = old; btn.disabled = false;
   }
   // שדות מתוך extra (JSON שנכתב ע"י הטופס/הטלפון); רשומות ישנות עם טקסט חופשי נשארות בלי שדות מפורקים
-  // מקור ההרשמה: טלפון (ימות) / נדרים / קהילות / אתר (הטופס המוטמע בוורדפרס) / אתר ישן / ידני
+  // מקור ההרשמה: טלפון (ימות) / נדרים פלוס / קהילות / אתר (הטופס המוטמע בוורדפרס) / אתר ישן / ידני
   function jSrc(r, o) {
     const s = String(r.src || "");
     if (/טלפון/.test(o["ערוץ"] || "")) return "טלפון";
-    if (/^nedarim/.test(s)) return "נדרים";
+    if (/^nedarim/.test(s)) return "נדרים פלוס";
     if (s === "site:embed") return "אתר";
     if (s === "site:kehilot") return "קהילות";
     if (/^cfdb7/.test(s)) return "אתר ישן";
