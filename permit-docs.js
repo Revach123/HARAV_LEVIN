@@ -624,9 +624,15 @@
       findBonds(c.text).then(b => { if (U.cur === c && b.length) { c.bonds = b; c.bondSel = new Set(b.map(x => x.row.id)); upReview(false); } }).catch(() => {});
     });
   }
+  // "שטר זה כרגע מסומן כשטר "פרטי" של חברה X" - לכל חברה שהמסמך משויך אליה
+  function dupRoleHtml(doc, btn) {
+    const d = S.byId.get(doc.id) || doc;
+    return (d.business_ids || []).map(id => { const sl = slotsOf(d, id);
+      const role = sl.length === 2 ? "משותף פרטי וכללי" : sl[0] === "private" ? "פרטי" : sl[0] === "general" ? "כללי" : "";
+      return `<div style="margin-top:6px">${role ? `שטר זה כרגע מסומן כשטר "${role}"` : "שטר זה כרגע משויך (כמסמך נוסף, לא כהת\"ע פרטי / כללי)"} של חברה <b>${E(bizName(id))}</b>${btn ? ` <button class="pd-mini link" onclick="PD._close('pd-upload');PD.openManage('${id}')">לשינוי</button>` : ""}</div>`; }).join("");
+  }
   function upDuplicate(doc) {
-    const cos = (doc.business_ids || []).map(b => E(bizName(b))).join(", ") || "ללא שיוך";
-    $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}, ${TL[doc.doc_type]}).<br>משויך אל: ${cos}.<br>קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div>
+    $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}).${(doc.business_ids || []).length ? dupRoleHtml(doc, true) : "<br>המסמך עדיין לא משויך לאף חברה."}<div class="pd-sub" style="margin-top:6px">קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div></div>
       <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" onclick="PD._close('pd-upload');PD.openDoc('${doc.id}')">פתיחת המסמך הקיים</button><button class="pd-btn" onclick="PD._next()">${U.queue.length ? "דילוג לקובץ הבא" : "סיום"}</button></div>`;
   }
   function upReview(fresh) {
@@ -738,7 +744,8 @@
     const p = c.pick; if (!p) return "";
     const isNew = p.kind !== "biz", nc = p.kind === "nochp", b = isNew ? null : bizById(p.id); if (!isNew && !b) return "";
     const lnk = d => `<span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD._acDoc('${d.id}')">הצגת השטר הקיים</span>`;
-    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר ${lnk(cur)}</span>` : ""; };
+    const dup = c.dupDoc ? (S.byId.get(c.dupDoc.id) || c.dupDoc) : null, dupSl = dup && b ? slotsOf(dup, b.id) : [];          // הקובץ החדש הוא מסמך שכבר קיים במאגר
+    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; if (cur && dup && cur.id === dup.id) return ""; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר ${lnk(cur)}</span>` : ""; };
     const det = !b ? "" : (() => {          // כרטיסיית פרטי העסק (עסק קיים במאגר)
       const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
       const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], [chpLbl(b.chp_number, b.biz_type), b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["אישור אג\"ח", b.agch_approved], ["הערה", b.notes]]
@@ -748,12 +755,18 @@
     // הפיצרים הם גם כפתורי הבחירה. מסמך משותף קיים / חברה חדשה: למעלה "החלפת המסמך המשותף" ומתחתיו פרטי / כללי. אחרת: פרטי / כללי למעלה והמשותף מתחת
     const sharedFirst = isNew || acShared(b);
     const big = (t, withWarn) => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
+      if (b && dupSl.length) {          // אותו מסמך כבר מסומן אצל החברה: "רק" (בסוג שהוא כבר מסומן בו) או "גם" (בסוג השני)
+        const mine = dupSl.includes(t), go = mine ? t : "both";
+        const cap = mine ? (dupSl.length === 2 ? `לסמן שטר זה רק כשטר ${he}` : `שטר זה כבר מסומן כשטר ${he}`) : `לסמן שטר זה גם כשטר ${he}`;
+        return `<button type="button" class="pd-chipx big ${mine ? "ok" : x.cls}" onclick="PD._acGo('${go}')"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">${mine ? "✓ " : ""}${cap}</span>${!mine && x.d ? `<span class="pd-ac-warn">השטר הקיים כ${he} יעבור למסמכים נוספים ${lnk(x.d)}</span>` : ""}</button>`;
+      }
       if (x && x.cls === "na") return `<button type="button" class="pd-chipx big chg" onclick="PD._acGo('${t}')" title="שינוי רישום החברה והוספת המסמך כהת&quot;ע ${he}"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">לשנות רישום החברה ל"${he}"</span></button>`;
       return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b && withWarn ? warn(t, "") : ""}</button>`; };
     const sp = b ? acState(b, "private") : null, sg = b ? acState(b, "general") : null;
-    const bothTitle = b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
+    const bothTitle = b && dupSl.length ? (dupSl.length === 2 ? "שטר זה כבר מסומן כשטר פרטי וכללי" : "לסמן שטר זה כשטר פרטי וכללי") : b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
     const needChg = b && (sp.cls === "na" || sg.cls === "na");
-    const bothWarn = !b ? "" : (sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "");          // אותו מסמך: קישור אחד להצגה
+    const dupOther = b && dupSl.length ? [sp.d, sg.d].find(d => d && d.id !== dup.id) : null;
+    const bothWarn = !b ? "" : dupSl.length ? (dupOther ? `<span class="pd-ac-warn">השטר הקיים השני יעבור למסמכים נוספים ${lnk(dupOther)}</span>` : "") : (sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "");          // אותו מסמך: קישור אחד להצגה
     const both = `<button type="button" class="pd-chipx big wide both ${b ? (sharedFirst ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> ${bothTitle}</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls === "na" ? "chg" : sp.cls}">${sp.cls === "na" ? 'לשנות רישום החברה ל"פרטי"' : "פרטי " + sp.st}</span><span class="${sg.cls === "na" ? "chg" : sg.cls}">${sg.cls === "na" ? 'לשנות רישום החברה ל"כללי"' : "כללי " + sg.st}</span></span>` : ""}${bothWarn}</button>`;
     const pair = w => `<div class="pd-ac-row">${big("private", w)}${big("general", w)}</div>`;
     const body = sharedFirst ? `${both}<div class="pd-sub" style="margin:8px 0 4px">או לסמן את המסמך החדש רק כ:</div>${pair(false)}` : `${pair(true)}${both}`;
@@ -834,7 +847,7 @@
     const body = $("pd-up-body"); body.classList.add("acfs");
     const side = `${U.list && U.list.length > 1 ? `<div class="pd-sub">קובץ ${U.idx + 1} מתוך ${U.list.length} · ממתינים: ${pend}</div>` : ""}
         ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
-        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}). אפשר לשייך אותו מחדש.</div>` : ""}
+        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc, false)}<div class="pd-sub" style="margin-top:4px">לשינוי: בוחרים את החברה ולוחצים על הסוג הרצוי למטה.</div></div>` : ""}
         ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
         <div id="pd-ac-top">${acTop(c)}</div>
         <div class="pd-ac-sugs">
@@ -2806,7 +2819,10 @@
     const others = (d.business_ids || []).filter(x => x !== b.id), sl = slotsOf(d, b.id);
     const shared = others.length > 0 || M.share.has(d.id), menuOpen = M.menu === d.id || M.move === d.id;
     const typeSel = `<select class="pd-sel" onchange="PD._setType('${d.id}',this.value)" title="סיווג המסמך">${["general", "private", "both", "unknown", "other"].map(t => `<option value="${t}" ${d.doc_type === t ? "selected" : ""}>${TL[t]}</option>`).join("")}</select>`;
-    const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
+    const othr = t => t === "private" ? "general" : "private";
+    const alsoBtns = sl.length === 1 ? `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${othr(sl[0])}')" title="אותו מסמך ישמש גם כהת&quot;ע ${SLOT_HE[othr(sl[0])]} של החברה">לסמן גם כהת"ע ${SLOT_HE[othr(sl[0])]}</button>`
+      : sl.length === 2 ? ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${othr(t)}')" title="המסמך יישאר רק כהת&quot;ע ${SLOT_HE[t]}">לסמן רק כהת"ע ${SLOT_HE[t]}</button>`).join("") : "";
+    const linkBtns = sl.length ? alsoBtns + `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
       : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
     const sp = (d.specials || {})[b.id];
     const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="${E(sp.detail || "")}">אחר: ${E(sp.title)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
