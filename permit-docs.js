@@ -647,6 +647,7 @@
     }
     const sug = c.sug;
     const noText = !c.analyzing && normText(c.text).length < 40;
+    if (noText && !c.ocr && !c.textErr && !c.dupDoc) ocrBg(c);          // סריקה בלי טקסט: זיהוי טקסט אוטומטי ברקע
     const card = x => `<label class="pd-cand"><input type="checkbox" ${c.sel.has(x.b.id) ? "checked" : ""} onchange="PD._tog('${x.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(x.b, true)}</b> <span class="pd-sub">${E(x.b.chp_number || "")} · ${x.hp ? "התאמה לפי ח.פ." : "התאמה לפי שם"} (${E(x.why.join(", "))})</span>${stTag(x.b.registry_status)}</span></label>`;
     const extra = [...c.sel].filter(id => !sug.cands.some(x => x.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, hp: false, why: ["נבחר ידנית"] }));
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
@@ -655,7 +656,7 @@
         <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0&view=FitH" title="תצוגה מקדימה"></iframe></div>
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
-          ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+          ${ocrBox(c, noText)}
           ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות שיוך). אפשר כבר לבחור חברה, סיווג ולשמור.</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
           ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : c.analyzing ? "" : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
@@ -841,6 +842,7 @@
     if (fresh || !c.sug) c.sug = suggest(c.text, c.file.name);
     if (U.preset && !c.pickInit) { c.pickInit = true; if (!c.pick && bizById(U.preset)) c.pick = { kind: "biz", id: U.preset }; }          // העלאה משורת חברה: החברה נבחרת אוטומטית
     const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40, pend = U.list ? U.list.filter(e => e.st === "pending").length : 0;
+    if (noText && !c.ocr && !c.textErr && !c.dupDoc) ocrBg(c);          // סריקה בלי טקסט: זיהוי טקסט אוטומטי ברקע
     const cardB = x => acBizCard(x.b, x.hp ? "לפי ח.פ. במסמך" : "לפי שם", c.pick && c.pick.kind === "biz" && c.pick.id === x.b.id, true);
     const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><div><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span></div><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div>${simHtml(nm)}</div>`; };
     const cards = [...sug.cands.slice(0, 20).map(cardB), ...sug.outside.map(cardN)].join("");
@@ -848,7 +850,7 @@
     const side = `${U.list && U.list.length > 1 ? `<div class="pd-sub">קובץ ${U.idx + 1} מתוך ${U.list.length} · ממתינים: ${pend}</div>` : ""}
         ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
         ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc, "pick")}</div>` : ""}
-        ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+        ${ocrBox(c, noText)}
         <div id="pd-ac-top">${acTop(c)}</div>
         <div class="pd-ac-sugs">
           <h4>חברות מוצעות לפי הכתוב במסמך</h4>
@@ -856,7 +858,7 @@
           <input class="pd-in" id="pd-up-q" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:8px"><div id="pd-up-res"></div>
           <div style="margin-top:8px">${c.ncOpen ? `<div class="pd-ac-nc"><b>עסק חדש בלי ח.פ.</b><div style="display:flex;gap:6px;margin-top:4px"><input class="pd-in" id="pd-ac-ncn" value="${E(c.ncVal || "")}" placeholder="שם העסק" oninput="PD._acNcVal(this.value)" onkeydown="if(event.key==='Enter')PD._acNcGo()" autocomplete="off" style="flex:1"><button class="pd-btn primary" onclick="PD._acNcGo()">המשך</button><button class="pd-btn" onclick="PD._acNc(0)">ביטול</button></div><div id="pd-ac-ncsim">${simHtml(c.ncVal || "")}</div></div>` : `<button class="pd-btn" onclick="PD._acNc(1)" title="הוספת עסק חדש שאין לו ח.פ.: מקלידים שם, ובוחרים פרטי / כללי / משותף">🏷️ עסק חדש בלי ח.פ.</button>`}</div>
         </div>
-        <div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
+        <div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD._next()">${c.dupDoc ? "סיום עם קובץ זה ומעבר לבא" : "דילוג על הקובץ"}</button></div>
         <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div>`;
     const multi = !!(U.list && U.list.length > 1);
     if (keepView) {          // המסמך עצמו לא נטען מחדש: מרעננים רק את התמונות הממוזערות ואת הכרטיסיות
@@ -887,6 +889,11 @@
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
     if (bz && slots.some(t => acState(bz, t).cls === "na")) job.vis = { id, value: "פרטי" };          // החברה לא רשומה בסוג הזה: משנים את הרישום ל"יש פרטי" (כלומר גם פרטי וגם כללי)
     U.jobs.push(job); upBg();
+    if (c.dupDoc) {          // קובץ שכבר קיים: נשארים באותו קובץ (ייתכן שצריך כמה שינויים, לכמה חברות) ומרעננים את "כרגע מסומן כ..."
+      c.pick = null; upReviewAC(false);
+      U.jchain = U.jchain.then(() => upSend(job)).then(() => { if (U.cur === c) upReviewAC(false); });
+      return;
+    }
     U.jchain = U.jchain.then(() => upSend(job));
     acDone();          // עוברים מיד לקובץ הבא (או סיום)
   }
@@ -896,13 +903,18 @@
     return (top.length ? `<div class="pd-grp">התאמות מובילות</div>` + top.map(card).join("") : "") +
            (rest.length ? `<div class="pd-grp weak">התאמות נוספות (פחות מתאימות)</div>` + rest.map(card).join("") : "");
   }
-  async function upOcr() {
-    const c = U.cur; c.ocr = true;
-    $("pd-up-body").insertAdjacentHTML("afterbegin", `<div class="pd-warnbox" id="pd-ocr-st">מריץ OCR…</div>`);
-    try { c.text += "\n" + await ocrText(c.buf, i => { const el = $("pd-ocr-st"); if (el) el.textContent = "מריץ OCR… עמוד " + i; }); }
-    catch (e) { c.textErr = "OCR נכשל: " + e.message; }
-    upReview(true);
+  // זיהוי טקסט (OCR) לסריקה בלי טקסט: רץ אוטומטית ברקע, עם ספינר; בסיום ההצעות מחושבות מחדש
+  async function ocrBg(c) {
+    if (c.ocr) return; c.ocr = true; c.ocrRun = true;
+    try { const t = await ocrText(c.buf, i => { const el = $("pd-ocr-st"); if (el && U.cur === c) el.textContent = `מזהה טקסט בסריקה… עמוד ${i}`; }); c.text += "\n" + t; }
+    catch (e) { c.textErr = "זיהוי הטקסט נכשל: " + e.message; }
+    c.ocrRun = false;
+    if (U.cur === c) { if (U.addCompany) upReviewAC(true); else upReview(true); }
+    if (normText(c.text).length >= 40) findBonds(c.text).then(bb => { if (bb.length) c.bonds = bb; }).catch(() => {});
   }
+  const ocrBox = (c, noText) => c.ocrRun ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c"><span class="pd-spin"></span> <span id="pd-ocr-st">מזהה טקסט בסריקה…</span> <span class="pd-sub">אפשר להמשיך לעבוד בינתיים.</span></div>`
+    : noText ? `<div class="pd-warnbox">${c.textErr ? E(c.textErr) : c.ocr ? "לא זוהה טקסט במסמך." : "אין בקובץ טקסט (כנראה סריקה)."}</div>` : "";
+  const upOcr = () => U.cur && ocrBg(U.cur);
   function upTog(id, on) { on ? U.cur.sel.add(id) : U.cur.sel.delete(id); const b = $("pd-save"); if (b) b.textContent = U.cur.sel.size ? `שמירה ושיוך ל-${U.cur.sel.size} חברות` : "שמירה בלי שיוך"; }
   function upSearch(q) {
     const out = $("pd-up-res"); if (!out) return;
@@ -3069,6 +3081,7 @@
   .pd-as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   .pd-as-mini{border:1px solid #d6d2ca;border-radius:8px;padding:6px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:4px}
   @media(max-width:900px){.pd-as-top{flex-direction:column}}
+  .pd-spin{display:inline-block;width:14px;height:14px;border:2px solid #b9c9e6;border-top-color:#1a3a5c;border-radius:50%;animation:pd-spin .8s linear infinite;vertical-align:-2px}@keyframes pd-spin{to{transform:rotate(360deg)}}
   .pd-ok{white-space:nowrap}.pd-ok .pd-chip{white-space:normal;line-height:1.2;text-align:center;font-size:10.5px}.pd-ok.pd-c-private{background:#7a3b8f;color:#fff;border-color:#7a3b8f}.pd-ok.pd-c-general{background:#1e4570;color:#fff;border-color:#1e4570}.pd-ok[class*=pd-c-]:hover{filter:brightness(1.15)}.pd-ok.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-ok.pd-long:hover{filter:brightness(1.12)}
   .pd-warn{background:#fff1d6;color:#8a5a00;border:1px solid #e8c36a;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-mg-top{display:flex;gap:16px;align-items:stretch}
