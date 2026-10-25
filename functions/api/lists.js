@@ -6,6 +6,7 @@
 //   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
 //     /api/lists?type=companies-all
 //   אג"ח: לא כאן. קבצים סטטיים /data/bonds_list/bonds_{private,general,all}.{json,csv} (נבנים יומית ממאיה).
+//   תשובת JSON של companies-private / companies-general כוללת גם תאריך עדכון: updated (YYYY-MM-DD), updated_display (DD/MM/YYYY), updated_heb (תאריך עברי)
 //   פורמט:
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
@@ -102,6 +103,31 @@ async function addSelectiveNotes(request, env, rows, scope) {
     r.bonds_note = r.bonds_note ? auto + "; " + r.bonds_note : auto;
     r._bonds_note_all = r._bonds_note_all ? auto + "; " + r._bonds_note_all : auto;
   }
+}
+
+// תאריך עדכון הרשימה: הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json) - אותו תאריך שמוצג באתר.
+// updated = YYYY-MM-DD, updated_display = DD/MM/YYYY, updated_heb = תאריך עברי (למשל "כ"ג חשון תשפ"ז")
+const hebNum = n => {
+  const H = ["", "ק", "ר", "ש", "ת"], T = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"], U = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
+  let out = ""; while (n >= 400) { out += "ת"; n -= 400; }
+  out += H[Math.floor(n / 100)]; n %= 100;
+  if (n === 15) out += "טו"; else if (n === 16) out += "טז"; else out += T[Math.floor(n / 10)] + U[n % 10];
+  return out.length > 1 ? out.slice(0, -1) + '"' + out.slice(-1) : out + "'";
+};
+async function listUpdated(request, env) {
+  try {
+    const url = new URL("/data/bonds_list/verification.json", request.url), res = await (env.ASSETS ? env.ASSETS.fetch(url) : fetch(url));
+    const m = res.ok ? /^(\d{4})-(\d{2})-(\d{2})/.exec(((await res.json()) || {}).updated || "") : null;
+    if (!m) return null;
+    let heb = "";
+    try {
+      const parts = new Intl.DateTimeFormat("he-u-ca-hebrew", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).formatToParts(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12)));
+      const get = t => (parts.find(p => p.type === t) || {}).value || "";
+      const day = parseInt(get("day"), 10), yr = parseInt(get("year") || get("relatedYear"), 10), month = get("month").replace(/^ב(?=[א-ת])/, "");
+      if (day && yr && month) heb = `${hebNum(day)} ${month} ${hebNum(yr % 1000)}`;
+    } catch { /* בלי תאריך עברי */ }
+    return { updated: `${m[1]}-${m[2]}-${m[3]}`, updated_display: `${m[3]}/${m[2]}/${m[1]}`, updated_heb: heb };
+  } catch { return null; }
 }
 
 // המרת שורות ל-CSV עם BOM (כדי שאקסל יזהה UTF-8 ויציג עברית)
@@ -236,7 +262,8 @@ export async function onRequestGet(context) {
     if (format === "csv") {
       return csvResponse(results, type);
     }
-    return json({ ok: true, type, count: results.length, rows: results });
+    const upd = (type === "companies-private" || type === "companies-general") ? await listUpdated(request, env) : null;
+    return json({ ok: true, type, count: results.length, ...(upd || {}), rows: results });
   } catch (e) {
     return json({ ok: false, error: e.message, type }, 500);
   }
