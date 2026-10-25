@@ -6,7 +6,7 @@
 //   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
 //     /api/lists?type=companies-all
 //   אג"ח: לא כאן. קבצים סטטיים /data/bonds_list/bonds_{private,general,all}.{json,csv} (נבנים יומית ממאיה).
-//   תשובת JSON של companies-private / companies-general כוללת גם תאריך עדכון: updated (YYYY-MM-DD), updated_display (DD/MM/YYYY), updated_heb (תאריך עברי)
+//   תשובת JSON של companies-private / companies-general כוללת גם תאריך עדכון: updated ("24/10/2026 - י"ג חשוון תשפ"ז")
 //   פורמט:
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
@@ -106,7 +106,7 @@ async function addSelectiveNotes(request, env, rows, scope) {
 }
 
 // תאריך עדכון הרשימה: הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json) - אותו תאריך שמוצג באתר.
-// updated = YYYY-MM-DD, updated_display = DD/MM/YYYY, updated_heb = תאריך עברי (למשל "כ"ג חשון תשפ"ז")
+// updated = שדה אחד: תאריך לועזי ועברי, למשל "24/10/2026 - י"ג חשוון תשפ"ז"
 const hebNum = n => {
   const H = ["", "ק", "ר", "ש", "ת"], T = ["", "י", "כ", "ל", "מ", "נ", "ס", "ע", "פ", "צ"], U = ["", "א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט"];
   let out = ""; while (n >= 400) { out += "ת"; n -= 400; }
@@ -126,7 +126,7 @@ async function listUpdated(request, env) {
       const day = parseInt(get("day"), 10), yr = parseInt(get("year") || get("relatedYear"), 10), month = get("month").replace(/^ב(?=[א-ת])/, "");
       if (day && yr && month) heb = `${hebNum(day)} ${month} ${hebNum(yr % 1000)}`;
     } catch { /* בלי תאריך עברי */ }
-    return { updated: `${m[1]}-${m[2]}-${m[3]}`, updated_display: `${m[3]}/${m[2]}/${m[1]}`, updated_heb: heb };
+    return { updated: `${m[3]}/${m[2]}/${m[1]}` + (heb ? ` - ${heb}` : "") };
   } catch { return null; }
 }
 
