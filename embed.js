@@ -10,6 +10,10 @@ var f=document.getElementById("hl-frame");
 if(!f){f=document.createElement("iframe");f.id="hl-frame";f.style.cssText="width:100%;height:700px;border:0";f.setAttribute("scrolling","no");if(sc&&sc.parentNode){sc.parentNode.insertBefore(f,sc);}else{document.body.appendChild(f);}}
 var P=decodeURIComponent(location.pathname),TY=(sc&&sc.getAttribute("data-type"))||(((P.indexOf("חוב")!==-1||P.indexOf("אגח")!==-1)?"bonds":"companies")+"-"+(P.indexOf("כללי")!==-1?"general":"private"));
 f.src=O+"/display.html?type="+TY;
+/* גובה ה-iframe מתחיל מהגובה האחרון שנשמר (ולא מ-700 הקבועים), וירידה בגובה מתעכבת - כדי שהדף לא יקפוץ בטעינה (שחזור מיקום הגלילה של הדפדפן) */
+var HK="hl-h-"+TY,st=null;try{var H0=Number(window.localStorage.getItem(HK));if(Math.sign(H0)===1){f.style.height=H0+"px";}}catch(x){}
+function applyH(h){f.style.height=h+"px";try{window.localStorage.setItem(HK,String(h));}catch(x){}}
+function setH(h){var c=f.offsetHeight;window.clearTimeout(st);if(Math.sign(h-c+50)!==-1){applyH(h);}else{st=window.setTimeout(function(){applyH(h);},1500);}}
 var OFF0=Number(sc&&sc.getAttribute("data-offset"))||140,OFFSET=OFF0,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
@@ -53,7 +57,7 @@ setUpd("\u00a0");/* שומר מראש את שורת "עודכן לאחרונה" 
 window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
 var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
-if(d.type==="resize"){f.style.height=d.height+"px";}
+if(d.type==="resize"){setH(d.height);}
 if(d.type==="nav"){nav=d;buildNav();}
 if(d.type==="header"){spec=d;build();f.contentWindow.postMessage({source:"harav-parent",type:"v5"},O);}
 if(d.type==="hscroll"){hs=d;buildSb();}
