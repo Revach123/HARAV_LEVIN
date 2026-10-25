@@ -1614,7 +1614,7 @@ function adminTabs() {
 
 // מספר המצטרפים בכפתור "מצטרפים" בדף הראשי (נטען פעם אחת, ברקע)
 let joinersCount = null, joinersCountP = null;
-const joinersCountText = () => `${joinersCount.total.toLocaleString("he-IL")} סה"כ` + (joinersCount.active !== joinersCount.total ? ` · ${joinersCount.active.toLocaleString("he-IL")} פעילים` : "");
+const joinersCountText = () => `${joinersCount.total.toLocaleString("he-IL")} סה"כ`;
 function loadJoinersCount() {
   if (joinersCountP) return;
   joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
