@@ -44,27 +44,6 @@
    "chp_number": "520028010"
   },
   {
-   "id": 10386,
-   "maya_report_id": 1777077,
-   "company_name": "חג'ג' נדל\"ן",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777077",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777077",
-   "link_presentation": "https://maya.tase.co.il/he/reports/1773850",
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "520033309"
-  },
-  {
    "id": 10379,
    "maya_report_id": 1776611,
    "company_name": "מגה אור",
@@ -126,27 +105,6 @@
     }
    ],
    "chp_number": "1811308"
-  },
-  {
-   "id": 10390,
-   "maya_report_id": 1777410,
-   "company_name": "ריט אזורים ליוי",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
-   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": "ilA-",
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "516117181"
   },
   {
    "id": 10128,
@@ -275,14 +233,14 @@
    "chp_number": "515541415"
   },
   {
-   "id": 10388,
-   "maya_report_id": 1777226,
+   "id": 10392,
+   "maya_report_id": 1777801,
    "company_name": "הראל ריביות",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": 1,
+   "draft_no": 2,
    "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777801",
    "link_trust_indenture": null,
    "link_presentation": null,
    "securities": [
@@ -611,6 +569,52 @@
    "chp_number": ""
   },
   {
+   "chp_number": "520033309",
+   "company_name": "חג'ג' נדל\"ן",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10386,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1773850",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777077",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777077",
+   "maya_report_id": 1777077,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-25"
+  },
+  {
+   "chp_number": "516561875",
+   "company_name": "הראל ריביות",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10388,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
+   "link_trust_indenture": null,
+   "maya_report_id": 1777226,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-25"
+  },
+  {
    "chp_number": "516117181",
    "company_name": "ריט אזורים ליוי",
    "draft_no": 1,
@@ -632,6 +636,29 @@
    ],
    "carried": true,
    "last_seen": "2026-10-22"
+  },
+  {
+   "chp_number": "516117181",
+   "company_name": "ריט אזורים ליוי",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10390,
+   "is_new_company": false,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
+   "maya_report_id": 1777410,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilA-",
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-25"
   }
  ],
  "open": [
