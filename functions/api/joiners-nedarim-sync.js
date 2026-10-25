@@ -1,5 +1,6 @@
 // functions/api/joiners-nedarim-sync.js
 // קליטת הרשמות מהטופס המאוחסן בנדרים פלוס (קבלת נתונים בלבד - שום דבר לא נשלח אליהם). מנהל בלבד, רק מהאתר עצמו (Origin).
+// משיכה יומית אוטומטית: .github/workflows/nedarim-sync.yml עם הסוד CRON_SECRET (אותו ערך ב-Cloudflare וב-GitHub).
 // דורש סוד NEDARIM_API_KEY (מפתח npk_… מוגבל להרשאה "משיכת רשומות טופס"). אופציונלי: NEDARIM_MOSAD_ID, NEDARIM_TOFES_ID (ברירת מחדל 7005939 / 800).
 //   POST /api/joiners-nedarim-sync  {}  → עד BATCH רשומות חדשות (מעבר ל"נקודת ההמשך" השמורה). תשובה: { ok, added, existing, more, last_id }
 // הלקוח קורא שוב ושוב עד more=false. רשומה שכבר נקלטה (אותו מזהה) לא נדרסת.
@@ -39,6 +40,13 @@ export function mapRow(r) {
   };
 }
 
+async function cronOk(request, env) {
+  const got = request.headers.get("X-Cron-Secret") || "", want = env.CRON_SECRET || "";
+  if (!want || want.length < 24 || !got) return false;
+  const h = async x => new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(x)));
+  const [a, b] = await Promise.all([h(got), h(want)]); let d = 0; for (let i = 0; i < a.length; i++) d |= a[i] ^ b[i];
+  return d === 0;
+}
 async function getSetting(env, k) { try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = ?").bind(k).first(); return r ? r.value : null; } catch { return null; } }
 async function setSetting(env, k, v) {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
@@ -59,8 +67,10 @@ async function pull(env, tofes, lastId) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!(await checkAdmin(request, env))) return noAuth();
-  if (!originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
+  // הרצה יומית אוטומטית (GitHub Actions, .github/workflows/nedarim-sync.yml): כותרת X-Cron-Secret = הסוד CRON_SECRET. אחרת - מנהל מהאתר עצמו
+  const cron = await cronOk(request, env);
+  if (!cron && !(await checkAdmin(request, env))) return noAuth();
+  if (!cron && !originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
   await readJson(request, 1024);
   if (!env.NEDARIM_API_KEY) return out({ error: "המפתח NEDARIM_API_KEY לא מוגדר באתר" }, 503);
   let wkey; try { wkey = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }

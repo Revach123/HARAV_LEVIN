@@ -2679,14 +2679,14 @@
     const set = h => { const b = $("pd-jned-b"); if (b) b.innerHTML = h; };
     const t = { added: 0, existing: 0 };
     try {
-      for (let i = 0; i < 100; i++) {
+      let more = true;
+      for (let i = 0; i < 2000 && more; i++) {          // עד שאין עוד (שומר-בטיחות: 2000 קריאות = 30,000 הרשמות)
         const r = await api("/joiners-nedarim-sync", "POST", {});
-        t.added += r.added; t.existing += r.existing;
+        t.added += r.added; t.existing += r.existing; more = !!r.more;
         set(`מושך הרשמות… נוספו ${t.added}, כבר קיימים ${t.existing}`);
-        if (!r.more) break;
       }
       J.rows = null; ndShow();
-      set(`הסתיים.<br>מצטרפים חדשים מנדרים: <b>${t.added}</b>`);
+      set(more ? `נעצר באמצע (יש עוד הרשמות).<br>נוספו עד כה: <b>${t.added}</b>. לחצו שוב להמשך.` : `הסתיים - נמשכו כל ההרשמות.<br>מצטרפים חדשים מנדרים: <b>${t.added}</b>`);
     } catch (e) {
       J.rows = null; ndShow();
       set(`<span style="color:#c0392b">${E(e.message || "שגיאה")}</span><div class="pd-sub" style="margin-top:6px">עד כה נוספו ${t.added}.</div><div style="margin-top:10px"><button class="pd-mini" onclick="PD._close('pd-jned')">סגירה</button></div>`);
