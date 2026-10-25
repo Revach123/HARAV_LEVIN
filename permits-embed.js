@@ -66,22 +66,24 @@
   // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
   function hdrBottom() {
     var w = window.innerWidth, best = 0, pts = [w / 2, w * 0.25, w * 0.75];
-    for (var p = 0; p < pts.length; p++) {
-      var els = document.elementsFromPoint(pts[p], 3);
-      for (var i = 0; i < els.length; i++) {
-        var e = els[i];
-        while (e && e !== document.documentElement) {
-          var cs = window.getComputedStyle(e);
-          if (cs.position === "fixed" || cs.position === "sticky") {
-            var r = e.getBoundingClientRect();
-            if (e.id !== "ipb" && r.width >= w * 0.6 && r.top <= 6 && r.bottom <= 260 && r.bottom > best) { best = r.bottom; }
-            break;
+    for (var y = 3; y < 250; y += 30) {
+      for (var p = 0; p < pts.length; p++) {
+        var els = document.elementsFromPoint(pts[p], y);
+        for (var i = 0; i < els.length; i++) {
+          var e = els[i];
+          while (e && e !== document.documentElement && e.nodeType === 1) {
+            var cs = window.getComputedStyle(e);
+            if (cs.position === "fixed" || cs.position === "sticky") {
+              var r = e.getBoundingClientRect();
+              if (e.id !== "ipb" && r.width >= w * 0.6 && r.top <= 40 && r.bottom <= 260 && r.bottom > best) { best = r.bottom; }
+              break;
+            }
+            e = e.parentNode;
           }
-          e = e.parentNode;
         }
       }
     }
-    return Math.round(best);
+    return best > 40 ? Math.round(best) : 0;   // סרגל הניהול של וורדפרס (32px) בלבד אינו כותרת האתר
   }
   function tick() {
     var hb = hdrBottom(); OFFSET = hb > 0 ? hb : OFF0;

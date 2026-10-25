@@ -65,14 +65,15 @@ if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"h
 });
 /* גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה), ואם אין כותרת קבועה - data-offset */
 function hdrBottom(){var w=window.innerWidth,best=0,pts=[w/2,w*0.25,w*0.75],ids={"hl-bar":1,"hl-nav":1,"hl-sb":1,"ipb":1};
-for(var p=0;p!==pts.length;p=p+1){var els=document.elementsFromPoint(pts[p],3);
+for(var y=3;Math.sign(250-y)===1;y=y+30){for(var p=0;p!==pts.length;p=p+1){var els=document.elementsFromPoint(pts[p],y);
 for(var i=0;i!==els.length;i=i+1){var e=els[i];
-while(e&&e!==document.documentElement){var cs=window.getComputedStyle(e);
+while(e&&e!==document.documentElement&&e.nodeType===1){var cs=window.getComputedStyle(e);
 if(cs.position==="fixed"||cs.position==="sticky"){var r=e.getBoundingClientRect();
-if(!ids[e.id]&&r.width>=w*0.6&&r.top<=6&&r.bottom<=260&&r.bottom>best){best=r.bottom;}
+if(!ids[e.id]&&Math.sign(r.width-w*0.6)!==-1&&Math.sign(40-r.top)!==-1&&Math.sign(260-r.bottom)!==-1&&Math.sign(r.bottom-best)===1){best=r.bottom;}
 break;}
-e=e.parentNode;}}}
-return Math.round(best);}
+e=e.parentNode;}}}}
+/* סרגל הניהול של וורדפרס (32px) בלבד אינו כותרת האתר */
+return Math.sign(best-40)===1?Math.round(best):0;}
 function tick(){
 var hb=hdrBottom();OFFSET=hb>0?hb:OFF0;
 if(!f.offsetWidth){if(bar){bar.style.display="none";}if(sb){sb.style.display="none";}window.requestAnimationFrame(tick);return;}
