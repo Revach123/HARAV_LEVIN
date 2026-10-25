@@ -10,7 +10,11 @@ var f=document.getElementById("hl-frame");
 if(!f){f=document.createElement("iframe");f.id="hl-frame";f.style.cssText="width:100%;height:700px;border:0";f.setAttribute("scrolling","no");if(sc&&sc.parentNode){sc.parentNode.insertBefore(f,sc);}else{document.body.appendChild(f);}}
 var P=decodeURIComponent(location.pathname),TY=(sc&&sc.getAttribute("data-type"))||(((P.indexOf("חוב")!==-1||P.indexOf("אגח")!==-1)?"bonds":"companies")+"-"+(P.indexOf("כללי")!==-1?"general":"private"));
 f.src=O+"/display.html?type="+TY;
-var OFFSET=Number(sc&&sc.getAttribute("data-offset"))||140,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
+/* גובה ה-iframe מתחיל מהגובה האחרון שנשמר (ולא מ-700 הקבועים), וירידה בגובה מתעכבת - כדי שהדף לא יקפוץ בטעינה (שחזור מיקום הגלילה של הדפדפן) */
+var HK="hl-h-"+TY,st=null;try{var H0=Number(window.localStorage.getItem(HK));if(Math.sign(H0)===1){f.style.height=H0+"px";}}catch(x){}
+function applyH(h){f.style.height=h+"px";try{window.localStorage.setItem(HK,String(h));}catch(x){}}
+function setH(h){var c=f.offsetHeight;window.clearTimeout(st);if(Math.sign(h-c+50)!==-1){applyH(h);}else{st=window.setTimeout(function(){applyH(h);},1500);}}
+var OFF0=Number(sc&&sc.getAttribute("data-offset"))||140,OFFSET=OFF0,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -49,16 +53,29 @@ sb.addEventListener("scroll",function(){if(ps!==null){if(Math.sign(Math.abs(sb.s
 sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
 if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}move();}
 }
+setUpd("\u00a0");/* שומר מראש את שורת "עודכן לאחרונה" בכותרת הדף, כדי שהכותרת לא תזוז כשהתאריך מגיע */
 window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
 var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
-if(d.type==="resize"){f.style.height=d.height+"px";}
+if(d.type==="resize"){setH(d.height);}
 if(d.type==="nav"){nav=d;buildNav();}
 if(d.type==="header"){spec=d;build();f.contentWindow.postMessage({source:"harav-parent",type:"v5"},O);}
 if(d.type==="hscroll"){hs=d;buildSb();}
 if(d.type==="updated"){if(setUpd(d.text)){f.contentWindow.postMessage({source:"harav-parent",type:"updShown"},O);}}
 });
+/* גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה), ואם אין כותרת קבועה - data-offset */
+function hdrBottom(){var w=window.innerWidth,best=0,pts=[w/2,w*0.25,w*0.75],ids={"hl-bar":1,"hl-nav":1,"hl-sb":1,"ipb":1};
+for(var y=3;Math.sign(250-y)===1;y=y+30){for(var p=0;p!==pts.length;p=p+1){var els=document.elementsFromPoint(pts[p],y);
+for(var i=0;i!==els.length;i=i+1){var e=els[i];
+while(e&&e!==document.documentElement&&e.nodeType===1){var cs=window.getComputedStyle(e);
+if(cs.position==="fixed"||cs.position==="sticky"){var r=e.getBoundingClientRect();
+if(!ids[e.id]&&Math.sign(r.width-w*0.6)!==-1&&Math.sign(40-r.top)!==-1&&Math.sign(260-r.bottom)!==-1&&Math.sign(r.bottom-best)===1){best=r.bottom;}
+break;}
+e=e.parentNode;}}}}
+/* סרגל הניהול של וורדפרס (32px) בלבד אינו כותרת האתר */
+return Math.sign(best-40)===1?Math.round(best):0;}
 function tick(){
+var hb=hdrBottom();OFFSET=hb>0?hb:OFF0;
 if(!f.offsetWidth){if(bar){bar.style.display="none";}if(sb){sb.style.display="none";}window.requestAnimationFrame(tick);return;}
 var r=f.getBoundingClientRect(),wide=Math.sign(Math.floor(window.innerWidth/992))===1;
 var OH=OFFSET;

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#274d5b">
 <link rel="icon" type="image/png" href="/favicon.png">
-<title>רשימת שטרות היתר עסקה</title>
+<title>שטרות היתר עיסקא</title>
 <style>
   /* רשימת שטרות היתר עסקה לפי קטגוריות ("קטגוריה עבור רשימת השטרות" בניהול). לכל חברה: צפייה והורדה של ההיתר הכללי, ו"יש פרטי" בצד עם צפייה והורדה. */
   @font-face{font-family:'Alef';font-weight:400;font-display:swap;src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
@@ -20,9 +20,10 @@
   .stick{position:sticky;top:0;z-index:20;background:#f4f7f7;margin:0 -.8rem 1rem;padding:.5rem .8rem .4rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
   .stick .bar{max-width:760px;margin:0 auto}
   .curcat{font-size:21px;font-weight:700;color:var(--navy);text-align:center;margin-top:.45rem;padding-top:.35rem;border-top:2px solid var(--accent-border)}
-  .tabs{display:flex;justify-content:center;gap:.5rem;margin:0 0 .5rem;flex-wrap:wrap}
-  .tabs button{font:inherit;font-size:17px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:999px;padding:.3rem 1.4rem;cursor:pointer}
-  .tabs button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+  .tabs{display:flex;gap:0;margin:0 0 .55rem;flex-wrap:wrap;border-bottom:1px solid var(--border)}
+  .tabs button{flex:1;min-width:150px;padding:.7rem 1rem;font-size:18px;font-weight:700;font-family:inherit;background:transparent;color:var(--navy);border:none;border-top:3px solid transparent;border-radius:0;cursor:pointer;transition:.15s}
+  .tabs button:hover{color:var(--accent-dark)}
+  .tabs button.on{color:var(--accent-dark);border-top-color:var(--accent);background:var(--accent-bg)}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:2rem;align-items:start}
   .side{position:sticky;top:calc(var(--sh,120px) + .6rem)}
   .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:17px;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:.65rem .4rem;cursor:pointer;text-align:start}
@@ -48,14 +49,19 @@
   body.embed .hero{display:none}
   html.embed,body.embed{background:#fff}body.embed{padding:0 .6rem 1rem}body.embed .stick{background:#fff;margin:0 -.6rem .8rem;padding:.4rem .6rem .3rem}
   .stick{scroll-margin-top:0}
-  .sp{font-size:13px;color:var(--navy);margin-top:.35rem}.sp b{display:block}
+  /* ?auto=1 (permits-embed.js): ה-iframe באורך התוכן, בלי גלילה פנימית. הסרגל העליון (לשוניות, חיפוש, קטגוריה) נבנה בעמוד האב ונצמד שם (position:fixed), כמו ברשימת החברות;
+     כאן הוא מוסתר, והתפריט בצד נגלל עם הדף (במובייל מוסתר: הבחירה בסרגל) */
+  html.auto{overflow:hidden}
+  body.auto .stick{display:none}
+  body.auto .side{position:relative;top:auto}
+  @media(max-width:760px){body.auto .side{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="hero"><h1>שטרות היתר עסקה</h1><div class="bc" id="bc">דף הבית « שטרות היתר עסקה</div></header>
+  <header class="hero"><h1>שטרות היתר עיסקא</h1><div class="bc" id="bc">דף הבית « שטרות היתר עיסקא</div></header>
   <div class="stick" id="stick">
-    <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות פרטיים</button><button role="tab" data-t="general">שטרות כלליים</button></div>
+    <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות היתר עיסקא פרטי</button><button role="tab" data-t="general">שטרות היתר עיסקא כללי</button></div>
     <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
     <h2 class="curcat" id="curcat" hidden></h2>
   </div>
@@ -72,6 +78,8 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;
 const ICON_VIEW = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_DL = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
 if (new URLSearchParams(location.search).has("embed")) document.body.classList.add("embed"), document.documentElement.classList.add("embed");
+const AUTO = window.parent !== window && new URLSearchParams(location.search).has("auto");
+if (AUTO) document.body.classList.add("auto"), document.documentElement.classList.add("auto");
 let CAT = "", Q = "";
 
 // צפייה והורדה כ-JSON (base64): רשתות עם סינון תוכן חוסמות הורדת PDF ישירה. אם נכשל - נופלים לקישור הישיר
@@ -104,7 +112,7 @@ const lnk = (id, ic, label, dl) => `<a class="ic" href="${API_BASE}/api/permit-d
 const pair = id => `<div class="pair">${lnk(id, ICON_VIEW, "צפייה")}${lnk(id, ICON_DL, "הורדה", 1)}</div>`;
 
 // כמו display.html: שמות החברות והשיוך ללשונית (פרטי / כללי) מגיעים מרשימות /api/lists, והמסמכים לפי השיוך שבניהול
-const TABS = { private: "שטרות פרטיים", general: "שטרות כלליים" };
+const TABS = { private: "שטרות היתר עיסקא פרטי", general: "שטרות היתר עיסקא כללי" };
 const LISTS = {};
 let LINKS = null, TAB = "private";
 const qnorm = s => String(s || "").replace(/["'׳״]/g, "");
@@ -152,11 +160,25 @@ async function draw() {
     return `<div class="it"><div class="nm">${esc(r.name)}</div><div class="act">${main}${side}${sp}${main || side || sp ? "" : '<div class="grp none">—</div>'}</div></div>`;
   }).join("")}</div>`).join("");
   list.innerHTML = out || '<div class="state">לא נמצאו חברות</div>';
+  if (AUTO) window.parent.postMessage({ source: "harav-levin", type: "permits-spec", tab: TAB, tabs: TABS, cat: CAT, cats: names.map(c => [c, cats.get(c)]), total: ROWS.length, count: rows.length }, "*");
 }
 function setHash() { location.hash = `t=${TAB}` + (CAT ? "&cat=" + encodeURIComponent(CAT) : ""); }
 document.getElementById("q").addEventListener("input", e => { Q = e.target.value; draw(); });
 document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; TAB = b.dataset.t; CAT = ""; setHash(); draw(); });
 document.getElementById("side").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; CAT = b.dataset.c; setHash(); draw(); });
+// ── הטמעה באתר (permits-embed.js): דיווח גובה לעמוד האב, ושליטה מהסרגל הקבוע שבעמוד האב (לשונית / חיפוש / קטגוריה) ──
+if (AUTO) {
+  const docH = () => Math.ceil(document.documentElement.getBoundingClientRect().height);
+  const report = () => window.parent.postMessage({ source: "harav-levin", type: "resize", height: docH() }, "*");
+  new ResizeObserver(report).observe(document.body);
+  addEventListener("message", e => {
+    const d = e.data; if (!d || d.source !== "harav-parent") return;
+    if (d.type === "setTab" && TABS[d.value]) { TAB = d.value; CAT = ""; setHash(); draw(); }
+    else if (d.type === "setCat") { CAT = String(d.value || ""); setHash(); draw(); }
+    else if (d.type === "setQ") { Q = String(d.value || ""); draw(); }
+  });
+  report();
+}
 {
   const sh = () => document.documentElement.style.setProperty("--sh", document.getElementById("stick").offsetHeight + "px");
   sh(); addEventListener("resize", sh); if (window.ResizeObserver) new ResizeObserver(sh).observe(document.getElementById("stick"));

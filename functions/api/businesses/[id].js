@@ -49,7 +49,7 @@ export async function onRequestPut({ request, env, params }) {
       return Response.json({ error: "Business not found" }, { status: 404 });
     }
     if (body.permits_category !== undefined) {          // קטגוריה עבור רשימת השטרות (migrations/0019); לפני המיגרציה מתעלמים
-      try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(normalizePcat(body.permits_category, permit_name, registrar_name), id).run(); }
+      try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(normalizePcat(body.permits_category), id).run(); }
       catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
     }
     return Response.json({ success: true });
