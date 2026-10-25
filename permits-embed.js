@@ -29,6 +29,12 @@
   f.id = "iska-permits"; f.title = "שטרות היתר עיסקא"; f.setAttribute("scrolling", "no");
   f.style.cssText = "width:100%;height:700px;border:0;display:block";
   f.src = O + "/permits.html?embed=1&auto=1#t=" + T;
+  // גובה ה-iframe מתחיל מהגובה האחרון שנשמר ללשונית (ולא מ-700 הקבועים), וירידה בגובה מתעכבת - כדי שהדף לא יקפוץ בטעינה
+  var curTab = T, st = null;
+  function hk() { return "ip-h-" + curTab; }
+  try { var H0 = Number(window.localStorage.getItem(hk())); if (H0 > 0) { f.style.height = H0 + "px"; } } catch (x) { }
+  function applyH(h) { f.style.height = h + "px"; try { window.localStorage.setItem(hk(), String(h)); } catch (x) { } }
+  function setH(h) { var c = f.offsetHeight; clearTimeout(st); if (h >= c - 50) { applyH(h); } else { st = setTimeout(function () { applyH(h); }, 1500); } }
   if (sc && sc.parentNode) { sc.parentNode.insertBefore(ph, sc); sc.parentNode.insertBefore(f, sc); } else { document.body.appendChild(ph); document.body.appendChild(f); }
   var tabsEl = bar.querySelector(".ipb-tabs"), q = bar.querySelector("input"), sel = bar.querySelector("select"), cnt = bar.querySelector(".ipb-cnt"), ttl = bar.querySelector(".ipb-title");
   function send(m) { m.source = "harav-parent"; if (f.contentWindow) { f.contentWindow.postMessage(m, O); } }
@@ -53,8 +59,8 @@
   }
   window.addEventListener("message", function (e) {
     if (e.origin !== O || !e.data || e.data.source !== "harav-levin") { return; }
-    if (e.data.type === "resize") { f.style.height = e.data.height + "px"; }
-    if (e.data.type === "permits-spec") { spec(e.data); }
+    if (e.data.type === "resize") { setH(e.data.height); }
+    if (e.data.type === "permits-spec") { curTab = e.data.tab; spec(e.data); }
   });
   var pinned = false, lastL = -1, lastW = -1;
   // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
