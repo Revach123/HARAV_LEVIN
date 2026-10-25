@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-24",
+ "updated": "2026-10-25",
  "upcoming": [
   {
    "id": 10358,
@@ -642,33 +642,6 @@
    "last_seen": "2026-10-22"
   },
   {
-   "begins_at": "2026-10-21T09:00:00",
-   "chp_number": "515846558",
-   "ends_at": "2026-10-21T16:00:00",
-   "interest": 3.48,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 1769,
-   "issuer_name": "ג'נריישן קפיטל",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777085",
-   "offer_number": 1187913,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "מדד",
-     "maalot_rating": "ilA+",
-     "midroog_rating": null,
-     "security_id": null,
-     "security_name": "אג\"ח ה'",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-21"
-  },
-  {
    "begins_at": "2026-10-22T09:00:00",
    "chp_number": "512719485",
    "ends_at": "2026-10-22T16:00:00",
@@ -748,33 +721,6 @@
    ],
    "carried": true,
    "last_seen": "2026-10-23"
-  },
-  {
-   "begins_at": "2026-10-21T10:00:00",
-   "chp_number": "515434074",
-   "ends_at": "2026-10-21T17:00:00",
-   "interest": 0.5,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 1668,
-   "issuer_name": "מגוריט",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777064",
-   "offer_number": 1240852,
-   "offer_type": "מחיר",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 879,
-   "securities": [
-    {
-     "linkage_type": "מדד",
-     "maalot_rating": null,
-     "midroog_rating": "A2.il",
-     "security_id": null,
-     "security_name": "אגח יג'",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-21"
   }
  ],
  "companies": [
@@ -877,13 +823,6 @@
    ]
   },
   {
-   "chp_number": "515434074",
-   "name": "מגוריט",
-   "statuses": [
-    "בהנפקה"
-   ]
-  },
-  {
    "chp_number": "515541415",
    "name": "גשם למשתכן",
    "statuses": [
@@ -895,13 +834,6 @@
    "name": "ג'י טי נדל\"ן",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "515846558",
-   "name": "ג'נריישן קפיטל",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
