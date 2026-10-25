@@ -39,7 +39,7 @@ export async function onRequestGet({ request, env }) {
       const expr = long.map(ftsPhrase).join(" AND ");
       const like = short.map(() => " AND c.name_norm LIKE ?").join("");
       stmts = tables.map(t => db.prepare(
-        `SELECT c.id,c.name,c.status,c.${SUB[t]} AS sub FROM ${t}_fts f JOIN ${t} c ON c.id=f.id WHERE ${t}_fts MATCH ?${like} LIMIT ${PER_TABLE}`
+        `SELECT DISTINCT c.id,c.name,c.status,c.${SUB[t]} AS sub FROM ${t}_fts f JOIN ${t} c ON c.id=f.id WHERE ${t}_fts MATCH ?${like} LIMIT ${PER_TABLE}`
       ).bind(expr, ...short.map(w => `%${w}%`)));
     }
     // שלוש שאילתות במקביל; כשל באחת (למשל טבלה/אינדקס חסרים) לא מפיל את האחרות - השגיאה מוחזרת ב-errors
@@ -50,7 +50,9 @@ export async function onRequestGet({ request, env }) {
       else errors.push(`${tables[i]}: ${String(res.reason && res.reason.message || res.reason)}`);
     });
     if (errors.length === tables.length) return Response.json({ error: errors.join(" | ") }, { status: 500 });
+    const seen = new Set();          // אותו תאגיד לא יופיע פעמיים (שורות כפולות באינדקס החיפוש)
     const results = rows
+      .filter(r => { const k = r.kind + ":" + r.id; if (seen.has(k)) return false; seen.add(k); return true; })
       .map(r => ({ id: String(r.id), name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || "") }))
       .sort((a, b) => (a.defunct - b.defunct) || (a.name || "").localeCompare(b.name || "", "he"))
       .slice(0, 20);
