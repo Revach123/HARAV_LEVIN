@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261025d"></script>
+<script src="/permit-docs.js?v=20261025e"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1189,7 +1189,7 @@ function renderAdminTable() {
             return `
               <tr class="${b0._isSub ? "sub-row" : ""}${alt}${bsubs.length ? " has-bonds" : ""}">
                 <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml((b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div></td>
-                <td class="det-cell"><div class="kv"><span class="k">ח.פ.</span><span class="v" style="direction:ltr;text-align:right;">${escHtml(b.chp_number)||"—"}</span>
+                <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${escHtml(b.chp_number)||"—"}</span>
                   <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
                   <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
@@ -1701,6 +1701,8 @@ function gsHighlight(val, tokens) {
     return hit ? `<mark>${escHtml(w)}</mark>` : escHtml(w);
   }).join("");
 }
+// ח.פ. או ח.צ.: חברה ציבורית (לפי סוג התאגיד ברשם, ובלעדיו לפי מספר שמתחיל ב-52) מוצגת "ח.צ."
+const chpLbl = (chp, type) => /ציבורית/.test(type || "") || (!/פרטית|שותפות|עמותה|אגודה|חל"צ|ציבורית/.test(type || "") && /^52\d{7}$/.test(String(chp || "").replace(/\D/g, ""))) ? "ח.צ." : "ח.פ.";
 const GS_BIZ_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: 'ח.פ.', entity_type: "סוג ישות", category: "קטגוריה", region: "אזור", biz_type: "סוג עסק",
   visibility: "פרטי / כללי", agch_approved: 'אישור אג"ח', tase_has_agch: 'אג"ח בבורסה', registry_status: "סטטוס ברשם", notes: "הערות", notes_scope: "היכן להציג הערה", updated_at: "עודכן" };
 const GS_BOND_LABELS = { security_name: 'שם אג"ח', symbol: "סימול", security_id: "מספר נייר", isin: "ISIN", security_type: "סוג נייר", company: "חברה", chp_number: 'ח.פ.', agch_approved: "אישור",
@@ -1712,7 +1714,7 @@ function gsCard(rec, kind, tokens) {
   const rows = Object.keys(labels).filter(k => rec[k] !== undefined && rec[k] !== null && String(rec[k]).trim() !== "").map(k => {
     let v = rec[k];
     if (k === "notes_scope") v = GS_SCOPE[v] ?? v;
-    return `<dt>${escHtml(labels[k])}</dt><dd>${gsHighlight(v, tokens)}</dd>`;
+    return `<dt>${escHtml(k === "chp_number" ? chpLbl(rec.chp_number, rec.biz_type) : labels[k])}</dt><dd>${gsHighlight(v, tokens)}</dd>`;
   }).join("");
   const btn = kind === "biz" ? `<button class="sbtn" onclick="openForm('${rec.id}')">✏️ עריכה</button>`
     : (businesses.find(b => (b.chp_number || "") && b.chp_number === rec.chp_number) ? `<button class="sbtn" onclick="openForm('${businesses.find(b => b.chp_number === rec.chp_number).id}')">פתיחת החברה</button>` : "");
@@ -1752,7 +1754,7 @@ async function registrySearchInto(q) {
   out.innerHTML = d.hint ? `<div class="gs-info" style="margin:6px 0;">${escHtml(d.hint)}</div>` : rs.length
     ? rs.map(r => { const ex = existingBiz(r.id);
         return `<div class="ns-row ${r.defunct ? "defunct" : ""} addable" data-id="${escHtml(String(r.id))}"><div><b>${escHtml(r.name)}</b>
-          <div class="m">${escHtml(r.type)} · ח.פ. ${escHtml(String(r.id))}${r.status ? " · " + escHtml(r.status) : ""}</div><div>${statusBadge(ex)}</div></div>
+          <div class="m">${escHtml(r.type)} · ${chpLbl(r.id, r.type)} ${escHtml(String(r.id))}${r.status ? " · " + escHtml(r.status) : ""}</div><div>${statusBadge(ex)}</div></div>
           ${ex.length ? circ("edit", `data-edit="${escHtml(ex[0].id)}"`) : circ("add", `data-add="${escHtml(String(r.id))}"`)}</div>`; }).join("") + (d.more ? `<div class="gs-info" style="margin:6px 0;">יש עוד תוצאות - דייק את החיפוש</div>` : "")
     : `<div class="gs-info" style="margin:6px 0;">לא נמצאו חברות${/^\d+$/.test(q) ? " שמספרן מתחיל בספרות האלה" : " בשם הזה"}${(d.errors || []).length ? ` (שגיאה חלקית: ${escHtml(d.errors.join(" | "))})` : ""}</div>`;
   out.querySelectorAll(".ns-row.addable").forEach(row => row.addEventListener("click", () => {      // כל הכרטיסייה לחיצה: קיים = עריכה, חסר = הוספה
@@ -2302,7 +2304,7 @@ function renderBondPicker() {
   root.innerHTML = `<div class="modal-overlay" style="${reopen ? "animation:none;" : ""}" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
     <div class="modal-box" style="max-width:560px;${reopen ? "animation:none;" : ""}">
       <div class="modal-title">בחירת אג"ח מסוימים</div>
-      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
+      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ${chpLbl(st.biz.chp_number, st.biz.biz_type)} ${escHtml(st.biz.chp_number || "")}</div>
       ${body}
       <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn-ghost" onclick="closeBondPicker()">ביטול</button>
@@ -2631,7 +2633,7 @@ async function doSave() {
     );
     if (duplicate) {
       if (errEl) errEl.textContent =
-        `ח.פ. ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
+        `${chpLbl(chpVal)} ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
       return;
     }
   }
@@ -2855,7 +2857,7 @@ async function startImport() {
     // ── Duplicate ח.פ. check within import ──
     const chpVal = get("chp_number");
     if (chpVal && businesses.some(b => (b.chp_number||"").trim() === chpVal)) {
-      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ח.פ. ${chpVal} כבר קיים — דולגה`);
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ${chpLbl(chpVal)} ${chpVal} כבר קיים — דולגה`);
       csvProgress++;
       updateProgressUI();
       continue;
