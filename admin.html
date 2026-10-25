@@ -340,7 +340,7 @@
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
   .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
   .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
-  .home-card .home-n { display:block; margin-top:6px; font-size:14px; font-weight:500; color:var(--muted); min-height:1.2em; }
+  .home-card .home-n { font-size:.8em; font-weight:500; color:inherit; opacity:.85; }
   .home-card b { font-size:18px; display:block; margin-bottom:4px; }
   .home-card span.sub { font-size:13px; color:var(--muted); }
   .gs-box { max-width:900px; margin:0 auto 1rem; }
@@ -1614,7 +1614,7 @@ function adminTabs() {
 
 // מספר המצטרפים בכפתור "מצטרפים" בדף הראשי (נטען פעם אחת, ברקע)
 let joinersCount = null, joinersCountP = null;
-const joinersCountText = () => `${joinersCount.total.toLocaleString("he-IL")} סה"כ`;
+const joinersCountText = () => ` (${joinersCount.total.toLocaleString("he-IL")})`;
 function loadJoinersCount() {
   if (joinersCountP) return;
   joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
@@ -1623,7 +1623,7 @@ function renderHome() {
   if (isAdmin) setTimeout(loadJoinersCount, 0);
   return `<div class="home-wrap"><div class="home-band">
     <div class="home-top">
-      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b><span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></button>
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים<span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></b></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
