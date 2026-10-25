@@ -49,6 +49,7 @@ sb.addEventListener("scroll",function(){if(ps!==null){if(Math.sign(Math.abs(sb.s
 sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
 if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}move();}
 }
+setUpd("\u00a0");/* שומר מראש את שורת "עודכן לאחרונה" בכותרת הדף, כדי שהכותרת לא תזוז כשהתאריך מגיע */
 window.addEventListener("message",function(e){
 if(e.origin!==O){return;}
 var d=e.data;if(!d){return;}if(d.source!=="harav-levin"){return;}
