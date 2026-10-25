@@ -12,7 +12,7 @@ import { normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jer
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
 const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at: r.cancelled_at, file_sha256: r.file_sha256, ident_hash: r.ident_hash,
-  first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "",
+  first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "", src: p.src || "",
   undecryptable: !p.first && !p.last && !p.email && !p.phone ? 1 : 0 });
 export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
@@ -27,6 +27,10 @@ export async function onRequestGet({ request, env }) {
       if (!obj) return Response.json({ error: "הקובץ לא נמצא (ייתכן שעדיין לא הועלה ל-R2)" }, { status: 404, headers: H });
       const html = /\.html$/i.test(row.r2_key);   // אישורים שנוצרו באתר החדש הם HTML; מהאתר הישן PDF
       return new Response(obj.body, { headers: { "Content-Type": html ? "text/html; charset=utf-8" : "application/pdf", "Content-Disposition": "inline", ...(html ? { "Content-Security-Policy": "sandbox; default-src 'none'; img-src https:; style-src 'unsafe-inline'" } : {}), ...H } });
+    }
+    if (u.searchParams.get("count")) {          // מספר המצטרפים בלבד (לכפתור בדף הראשי של הניהול), בלי פענוח
+      const c = await env.DB.prepare("SELECT COUNT(*) AS n, SUM(CASE WHEN COALESCE(cancelled_at,'') = '' THEN 1 ELSE 0 END) AS a FROM joiners").first();
+      return Response.json({ total: c.n || 0, active: c.a || 0 }, { headers: H });
     }
     const offset = Math.max(0, parseInt(u.searchParams.get("offset") || "0", 10) || 0), limit = Math.min(500, Math.max(1, parseInt(u.searchParams.get("limit") || "400", 10) || 400));
     let key;

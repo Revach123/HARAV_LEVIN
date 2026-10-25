@@ -2438,6 +2438,7 @@
     if (ND.tab === "e") ndShow();
   }
   const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
+  const jDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };          // יום/חודש/שנה
   // הקלטות של מצטרף טלפוני (שדות "הקלטת ..." ב-extra): סמל קטן להשמעה לכל הקלטה
   const J_REC = { "הקלטת שם פרטי": "פרטי", "הקלטת שם משפחה": "משפחה", "הקלטת כתובת": "כתובת", "הקלטת אימייל": "מייל", "הקלטת חברות": "חברות" };
   function jRecs(r) { if (!r.extra || r.extra.indexOf("הקלטת") < 0) return []; try { const x = JSON.parse(r.extra); return Object.keys(J_REC).filter(k => typeof x[k] === "string" && x[k]); } catch { return []; } }
@@ -2469,16 +2470,27 @@
     btn.textContent = old; btn.disabled = false;
   }
   // שדות מתוך extra (JSON שנכתב ע"י הטופס/הטלפון); רשומות ישנות עם טקסט חופשי נשארות בלי שדות מפורקים
+  // מקור ההרשמה: טלפון (ימות) / נדרים פלוס / קהילות / אתר (הטופס המוטמע בוורדפרס) / אתר ישן / ידני
+  function jSrc(r, o) {
+    const s = String(r.src || "");
+    if (/טלפון/.test(o["ערוץ"] || "")) return "טלפון";
+    if (/^nedarim/.test(s)) return "נדרים פלוס";
+    if (s === "site:embed") return "אתר";
+    if (s === "site:kehilot") return "קהילות";
+    if (/^cfdb7/.test(s)) return "אתר ישן";
+    if (s === "admin") return "ידני";
+    return "";
+  }
   function jX(r) {
     if (r._x) return r._x;
     let o = {}; try { const j = JSON.parse(r.extra || ""); if (j && typeof j === "object" && !Array.isArray(j)) o = j; } catch { /* טקסט חופשי */ }
     const shown = new Set(["כתובת", "טלפון נוסף", "פקס", "ערוץ", ...Object.keys(J_REC)]);
-    return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: /טלפון/.test(o["ערוץ"] || "") ? "טלפון" : "",
+    return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
       rest: Object.keys(o).filter(k => !shown.has(k) && o[k]).map(k => `${k}: ${o[k]}`).join(" · "), raw: Object.keys(o).length ? "" : String(r.extra || "") });
   }
   // עמודות הטבלה: nar = צרה (בלי שבירת שורה), ltr = מספרים/אימייל
   const J_COLS = [
-    { k: "date", h: "תאריך", nar: 1, ltr: 1, v: r => (r.submitted_at || "").slice(0, 10) },
+    { k: "date", h: "תאריך", nar: 1, ltr: 1, v: r => jDate(r.submitted_at) },
     { k: "first", h: "שם פרטי", v: r => r.first },
     { k: "last", h: "שם משפחה", v: r => r.last },
     { k: "id", h: "ת.ז.", nar: 1, ltr: 1, v: r => r.id_number },
@@ -2522,7 +2534,7 @@
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
         <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
-        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button></div>
+        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button></div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
         <tr class="pd-cfrow">${J_COLS.map(c => c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => String(jX(r).src || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
@@ -2581,7 +2593,7 @@
   function jDel(id) {
     const r = J.rows.find(x => x.id === id); if (!r) return;
     overlay("pd-jdel", `<div class="pd-head" style="background:#c0392b;color:#fff"><b>מחיקת מצטרף</b></div>
-      <div style="padding:14px;line-height:1.7">למחוק לצמיתות את <b>${E(jName(r))}</b>${r.submitted_at ? " (נרשם " + E(r.submitted_at.slice(0, 10)) + ")" : ""}?<br><span class="pd-sub">הפעולה אינה הפיכה${r.file_sha256 ? ", וקובץ האישור שלו יימחק אם אף מצטרף אחר לא משתמש בו" : ""}.</span>
+      <div style="padding:14px;line-height:1.7">למחוק לצמיתות את <b>${E(jName(r))}</b>${r.submitted_at ? " (נרשם " + E(jDate(r.submitted_at)) + ")" : ""}?<br><span class="pd-sub">הפעולה אינה הפיכה${r.file_sha256 ? ", וקובץ האישור שלו יימחק אם אף מצטרף אחר לא משתמש בו" : ""}.</span>
       <div class="pd-sub" id="pd-jderr" style="color:#c0392b"></div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" style="background:#c0392b" id="pd-jdgo" onclick="PD._jDelGo('${E(id)}')">מחיקה</button><button class="pd-mini" onclick="PD._close('pd-jdel')">ביטול</button></div></div>`);
   }
@@ -2674,19 +2686,63 @@
     }
   }
   // קליטת הרשמות מהטופס בנדרים פלוס (קבלה בלבד), בקריאות קצרות חוזרות עד שאין עוד
+  // שליחה חוזרת של מייל אישור הצטרפות: טווח תאריכים + מקורות, בדיקה לפני שליחה, ושליחה במנות (פעם אחת לכל מצטרף)
+  const JM = { from: "", to: "", src: null, sent: {}, busy: false, stop: false };
+  const jmEmail = v => /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v || "");
+  function jmList() {
+    const from = JM.from, to = JM.to;
+    const base = (J.rows || []).filter(r => !r.cancelled_at && (r.submitted_at || "").slice(0, 10) >= from && (r.submitted_at || "").slice(0, 10) <= to && JM.src.has(jX(r).src || "אחר"));
+    const noMail = base.filter(r => !jmEmail(r.email)), already = base.filter(r => jmEmail(r.email) && JM.sent[r.id]);
+    return { base, noMail, already, go: base.filter(r => jmEmail(r.email) && !JM.sent[r.id]) };
+  }
+  async function jMail() {
+    const iso = d => d.toISOString().slice(0, 10), now = new Date();
+    JM.to = iso(now); JM.from = iso(new Date(now.getTime() - 30 * 864e5)); JM.stop = false;
+    const all = [...new Set((J.rows || []).map(r => jX(r).src || "אחר"))].sort((a, b) => a.localeCompare(b, "he"));
+    JM.src = new Set(all.filter(x => x === "נדרים פלוס"));
+    if (!JM.src.size) JM.src = new Set(all);
+    try { JM.sent = (await api("/joiners-confirm")).sent || {}; } catch { JM.sent = {}; }
+    overlay("pd-jmail", `<div class="pd-head"><b>שליחת אישורי הצטרפות</b></div><div style="padding:14px;line-height:1.8" id="pd-jmail-b"></div>`);
+    jmPaint(all);
+  }
+  function jmPaint(all) {
+    const b = $("pd-jmail-b"); if (!b) return;
+    all = all || [...new Set((J.rows || []).map(r => jX(r).src || "אחר"))].sort((a, b) => a.localeCompare(b, "he"));
+    const L = jmList();
+    b.innerHTML = `<div>נרשמו בין <input class="pd-in" type="date" value="${JM.from}" style="width:auto" onchange="PD._jmSet('from',this.value)"> ל-<input class="pd-in" type="date" value="${JM.to}" style="width:auto" onchange="PD._jmSet('to',this.value)"></div>
+      <div style="margin-top:6px">מקור: ${all.map(x => `<label style="margin-inline-end:12px"><input type="checkbox" ${JM.src.has(x) ? "checked" : ""} onchange="PD._jmSrc('${E(x)}',this.checked)"> ${E(x)}</label>`).join("")}</div>
+      <div class="pd-sub" style="margin-top:6px">במייל: משפט פתיחה "מצורף אישור על הצטרפותך מתאריך …", ואחריו אותו אישור כמו בהצטרפות. מבוטלים לא נכללים.</div>
+      <div style="margin-top:10px;padding:8px 10px;background:#f4f8fd;border-radius:8px">יישלח ל-<b>${L.go.length}</b> מצטרפים<br><span class="pd-sub">בלי מייל תקין: ${L.noMail.length} · כבר קיבלו אישור כזה: ${L.already.length}</span></div>
+      <div style="margin-top:12px;display:flex;gap:8px"><button class="pd-btn primary" ${L.go.length ? "" : "disabled"} onclick="PD._jmGo()">שליחה ל-${L.go.length}</button><button class="pd-btn" onclick="PD._close('pd-jmail')">סגירה</button></div>`;
+  }
+  async function jmGo() {
+    const L = jmList(); if (!L.go.length || JM.busy) return;
+    if (!confirm(`לשלוח מייל אישור ל-${L.go.length} מצטרפים?`)) return;
+    JM.busy = true; JM.stop = false;
+    const b = $("pd-jmail-b"), set = h => { if (b) b.innerHTML = h; };
+    let sent = 0, failed = 0, skipped = 0, err = "";
+    const ids = L.go.map(r => r.id);
+    for (let i = 0; i < ids.length && !JM.stop; i += 8) {
+      set(`שולח… ${Math.min(i, ids.length)} מתוך ${ids.length}<br>נשלחו ${sent}${failed ? `, נכשלו ${failed}` : ""}<div style="margin-top:10px"><button class="pd-btn" onclick="PD._jmStop()">עצירה</button></div>`);
+      try { const r = await api("/joiners-confirm", "POST", { ids: ids.slice(i, i + 8) }); sent += r.sent; failed += r.failed; skipped += r.skipped; for (const x of r.results || []) if (x.status === "sent") JM.sent[x.id] = new Date().toISOString(); }
+      catch (e) { err = e.message || "שגיאה"; break; }
+    }
+    JM.busy = false;
+    set(`${err ? `<span style="color:#c0392b">${E(err)}</span><br>` : JM.stop ? "נעצר.<br>" : "הסתיים.<br>"}נשלחו: <b>${sent}</b>${failed ? `<br>נכשלו: <b>${failed}</b> (אפשר לנסות שוב - יישלח רק למי שלא קיבל)` : ""}${skipped ? `<br>דולגו: ${skipped}` : ""}<div style="margin-top:10px"><button class="pd-btn" onclick="PD._close('pd-jmail')">סגירה</button></div>`);
+  }
   async function jNed() {
     overlay("pd-jned", `<div class="pd-head"><b>משיכה מנדרים פלוס</b></div><div style="padding:14px;line-height:1.8" id="pd-jned-b">מתחבר…</div>`);
     const set = h => { const b = $("pd-jned-b"); if (b) b.innerHTML = h; };
     const t = { added: 0, existing: 0 };
     try {
-      for (let i = 0; i < 100; i++) {
+      let more = true;
+      for (let i = 0; i < 2000 && more; i++) {          // עד שאין עוד (שומר-בטיחות: 2000 קריאות = 30,000 הרשמות)
         const r = await api("/joiners-nedarim-sync", "POST", {});
-        t.added += r.added; t.existing += r.existing;
+        t.added += r.added; t.existing += r.existing; more = !!r.more;
         set(`מושך הרשמות… נוספו ${t.added}, כבר קיימים ${t.existing}`);
-        if (!r.more) break;
       }
       J.rows = null; ndShow();
-      set(`הסתיים.<br>מצטרפים חדשים מנדרים: <b>${t.added}</b>`);
+      set(more ? `נעצר באמצע (יש עוד הרשמות).<br>נוספו עד כה: <b>${t.added}</b>. לחצו שוב להמשך.` : `הסתיים - נמשכו כל ההרשמות.<br>מצטרפים חדשים מנדרים: <b>${t.added}</b>`);
     } catch (e) {
       J.rows = null; ndShow();
       set(`<span style="color:#c0392b">${E(e.message || "שגיאה")}</span><div class="pd-sub" style="margin-top:6px">עד כה נוספו ${t.added}.</div><div style="margin-top:10px"><button class="pd-mini" onclick="PD._close('pd-jned')">סגירה</button></div>`);
@@ -3062,7 +3118,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
