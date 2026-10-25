@@ -2002,7 +2002,7 @@
   function slotCell(b, t) {
     const w = ready(); if (w) return w;
     const d = slotDoc(b.id, t);
-    if (d) return `<button type="button" class="pd-ok pd-c-${t}" onclick="PD.openDoc('${d.id}','${b.id}',true)" title="${E(d.original_name || "")}">📄 פתיחה${(d.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">משותף</span>' : ""}</button>`;
+    if (d) return `<button type="button" class="pd-ok pd-c-${t}" onclick="PD.openDoc('${d.id}','${b.id}',true)" title="${E(d.original_name || "")}">📄 פתיחה${(d.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">הת"ע משותף לכמה חברות</span>' : ""}</button>`;
     if (!needOf(b)[t]) return `<span class="pd-na">—</span>`;
     return liveDocs(b.id).length
       ? `<button type="button" class="pd-warn" onclick="PD.openManage('${b.id}')" title="יש מסמכים לחברה, אבל אף אחד לא קושר לרשימה הזו">לא קושר מסמך</button>`
@@ -2012,7 +2012,7 @@
   function slotCells(b) {
     const w = ready(), pr = slotDoc(b.id, "private"), ge = slotDoc(b.id, "general");
     if (!w && pr && ge && pr.id === ge.id)
-      return `<td class="pd-cell" colspan="2" style="text-align:center;"><button type="button" class="pd-ok pd-long" onclick="PD.openDoc('${pr.id}','${b.id}',true)" title="${E(pr.original_name || "")}">📄 פתיחה${(pr.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">משותף</span>' : ""}</button></td>`;
+      return `<td class="pd-cell" colspan="2" style="text-align:center;"><button type="button" class="pd-ok pd-long" onclick="PD.openDoc('${pr.id}','${b.id}',true)" title="${E(pr.original_name || "")}">📄 פתיחה${(pr.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">הת"ע משותף לכמה חברות</span>' : ""}</button></td>`;
     return `<td class="pd-cell" style="text-align:center;">${slotCell(b, "private")}</td><td class="pd-cell" style="text-align:center;">${slotCell(b, "general")}</td>`;
   }
   function extraCell(b) {
@@ -3053,7 +3053,7 @@
   .pd-as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   .pd-as-mini{border:1px solid #d6d2ca;border-radius:8px;padding:6px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:4px}
   @media(max-width:900px){.pd-as-top{flex-direction:column}}
-  .pd-ok{white-space:nowrap}.pd-ok.pd-c-private{background:#7a3b8f;color:#fff;border-color:#7a3b8f}.pd-ok.pd-c-general{background:#1e4570;color:#fff;border-color:#1e4570}.pd-ok[class*=pd-c-]:hover{filter:brightness(1.15)}.pd-ok.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-ok.pd-long:hover{filter:brightness(1.12)}
+  .pd-ok{white-space:nowrap}.pd-ok .pd-chip{white-space:normal;line-height:1.2;text-align:center;font-size:10.5px}.pd-ok.pd-c-private{background:#7a3b8f;color:#fff;border-color:#7a3b8f}.pd-ok.pd-c-general{background:#1e4570;color:#fff;border-color:#1e4570}.pd-ok[class*=pd-c-]:hover{filter:brightness(1.15)}.pd-ok.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-ok.pd-long:hover{filter:brightness(1.12)}
   .pd-warn{background:#fff1d6;color:#8a5a00;border:1px solid #e8c36a;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-mg-top{display:flex;gap:16px;align-items:stretch}
   .pd-mg-slot{flex:1;min-width:0;border:2px solid #b9c7da;border-radius:10px;padding:8px 10px;background:#f7f9fc}.pd-mg-slot.off{opacity:.65}
