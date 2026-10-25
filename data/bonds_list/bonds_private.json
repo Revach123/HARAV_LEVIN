@@ -2652,7 +2652,7 @@
    "first_seen": "2026-10-08",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
-   "ytm_gross": 7.29
+   "ytm_gross": 7.28
   },
   {
    "security_id": 1215243,
@@ -7774,7 +7774,7 @@
    "first_seen": "2026-10-08",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
-   "ytm_gross": 3.62
+   "ytm_gross": 3.61
   },
   {
    "security_id": 1138171,
@@ -8554,7 +8554,7 @@
    "first_seen": "2026-10-08",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
-   "ytm_gross": 2.31
+   "ytm_gross": 2.3
   },
   {
    "security_id": 1237239,
@@ -14300,7 +14300,7 @@
    "first_seen": "2026-10-08",
    "midroog_rating": "",
    "maalot_rating": "",
-   "ytm_gross": 5.02
+   "ytm_gross": 5.01
   },
   {
    "security_id": 1143585,
