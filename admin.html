@@ -837,6 +837,9 @@
   .big-card > b { display:block; font-size:21px; color:var(--navy); margin-bottom:12px; }
   .big-card:focus-within { border-color:var(--accent); }
   .big-nochp { width:100%; min-height:150px; font-family:inherit; font-size:21px; font-weight:700; color:var(--navy); background:#fff; border:2px dashed var(--border); border-radius:8px; cursor:pointer; transition:.15s; padding:12px; }
+  #form-modal .big-nochp, #form-modal #name-search-wrap, #form-modal #nochp-bar, #form-modal .big-card > .ico, #form-modal .big-card > b { display:none !important; }
+  #form-modal #chp-choice { grid-template-columns:1fr !important; }
+  #form-modal #chp { background:#eef3f3; pointer-events:none; }
   .big-nochp:hover { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); }
   .big-nochp .ico { display:block; font-size:30px; margin-bottom:6px; }
   .big-nochp small { display:block; font-size:13px; font-weight:400; color:var(--muted); margin-top:4px; }
@@ -1315,7 +1318,7 @@ function renderForm() {
       ${isEdit && window.PD ? `<div style="margin:6px 0 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><b style="font-size:13px;">היתרי עסקה:</b><span id="pd-form-strip">${PD.cell(b)}</span>
         <button type="button" class="btn-ghost" onclick="PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button></div>` : ""}
 
-      <div class="lookup-box" id="lookup-box">
+      <div class="lookup-box" id="lookup-box" style="${formModal && noChp ? "display:none;" : ""}">
         <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "grid-template-columns:1.4fr 1fr 1fr;")}">
           <div class="big-card">
             <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
@@ -1992,6 +1995,7 @@ function showChpPart() {                          // מציג את החלק המ
   const set = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? "" : "none"; };
   set("chp-choice", !noChp);
   set("nochp-bar", noChp);
+  if (formModal) set("lookup-box", !noChp);
   updateFormGate();
 }
 function updateSimilar() {          // הוספת עסק חדש: אזהרה "קיים עסק(ים) ברשימה על שם..." עם רשימת העסקים בשם דומה
