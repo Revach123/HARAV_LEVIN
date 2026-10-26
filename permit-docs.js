@@ -44,6 +44,9 @@
   const slotsOf = (d, b) => String((d.slots || {})[b] || "").split(",").filter(Boolean);       // לאילו רשימות (general / private) המסמך מקושר אצל החברה
   const liveDocs = bizId => (S.byBiz.get(bizId) || []).filter(d => d.doc_type !== "other");
   const sameChpRows = b => b && digitsOf(b.chp_number) ? bizList().filter(x => x.id !== b.id && digitsOf(x.chp_number) === digitsOf(b.chp_number)) : [];          // תתי-שורות של אותה חברה (אותו ח.פ., למשל "מסלול הלכה")
+  const mainOf = b => { if (!b) return null; const fam = sameChpRows(b); if (!fam.length) return null;          // תת-שורה: הרשומה הראשית של החברה (שם בהיתר ריק או כמו ברשם); לשורה ראשית - null
+    const isMain = x => !String(x.permit_name || "").trim() || NORMN(x.permit_name) === NORMN(x.registrar_name);
+    return isMain(b) ? null : fam.find(isMain) || null; };
   const otherCos = (d, bizId) => { const b = bizById(bizId), fam = new Set(sameChpRows(b).map(x => x.id)); return (d.business_ids || []).filter(x => x !== bizId && !fam.has(x)); };          // חברות אחרות במסמך (בלי תתי-שורות של אותה חברה)
   const slotDoc = (bizId, t) => liveDocs(bizId).find(d => slotsOf(d, bizId).includes(t)) || null;
   const needOf = b => ({ private: b.visibility === "פרטי" || b.visibility === "רק פרטי", general: b.visibility !== "רק פרטי" });
@@ -2044,6 +2047,7 @@
   }
   function extraCell(b) {
     const w = ready(); if (w) return w;
+    { const m = mainOf(b); if (m) return `<span class="pd-na" title="המסמכים של תת-השורה מנוהלים בחלון ניהול המסמכים של ${E(displayName(m))}">—</span>`; }
     const n = extrasOf(b.id).length;
     return `<button type="button" class="pd-ok" onclick="PD.openManage('${b.id}')">🗂 ניהול מסמכים${n ? ` <span class="pd-chip" style="background:#b85c00">${n} לבדיקה</span>` : ""}</button>
       <div style="margin-top:3px"><button type="button" class="pd-link" style="font-size:12px" onclick="PD._upNew('${b.id}')" title="בחירת קובץ; אחרי הבחירה נפתח חלון ההוספה עם החברה הזו כבר נבחרת, ונשאר לבחור פרטי / כללי / משותף">⬆ העלאת מסמך חדש</button></div>`;
@@ -2135,6 +2139,7 @@
   }
   function openManage(bizId) {
     if (!bizById(bizId)) return;
+    { const m = mainOf(bizById(bizId)); if (m) bizId = m.id; }          // תת-שורה: הכל מנוהל בחלון הראשי של החברה
     M.biz = bizId; M.share = new Set(); M.move = ""; M.subNew = false;
     ["pd-company"].forEach(close);
     overlay("pd-manage", `<div id="pd-mg" style="display:flex;flex-direction:column;height:100%;min-height:0"></div>`, true);
@@ -2934,7 +2939,7 @@
     const subBox = x => { const need2 = needOf(x);
       const cell = t => { const d = slotDoc(x.id, t);
         return `<div class="pd-mg-brow ${need2[t] || d ? "" : "off"}" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'sub:${x.id}:${t}')"><span class="pd-mg-brl">${SLOT_HE[t]}</span>${d ? bmini2(d, x) : `<div class="pd-mg-bempty">${need2[t] ? "" : "לא נדרש · "}אין מסמך · גררו לכאן${pool.length ? `<select class="pd-sel" style="font-size:12px;margin-top:4px;max-width:100%" onchange="if(this.value)PD._subLink(this.value,'${x.id}','${t}')"><option value="">בחירת מסמך של החברה…</option>${pool.map(p => `<option value="${p.id}">${E(p.original_name || p.id)}</option>`).join("")}</select>` : ""}</div>`}</div>`; };
-      return `<div class="pd-mg-bslot sub"><h5>${E(subLabel(x))} <select class="pd-sel" style="font-size:12px;padding:1px 4px" onchange="PD._subVis('${x.id}',this.value)" title="רישום תת-השורה ברשימות האתר">${[["", "כללי"], ["פרטי", "פרטי + כללי"], ["רק פרטי", "רק פרטי"]].map(([v, l]) => `<option value="${v}" ${(x.visibility || "") === v || (!["פרטי", "רק פרטי"].includes(x.visibility || "") && v === "") ? "selected" : ""}>${l}</option>`).join("")}</select> <button class="pd-link2" onclick="PD.openManage('${x.id}')" title="ניהול המסמכים של תת-השורה">ניהול</button></h5>${cell("private")}${cell("general")}</div>`; };
+      return `<div class="pd-mg-bslot sub"><h5>${E(subLabel(x))} <select class="pd-sel" style="font-size:12px;padding:1px 4px" onchange="PD._subVis('${x.id}',this.value)" title="רישום תת-השורה ברשימות האתר">${[["", "כללי"], ["פרטי", "פרטי + כללי"], ["רק פרטי", "רק פרטי"]].map(([v, l]) => `<option value="${v}" ${(x.visibility || "") === v || (!["פרטי", "רק פרטי"].includes(x.visibility || "") && v === "") ? "selected" : ""}>${l}</option>`).join("")}</select> </h5>${["private", "general"].filter(t => need2[t] || slotDoc(x.id, t)).map(cell).join("")}</div>`; };          // רק התיבות שנדרשות לפי הרישום (או שכבר יש בהן מסמך)
     const bmini2 = (d, x) => `<div class="pd-mg-bdoc"><div class="pd-mg-bth" onclick="PD.openDoc('${d.id}','${x.id}')" title="פתיחה בגדול"><img data-thumb="${d.id}" alt="" ${thumbUrls.get(d.id) ? `src="${thumbUrls.get(d.id)}"` : ""}><span class="pd-mg-ld" ${thumbUrls.get(d.id) ? 'style="display:none"' : ""}>…</span></div>
       <div style="min-width:0"><div class="pd-name" style="cursor:pointer;text-decoration:underline;font-size:12px;overflow-wrap:anywhere" onclick="PD.openDoc('${d.id}','${x.id}')">${E(d.original_name || d.id)}</div><div class="pd-btns" style="gap:2px 8px"><button class="pd-link2" style="color:#c0392b" onclick="PD._subDel('${d.id}','${x.id}')">ביטול שיוך</button></div></div></div>`;
     const addBox = M.subNew ? `<div class="pd-mg-bslot sub"><h5>תת-שורה חדשה</h5><input class="pd-in" id="pd-sub-new" placeholder="פירוט (למשל: מסלול הלכה)" onkeydown="if(event.key==='Enter')PD._subCreate()" autocomplete="off">
