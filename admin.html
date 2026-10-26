@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261026k"></script>
+<script src="/permit-docs.js?v=20261026l"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1040,9 +1040,21 @@ async function apiFetch(path, opts = {}) {
 }
 
 let bizLoaded = false, adminDeferred = false;
+// רשימת העסקים נשמרת בדפדפן: בכניסה מוצג מיד העותק האחרון, והנתונים העדכניים מחליפים אותו כשהם מגיעים (ברשת איטית זה החלק הארוך).
+// עד שמגיעים הנתונים העדכניים, שמירה מהטבלה מחכה להם (כדי לא לשמור על בסיס עותק ישן).
+const BIZ_CACHE = "hl_biz_cache_v1";
+let bizStale = false, bizFreshP = null;
+const bizFresh = async () => { if (bizStale && bizFreshP) { try { await bizFreshP; } catch { /* השגיאה תטופל בשמירה */ } } };
 async function loadBusinesses() {
-  businesses = await apiFetch("/businesses");
+  if (!bizLoaded) {
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(BIZ_CACHE) || "null"); } catch { cached = null; }
+    if (Array.isArray(cached) && cached.length) { businesses = cached; bizLoaded = true; bizStale = true; render(); }
+  }
+  bizFreshP = apiFetch("/businesses");
+  try { businesses = await bizFreshP; } finally { bizStale = false; }
   bizLoaded = true;
+  try { localStorage.setItem(BIZ_CACHE, JSON.stringify(businesses)); } catch { /* אין מקום / חסום */ }
   render();
 }
 
@@ -1111,6 +1123,7 @@ function render() {
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
+  if (view === "admin") admWatch();
   document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
   document.getElementById("admin-toggle").textContent = "כניסת מנהל";
   document.getElementById("home-btn").style.display = isAdmin && view !== "home" ? "" : "none";
@@ -1192,7 +1205,43 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${(() => { let grp = -1; return groupSubs(sorted).map(b0 => { if (!b0._isSub) grp++; const gi = grp;          // תת-שורה ("מסלול הלכה") באותו רקע כמו החברה שלה
+          ${admRowsHtml(admPage(sorted), 0)}
+        </tbody>
+      </table>
+      <div id="adm-more">${admMoreHtml()}</div>
+    </div>`;
+}
+
+// טבלת הניהול בחלקים: בהתחלה רק ADM_STEP חברות (עם תתי-השורות שלהן), והשאר נוספות בגלילה למטה / "הצג עוד".
+// טבלה מלאה של כ-1,500 חברות היא עשרות אלפי רכיבים, ובמחשב איטי בנייתה לוקחת עשרות שניות.
+const ADM_STEP = 60;
+let admShown = ADM_STEP, admRest = [], admGrp = 0, admTotal = 0, admObs = null;
+function admPage(sorted) {
+  const all = groupSubs(sorted); let n = 0, k = 0;
+  for (; k < all.length; k++) { if (!all[k]._isSub) { if (n >= admShown) break; n++; } }
+  admRest = all.slice(k); admGrp = n; admTotal = all.filter(b => !b._isSub).length;
+  return all.slice(0, k);
+}
+function admMoreHtml() {
+  return admRest.length ? `<div style="text-align:center;padding:14px;color:var(--muted);font-size:13px">מוצגות ${admGrp} מתוך ${admTotal} · <button type="button" class="btn-ghost" onclick="admMore()">הצג עוד</button> <button type="button" class="btn-ghost" onclick="admMore(true)">הצג הכל</button></div>` : "";
+}
+function admMore(all) {
+  const tb = document.querySelector("#app table tbody"), more = document.getElementById("adm-more"); if (!tb || !admRest.length) return;
+  let n = 0, k = 0;
+  for (; k < admRest.length; k++) { if (!admRest[k]._isSub) { if (!all && n >= ADM_STEP) break; n++; } }
+  const part = admRest.slice(0, k); admRest = admRest.slice(k);
+  tb.insertAdjacentHTML("beforeend", admRowsHtml(part, admGrp)); admGrp += n; admShown = admGrp;
+  if (more) more.innerHTML = admMoreHtml();
+}
+function admWatch() {          // טעינת החלק הבא כשמגיעים קרוב לסוף הטבלה
+  if (admObs) admObs.disconnect();
+  const m = document.getElementById("adm-more"); if (!m || !("IntersectionObserver" in window)) return;
+  admObs = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && admRest.length) admMore(); }, { rootMargin: "600px" });
+  admObs.observe(m);
+}
+function admRowsHtml(items, grp0) {
+  let grp = grp0 - 1;
+  return items.map(b0 => { if (!b0._isSub) grp++; const gi = grp;          // תת-שורה ("מסלול הלכה") באותו רקע כמו החברה שלה
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             const bsubs = (window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : [], alt = gi % 2 ? " alt" : "";          // חברה עם תת-שורות אג"ח: קבוצה אחת (אותו רקע, מסגרת ופס צבע בצד)
             return `
@@ -1251,10 +1300,7 @@ function renderAdminTable() {
                   ? `<td class="bs bs-last" colspan="2" style="text-align:center"><button type="button" class="pd-ok pd-long pd-sm" onclick="PD.openDoc('${x.priv.id}','${b.id}')" title="${escHtml(x.priv.name)} (משותף לפרטי ולכללי)">📄 פתיחה</button></td>`
                   : `<td class="bs" style="text-align:center">${open(x.priv, "private")}</td><td class="bs bs-last" style="text-align:center">${open(x.gen, "general")}</td>`}<td></td><td></td></tr>`;
               }).join("");
-          }).join(""); })()}
-        </tbody>
-      </table>
-    </div>`;
+          }).join("");
 }
 
 // ── FORM (add / edit) ──
@@ -2345,6 +2391,7 @@ async function agchChange(id, sel) {
 let admSearchTimer = null;
 function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה אחרי הפסקת הקלדה (ולא באמצע), ושדה החיפוש נשאר אותו אלמנט כדי שההקלדה לא תיקטע
   search = v;
+  admShown = ADM_STEP;
   clearTimeout(admSearchTimer);
   const go = () => {
     if (navigator.scheduling && navigator.scheduling.isInputPending && navigator.scheduling.isInputPending()) { admSearchTimer = setTimeout(go, 120); return; }
@@ -2358,6 +2405,7 @@ function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה א
 
 async function inlineUpdate(id, field, value) { return inlineUpdateMany(id, { [field]: value }); }
 async function inlineUpdateMany(id, fields) {
+  await bizFresh();
   const biz = businesses.find(b => b.id === id);
   if (!biz) return;
   const updated = { ...biz, ...fields };
@@ -2405,6 +2453,7 @@ function subAddWidget(id, withList) {
   return `<div class="sub-add" onclick="event.stopPropagation()">${withList ? `<div class="sub-add-list">${list.map(x => `<div>↳ ${escHtml(x.permit_name || "")} <span style="color:var(--muted);font-size:12px">(${subVisLabel(x.visibility)})</span></div>`).join("")}</div>` : ""}<button type="button" class="sub-add-btn" onclick="subAddOpen(this)" title="רישום נוסף לאותה חברה (אותו ח.פ.), למשל &quot;מסלול הלכה&quot;: מופיע ברשימות מתחת לחברה">+ הוספת תת-שורה</button><span class="sub-add-form" style="display:none"><input type="text" placeholder="פירוט (למשל: מסלול הלכה)" onkeydown="if(event.key==='Enter'){event.preventDefault();subAddSave('${id}',this)}"><select>${SUB_VIS_OPTS.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select><button type="button" onclick="subAddSave('${id}',this)">הוספה</button><button type="button" class="sub-add-x" onclick="subAddClose(this)">ביטול</button></span></div>`;
 }
 async function subAddSave(id, el) {          // "הוספת תת-שורה" מתחת לשם העסק: רישום נוסף עם אותו ח.פ. ושם בהיתר = הפירוט
+  await bizFresh();
   const f = el.closest(".sub-add-form"), name = f.querySelector("input").value.replace(/\s+/g, " ").trim(), vis = f.querySelector("select").value, main = businesses.find(b => b.id === id);
   if (!main) return;
   if (!name) { f.querySelector("input").focus(); return; }
@@ -2424,6 +2473,7 @@ function pnEdit(btn) {
   inp.style.cssText = inp.dataset.s || ""; inp.focus(); inp.select();
 }
 async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים רק את "שם בהיתר עסקה" (שם הרשם נשאר)
+  await bizFresh();
   const v = (raw || "").trim(), biz = businesses.find(b => b.id === id);
   if (!biz || !v || v === (biz.permit_name || biz.registrar_name || "").trim()) { render(); return; }
   if (v.length < 4) { showStatus("שם בהיתר עסקה: לפחות 4 תווים"); render(); return; }
@@ -2431,6 +2481,7 @@ async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים 
   render();
 }
 async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, נשמר גם כשם בהיתר וגם כשם הרשם
+  await bizFresh();
   const v = (raw || "").trim();
   if (!v) { showStatus("שם העסק לא יכול להיות ריק"); render(); return; }
   await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
@@ -2653,6 +2704,7 @@ async function runTaseSync(scope = "bonds") {
 
 
 async function doSave() {
+  await bizFresh();
   let regName    = (document.getElementById("f-reg")?.value    || "").trim();
   let permitName = (document.getElementById("f-permit")?.value || "").trim();
   if (noChp) regName = permitName;                                     // בלי ח.פ.: שם אחד, נשמר בשני השדות
@@ -3158,6 +3210,7 @@ if (!isAdmin) fetch("/api/login", { cache: "no-store" }).then(r => r.json()).the
 render();
 
 loadBusinesses().catch(() => {
+  if (businesses.length) { showStatus("אין חיבור לשרת: מוצג העותק האחרון של רשימת העסקים"); return; }          // יש עותק שמור: ממשיכים איתו
   document.getElementById("app").innerHTML =
     `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
 });

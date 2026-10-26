@@ -188,12 +188,16 @@
   async function load() {
     if (S.loading) return;
     S.loading = true;
-    try { const r = await api("/permit-docs"); S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; }
+    // כל הבקשות יוצאות יחד (ברשת איטית: זמן אחד במקום חמישה ברצף); הטבלה מתעדכנת כבר כשמגיעים המסמכים
+    const pDocs = api("/permit-docs"), pExt = api("/permit-ext"), pHp = api("/permit-text?hints=1"), pRev = api("/permit-review"), pAppr = apprReload();
+    [pExt, pHp, pRev].forEach(p => p.catch(() => {}));
+    try { const r = await pDocs; S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; }
     catch (e) { S.err = e.message || "שגיאה"; S.loaded = true; }
-    try { S.ext = (await api("/permit-ext")).companies || []; S.extErr = ""; } catch (e) { S.ext = []; S.extErr = e.message || "שגיאה"; }      // לפני מיגרציה 0008 אין חברות שאינן במאגר
-    try { S.hp = (await api("/permit-text?hints=1")).hp || []; S.hpDocs = null; S.hpBy = null; } catch { S.hp = null; }      // ח.פ. שנמצאו במסמכים (אחרי ייבוא 0015); בלי זה אין הצעות לפי ח.פ.
-    try { S.rev = new Map(((await api("/permit-review")).items || []).map(x => [x.key, x])); } catch { S.rev = new Map(); }
-    await apprReload();      // לפני מיגרציה 0012 אין מצבי בדיקה
+    try { await pAppr; } catch { /* לפני מיגרציה */ }
+    refresh();
+    try { S.ext = (await pExt).companies || []; S.extErr = ""; } catch (e) { S.ext = []; S.extErr = e.message || "שגיאה"; }      // לפני מיגרציה 0008 אין חברות שאינן במאגר
+    try { S.hp = (await pHp).hp || []; S.hpDocs = null; S.hpBy = null; } catch { S.hp = null; }      // ח.פ. שנמצאו במסמכים (אחרי ייבוא 0015); בלי זה אין הצעות לפי ח.פ.
+    try { S.rev = new Map(((await pRev).items || []).map(x => [x.key, x])); } catch { S.rev = new Map(); }      // לפני מיגרציה 0012 אין מצבי בדיקה
     S.loading = false;
     refresh();
   }
