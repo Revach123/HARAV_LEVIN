@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261026m"></script>
+<script src="/permit-docs.js?v=20261026n"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1035,12 +1035,46 @@ async function apiFetch(path, opts = {}) {
   const headers = { "Content-Type": "application/json" };
   if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
   const res = await fetch("/api" + path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+  noteDataVer(res.headers.get("X-Data-Ver"), path, opts.method);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }
   return res.json();
 }
+
+// ── בדיקת עדכונים: שינוי שנעשה ממחשב אחר נכנס מיד בכניסה לדף הראשי / עדכון קיים / הוספה / חלון המסמכים, בחזרה לחלון, ופעם בדקה וחצי ──
+// השרת מחזיר גרסה לכל קבוצת נתונים (עסקים / מסמכים); רק קבוצה שהשתנתה נטענת מחדש
+let dataVer = { biz: null, docs: null }, verCheckAt = 0, verChecking = false;
+const verSame = (a, b) => !!a && !!b && a.v === b.v && a.s === b.s;
+function noteDataVer(h, path, method) {          // גרסה שהגיעה עם תשובה מהשרת
+  if (!h) return; let v; try { v = JSON.parse(h); } catch { return; }
+  const write = method && method !== "GET";
+  if (!write) {          // טעינת רשימה מלאה: הנתונים שהגיעו חדשים לפחות כמו הגרסה הזו
+    if (/^\/businesses(\?|$)/.test(path)) dataVer.biz = v.biz;
+    if (/^\/permit-docs(\?|$)/.test(path) && !/sha=/.test(path)) dataVer.docs = v.docs;
+    return;
+  }
+  for (const g of ["biz", "docs"]) {          // אחרי שינוי שלנו: מאמצים את הגרסה רק אם אין באמצע שינוי של מישהו אחר
+    const k = dataVer[g], n = v[g]; if (!k || !n) continue;
+    if (n.v === k.v + 1 || (n.v === k.v && n.s === k.s)) dataVer[g] = n;
+  }
+}
+async function checkUpdates(force) {
+  if (!isAdmin || verChecking || (!force && Date.now() - verCheckAt < 4000)) return;
+  if (!dataVer.biz && !dataVer.docs) return;          // עוד לא נטען כלום
+  verChecking = true; verCheckAt = Date.now();
+  try {
+    const v = await apiFetch("/data-version");
+    if (dataVer.biz && !verSame(dataVer.biz, v.biz)) await loadBusinesses();
+    if (dataVer.docs && !verSame(dataVer.docs, v.docs) && window.PD && PD.reload) await PD.reload();
+  } catch { /* בלי חיבור: נבדוק בפעם הבאה */ }
+  finally { verChecking = false; }
+}
+window.checkUpdates = checkUpdates; window.noteDataVer = noteDataVer;
+window.addEventListener("focus", () => checkUpdates());
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdates(); });
+setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 90000);
 
 let bizLoaded = false, adminDeferred = false;
 // רשימת העסקים נשמרת בדפדפן: בכניסה מוצג מיד העותק האחרון, והנתונים העדכניים מחליפים אותו כשהם מגיעים (ברשת איטית זה החלק הארוך).
@@ -1058,7 +1092,8 @@ async function loadBusinesses() {
   try { businesses = await bizFreshP; } finally { bizStale = false; }
   bizLoaded = true;
   try { localStorage.setItem(BIZ_CACHE, JSON.stringify(businesses)); } catch { /* אין מקום / חסום */ }
-  render();
+  if (view === "form") { if (typeof refreshFormLists === "function") refreshFormLists(); }          // בטופס לא מציירים מחדש (כדי לא לאבד מה שהוקלד); הנתונים עצמם כבר עודכנו
+  else render();
 }
 
 // ─────────────────────────────────────────────
@@ -1924,6 +1959,7 @@ const confirmLeave = () => confirm("השינויים שעשית לא נשמרו.
 window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
 let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
+  if (v === "home" || v === "admin" || v === "form") setTimeout(() => checkUpdates(true), 0);
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (formModal && v !== "form") closeFormModal(false);
   if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
