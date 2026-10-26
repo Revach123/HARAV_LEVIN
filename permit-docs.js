@@ -3,7 +3,8 @@
    חשיפה: window.PD (cell, slotCell, extraCell, openManage, homeCards, load, openUpload, openUnassigned, openCompany, openDoc ...) */
 (function () {
   "use strict";
-  const S = { ext: [], docs: [], byBiz: new Map(), byId: new Map(), loaded: false, loading: false, err: "" };
+  const S = { ext: [], docs: [], byBiz: new Map(), byId: new Map(), loaded: false, loading: false, err: "", stale: false, freshP: Promise.resolve(), cacheTried: false };
+  const DOCS_CACHE = "hl_pd_docs_v1";
   const TL = { general: "כללי", private: "רק פרטי", both: "פרטי", unknown: "לא ידוע", other: "לא קשור / לא היתר" };
   const TCOL = { general: "#1e4570", private: "#7a3b8f", both: "#1e7e4a", unknown: "#8a6d00", other: "#777" };
   const $ = id => document.getElementById(id);
@@ -14,6 +15,11 @@
 
   const authH = () => (adminToken ? { Authorization: "Bearer " + adminToken } : {});
   async function api(path, method, body) {
+    if (method && method !== "GET" && S.stale) {          // מוצג עותק שמור של המסמכים: לא שומרים על בסיסו. מחכים לנתונים העדכניים ומבקשים לבדוק שוב
+      await S.freshP;
+      refresh();
+      throw new Error(S.stale ? "אין חיבור לשרת: מוצג עותק שמור, ולכן אי אפשר לשמור כרגע" : "הנתונים התעדכנו מהשרת. בדקו שוב את המצב ונסו שנית");
+    }
     const res = await fetch("/api" + path, {
       method: method || "GET",
       headers: { ...authH(), ...(body ? { "Content-Type": "application/json" } : {}) },
@@ -188,12 +194,22 @@
   async function load() {
     if (S.loading) return;
     S.loading = true;
+    // עותק שמור בדפדפן (מהכניסה הקודמת): מוצג מיד, רק לתצוגה ורק בטעינה הראשונה. שמירה ופתיחת חלונות מחכות לנתונים העדכניים מהשרת
+    S.freshP = new Promise(r => { S._freshDone = r; });
+    if (!S.cacheTried) {
+      S.cacheTried = true;
+      let c = null; try { c = JSON.parse(localStorage.getItem(DOCS_CACHE) || "null"); } catch { c = null; }
+      if (c && Array.isArray(c.docs) && c.docs.length) { S.docs = c.docs; S.appr = new Map(c.appr || []); reindex(); S.loaded = true; S.stale = true; refresh(); }
+    }
     // כל הבקשות יוצאות יחד (ברשת איטית: זמן אחד במקום חמישה ברצף); הטבלה מתעדכנת כבר כשמגיעים המסמכים
     const pDocs = api("/permit-docs"), pExt = api("/permit-ext"), pHp = api("/permit-text?hints=1"), pRev = api("/permit-review"), pAppr = apprReload();
     [pExt, pHp, pRev].forEach(p => p.catch(() => {}));
-    try { const r = await pDocs; S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; }
-    catch (e) { S.err = e.message || "שגיאה"; S.loaded = true; }
+    let fresh = false;
+    try { const r = await pDocs; S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; fresh = true; }
+    catch (e) { if (!S.stale) S.err = e.message || "שגיאה"; S.loaded = true; }
     try { await pAppr; } catch { /* לפני מיגרציה */ }
+    if (fresh) { S.stale = false; try { localStorage.setItem(DOCS_CACHE, JSON.stringify({ docs: S.docs, appr: [...(S.appr || new Map())] })); } catch { /* אין מקום */ } }
+    S._freshDone();
     refresh();
     try { S.ext = (await pExt).companies || []; S.extErr = ""; } catch (e) { S.ext = []; S.extErr = e.message || "שגיאה"; }      // לפני מיגרציה 0008 אין חברות שאינן במאגר
     try { S.hp = (await pHp).hp || []; S.hpDocs = null; S.hpBy = null; } catch { S.hp = null; }      // ח.פ. שנמצאו במסמכים (אחרי ייבוא 0015); בלי זה אין הצעות לפי ח.פ.
@@ -3248,4 +3264,15 @@
     _unType: t => { Q.type = t; Q.typeTouched = true; uqShow(); }, _unNote: v => { Q.note = v; }, _unSave: uqSave, _unOtherDoc: uqOther,
     _unSkip: () => { const d = unassignedList()[Q.i]; if (d) Q.skipped.add(d.id); Q.curId = ""; uqShow(); }, _unUnskip: () => { Q.skipped = new Set(); Q.curId = ""; uqShow(); },
     _unGo: n => { const len = unassignedList().length; Q.i = Math.min(Math.max(0, Q.i + n), Math.max(0, len - 1)); Q.curId = ""; uqShow(); } };
+  // חלונות שבהם משנים נתונים נפתחים רק אחרי שהגיעו הנתונים העדכניים מהשרת (בזמן שמוצג העותק השמור)
+  function whenFresh(fn) {
+    if (!S.stale) return fn();
+    let t = document.getElementById("pd-wait");
+    if (!t) { t = document.createElement("div"); t.id = "pd-wait"; t.style.cssText = "position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#274d5b;color:#fff;padding:8px 16px;border-radius:20px;z-index:99999;font-size:14px"; document.body.appendChild(t); }
+    t.textContent = "טוען נתונים עדכניים מהשרת…";
+    S.freshP.then(() => { t.remove(); if (S.stale) alert("אין חיבור לשרת: מוצג עותק שמור, ואי אפשר לפתוח חלון עריכה כרגע"); else fn(); });
+  }
+  for (const k of ["openManage", "openDoc", "openUpload", "openCompany", "openCompanyDash", "openDash", "openExt", "openRecent", "openUnassigned", "_upNew", "_rowUp"]) {
+    const f = window.PD[k]; if (typeof f === "function") window.PD[k] = (...a) => whenFresh(() => f(...a));
+  }
 })();
