@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261026b"></script>
+<script src="/permit-docs.js?v=20261026c"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -2628,7 +2628,8 @@ async function doSave() {
   const chpVal = (document.getElementById("chp")?.value || "").trim();
   // ── Duplicate ח.פ. check ──
   if (chpVal) {
-    const duplicate = businesses.find(b =>
+    const orig = editBiz?.id ? businesses.find(b => b.id === editBiz.id) : null;
+    const duplicate = orig && digitsOf(orig.chp_number) === digitsOf(chpVal) ? null : businesses.find(b =>          // עריכה בלי שינוי הח.פ.: רשומות נוספות עם אותו ח.פ. הן תתי-שורות של החברה
       (b.chp_number || "").trim() === chpVal && b.id !== editBiz?.id
     );
     if (duplicate) {
