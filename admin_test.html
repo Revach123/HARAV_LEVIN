@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=77"></script>
+<script src="/permit-docs-test.js?v=78"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -187,6 +187,15 @@
   .pn-same { font-size: 12px; color: var(--muted); }
   .pn-edit { border: 0; background: none; cursor: pointer; font-size: 12px; padding: 0 2px; opacity: .75; }
   .pn-edit:hover { opacity: 1; }
+  .sub-add { margin-top: 6px; }
+  .sub-add-list > div { font-size: 13px; margin-bottom: 3px; }
+  .sub-add-btn { border: 1px dashed var(--border); background: none; color: var(--accent, #1a5c8a); border-radius: 6px; padding: 2px 8px; font-size: 12px; cursor: pointer; }
+  .sub-add-btn:hover { background: var(--bg); }
+  .sub-add-form { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .sub-add-form input { flex: 1; min-width: 140px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 5px; font-size: 13px; background: var(--bg); color: var(--text); }
+  .sub-add-form select { padding: 3px 4px; border: 1px solid var(--border); border-radius: 5px; font-size: 12px; background: var(--bg); color: var(--text); }
+  .sub-add-form button { padding: 3px 8px; border: 1px solid var(--border); border-radius: 5px; font-size: 12px; cursor: pointer; background: #fff; }
+  .sub-add-form .sub-add-x { border: 0; background: none; color: var(--muted); }
   td.det-cell .kv .v { font-size: 12px; }
   td.biz-cell .kv .v.biz-name { white-space: normal; }
   col.c-cat      { width: 80px; }
@@ -340,6 +349,8 @@
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
   .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
   .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
+  .home-card .ico-white { filter: grayscale(1) brightness(0) invert(1); }
+  .home-card .home-n { font-size:.8em; font-weight:500; color:inherit; opacity:.85; }
   .home-card b { font-size:18px; display:block; margin-bottom:4px; }
   .home-card span.sub { font-size:13px; color:var(--muted); }
   .gs-box { max-width:900px; margin:0 auto 1rem; }
@@ -1029,9 +1040,21 @@ async function apiFetch(path, opts = {}) {
 }
 
 let bizLoaded = false, adminDeferred = false;
+// רשימת העסקים נשמרת בדפדפן: בכניסה מוצג מיד העותק האחרון, והנתונים העדכניים מחליפים אותו כשהם מגיעים (ברשת איטית זה החלק הארוך).
+// עד שמגיעים הנתונים העדכניים, שמירה מהטבלה מחכה להם (כדי לא לשמור על בסיס עותק ישן).
+const BIZ_CACHE = "hl_biz_cache_v1";
+let bizStale = false, bizFreshP = null;
+const bizFresh = async () => { if (bizStale && bizFreshP) { try { await bizFreshP; } catch { /* השגיאה תטופל בשמירה */ } } };
 async function loadBusinesses() {
-  businesses = await apiFetch("/businesses");
+  if (!bizLoaded) {
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(BIZ_CACHE) || "null"); } catch { cached = null; }
+    if (Array.isArray(cached) && cached.length) { businesses = cached; bizLoaded = true; bizStale = true; render(); }
+  }
+  bizFreshP = apiFetch("/businesses");
+  try { businesses = await bizFreshP; } finally { bizStale = false; }
   bizLoaded = true;
+  try { localStorage.setItem(BIZ_CACHE, JSON.stringify(businesses)); } catch { /* אין מקום / חסום */ }
   render();
 }
 
@@ -1096,10 +1119,11 @@ function render() {
   else if (view === "home")       app.innerHTML = renderHome();
   else if (view === "search")     { app.innerHTML = adminTabs() + (window.PD ? '<div id="pd-sp-body"></div>' : renderSearch()); if (window.PD) PD.searchPage(document.getElementById("pd-sp-body")); }
   else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
-  else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
+  else if (view === "form")       { if (formModal) ensureFormModal().innerHTML = renderForm(); else app.innerHTML = adminTabs() + renderForm(); }
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
+  if (view === "admin") admWatch();
   document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
   document.getElementById("admin-toggle").textContent = "כניסת מנהל";
   document.getElementById("home-btn").style.display = isAdmin && view !== "home" ? "" : "none";
@@ -1181,13 +1205,49 @@ function renderAdminTable() {
           </tr>
         </thead>
         <tbody>
-          ${groupSubs(sorted).map((b0, gi) => {
+          ${admRowsHtml(admPage(sorted), 0)}
+        </tbody>
+      </table>
+      <div id="adm-more">${admMoreHtml()}</div>
+    </div>`;
+}
+
+// טבלת הניהול בחלקים: בהתחלה רק ADM_STEP חברות (עם תתי-השורות שלהן), והשאר נוספות בגלילה למטה / "הצג עוד".
+// טבלה מלאה של כ-1,500 חברות היא עשרות אלפי רכיבים, ובמחשב איטי בנייתה לוקחת עשרות שניות.
+const ADM_STEP = 60;
+let admShown = ADM_STEP, admRest = [], admGrp = 0, admTotal = 0, admObs = null;
+function admPage(sorted) {
+  const all = groupSubs(sorted); let n = 0, k = 0;
+  for (; k < all.length; k++) { if (!all[k]._isSub) { if (n >= admShown) break; n++; } }
+  admRest = all.slice(k); admGrp = n; admTotal = all.filter(b => !b._isSub).length;
+  return all.slice(0, k);
+}
+function admMoreHtml() {
+  return admRest.length ? `<div style="text-align:center;padding:14px;color:var(--muted);font-size:13px">מוצגות ${admGrp} מתוך ${admTotal} · <button type="button" class="btn-ghost" onclick="admMore()">הצג עוד</button> <button type="button" class="btn-ghost" onclick="admMore(true)">הצג הכל</button></div>` : "";
+}
+function admMore(all) {
+  const tb = document.querySelector("#app table tbody"), more = document.getElementById("adm-more"); if (!tb || !admRest.length) return;
+  let n = 0, k = 0;
+  for (; k < admRest.length; k++) { if (!admRest[k]._isSub) { if (!all && n >= ADM_STEP) break; n++; } }
+  const part = admRest.slice(0, k); admRest = admRest.slice(k);
+  tb.insertAdjacentHTML("beforeend", admRowsHtml(part, admGrp)); admGrp += n; admShown = admGrp;
+  if (more) more.innerHTML = admMoreHtml();
+}
+function admWatch() {          // טעינת החלק הבא כשמגיעים קרוב לסוף הטבלה
+  if (admObs) admObs.disconnect();
+  const m = document.getElementById("adm-more"); if (!m || !("IntersectionObserver" in window)) return;
+  admObs = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting) && admRest.length) admMore(); }, { rootMargin: "600px" });
+  admObs.observe(m);
+}
+function admRowsHtml(items, grp0) {
+  let grp = grp0 - 1;
+  return items.map(b0 => { if (!b0._isSub) grp++; const gi = grp;          // תת-שורה ("מסלול הלכה") באותו רקע כמו החברה שלה
             const b = pendingNotes[b0.id] !== undefined ? { ...b0, notes: pendingNotes[b0.id], notes_scope: "" } : b0;
             const bsubs = (window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : [], alt = gi % 2 ? " alt" : "";          // חברה עם תת-שורות אג"ח: קבוצה אחת (אותו רקע, מסגרת ופס צבע בצד)
             return `
               <tr class="${b0._isSub ? "sub-row" : ""}${alt}${bsubs.length ? " has-bonds" : ""}">
-                <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml((b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div></td>
-                <td class="det-cell"><div class="kv"><span class="k">ח.פ.</span><span class="v" style="direction:ltr;text-align:right;">${escHtml(b.chp_number)||"—"}</span>
+                <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml(((b0._isSub ? b.permit_name : "") || b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div>${!b0._isSub && (b.chp_number || "").toString().trim() ? subAddWidget(b.id) : ""}</td>
+                <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${escHtml(b.chp_number)||"—"}</span>
                   <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
                   <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
@@ -1240,10 +1300,7 @@ function renderAdminTable() {
                   ? `<td class="bs bs-last" colspan="2" style="text-align:center"><button type="button" class="pd-ok pd-long pd-sm" onclick="PD.openDoc('${x.priv.id}','${b.id}')" title="${escHtml(x.priv.name)} (משותף לפרטי ולכללי)">📄 פתיחה</button></td>`
                   : `<td class="bs" style="text-align:center">${open(x.priv, "private")}</td><td class="bs bs-last" style="text-align:center">${open(x.gen, "general")}</td>`}<td></td><td></td></tr>`;
               }).join("");
-          }).join("")}
-        </tbody>
-      </table>
-    </div>`;
+          }).join("");
 }
 
 // ── FORM (add / edit) ──
@@ -1388,6 +1445,11 @@ function renderForm() {
         ${(() => { const sc = b.notes_scope || ((b.notes||"").trim() ? "companies" : "");   // הערה קיימת בלי בחירה = מוצגת בחברות
           return `<input type="hidden" id="f-notes-scope" value="${sc}">
         <div class="sc-btns" id="f-notes-scope-btns">${[["companies","רק ברשימת החברות"],["bonds","רק ברשימת האג\"ח"],["both","בשתי הרשימות (חברות ואג\"ח)"]].map(([v,l]) => `<button type="button" class="sc-b ${sc===v?"on":""}" onclick="formScopePick('${v}')">${l}</button>`).join("")}</div>`; })()}
+      </div>
+
+      <div class="field" id="subs-field" style="${noChp ? "display:none;" : ""}">
+        <label>תתי-שורות <span style="color:var(--light);font-weight:400">(רישום נוסף לאותה חברה, למשל "מסלול הלכה"; מופיע ברשימות מתחת לחברה)</span></label>
+        <div id="subs-box">${formSubsHtml()}</div>
       </div>
 
       <p class="error-msg" id="form-err"></p>
@@ -1611,10 +1673,18 @@ function adminTabs() {
   return `<div class="admin-tabs">${t("add", ADD_ICON, "הוספת עסק", "openForm(null)")}${t("update", "✏️", "עדכון עסק קיים", "setView('admin')")}${t("search", "🔍", "חיפוש", "setView('search')")}${window.PD ? t("pd-nd", "📊", "ניהול שטרות היתר עיסקא", "PD.openDash()") : ""}</div>`;
 }
 
+// מספר המצטרפים בכפתור "מצטרפים" בדף הראשי (נטען פעם אחת, ברקע)
+let joinersCount = null, joinersCountP = null;
+const joinersCountText = () => ` (${joinersCount.total.toLocaleString("he-IL")})`;
+function loadJoinersCount() {
+  if (joinersCountP) return;
+  joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
+}
 function renderHome() {
+  if (isAdmin) setTimeout(loadJoinersCount, 0);
   return `<div class="home-wrap"><div class="home-band">
     <div class="home-top">
-      <button class="home-card" onclick="PD.openDash('e')"><span class="ico">👥</span><b>מצטרפים</b></button>
+      <button class="home-card" onclick="PD.openDash('e')"><span class="ico ico-white">👥</span><b>מצטרפים<span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></b></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
@@ -1691,6 +1761,8 @@ function gsHighlight(val, tokens) {
     return hit ? `<mark>${escHtml(w)}</mark>` : escHtml(w);
   }).join("");
 }
+// ח.פ. או ח.צ.: חברה ציבורית (לפי סוג התאגיד ברשם, ובלעדיו לפי מספר שמתחיל ב-52) מוצגת "ח.צ."
+const chpLbl = (chp, type) => /ציבורית/.test(type || "") || (!/פרטית|שותפות|עמותה|אגודה|חל"צ|ציבורית/.test(type || "") && /^52\d{7}$/.test(String(chp || "").replace(/\D/g, ""))) ? "ח.צ." : "ח.פ.";
 const GS_BIZ_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: 'ח.פ.', entity_type: "סוג ישות", category: "קטגוריה", region: "אזור", biz_type: "סוג עסק",
   visibility: "פרטי / כללי", agch_approved: 'אישור אג"ח', tase_has_agch: 'אג"ח בבורסה', registry_status: "סטטוס ברשם", notes: "הערות", notes_scope: "היכן להציג הערה", updated_at: "עודכן" };
 const GS_BOND_LABELS = { security_name: 'שם אג"ח', symbol: "סימול", security_id: "מספר נייר", isin: "ISIN", security_type: "סוג נייר", company: "חברה", chp_number: 'ח.פ.', agch_approved: "אישור",
@@ -1702,7 +1774,7 @@ function gsCard(rec, kind, tokens) {
   const rows = Object.keys(labels).filter(k => rec[k] !== undefined && rec[k] !== null && String(rec[k]).trim() !== "").map(k => {
     let v = rec[k];
     if (k === "notes_scope") v = GS_SCOPE[v] ?? v;
-    return `<dt>${escHtml(labels[k])}</dt><dd>${gsHighlight(v, tokens)}</dd>`;
+    return `<dt>${escHtml(k === "chp_number" ? chpLbl(rec.chp_number, rec.biz_type) : labels[k])}</dt><dd>${gsHighlight(v, tokens)}</dd>`;
   }).join("");
   const btn = kind === "biz" ? `<button class="sbtn" onclick="openForm('${rec.id}')">✏️ עריכה</button>`
     : (businesses.find(b => (b.chp_number || "") && b.chp_number === rec.chp_number) ? `<button class="sbtn" onclick="openForm('${businesses.find(b => b.chp_number === rec.chp_number).id}')">פתיחת החברה</button>` : "");
@@ -1742,7 +1814,7 @@ async function registrySearchInto(q) {
   out.innerHTML = d.hint ? `<div class="gs-info" style="margin:6px 0;">${escHtml(d.hint)}</div>` : rs.length
     ? rs.map(r => { const ex = existingBiz(r.id);
         return `<div class="ns-row ${r.defunct ? "defunct" : ""} addable" data-id="${escHtml(String(r.id))}"><div><b>${escHtml(r.name)}</b>
-          <div class="m">${escHtml(r.type)} · ח.פ. ${escHtml(String(r.id))}${r.status ? " · " + escHtml(r.status) : ""}</div><div>${statusBadge(ex)}</div></div>
+          <div class="m">${escHtml(r.type)} · ${chpLbl(r.id, r.type)} ${escHtml(String(r.id))}${r.status ? " · " + escHtml(r.status) : ""}</div><div>${statusBadge(ex)}</div></div>
           ${ex.length ? circ("edit", `data-edit="${escHtml(ex[0].id)}"`) : circ("add", `data-add="${escHtml(String(r.id))}"`)}</div>`; }).join("") + (d.more ? `<div class="gs-info" style="margin:6px 0;">יש עוד תוצאות - דייק את החיפוש</div>` : "")
     : `<div class="gs-info" style="margin:6px 0;">לא נמצאו חברות${/^\d+$/.test(q) ? " שמספרן מתחיל בספרות האלה" : " בשם הזה"}${(d.errors || []).length ? ` (שגיאה חלקית: ${escHtml(d.errors.join(" | "))})` : ""}</div>`;
   out.querySelectorAll(".ns-row.addable").forEach(row => row.addEventListener("click", () => {      // כל הכרטיסייה לחיצה: קיים = עריכה, חסר = הוספה
@@ -1847,9 +1919,11 @@ function bindEvents() {
 let formDirty = false;
 const confirmLeave = () => confirm("השינויים שעשית לא נשמרו. לעזוב את העמוד בכל זאת?");
 window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
+let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
-  if (v === "form" && view !== "form") formDirty = false;
+  if (formModal && v !== "form") closeFormModal(false);
+  if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
   view = v;
   if (window.PD && PD.onView) PD.onView(v);          // המשך העלאת קבצים אחרי הוספת עסק מתוך חלון ההעלאה
   if (v !== "csv-import") {
@@ -1965,19 +2039,38 @@ function toggleNoChp() {
     if (out) out.innerHTML = lookupOutHtml();
   }
   showChpPart();
+  { const sf = document.getElementById("subs-field"); if (sf) sf.style.display = noChp ? "none" : ""; }
   if (!noChp) document.getElementById("chp")?.focus();
 }
 
 let formReturn = "admin";
 function openFormSkip(id) { formDirty = false; openForm(id); }   // מעבר לעריכת עסק קיים מתוך חיפוש: בלי אזהרת שינויים שלא נשמרו
-function openForm(id) {
+// טופס "הוספת עסק" כחלון צף (מעל הדף, בלי לעבור לתצוגת הטופס הרגילה): נפתח מחלון העלאת היתר; אחרי שמירה / סגירה החלון נסגר וההעלאה ממשיכה
+function ensureFormModal() {
+  let ov = document.getElementById("form-modal");
+  if (!ov) {
+    ov = document.createElement("div"); ov.id = "form-modal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto";
+    ov.innerHTML = '<div style="background:var(--bg,#fff);border-radius:14px;width:min(900px,100%);box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative;margin:auto 0"><button type="button" class="btn-ghost" onclick="closeFormModal(true)" style="position:absolute;top:10px;left:10px;z-index:2" title="סגירה">✕ סגירה</button><div id="form-modal-body" style="padding:6px 14px 16px"></div></div>';
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+  }
+  return document.getElementById("form-modal-body");
+}
+function closeFormModal(byUser) {
+  if (byUser) { if (formDirty && !confirmLeave()) return; formDirty = false; setView(formReturn); return; }
+  document.getElementById("form-modal")?.remove(); document.body.style.overflow = ""; formModal = false;
+}
+function openForm(id, asModal) {
   if (view === "form" && formDirty && !confirmLeave()) return;
   formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
   editBiz = id ? businesses.find(b => b.id === id) || {} : {};
+  newSubs = [];
   { const p = (editBiz.permit_name || "").trim(), r = (editBiz.registrar_name || "").trim(); permitMode = !id ? "" : (!p || p === r) ? "reg" : "other"; }
   noChp = !!id && !(editBiz.chp_number || "").trim();      // עסק קיים בלי ח.פ. = שם הרשם ניתן לעריכה
   chpResult = null; chpError = "";
+  formModal = !!asModal;
+  if (formModal) { const app = document.getElementById("app"); if (app && app.querySelector('[id^="f-"]')) app.innerHTML = ""; }      // בלי מזהים כפולים עם מסנני הטבלה שמתחת
   setView("form");
 }
 
@@ -2087,7 +2180,8 @@ function lookupOutHtml() {
         <div style="font-size:11px;color:var(--muted);">נמצא ברשם:</div>
         <div class="found-name">${escHtml(chpResult.name)}</div>
         <div class="found-meta">${escHtml(chpResult.type)} · ${escHtml(chpResult.status)}</div>
-        ${editBiz?.id ? "" : (() => { const ex = chpDuplicates(); return `<div class="st-line">${statusBadge(ex)}${ex.length ? circ("edit", "") : ""}</div>`; })()}
+        ${editBiz?.id ? "" : (() => { const ex = chpDuplicates(); const m = ex.find(b => !(b.permit_name || "").trim() || pnNorm(b.permit_name) === pnNorm(b.registrar_name)) || ex[0];
+          return `<div class="st-line">${statusBadge(ex)}${ex.length ? circ("edit", "") : ""}</div>${m ? `<div style="margin-top:8px;cursor:default;text-align:right" onclick="event.stopPropagation()"><div style="font-size:12px;color:var(--muted)">החברה כבר קיימת. רישום נוסף שלה (למשל "מסלול הלכה") מוסיפים כתת-שורה:</div>${subAddWidget(m.id, true)}</div>` : ""}`; })()}
       </div>` : ""}`;
 }
 
@@ -2292,7 +2386,7 @@ function renderBondPicker() {
   root.innerHTML = `<div class="modal-overlay" style="${reopen ? "animation:none;" : ""}" onclick="if(event.target.classList.contains('modal-overlay'))closeBondPicker()">
     <div class="modal-box" style="max-width:560px;${reopen ? "animation:none;" : ""}">
       <div class="modal-title">בחירת אג"ח מסוימים</div>
-      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ח.פ. ${escHtml(st.biz.chp_number || "")}</div>
+      <div class="modal-biz-name">${escHtml((st.biz.registrar_name || st.biz.permit_name || "").trim())} · ${chpLbl(st.biz.chp_number, st.biz.biz_type)} ${escHtml(st.biz.chp_number || "")}</div>
       ${body}
       <div class="modal-actions" style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn-ghost" onclick="closeBondPicker()">ביטול</button>
@@ -2316,6 +2410,7 @@ async function agchChange(id, sel) {
 let admSearchTimer = null;
 function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה אחרי הפסקת הקלדה (ולא באמצע), ושדה החיפוש נשאר אותו אלמנט כדי שההקלדה לא תיקטע
   search = v;
+  admShown = ADM_STEP;
   clearTimeout(admSearchTimer);
   const go = () => {
     if (navigator.scheduling && navigator.scheduling.isInputPending && navigator.scheduling.isInputPending()) { admSearchTimer = setTimeout(go, 120); return; }
@@ -2329,6 +2424,7 @@ function onAdminSearch(v) {   // חיפוש בטבלת הניהול: הרצה א
 
 async function inlineUpdate(id, field, value) { return inlineUpdateMany(id, { [field]: value }); }
 async function inlineUpdateMany(id, fields) {
+  await bizFresh();
   const biz = businesses.find(b => b.id === id);
   if (!biz) return;
   const updated = { ...biz, ...fields };
@@ -2364,12 +2460,39 @@ async function noteScopeChange(id, scope) {
 // שם בהיתר עסקה זהה לשם ברשם (בלי הבדלי בע"מ, רווחים ופיסוק): מוצג "שם זהה בהיתר עסקה" עם עיפרון לעריכה
 const pnNorm = x => String(x || "").replace(/בע"?מ|בע״מ|בע''מ/g, "").replace(/["'׳״`.,\-()]/g, "").replace(/\s+/g, " ").trim();
 function samePermitName(b) { const p = (b.permit_name || "").trim(); return !p || pnNorm(p) === pnNorm(b.registrar_name); }
+function subAddOpen(btn) { const w = btn.closest(".sub-add"), f = w.querySelector(".sub-add-form"); btn.style.display = "none"; f.style.display = ""; f.querySelector("input").focus(); }
+function subAddClose(btn) { const w = btn.closest(".sub-add"); w.querySelector(".sub-add-form").style.display = "none"; w.querySelector(".sub-add-btn").style.display = ""; }
+const SUB_VIS_OPTS = [["", "כללי"], ["פרטי", "פרטי + כללי"], ["רק פרטי", "רק פרטי"]];
+const subVisLabel = v => (SUB_VIS_OPTS.find(x => x[0] === (v || "")) || SUB_VIS_OPTS[0])[1];
+const subNormName = x => String(x || "").replace(/["'׳״`\-–(),.]/g, " ").replace(/\s+/g, " ").trim();
+function subRowsOf(main) { return main && digitsOf(main.chp_number) ? businesses.filter(b => b.id !== main.id && digitsOf(b.chp_number) === digitsOf(main.chp_number)) : []; }
+// "+ הוספת תת-שורה" (רישום נוסף עם אותו ח.פ. ושם בהיתר = הפירוט): בטבלת העדכון, בטופס העריכה ובהוספת עסק עם ח.פ. שכבר קיים. נשמר מיד
+function subAddWidget(id, withList) {
+  const list = withList ? subRowsOf(businesses.find(b => b.id === id)) : [];
+  return `<div class="sub-add" onclick="event.stopPropagation()">${withList ? `<div class="sub-add-list">${list.map(x => `<div>↳ ${escHtml(x.permit_name || "")} <span style="color:var(--muted);font-size:12px">(${subVisLabel(x.visibility)})</span></div>`).join("")}</div>` : ""}<button type="button" class="sub-add-btn" onclick="subAddOpen(this)" title="רישום נוסף לאותה חברה (אותו ח.פ.), למשל &quot;מסלול הלכה&quot;: מופיע ברשימות מתחת לחברה">+ הוספת תת-שורה</button><span class="sub-add-form" style="display:none"><input type="text" placeholder="פירוט (למשל: מסלול הלכה)" onkeydown="if(event.key==='Enter'){event.preventDefault();subAddSave('${id}',this)}"><select>${SUB_VIS_OPTS.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select><button type="button" onclick="subAddSave('${id}',this)">הוספה</button><button type="button" class="sub-add-x" onclick="subAddClose(this)">ביטול</button></span></div>`;
+}
+async function subAddSave(id, el) {          // "הוספת תת-שורה" מתחת לשם העסק: רישום נוסף עם אותו ח.פ. ושם בהיתר = הפירוט
+  await bizFresh();
+  const f = el.closest(".sub-add-form"), name = f.querySelector("input").value.replace(/\s+/g, " ").trim(), vis = f.querySelector("select").value, main = businesses.find(b => b.id === id);
+  if (!main) return;
+  if (!name) { f.querySelector("input").focus(); return; }
+  if (subRowsOf(main).some(b => subNormName(b.permit_name) === subNormName(name))) { alert("כבר יש תת-שורה בשם הזה"); return; }
+  const sub = { id: uid(), chp_number: main.chp_number, entity_type: main.entity_type || "company", registrar_name: main.registrar_name || "", permit_name: name, category: main.category || "", region: main.region || "", notes: "", visibility: vis, agch_approved: "לא", biz_type: main.biz_type || "", has_details: 0 };
+  try {
+    await apiFetch("/businesses", { method: "POST", body: JSON.stringify(sub) });
+    businesses = [...businesses, sub]; logChange("add", null, sub);
+    showStatus("נוספה תת-שורה: " + name);
+    if (view === "form") { const w = el.closest(".sub-add"), lst = w.querySelector(".sub-add-list"); if (lst) lst.insertAdjacentHTML("beforeend", `<div>↳ ${escHtml(name)} <span style="color:var(--muted);font-size:12px">(${subVisLabel(vis)})</span></div>`); f.querySelector("input").value = ""; subAddClose(el); }          // בטופס: בלי רינדור מחדש (כדי לא לאבד שדות שעוד לא נשמרו)
+    else render();
+  } catch (e) { if (e.message === "Unauthorized") { handleUnauth(); return; } alert("השמירה נכשלה: " + e.message); }
+}
 function pnEdit(btn) {
   const v = btn.closest(".pn-same"), inp = v.querySelector("input"), txt = v.querySelector(".pn-txt");
   if (txt) txt.remove(); btn.remove();
   inp.style.cssText = inp.dataset.s || ""; inp.focus(); inp.select();
 }
 async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים רק את "שם בהיתר עסקה" (שם הרשם נשאר)
+  await bizFresh();
   const v = (raw || "").trim(), biz = businesses.find(b => b.id === id);
   if (!biz || !v || v === (biz.permit_name || biz.registrar_name || "").trim()) { render(); return; }
   if (v.length < 4) { showStatus("שם בהיתר עסקה: לפחות 4 תווים"); render(); return; }
@@ -2377,6 +2500,7 @@ async function permitNameSave(id, raw) {      // עסק עם ח.פ.: משנים 
   render();
 }
 async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, נשמר גם כשם בהיתר וגם כשם הרשם
+  await bizFresh();
   const v = (raw || "").trim();
   if (!v) { showStatus("שם העסק לא יכול להיות ריק"); render(); return; }
   await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
@@ -2599,6 +2723,7 @@ async function runTaseSync(scope = "bonds") {
 
 
 async function doSave() {
+  await bizFresh();
   let regName    = (document.getElementById("f-reg")?.value    || "").trim();
   let permitName = (document.getElementById("f-permit")?.value || "").trim();
   if (noChp) regName = permitName;                                     // בלי ח.פ.: שם אחד, נשמר בשני השדות
@@ -2616,12 +2741,13 @@ async function doSave() {
   const chpVal = (document.getElementById("chp")?.value || "").trim();
   // ── Duplicate ח.פ. check ──
   if (chpVal) {
-    const duplicate = businesses.find(b =>
+    const orig = editBiz?.id ? businesses.find(b => b.id === editBiz.id) : null;
+    const duplicate = orig && digitsOf(orig.chp_number) === digitsOf(chpVal) ? null : businesses.find(b =>          // עריכה בלי שינוי הח.פ.: רשומות נוספות עם אותו ח.פ. הן תתי-שורות של החברה
       (b.chp_number || "").trim() === chpVal && b.id !== editBiz?.id
     );
     if (duplicate) {
       if (errEl) errEl.textContent =
-        `ח.פ. ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
+        `${chpLbl(chpVal)} ${chpVal} כבר קיים במערכת — "${displayName(duplicate)}"`;
       return;
     }
   }
@@ -2656,6 +2782,13 @@ async function doSave() {
       businesses = [...businesses, payload];
       logChange("add", null, payload);
     }
+    if (!isEdit && newSubs.length && (payload.chp_number || "").trim()) {          // תתי-שורות שנרשמו בטופס לעסק החדש
+      for (const x of newSubs) {
+        const sub = { id: uid(), chp_number: payload.chp_number, entity_type: payload.entity_type || "company", registrar_name: payload.registrar_name || "", permit_name: x.name, category: payload.category || "", region: payload.region || "", notes: "", visibility: x.vis || "", agch_approved: "לא", biz_type: payload.biz_type || "", has_details: 0 };
+        try { await apiFetch("/businesses", { method: "POST", body: JSON.stringify(sub) }); businesses = [...businesses, sub]; logChange("add", null, sub); } catch (e) { alert("תת-השורה \"" + x.name + "\" לא נשמרה: " + e.message); }
+      }
+    }
+    newSubs = [];
     if (!isEdit && window.PD && PD.bizAdded) setTimeout(() => PD.bizAdded(payload), 400);      // שיוך אוטומטי של מסמך שממתין לחברה החדשה
     showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
     saving = false; formDirty = false; setView(formReturn);
@@ -2666,6 +2799,26 @@ async function doSave() {
     if (errEl2) errEl2.textContent = "שגיאה: " + e.message;
     render();
   }
+}
+
+let newSubs = [];          // תתי-שורות לעסק חדש: נוצרות אחרי "הוסף עסק"
+function formSubsHtml() {
+  const b = editBiz || {};
+  if (b.id) {
+    const orig = businesses.find(x => x.id === b.id) || b;
+    const isSub = subRowsOf(orig).some(x => !(x.permit_name || "").trim() || pnNorm(x.permit_name) === pnNorm(x.registrar_name)) && pnNorm(orig.permit_name) !== pnNorm(orig.registrar_name) && (orig.permit_name || "").trim();
+    if (isSub) return `<div style="font-size:13px;color:var(--muted)">זו תת-שורה. תתי-שורות מוסיפים בחברה הראשית.</div>`;
+    return subAddWidget(b.id, true);
+  }
+  return `<div class="sub-add-list">${newSubs.map((x, i) => `<div>↳ ${escHtml(x.name)} <span style="color:var(--muted);font-size:12px">(${subVisLabel(x.vis)}, תיווסף עם העסק)</span> <button type="button" class="sub-add-x" onclick="newSubs.splice(${i},1);subsRepaint()">הסרה</button></div>`).join("")}</div>
+    <span class="sub-add-form"><input type="text" id="new-sub-name" placeholder="פירוט (למשל: מסלול הלכה)" onkeydown="if(event.key==='Enter'){event.preventDefault();newSubAdd()}"><select id="new-sub-vis">${SUB_VIS_OPTS.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select><button type="button" onclick="newSubAdd()">+ הוספת תת-שורה</button></span>`;
+}
+function subsRepaint() { const el = document.getElementById("subs-box"); if (el) el.innerHTML = formSubsHtml(); }
+function newSubAdd() {
+  const n = document.getElementById("new-sub-name"), name = String(n && n.value || "").replace(/\s+/g, " ").trim(), vis = (document.getElementById("new-sub-vis") || {}).value || "";
+  if (!name) { if (n) n.focus(); return; }
+  if (newSubs.some(x => subNormName(x.name) === subNormName(name))) { alert("כבר יש תת-שורה בשם הזה"); return; }
+  newSubs.push({ name, vis }); formDirty = true; subsRepaint(); const n2 = document.getElementById("new-sub-name"); if (n2) n2.focus();
 }
 
 function handleUnauth() {
@@ -2845,7 +2998,7 @@ async function startImport() {
     // ── Duplicate ח.פ. check within import ──
     const chpVal = get("chp_number");
     if (chpVal && businesses.some(b => (b.chp_number||"").trim() === chpVal)) {
-      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ח.פ. ${chpVal} כבר קיים — דולגה`);
+      csvErrors.push(`שורה ${i+2} (${regName||permitName}): ${chpLbl(chpVal)} ${chpVal} כבר קיים — דולגה`);
       csvProgress++;
       updateProgressUI();
       continue;
@@ -2997,17 +3150,18 @@ function filteredAndSorted() {
   const q = search.trim().toLowerCase();
 
   // Filter
-  let rows = businesses.filter(b => {
-    if (q) {
-      const name = displayName(b).toLowerCase();
-      const hits = name.includes(q)
+  const textHit = b => displayName(b).toLowerCase().includes(q)
+        || (b.permit_name ||"").toLowerCase().includes(q)
+        || (b.registrar_name ||"").toLowerCase().includes(q)
         || (b.category   ||"").toLowerCase().includes(q)
         || (b.region     ||"").toLowerCase().includes(q)
         || (b.chp_number ||"").toLowerCase().includes(q)
         || (b.notes      ||"").toLowerCase().includes(q)
         || (b.biz_type   ||"").toLowerCase().includes(q);
-      if (!hits) return false;
-    }
+  // חיפוש גם בשמות תת-השורות (כמה רישומים לאותו ח.פ., למשל "מסלול הלכה"): התאמה באחד מהם מציגה את כל הקבוצה, עם השורה הראשית
+  const hitChp = new Set(q ? businesses.filter(textHit).map(b => String(b.chp_number || "").trim()).filter(Boolean) : []);
+  let rows = businesses.filter(b => {
+    if (q && !textHit(b) && !hitChp.has(String(b.chp_number || "").trim())) return false;
     if (filterCat     && b.category    !== filterCat)     return false;
     if (filterRegion  && b.region      !== filterRegion)  return false;
     if (filterBizType && b.biz_type    !== filterBizType) return false;
@@ -3075,6 +3229,7 @@ if (!isAdmin) fetch("/api/login", { cache: "no-store" }).then(r => r.json()).the
 render();
 
 loadBusinesses().catch(() => {
+  if (businesses.length) { showStatus("אין חיבור לשרת: מוצג העותק האחרון של רשימת העסקים"); return; }          // יש עותק שמור: ממשיכים איתו
   document.getElementById("app").innerHTML =
     `<p style="color:var(--red);text-align:center;padding:2rem;">שגיאה בטעינת נתונים — בדוק שהשרת פועל</p>`;
 });

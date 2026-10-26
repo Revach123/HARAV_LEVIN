@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261026l"></script>
+<script src="/permit-docs.js?v=20261026m"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1119,7 +1119,7 @@ function render() {
   else if (view === "home")       app.innerHTML = renderHome();
   else if (view === "search")     { app.innerHTML = adminTabs() + (window.PD ? '<div id="pd-sp-body"></div>' : renderSearch()); if (window.PD) PD.searchPage(document.getElementById("pd-sp-body")); }
   else if (view === "admin")      app.innerHTML = adminTabs() + ((adminDeferred || !bizLoaded) ? `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען את רשימת העסקים…</div>` : renderAdminTable());
-  else if (view === "form")       app.innerHTML = adminTabs() + renderForm();
+  else if (view === "form")       { if (formModal) ensureFormModal().innerHTML = renderForm(); else app.innerHTML = adminTabs() + renderForm(); }
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
   bindEvents();
@@ -1919,8 +1919,10 @@ function bindEvents() {
 let formDirty = false;
 const confirmLeave = () => confirm("השינויים שעשית לא נשמרו. לעזוב את העמוד בכל זאת?");
 window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
+let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
+  if (formModal && v !== "form") closeFormModal(false);
   if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
   view = v;
   if (window.PD && PD.onView) PD.onView(v);          // המשך העלאת קבצים אחרי הוספת עסק מתוך חלון ההעלאה
@@ -2043,7 +2045,22 @@ function toggleNoChp() {
 
 let formReturn = "admin";
 function openFormSkip(id) { formDirty = false; openForm(id); }   // מעבר לעריכת עסק קיים מתוך חיפוש: בלי אזהרת שינויים שלא נשמרו
-function openForm(id) {
+// טופס "הוספת עסק" כחלון צף (מעל הדף, בלי לעבור לתצוגת הטופס הרגילה): נפתח מחלון העלאת היתר; אחרי שמירה / סגירה החלון נסגר וההעלאה ממשיכה
+function ensureFormModal() {
+  let ov = document.getElementById("form-modal");
+  if (!ov) {
+    ov = document.createElement("div"); ov.id = "form-modal";
+    ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto";
+    ov.innerHTML = '<div style="background:var(--bg,#fff);border-radius:14px;width:min(900px,100%);box-shadow:0 10px 40px rgba(0,0,0,.35);position:relative;margin:auto 0"><button type="button" class="btn-ghost" onclick="closeFormModal(true)" style="position:absolute;top:10px;left:10px;z-index:2" title="סגירה">✕ סגירה</button><div id="form-modal-body" style="padding:6px 14px 16px"></div></div>';
+    document.body.appendChild(ov); document.body.style.overflow = "hidden";
+  }
+  return document.getElementById("form-modal-body");
+}
+function closeFormModal(byUser) {
+  if (byUser) { if (formDirty && !confirmLeave()) return; formDirty = false; setView(formReturn); return; }
+  document.getElementById("form-modal")?.remove(); document.body.style.overflow = ""; formModal = false;
+}
+function openForm(id, asModal) {
   if (view === "form" && formDirty && !confirmLeave()) return;
   formDirty = false;
   formReturn = view === "search" ? "search" : (view === "home" ? "home" : "admin");   // לאן חוזרים אחרי שמירה / ביטול
@@ -2052,6 +2069,8 @@ function openForm(id) {
   { const p = (editBiz.permit_name || "").trim(), r = (editBiz.registrar_name || "").trim(); permitMode = !id ? "" : (!p || p === r) ? "reg" : "other"; }
   noChp = !!id && !(editBiz.chp_number || "").trim();      // עסק קיים בלי ח.פ. = שם הרשם ניתן לעריכה
   chpResult = null; chpError = "";
+  formModal = !!asModal;
+  if (formModal) { const app = document.getElementById("app"); if (app && app.querySelector('[id^="f-"]')) app.innerHTML = ""; }      // בלי מזהים כפולים עם מסנני הטבלה שמתחת
   setView("form");
 }
 

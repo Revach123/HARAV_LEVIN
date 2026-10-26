@@ -152,7 +152,7 @@
     pendingAdd = added ? { chp: digitsOf(id), added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm === "function") {
-      openForm(null);
+      openForm(null, true);          // חלון צף מעל הדף (ולא מעבר לתצוגת הטופס הרגילה)
       setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150);
       if (vis !== undefined) for (const ms of [250, 900, 2000]) setTimeout(() => { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }, ms);
       if (pcat) for (const ms of [250, 900, 2000]) setTimeout(() => { const f = document.getElementById("f-pcat"); if (f && !f.value) { f.value = pcat; if (window.pcatRender) pcatRender(); } }, ms);          // קטגוריה לרשימת השטרות שנבחרה בחלון ההעלאה          // פרטי / כללי לפי בחירת סוג השטר בחלון ההעלאה
@@ -163,7 +163,7 @@
     pendingAdd = added ? { chp: "", added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm !== "function") return;
-    openForm(null);
+    openForm(null, true);          // חלון צף מעל הדף
     const fill = () => {
       if (typeof toggleNoChp === "function" && typeof noChp !== "undefined" && !noChp) toggleNoChp();
       const f = document.getElementById("f-permit"); if (f && !f.value) { f.value = name; f.dispatchEvent(new Event("input", { bubbles: true })); }
