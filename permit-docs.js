@@ -2948,7 +2948,6 @@
     root.innerHTML = `<div class="pd-head"><b>ניהול מסמכים · ${displayName(b, true)}</b><span class="pd-chip" style="background:#1a3a5c;margin-inline-start:8px" title="הרישום של החברה ברשימות האתר">רישום: ${regLabel(b)}</span><button class="pd-mini" onclick="PD._regChange()" title="שינוי הרישום או מחיקת החברה מהרשימה">לשינוי</button>
         <span id="pd-mg-undo"></span><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-btn" onclick="PD._close('pd-manage');PD.openUpload({bizId:'${b.id}'})">⬆ העלאת היתר</button><button class="pd-x" onclick="PD._close('pd-manage')">✕</button></div>
       <div class="pd-body"><div class="pd-mg-top">${["private", "general"].filter(t => need[t] || slotDoc(b.id, t)).map(slotBox).join("")}</div>${scol}${bcol}
-        ${bd.length ? `<h4 style="margin:18px 0 8px">שטרות אג"ח של החברה (${bd.length})</h4><div class="pd-mg-grid" id="pd-mg-bonds">${bd.map(d => mgCard(d, b)).join("")}</div>` : ""}
         <h4 style="margin:18px 0 8px">מסמכים נוספים לבדיקה (${ex.length})</h4>
         <div class="pd-mg-grid" id="pd-mg-extras" ondragover="PD._dragOver(event)" ondragleave="PD._dragLeave(event)" ondrop="PD._drop(event,'extra')">${ex.map(d => mgCard(d, b)).join("") || `<div class="pd-sub">אין מסמכים נוספים. אפשר לגרור לכאן מסמך כדי להוריד אותו מהת"ע.</div>`}</div>${suggestHtml(b.id)}</div>`;
     const body = root.querySelector(".pd-body"); if (body) body.scrollTop = keep;
