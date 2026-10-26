@@ -3009,17 +3009,18 @@ function filteredAndSorted() {
   const q = search.trim().toLowerCase();
 
   // Filter
-  let rows = businesses.filter(b => {
-    if (q) {
-      const name = displayName(b).toLowerCase();
-      const hits = name.includes(q)
+  const textHit = b => displayName(b).toLowerCase().includes(q)
+        || (b.permit_name ||"").toLowerCase().includes(q)
+        || (b.registrar_name ||"").toLowerCase().includes(q)
         || (b.category   ||"").toLowerCase().includes(q)
         || (b.region     ||"").toLowerCase().includes(q)
         || (b.chp_number ||"").toLowerCase().includes(q)
         || (b.notes      ||"").toLowerCase().includes(q)
         || (b.biz_type   ||"").toLowerCase().includes(q);
-      if (!hits) return false;
-    }
+  // חיפוש גם בשמות תת-השורות (כמה רישומים לאותו ח.פ., למשל "מסלול הלכה"): התאמה באחד מהם מציגה את כל הקבוצה, עם השורה הראשית
+  const hitChp = new Set(q ? businesses.filter(textHit).map(b => String(b.chp_number || "").trim()).filter(Boolean) : []);
+  let rows = businesses.filter(b => {
+    if (q && !textHit(b) && !hitChp.has(String(b.chp_number || "").trim())) return false;
     if (filterCat     && b.category    !== filterCat)     return false;
     if (filterRegion  && b.region      !== filterRegion)  return false;
     if (filterBizType && b.biz_type    !== filterBizType) return false;
