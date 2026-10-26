@@ -62,7 +62,7 @@
     if (e.data.type === "resize") { setH(e.data.height); }
     if (e.data.type === "permits-spec") { curTab = e.data.tab; spec(e.data); }
   });
-  var pinned = false, lastL = -1, lastW = -1;
+  var pinned = false, lastL = -1, lastW = -1, lastSideTop = null, lastSideAvail = null;
   // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
   function hdrBottom() {
     var w = window.innerWidth, best = 0, pts = [w / 2, w * 0.25, w * 0.75];
@@ -96,6 +96,10 @@
       if (l !== lastL || w !== lastW) { bar.style.left = l + "px"; bar.style.width = w + "px"; lastL = l; lastW = w; }
     } else if (pinned) {
       ph.style.height = ""; bar.style.position = ""; bar.style.top = ""; bar.style.left = ""; bar.style.width = ""; bar.style.zIndex = ""; bar.className = ""; pinned = false;
+    }
+    if (wide && f.contentWindow) {            // התפריט בצד ה-iframe נשאר במקום: שורת המסך הפנויה (מתחת לכותרת ולסרגל) בקואורדינטות ה-iframe
+      var top = Math.round(OFFSET + bh + 10 - fr.top), avail = Math.round(window.innerHeight - OFFSET - bh - 24);
+      if (top !== lastSideTop || avail !== lastSideAvail) { lastSideTop = top; lastSideAvail = avail; f.contentWindow.postMessage({ source: "harav-parent", type: "side", top: top, avail: avail }, O); }
     }
     window.requestAnimationFrame(tick);
   }
