@@ -569,6 +569,27 @@
    "chp_number": ""
   },
   {
+   "id": 10394,
+   "maya_report_id": 1777848,
+   "company_name": "לייטסטון מוקסי",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1777847",
+   "link_trust_indenture": null,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1777848",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
+  },
+  {
    "chp_number": "520033309",
    "company_name": "חג'ג' נדל\"ן",
    "draft_no": 1,
@@ -870,6 +891,7 @@
   "ניצנים",
   "נגה נכסים",
   "פישר ברדרס פרופ",
-  "עמרם את נידם"
+  "עמרם את נידם",
+  "לייטסטון מוקסי"
  ]
 }

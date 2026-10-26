@@ -783,6 +783,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-26"
   },
+  "U10394": {
+   "data": {
+    "chp_number": "",
+    "company_name": "לייטסטון מוקסי",
+    "draft_no": 1,
+    "draft_title": "טיוטת תשקיף להשלמה",
+    "id": 10394,
+    "is_new_company": true,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1777848",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777847",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777848,
+    "new_company_type": "חברת אג\"ח חדשה",
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-26"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
