@@ -193,9 +193,7 @@ export async function onRequestGet(context) {
       const notesExprBase = `CASE WHEN ${isBondNote} THEN '' ELSE TRIM(REPLACE(COALESCE(notes,''), char(160), ' ')) END`;
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
-      // תת-שורות (כמה רישומים לאותו ח.פ., למשל "מסלול הלכה") מוצגות בכל רשימה שבה מופיעה החברה עם אותו ח.פ., גם אם הן עצמן רשומות לרשימה אחרת
-      const inList = isPrivate ? (a => `COALESCE(${a}visibility,'') IN ('פרטי','רק פרטי')`) : (a => `NOT ${onlyPrivateExplicit.replace(/COALESCE\((visibility|notes),/g, `COALESCE(${a}$1,`)}`);
-      const whereClause = `(${inList("")} OR (COALESCE(chp_number,'') != '' AND chp_number IN (SELECT s.chp_number FROM businesses s WHERE COALESCE(s.chp_number,'') != '' AND ${inList("s.")})))`;
+      const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
       // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות/מחוקות (מחוסלת.../חיסול.../מחוקה/נגרעה מהמרשם) לא מוצגות;
       // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
