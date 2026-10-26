@@ -1,0 +1,40 @@
+name: Peek public permit doc (read-only, manual)
+
+# מוריד מסמך ציבורי (/api/permit-docs-public/:id) ושומר רק את הטקסט שלו ל-data/probe/doc_<id>.txt, לבדיקה. לא משנה שום דבר באתר.
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "מזהי מסמכים (מופרדים ברווח)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  peek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and extract text
+        env:
+          IDS: ${{ inputs.ids }}
+        run: |
+          sudo apt-get install -y -q poppler-utils >/dev/null
+          mkdir -p data/probe
+          for id in $IDS; do
+            [[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || continue
+            curl -sS --fail --retry 3 -H "User-Agent: Mozilla/5.0" -D "/tmp/h_$id" "https://harav-levin.pages.dev/api/permit-docs-public/$id" -o "/tmp/$id.pdf" || continue
+            { grep -i "content-disposition" "/tmp/h_$id" || true; pdfinfo "/tmp/$id.pdf" | grep -E "Pages|Title|CreationDate" || true; echo "-----"; pdftotext -layout -l 3 "/tmp/$id.pdf" - | head -120; } > "data/probe/doc_$id.txt"
+          done
+          ls -la data/probe
+      - name: Commit
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe
+          git diff --staged --quiet && exit 0
+          git commit -m "peek-public-doc: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push
