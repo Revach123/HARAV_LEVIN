@@ -41,7 +41,11 @@ export async function withBusinesses(env, rows) {
     catch { try { bl = await env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp FROM permit_doc_bonds" + W).bind(...B).all(); } catch { bl = null; } }      // לפני מיגרציה 0018 / 0009
     for (const l of (bl && bl.results) || []) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp, slot: l.slot || "" });
   }
-  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [], specials: specials.get(r.id) || {} }));
+  const subs = new Map(ids.map(i => [i, []]));
+  if (ids.length) {          // תיוג תת-שורה של החברה (מיגרציה 0020): [{ id: מזהה תת-השורה, slot }]
+    try { for (const l of (await env.DB.prepare("SELECT doc_id, sub_id, slot FROM permit_doc_subs" + W).bind(...B).all()).results ?? []) if (subs.has(l.doc_id)) subs.get(l.doc_id).push({ id: l.sub_id, slot: l.slot || "" }); } catch { /* אין טבלה עדיין */ }
+  }
+  return rows.map(r => ({ ...r, business_ids: links.get(r.id) || [], slots: slots.get(r.id) || {}, ext_ids: ext.get(r.id) || [], bonds: bonds.get(r.id) || [], specials: specials.get(r.id) || {}, subs: subs.get(r.id) || [] }));
 }
 
 // קובע את הקישור לרשימות של מסמך אחד: slotMap = { מזהה_חברה: ["general","private"] }.

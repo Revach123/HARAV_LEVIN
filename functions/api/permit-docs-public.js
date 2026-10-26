@@ -76,6 +76,17 @@ export async function onRequestGet({ env }) {
         by.set(key, en);
       }
     } catch { /* אין טבלה עדיין */ }
+    try {          // תיוג תת-שורה (מיגרציה 0020): המסמך משויך לחברה הראשית ומסומן לתת-שורה; התפקיד בתת-השורה קובע את הרשימה
+      const st = await env.DB.prepare(`
+        SELECT x.doc_id, x.sub_id, x.slot FROM permit_doc_subs x JOIN permit_docs d ON d.id = x.doc_id
+        WHERE x.slot != '' AND d.doc_type != 'other'`).all();
+      for (const r of st.results ?? []) {
+        if (!subOf.has(r.sub_id)) continue;
+        const k = "s:" + r.sub_id, e = by.get(k) || { ...subOf.get(r.sub_id), name: subOf.get(r.sub_id).sub };
+        for (const t of String(r.slot).split(",")) if (t === "general" || t === "private") e[t] = r.doc_id;
+        by.set(k, e);
+      }
+    } catch { /* אין טבלה עדיין */ }
     for (const [bid, x] of subOf) if (!by.has("s:" + bid)) by.set("s:" + bid, { ...x });          // תת-שורה בלי מסמכים: רשומה ריקה, כדי שלא תקבל את מסמכי הראשית
     return Response.json({ links: [...by.values()] }, { headers: CORS });
   } catch (e) {
