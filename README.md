@@ -229,6 +229,7 @@ title=חיפוש היתר עסקה חברות
 - הקוד: `functions/api/joiners-nedarim-sync.js`. כפתור בניהול: טבלת המצטרפים → "🔄 משיכה מנדרים פלוס".
 - סוד ב-Cloudflare Pages: `NEDARIM_API_KEY` (מפתח `npk_…` מוגבל להרשאה "משיכת רשומות טופס"). אחרי הוספת הסוד - פריסה מחדש.
 - משיכה יומית אוטומטית: `.github/workflows/nedarim-sync.yml` (03:17 UTC). דורש סוד `CRON_SECRET` (אקראי, 24+ תווים) - אותו ערך ב-GitHub Secrets וב-Cloudflare Pages.
+  - שגיאה 401 בהרצה: הסוד ב-GitHub וב-Cloudflare לא זהה, או שלא הייתה פריסה מחדש של האתר אחרי הגדרת הסוד ב-Cloudflare.
 - אופציונלי: `NEDARIM_MOSAD_ID` (ברירת מחדל 7005939), `NEDARIM_TOFES_ID` (ברירת מחדל 800).
 
 ## רשימות האג"ח וכפתור "עדכן אג"ח מבורסה"
