@@ -346,6 +346,18 @@
 
   /* ── מסך ראשי של הניהול + חיפוש במאגר ── */
   .home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:900px; margin:2.5rem auto; }
+  .home-card.home-gf { padding:.5rem .8rem !important; display:flex; align-items:center; justify-content:center; gap:10px; }
+  .home-card.home-gf .ico { display:none !important; }
+  .home-card.home-gf b { font-size:clamp(14px,1.15vw,19px) !important; margin:0 !important; line-height:1.25; }
+  .gf-tbl { width:100%; border-collapse:collapse; background:var(--bg2); font-size:14px; }
+  .gf-tbl th { background:var(--navy); color:#fff; text-align:right; padding:6px 8px; position:sticky; top:0; z-index:1; font-size:13px; }
+  .gf-tbl td { padding:3px 4px; border-top:1px solid var(--border); }
+  .gf-tbl tr.gf-gs td { border-top:2px solid var(--navy); }
+  .gf-tbl input { width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:5px; font-size:14px; background:transparent; color:var(--text); font-family:inherit; }
+  .gf-tbl input:hover { border-color:var(--border); }
+  .gf-tbl input:focus { border-color:var(--accent); background:var(--bg); outline:none; }
+  .gf-b { border:1px solid var(--border); background:var(--bg); border-radius:5px; padding:2px 7px; margin:0 1px; cursor:pointer; font-size:12px; }
+  .gf-b:disabled { opacity:.35; cursor:default; }
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
   .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
   .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
@@ -1125,6 +1137,7 @@ function render() {
   else if (view === "form")       { if (formModal) ensureFormModal().innerHTML = renderForm(); else app.innerHTML = adminTabs() + renderForm(); }
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
+  else if (view === "gfunds")     { app.innerHTML = renderGFunds(); if (!GF.loaded && !GF.loading) gfLoad(); }
   bindEvents();
   if (view === "admin") admWatch();
   document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
@@ -1683,11 +1696,83 @@ function loadJoinersCount() {
   if (joinersCountP) return;
   joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
 }
+// ════════════════════════════════════════════
+//  מסלולים וקרנות גלאט הון: עריכת הרשימה שמוצגת בדף funds_test.html (API: /api/glatt-funds)
+// ════════════════════════════════════════════
+const GF = { rows: [], updated: "", tab: "pension", q: "", dirty: false, loaded: false, loading: false, saving: false, err: "", savedAt: "" };
+const GF_TABS = [["pension", "קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד"], ["savings", "תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל"]];
+const GF_FIELDS = [["company", "שם חברה", "16%"], ["track", "שם מסלול", "30%"], ["type", "סוג", "20%"], ["number", "מספר קופה", "10%"], ["note", "הערות", "24%"]];
+async function gfLoad() {
+  GF.loading = true; GF.err = "";
+  try {
+    const r = await fetch("/api/glatt-funds", { cache: "no-store" }); const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.statusText);
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.loaded = true; GF.dirty = false;
+  } catch (e) { GF.err = e.message; }
+  GF.loading = false;
+  if (view === "gfunds") render();
+}
+function gfIdx() { return GF.rows.map((r, i) => i).filter(i => GF.rows[i].tab === GF.tab); }
+function gfMatch(r) { const q = GF.q.trim().toLowerCase(); return !q || [r.company, r.track, r.type, r.number, r.note].join(" ").toLowerCase().includes(q); }
+function renderGFunds() {
+  const head = `<div class="admin-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="margin:0">📋 מסלולים וקרנות גלאט הון</h2>
+    <a class="btn-ghost" href="/funds_test.html" target="_blank" rel="noopener" style="text-decoration:none">👁 תצוגה בדף (בדיקה)</a>
+    <span style="flex:1"></span>
+    <label style="font-size:13px;color:var(--muted)">מעודכן: <input type="text" value="${escHtml(GF.updated)}" oninput="GF.updated=this.value;gfDirty()" placeholder='למשל: חשוון תשפ"ז' style="width:150px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></label>
+    <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
+  if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
+  const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => r.tab === k).length})</button>`).join("")}
+    <input type="search" value="${escHtml(GF.q)}" placeholder="סינון בטבלה…" oninput="GF.q=this.value;gfPaintBody()" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></div>`;
+  const types = [...new Set(GF.rows.map(r => r.type).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  const cos = [...new Set(GF.rows.map(r => r.company).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  return head + tabs + `<datalist id="gf-types">${types.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist><datalist id="gf-cos">${cos.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist>
+    <div style="overflow:auto"><table class="gf-tbl"><thead><tr><th style="width:28px">#</th>${GF_FIELDS.map(([, l, w]) => `<th style="width:${w}">${l}</th>`).join("")}<th style="width:150px">פעולות</th></tr></thead><tbody id="gf-body">${gfBodyHtml()}</tbody></table></div>
+    <div style="margin-top:10px;display:flex;gap:8px"><button class="btn-ghost" onclick="gfAdd(-1)">➕ הוספת שורה בסוף הרשימה</button></div>
+    ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
+}
+function gfBodyHtml() {
+  const idx = gfIdx(); let prevCo = null;
+  return idx.map((i, n) => { const r = GF.rows[i], newCo = r.company !== prevCo; prevCo = r.company; if (!gfMatch(r)) return "";
+    return `<tr class="${newCo ? "gf-gs" : ""}"><td style="color:var(--muted);font-size:12px">${n + 1}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+      <td style="white-space:nowrap"><button class="gf-b" title="למעלה" onclick="gfMove(${i},-1)" ${n === 0 ? "disabled" : ""}>▲</button><button class="gf-b" title="למטה" onclick="gfMove(${i},1)" ${n === idx.length - 1 ? "disabled" : ""}>▼</button><button class="gf-b" title="הוספת שורה מתחת (אותה חברה)" onclick="gfAdd(${i})">➕</button><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`; }).join("");
+}
+function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
+function gfDirty() { GF.dirty = true; formDirty = false; const b = document.getElementById("gf-save"); if (b) { b.disabled = GF.saving; b.textContent = "💾 שמירה"; } }
+function gfSet(i, k, v) { GF.rows[i][k] = v; gfDirty(); }
+function gfMove(i, d) {
+  const idx = gfIdx(), p = idx.indexOf(i), j = idx[p + d]; if (j === undefined) return;
+  [GF.rows[i], GF.rows[j]] = [GF.rows[j], GF.rows[i]]; gfDirty(); gfPaintBody();
+}
+function gfAdd(i) {
+  const row = { tab: GF.tab, company: i >= 0 ? GF.rows[i].company : "", track: "", type: i >= 0 ? GF.rows[i].type : "", number: "", note: "" };
+  if (i >= 0) GF.rows.splice(i + 1, 0, row); else GF.rows.push(row);
+  GF.q = ""; gfDirty(); render();
+  setTimeout(() => { const pos = gfIdx().indexOf(i >= 0 ? i + 1 : GF.rows.length - 1), tr = document.querySelectorAll("#gf-body tr")[pos]; if (tr) { const inp = tr.querySelectorAll("input")[1]; if (inp) { inp.focus(); tr.scrollIntoView({ block: "center" }); } } }, 0);
+}
+function gfDel(i) {
+  const r = GF.rows[i]; if (!confirm(`למחוק את השורה "${[r.company, r.track, r.number].filter(Boolean).join(" · ") || "ריקה"}"? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
+  GF.rows.splice(i, 1); gfDirty(); render();
+}
+async function gfSave() {
+  if (!GF.dirty || GF.saving) return;
+  GF.saving = true; render();
+  try {
+    const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, rows: GF.rows }) });
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false;
+    showStatus("הרשימה נשמרה");
+  } catch (e) { if (e.message === "Unauthorized") { GF.saving = false; handleUnauth(); return; } alert("השמירה נכשלה: " + e.message); }
+  GF.saving = false; render();
+}
+window.addEventListener("beforeunload", e => { if (GF.dirty) { e.preventDefault(); e.returnValue = ""; } });
+
 function renderHome() {
   if (isAdmin) setTimeout(loadJoinersCount, 0);
   return `<div class="home-wrap"><div class="home-band">
     <div class="home-top">
       <button class="home-card" onclick="PD.openDash('e')"><span class="ico ico-white">👥</span><b>מצטרפים<span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></b></button>
+      <button class="home-card home-gf" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
@@ -1924,6 +2009,7 @@ const confirmLeave = () => confirm("השינויים שעשית לא נשמרו.
 window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
 let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
+  if (view === "gfunds" && v !== "gfunds" && GF.dirty && !confirm("יש שינויים ברשימת המסלולים שלא נשמרו. לצאת בלי לשמור?")) return;
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (formModal && v !== "form") closeFormModal(false);
   if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
