@@ -352,7 +352,6 @@
   .gf-tbl { width:100%; border-collapse:collapse; background:var(--bg2); font-size:14px; }
   .gf-tbl th { background:var(--navy); color:#fff; text-align:right; padding:6px 8px; position:sticky; top:0; z-index:1; font-size:13px; }
   .gf-tbl td { padding:3px 4px; border-top:1px solid var(--border); }
-  .gf-tbl tr.gf-gs td { border-top:2px solid var(--navy); }
   .gf-tbl input { width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:5px; font-size:14px; background:transparent; color:var(--text); font-family:inherit; }
   .gf-tbl input:hover { border-color:var(--border); }
   .gf-tbl input:focus { border-color:var(--accent); background:var(--bg); outline:none; }
@@ -1732,9 +1731,9 @@ function renderGFunds() {
     ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
 }
 function gfBodyHtml() {
-  const idx = gfIdx(); let prevCo = null;
-  return idx.map((i, n) => { const r = GF.rows[i], newCo = r.company !== prevCo; prevCo = r.company; if (!gfMatch(r)) return "";
-    return `<tr class="${newCo ? "gf-gs" : ""}"><td style="color:var(--muted);font-size:12px">${n + 1}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+  const idx = gfIdx();
+  return idx.map((i, n) => { const r = GF.rows[i]; if (!gfMatch(r)) return "";
+    return `<tr><td style="color:var(--muted);font-size:12px">${n + 1}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
       <td style="white-space:nowrap"><button class="gf-b" title="למעלה" onclick="gfMove(${i},-1)" ${n === 0 ? "disabled" : ""}>▲</button><button class="gf-b" title="למטה" onclick="gfMove(${i},1)" ${n === idx.length - 1 ? "disabled" : ""}>▼</button><button class="gf-b" title="הוספת שורה מתחת (אותה חברה)" onclick="gfAdd(${i})">➕</button><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`; }).join("");
 }
 function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
