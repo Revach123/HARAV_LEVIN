@@ -233,27 +233,6 @@
    "chp_number": "515541415"
   },
   {
-   "id": 10392,
-   "maya_report_id": 1777801,
-   "company_name": "הראל ריביות",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 2,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777801",
-   "link_trust_indenture": null,
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "516561875"
-  },
-  {
    "id": 9973,
    "maya_report_id": 1738858,
    "company_name": "ג'י טי נדל\"ן",
@@ -588,29 +567,6 @@
     }
    ],
    "chp_number": ""
-  },
-  {
-   "chp_number": "516561875",
-   "company_name": "הראל ריביות",
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "id": 10388,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
-   "link_trust_indenture": null,
-   "maya_report_id": 1777226,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-25"
   }
  ],
  "open": [
@@ -663,6 +619,31 @@
     }
    ],
    "chp_number": "520033309"
+  },
+  {
+   "offer_number": 1229194,
+   "issuer_id": 2457,
+   "issuer_name": "הראל ריביות",
+   "is_new_company": false,
+   "begins_at": "2026-10-28T09:00:00",
+   "ends_at": "2026-10-28T16:00:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 0.18,
+   "is_variable_interest": true,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1778025",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אג\"ח ז",
+     "security_type": "אג\"ח מובנות",
+     "linkage_type": "ללא",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": "516561875"
   },
   {
    "begins_at": "2026-10-22T13:30:00",
@@ -829,7 +810,7 @@
    "chp_number": "516561875",
    "name": "הראל ריביות",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {

@@ -29,6 +29,35 @@
    "kind": "open",
    "last_seen": "2026-10-26"
   },
+  "O1229194": {
+   "data": {
+    "begins_at": "2026-10-28T09:00:00",
+    "chp_number": "516561875",
+    "ends_at": "2026-10-28T16:00:00",
+    "interest": 0.18,
+    "is_new_company": false,
+    "is_variable_interest": true,
+    "issuer_id": 2457,
+    "issuer_name": "הראל ריביות",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1778025",
+    "offer_number": 1229194,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "security_id": null,
+      "security_name": "אג\"ח ז",
+      "security_type": "אג\"ח מובנות"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-26"
+  },
   "O1230242": {
    "data": {
     "begins_at": "2026-10-22T13:30:00",
@@ -716,31 +745,6 @@
    "kind": "upcoming",
    "last_seen": "2026-10-26"
   },
-  "U10388": {
-   "data": {
-    "chp_number": "516561875",
-    "company_name": "הראל ריביות",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10388,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777226",
-    "link_trust_indenture": null,
-    "maya_report_id": 1777226,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-25"
-  },
   "U10391": {
    "data": {
     "chp_number": "517220448",
@@ -753,31 +757,6 @@
     "link_prospectus": "https://maya.tase.co.il/he/reports/1777726",
     "link_trust_indenture": null,
     "maya_report_id": 1777726,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-26"
-  },
-  "U10392": {
-   "data": {
-    "chp_number": "516561875",
-    "company_name": "הראל ריביות",
-    "draft_no": 2,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10392,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777801",
-    "link_trust_indenture": null,
-    "maya_report_id": 1777801,
     "new_company_type": null,
     "securities": [
      {

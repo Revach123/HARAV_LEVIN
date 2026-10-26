@@ -1,7 +1,7 @@
 import { checkAdmin } from "../_shared/auth.js";
-import { TYPES, noAuth, withBusinesses, existingBusinessIds, slotStatements } from "../_shared/permit-docs.js";
+import { TYPES, noAuth, withBusinesses, existingBusinessIds, slotStatements, cleanSlot } from "../_shared/permit-docs.js";
 // GET    /api/permit-docs/:id   → מסמך אחד
-// PUT    /api/permit-docs/:id   → עדכון { pages?, doc_dates? (מערך YYYY-MM-DD), bonds? (שיוך לאג"ח: [{id,name,symbol,company,chp}]), ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
+// PUT    /api/permit-docs/:id   → עדכון { subs? (תיוג תת-שורה: [{id, slot}]), pages?, doc_dates? (מערך YYYY-MM-DD), bonds? (שיוך לאג"ח: [{id,name,symbol,company,chp}]), ext_ids? (חברות שאינן במאגר), doc_type?, business_ids? (החלפה מלאה של השיוכים; הקישור לרשימה נשמר לחברות שנשארו), slots? ({חברה: ["general","private"]}), note? }
 // DELETE /api/permit-docs/:id   → מחיקה מלאה של המסמך (השיוכים והקובץ)
 
 export async function onRequestGet({ request, env, params }) {
@@ -93,6 +93,22 @@ export async function onRequestPut({ request, env, params }) {
           : env.DB.prepare("INSERT INTO permit_doc_bonds (doc_id, security_id, name, symbol, company, chp) VALUES (?,?,?,?,?,?)").bind(...vals));
       }
     }
+    if (Array.isArray(body.subs)) {        // תיוג תת-שורה (מיגרציה 0020): החלפה מלאה [{ id: מזהה תת-השורה, slot }]. לכל תת-שורה מסמך אחד לכל תפקיד: המסמך הקודם בתפקיד מאבד אותו
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS permit_doc_subs (doc_id TEXT NOT NULL, sub_id TEXT NOT NULL, slot TEXT NOT NULL DEFAULT '', PRIMARY KEY (doc_id, sub_id))").run();
+      const ids = new Set(await existingBusinessIds(env, body.subs.map(x => x && x.id)));
+      stmts.push(env.DB.prepare("DELETE FROM permit_doc_subs WHERE doc_id = ?").bind(params.id));
+      const seen = new Set();
+      for (const x of body.subs) {
+        const sid = String(x && x.id || ""); if (!ids.has(sid) || seen.has(sid)) continue; seen.add(sid);
+        const mine = cleanSlot(x.slot);
+        stmts.push(env.DB.prepare("INSERT INTO permit_doc_subs (doc_id, sub_id, slot) VALUES (?,?,?)").bind(params.id, sid, mine));
+        if (!mine) continue;
+        for (const o of (await env.DB.prepare("SELECT doc_id, slot FROM permit_doc_subs WHERE sub_id = ? AND doc_id != ? AND slot != ''").bind(sid, params.id).all()).results ?? []) {
+          const keep = cleanSlot(String(o.slot).split(",").filter(t => !mine.split(",").includes(t)));
+          if (keep !== o.slot) stmts.push(env.DB.prepare("UPDATE permit_doc_subs SET slot = ? WHERE doc_id = ? AND sub_id = ?").bind(keep, o.doc_id, sid));
+        }
+      }
+    }
     if (body.intel !== undefined) {          // מידע מהסריקה המקומית (מיגרציה 0011)
       const txt = body.intel && typeof body.intel === "object" ? JSON.stringify(body.intel) : "";
       stmts.push(env.DB.prepare("UPDATE permit_docs SET intel = ? WHERE id = ?").bind(txt.length > 8000 ? "" : txt, params.id));
@@ -120,6 +136,7 @@ export async function onRequestDelete({ request, env, params }) {
       env.DB.prepare("DELETE FROM permit_docs WHERE id = ?").bind(params.id),
     ]);
     await env.DB.prepare("DELETE FROM permit_doc_special WHERE doc_id = ?").bind(params.id).run().catch(() => {});
+    await env.DB.prepare("DELETE FROM permit_doc_subs WHERE doc_id = ?").bind(params.id).run().catch(() => {});
     if (env.PERMITS) await env.PERMITS.delete(row.file_key).catch(() => {});
     return Response.json({ success: true });
   } catch (e) {
