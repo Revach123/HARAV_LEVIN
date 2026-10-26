@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1215318": {
+   "data": {
+    "begins_at": "2026-10-26T09:30:00",
+    "chp_number": "520033309",
+    "ends_at": "2026-10-26T16:30:00",
+    "interest": 6.95,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 823,
+    "issuer_name": "חג'ג' נדל\"ן",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777831",
+    "offer_number": 1215318,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אגח טז",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-26"
+  },
   "O1230242": {
    "data": {
     "begins_at": "2026-10-22T13:30:00",
@@ -28,6 +57,35 @@
    },
    "kind": "open",
    "last_seen": "2026-10-23"
+  },
+  "O1239433": {
+   "data": {
+    "begins_at": "2026-10-26T09:00:00",
+    "chp_number": "516117181",
+    "ends_at": "2026-10-26T15:30:00",
+    "interest": 2.59,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1794,
+    "issuer_name": "ריט אזורים ליוי",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777819",
+    "offer_number": 1239433,
+    "offer_type": "מחיר",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1027.8,
+    "securities": [
+     {
+      "linkage_type": "מדד",
+      "maalot_rating": "ilA-",
+      "midroog_rating": null,
+      "security_id": 1234491,
+      "security_name": "ריט אזורים אגחד",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-26"
   },
   "O1240563": {
    "data": {
@@ -633,31 +691,6 @@
    "kind": "upcoming",
    "last_seen": "2026-10-26"
   },
-  "U10386": {
-   "data": {
-    "chp_number": "520033309",
-    "company_name": "חג'ג' נדל\"ן",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10386,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1773850",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777077",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777077",
-    "maya_report_id": 1777077,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-25"
-  },
   "U10387": {
    "data": {
     "chp_number": "520044314",
@@ -699,31 +732,6 @@
     "securities": [
      {
       "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-25"
-  },
-  "U10390": {
-   "data": {
-    "chp_number": "516117181",
-    "company_name": "ריט אזורים ליוי",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10390,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
-    "maya_report_id": 1777410,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilA-",
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
