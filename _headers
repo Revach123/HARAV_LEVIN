@@ -1,0 +1,10 @@
+# Cloudflare Pages: כותרות לקבצים סטטיים.
+# סקריפטי הניהול נטענים תמיד עם מספר גרסה (?v=...) שמשתנה בכל עדכון, ולכן הדפדפן יכול לשמור אותם עד הגרסה הבאה
+# (בלי בדיקה מול השרת בכל כניסה - חשוב ברשת איטית). ⚠ כל שינוי בקבצים האלה חייב לבוא עם העלאת מספר הגרסה ב-admin.html / admin_test.html.
+/permit-docs.js
+  Cache-Control: public, max-age=31536000, immutable
+/permit-docs-test.js
+  Cache-Control: public, max-age=31536000, immutable
+# גופנים (קבצים קבועים, בלי מספר גרסה): 30 יום
+/fonts/*
+  Cache-Control: public, max-age=2592000
