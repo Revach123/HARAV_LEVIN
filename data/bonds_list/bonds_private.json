@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-25",
- "count": 696,
+ "updated": "2026-10-26",
+ "count": 695,
  "columns": [
   "security_id",
   "security_name",
@@ -491,7 +491,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1141,7 +1141,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1895,7 +1895,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3923,7 +3923,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5717,7 +5717,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6445,7 +6445,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7225,7 +7225,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8291,7 +8291,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -8317,7 +8317,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9227,7 +9227,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10657,7 +10657,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11437,7 +11437,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12425,7 +12425,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14297,7 +14297,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15077,7 +15077,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17183,33 +17183,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
-   "midroog_rating": "",
-   "maalot_rating": "ilA-",
-   "ytm_gross": ""
-  },
-  {
-   "security_id": "",
-   "security_name": "אג\"ח - ריט אזורים - ה.פ ליווינג בע\"מ (הנפקה עתידית)",
-   "symbol": "",
-   "isin": "",
-   "security_type": "אג\"ח",
-   "asset_class": "אג\"ח קונצרני",
-   "issuer_name": "ריט אזורים - ה.פ ליווינג בע\"מ",
-   "company": "ריט אזורים - ה.פ ליווינג בע\"מ",
-   "chp_number": "516117181",
-   "agch_approved": "כן",
-   "is_private": "כן",
-   "notes": "",
-   "redemption_date": "",
-   "annual_interest": "",
-   "linkage": "",
-   "linkage_type": "",
-   "last_price": "",
-   "annual_yield": "",
-   "base_indices": "",
-   "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "ilA-",
    "ytm_gross": ""
@@ -17859,7 +17833,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-25",
+   "first_seen": "2026-10-26",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
