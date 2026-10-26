@@ -18,6 +18,17 @@ function normB(s) {
   return s.replace(/\s+/g, " ").trim();
 }
 const ftsPhrase = (w) => `"${w.replace(/"/g, '""')}"`;
+// דירוג לפי דמיון לשם שהוקלד: זהה (בלי "בע"מ") > מתחיל בו > מכיל אותו כמילים שלמות > מכיל > כל המילים > השאר; ואז הפרש אורך
+const core = s => (" " + normB(s) + " ").replace(/ בע מ /g, " ").replace(/\s+/g, " ").trim();
+function similarity(q, name) {
+  const a = core(q), b = core(name);
+  if (!a || !b) return 9;
+  if (b === a) return 0;
+  if (b.startsWith(a + " ") || b.startsWith(a)) return 1;
+  if ((" " + b + " ").includes(" " + a + " ")) return 2;
+  if (b.includes(a)) return 3;
+  return a.split(" ").every(w => b.includes(w)) ? 4 : 5;
+}
 
 export async function onRequestGet({ request, env }) {
   const t0 = Date.now();
@@ -39,22 +50,28 @@ export async function onRequestGet({ request, env }) {
       const expr = long.map(ftsPhrase).join(" AND ");
       const like = short.map(() => " AND c.name_norm LIKE ?").join("");
       stmts = tables.map(t => db.prepare(
-        `SELECT DISTINCT c.id,c.name,c.status,c.${SUB[t]} AS sub FROM ${t}_fts f JOIN ${t} c ON c.id=f.id WHERE ${t}_fts MATCH ?${like} LIMIT ${PER_TABLE}`
+        `SELECT DISTINCT c.id,c.name,c.status,c.${SUB[t]} AS sub FROM ${t}_fts f JOIN ${t} c ON c.id=f.id WHERE ${t}_fts MATCH ?${like} LIMIT ${PER_TABLE * 4}`
       ).bind(expr, ...short.map(w => `%${w}%`)));
+      const phrase = normB(q);          // כל הביטוי כרצף אחד (trigram = חיפוש תת-מחרוזת): השם המדויק נכלל גם כשיש הרבה התאמות למילה בודדת
+      if (words.length > 1 && phrase.length >= 3) stmts.push(...tables.map(t => db.prepare(
+        `SELECT DISTINCT c.id,c.name,c.status,c.${SUB[t]} AS sub FROM ${t}_fts f JOIN ${t} c ON c.id=f.id WHERE ${t}_fts MATCH ? LIMIT ${PER_TABLE}`
+      ).bind(ftsPhrase(phrase))));
     }
     // שלוש שאילתות במקביל; כשל באחת (למשל טבלה/אינדקס חסרים) לא מפיל את האחרות - השגיאה מוחזרת ב-errors
     const out = await Promise.allSettled(stmts.map(st => st.all()));
     const rows = [], errors = [];
     out.forEach((res, i) => {
-      if (res.status === "fulfilled") (res.value.results || []).forEach(r => rows.push({ kind: KINDS[tables[i]], ...r }));
-      else errors.push(`${tables[i]}: ${String(res.reason && res.reason.message || res.reason)}`);
+      const t = tables[i % tables.length];
+      if (res.status === "fulfilled") (res.value.results || []).forEach(r => rows.push({ kind: KINDS[t], ...r }));
+      else errors.push(`${t}: ${String(res.reason && res.reason.message || res.reason)}`);
     });
-    if (errors.length === tables.length) return Response.json({ error: errors.join(" | ") }, { status: 500 });
+    if (out.slice(0, tables.length).every(r => r.status !== "fulfilled")) return Response.json({ error: errors.join(" | ") }, { status: 500 });
     const seen = new Set();          // אותו תאגיד לא יופיע פעמיים (שורות כפולות באינדקס החיפוש)
     const results = rows
       .filter(r => { const k = r.kind + ":" + r.id; if (seen.has(k)) return false; seen.add(k); return true; })
-      .map(r => ({ id: String(r.id), name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || "") }))
-      .sort((a, b) => (a.defunct - b.defunct) || (a.name || "").localeCompare(b.name || "", "he"))
+      .map(r => ({ id: String(r.id), name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || ""), _s: /^\d+$/.test(q) ? 0 : similarity(q, r.name) }))
+      .sort((a, b) => (a._s - b._s) || (a.defunct - b.defunct) || (core(a.name).length - core(b.name).length) || (a.name || "").localeCompare(b.name || "", "he"))
+      .map(({ _s, ...r }) => r)
       .slice(0, 20);
     return Response.json({ results, more: rows.length > 20, errors, ms: Date.now() - t0 });
   } catch (e) {
