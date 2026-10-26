@@ -222,9 +222,11 @@ function docLinks() {
 }
 async function withDocLinks(rows, level) {
   const links = await docLinks(), byChp = new Map(), byName = new Map();
-  for (const l of links) { if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
+  const subs = new Map();          // תת-שורה (אותו ח.פ., למשל "מסלול הלכה"): רק המסמכים שלה, לא של הראשית
+  for (const l of links) { if (l.sub) { const k = String(l.chp || "").trim(); if (!subs.has(k)) subs.set(k, []); subs.get(k).push(l); } else if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
+  const linkOf = (chp, name) => { const k = String(chp || "").trim(), n = String(name || "").replace(/\s+/g, " ").trim(); return (subs.get(k) || []).find(l => n === l.sub || n.endsWith(`(${l.sub})`)) || byChp.get(k) || byName.get(name); };
   return rows.map(r => {
-    const l = byChp.get(String(r.chp_number || "").trim()) || byName.get(r.permit_name);
+    const l = linkOf(r.chp_number, r.permit_name);
     const id = l && l[level] ? l[level] : "";
     // "פרטי" (both) מופיע גם ברשימת הכללי עם סימון "יש פרטי"; "רק פרטי" רק ברשימת הפרטי. ברשימת הכללי, אם יש מסמך כללי לאותה סדרה - הוא מוצג במקום ה"פרטי"
     const bd = (l && l.bond_docs) || [], genLabels = new Set(bd.filter(x => x.list === "general").map(x => x.label));

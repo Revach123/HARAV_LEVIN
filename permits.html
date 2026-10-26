@@ -120,14 +120,16 @@ async function loadTab(level) {
   if (LISTS[level]) return LISTS[level];
   if (!LINKS) LINKS = await fetch(`${API_BASE}/api/permit-docs-public`).then(r => r.json()).then(d => d.links || []).catch(() => []);
   const byChp = new Map(), byName = new Map();
-  for (const l of LINKS) { if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
+  const subs = new Map();          // תת-שורה (אותו ח.פ., למשל "מסלול הלכה"): רק המסמכים שלה, לא של הראשית
+  for (const l of LINKS) { if (l.sub) { const k = String(l.chp || "").trim(); if (!subs.has(k)) subs.set(k, []); subs.get(k).push(l); } else if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
+  const linkOf = (chp, name) => { const k = String(chp || "").trim(), n = String(name || "").replace(/\s+/g, " ").trim(); return (subs.get(k) || []).find(l => n === l.sub || n.endsWith(`(${l.sub})`)) || byChp.get(k) || byName.get(name); };
   const lr = await fetch(`${API_BASE}/api/lists?type=companies-${level}`).then(r => r.json());
   const rows = [];
   for (const b of lr.rows || []) {
     let cats = String(b.permits_category || "").split("|").map(x => x.trim()).filter(Boolean).filter(x => x !== "שונות");          // בלי קטגוריה = "שונות"; עם קטגוריה ספציפית - לא ב"שונות"
     if (!cats.length) cats = ["שונות"];
     if ((b.permit_name || b._registrar) === "מסלול הלכה") continue;
-    const l = byChp.get(String(b.chp_number || "").trim()) || byName.get(b.permit_name) || {};
+    const l = linkOf(b.chp_number, b.permit_name) || {};
     const gen = level === "general";
     const row = { name: b.permit_name || b._registrar || "—", doc: l[level] || "", priv: gen ? (l.private || "") : "", hasPriv: gen && (b.has_private_permit === "כן" || !!l.private), specials: l.specials || [], hay: `${b.permit_name || ""} ${b._registrar || ""} ${b.chp_number || ""}`.toLowerCase() };
     if (!row.doc && !row.priv && !row.specials.length) continue;          // רק חברה עם שטר משויך
