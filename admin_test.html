@@ -355,6 +355,7 @@
   .gf-tbl input { width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:5px; font-size:14px; background:transparent; color:var(--text); font-family:inherit; }
   .gf-tbl input:hover { border-color:var(--border); }
   .gf-tbl input:focus { border-color:var(--accent); background:var(--bg); outline:none; }
+  .gf-tbl tr.gf-sec td { background:var(--bg); color:var(--navy); font-weight:700; font-size:15px; padding:8px 10px; border-top:2px solid var(--navy); }
   .gf-b { border:1px solid var(--border); background:var(--bg); border-radius:5px; padding:2px 7px; margin:0 1px; cursor:pointer; font-size:12px; }
   .gf-b:disabled { opacity:.35; cursor:default; }
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
@@ -1731,9 +1732,10 @@ function renderGFunds() {
     ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
 }
 function gfBodyHtml() {
-  const idx = gfIdx();
+  const idx = gfIdx(); let prevType = null;
   return idx.map((i, n) => { const r = GF.rows[i]; if (!gfMatch(r)) return "";
-    return `<tr><td style="color:var(--muted);font-size:12px">${n + 1}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+    const head = r.type !== prevType ? `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(r.type || "(בלי סוג)")}</td></tr>` : ""; prevType = r.type;          // כותרת לכל סוג מוצר
+    return head + `<tr><td style="color:var(--muted);font-size:12px">${n + 1}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
       <td style="white-space:nowrap"><button class="gf-b" title="למעלה" onclick="gfMove(${i},-1)" ${n === 0 ? "disabled" : ""}>▲</button><button class="gf-b" title="למטה" onclick="gfMove(${i},1)" ${n === idx.length - 1 ? "disabled" : ""}>▼</button><button class="gf-b" title="הוספת שורה מתחת (אותה חברה)" onclick="gfAdd(${i})">➕</button><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`; }).join("");
 }
 function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
@@ -1747,7 +1749,7 @@ function gfAdd(i) {
   const row = { tab: GF.tab, company: i >= 0 ? GF.rows[i].company : "", track: "", type: i >= 0 ? GF.rows[i].type : "", number: "", note: "" };
   if (i >= 0) GF.rows.splice(i + 1, 0, row); else GF.rows.push(row);
   GF.q = ""; gfDirty(); render();
-  setTimeout(() => { const pos = gfIdx().indexOf(i >= 0 ? i + 1 : GF.rows.length - 1), tr = document.querySelectorAll("#gf-body tr")[pos]; if (tr) { const inp = tr.querySelectorAll("input")[1]; if (inp) { inp.focus(); tr.scrollIntoView({ block: "center" }); } } }, 0);
+  setTimeout(() => { const pos = gfIdx().indexOf(i >= 0 ? i + 1 : GF.rows.length - 1), tr = document.querySelectorAll("#gf-body tr:not(.gf-sec)")[pos]; if (tr) { const inp = tr.querySelectorAll("input")[1]; if (inp) { inp.focus(); tr.scrollIntoView({ block: "center" }); } } }, 0);
 }
 function gfDel(i) {
   const r = GF.rows[i]; if (!confirm(`למחוק את השורה "${[r.company, r.track, r.number].filter(Boolean).join(" · ") || "ריקה"}"? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
