@@ -96,8 +96,10 @@
   // ───────── חיפוש חברה: במאגר שלנו, ובמאגר הרשם (חברות שאינן במאגר: כרטיסייה אדומה; סימון חברות מחוסלות/נמחקו) ─────────
   const DEFUNCT = /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/;
   const stTag = st => (st ? `<span class="pd-st${DEFUNCT.test(st) ? " bad" : ""}">${E(st)}</span>` : "");
+  // ח.פ. או ח.צ.: חברה ציבורית (לפי סוג התאגיד ברשם, ובלעדיו לפי מספר שמתחיל ב-52) מוצגת "ח.צ."
+  const chpLbl = (chp, type) => /ציבורית/.test(type || "") || (!/פרטית|שותפות|עמותה|אגודה|חל"צ|ציבורית/.test(type || "") && /^52\d{7}$/.test(String(chp || "").replace(/\D/g, ""))) ? "ח.צ." : "ח.פ.";
   const digitsOf = x => String(x || "").replace(/\D/g, "").replace(/^0+/, "");
-  const markText = r => `חסר במאגר: ${r.name} (ח.פ. ${r.id}${r.status ? ", " + r.status : ""})`;
+  const markText = r => `חסר במאגר: ${r.name} (${chpLbl(r.id, r.type)} ${r.id}${r.status ? ", " + r.status : ""})`;
   function runCompanySearch(q, out, o) {
     q = (q || "").trim();
     clearTimeout(out._t);
@@ -133,7 +135,7 @@
     box.innerHTML = (inDb.length ? `<div class="pd-grp weak">במאגר שלנו (לפי הרשם)</div>` + inDb.slice(0, 6).map(x => o.card ? o.card(x.b) : `<button class="pd-pick" data-pick="${x.b.id}">${displayName(x.b, true)} <span class="pd-sub">${E(x.r.id)}</span>${stTag(x.r.status)}</button>`).join("") : "") +
       (miss.length ? `<div class="pd-grp" style="color:#c0392b">לא במאגר שלנו (נמצאו ברשם)</div>` + miss.slice(0, 8).map(r => `
         <div class="pd-reg"><div><b>${E(r.name)}</b> <span class="pd-tag red">לא במאגר</span>${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div>
-          <div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div>
+          <div class="pd-sub">${E(r.type || "")} · ${chpLbl(r.id, r.type)} ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div>
           <div class="pd-btns" style="margin-top:4px">${o.newpick ? `<button class="pd-btn pd-ac-addbtn" data-addreg="${E(r.id)}" data-name="${E(r.name)}" data-defunct="${r.defunct ? 1 : 0}">➕ הוספת העסק לרשימת המאושרים</button> <button class="pd-mini pd-ac-plain" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="המסמך משויך לחברה בלי להוסיף אותה למאגר (תופיע ברשימת החברות שאינן במאגר)">שיוך המסמך בלבד</button></div></div>` : `${o.ext ? `<button class="pd-btn primary" data-ext="${extGuess(r.status)}" data-id="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}" title="הסטטוס (${EXT_HE[extGuess(r.status)]}) נקבע לפי הרשם, ואפשר לשנות אותו ברשימת החברות שאינן במאגר">שיוך</button>` : `<button class="pd-btn" data-mark="${E(r.id)}" data-name="${E(r.name)}" data-status="${E(r.status || "")}">סמן במסמך: חסר במאגר</button>`}
             <button class="pd-btn" data-addreg="${E(r.id)}" data-name="${E(r.name)}" data-defunct="${r.defunct ? 1 : 0}">הוספה למאגר…</button></div></div>`}`).join("") +
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
@@ -493,7 +495,7 @@
     const found = new Map(), outside = new Set();
     const add = (b, key, why, len) => { const c = found.get(b.id) || { b, hp: false, name: false, why: [], nameLen: 0 }; c[key] = true; c.nameLen = Math.max(c.nameLen, len || 0); if (!c.why.includes(why)) c.why.push(why); found.set(b.id, c); };
     const hps = new Set((String(text || "").replace(/,/g, "").match(/(?<!\d)\d{8,9}(?!\d)/g) || []).map(x => x.padStart(9, "0")));
-    for (const h of hps) { if (!hpOk(h) || h[0] !== "5") continue; const b = byChp.get(h); if (b) add(b, "hp", "ח.פ. " + h + " בקובץ"); else outside.add(h); }
+    for (const h of hps) { if (!hpOk(h) || h[0] !== "5") continue; const b = byChp.get(h); if (b) add(b, "hp", chpLbl(h) + " " + h + " בקובץ"); else outside.add(h); }
     for (const { b, names } of nameIndex()) {
       const hit = names.find(n => nts.some(t => t.includes(n)));
       if (hit) add(b, "name", "השם בקובץ", hit.length);
@@ -622,9 +624,15 @@
       findBonds(c.text).then(b => { if (U.cur === c && b.length) { c.bonds = b; c.bondSel = new Set(b.map(x => x.row.id)); upReview(false); } }).catch(() => {});
     });
   }
+  // "שטר זה כרגע מסומן כשטר "פרטי" של חברה X" - לכל חברה שהמסמך משויך אליה
+  function dupRoleHtml(doc, btn) {
+    const d = S.byId.get(doc.id) || doc;
+    return (d.business_ids || []).map(id => { const sl = slotsOf(d, id);
+      const role = sl.length === 2 ? "משותף פרטי וכללי" : sl[0] === "private" ? "פרטי" : sl[0] === "general" ? "כללי" : "";
+      return `<div style="margin-top:6px">${role ? `שטר זה כרגע מסומן כשטר "${role}"` : "שטר זה כרגע משויך (כמסמך נוסף, לא כהת\"ע פרטי / כללי)"} של חברה <b>${E(bizName(id))}</b>${btn === "pick" ? ` <button class="pd-mini link" onclick="PD._acPick('biz','${id}')" title="בחירת החברה: למטה מופיעות האפשרויות פרטי / כללי / משותף">לשינוי</button>` : btn ? ` <button class="pd-mini link" onclick="PD._close('pd-upload');PD.openManage('${id}')">לשינוי</button>` : ""}</div>`; }).join("");
+  }
   function upDuplicate(doc) {
-    const cos = (doc.business_ids || []).map(b => E(bizName(b))).join(", ") || "ללא שיוך";
-    $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}, ${TL[doc.doc_type]}).<br>משויך אל: ${cos}.<br>קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div>
+    $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}).${(doc.business_ids || []).length ? dupRoleHtml(doc, true) : "<br>המסמך עדיין לא משויך לאף חברה."}<div class="pd-sub" style="margin-top:6px">קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div></div>
       <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" onclick="PD._close('pd-upload');PD.openDoc('${doc.id}')">פתיחת המסמך הקיים</button><button class="pd-btn" onclick="PD._next()">${U.queue.length ? "דילוג לקובץ הבא" : "סיום"}</button></div>`;
   }
   function upReview(fresh) {
@@ -639,6 +647,7 @@
     }
     const sug = c.sug;
     const noText = !c.analyzing && normText(c.text).length < 40;
+    if (noText && !c.ocr && !c.textErr && !c.dupDoc) ocrBg(c);          // סריקה בלי טקסט: זיהוי טקסט אוטומטי ברקע
     const card = x => `<label class="pd-cand"><input type="checkbox" ${c.sel.has(x.b.id) ? "checked" : ""} onchange="PD._tog('${x.b.id}',this.checked)"> <span class="pd-grow"><b>${displayName(x.b, true)}</b> <span class="pd-sub">${E(x.b.chp_number || "")} · ${x.hp ? "התאמה לפי ח.פ." : "התאמה לפי שם"} (${E(x.why.join(", "))})</span>${stTag(x.b.registry_status)}</span></label>`;
     const extra = [...c.sel].filter(id => !sug.cands.some(x => x.b.id === id)).map(id => bizById(id)).filter(Boolean).map(b => card({ b, hp: false, why: ["נבחר ידנית"] }));
     const tb = Object.keys(TL).map(t => `<button class="pd-btn ${c.type === t ? "sel" : ""}" onclick="PD._type('${t}')">${TL[t]}</button>`).join("");
@@ -647,7 +656,7 @@
         <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0&view=FitH" title="תצוגה מקדימה"></iframe></div>
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
-          ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+          ${ocrBox(c, noText)}
           ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות שיוך). אפשר כבר לבחור חברה, סיווג ולשמור.</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
           ${sug.cands.length ? candGroups(sug.cands.slice(0, 20), card) : c.analyzing ? "" : `<div class="pd-sub">לא נמצאה חברה מתאימה בקובץ. אפשר לחפש ידנית.</div>`}${extra.join("")}
@@ -694,7 +703,7 @@
   }
   function acBizCard(b, why, on, inline) {          // כרטיסייה שלמה לעסק קיים (כמו לחברה חדשה): שם, ח.פ., קטגוריה, אזור, סוג, סטטוס, רישום ומצב ההיתרים
     const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
-    const line = [b.chp_number ? "ח.פ. " + b.chp_number : "", b.category, b.region, b.biz_type].filter(x => String(x || "").trim()).map(E).join(" · ");
+    const line = [b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + b.chp_number : "", b.category, b.region, b.biz_type].filter(x => String(x || "").trim()).map(E).join(" · ");
     return `<div class="pd-ac-card pd-ac-bc${on ? " on" : ""}" data-pick="${b.id}"${inline ? ` onclick="PD._acPick('biz','${b.id}')"` : ""}><div><b>${displayName(b, true)}</b> ${stTag(b.registry_status)}${why ? ` <span class="pd-tag">${E(why)}</span>` : ""}</div>
       ${reg && pn && reg !== pn ? `<div class="pd-sub">שם ברשם: ${E(reg)}</div>` : ""}${line ? `<div class="pd-sub">${line}</div>` : ""}
       <div class="pd-sub" style="font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div><div class="pd-ac-chips">${acChips(b)}</div>${(b.notes || "").trim() ? `<div class="pd-sub">הערה: ${E(b.notes)}</div>` : ""}</div>`;
@@ -736,26 +745,33 @@
     const p = c.pick; if (!p) return "";
     const isNew = p.kind !== "biz", nc = p.kind === "nochp", b = isNew ? null : bizById(p.id); if (!isNew && !b) return "";
     const lnk = d => `<span class="pd-ac-lnk" role="link" tabindex="0" onclick="event.stopPropagation();PD._acDoc('${d.id}')">הצגת השטר הקיים</span>`;
-    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר ${lnk(cur)}</span>` : ""; };
+    const dup = c.dupDoc ? (S.byId.get(c.dupDoc.id) || c.dupDoc) : null, dupSl = dup && b ? slotsOf(dup, b.id) : [];          // הקובץ החדש הוא מסמך שכבר קיים במאגר
+    const warn = (t, label) => { const cur = b ? slotDoc(b.id, t) : null; if (cur && dup && cur.id === dup.id) return ""; return cur ? `<span class="pd-ac-warn">${label ? E(label) + ": " : ""}בחירת השטר החדש יבטל השטר הקיים במאגר ${lnk(cur)}</span>` : ""; };
     const det = !b ? "" : (() => {          // כרטיסיית פרטי העסק (עסק קיים במאגר)
       const reg = (b.registrar_name || "").trim(), pn = (b.permit_name || "").trim();
-      const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], ["ח.פ.", b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["אישור אג\"ח", b.agch_approved], ["הערה", b.notes]]
+      const items = [["שם ברשם", reg], ["שם בהיתר עסקה", pn && pn !== reg ? pn : ""], [chpLbl(b.chp_number, b.biz_type), b.chp_number], ["קטגוריה", b.category], ["אזור", b.region], ["סוג עסק", b.biz_type], ["סטטוס ברשם", b.registry_status], ["אישור אג\"ח", b.agch_approved], ["הערה", b.notes]]
         .filter(x => String(x[1] || "").trim());
       return `<div class="pd-ac-det"><div style="grid-column:1/-1;font-weight:700;color:#1a3a5c">${E(AC_VIS[b.visibility || ""] || b.visibility || "")}</div><div style="grid-column:1/-1"><span class="pd-sub">קטגוריה עבור רשימת השטרות:</span> ${pcatSelect((b.permits_category || "").trim())}</div>${items.map(([k, v]) => `<div><span class="pd-sub">${E(k)}:</span> <b>${E(String(v))}</b></div>`).join("")}</div>`;
     })();
     // הפיצרים הם גם כפתורי הבחירה. מסמך משותף קיים / חברה חדשה: למעלה "החלפת המסמך המשותף" ומתחתיו פרטי / כללי. אחרת: פרטי / כללי למעלה והמשותף מתחת
     const sharedFirst = isNew || acShared(b);
     const big = (t, withWarn) => { const he = t === "private" ? "פרטי" : "כללי", x = b ? acState(b, t) : null;
+      if (b && dupSl.length) {          // אותו מסמך כבר מסומן אצל החברה: "רק" (בסוג שהוא כבר מסומן בו) או "גם" (בסוג השני)
+        const mine = dupSl.includes(t), go = mine ? t : "both";
+        const cap = mine ? (dupSl.length === 2 ? `לסמן שטר זה רק כשטר ${he}` : `שטר זה כבר מסומן כשטר ${he}`) : `לסמן שטר זה גם כשטר ${he}`;
+        return `<button type="button" class="pd-chipx big ${mine ? "ok" : x.cls}" onclick="PD._acGo('${go}')"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">${mine ? "✓ " : ""}${cap}</span>${!mine && x.d ? `<span class="pd-ac-warn">השטר הקיים כ${he} יעבור למסמכים נוספים ${lnk(x.d)}</span>` : ""}</button>`;
+      }
       if (x && x.cls === "na") return `<button type="button" class="pd-chipx big chg" onclick="PD._acGo('${t}')" title="שינוי רישום החברה והוספת המסמך כהת&quot;ע ${he}"><span class="pd-chipx-t">📄 ${he}</span><span class="pd-chipx-s">לשנות רישום החברה ל"${he}"</span></button>`;
       return `<button type="button" class="pd-chipx big ${x ? x.cls : "new"}" onclick="PD._acGo('${t}')"><span class="pd-chipx-t">📄 ${he}</span>${x ? `<span class="pd-chipx-s">${x.st}</span>` : ""}${b && withWarn ? warn(t, "") : ""}</button>`; };
     const sp = b ? acState(b, "private") : null, sg = b ? acState(b, "general") : null;
-    const bothTitle = b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
+    const bothTitle = b && dupSl.length ? (dupSl.length === 2 ? "שטר זה כבר מסומן כשטר פרטי וכללי" : "לסמן שטר זה כשטר פרטי וכללי") : b && sharedFirst ? "החלפת המסמך המשותף: כללי + פרטי" : "מסמך משותף: פרטי + כללי";
     const needChg = b && (sp.cls === "na" || sg.cls === "na");
-    const bothWarn = !b ? "" : (sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "");          // אותו מסמך: קישור אחד להצגה
+    const dupOther = b && dupSl.length ? [sp.d, sg.d].find(d => d && d.id !== dup.id) : null;
+    const bothWarn = !b ? "" : dupSl.length ? (dupOther ? `<span class="pd-ac-warn">השטר הקיים השני יעבור למסמכים נוספים ${lnk(dupOther)}</span>` : "") : (sharedFirst ? warn("private", "") : (sp.d || sg.d) ? `<span class="pd-ac-warn">בחירת השטר החדש יבטל את השטרות הקיימים במאגר</span>` : "");          // אותו מסמך: קישור אחד להצגה
     const both = `<button type="button" class="pd-chipx big wide both ${b ? (sharedFirst ? "ok" : "") : "new"}" onclick="PD._acGo('both')"><span class="pd-chipx-t"><span class="pd-ac-plus">${PLUS_T}</span> ${bothTitle}</span>${b ? `<span class="pd-chipx-s2"><span class="${sp.cls === "na" ? "chg" : sp.cls}">${sp.cls === "na" ? 'לשנות רישום החברה ל"פרטי"' : "פרטי " + sp.st}</span><span class="${sg.cls === "na" ? "chg" : sg.cls}">${sg.cls === "na" ? 'לשנות רישום החברה ל"כללי"' : "כללי " + sg.st}</span></span>` : ""}${bothWarn}</button>`;
     const pair = w => `<div class="pd-ac-row">${big("private", w)}${big("general", w)}</div>`;
     const body = sharedFirst ? `${both}<div class="pd-sub" style="margin:8px 0 4px">או לסמן את המסמך החדש רק כ:</div>${pair(false)}` : `${pair(true)}${both}`;
-    return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${nc ? "בלי ח.פ." : isNew ? "ח.פ. " + E(p.hp) : E(b.chp_number || "")}</span>${isNew ? ` <span class="pd-tag red">${nc ? "עסק חדש בלי ח.פ.: יתווסף למאגר" : "חברה חדשה: תתווסף למאגר"}</span>` : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
+    return `<div class="pd-ac-topcard"><div class="pd-ac-head"><div><b>${isNew ? E(p.name) : displayName(b, true)}</b> <span class="pd-sub">${nc ? "בלי ח.פ." : isNew ? chpLbl(p.hp) + " " + E(p.hp) : (b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) : "")}</span>${isNew ? ` <span class="pd-tag red">${nc ? "עסק חדש בלי ח.פ.: יתווסף למאגר" : "חברה חדשה: תתווסף למאגר"}</span>` : ""}</div><button class="pd-x" style="position:static" onclick="PD._acUnpick()" title="ביטול הבחירה">✕</button></div>
       ${isNew ? `<div class="pd-ac-det"><div style="grid-column:1/-1"><span class="pd-sub">קטגוריה עבור רשימת השטרות:</span> ${pcatSelect(p.pcat || "")}</div></div>` : det}<div class="pd-sub" style="margin:2px 0 6px">לאיזה היתר עיסקא של החברה המסמך הזה? (לחיצה על פיצר שומרת ועוברת הלאה)</div>
       ${body}
       ${isNew && !nc ? `<div style="margin:8px 0 0"><button class="pd-mini pd-ac-plain" onclick="PD._acExt('${E(p.hp)}')" title="המסמך משויך לחברה בלי להוסיף אותה למאגר">שיוך המסמך בלבד (בלי הוספה למאגר)</button></div>` : ""}</div>`;
@@ -826,14 +842,15 @@
     if (fresh || !c.sug) c.sug = suggest(c.text, c.file.name);
     if (U.preset && !c.pickInit) { c.pickInit = true; if (!c.pick && bizById(U.preset)) c.pick = { kind: "biz", id: U.preset }; }          // העלאה משורת חברה: החברה נבחרת אוטומטית
     const sug = c.sug, noText = !c.analyzing && normText(c.text).length < 40, pend = U.list ? U.list.filter(e => e.st === "pending").length : 0;
+    if (noText && !c.ocr && !c.textErr && !c.dupDoc) ocrBg(c);          // סריקה בלי טקסט: זיהוי טקסט אוטומטי ברקע
     const cardB = x => acBizCard(x.b, x.hp ? "לפי ח.פ. במסמך" : "לפי שם", c.pick && c.pick.kind === "biz" && c.pick.id === x.b.id, true);
     const cardN = h => { const nm = nameNear(c.text, h) || h, on = c.pick && c.pick.kind === "new" && c.pick.hp === h; return `<div class="pd-ac-card new${on ? " on" : ""}" onclick="PD._acPick('new','${E(h)}')"><div><b>${E(nm)}</b> <span class="pd-tag red">לא במאגר</span></div><div class="pd-sub">ח.פ. ${E(h)} · יתווסף למאגר</div>${simHtml(nm)}</div>`; };
     const cards = [...sug.cands.slice(0, 20).map(cardB), ...sug.outside.map(cardN)].join("");
     const body = $("pd-up-body"); body.classList.add("acfs");
     const side = `${U.list && U.list.length > 1 ? `<div class="pd-sub">קובץ ${U.idx + 1} מתוך ${U.list.length} · ממתינים: ${pend}</div>` : ""}
         ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות). אפשר כבר לחפש חברה ידנית.</div>` : ""}
-        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}). אפשר לשייך אותו מחדש.</div>` : ""}
-        ${noText ? `<div class="pd-warnbox">${c.textErr ? "שגיאה בקריאת הקובץ: " + E(c.textErr) : "אין בקובץ טקסט (כנראה סריקה)."} ${c.ocr ? "" : `<button class="pd-link" onclick="PD._ocr()">זיהוי טקסט (OCR) — עשוי לקחת כדקה</button>`}</div>` : ""}
+        ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc, "pick")}</div>` : ""}
+        ${ocrBox(c, noText)}
         <div id="pd-ac-top">${acTop(c)}</div>
         <div class="pd-ac-sugs">
           <h4>חברות מוצעות לפי הכתוב במסמך</h4>
@@ -841,7 +858,7 @@
           <input class="pd-in" id="pd-up-q" placeholder="חיפוש חברה אחרת: שם או ח.פ." oninput="PD._upSearch(this.value)" autocomplete="off" style="margin-top:8px"><div id="pd-up-res"></div>
           <div style="margin-top:8px">${c.ncOpen ? `<div class="pd-ac-nc"><b>עסק חדש בלי ח.פ.</b><div style="display:flex;gap:6px;margin-top:4px"><input class="pd-in" id="pd-ac-ncn" value="${E(c.ncVal || "")}" placeholder="שם העסק" oninput="PD._acNcVal(this.value)" onkeydown="if(event.key==='Enter')PD._acNcGo()" autocomplete="off" style="flex:1"><button class="pd-btn primary" onclick="PD._acNcGo()">המשך</button><button class="pd-btn" onclick="PD._acNc(0)">ביטול</button></div><div id="pd-ac-ncsim">${simHtml(c.ncVal || "")}</div></div>` : `<button class="pd-btn" onclick="PD._acNc(1)" title="הוספת עסק חדש שאין לו ח.פ.: מקלידים שם, ובוחרים פרטי / כללי / משותף">🏷️ עסק חדש בלי ח.פ.</button>`}</div>
         </div>
-        <div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD._next()">דילוג על הקובץ</button></div>
+        <div class="pd-btns" style="margin-top:8px"><button class="pd-btn" onclick="PD._next()">${c.dupDoc ? "סיום עם קובץ זה ומעבר לבא" : "דילוג על הקובץ"}</button></div>
         <div id="pd-up-err" style="color:#c0392b;margin-top:6px"></div>`;
     const multi = !!(U.list && U.list.length > 1);
     if (keepView) {          // המסמך עצמו לא נטען מחדש: מרעננים רק את התמונות הממוזערות ואת הכרטיסיות
@@ -872,6 +889,11 @@
     const job = { c, ids: [id], type: kind, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: { [id]: slots } };
     if (bz && slots.some(t => acState(bz, t).cls === "na")) job.vis = { id, value: "פרטי" };          // החברה לא רשומה בסוג הזה: משנים את הרישום ל"יש פרטי" (כלומר גם פרטי וגם כללי)
     U.jobs.push(job); upBg();
+    if (c.dupDoc) {          // קובץ שכבר קיים: נשארים באותו קובץ (ייתכן שצריך כמה שינויים, לכמה חברות) ומרעננים את "כרגע מסומן כ..."
+      c.pick = null; upReviewAC(false);
+      U.jchain = U.jchain.then(() => upSend(job)).then(() => { if (U.cur === c) upReviewAC(false); });
+      return;
+    }
     U.jchain = U.jchain.then(() => upSend(job));
     acDone();          // עוברים מיד לקובץ הבא (או סיום)
   }
@@ -881,13 +903,18 @@
     return (top.length ? `<div class="pd-grp">התאמות מובילות</div>` + top.map(card).join("") : "") +
            (rest.length ? `<div class="pd-grp weak">התאמות נוספות (פחות מתאימות)</div>` + rest.map(card).join("") : "");
   }
-  async function upOcr() {
-    const c = U.cur; c.ocr = true;
-    $("pd-up-body").insertAdjacentHTML("afterbegin", `<div class="pd-warnbox" id="pd-ocr-st">מריץ OCR…</div>`);
-    try { c.text += "\n" + await ocrText(c.buf, i => { const el = $("pd-ocr-st"); if (el) el.textContent = "מריץ OCR… עמוד " + i; }); }
-    catch (e) { c.textErr = "OCR נכשל: " + e.message; }
-    upReview(true);
+  // זיהוי טקסט (OCR) לסריקה בלי טקסט: רץ אוטומטית ברקע, עם ספינר; בסיום ההצעות מחושבות מחדש
+  async function ocrBg(c) {
+    if (c.ocr) return; c.ocr = true; c.ocrRun = true;
+    try { const t = await ocrText(c.buf, i => { const el = $("pd-ocr-st"); if (el && U.cur === c) el.textContent = `מזהה טקסט בסריקה… עמוד ${i}`; }); c.text += "\n" + t; }
+    catch (e) { c.textErr = "זיהוי הטקסט נכשל: " + e.message; }
+    c.ocrRun = false;
+    if (U.cur === c) { if (U.addCompany) upReviewAC(true); else upReview(true); }
+    if (normText(c.text).length >= 40) findBonds(c.text).then(bb => { if (bb.length) c.bonds = bb; }).catch(() => {});
   }
+  const ocrBox = (c, noText) => c.ocrRun ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c"><span class="pd-spin"></span> <span id="pd-ocr-st">מזהה טקסט בסריקה…</span> <span class="pd-sub">אפשר להמשיך לעבוד בינתיים.</span></div>`
+    : noText ? `<div class="pd-warnbox">${c.textErr ? E(c.textErr) : c.ocr ? "לא זוהה טקסט במסמך." : "אין בקובץ טקסט (כנראה סריקה)."}</div>` : "";
+  const upOcr = () => U.cur && ocrBg(U.cur);
   function upTog(id, on) { on ? U.cur.sel.add(id) : U.cur.sel.delete(id); const b = $("pd-save"); if (b) b.textContent = U.cur.sel.size ? `שמירה ושיוך ל-${U.cur.sel.size} חברות` : "שמירה בלי שיוך"; }
   function upSearch(q) {
     const out = $("pd-up-res"); if (!out) return;
@@ -1240,7 +1267,7 @@
     const act = o.assigned ? `<div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" onclick="PD._unPicker('change','biz','${b.id}')">שינוי</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unDetach('${b.id}')">ביטול</button></div>`
       : `<div class="pd-uc-act"><button class="pd-mini" onclick="PD._unAct('${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._unAct('${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._unAct('${b.id}','general')">הת"ע כללי</button>` : ""}</div>`;
     return `<div class="pd-uc ${f.me ? "is-main" : ""}"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה">
-        <b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}${reg}${stTag(b.registry_status)}</div>
+        <b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) + " · " : ""}${reg}${stTag(b.registry_status)}</div>
         <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}${f.me ? " glow" : ""}" title="${E(f.names)}${f.me ? " | המסמך הזה הוא אחד מהמסמכים הראשיים של החברה" : ""}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex" title="מסמכים נוספים של החברה">נוספים ${f.ex}</span></div>
         ${o.why && o.why.length ? `<div class="pd-sub" style="font-size:10.5px">${E(o.why.slice(0, 2).join(", "))}</div>` : ""}</div>${act}</div>`;
   }
@@ -1318,7 +1345,7 @@
   }
   function xcard(id) {
     const x = extById(id);
-    return `<div class="pd-uc ext"><div class="pd-uc-top"><b>${E(extName(id))}</b><div class="pd-sub">${x && x.chp ? "ח.פ. " + E(x.chp) + " · " : ""}חברה שאינה במאגר <span class="pd-st bad">${x ? EXT_HE[x.status] : ""}</span></div></div>
+    return `<div class="pd-uc ext"><div class="pd-uc-top"><b>${E(extName(id))}</b><div class="pd-sub">${x && x.chp ? chpLbl(x.chp) + " " + E(x.chp) + " · " : ""}חברה שאינה במאגר <span class="pd-st bad">${x ? EXT_HE[x.status] : ""}</span></div></div>
       <div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" onclick="PD._unPicker('change','ext','${id}')">שינוי</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unExtDetach('${id}')">ביטול</button></div></div>`;
   }
   const C = { docId: "", bizId: "", t: "" };
@@ -1577,7 +1604,7 @@
     }
     side.innerHTML = `
       <div class="pd-uc is-main-none" style="border-width:2px"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b style="font-size:15px">${displayName(b, true)}</b>
-        <div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
+        <div class="pd-sub">${b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) + " · " : ""}רישום: ${reg}${stTag(b.registry_status)}</div>
         <div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span><span class="pd-feat ex">נוספים ${f.ex}</span>${flags.length ? `<span class="pd-feat part">⚠ ${flags.length} ממצאים</span>` : ""}${sug.length ? `<span class="pd-feat ex">${sug.length} הצעות</span>` : ""}</div></div></div>
       ${flags.length ? `<h4>❓ שאלות על השיוך המקורי (לפי פוסטים מהאתר הישן)</h4>${flags.map(x => `<div class="pd-warnbox" style="cursor:pointer" onclick="PD._cdSel('${x.d.id}')">❓ <b>${E(x.d.original_name || "")}</b>: ${E(x.label)}${(intelOf(x.d).t || []).length ? " <span class='pd-sub'>(פוסט: " + E(intelOf(x.d).t[0]) + ")</span>" : ""}${x.detail ? " <span class='pd-sub'>" + E(x.detail) + "</span>" : ""}</div>`).join("")}` : ""}
       <h4>מסמכי החברה (${docs.length})</h4>
@@ -1604,7 +1631,7 @@
     : op.t === "extnew" ? `שיוך ${docNm(op.docId)} לחברה שאינה במאגר: ${op.name || op.chp}`
     : op.t === "reject" ? `ביטול הרישום המקורי של ${docNm(op.docId)} ל${bizName(op.bid)} (לא ישויך)`
     : op.t === "type" ? `סיווג ${docNm(op.docId)}: ${TL[op.dtype] || op.dtype}` : op.t === "detach" ? `הסרת שיוך ${docNm(op.docId)} מ${bizName(op.bid)}` : op.t === "extras" ? `הורדת ${docNm(op.docId)} ל"מסמכים נוספים" של ${bizName(op.bid)}`
-    : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (ח.פ. " + op.hp + ")" : " לפי שם הפוסט"}`;
+    : `שיוך ${docNm(op.docId)} לחברה שאינה במאגר${op.extId ? ": " + extName(op.extId) : op.hp ? " (" + chpLbl(op.hp) + " " + op.hp + ")" : " לפי שם הפוסט"}`;
   function cdBar() {
     const l = CD.pend[cdKey()] || [];
     return `<div class="pd-cdbar">${l.length ? `<div class="pd-sub" style="width:100%"><b>ממתין לאישור:</b></div>` + l.map((op, i) => `<div class="pd-sub" style="width:100%">• ${E(opLabel(op))} <a href="#" onclick="PD._cdUnstage(${i});return false" style="color:#c0392b" title="ביטול הבחירה">✕</a></div>`).join("") : ""}
@@ -1672,7 +1699,7 @@
     const docs = oldDocsOf(b.id), reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "יש גם פרטי" : "רק כללי";
     if (!CD.selDoc || !docs.some(d => d.id === CD.selDoc)) CD.selDoc = (docs[0] || {}).id || "";
     const opt = (v, l) => `<button class="pd-mini ${(b.visibility || "") === v ? "sel" : ""}" onclick="PD._cdVis('${b.id}','${v}')">${l}</button>`;
-    return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) : ""}</span></div>
+    return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) : ""}</span></div>
       <h4>❓ בדיקת סיווג החברה</h4>
       <div class="pd-warnbox"><div>❓ <b>${E(introIssue(b))}</b></div><div class="pd-sub" style="margin-top:3px">רישום נוכחי במאגר: <b>${reg}</b></div>
         <div class="pd-btns" style="margin-top:6px"><span class="pd-sub">שינוי רישום:</span>${opt("", "רק כללי")}${opt("פרטי", "יש גם פרטי")}${opt("רק פרטי", "רק פרטי")}</div></div>
@@ -1692,7 +1719,7 @@
           <span class="pd-sub">סיווג:</span><button class="pd-mini ${d.doc_type === "general" ? "sel" : ""}" onclick="PD._cdType('${d.id}','general')">כללי</button><button class="pd-mini ${d.doc_type === "both" || d.doc_type === "private" ? "sel" : ""}" onclick="PD._cdType('${d.id}','both')">פרטי</button>
         </div></div>`;
     }).join("");
-    return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) : ""}</span></div>
+    return `<div style="font-weight:700;font-size:15px">${displayName(b, true)} <span class="pd-sub">${b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) : ""}</span></div>
       <h4>❓ שאלות על השיוך המקורי</h4>${blocks || `<div class="pd-sub">אין שאלות.</div>`}`;
   }
   const postExtHtml = d => {          // הצעות לשיוך לחברה שאינה במאגר: ח.פ. של תאגיד שנמצא במסמך, חברה קיימת ברשימה שהשם דומה, או לפי שם הפוסט
@@ -1701,7 +1728,7 @@
     const card = (name, sub, acts) => `<div class="pd-uc ext"><div class="pd-uc-top" style="cursor:default"><b>${E(name)}</b><div class="pd-sub">${E(sub)}</div></div><div class="pd-uc-act">${acts}</div></div>`;
     for (const hp of [...new Set([...(it.xo || []), ...((CD.live[d.id] || {}).xo || [])])]) {
       const x = S.ext.find(e => digitsOf(e.chp) === digitsOf(hp)); if (x) seen.add(x.id);
-      cards.push(card(x ? x.name : (title || "חברה שאינה במאגר"), `ח.פ. ${hp} · תאגיד שנמצא במסמך${x ? " · כבר ברשימת החברות שאינן במאגר" : ""}`,
+      cards.push(card(x ? x.name : (title || "חברה שאינה במאגר"), `${chpLbl(hp)} ${hp} · תאגיד שנמצא במסמך${x ? " · כבר ברשימת החברות שאינן במאגר" : ""}`,
         `<button class="pd-mini link" onclick="PD._postExt('${d.id}','${hp}','${x ? x.id : ""}')">שיוך כחברה שאינה במאגר</button>${x ? "" : `<button class="pd-link2" onclick="PD._postAdd('${d.id}','${hp}')">הוספה למאגר</button>`}`));
     }
     if (tn.length >= 4) for (const x of S.ext) { const xn = normText(x.name); if (!seen.has(x.id) && xn.length >= 4 && (xn.includes(tn) || tn.includes(xn))) { seen.add(x.id); cards.push(card(x.name, `${x.chp ? "ח.פ. " + x.chp + " · " : ""}${EXT_HE[x.status] || ""} · שם דומה לשם הפוסט`, `<button class="pd-mini link" onclick="PD._postExt('${d.id}','','${x.id}')">שיוך</button>`)); } }
@@ -1740,7 +1767,7 @@
       ${fl.map(f => `<div class="pd-warnbox">⚠ ${E(FLAG_HE[f.c] || f.c)}${f.d ? " <span class='pd-sub'>" + E(f.d) + "</span>" : ""}</div>`).join("")}
       <h4>הצעות לשיוך (${sugs.length})</h4>
       ${sugs.length ? sugs.map(({ x, b }) => { const need = needOf(b), f = cfeat(b, d);
-        return `<div class="pd-uc"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? "ח.פ. " + E(b.chp_number) + " · " : ""}${E((x.w || []).join(", "))}</div><div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span></div></div>
+        return `<div class="pd-uc"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה"><b>${displayName(b)}</b><div class="pd-sub">${b.chp_number ? chpLbl(b.chp_number, b.biz_type) + " " + E(b.chp_number) + " · " : ""}${E((x.w || []).join(", "))}</div><div class="pd-ucf"><span class="pd-feat ${f.have === f.total ? "full" : "part"}">ראשיים ${f.have}/${f.total}</span></div></div>
           <div class="pd-uc-act"><button class="pd-mini" onclick="PD._cdAct('${d.id}','${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._cdAct('${d.id}','${b.id}','general')">הת"ע כללי</button>` : ""}</div></div>`; }).join("") : `<div class="pd-sub">לא נמצאה חברה במאגר לפי תוכן המסמך.</div>`}
       <h4>חברות שאינן במאגר</h4>${lv && lv.wait ? `<div class="pd-sub">קורא את הטקסט מהמסמך…</div>` : ''}${postExtHtml(d)}${cdBar()}`;
     cdViewer();
@@ -1939,7 +1966,7 @@
     const rows = S.ext.filter(x => extGroup(x) === extGrp).sort((a, b) => String(a.name).localeCompare(String(b.name), "he"));
     overlay("pd-ext", `<div class="pd-head"><b>${extGrp === "gone" ? "חברות מחוקות" : "חברות שאינן במאגר"} (${rows.length})</b><button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-ext')">✕</button></div>
       <div class="pd-body"><div class="pd-sub" style="margin-bottom:8px">חברות שמסמכי היתר משויכים אליהן אבל אינן במאגר העסקים. כל שיוך כזה מוסיף את החברה לכאן. ${S.extErr ? `<span style="color:#c0392b">(${E(S.extErr)}: אם חסרה מיגרציה 0008 - להריץ ב-D1)</span>` : ""}</div>
-        <table class="pd-ext-tbl"><thead><tr><th>שם</th><th>ח.פ.</th><th>סטטוס</th><th>מסמכים</th><th></th></tr></thead><tbody>
+        <table class="pd-ext-tbl"><thead><tr><th>שם</th><th>ח.פ. / ח.צ.</th><th>סטטוס</th><th>מסמכים</th><th></th></tr></thead><tbody>
         ${rows.map(x => `<tr><td>${E(x.name)}</td><td dir="ltr" style="text-align:right">${E(x.chp || "")}</td>
           <td><select class="pd-in" style="padding:3px" onchange="PD._extStatus('${x.id}',this.value)">${["deleted", "merged", "not_in_db"].map(st => `<option value="${st}" ${x.status === st ? "selected" : ""}>${EXT_HE[st]}</option>`).join("")}</select></td>
           <td>${(x.doc_ids || []).map(id => { const d = S.byId.get(id); return d ? `<a href="#" onclick="PD.openDoc('${id}');return false">${E(d.original_name || id)}</a>` : ""; }).filter(Boolean).join(" · ") || '<span class="pd-sub">אין</span>'}</td>
@@ -2000,7 +2027,7 @@
   function slotCell(b, t) {
     const w = ready(); if (w) return w;
     const d = slotDoc(b.id, t);
-    if (d) return `<button type="button" class="pd-ok pd-c-${t}" onclick="PD.openDoc('${d.id}','${b.id}',true)" title="${E(d.original_name || "")}">📄 פתיחה${(d.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">משותף</span>' : ""}</button>`;
+    if (d) return `<button type="button" class="pd-ok pd-c-${t}" onclick="PD.openDoc('${d.id}','${b.id}',true)" title="${E(d.original_name || "")}">📄 פתיחה${(d.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">הת"ע משותף לכמה חברות</span>' : ""}</button>`;
     if (!needOf(b)[t]) return `<span class="pd-na">—</span>`;
     return liveDocs(b.id).length
       ? `<button type="button" class="pd-warn" onclick="PD.openManage('${b.id}')" title="יש מסמכים לחברה, אבל אף אחד לא קושר לרשימה הזו">לא קושר מסמך</button>`
@@ -2010,7 +2037,7 @@
   function slotCells(b) {
     const w = ready(), pr = slotDoc(b.id, "private"), ge = slotDoc(b.id, "general");
     if (!w && pr && ge && pr.id === ge.id)
-      return `<td class="pd-cell" colspan="2" style="text-align:center;"><button type="button" class="pd-ok pd-long" onclick="PD.openDoc('${pr.id}','${b.id}',true)" title="${E(pr.original_name || "")}">📄 פתיחה${(pr.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">משותף</span>' : ""}</button></td>`;
+      return `<td class="pd-cell" colspan="2" style="text-align:center;"><button type="button" class="pd-ok pd-long" onclick="PD.openDoc('${pr.id}','${b.id}',true)" title="${E(pr.original_name || "")}">📄 פתיחה${(pr.business_ids || []).length > 1 ? ' <span class="pd-chip" style="background:#1e7e4a">הת"ע משותף לכמה חברות</span>' : ""}</button></td>`;
     return `<td class="pd-cell" style="text-align:center;">${slotCell(b, "private")}</td><td class="pd-cell" style="text-align:center;">${slotCell(b, "general")}</td>`;
   }
   function extraCell(b) {
@@ -2253,7 +2280,7 @@
     return `<div class="pd-nd-bar">${ndSearchBox("חיפוש חברה: שם או ח.פ.")}<span class="pd-btns">${M_.map(([k, l]) => `<button class="pd-mini ${ND.miss === k ? "sel" : ""}" onclick="PD._ndMiss('${k}')">${l}</button>`).join("")}</span></div>
       <div class="pd-nd-bar" style="margin-top:6px"><button class="pd-mini ${ND.sug ? "sel" : ""}" onclick="PD._ndSug()" title="רק חברות שיש להן שטרות נוספים או הצעות נוספות">חברות עם שטרות/הצעות נוספות</button></div>
       <div class="pd-sub" style="margin-bottom:6px">כל חברה שרשומה ברשימת הפרטי או הכללי צריכה הת"ע משויך מאותו סוג. לחיצה על שורה פותחת את ניהול המסמכים של החברה.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th><th>הצעות נוספות</th><th>הערה (מרשימת החברות)</th><th>העלאה</th></tr></thead><tbody>${rows.map(e => {
+      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ. / ח.צ.</th><th>הת"ע פרטי</th><th>הת"ע כללי</th><th>שטרות נוספים</th><th>הצעות נוספות</th><th>הערה (מרשימת החברות)</th><th>העלאה</th></tr></thead><tbody>${rows.map(e => {
         const b = e.b, one = t => { const d = slotDoc(b.id, t); return d ? `<span class="pd-nd-ok" title="${E(d.original_name || "")}">קיים</span>` : needOf(b)[t] ? `<span class="pd-nd-miss">חסר</span>` : `<span class="pd-sub">-</span>`; };
         return `<tr class="go" onclick="PD.openManage('${b.id}')"><td><b>${displayName(b)}</b>${stTag(b.registry_status)}</td><td dir="ltr" style="text-align:right">${E(b.chp_number || "")}</td>
           <td>${one("private")}</td><td>${one("general")}</td><td class="pd-nd-n">${e.ex.length || ""}</td><td>${e.sug.length ? `<span class="pd-nd-sug" title="${E(e.sug.map(x => (x.d.original_name || x.d.id) + " (" + x.why + ")").join("\n"))}">💡 ${e.sug.length} ${e.sug.length === 1 ? "הצעה" : "הצעות"}</span>` : ""}</td><td style="font-size:12px;max-width:260px" title="${E(b.notes || "")}">${E((b.notes || "").trim())}</td><td><button class="pd-mini" onclick="event.stopPropagation();PD._rowUp('${b.id}')" title="העלאת מסמך עבור החברה, ובחירת הת&quot;ע שאליו לקשר">⬆ העלאת מסמך</button></td></tr>`; }).join("") || `<tr><td colspan="8" class="pd-sub">אין חברות שחסרים להן שטרות בסינון הזה.</td></tr>`}</tbody></table>`;
@@ -2316,7 +2343,7 @@
       const b = byChp.get(digitsOf(r.id)); if (b && shown.has(b.id)) return "";
       if (b) return fCard(b, 1);
       const tag = inExt.has(digitsOf(r.id)) ? '<span class="pd-nd-ok">ברשימת הלא רשומות</span>' : '<span class="pd-nd-miss">לא במאגר</span>';
-      return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
+      return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ${chpLbl(r.id, r.type)} ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
   }
   function searchPage(el) {          // דף "חיפוש" בראשי הניהול (במקום לשונית בדשבורד)
     if (!el) return;
@@ -2342,7 +2369,7 @@
   function ndExtTable() {
     const rows = extGroups();
     return `<div class="pd-sub" style="margin-bottom:6px">חברות שיש להן שטר במאגר, אבל אינן ברשימת העסקים. ברירת מחדל בלי מחוקות ומוזגו. "הוספת חברה לרשימה" פותחת את טופס הוספת העסק עם הח.פ., ואחרי השמירה השטרות של החברה משויכים אליה אוטומטית.</div>
-      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ.</th><th>סטטוס</th><th>שטרות</th><th></th></tr></thead><tbody>${rows.map((g, i) => `<tr><td><b>${E(g.name)}</b></td><td dir="ltr" style="text-align:right">${E(g.chp)}</td><td>${EXT_HE[g.status] || g.status}</td>
+      <table class="pd-nd-tbl"><thead><tr><th>חברה</th><th>ח.פ. / ח.צ.</th><th>סטטוס</th><th>שטרות</th><th></th></tr></thead><tbody>${rows.map((g, i) => `<tr><td><b>${E(g.name)}</b></td><td dir="ltr" style="text-align:right">${E(g.chp)}</td><td>${EXT_HE[g.status] || g.status}</td>
         <td class="pd-nd-n">${g.docs.size} <button class="pd-mini" onclick="PD._evOpen(${i})" title="הצגת כל השטרות של החברה">הצגה</button></td>
         <td><button class="pd-mini primary" onclick="PD._ndAddCo(${i})" ${digitsOf(g.chp) ? "" : 'title="אין ח.פ.: נפתח טופס עסק בלי ח.פ. עם השם"'}>הוספת חברה לרשימה</button></td></tr>`).join("") || `<tr><td colspan="5" class="pd-sub">הרשימה ריקה.</td></tr>`}</tbody></table>`;
   }
@@ -2381,7 +2408,7 @@
     const q = ($("pd-ev-q") || {}).value || "", r = EV.reg;
     const card = `<div class="pd-dup" style="cursor:pointer;max-width:520px" onclick="PD._evAdd()" title="הוספת החברה לרשימה ושיוך כל השטרות שלה">
         <div class="pd-sub">${r ? "נתוני החברה מהרשם" : "שם החברה המוצעת"}</div><b style="font-size:16px">${E(r ? r.name : g.name)}</b>
-        <div style="margin-top:4px">${g.chp ? `ח.פ.: <b><bdi>${E(g.chp)}</bdi></b>` : "אין ח.פ."}${r && r.type ? " · " + E(r.type) : ""}${r && r.status ? " · " + E(r.status) : ""}${!r && g.status ? " · " + (EXT_HE[g.status] || E(g.status)) : ""}</div>
+        <div style="margin-top:4px">${g.chp ? `${chpLbl(g.chp, r && r.type)}: <b><bdi>${E(g.chp)}</bdi></b>` : "אין ח.פ."}${r && r.type ? " · " + E(r.type) : ""}${r && r.status ? " · " + E(r.status) : ""}${!r && g.status ? " · " + (EXT_HE[g.status] || E(g.status)) : ""}</div>
         <div style="margin-top:8px;color:#1e7e4a;font-weight:700">➕ להוספה לרשימה</div></div>`;
     const docs = [...g.docs].map(id => S.byId.get(id)).filter(Boolean);
     body.innerHTML = card + `<div style="margin:12px 0 4px"><input class="pd-in" id="pd-ev-q" value="${E(q)}" placeholder="חיפוש חברה אחרת (ח.פ. / שם) לשיוך השטרות אליה" oninput="PD._evSearch(this.value)" autocomplete="off" style="max-width:520px"><div id="pd-ev-res" style="max-width:520px"></div>
@@ -2416,7 +2443,7 @@
     const inDb = new Set(bizList().map(b => digitsOf(b.chp_number)).filter(Boolean)), inExt = new Set(S.ext.map(x => digitsOf(x.chp)).filter(Boolean)), seen = new Set();
     const rs = (d.results || []).filter(r => !seen.has(digitsOf(r.id)) && seen.add(digitsOf(r.id)));
     $("pd-nd-reg").innerHTML = `<div class="pd-grp" style="color:#c0392b">ברשם החברות / העמותות</div>` + (rs.slice(0, 15).map(r => { const k = digitsOf(r.id), tag = inDb.has(k) ? '<span class="pd-nd-ok">במאגר שלנו</span>' : inExt.has(k) ? '<span class="pd-nd-ok">ברשימת השאינן במאגר</span>' : '<span class="pd-nd-miss">לא במאגר</span>';
-      return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ח.פ. ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
+      return `<div class="pd-reg"><div><b>${E(r.name)}</b> ${tag}${r.defunct ? ' <span class="pd-tag red">⚠ מחוסלת / נמחקה</span>' : ""}</div><div class="pd-sub">${E(r.type || "")} · ${chpLbl(r.id, r.type)} ${E(r.id)}${r.status ? " · " + E(r.status) : ""}</div></div>`; }).join("") || `<div class="pd-sub">לא נמצא ברשם</div>`) + (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "");
   }
 
   // ───────── מצטרפים להיתר עיסקא (נתונים אישיים: מנהל בלבד; מפוענחים בשרת ונשארים רק בזיכרון הדף) ─────────
@@ -2804,7 +2831,10 @@
     const others = (d.business_ids || []).filter(x => x !== b.id), sl = slotsOf(d, b.id);
     const shared = others.length > 0 || M.share.has(d.id), menuOpen = M.menu === d.id || M.move === d.id;
     const typeSel = `<select class="pd-sel" onchange="PD._setType('${d.id}',this.value)" title="סיווג המסמך">${["general", "private", "both", "unknown", "other"].map(t => `<option value="${t}" ${d.doc_type === t ? "selected" : ""}>${TL[t]}</option>`).join("")}</select>`;
-    const linkBtns = sl.length ? `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
+    const othr = t => t === "private" ? "general" : "private";
+    const alsoBtns = sl.length === 1 ? `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${othr(sl[0])}')" title="אותו מסמך ישמש גם כהת&quot;ע ${SLOT_HE[othr(sl[0])]} של החברה">לסמן גם כהת"ע ${SLOT_HE[othr(sl[0])]}</button>`
+      : sl.length === 2 ? ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${othr(t)}')" title="המסמך יישאר רק כהת&quot;ע ${SLOT_HE[t]}">לסמן רק כהת"ע ${SLOT_HE[t]}</button>`).join("") : "";
+    const linkBtns = sl.length ? alsoBtns + `<button class="pd-link2" onclick="PD._toExtras('${d.id}')" title="המסמך יעבור ל'מסמכים נוספים' ויישאר משויך לחברה">הורדה למסמכים נוספים</button>`
       : ["private", "general"].map(t => `<button class="pd-mini link" onclick="PD._slot('${d.id}','${b.id}','${t}')">קשר כהת"ע ${SLOT_HE[t]}</button>`).join("");
     const sp = (d.specials || {})[b.id];
     const spBtn = sp !== undefined ? `<span class="pd-chip" style="background:#b8860b" title="${E(sp.detail || "")}">אחר: ${E(sp.title)}</span><button class="pd-link2" onclick="PD._spEdit('${d.id}','${b.id}')">שינוי כותרת</button><button class="pd-link2" style="color:#c0392b" onclick="PD._spDel('${d.id}','${b.id}')">ביטול</button>`
@@ -3051,7 +3081,8 @@
   .pd-as-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   .pd-as-mini{border:1px solid #d6d2ca;border-radius:8px;padding:6px;background:#fff;cursor:pointer;display:flex;flex-direction:column;gap:4px}
   @media(max-width:900px){.pd-as-top{flex-direction:column}}
-  .pd-ok{white-space:nowrap}.pd-ok.pd-c-private{background:#7a3b8f;color:#fff;border-color:#7a3b8f}.pd-ok.pd-c-general{background:#1e4570;color:#fff;border-color:#1e4570}.pd-ok[class*=pd-c-]:hover{filter:brightness(1.15)}.pd-ok.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-ok.pd-long:hover{filter:brightness(1.12)}
+  .pd-spin{display:inline-block;width:14px;height:14px;border:2px solid #b9c9e6;border-top-color:#1a3a5c;border-radius:50%;animation:pd-spin .8s linear infinite;vertical-align:-2px}@keyframes pd-spin{to{transform:rotate(360deg)}}
+  .pd-ok{white-space:nowrap}.pd-ok .pd-chip{white-space:normal;line-height:1.2;text-align:center;font-size:10.5px}.pd-ok.pd-c-private{background:#7a3b8f;color:#fff;border-color:#7a3b8f}.pd-ok.pd-c-general{background:#1e4570;color:#fff;border-color:#1e4570}.pd-ok[class*=pd-c-]:hover{filter:brightness(1.15)}.pd-ok.pd-long{width:100%;justify-content:center;border:none;color:#fff;font-weight:600;background:linear-gradient(72deg,#1e4570 0 42%,#7a3b8f 58% 100%)}.pd-ok.pd-long:hover{filter:brightness(1.12)}
   .pd-warn{background:#fff1d6;color:#8a5a00;border:1px solid #e8c36a;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-mg-top{display:flex;gap:16px;align-items:stretch}
   .pd-mg-slot{flex:1;min-width:0;border:2px solid #b9c7da;border-radius:10px;padding:8px 10px;background:#f7f9fc}.pd-mg-slot.off{opacity:.65}

@@ -1,46 +1,17 @@
 {
  "items": {
-  "O1173640": {
+  "O1215318": {
    "data": {
-    "begins_at": "2026-10-22T09:00:00",
-    "chp_number": "510400740",
-    "ends_at": "2026-10-22T16:00:00",
-    "interest": 4.49,
+    "begins_at": "2026-10-26T09:30:00",
+    "chp_number": "520033309",
+    "ends_at": "2026-10-26T16:30:00",
+    "interest": 6.95,
     "is_new_company": false,
     "is_variable_interest": false,
-    "issuer_id": 1867,
-    "issuer_name": "דיפלומט",
-    "link_offer_report": "https://maya.tase.co.il/he/reports/1777320",
-    "offer_number": 1173640,
-    "offer_type": "ריבית",
-    "offering_type": "הצעה אחידה",
-    "price_per_unit": 1000,
-    "securities": [
-     {
-      "linkage_type": "ללא",
-      "maalot_rating": "ilA+",
-      "midroog_rating": null,
-      "security_id": null,
-      "security_name": "אגח א",
-      "security_type": "אג\"ח קונצרני"
-     }
-    ]
-   },
-   "kind": "open",
-   "last_seen": "2026-10-22"
-  },
-  "O1217678": {
-   "data": {
-    "begins_at": "2026-10-22T09:00:00",
-    "chp_number": "512719485",
-    "ends_at": "2026-10-22T16:00:00",
-    "interest": 4.89,
-    "is_new_company": false,
-    "is_variable_interest": false,
-    "issuer_id": 1614,
-    "issuer_name": "מגדלי ים תיכון",
-    "link_offer_report": "https://maya.tase.co.il/he/reports/1777307",
-    "offer_number": 1217678,
+    "issuer_id": 823,
+    "issuer_name": "חג'ג' נדל\"ן",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777831",
+    "offer_number": 1215318,
     "offer_type": "ריבית",
     "offering_type": "הצעה אחידה",
     "price_per_unit": 1000,
@@ -48,15 +19,15 @@
      {
       "linkage_type": "ללא",
       "maalot_rating": null,
-      "midroog_rating": "A2.il",
+      "midroog_rating": null,
       "security_id": null,
-      "security_name": "אג\"ח ח'",
+      "security_name": "אגח טז",
       "security_type": "אג\"ח קונצרני"
      }
     ]
    },
    "kind": "open",
-   "last_seen": "2026-10-22"
+   "last_seen": "2026-10-26"
   },
   "O1230242": {
    "data": {
@@ -86,6 +57,35 @@
    },
    "kind": "open",
    "last_seen": "2026-10-23"
+  },
+  "O1239433": {
+   "data": {
+    "begins_at": "2026-10-26T09:00:00",
+    "chp_number": "516117181",
+    "ends_at": "2026-10-26T15:30:00",
+    "interest": 2.59,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1794,
+    "issuer_name": "ריט אזורים ליוי",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1777819",
+    "offer_number": 1239433,
+    "offer_type": "מחיר",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1027.8,
+    "securities": [
+     {
+      "linkage_type": "מדד",
+      "maalot_rating": "ilA-",
+      "midroog_rating": null,
+      "security_id": 1234491,
+      "security_name": "ריט אזורים אגחד",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-10-26"
   },
   "O1240563": {
    "data": {
@@ -139,7 +139,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10121": {
    "data": {
@@ -164,7 +164,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10128": {
    "data": {
@@ -189,7 +189,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10131": {
    "data": {
@@ -214,7 +214,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10225": {
    "data": {
@@ -239,7 +239,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10227": {
    "data": {
@@ -264,7 +264,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10237": {
    "data": {
@@ -289,7 +289,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10243": {
    "data": {
@@ -314,7 +314,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10259": {
    "data": {
@@ -339,7 +339,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10287": {
    "data": {
@@ -364,7 +364,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10289": {
    "data": {
@@ -389,7 +389,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10296": {
    "data": {
@@ -414,7 +414,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10300": {
    "data": {
@@ -439,7 +439,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10316": {
    "data": {
@@ -464,7 +464,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10319": {
    "data": {
@@ -489,7 +489,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10329": {
    "data": {
@@ -514,7 +514,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10355": {
    "data": {
@@ -539,7 +539,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10358": {
    "data": {
@@ -564,7 +564,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10371": {
    "data": {
@@ -589,7 +589,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10372": {
    "data": {
@@ -614,7 +614,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10378": {
    "data": {
@@ -639,7 +639,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10379": {
    "data": {
@@ -664,7 +664,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10382": {
    "data": {
@@ -689,32 +689,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
-  },
-  "U10386": {
-   "data": {
-    "chp_number": "520033309",
-    "company_name": "חג'ג' נדל\"ן",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10386,
-    "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1773850",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777077",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777077",
-    "maya_report_id": 1777077,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10387": {
    "data": {
@@ -739,7 +714,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   },
   "U10388": {
    "data": {
@@ -766,22 +741,22 @@
    "kind": "upcoming",
    "last_seen": "2026-10-25"
   },
-  "U10389": {
+  "U10391": {
    "data": {
-    "chp_number": "516117181",
-    "company_name": "ריט אזורים ליוי",
+    "chp_number": "517220448",
+    "company_name": "איביאי ריב פיק",
     "draft_no": 1,
     "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10389,
+    "id": 10391,
     "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
-    "maya_report_id": 1777280,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777726",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777726,
     "new_company_type": null,
     "securities": [
      {
-      "maalot_rating": "ilA-",
+      "maalot_rating": null,
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
@@ -789,24 +764,24 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-22"
+   "last_seen": "2026-10-26"
   },
-  "U10390": {
+  "U10392": {
    "data": {
-    "chp_number": "516117181",
-    "company_name": "ריט אזורים ליוי",
-    "draft_no": 1,
+    "chp_number": "516561875",
+    "company_name": "הראל ריביות",
+    "draft_no": 2,
     "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10390,
+    "id": 10392,
     "is_new_company": false,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1632300",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777280",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1639787",
-    "maya_report_id": 1777410,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777801",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777801,
     "new_company_type": null,
     "securities": [
      {
-      "maalot_rating": "ilA-",
+      "maalot_rating": null,
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
@@ -814,7 +789,32 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
+  },
+  "U10394": {
+   "data": {
+    "chp_number": "",
+    "company_name": "לייטסטון מוקסי",
+    "draft_no": 1,
+    "draft_title": "טיוטת תשקיף להשלמה",
+    "id": 10394,
+    "is_new_company": true,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1777848",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777847",
+    "link_trust_indenture": null,
+    "maya_report_id": 1777848,
+    "new_company_type": "חברת אג\"ח חדשה",
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-26"
   },
   "U9973": {
    "data": {
@@ -839,7 +839,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-10-25"
+   "last_seen": "2026-10-26"
   }
  }
 }
