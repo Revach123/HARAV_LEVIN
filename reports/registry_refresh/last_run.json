@@ -6,87 +6,87 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 91
+   "biz_type": 92
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-26T08:10:05.526624Z",
+  "updated": "2026-10-27T08:25:47.264964Z",
   "source": "d1",
-  "businesses": 1276,
-  "numeric_chp": 1272,
-  "found_in_registry": 1184,
+  "businesses": 1277,
+  "numeric_chp": 1273,
+  "found_in_registry": 1185,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2230,
-  "datawise_date": "2026-10-23",
+  "datawise_rows": 2235,
+  "datawise_date": "2026-10-26",
   "bond_companies": 364,
   "changes": {
-   "registrar_name": 2,
-   "biz_type": 1,
+   "registrar_name": 0,
+   "biz_type": 2,
    "tase_has_agch": 2,
-   "registry_status": 1
+   "registry_status": 2
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 1,
-   "tase_has_agch": 1,
-   "registry_status": 1
+   "biz_type": 2,
+   "tase_has_agch": 2,
+   "registry_status": 2
   },
   "registry_status_counts": {
-   "פעילה": 1071,
+   "פעילה": 1072,
    "לא ידוע": 154,
    "מחוסלת/חיסול": 35,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 3,
+  "statements_applied": 2,
   "problems": []
  },
  "changes": [
   {
-   "id": "mp64luatfk1h",
-   "chp": "520040346",
-   "field": "registrar_name",
-   "old": "קבוצת ברנד (מ.ג)  בע\"מ",
-   "new": "קונקסה (א.ל) בע\"מ"
-  },
-  {
-   "id": "mvfvzh40junh",
-   "chp": "510400740",
-   "field": "tase_has_agch",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mvoh0zj5oyot",
-   "chp": "515857910",
+   "id": "mvp75ozejpfu",
+   "chp": "512065202",
    "field": "registry_status",
    "old": "",
    "new": "פעילה"
   },
   {
-   "id": "mvoh0zj5oyot",
-   "chp": "515857910",
-   "field": "registrar_name",
-   "old": "מגדלי שרת התחדשות עירונית בע\"מ",
-   "new": "מגדלי שרת התחדשות עירונית  בע\"מ"
-  },
-  {
-   "id": "mvoh0zj5oyot",
-   "chp": "515857910",
+   "id": "mvp75ozejpfu",
+   "chp": "512065202",
    "field": "biz_type",
    "old": "",
    "new": "חברה פרטית - בע\"מ"
   },
   {
-   "id": "mvoh0zj5oyot",
-   "chp": "515857910",
+   "id": "mvp75ozejpfu",
+   "chp": "512065202",
    "field": "tase_has_agch",
    "old": "",
    "new": "אין"
+  },
+  {
+   "id": "mvpqvd1kaql7",
+   "chp": "520033234",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mvpqvd1kaql7",
+   "chp": "520033234",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה ציבורית - בע\"מ"
+  },
+  {
+   "id": "mvpqvd1kaql7",
+   "chp": "520033234",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "יש"
   }
  ],
  "not_found": [
