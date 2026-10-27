@@ -911,8 +911,9 @@
   .home-mid { height:clamp(64px,14vh,160px) !important; }
   .home-bot { flex:1 1 0 !important; min-height:0 !important; }
   .home-dash .home-grid { min-height:0 !important; }
-  /* המסך הראשי מונמך מעט מתחת לכותרת, לא צמוד אליה */
-  .home-wrap { margin-top:clamp(18px,5vh,64px) !important; height:calc(100vh - 86px - clamp(18px,5vh,64px)) !important; }
+  /* הכפתורים מונמכים: תמונת הכותרת (הבאנר) נראית מעליהם, והם לא יושבים על הקצה שלה */
+  .home-band { padding-top:clamp(44px,9vh,100px); }
+  .home-band::before { top:0 !important; }
   /* כפתורי הניהול באותו גודל כמו שאר הכפתורים בדף (לא נמתחים לכל הגובה); המספרים כתגיות ברורות */
   .home-dash .home-grid { flex:none !important; grid-auto-rows:clamp(100px,14vh,160px) !important; align-content:start; }
   .home-wrap .home-card .chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:4px; }
