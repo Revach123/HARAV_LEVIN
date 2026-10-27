@@ -1717,9 +1717,8 @@ async function gfLoad() {
 function gfMatch(r) { const q = GF.q.trim().toLowerCase(); return !q || [r.company, r.track, r.type, r.number, r.note].join(" ").toLowerCase().includes(q); }
 function renderGFunds() {
   const head = `<div class="admin-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="margin:0">📋 מסלולים וקרנות גלאט הון</h2>
-    <a class="btn-ghost" href="/funds_test.html" target="_blank" rel="noopener" style="text-decoration:none">👁 תצוגה בדף (בדיקה)</a>
     <span style="flex:1"></span>
-    <label style="font-size:13px;color:var(--muted)">מעודכן: <input type="text" value="${escHtml(GF.updated)}" oninput="GF.updated=this.value;gfDirty()" placeholder='למשל: חשוון תשפ"ז' style="width:150px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></label>
+
     <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
   if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
   const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => r.tab === k).length})</button>`).join("")}
@@ -1783,11 +1782,21 @@ function gfDel(i) {
   const r = GF.rows[i]; if (!confirm(`למחוק את השורה "${[r.company, r.track, r.number].filter(Boolean).join(" · ") || "ריקה"}"? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
   GF.rows.splice(i, 1); gfDirty(); render();
 }
+function gfHebDate(d) {          // "חשוון תשפ"ז": החודש העברי הנוכחי ושנה באותיות (בלי האלפים) - נרשם אוטומטית בכל שמירה
+  const parts = new Intl.DateTimeFormat("he-u-ca-hebrew", { month: "long", year: "numeric" }).formatToParts(d);
+  const month = (parts.find(p => p.type === "month") || {}).value || "", y = parseInt((parts.find(p => p.type === "year") || {}).value, 10) % 1000;
+  const L = [[400, "ת"], [300, "ש"], [200, "ר"], [100, "ק"], [90, "צ"], [80, "פ"], [70, "ע"], [60, "ס"], [50, "נ"], [40, "מ"], [30, "ל"], [20, "כ"], [10, "י"], [9, "ט"], [8, "ח"], [7, "ז"], [6, "ו"], [5, "ה"], [4, "ד"], [3, "ג"], [2, "ב"], [1, "א"]];
+  let n = y, out = "";
+  while (n > 0) { if (n % 100 === 15 || n % 100 === 16) { out += "ט" + (n % 100 === 15 ? "ו" : "ז"); n -= n % 100; continue; } const [v, c] = L.find(x => x[0] <= n); out += c; n -= v; }
+  const year = out.length > 1 ? out.slice(0, -1) + '"' + out.slice(-1) : out + "'";
+  return (month + " " + year).trim();
+}
 async function gfSave() {
   if (!GF.dirty || GF.saving) return;
   GF.saving = true; render();
   try {
     gfSort();
+    try { GF.updated = gfHebDate(new Date()); } catch { /* בלי לוח עברי בדפדפן: נשאר התאריך הקודם */ }
     const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, rows: GF.rows }) });
     GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
     GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false; GF.types = {}; gfSort();
