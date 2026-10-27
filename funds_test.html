@@ -74,6 +74,15 @@ function hl(s) {
   const i = String(s).toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return E(s);
   return E(s.slice(0, i)) + "<mark>" + E(s.slice(i, i + q.length)) + "</mark>" + E(s.slice(i + q.length));
 }
+// סדר קבוע: לפי סוג מוצר (בסדר שבו הסוגים מופיעים ברשימה), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
+const FIRST = ["מיטב", "הראל"];
+function sortRows(rows) {
+  const order = {}, rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
+  rows.forEach(r => { const o = order[r.tab] = order[r.tab] || []; if (!o.includes(r.type)) o.push(r.type); });
+  return rows.map((r, n) => ({ r, n })).sort((a, b) => (a.r.tab === b.r.tab ? 0 : a.r.tab === "pension" ? -1 : 1)
+    || (order[a.r.tab].indexOf(a.r.type) - order[b.r.tab].indexOf(b.r.type))
+    || (rank(a.r.company)[0] - rank(b.r.company)[0]) || rank(a.r.company)[1].localeCompare(rank(b.r.company)[1], "he") || (a.n - b.n)).map(x => x.r);
+}
 function groups(list) {          // שורות רצופות של אותה חברה ואותו סוג = קבוצה אחת
   const out = [];
   for (const r of list) { const g = out[out.length - 1]; if (g && g.co === r.company && g.type === r.type) g.rows.push(r); else out.push({ co: r.company, type: r.type, rows: [r] }); }          // הרשימה מסודרת לפי סוג מוצר: חברה מאוחדת רק בתוך אותו סוג
@@ -101,7 +110,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
 let tm; document.getElementById("q").addEventListener("input", e => { st.q = e.target.value; clearTimeout(tm); tm = setTimeout(paint, 150); });
 fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
-  st.rows = d.rows || [];
+  st.rows = sortRows(d.rows || []);
   document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
   paint();
 }).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
