@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-26",
- "count": 703,
+ "updated": "2026-10-27",
+ "count": 702,
  "columns": [
   "security_id",
   "security_name",
@@ -491,7 +491,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1141,7 +1141,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -1895,7 +1895,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -3923,7 +3923,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -5717,7 +5717,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -6705,7 +6705,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -7511,7 +7511,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -9513,7 +9513,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -10943,7 +10943,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -11645,7 +11645,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "Aaa.il",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -12633,7 +12633,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -14505,7 +14505,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -15285,7 +15285,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
@@ -17449,32 +17449,6 @@
    "ytm_gross": ""
   },
   {
-   "security_id": 1234491,
-   "security_name": "ריט אזורים אגחד (בהנפקה)",
-   "symbol": "",
-   "isin": "",
-   "security_type": "אג\"ח קונצרני",
-   "asset_class": "אג\"ח קונצרני",
-   "issuer_name": "ריט אזורים - ה.פ ליווינג בע\"מ",
-   "company": "ריט אזורים - ה.פ ליווינג בע\"מ",
-   "chp_number": "516117181",
-   "agch_approved": "כן",
-   "is_private": "כן",
-   "notes": "הנפקה פתוחה עד 26/10/2026",
-   "redemption_date": "",
-   "annual_interest": 2.59,
-   "linkage": "מדד",
-   "linkage_type": "",
-   "last_price": "",
-   "annual_yield": "",
-   "base_indices": "",
-   "is_tradable": false,
-   "first_seen": "2026-10-26",
-   "midroog_rating": "",
-   "maalot_rating": "ilA-",
-   "ytm_gross": ""
-  },
-  {
    "security_id": 1223197,
    "security_name": "רייסדור   אגח א",
    "symbol": "רסדר.ק1",
@@ -18041,7 +18015,7 @@
    "annual_yield": "",
    "base_indices": "",
    "is_tradable": false,
-   "first_seen": "2026-10-26",
+   "first_seen": "2026-10-27",
    "midroog_rating": "",
    "maalot_rating": "",
    "ytm_gross": ""
