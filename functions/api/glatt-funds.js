@@ -23,6 +23,11 @@ async function ensure(env) {
   const seeded = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'seeded'").first();
   if (!n.n && !seeded) await replaceAll(env, SEED, SEED_UPDATED, null, true);
   if (!(await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'shared_v1'").first())) await migrateShared(env);
+  if (!(await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'fund_type_v1'").first())) {          // תיקון חד-פעמי של הרשימה הקיימת: סוג קרן סל / נאמנות לפי המספר
+    const cur = await read(env);
+    if (cur.rows.some(r => fundType(r.type, r.number) !== r.type)) await replaceAll(env, cur.rows, cur.updated, cur.type_order);
+    await env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('fund_type_v1', '1') ON CONFLICT(k) DO NOTHING").run();
+  }
 }
 
 // העברה חד-פעמית: סוג מוצר שמופיע בשתי הרשימות נשמר פעם אחת (tab = both); סדר הסוגים נשמר לכל רשימה בנפרד.
@@ -45,9 +50,17 @@ async function migrateShared(env) {
   await env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('shared_v1', '1') ON CONFLICT(k) DO NOTHING").run();
 }
 
+// קרן סל / קרן נאמנות לפי מספר הקרן: מתחיל ב-1 = קרן סל, ב-5 = קרן נאמנות (רק בשורות שסוגן אחד משני אלה - שאר הסוגים לא נוגעים)
+const FUND_TYPES = ["קרן סל", "קרן נאמנות"];
+export function fundType(type, number) {
+  const t = String(type || "").replace(/\s+/g, " ").trim(), d = String(number || "").replace(/\D/g, "")[0];
+  if (!FUND_TYPES.includes(t)) return t;
+  return d === "1" ? "קרן סל" : d === "5" ? "קרן נאמנות" : t;
+}
+
 function clean(r, i) {
   const s = (v, max) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, max);
-  return { tab: TABS.includes(r.tab) ? r.tab : "pension", sort: i, company: s(r.company, 120), track: s(r.track, 300), type: s(r.type, 160), number: s(r.number, 60), note: s(r.note, 400), mark: r.mark === "new" || r.mark === "del" ? r.mark : "" };
+  return { tab: TABS.includes(r.tab) ? r.tab : "pension", sort: i, company: s(r.company, 120), track: s(r.track, 300), type: fundType(s(r.type, 160), r.number), number: s(r.number, 60), note: s(r.note, 400), mark: r.mark === "new" || r.mark === "del" ? r.mark : "" };
 }
 
 async function replaceAll(env, rows, updated, typeOrder, seed) {

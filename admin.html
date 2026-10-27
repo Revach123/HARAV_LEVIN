@@ -1817,7 +1817,7 @@ function gfBodyHtml() {
     if (GF.q.trim() && !shown.length) return "";
     return `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(t || "(סוג מוצר חדש: כתבו את שם הסוג בעמודת הסוג)")}${gfShared(t) ? ' <span style="font-weight:400;font-size:12px;color:var(--muted)">(מופיע בשתי הרשימות)</span>' : ""}</td></tr>` +
       shown.map(({ r, i }) => { const del = r.mark === "del";          // שורה שהוסרה: רק ההערות ניתנות לעריכה
-        return `<tr data-i="${i}" class="${del ? "gf-del" : r.mark === "new" ? "gf-new" : ""}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" data-k="${k}" value="${escHtml(r[k])}" ${del && k !== "note" ? "readonly" : ""} ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+        return `<tr data-i="${i}" class="${del ? "gf-del" : r.mark === "new" ? "gf-new" : ""}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" data-k="${k}" value="${escHtml(r[k])}" ${del && k !== "note" ? "readonly" : ""} ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" || k === "number" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
         <td style="text-align:center;white-space:nowrap">${del
           ? `<button class="gf-b" title="החזרת המסלול לרשימה" onclick="gfMark(${i},'')">↩ שחזור</button><button class="gf-b" title="מחיקה סופית מהרשימה" style="color:var(--red)" onclick="gfDel(${i},1)">🗑 סופית</button>`
           : `${r.mark === "new" ? `<button class="gf-b" title="ביטול הסימון הצהוב (מסלול חדש)" onclick="gfMark(${i},'')">✓ לא חדש</button>` : ""}<button class="gf-b" title="סימון כהוסר (רקע אדום וקו חוצה)" style="color:var(--red)" onclick="gfDel(${i})">✕</button>`}</td></tr>`; }).join("") +
@@ -1828,11 +1828,15 @@ function gfTabsH() { const t = document.querySelector(".gf-tabs"); if (t) docume
 function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
 function gfDirty() { GF.dirty = true; formDirty = false; const b = document.getElementById("gf-save"); if (b) { b.disabled = GF.saving; b.textContent = "💾 שמירה"; } }
 function gfSet(i, k, v) { GF.rows[i][k] = v; gfDirty(); }
+// קרן סל / קרן נאמנות לפי מספר הקרן: מתחיל ב-1 = קרן סל, ב-5 = קרן נאמנות (רק בשורות שסוגן אחד משני אלה; כמו בשרת)
+function gfFundType(r) { if (!["קרן סל", "קרן נאמנות"].includes(String(r.type || "").trim())) return false; const d = String(r.number || "").replace(/\D/g, "")[0], t = d === "1" ? "קרן סל" : d === "5" ? "קרן נאמנות" : r.type; if (t === r.type) return false; r.type = t; return true; }
 function gfFocus(row, field) {          // אחרי ציור מחדש: מיקוד בשדה של השורה (לפי מקומה החדש ברשימה)
   setTimeout(() => { const tr = document.querySelector(`#gf-body tr[data-i="${GF.rows.indexOf(row)}"]`); if (!tr) return; const inp = tr.querySelectorAll("input")[GF_FIELDS.findIndex(f => f[0] === field)]; tr.scrollIntoView({ block: "center" }); if (inp) inp.focus(); }, 0);
 }
 function gfResort(i, k) {          // שינוי חברה / סוג: השורה עוברת למקום שלה לפי הסדר הקבוע
   const row = GF.rows[i];
+  if (k === "number") { if (!gfFundType(row)) return; k = "type"; }          // מספר קרן שמשנה את סוגה (סל / נאמנות): השורה עוברת לסוג הנכון
+  else if (k === "type") gfFundType(row);
   if (k === "type") row.tab = gfShared(row.type, row) ? "both" : (row.tab === "both" ? GF.tab : row.tab);          // סוג משותף לשתי הרשימות - השורה בשתיהן
   gfSort(); render(); gfFocus(row, k === "type" ? "company" : "track");
 }
