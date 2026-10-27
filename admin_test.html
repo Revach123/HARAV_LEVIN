@@ -1728,7 +1728,7 @@ function renderGFunds() {
   const cos = [...new Set(GF.rows.map(r => r.company).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
   return head + tabs + `<datalist id="gf-types">${types.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist><datalist id="gf-cos">${cos.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist>
     <div style="overflow:auto"><table class="gf-tbl"><thead><tr><th style="width:28px">#</th>${GF_FIELDS.map(([, l, w]) => `<th style="width:${w}">${l}</th>`).join("")}<th style="width:60px">מחיקה</th></tr></thead><tbody id="gf-body">${gfBodyHtml()}</tbody></table></div>
-    <div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="btn-ghost" onclick="gfAdd(-1)">➕ סוג מוצר חדש</button><span style="font-size:12px;color:var(--muted)">הסדר קבוע: לפי סוג מוצר, ובתוך כל סוג מיטב, הראל ואז שאר החברות לפי א-ב</span></div>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="btn-ghost" onclick="gfAdd(-1)">➕ סוג מוצר חדש</button></div>
     ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
 }
 // סדר קבוע ואוטומטי: לפי סוג מוצר (בסדר הקיים; סוג חדש - בסוף), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
