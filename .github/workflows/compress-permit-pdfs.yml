@@ -17,6 +17,9 @@ on:
       min_bytes:
         description: "רק מסמכים גדולים מזה (בייט)"
         default: "400000"
+      max_minutes:
+        description: "תקרת זמן לשלב הדחיסה (דקות)"
+        default: "20"
 
 permissions:
   contents: read
@@ -51,8 +54,10 @@ jobs:
           APPLY: ${{ inputs.apply }}
           LIMIT: ${{ inputs.limit }}
           MIN_BYTES: ${{ inputs.min_bytes }}
+          MAX_MIN: ${{ inputs.max_minutes }}
         run: |
-          [[ "$LIMIT" =~ ^[0-9]+$ && "$MIN_BYTES" =~ ^[0-9]+$ ]] || { echo "::error::limit / min_bytes חייבים להיות מספרים"; exit 1; }
+          [[ "$LIMIT" =~ ^[0-9]+$ && "$MIN_BYTES" =~ ^[0-9]+$ && "$MAX_MIN" =~ ^[0-9]+$ ]] || { echo "::error::limit / min_bytes / max_minutes חייבים להיות מספרים"; exit 1; }
           ARGS="--limit $LIMIT --min-bytes $MIN_BYTES"
           [ "$APPLY" = "true" ] && ARGS="$ARGS --apply"
-          python3 -u scripts/compress_permit_pdfs.py $ARGS
+          # תקרת זמן: בתקיעה השלב נכשל אחרי max_minutes והלוג זמין (אחרת הלוג נשאר חסום עד סיום הריצה)
+          timeout "$((MAX_MIN * 60))" python3 -u scripts/compress_permit_pdfs.py $ARGS
