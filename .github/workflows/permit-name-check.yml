@@ -1,0 +1,56 @@
+name: Permit name check (read-only, manual)
+
+# בודק לכל חברה עם שטר משויך אם שמה (השם בהיתר עסקה / השם ברשם) מופיע בטקסט השטר באינדקס.
+# קריאה בלבד: /api/permit-text?namecheck=1 עם הסוד CRON_SECRET. התוצאה: data/probe/permit_name_check.{json,csv}
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run check
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe tmp_nc
+          off=0; i=0
+          while [ "$off" != "null" ]; do
+            code=$(curl -sS -m 120 -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" "https://harav-levin.pages.dev/api/permit-text?namecheck=1&offset=$off&limit=20" -o "tmp_nc/p$i.json" -w '%{http_code}')
+            if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp_nc/p$i.json)"; exit 1; fi
+            off=$(jq -r '.next' "tmp_nc/p$i.json"); i=$((i+1))
+          done
+          jq -s '{total: (.[0].total), rows: (map(.rows) | add)}' tmp_nc/p*.json > data/probe/permit_name_check.json
+          python3 - <<'PY'
+          import json, csv
+          d = json.load(open("data/probe/permit_name_check.json", encoding="utf-8"))
+          rank = {"none": 0, "partial": 1, "notext": 2, "ok": 3}
+          SL = {"general": "כללי", "private": "פרטי", "general,private": "כללי+פרטי"}
+          ST = {"none": "אין התאמה", "partial": "חלקית", "notext": "אין טקסט", "ok": "תקין"}
+          rows = sorted(d["rows"], key=lambda r: (rank[r["status"]], r.get("permit_name") or ""))
+          with open("data/probe/permit_name_check.csv", "w", encoding="utf-8-sig", newline="") as f:
+              w = csv.writer(f); w.writerow(["שם בהיתר עסקה", "שם ברשם", "ח.פ.", "רשימה", "שטר", "סטטוס", "אחוז התאמה"])
+              for r in rows:
+                  if r["status"] != "ok": w.writerow([r.get("permit_name"), r.get("registrar_name"), r.get("chp"), SL.get(r["slot"], r["slot"]), r.get("doc_name"), ST[r["status"]], r["cover"]])
+          c = {k: sum(1 for r in rows if r["status"] == k) for k in rank}
+          print(f"total={d['total']} none={c['none']} partial={c['partial']} notext={c['notext']} ok={c['ok']}")
+          open("data/probe/permit_name_check_summary.txt", "w").write(f"total={d['total']} none={c['none']} partial={c['partial']} notext={c['notext']} ok={c['ok']}\n")
+          PY
+      - name: Commit
+        if: always()
+        run: |
+          rm -rf tmp_nc
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "permit-name-check: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push
