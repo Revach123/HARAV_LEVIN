@@ -55,8 +55,9 @@
     .it .note{font-size:14px;margin-top:.15rem}
   }
   /* הטמעה באתר iska.co.il (funds.html?embed=1): בלי כפתור חזרה וכותרת, בלי הצמדה (ה-iframe באורך התוכן), רקע שקוף */
-  html.embed .back, html.embed h1{display:none}
-  html.embed .top{position:static;box-shadow:none;background:transparent;margin:0;padding:0 0 .4rem}
+  html.embed .top{display:none}          /* בהטמעה הלשוניות והחיפוש נמצאים בדף המארח (funds-embed.js) ונצמדים שם לראש העמוד בגלילה */
+  html.embed main table{margin-top:0}
+  html.embed .cards{margin-top:0}
   html.embed body{background:transparent;padding:0 0 .5rem}
 </style>
 <script>if (/[?&]embed\b/.test(location.search)) document.documentElement.classList.add("embed");</script>
@@ -126,8 +127,17 @@ fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
   paint();
 }).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
-// בהטמעה: מדווחים לדף המארח את גובה התוכן (ה-iframe מתאים את גובהו, בלי גלילה פנימית)
+// בהטמעה: מדווחים לדף המארח את גובה התוכן (ה-iframe מתאים את גובהו, בלי גלילה פנימית), ומקבלים ממנו לשונית / חיפוש
 if (document.documentElement.classList.contains("embed") && parent !== window) {
+  const spec = () => { try { parent.postMessage({ source: "harav-levin", type: "funds-spec", tab: st.tab, updated: document.getElementById("upd").textContent }, "*"); } catch {} };
+  window.addEventListener("message", e => {
+    const m = e.data; if (!m || m.source !== "harav-parent" || e.source !== parent) return;
+    if (m.type === "setTab" && (m.value === "pension" || m.value === "savings")) { st.tab = m.value; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.t === st.tab ? "true" : "false")); paint(); spec(); }
+    if (m.type === "setQ") { st.q = String(m.value || ""); paint(); }
+    if (m.type === "hello") spec();
+  });
+  new MutationObserver(spec).observe(document.getElementById("upd"), { childList: true, characterData: true, subtree: true });
+  spec();
   let lastH = 0;
   const sendH = () => { const h = Math.ceil(document.body.getBoundingClientRect().height + 8); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-funds-height", h }, "*"); } catch {} } };
   new ResizeObserver(sendH).observe(document.body); window.addEventListener("load", sendH); sendH();
