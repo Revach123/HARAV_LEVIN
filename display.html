@@ -652,7 +652,11 @@ function cellFor(col, val, row) {
     const st = val || (row && Number(row.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
     td.className = "ctr wrapok";          // עמודה צרה: הסימון והערתו נשברים לשורות במקום להרחיב את הטבלה
     if (st.startsWith("אין"))            td.innerHTML = '<span class="bonds-none">אין אג"ח</span>';
-    else if (st.includes("בהנפקה"))       td.innerHTML = `<span class="badge-offer">${esc(st)}</span>`;   // יש אג"ח בהנפקה / בהנפקה עתידית
+    else if (st.includes("בהנפקה")) {         // יש אג"ח בהנפקה / בהנפקה עתידית + מאושר / לא מאושר
+      const base = st.replace(/\s*-\s*(לא )?מאושר\s*$/, "");
+      const ok = / - מאושר\s*$/.test(st) ? '<span class="badge-yes">מאושר ✓</span>' : /לא מאושר\s*$/.test(st) ? '<span class="badge-bad">לא מאושר ✕</span>' : "";
+      td.innerHTML = `<span class="badge-offer">${esc(base)}</span>` + (ok ? `<div style="margin-top:3px">${ok}</div>` : "");
+    }
     else if (st.includes("לא מאושר"))    td.innerHTML = '<span class="badge-bad">יש אג"ח - לא מאושר ✕</span>';
     else if (st.includes("מסוימים"))      td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span><div class="bond-note">אג"ח מסוימים</div>';
     else                                  td.innerHTML = '<span class="badge-yes">יש אג"ח - מאושר ✓</span>';

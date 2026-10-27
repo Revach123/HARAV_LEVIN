@@ -64,10 +64,14 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
     if (hit.length === 1) { const cur = byRow.get(hit[0]); if (cur !== "open") byRow.set(hit[0], o.kind); }
   }
   const out = rows.map(r => {
-    const { _registrar, _bonds_note_all, _selective, ...rest } = r;
-    // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית), והערת אישור האג"ח חוזרת להופיע
+    const { _registrar, _bonds_note_all, _selective, _bonds_ok, ...rest } = r;
+    // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית) + מאושר / לא מאושר (לפי אישור האג"ח של החברה), והערת אישור האג"ח חוזרת להופיע
     const off = rest.bonds_status === 'אין אג"ח' ? (offerings.byChp.get(String(rest.chp_number || "").trim()) || byRow.get(r)) : "";
-    if (off) { rest.bonds_status = off === "open" ? 'יש אג"ח בהנפקה' : 'יש אג"ח בהנפקה עתידית'; rest.bonds_note = _bonds_note_all || ""; }
+    if (off) {
+      rest.bonds_status = (off === "open" ? 'יש אג"ח בהנפקה' : 'יש אג"ח בהנפקה עתידית') + (Number(_bonds_ok) === 1 ? " - מאושר" : " - לא מאושר");
+      rest.approved = Number(_bonds_ok) === 1 ? 1 : 0;
+      rest.bonds_note = _bonds_note_all || "";
+    }
     const reg = String(_registrar || "").replace(/\s+/g, " ").trim();
     const permit = String(r.permit_name || "").replace(/\s+/g, " ").trim();
     let name = permit;
@@ -216,6 +220,7 @@ export async function onRequestGet(context) {
                ${bondsNoteExpr} AS bonds_note,
                ${bondsNoteAll} AS _bonds_note_all,
                CASE WHEN ${selective} THEN 1 ELSE 0 END AS _selective,
+               CASE WHEN ${approvedCond} OR ${selective} THEN 1 ELSE 0 END AS _bonds_ok,
                ${notesOut} AS notes${withPcat ? ",\n               COALESCE(permits_category,'') AS permits_category" : ""}
         FROM businesses
         WHERE ${whereClause} ${liquidated}
