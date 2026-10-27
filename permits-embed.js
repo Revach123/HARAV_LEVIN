@@ -25,6 +25,7 @@
     "#ipb-side button::after{content:\"\\2039\";font-size:20px;line-height:1;color:#6a7c82;order:2;margin-inline-start:.4rem}" +
     "#ipb-side button small{color:#6a7c82;font-size:13px;margin-inline-start:auto;padding-inline:.5rem}" +
     "#ipb-side button:hover{background:#eef4f5}#ipb-side button.on{font-weight:700;color:#1e8f85;border-bottom-color:#2aada1}" +
+    "#ipb .ipb-x{margin:0 .5rem;padding:0 .5rem;font:inherit;font-size:16px;line-height:1.6;color:#6a7c82;background:#fff;border:1px solid #b9e3de;border-radius:999px;cursor:pointer;box-shadow:none;text-transform:none}#ipb .ipb-x:hover{color:#1e8f85;border-color:#2aada1}" +
     "#ipb .ipb-title{font-size:21px;font-weight:700;color:#274d5b;text-align:center;padding:.25rem .6rem .45rem;border-top:2px solid #b9e3de}";
   document.head.appendChild(css);
   var ph = document.createElement("div"), bar = document.createElement("div"), f = document.createElement("iframe");
@@ -37,7 +38,7 @@
   f.style.cssText = "width:100%;height:700px;border:0;display:block";
   f.src = O + "/permits.html?embed=1&auto=1";
   // גובה ה-iframe מתחיל מהגובה האחרון שנשמר ללשונית (ולא מ-700 הקבועים), וירידה בגובה מתעכבת - כדי שהדף לא יקפוץ בטעינה
-  var curTab = "all", st = null;
+  var curTab = "all", st = null, curCat = "";
   function hk() { return "ip-h-" + curTab; }
   try { var H0 = Number(window.localStorage.getItem(hk())); if (H0 > 0) { f.style.height = H0 + "px"; } } catch (x) { }
   function applyH(h) { f.style.height = h + "px"; try { window.localStorage.setItem(hk(), String(h)); } catch (x) { } }
@@ -52,6 +53,7 @@
   sel.innerHTML = '<option value="">כל הקטגוריות</option>'; cnt.textContent = "\u00a0";
   tabsEl.style.display = "none";
   tabsEl.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setTab", value: b.getAttribute("data-t") }); } });
+  ttl.addEventListener("click", function (e) { if (e.target.closest(".ipb-x")) { send({ type: "setCat", value: "" }); } });
   sel.addEventListener("change", function () { send({ type: "setCat", value: sel.value }); });
   q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { send({ type: "setQ", value: q.value }); }, 120); });
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -65,14 +67,14 @@
     if (sk !== sideKey) { sideKey = sk; sidebar.innerHTML = '<button type="button" data-c=""' + (d.cat ? "" : ' class="on"') + ">כל הקטגוריות<small>" + d.total + "</small></button>" + d.cats.map(function (c) { return '<button type="button" data-c="' + esc(c[0]) + '"' + (c[0] === d.cat ? ' class="on"' : "") + ">" + esc(c[0]) + "<small>" + c[1] + "</small></button>"; }).join(""); }
     sel.value = d.cat;
     cnt.textContent = d.count + " חברות";
-    ttl.hidden = !d.cat; ttl.textContent = d.cat;
+    curCat = d.cat; ttl.hidden = !d.cat; ttl.innerHTML = d.cat ? esc(d.cat) + ' <button type="button" class="ipb-x" title="ביטול בחירת הקטגוריה" aria-label="ביטול בחירת הקטגוריה">✕</button>' : "";
   }
   window.addEventListener("message", function (e) {
     if (e.origin !== O || !e.data || e.data.source !== "harav-levin") { return; }
     if (e.data.type === "resize") { setH(e.data.height); GEO = e.data.side || null; }
     if (e.data.type === "permits-spec") { curTab = e.data.tab; spec(e.data); }
   });
-  sidebar.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setCat", value: b.getAttribute("data-c") }); } });
+  sidebar.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setCat", value: b.getAttribute("data-c") === curCat ? "" : b.getAttribute("data-c") }); } });
   // הרחבה מעבר לעמודת התוכן של האתר: ה-iframe (והסרגל שמעליו) ברוחב המסך פחות שוליים קטנים, ממורכזים
   var lastWide = -1, wideN = 0, wKey = "";
   function widen() {
