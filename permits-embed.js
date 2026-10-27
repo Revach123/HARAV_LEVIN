@@ -20,12 +20,19 @@
     "#ipb input,#ipb select{box-sizing:border-box;margin:0;font:inherit;font-size:16px;padding:.4rem .8rem;border:2px solid #b9e3de;border-radius:10px;background:#fff;color:#3b3d3d;min-height:42px;height:auto;box-shadow:none}" +
     "#ipb input{flex:1;min-width:160px}#ipb select{min-width:190px}" +
     "#ipb .ipb-cnt{font-size:14px;color:#6a7c82}" +
+    "#ipb-side{position:fixed;display:none;z-index:98;direction:rtl;box-sizing:border-box;overflow-y:auto;background:#fff;font-family:inherit}" +
+    "#ipb-side button{display:flex;width:100%;justify-content:space-between;align-items:center;margin:0;font:inherit;font-size:18px;line-height:1.15;color:#274d5b;background:none;border:0;border-bottom:1px solid #dfe7e8;border-radius:0;box-shadow:none;text-transform:none;padding:.18rem .4rem;cursor:pointer;text-align:start}" +
+    "#ipb-side button::after{content:\"\\2039\";font-size:20px;line-height:1;color:#6a7c82;order:2;margin-inline-start:.4rem}" +
+    "#ipb-side button small{color:#6a7c82;font-size:13px;margin-inline-start:auto;padding-inline:.5rem}" +
+    "#ipb-side button:hover{background:#eef4f5}#ipb-side button.on{font-weight:700;color:#1e8f85;border-bottom-color:#2aada1}" +
     "#ipb .ipb-title{font-size:21px;font-weight:700;color:#274d5b;text-align:center;padding:.25rem .6rem .45rem;border-top:2px solid #b9e3de}";
   document.head.appendChild(css);
   var ph = document.createElement("div"), bar = document.createElement("div"), f = document.createElement("iframe");
   ph.id = "ipb-ph"; bar.id = "ipb";
   bar.innerHTML = '<div class="ipb-tabs"></div><div class="ipb-row"><input type="search" placeholder="חיפוש חברה…" aria-label="חיפוש חברה" autocomplete="off"><select aria-label="קטגוריה"></select><span class="ipb-cnt"></span></div><div class="ipb-title" hidden></div>';
   ph.appendChild(bar);
+  var sidebar = document.createElement("nav"); sidebar.id = "ipb-side"; sidebar.setAttribute("aria-label", "קטגוריות"); document.body.appendChild(sidebar);
+  var GEO = null, sideKey = "", extOn = null, sL = -1, sW = -1, sT = -1, sM = -1;
   f.id = "iska-permits"; f.title = "שטרות היתר עיסקא"; f.setAttribute("scrolling", "no");
   f.style.cssText = "width:100%;height:700px;border:0;display:block";
   f.src = O + "/permits.html?embed=1&auto=1#t=" + T;
@@ -53,16 +60,19 @@
     Array.prototype.forEach.call(tabsEl.children, function (b) { b.className = b.getAttribute("data-t") === d.tab ? "on" : ""; });
     var ck = d.total + "|" + JSON.stringify(d.cats);
     if (ck !== catsKey) { catsKey = ck; sel.innerHTML = '<option value="">כל הקטגוריות (' + d.total + ")</option>" + d.cats.map(function (c) { return '<option value="' + esc(c[0]) + '">' + esc(c[0]) + " (" + c[1] + ")</option>"; }).join(""); }
+    var sk = ck + "|" + d.cat;
+    if (sk !== sideKey) { sideKey = sk; sidebar.innerHTML = '<button type="button" data-c=""' + (d.cat ? "" : ' class="on"') + ">כל הקטגוריות<small>" + d.total + "</small></button>" + d.cats.map(function (c) { return '<button type="button" data-c="' + esc(c[0]) + '"' + (c[0] === d.cat ? ' class="on"' : "") + ">" + esc(c[0]) + "<small>" + c[1] + "</small></button>"; }).join(""); }
     sel.value = d.cat;
     cnt.textContent = d.count + " חברות";
     ttl.hidden = !d.cat; ttl.textContent = d.cat;
   }
   window.addEventListener("message", function (e) {
     if (e.origin !== O || !e.data || e.data.source !== "harav-levin") { return; }
-    if (e.data.type === "resize") { setH(e.data.height); }
+    if (e.data.type === "resize") { setH(e.data.height); GEO = e.data.side || null; }
     if (e.data.type === "permits-spec") { curTab = e.data.tab; spec(e.data); }
   });
-  var pinned = false, lastL = -1, lastW = -1, lastSideTop = null, lastSideAvail = null;
+  sidebar.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setCat", value: b.getAttribute("data-c") }); } });
+  var pinned = false, lastL = -1, lastW = -1;
   // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
   function hdrBottom() {
     var w = window.innerWidth, best = 0, pts = [w / 2, w * 0.25, w * 0.75];
@@ -97,9 +107,15 @@
     } else if (pinned) {
       ph.style.height = ""; bar.style.position = ""; bar.style.top = ""; bar.style.left = ""; bar.style.width = ""; bar.style.zIndex = ""; bar.className = ""; pinned = false;
     }
-    if (wide && f.contentWindow) {            // התפריט בצד ה-iframe נשאר במקום: שורת המסך הפנויה (מתחת לכותרת ולסרגל) בקואורדינטות ה-iframe
-      var top = Math.round(OFFSET + bh + 10 - fr.top), avail = Math.round(window.innerHeight - OFFSET - bh - 24);
-      if (top !== lastSideTop || avail !== lastSideAvail) { lastSideTop = top; lastSideAvail = avail; f.contentWindow.postMessage({ source: "harav-parent", type: "side", top: top, avail: avail }, O); }
+    var ext = wide && !!GEO && sidebar.children.length > 0;     // התפריט בצד נשאר קבוע בעמוד האב (כמו הסרגל העליון) - באותו פריים של הגלילה, בלי מעבר הודעות
+    if (ext !== extOn) { extOn = ext; send({ type: "ext", on: ext }); sidebar.style.display = ext ? "block" : "none"; }
+    if (ext) {
+      var pinTop = OFFSET + bh + 10, nat = fr.top + GEO.t, lb = fr.top + GEO.t + GEO.h, mh = Math.max(160, window.innerHeight - pinTop - 12);
+      if (sidebar.style.maxHeight !== mh + "px") { sidebar.style.maxHeight = mh + "px"; }
+      var tp = Math.round(Math.min(Math.max(nat, pinTop), lb - sidebar.offsetHeight)), lf = Math.round(fr.left + GEO.l), wd = GEO.w;
+      if (tp !== sT) { sidebar.style.top = tp + "px"; sT = tp; }
+      if (lf !== sL) { sidebar.style.left = lf + "px"; sL = lf; }
+      if (wd !== sW) { sidebar.style.width = wd + "px"; sW = wd; }
     }
     window.requestAnimationFrame(tick);
   }

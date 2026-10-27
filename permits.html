@@ -26,7 +26,7 @@
   .tabs button.on{color:var(--accent-dark);border-top-color:var(--accent);background:var(--accent-bg)}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:2rem;align-items:start}
   .side{position:sticky;top:calc(var(--sh,120px) + .6rem)}
-  .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:calc(19px*var(--sf,1));line-height:1.2;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:calc(.3rem*var(--sf,1)) .4rem;cursor:pointer;text-align:start}
+  .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:calc(18px*var(--sf,1));line-height:1.15;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:calc(.18rem*var(--sf,1)) .4rem;cursor:pointer;text-align:start}
   .side button::after{content:"\2039";font-size:20px;color:var(--muted);order:2;margin-inline-start:.4rem}
   .side button small{color:var(--muted);font-size:calc(13px*var(--sf,1));margin-inline-start:auto;padding-inline:.5rem}
   .side button:hover{background:#eef4f5}.side button.on{font-weight:700;color:var(--accent-dark);border-bottom-color:var(--accent)}
@@ -53,7 +53,8 @@
      כאן הוא מוסתר, והתפריט בצד נגלל עם הדף (במובייל מוסתר: הבחירה בסרגל) */
   html.auto{overflow:hidden}
   body.auto .stick{display:none}
-  body.auto .side{position:relative;top:auto;will-change:transform}
+  body.auto .side{position:relative;top:auto}
+  body.auto.ext .side{visibility:hidden}          /* בהטמעה רחבה התפריט האמיתי נבנה בעמוד האב (position:fixed) - כאן נשמר רק המקום */
   @media(max-width:760px){body.auto .side{display:none}}
 </style>
 </head>
@@ -172,20 +173,20 @@ document.getElementById("side").addEventListener("click", e => { const b = e.tar
 // ── הטמעה באתר (permits-embed.js): דיווח גובה לעמוד האב, ושליטה מהסרגל הקבוע שבעמוד האב (לשונית / חיפוש / קטגוריה) ──
 if (AUTO) {
   const docH = () => Math.ceil(document.documentElement.getBoundingClientRect().height);
-  const report = () => window.parent.postMessage({ source: "harav-levin", type: "resize", height: docH() }, "*");
+  const geo = () => { const sd = document.getElementById("side"), lay = document.querySelector(".layout"); if (!sd || !lay) return null; const r = sd.getBoundingClientRect(); return { t: sd.offsetTop, l: Math.round(r.left), w: Math.round(r.width), h: lay.offsetHeight }; };
+  const report = () => window.parent.postMessage({ source: "harav-levin", type: "resize", height: docH(), side: geo() }, "*");
   new ResizeObserver(report).observe(document.body);
   addEventListener("message", e => {
     const d = e.data; if (!d || d.source !== "harav-parent") return;
     if (d.type === "setTab" && TABS[d.value]) { TAB = d.value; CAT = ""; setHash(); draw(); }
     else if (d.type === "setCat") { CAT = String(d.value || ""); setHash(); draw(); }
     else if (d.type === "setQ") { Q = String(d.value || ""); draw(); }
-    else if (d.type === "side") { SIDE = d; placeSide(); }
+    else if (d.type === "ext") { document.body.classList.toggle("ext", !!d.on); report(); }
   });
   report();
 }
-// התפריט בצד נשאר במקומו בגלילה: בתצוגה עצמאית - sticky; בהטמעה (auto) העמוד האב שולח את שורת המסך הפנויה (top בקואורדינטות ה-iframe + avail)
-// ואז מזיזים אותו בהתאם. אם הרשימה ארוכה מהמסך - מקטינים את הפונט והריווח (--sf) עד שהכול נכנס
-let SIDE = null, fitKey = "";
+// התפריט בצד: בתצוגה עצמאית - sticky; אם הרשימה ארוכה מהמסך - מקטינים מעט את הפונט והריווח (--sf). בהטמעה (auto) התפריט נבנה בעמוד האב (permits-embed.js)
+let fitKey = "";
 function fitSide(avail) {
   const s = document.getElementById("side"); if (!s || avail < 120) return;
   const key = Math.round(avail) + "|" + s.children.length; if (key === fitKey) return; fitKey = key;
@@ -193,15 +194,7 @@ function fitSide(avail) {
   const H = s.offsetHeight, f = H > avail ? Math.max(.75, avail / H) : 1;
   s.style.setProperty("--sf", f.toFixed(3)); s.style.maxHeight = Math.round(avail) + "px"; s.style.overflowY = "auto";
 }
-function placeSide() {
-  const s = document.getElementById("side"), lay = document.querySelector(".layout"); if (!s || !lay) return;
-  if (document.body.classList.contains("auto")) {
-    if (!SIDE) return;
-    fitSide(SIDE.avail);
-    const y = Math.max(0, Math.min(SIDE.top - s.offsetTop, lay.offsetHeight - s.offsetHeight));
-    s.style.transform = y ? "translateY(" + Math.round(y) + "px)" : "";
-  } else fitSide(innerHeight - (document.getElementById("stick").offsetHeight || 0) - 24);
-}
+function placeSide() { if (!document.body.classList.contains("auto")) fitSide(innerHeight - (document.getElementById("stick").offsetHeight || 0) - 24); }
 addEventListener("resize", () => { fitKey = ""; placeSide(); });
 {
   const sh = () => document.documentElement.style.setProperty("--sh", document.getElementById("stick").offsetHeight + "px");
