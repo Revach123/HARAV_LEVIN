@@ -1411,7 +1411,7 @@ function renderForm() {
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
-          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש ח.פ.</button>
+          <button type="button" class="${isEdit ? "btn-primary" : "btn-ghost"}" onclick="toggleNoChp()" ${isEdit ? 'style="padding:7px 16px"' : ""}>${isEdit ? "➕ הוספת ח.פ." : "יש ח.פ."}</button>
         </div>
       </div>
 
@@ -2240,6 +2240,7 @@ function toggleNoChp() {
   } else {                                       // חזרה ל"עסק עם ח.פ."
     if (chpEl) { chpEl.disabled = false; }
     if (out) out.innerHTML = lookupOutHtml();
+    if (editBiz?.id) permitPick("other");          // עסק קיים שמוסיפים לו ח.פ.: השם בהיתר עסקה הקיים נשמר (לא מוחלף בשם מהרשם בלי בחירה); אפשר לבחור "שם מהרשם" אחרי הזיהוי
   }
   showChpPart();
   { const sf = document.getElementById("subs-field"); if (sf) sf.style.display = noChp ? "none" : ""; }
