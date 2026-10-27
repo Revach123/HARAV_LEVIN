@@ -89,16 +89,16 @@ const MODE_KEY = "permitsPdfMode", PDFS = new Map();
 const pdfUrl = id => `${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}`;
 const b64Mode = () => { try { return +localStorage.getItem(MODE_KEY) > Date.now(); } catch (e) { return false; } };
 const setB64Mode = () => { try { localStorage.setItem(MODE_KEY, String(Date.now() + 7 * 864e5)); } catch (e) {} };
-async function fetchDirect(id) {
-  const r = await fetch(pdfUrl(id));
+async function fetchDirect(id, full) {
+  const r = await fetch(pdfUrl(id) + (full ? "?dl=1" : ""));
   if (!r.ok) throw new Error(r.status);
   const blob = await r.blob();
   if ((await blob.slice(0, 5).text()) !== "%PDF-") throw new Error("not pdf");          // דף חסימה של סינון במקום קובץ
   const m = /filename\*=UTF-8''([^;]+)/i.exec(r.headers.get("Content-Disposition") || "");
   return { blob: blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" }), name: m ? decodeURIComponent(m[1]) : "permit.pdf" };
 }
-async function fetchB64(id) {
-  const r = await fetch(`${pdfUrl(id)}?enc=b64`);
+async function fetchB64(id, full) {
+  const r = await fetch(`${pdfUrl(id)}?enc=b64${full ? "&full=1" : ""}`);
   if (!r.ok) throw new Error(r.status);
   const j = await r.json();
   let blob;
@@ -106,16 +106,18 @@ async function fetchB64(id) {
   catch (e) { const bin = atob(j.data), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); blob = new Blob([u8], { type: "application/pdf" }); }
   return { blob, name: j.name || "permit.pdf" };
 }
-function fetchPdf(id) {
-  let p = PDFS.get(id);
+// full=true: הקובץ המקורי (הורדה); אחרת הגרסה הקלה לצפייה מהירה (אם קיימת, אחרת המקור)
+function fetchPdf(id, full) {
+  const ck = id + (full ? "|full" : "");
+  let p = PDFS.get(ck);
   if (p) return p;
   p = (async () => {
-    if (b64Mode()) return fetchB64(id);
-    try { return await fetchDirect(id); } catch (e) { if (String(e.message) === "404") throw e; }
-    const f = await fetchB64(id); setB64Mode(); return f;
+    if (b64Mode()) return fetchB64(id, full);
+    try { return await fetchDirect(id, full); } catch (e) { if (String(e.message) === "404") throw e; }
+    const f = await fetchB64(id, full); setB64Mode(); return f;
   })();
-  PDFS.set(id, p);
-  p.catch(() => PDFS.delete(id));
+  PDFS.set(ck, p);
+  p.catch(() => PDFS.delete(ck));
   while (PDFS.size > 8) PDFS.delete(PDFS.keys().next().value);          // שומרים רק כמה אחרונים בזיכרון
   return p;
 }
@@ -131,7 +133,7 @@ async function pdDownload(ev, id) {
   ev.preventDefault();
   const a = ev.currentTarget; a.style.opacity = ".5"; a.style.pointerEvents = "none";
   try {
-    const f = await fetchPdf(id), url = URL.createObjectURL(f.blob), d = document.createElement("a");
+    const f = await fetchPdf(id, true), url = URL.createObjectURL(f.blob), d = document.createElement("a");
     d.href = url; d.download = f.name; document.body.appendChild(d); d.click(); d.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
   } catch (e) { window.open(`${pdfUrl(id)}?dl=1`, "_blank"); }
   finally { a.style.opacity = ""; a.style.pointerEvents = ""; }

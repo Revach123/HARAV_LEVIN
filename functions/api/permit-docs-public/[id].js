@@ -7,7 +7,11 @@ export async function onRequestGet({ request, env, params }) {
       WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id AND c.slot != '')`).bind(params.id).first()
       || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)`).bind(params.id).first().catch(() => null);
     if (!row) return new Response("not found", { status: 404 });
-    const obj = await env.PERMITS.get(row.file_key);
+    // צפייה מוגשת מהגרסה הקלה (docs-lite/, נבנית ע"י scripts/compress_permit_pdfs.py) אם קיימת; הורדה (?dl=1 / ?full=1) - תמיד המקור
+    const q = new URL(request.url).searchParams;
+    let obj = null;
+    if (!q.get("dl") && !q.get("full")) obj = await env.PERMITS.get(row.file_key.startsWith("docs/") ? "docs-lite/" + row.file_key.slice(5) : "docs-lite/" + row.file_key).catch(() => null);
+    if (!obj) obj = await env.PERMITS.get(row.file_key);
     if (!obj) return new Response("not found", { status: 404 });
     // ?enc=b64: הקובץ כ-JSON (base64), לרשתות עם סינון תוכן (נטפרי) שחוסמות הורדת PDF אבל לא JSON
     if (new URL(request.url).searchParams.get("enc") === "b64") {
