@@ -18,9 +18,12 @@
   .back{display:inline-flex;align-items:center;gap:.4rem;min-height:44px;padding:0 .9rem;margin:.5rem 0 .3rem;font:inherit;font-size:17px;font-weight:700;color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
   .back::before{content:"\203A";font-size:24px;line-height:1}
   h1{font-size:21px;color:var(--navy);margin:.1rem 0 .4rem}
-  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
-  .tabs button{font:inherit;font-size:16px;font-weight:700;line-height:1.25;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px;padding:.45rem .6rem;min-height:52px;cursor:pointer}
-  .tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
+  /* לשוניות באותו סגנון של שאר האתר (display.html): שורה אחת, קו עליון צבעוני ללשונית הפעילה */
+  .tabs{display:flex;gap:0;margin:.2rem 0 .6rem;border-bottom:1px solid #dfe7e8}
+  .tabs button{flex:1;min-width:150px;padding:.8rem 1rem;font:inherit;font-size:17px;font-weight:700;line-height:1.3;background:transparent;color:var(--navy);border:none;border-top:3px solid transparent;cursor:pointer;transition:.15s}
+  .tabs button:hover{color:#1e8f85}
+  .tabs button[aria-selected=true]{color:#1e8f85;border-top-color:var(--accent);background:#e9f6f5}
+  @media (max-width:560px){ .tabs button{min-width:0;font-size:15px;padding:.6rem .5rem} }
   .bar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
   .bar input{flex:1;min-width:200px;font:inherit;font-size:16px;padding:.45rem .7rem;border:2px solid var(--accent-border);border-radius:10px;background:#fff;color:inherit}
   .bar input:focus{outline:none;border-color:var(--accent)}
