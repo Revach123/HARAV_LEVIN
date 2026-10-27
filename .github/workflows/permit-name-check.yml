@@ -36,9 +36,9 @@ jobs:
           ST = {"none": "אין התאמה", "partial": "חלקית", "notext": "אין טקסט", "ok": "תקין"}
           rows = sorted(d["rows"], key=lambda r: (rank[r["status"]], r.get("permit_name") or ""))
           with open("data/probe/permit_name_check.csv", "w", encoding="utf-8-sig", newline="") as f:
-              w = csv.writer(f); w.writerow(["שם בהיתר עסקה", "שם ברשם", "ח.פ.", "רשימה", "שטר", "סטטוס", "אחוז התאמה", "ח.פ. בשטר", "אורך טקסט"])
+              w = csv.writer(f); w.writerow(["שם בהיתר עסקה", "שם ברשם", "ח.פ.", "רשימה", "שטר", "סטטוס", "אחוז התאמה", "שמות שנמצאו בשטר", "ח.פ. בשטר"])
               for r in rows:
-                  if r["status"] != "ok": w.writerow([r.get("permit_name"), r.get("registrar_name"), r.get("chp"), SL.get(r["slot"], r["slot"]), r.get("doc_name"), ST[r["status"]], r["cover"], {1: "כן", 0: "לא", -1: "אין ח.פ."}[r.get("hp_in_doc", -1)], r.get("len", 0)])
+                  if r["status"] != "ok": w.writerow([r.get("permit_name"), r.get("registrar_name"), r.get("chp"), SL.get(r["slot"], r["slot"]), r.get("doc_name"), ST[r["status"]], r["cover"], r.get("doc_names", ""), {1: "כן", 0: "לא", -1: "אין ח.פ."}[r.get("hp_in_doc", -1)]])
           c = {k: sum(1 for r in rows if r["status"] == k) for k in rank}
           print(f"total={d['total']} none={c['none']} partial={c['partial']} notext={c['notext']} ok={c['ok']}")
           open("data/probe/permit_name_check_summary.txt", "w").write(f"total={d['total']} none={c['none']} partial={c['partial']} notext={c['notext']} ok={c['ok']}\n")
