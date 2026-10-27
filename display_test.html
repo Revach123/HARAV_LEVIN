@@ -306,7 +306,8 @@ function render(container, state, type, usedSample) {
   const csvBtn = el("button","btn-csv","⬇ ייצוא לאקסל");
   csvBtn.onclick = () => {   // קובץ Excel כטבלה: כל השורות של הרשימה, עם העמודות המוצגות
     const cellVal = (c, r) => c.cell === "cat" ? catWithRegion(r) : c.cell === "bonds" ? (r[c.key] || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח')) : (c.cell === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2))) : (r[c.key] ?? ""));
-    downloadXlsx(type, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
+    const d = new Date(), dd = n => String(n).padStart(2, "0");          // שם הקובץ עם תאריך ההורדה: bonds-general-27-10-2026.xlsx
+    downloadXlsx(`${type}-${dd(d.getDate())}-${dd(d.getMonth() + 1)}-${d.getFullYear()}`, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
       state.rows.map(r => state.cols.map(c => cellVal(c, r))), state.cols.map(c => c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number")));
   };
   const clearBtn = el("button", "btn-clear", "✕ ביטול סינון");

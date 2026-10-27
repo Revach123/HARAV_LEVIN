@@ -14,7 +14,7 @@ f.src=O+"/display.html?type="+TY;
 var HK="hl-h-"+TY,st=null;try{var H0=Number(window.localStorage.getItem(HK));if(Math.sign(H0)===1){f.style.height=H0+"px";}}catch(x){}
 function applyH(h){f.style.height=h+"px";try{window.localStorage.setItem(HK,String(h));}catch(x){}}
 function setH(h){var c=f.offsetHeight;window.clearTimeout(st);if(Math.sign(h-c+50)!==-1){applyH(h);}else{st=window.setTimeout(function(){applyH(h);},1500);}}
-var OFF0=Number(sc&&sc.getAttribute("data-offset"))||140,OFFSET=OFF0,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null;
+var OFF0=Number(sc&&sc.getAttribute("data-offset"))||140,OFFSET=OFF0,nav=null,nbar=null,spec=null,bar=null,hs=null,sb=null,sbi=null,bi=null,cur=0,lu=0,ps=null,sbt=null;
 function build(){
 if(!bar){bar=document.createElement("div");bar.id="hl-bar";bar.style.cssText="position:fixed;z-index:99;display:none;overflow:hidden;direction:rtl;box-sizing:border-box";document.body.appendChild(bar);}
 bar.innerHTML="";bi=document.createElement("div");bi.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%";bar.appendChild(bi);bar.style.background=spec.bg;bar.style.height=spec.h+"px";bar.style.borderBottom=spec.border;
@@ -51,7 +51,9 @@ if(!sb){sb=document.createElement("div");sb.id="hl-sb";sb.style.cssText="positio
 sbi=document.createElement("div");sbi.style.height="1px";sb.appendChild(sbi);document.body.appendChild(sb);
 sb.addEventListener("scroll",function(){if(ps!==null){if(Math.sign(Math.abs(sb.scrollLeft-ps)-1)!==1){ps=null;return;}ps=null;}lu=Date.now();cur=sb.scrollLeft;move();f.contentWindow.postMessage({source:"harav-parent",type:"setScroll",left:cur},O);});}
 sbi.style.width=hs.sw+"px";sb.style.width=hs.cw+"px";
-if(Math.sign(Date.now()-lu-250)===1){cur=hs.left;if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}move();}
+/* הכותרת הצמודה תמיד לפי מיקום הגלילה האמיתי של הטבלה (הדיווח מה-iframe), כדי שלא תזוז ביחס לעמודות; הסרגל התחתון מסתנכרן אחרי שהגרירה בו נרגעת */
+cur=hs.left;move();window.clearTimeout(sbt);
+if(Math.sign(Date.now()-lu-250)===1){if(Math.sign(Math.abs(sb.scrollLeft-hs.left)-1)===1){ps=hs.left;sb.scrollLeft=hs.left;}}else{sbt=window.setTimeout(buildSb,300);}
 }
 setUpd("\u00a0");/* שומר מראש את שורת "עודכן לאחרונה" בכותרת הדף, כדי שהכותרת לא תזוז כשהתאריך מגיע */
 window.addEventListener("message",function(e){
