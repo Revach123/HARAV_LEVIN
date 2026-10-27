@@ -10,6 +10,7 @@ export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   const u = new URL(request.url);
   try {
+    if (u.searchParams.get("namecheck")) return Response.json(await nameCheck(env, Math.max(0, Number(u.searchParams.get("offset")) || 0), Math.min(40, Number(u.searchParams.get("limit")) || 20)));
     if (u.searchParams.get("names")) {
       const r = await env.DB.prepare("SELECT d.id AS id, n.name AS name, n.src AS src FROM permit_doc_name n JOIN permit_docs d ON d.sha256 = n.sha256 WHERE length(n.name) BETWEEN 4 AND 90").all();
       return Response.json({ names: r.results ?? [] });
@@ -40,4 +41,36 @@ export async function onRequestGet({ request, env }) {
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
+}
+
+// ── בדיקה: האם שם החברה (השם בהיתר עסקה / השם ברשם) מופיע בטקסט השטר המשויך (מהאינדקס). בקשות במנות: offset / limit.
+// כל שורה: חברה + השטר הראשי שלה (slot לא ריק, גם של תת-שורה). status: ok (השם המלא) | partial (רוב המילים) | none | notext (אין טקסט באינדקס)
+const STOP = new Set(["בעמ", "ובעמ", "חברה", "חב", "ל", "של", "את", "ו", "בע", "מ"]);
+const nz = s => String(s || "").toLowerCase().replace(/["'`״׳]/g, "").replace(/[\u0591-\u05C7]/g, "").replace(/[^0-9a-z\u05d0-\u05ea]+/g, " ").replace(/\s+/g, " ").trim();
+const toks = s => nz(s).split(" ").filter(t => t && !STOP.has(t) && (t.length > 1 || /\d/.test(t)));
+async function nameCheck(env, offset, limit) {
+  const base = `SELECT c.doc_id AS doc_id, d.sha256 AS sha, d.original_name AS doc_name, b.id AS bid, b.permit_name AS permit_name, b.registrar_name AS registrar_name, b.chp_number AS chp, c.slot AS slot FROM permit_doc_companies c JOIN permit_docs d ON d.id = c.doc_id JOIN businesses b ON b.id = c.business_id WHERE c.slot != ''
+    UNION ALL SELECT s.doc_id, d.sha256, d.original_name, b.id, b.permit_name, b.registrar_name, b.chp_number, s.slot FROM permit_doc_subs s JOIN permit_docs d ON d.id = s.doc_id JOIN businesses b ON b.id = s.sub_id WHERE s.slot != ''`;
+  const total = (await env.DB.prepare(`SELECT count(*) AS n FROM (${base})`).first())?.n ?? 0;
+  const rows = (await env.DB.prepare(`SELECT * FROM (${base}) ORDER BY permit_name, bid LIMIT ? OFFSET ?`).bind(limit, offset).all()).results ?? [];
+  const shas = [...new Set(rows.map(r => r.sha))], text = new Map();
+  for (const sha of shas) {
+    const pg = (await env.DB.prepare("SELECT text FROM permit_doc_page WHERE sha256 = ? ORDER BY page, rowid").bind(sha).all()).results ?? [];
+    text.set(sha, nz(pg.map(x => x.text).join(" ")));
+  }
+  const out = rows.map(r => {
+    const t = text.get(r.sha) || "";
+    if (!t) return { ...r, sha: undefined, status: "notext", cover: 0, best: "" };
+    let best = { cover: -1, name: "", full: false };
+    for (const name of [r.permit_name, r.registrar_name]) {
+      const tk = toks(name); if (!tk.length) continue;
+      const full = nz(name).length > 2 && t.includes(nz(name).replace(/\s?בעמ$/, "").trim());
+      const cover = tk.filter(x => t.includes(x)).length / tk.length;
+      if (full || cover > best.cover) best = { cover: full ? 1 : cover, name, full: full || best.full };
+      if (full) break;
+    }
+    const status = best.cover >= 1 ? "ok" : best.cover >= 0.6 ? "partial" : "none";
+    return { ...r, sha: undefined, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name };
+  });
+  return { total, offset, next: offset + rows.length < total ? offset + rows.length : null, rows: out };
 }

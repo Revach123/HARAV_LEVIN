@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>בדיקת שמות חברות בשטרות</title>
+<style>
+  body{font-family:'Alef','Heebo',system-ui,sans-serif;background:#f4f7f7;color:#2a3a3f;margin:0;padding:1rem 1.2rem 3rem}
+  h1{font-size:22px;margin:.2rem 0 .3rem;color:#274d5b}
+  p.s{margin:.2rem 0 .8rem;color:#5d7077;font-size:14px;max-width:900px}
+  .row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin:.6rem 0}
+  button{font:inherit;font-size:15px;padding:.45rem 1rem;border:1px solid #1e8f85;background:#1e8f85;color:#fff;border-radius:8px;cursor:pointer}
+  button.g{background:#fff;color:#1e8f85}button:disabled{opacity:.5;cursor:default}
+  label{font-size:14px}
+  .bar{height:8px;background:#dfe7e8;border-radius:6px;overflow:hidden;width:320px}.bar i{display:block;height:100%;background:#2aada1;width:0}
+  table{border-collapse:collapse;width:100%;background:#fff;font-size:14px}
+  th,td{border-bottom:1px solid #e3eaeb;padding:.4rem .6rem;text-align:right;vertical-align:top}
+  th{background:#e9f6f5;position:sticky;top:0}
+  .st-none{color:#b3261e;font-weight:700}.st-partial{color:#a86400;font-weight:700}.st-notext{color:#6a7c82}
+  .cnt{font-size:14px;color:#274d5b}
+</style>
+</head>
+<body>
+<h1>בדיקת שמות חברות בשטרות</h1>
+<p class="s">לכל חברה עם שטר משויך (כללי / פרטי, כולל תת-שורות): האם שמה מופיע בטקסט השטר באינדקס. נבדקים גם "השם בהיתר עסקה" וגם "השם ברשם", והמוצג הוא ההתאמה הטובה ביותר.
+  <b>אין התאמה</b> = פחות ממחצית מילות השם מופיעות; <b>חלקית</b> = לפחות 60% מהמילים; <b>אין טקסט</b> = השטר עדיין לא באינדקס. דף מנהל, קריאה בלבד.</p>
+<div class="row">
+  <button id="go">הרצת הבדיקה</button><button id="csv" class="g" disabled>הורדה כ-CSV</button>
+  <div class="bar"><i id="pb"></i></div><span class="cnt" id="pt"></span>
+</div>
+<div class="row">
+  <label><input type="checkbox" id="f-none" checked> אין התאמה</label>
+  <label><input type="checkbox" id="f-partial" checked> חלקית</label>
+  <label><input type="checkbox" id="f-notext"> אין טקסט</label>
+  <label><input type="checkbox" id="f-ok"> תקין</label>
+  <span class="cnt" id="sum"></span>
+</div>
+<table><thead><tr><th>#</th><th>שם בהיתר עסקה</th><th>שם ברשם</th><th>ח.פ.</th><th>רשימה</th><th>שטר</th><th>סטטוס</th><th>התאמה</th></tr></thead><tbody id="tb"></tbody></table>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const SL = { general: "כללי", private: "פרטי", "general,private": "כללי+פרטי" }, ST = { none: "אין התאמה", partial: "חלקית", notext: "אין טקסט", ok: "תקין" };
+let ROWS = [], token = "";
+try { token = localStorage.getItem("adm_tok") || ""; } catch {}
+async function get(off) {
+  const r = await fetch(`/api/permit-text?namecheck=1&offset=${off}&limit=20`, { headers: { Authorization: "Bearer " + token } });
+  if (r.status === 401 || r.status === 403) { token = prompt("סיסמת מנהל:") || ""; if (!token) throw new Error("אין הרשאה"); return get(off); }
+  if (!r.ok) throw new Error("שגיאה " + r.status);
+  return r.json();
+}
+function draw() {
+  const on = k => document.getElementById("f-" + k).checked, rank = { none: 0, partial: 1, notext: 2, ok: 3 };
+  const rows = ROWS.filter(r => on(r.status)).sort((a, b) => rank[a.status] - rank[b.status] || (a.permit_name || "").localeCompare(b.permit_name || "", "he"));
+  document.getElementById("tb").innerHTML = rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.permit_name)}</td><td>${esc(r.registrar_name)}</td><td>${esc(r.chp)}</td><td>${SL[r.slot] || esc(r.slot)}</td><td>${esc(r.doc_name)}</td><td class="st-${r.status}">${ST[r.status]}</td><td>${r.status === "notext" ? "" : r.cover + "%"}</td></tr>`).join("");
+  const c = k => ROWS.filter(r => r.status === k).length;
+  document.getElementById("sum").textContent = `אין התאמה: ${c("none")} · חלקית: ${c("partial")} · אין טקסט: ${c("notext")} · תקין: ${c("ok")}`;
+}
+document.getElementById("go").onclick = async () => {
+  const go = document.getElementById("go"); go.disabled = true; ROWS = [];
+  try {
+    let off = 0, total = 1;
+    while (off !== null) {
+      const d = await get(off); total = d.total; ROWS.push(...d.rows); off = d.next;
+      document.getElementById("pb").style.width = (100 * ROWS.length / Math.max(total, 1)) + "%";
+      document.getElementById("pt").textContent = `${ROWS.length} / ${total}`; draw();
+    }
+    document.getElementById("csv").disabled = false;
+  } catch (e) { alert(e.message); }
+  go.disabled = false;
+};
+document.querySelectorAll("input[type=checkbox]").forEach(c => c.onchange = draw);
+document.getElementById("csv").onclick = () => {
+  const on = k => document.getElementById("f-" + k).checked;
+  const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+  const lines = [["שם בהיתר עסקה", "שם ברשם", "ח.פ.", "רשימה", "שטר", "סטטוס", "אחוז התאמה"].map(q).join(",")];
+  for (const r of ROWS.filter(r => on(r.status))) lines.push([r.permit_name, r.registrar_name, r.chp, SL[r.slot] || r.slot, r.doc_name, ST[r.status], r.cover].map(q).join(","));
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" })); a.download = "permit-name-check.csv"; a.click();
+};
+</script>
+</body>
+</html>
