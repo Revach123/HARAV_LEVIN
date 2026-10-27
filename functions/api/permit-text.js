@@ -60,9 +60,11 @@ async function nameCheck(env, offset, limit) {
     const pg = (await env.DB.prepare("SELECT text FROM permit_doc_page WHERE sha256 = ? ORDER BY page, rowid").bind(sha).all()).results ?? [];
     text.set(sha, nz(pg.map(x => x.text).join(" ")));
   }
+  const hps = new Map();      // sha -> קבוצת ח.פ. שנמצאו בשטר (permit_doc_hp)
+  if (shas.length) for (const h of (await env.DB.prepare(`SELECT sha256, hp FROM permit_doc_hp WHERE sha256 IN (${shas.map(() => "?").join(",")})`).bind(...shas).all()).results ?? []) { if (!hps.has(h.sha256)) hps.set(h.sha256, new Set()); hps.get(h.sha256).add(String(h.hp)); }
   const out = rows.map(r => {
-    const t = text.get(r.sha) || "";
-    if (!t) return { ...r, sha: undefined, status: "notext", cover: 0, best: "" };
+    const t = text.get(r.sha) || "", hpIn = r.chp ? (hps.get(r.sha)?.has(String(r.chp).trim()) ? 1 : 0) : -1, len = t.length;
+    if (!t) return { ...r, sha: undefined, status: "notext", cover: 0, best: "", hp_in_doc: hpIn, len };
     let best = { cover: -1, name: "", full: false };
     for (const name of [r.permit_name, r.registrar_name]) {
       const tk = toks(name); if (!tk.length) continue;
@@ -72,7 +74,7 @@ async function nameCheck(env, offset, limit) {
       if (full) break;
     }
     const status = best.cover >= 1 ? "ok" : best.cover >= 0.6 ? "partial" : "none";
-    return { ...r, sha: undefined, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name };
+    return { ...r, sha: undefined, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name, hp_in_doc: hpIn, len };
   });
   return { total, offset, next: offset + rows.length < total ? offset + rows.length : null, rows: out };
 }
