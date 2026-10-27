@@ -51,8 +51,8 @@ const STOP = new Set(["בעמ", "ובעמ", "חברה", "חב", "ל", "של", "�
 const nz = s => String(s || "").toLowerCase().replace(/["'`״׳]/g, "").replace(/[\u0591-\u05C7]/g, "").replace(/[^0-9a-z\u05d0-\u05ea]+/g, " ").replace(/\s+/g, " ").trim();
 const toks = s => nz(s).split(" ").filter(t => t && !STOP.has(t) && (t.length > 1 || /\d/.test(t)));
 async function nameCheck(env, offset, limit) {
-  const base = `SELECT c.doc_id AS doc_id, d.sha256 AS sha, d.original_name AS doc_name, b.id AS bid, b.permit_name AS permit_name, b.registrar_name AS registrar_name, b.chp_number AS chp, c.slot AS slot FROM permit_doc_companies c JOIN permit_docs d ON d.id = c.doc_id JOIN businesses b ON b.id = c.business_id WHERE c.slot != ''
-    UNION ALL SELECT s.doc_id, d.sha256, d.original_name, b.id, b.permit_name, b.registrar_name, b.chp_number, s.slot FROM permit_doc_subs s JOIN permit_docs d ON d.id = s.doc_id JOIN businesses b ON b.id = s.sub_id WHERE s.slot != ''`;
+  const base = `SELECT c.doc_id AS doc_id, d.sha256 AS sha, d.original_name AS doc_name, d.intel AS intel, b.id AS bid, b.permit_name AS permit_name, b.registrar_name AS registrar_name, b.chp_number AS chp, c.slot AS slot FROM permit_doc_companies c JOIN permit_docs d ON d.id = c.doc_id JOIN businesses b ON b.id = c.business_id WHERE c.slot != ''
+    UNION ALL SELECT s.doc_id, d.sha256, d.original_name, d.intel, b.id, b.permit_name, b.registrar_name, b.chp_number, s.slot FROM permit_doc_subs s JOIN permit_docs d ON d.id = s.doc_id JOIN businesses b ON b.id = s.sub_id WHERE s.slot != ''`;
   const total = (await env.DB.prepare(`SELECT count(*) AS n FROM (${base})`).first())?.n ?? 0;
   const rows = (await env.DB.prepare(`SELECT * FROM (${base}) ORDER BY permit_name, bid LIMIT ? OFFSET ?`).bind(limit, offset).all()).results ?? [];
   const shas = [...new Set(rows.map(r => r.sha))], text = new Map();
@@ -65,8 +65,10 @@ async function nameCheck(env, offset, limit) {
   const dn = new Map();      // sha -> השמות שנמצאו בשטר (permit_doc_name: ביטויים עם בע"מ / שורות פתיחה), עד 6
   if (shas.length) for (const h of (await env.DB.prepare(`SELECT sha256, name FROM permit_doc_name WHERE sha256 IN (${shas.map(() => "?").join(",")}) AND length(name) BETWEEN 4 AND 90 ORDER BY (name LIKE '%בע%מ%') DESC, length(name)`).bind(...shas).all()).results ?? []) { const a = dn.get(h.sha256) || []; if (a.length < 6 && !a.includes(h.name)) { a.push(h.name); dn.set(h.sha256, a); } }
   const out = rows.map(r => {
+    let prev = "";      // ממצא הסריקה הקודמת (build_cases.py, נשמר ב-permit_docs.intel): שם הפוסט באתר הישן מול השם במסמך
+    try { prev = (JSON.parse(r.intel || "{}").f || []).filter(x => x.c === "name_differs").map(x => x.d).join(" ; "); } catch { /* intel לא תקין */ }
     const t = text.get(r.sha) || "", hpIn = r.chp ? (hps.get(r.sha)?.has(String(r.chp).trim()) ? 1 : 0) : -1, len = t.length;
-    if (!t) return { ...r, sha: undefined, status: "notext", cover: 0, best: "", hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
+    if (!t) return { ...r, sha: undefined, intel: undefined, prev_scan: prev, status: "notext", cover: 0, best: "", hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
     let best = { cover: -1, name: "", full: false };
     for (const name of [r.permit_name, r.registrar_name]) {
       const tk = toks(name); if (!tk.length) continue;
@@ -76,7 +78,7 @@ async function nameCheck(env, offset, limit) {
       if (full) break;
     }
     const status = best.cover >= 1 ? "ok" : best.cover >= 0.6 ? "partial" : "none";
-    return { ...r, sha: undefined, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name, hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
+    return { ...r, sha: undefined, intel: undefined, prev_scan: prev, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name, hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
   });
   return { total, offset, next: offset + rows.length < total ? offset + rows.length : null, rows: out };
 }
