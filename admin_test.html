@@ -1709,7 +1709,7 @@ async function gfLoad() {
     const r = await fetch("/api/glatt-funds", { cache: "no-store" }); const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error || r.statusText);
     GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
-    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.loaded = true; GF.dirty = false; GF.types = {}; gfSort();
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.loaded = true; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
   } catch (e) { GF.err = e.message; }
   GF.loading = false;
   if (view === "gfunds") render();
@@ -1721,7 +1721,7 @@ function renderGFunds() {
 
     <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
   if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
-  const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => r.tab === k).length})</button>`).join("")}
+  const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => gfIn(r, k)).length})</button>`).join("")}
     <input type="search" value="${escHtml(GF.q)}" placeholder="סינון בטבלה…" oninput="GF.q=this.value;gfPaintBody()" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></div>`;
   const types = [...new Set(GF.rows.map(r => r.type).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
   const cos = [...new Set(GF.rows.map(r => r.company).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
@@ -1733,30 +1733,30 @@ function renderGFunds() {
 // סדר קבוע ואוטומטי: לפי סוג מוצר (בסדר הקיים; סוג חדש - בסוף), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
 const GF_FIRST = ["מיטב", "הראל"];
 function gfCoRank(c) { c = String(c || "").trim(); const k = GF_FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [GF_FIRST.length, c] : [GF_FIRST.length + 1, ""]; }
-function gfTypeOrder(tab) {          // סדר הסוגים: מהסדר שנשמר (GF.types), וסוג שלא היה - בסוף
+// סוג מוצר שמופיע בשתי הרשימות (למשל קופת גמל להשקעה): השורות שלו נשמרות פעם אחת (tab = both) ומוצגות בשתי הלשוניות - כל שינוי חל על שתיהן
+const gfIn = (r, tab) => r.tab === tab || r.tab === "both";
+const gfShared = (type, except) => GF.rows.some(r => r !== except && r.tab === "both" && r.type === type);
+function gfOrderFrom(o) { const out = {}; for (const [t] of GF_TABS) out[t] = Array.isArray(o && o[t]) ? [...o[t]] : []; return out; }
+function gfTypeOrder(tab) {          // סדר הסוגים בלשונית: הסדר שנשמר, וסוג שלא היה - בסוף
   const o = GF.types[tab] = GF.types[tab] || [];
-  for (const r of GF.rows) if (r.tab === tab && !o.includes(r.type)) o.push(r.type);
-  const live = new Set(GF.rows.filter(r => r.tab === tab).map(r => r.type));
-  GF.types[tab] = o.filter(t => live.has(t) || t === GF.pendingType);
+  for (const r of GF.rows) if (gfIn(r, tab) && !o.includes(r.type)) o.push(r.type);
+  const live = new Set(GF.rows.filter(r => gfIn(r, tab)).map(r => r.type));
+  GF.types[tab] = o.filter(t => live.has(t));
   return GF.types[tab];
 }
 function gfSort() {
-  const out = [];
-  for (const [tab] of GF_TABS) {
-    const order = gfTypeOrder(tab), rows = GF.rows.map((r, n) => ({ r, n })).filter(x => x.r.tab === tab);
-    rows.sort((a, b) => { const ta = order.indexOf(a.r.type), tb = order.indexOf(b.r.type); if (ta !== tb) return (ta < 0 ? 1e6 : ta) - (tb < 0 ? 1e6 : tb);
-      const ca = gfCoRank(a.r.company), cb = gfCoRank(b.r.company); return (ca[0] - cb[0]) || ca[1].localeCompare(cb[1], "he") || (a.n - b.n); });
-    out.push(...rows.map(x => x.r));
-  }
-  GF.rows = out;
+  const ord = {}; for (const [tab] of GF_TABS) ord[tab] = gfTypeOrder(tab);
+  const key = r => { const tab = r.tab === "both" ? "pension" : r.tab; return [GF_TABS.findIndex(x => x[0] === tab), ord[tab].indexOf(r.type)]; };
+  GF.rows = GF.rows.map((r, n) => ({ r, n })).sort((a, b) => { const ka = key(a.r), kb = key(b.r); if (ka[0] !== kb[0]) return ka[0] - kb[0]; if (ka[1] !== kb[1]) return ka[1] - kb[1];
+    const ca = gfCoRank(a.r.company), cb = gfCoRank(b.r.company); return (ca[0] - cb[0]) || ca[1].localeCompare(cb[1], "he") || (a.n - b.n); }).map(x => x.r);
 }
 function gfBodyHtml() {
   const order = gfTypeOrder(GF.tab); let n = 0;
   return order.map((t, ti) => {
-    const rows = GF.rows.map((r, i) => ({ r, i })).filter(x => x.r.tab === GF.tab && x.r.type === t);
+    const rows = GF.rows.map((r, i) => ({ r, i })).filter(x => gfIn(x.r, GF.tab) && x.r.type === t);
     const shown = rows.filter(x => gfMatch(x.r));
     if (GF.q.trim() && !shown.length) return "";
-    return `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(t || "(סוג מוצר חדש: כתבו את שם הסוג בעמודת הסוג)")}</td></tr>` +
+    return `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(t || "(סוג מוצר חדש: כתבו את שם הסוג בעמודת הסוג)")}${gfShared(t) ? ' <span style="font-weight:400;font-size:12px;color:var(--muted)">(מופיע בשתי הרשימות)</span>' : ""}</td></tr>` +
       shown.map(({ r, i }) => `<tr data-i="${i}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
         <td style="text-align:center"><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`).join("") +
       `<tr class="gf-add"><td colspan="${GF_FIELDS.length + 2}"><button class="gf-b" onclick="gfAdd(${ti})">➕ הוספת שורה ל${escHtml(t || "סוג החדש")}</button></td></tr>`;
@@ -1769,13 +1769,14 @@ function gfFocus(row, field) {          // אחרי ציור מחדש: מיקו�
   setTimeout(() => { const tr = document.querySelector(`#gf-body tr[data-i="${GF.rows.indexOf(row)}"]`); if (!tr) return; const inp = tr.querySelectorAll("input")[GF_FIELDS.findIndex(f => f[0] === field)]; tr.scrollIntoView({ block: "center" }); if (inp) inp.focus(); }, 0);
 }
 function gfResort(i, k) {          // שינוי חברה / סוג: השורה עוברת למקום שלה לפי הסדר הקבוע
-  const row = GF.rows[i]; if (k === "type" && GF.pendingType !== undefined && row.type) GF.pendingType = undefined;
+  const row = GF.rows[i];
+  if (k === "type") row.tab = gfShared(row.type, row) ? "both" : (row.tab === "both" ? GF.tab : row.tab);          // סוג משותף לשתי הרשימות - השורה בשתיהן
   gfSort(); render(); gfFocus(row, k === "type" ? "company" : "track");
 }
 function gfAdd(ti) {          // שורה חדשה בסוף הסוג (ti = מיקום הסוג), או סוג מוצר חדש (ti = -1)
   const order = gfTypeOrder(GF.tab), type = ti >= 0 ? order[ti] : "";
-  if (ti < 0) { if (order.includes("")) { gfFocus(GF.rows.find(r => r.tab === GF.tab && r.type === ""), "type"); return; } GF.pendingType = ""; }
-  const row = { tab: GF.tab, company: "", track: "", type, number: "", note: "" };
+  if (ti < 0 && order.includes("")) { gfFocus(GF.rows.find(r => gfIn(r, GF.tab) && r.type === ""), "type"); return; }
+  const row = { tab: type && gfShared(type) ? "both" : GF.tab, company: "", track: "", type, number: "", note: "" };
   GF.rows.push(row); GF.q = ""; gfSort(); gfDirty(); render(); gfFocus(row, ti >= 0 ? "company" : "type");
 }
 function gfDel(i) {
@@ -1797,9 +1798,9 @@ async function gfSave() {
   try {
     gfSort();
     try { GF.updated = gfHebDate(new Date()); } catch { /* בלי לוח עברי בדפדפן: נשאר התאריך הקודם */ }
-    const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, rows: GF.rows }) });
+    const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, type_order: { pension: gfTypeOrder("pension"), savings: gfTypeOrder("savings") }, rows: GF.rows }) });
     GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
-    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false; GF.types = {}; gfSort();
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
     showStatus("הרשימה נשמרה");
   } catch (e) { if (e.message === "Unauthorized") { GF.saving = false; handleUnauth(); return; } alert("השמירה נכשלה: " + e.message); }
   GF.saving = false; render();

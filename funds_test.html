@@ -78,11 +78,11 @@ function hl(s) {
 }
 // סדר קבוע: לפי סוג מוצר (בסדר שבו הסוגים מופיעים ברשימה), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
 const FIRST = ["מיטב", "הראל"];
-function sortRows(rows) {
-  const order = {}, rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
-  rows.forEach(r => { const o = order[r.tab] = order[r.tab] || []; if (!o.includes(r.type)) o.push(r.type); });
-  return rows.map((r, n) => ({ r, n })).sort((a, b) => (a.r.tab === b.r.tab ? 0 : a.r.tab === "pension" ? -1 : 1)
-    || (order[a.r.tab].indexOf(a.r.type) - order[b.r.tab].indexOf(b.r.type))
+function sortRows(rows, tab, saved) {          // השורות של לשונית אחת (כולל שורות "both" שמוצגות בשתי הלשוניות) בסדר הקבוע
+  const order = [...((saved && saved[tab]) || [])], rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
+  const mine = rows.filter(r => r.tab === tab || r.tab === "both");
+  mine.forEach(r => { if (!order.includes(r.type)) order.push(r.type); });
+  return mine.map((r, n) => ({ r, n })).sort((a, b) => (order.indexOf(a.r.type) - order.indexOf(b.r.type))
     || (rank(a.r.company)[0] - rank(b.r.company)[0]) || rank(a.r.company)[1].localeCompare(rank(b.r.company)[1], "he") || (a.n - b.n)).map(x => x.r);
 }
 function groups(list) {          // שורות רצופות של אותה חברה ואותו סוג = קבוצה אחת
@@ -92,7 +92,7 @@ function groups(list) {          // שורות רצופות של אותה חבר
 }
 function paint() {
   const out = document.getElementById("out"), q = norm(st.q);
-  const list = st.rows.filter(r => r.tab === st.tab && (!q || norm([r.company, r.track, r.type, r.number, r.note].join(" ")).includes(q)));
+  const list = sortRows(st.rows, st.tab, st.order).filter(r => (!q || norm([r.company, r.track, r.type, r.number, r.note].join(" ")).includes(q)));
   if (!list.length) { out.innerHTML = `<div class="state">${q ? "לא נמצאו מסלולים מתאימים" : "אין מסלולים להצגה"}</div>`; return; }
   const sections = [];          // כותרת לכל סוג מוצר (הרשימה מסודרת לפי סוג); בתוך כל סוג - חברה מאוחדת לשורות רצופות
   for (const r of list) { const sc = sections[sections.length - 1]; if (sc && sc.type === r.type) sc.rows.push(r); else sections.push({ type: r.type, rows: [r] }); }
@@ -114,7 +114,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
 let tm; document.getElementById("q").addEventListener("input", e => { st.q = e.target.value; clearTimeout(tm); tm = setTimeout(paint, 150); });
 fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
-  st.rows = sortRows(d.rows || []);
+  st.rows = d.rows || []; st.order = d.type_order || null;
   document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
   paint();
 }).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
