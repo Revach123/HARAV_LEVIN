@@ -7,8 +7,10 @@ import { noAuth } from "./_shared/permit-docs.js";
 // GET /api/permit-text?names=1          → { names: [{ id, name, src }] }  שמות שנמצאו במסמכים (טקסט / חותמת / כתב יד), להצעות שיוך לפי שם
 const norm = s => String(s || "").replace(/["'`״׳]/g, "").replace(/\s+/g, " ").trim();
 export async function onRequestGet({ request, env }) {
-  if (!(await checkAdmin(request, env))) return noAuth();
   const u = new URL(request.url);
+  // בדיקת השמות בלבד (קריאה בלבד) מותרת גם להרצה אוטומטית (GitHub Actions) עם הסוד CRON_SECRET בכותרת X-Cron-Secret
+  const cs = request.headers.get("X-Cron-Secret") || "", cronOk = u.searchParams.get("namecheck") && !!env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET;
+  if (!cronOk && !(await checkAdmin(request, env))) return noAuth();
   try {
     if (u.searchParams.get("namecheck")) return Response.json(await nameCheck(env, Math.max(0, Number(u.searchParams.get("offset")) || 0), Math.min(40, Number(u.searchParams.get("limit")) || 20)));
     if (u.searchParams.get("names")) {
