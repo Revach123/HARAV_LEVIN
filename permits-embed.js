@@ -21,7 +21,7 @@
     "#ipb input{flex:1;min-width:160px}#ipb select{min-width:190px}#ipb.nar select{display:none}#ipb.nar{margin-right:auto;margin-left:0}" +
     "#ipb .ipb-cnt{font-size:14px;color:#6a7c82}" +
     "#ipb-side{position:fixed;display:none;z-index:98;direction:rtl;box-sizing:border-box;overflow-y:auto;background:#fff;font-family:inherit}" +
-    "#ipb-side button{display:flex;width:100%;justify-content:space-between;align-items:center;margin:0;font:inherit;font-size:18px;line-height:1.15;color:#274d5b;background:none;border:0;border-bottom:1px solid #dfe7e8;border-radius:0;box-shadow:none;text-transform:none;padding:.18rem .4rem;cursor:pointer;text-align:start}" +
+    "#ipb-side button{display:flex;width:100%;justify-content:space-between;align-items:center;margin:0;font:inherit;font-size:19px;line-height:1.2;color:#274d5b;background:none;border:0;border-bottom:1px solid #dfe7e8;border-radius:0;box-shadow:none;text-transform:none;padding:.26rem .4rem;cursor:pointer;text-align:start}" +
     "#ipb-side button::after{content:\"\\2039\";font-size:20px;line-height:1;color:#6a7c82;order:2;margin-inline-start:.4rem}" +
     "#ipb-side button small{color:#6a7c82;font-size:13px;margin-inline-start:auto;padding-inline:.5rem}" +
     "#ipb-side button:hover{background:#eef4f5}#ipb-side button.on{font-weight:700;color:#1e8f85;border-bottom-color:#2aada1}" +
@@ -113,7 +113,7 @@
     var ext = wide && !!GEO && sidebar.children.length > 0;     // התפריט בצד נשאר קבוע בעמוד האב (כמו הסרגל העליון) - באותו פריים של הגלילה, בלי מעבר הודעות
     if (ext !== extOn) { extOn = ext; send({ type: "ext", on: ext }); sidebar.style.display = ext ? "block" : "none"; }
     if (ext) {
-      var pinTop = OFFSET + 10, nat = fr.top + GEO.t, lb = fr.top + GEO.t + GEO.h, mh = Math.max(160, window.innerHeight - pinTop - 12);
+      var pinTop = OFFSET, nat = fr.top + GEO.t - bh, lb = fr.top + GEO.t + GEO.h, mh = Math.max(160, window.innerHeight - pinTop - 12);
       if (sidebar.style.maxHeight !== mh + "px") { sidebar.style.maxHeight = mh + "px"; }
       var tp = Math.round(Math.min(Math.max(nat, pinTop), lb - sidebar.offsetHeight)), lf = Math.round(fr.left + GEO.l), wd = GEO.w;
       if (tp !== sT) { sidebar.style.top = tp + "px"; sT = tp; }
