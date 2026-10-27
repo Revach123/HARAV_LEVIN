@@ -1,1 +1,1 @@
-total=1877 none=319 partial=167 notext=12 ok=1379
+total=1877 none=274 partial=161 notext=12 ok=1430
