@@ -58,7 +58,7 @@ def r2_exists(key):
         r = wr("r2", "object", "get", f"{BUCKET}/{key}", "--file", tmp, "--remote", check=False)
         if r.returncode == 0: return True
         err = (r.stderr or "") + (r.stdout or "")
-        if re.search(r"403|Authentication error|Forbidden|Unauthorized", err):
+        if re.search(r"403: Forbidden|Authentication error|Unauthorized", err):          # לא סתם "403" - הוא יכול להופיע בתוך מפתח הקובץ (hex)
             sys.exit("שגיאת הרשאה מול R2 - לטוקן חסרה ההרשאה Workers R2 Storage - Edit")
         return False          # לא קיים
     finally:
