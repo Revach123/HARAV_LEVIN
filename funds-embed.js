@@ -42,7 +42,10 @@
     if (e.origin !== O || e.source !== f.contentWindow || !e.data) { return; }
     if (e.data.type === "iska-funds-height") { f.style.height = (e.data.h + 10) + "px"; }
     if (e.data.type === "funds-spec") {
-      upd.textContent = e.data.updated || "";
+      // תאריך העדכון מוצג בבאנר של העמוד, במקום הניווט "דף הבית » ..." (Avada); אם אין באנר כזה - בסרגל
+      var bc = document.querySelector(".fusion-page-title-bar .fusion-breadcrumbs") || document.querySelector(".fusion-breadcrumbs") || document.querySelector(".fusion-page-title-secondary");
+      if (bc && e.data.updated) { bc.textContent = e.data.updated; upd.textContent = ""; upd.style.display = "none"; }
+      else { upd.textContent = e.data.updated || ""; upd.style.display = ""; }
       Array.prototype.forEach.call(tabsEl.children, function (x) { x.className = x.getAttribute("data-t") === e.data.tab ? "on" : ""; });
     }
   });
