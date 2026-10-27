@@ -26,7 +26,7 @@
   .tabs button.on{color:var(--accent-dark);border-top-color:var(--accent);background:var(--accent-bg)}
   .layout{display:grid;grid-template-columns:250px 1fr;gap:2rem;align-items:start}
   .side{position:sticky;top:calc(var(--sh,120px) + .6rem)}
-  .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:calc(17px*var(--sf,1));color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:calc(.65rem*var(--sf,1)) .4rem;cursor:pointer;text-align:start}
+  .side button{display:flex;width:100%;justify-content:space-between;align-items:center;font:inherit;font-size:calc(19px*var(--sf,1));line-height:1.2;color:var(--navy);background:none;border:0;border-bottom:1px solid var(--border);padding:calc(.3rem*var(--sf,1)) .4rem;cursor:pointer;text-align:start}
   .side button::after{content:"\2039";font-size:20px;color:var(--muted);order:2;margin-inline-start:.4rem}
   .side button small{color:var(--muted);font-size:calc(13px*var(--sf,1));margin-inline-start:auto;padding-inline:.5rem}
   .side button:hover{background:#eef4f5}.side button.on{font-weight:700;color:var(--accent-dark);border-bottom-color:var(--accent)}
@@ -190,7 +190,7 @@ function fitSide(avail) {
   const s = document.getElementById("side"); if (!s || avail < 120) return;
   const key = Math.round(avail) + "|" + s.children.length; if (key === fitKey) return; fitKey = key;
   s.style.maxHeight = ""; s.style.setProperty("--sf", "1");
-  const H = s.offsetHeight, f = H > avail ? Math.max(.6, avail / H) : 1;
+  const H = s.offsetHeight, f = H > avail ? Math.max(.75, avail / H) : 1;
   s.style.setProperty("--sf", f.toFixed(3)); s.style.maxHeight = Math.round(avail) + "px"; s.style.overflowY = "auto";
 }
 function placeSide() {
