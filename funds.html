@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#274d5b">
 <link rel="icon" type="image/png" href="/favicon.png">
 <title>מסלולים וקרנות מאושרים</title>
@@ -10,79 +10,116 @@
   @font-face{font-family:'Alef';font-weight:400;font-display:swap;src:url(fonts/alef/alef-hebrew-400-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
   @font-face{font-family:'Alef';font-weight:700;font-display:swap;src:url(fonts/alef/alef-hebrew-700-normal.woff2) format('woff2');unicode-range:U+0590-05FF,U+20AA}
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{--navy:#274d5b;--accent:#2aada1;--accent-border:#b9e3de;--muted:#6a7c82}
-  html,body{touch-action:pan-x pan-y}
-  body{font-family:'Alef','Heebo',system-ui,sans-serif;background:#f4f7f7;color:#3b3d3d;font-size:18px;line-height:1.5;padding:0 .6rem 2rem}
-  .wrap{max-width:1100px;margin:0 auto}
-  .top{position:sticky;top:0;z-index:10;background:#f4f7f7;margin:0 -.6rem;padding:0 .6rem .1rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-  .top .back{margin:.5rem 0 .3rem;min-height:44px}
-  .top h1{font-size:20px;margin:.1rem 0 .4rem}
-  .top .tabs{margin-bottom:.5rem}
-  .top .tabs button{min-height:52px;font-size:16px}
-  .upd{margin-top:.6rem}
-  .back{display:inline-flex;align-items:center;gap:.4rem;min-height:48px;padding:0 .9rem;margin:.7rem 0;font:inherit;font-size:18px;font-weight:700;color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
-  .back::before{content:"\203A";font-size:26px;line-height:1}
-  h1{font-size:23px;color:var(--navy);margin:.2rem 0 .6rem}
-  .tabs{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.8rem}
-  .tabs button{font:inherit;font-size:17px;font-weight:700;line-height:1.25;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px;padding:.5rem .6rem;min-height:60px;cursor:pointer}
-  .tabs button[aria-selected=true]{background:var(--navy);border-color:var(--navy);color:#fff}
-  .upd{font-size:15px;color:var(--muted);margin-bottom:.5rem}
-  .pane{display:none}.pane.on{display:block}
-  .scroller{background:#fff;border:2px solid var(--accent-border);border-radius:10px;overflow:hidden;touch-action:pan-y}
-  .scroller img{display:block;width:100%;height:auto;transform-origin:0 0;will-change:transform;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
-  .hint{font-size:15px;color:var(--muted);margin-top:.5rem;text-align:center}
+  :root{--navy:#274d5b;--accent:#2aada1;--accent-border:#b9e3de;--muted:#6a7c82;--line:#dbe7e6;--bg:#f4f7f7;--zebra:#f8fbfb}
+  body{font-family:'Alef','Heebo',system-ui,sans-serif;background:var(--bg);color:#3b3d3d;font-size:17px;line-height:1.45;padding:0 .6rem 2rem}
+  .wrap{max-width:1150px;margin:0 auto}
+  .top{position:sticky;top:0;z-index:10;background:var(--bg);margin:0 -.6rem;padding:0 .6rem .5rem;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+  .back{display:inline-flex;align-items:center;gap:.4rem;min-height:44px;padding:0 .9rem;margin:.5rem 0 .3rem;font:inherit;font-size:17px;font-weight:700;color:var(--navy);text-decoration:none;background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .back::before{content:"\203A";font-size:24px;line-height:1}
+  h1{font-size:21px;color:var(--navy);margin:.1rem 0 .4rem}
+  /* לשוניות באותו סגנון של שאר האתר (display.html): שורה אחת, קו עליון צבעוני ללשונית הפעילה */
+  .tabs{display:flex;gap:0;margin:.2rem 0 .6rem;border-bottom:1px solid #dfe7e8}
+  .tabs button{flex:1;min-width:150px;padding:.8rem 1rem;font:inherit;font-size:17px;font-weight:700;line-height:1.3;background:transparent;color:var(--navy);border:none;border-top:3px solid transparent;cursor:pointer;transition:.15s}
+  .tabs button:hover{color:#1e8f85}
+  .tabs button[aria-selected=true]{color:#1e8f85;border-top-color:var(--accent);background:#e9f6f5}
+  @media (max-width:560px){ .tabs button{min-width:0;font-size:15px;padding:.6rem .5rem} }
+  .bar{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+  .bar input{flex:1;min-width:200px;font:inherit;font-size:16px;padding:.45rem .7rem;border:2px solid var(--accent-border);border-radius:10px;background:#fff;color:inherit}
+  .bar input:focus{outline:none;border-color:var(--accent)}
+  .upd{font-size:14px;color:var(--muted);white-space:nowrap}
+  .state{text-align:center;color:var(--muted);padding:2.5rem 0}
+  /* בסגנון הרשימה הישנה (אקסל): רקע לבן, קווי טבלה שחורים, טקסט בצבע לפי סוג המוצר, קו עבה בין חברה לחברה */
+  table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border:3px solid #000;margin-top:.8rem}
+  th{background:#fff;color:#000;font-size:16px;font-weight:700;text-align:right;padding:.45rem .6rem;border:1px solid #000;border-bottom:3px solid #000;position:sticky;top:0}
+  th:first-child{color:#1f4e9c}
+  td{padding:.35rem .6rem;border:1px solid #000;vertical-align:middle;font-size:16px;font-weight:700;color:var(--tc,#000)}
+  td.co{border-left:1px solid #000}
+  td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.sec td{font-size:17px;padding:.45rem .7rem;border-top:3px solid #000;border-bottom:2px solid #000;text-decoration:underline;text-underline-offset:4px}
+  tr.cg td{border-top:3px solid #000}
+  .sec-box{margin:.9rem 0}
+  .sec-h{font-weight:700;font-size:17px;padding:.3rem .2rem;text-decoration:underline;text-underline-offset:4px}
+  mark{background:#fff3a6;color:inherit;border-radius:3px;padding:0 1px}
+  .cards{display:none}
+  @media (max-width:760px){
+    table{display:none}
+    .cards{display:block;margin-top:.8rem}
+    .card{background:#fff;border:3px solid #000;margin-bottom:.6rem;color:var(--tc,#000)}
+    .card h3{font-size:17px;color:var(--tc,#000);padding:.35rem .7rem;border-bottom:2px solid #000}
+    .it{padding:.45rem .7rem;border-top:1px solid #000;font-weight:700}
+    .it:first-of-type{border-top:0}
+    .it b{display:block;font-size:16px}
+    .it .meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.2rem}
+    .it .num{direction:ltr;font-weight:700;font-variant-numeric:tabular-nums}
+    .it .note{font-size:14px;margin-top:.15rem}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="top"><a class="back" href="kehilot.html">חזרה</a>
-  <h1>רשימת מסלולים וקרנות מאושרים</h1>
-  <div class="tabs" role="tablist">
-    <button role="tab" aria-selected="true" data-p="a">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
-    <button role="tab" aria-selected="false" data-p="b">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
-  </div></header>
-  <section class="pane on" id="a">
-    <div class="upd">מעודכן חשוון תשפ"ז</div>
-    <div class="scroller"><img src="data/funds/pension.png" alt="רשימת קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד מאושרים" draggable="false" oncontextmenu="return false"></div>
-  </section>
-  <section class="pane" id="b">
-    <div class="upd">מעודכן חשוון תשפ"ז</div>
-    <div class="scroller"><img src="data/funds/savings.png" alt="רשימת תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל מאושרים" draggable="false" oncontextmenu="return false"></div>
-  </section>
+    <h1>רשימת מסלולים וקרנות מאושרים</h1>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-t="pension">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
+      <button role="tab" aria-selected="false" data-t="savings">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
+    </div>
+    <div class="bar"><input id="q" type="search" placeholder="חיפוש: חברה, מסלול, סוג או מספר קופה" autocomplete="off"><span class="upd" id="upd"></span></div>
+  </header>
+  <main id="out"><div class="state">טוען…</div></main>
 </div>
 <script>
-// הגדלה בצביטה (שתי אצבעות) רק של התמונה, לא של הדף; גרירה באצבע אחת כשהתמונה מוגדלת; במחשב: Ctrl + גלגלת. אין הגדלה בלחיצה.
-["gesturestart","gesturechange","gestureend"].forEach(function(e){document.addEventListener(e,function(ev){ev.preventDefault()},{passive:false})});          // iOS: בלי הגדלת הדף
-document.querySelectorAll(".scroller").forEach(function(c){
-  var img=c.querySelector("img"),s=1,tx=0,ty=0,MAX=5,g=null;
-  function apply(){
-    var w=c.clientWidth,h=img.offsetHeight;
-    tx=Math.min(0,Math.max(w-w*s,tx));ty=Math.min(0,Math.max(h-h*s,ty));
-    img.style.transform=s===1?"":"translate("+tx+"px,"+ty+"px) scale("+s+")";
-    c.style.touchAction=s>1?"none":"pan-y";
-  }
-  function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
-  function mid(t){var r=c.getBoundingClientRect();return{x:(t[0].clientX+t[1].clientX)/2-r.left,y:(t[0].clientY+t[1].clientY)/2-r.top}}
-  function zoomAt(ns,m){ns=Math.min(MAX,Math.max(1,ns));var px=(m.x-tx)/s,py=(m.y-ty)/s;s=ns;tx=m.x-px*s;ty=m.y-py*s;apply()}
-  c.addEventListener("touchstart",function(e){
-    if(e.touches.length===2){g={d:dist(e.touches),s:s,pan:false}}
-    else if(e.touches.length===1&&s>1){g={pan:true,x:e.touches[0].clientX,y:e.touches[0].clientY}}
-  },{passive:true});
-  c.addEventListener("touchmove",function(e){
-    if(!g)return;
-    if(e.touches.length===2&&g.d){e.preventDefault();zoomAt(g.s*dist(e.touches)/g.d,mid(e.touches))}
-    else if(e.touches.length===1&&g.pan&&s>1){e.preventDefault();tx+=e.touches[0].clientX-g.x;ty+=e.touches[0].clientY-g.y;g.x=e.touches[0].clientX;g.y=e.touches[0].clientY;apply()}
-  },{passive:false});
-  c.addEventListener("touchend",function(e){if(e.touches.length===0)g=null;else if(e.touches.length===1&&s>1)g={pan:true,x:e.touches[0].clientX,y:e.touches[0].clientY};else g=null});
-  c.addEventListener("wheel",function(e){if(!e.ctrlKey)return;e.preventDefault();var r=c.getBoundingClientRect();zoomAt(s*Math.exp(-e.deltaY*0.01),{x:e.clientX-r.left,y:e.clientY-r.top})},{passive:false});
-  window.addEventListener("resize",apply);
-});
-document.querySelectorAll(".tabs button").forEach(function(b){
-  b.addEventListener("click",function(){
-    document.querySelectorAll(".tabs button").forEach(function(x){x.setAttribute("aria-selected",x===b?"true":"false")});
-    document.querySelectorAll(".pane").forEach(function(p){p.classList.toggle("on",p.id===b.dataset.p)});
-  });
-});
+const st = { tab: "pension", q: "", rows: [] };
+const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s || "").toLowerCase().replace(/["'׳״`]/g, "").replace(/\s+/g, " ").trim();
+// צבע לפי סוג (כמו בצבעים של הרשימה הקודמת): גוון קבוע לכל סוג
+const TYPE_COL = [["פנסיונרים", "", "#9c6b00"], ["לשכירים", "", "#1f3864"], ["להשקעה", "", "#00a650"], ["לעובדי הוראה (", "", "#00a0e0"], ["ייעודי", "", "#8cc34a"], ["השתלמות", "", "#a0522d"], ["פנסיה", "", "#7030a0"], ["בטוח מנהלים", "", "#000000"], ["ילד", "", "#2e75b6"], ["תוכנית חיסכון", "", "#00a0e0"], ["סל", "", "#7030a0"], ["כספית", "", "#e46c0a"], ["נאמנות", "", "#000000"]];          // צבע הטקסט לכל סוג, כמו ברשימה הישנה
+function hl(s) {
+  const q = st.q.trim(); if (!q) return E(s);
+  const i = String(s).toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return E(s);
+  return E(s.slice(0, i)) + "<mark>" + E(s.slice(i, i + q.length)) + "</mark>" + E(s.slice(i + q.length));
+}
+// סדר קבוע: לפי סוג מוצר (בסדר שבו הסוגים מופיעים ברשימה), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
+const FIRST = ["מיטב", "הראל"];
+function sortRows(rows, tab, saved) {          // השורות של לשונית אחת (כולל שורות "both" שמוצגות בשתי הלשוניות) בסדר הקבוע
+  const order = [...((saved && saved[tab]) || [])], rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
+  const mine = rows.filter(r => r.tab === tab || r.tab === "both");
+  mine.forEach(r => { if (!order.includes(r.type)) order.push(r.type); });
+  return mine.map((r, n) => ({ r, n })).sort((a, b) => (order.indexOf(a.r.type) - order.indexOf(b.r.type))
+    || (rank(a.r.company)[0] - rank(b.r.company)[0]) || rank(a.r.company)[1].localeCompare(rank(b.r.company)[1], "he") || (a.n - b.n)).map(x => x.r);
+}
+function groups(list) {          // שורות רצופות של אותה חברה ואותו סוג = קבוצה אחת
+  const out = [];
+  for (const r of list) { const g = out[out.length - 1]; if (g && g.co === r.company && g.type === r.type) g.rows.push(r); else out.push({ co: r.company, type: r.type, rows: [r] }); }          // הרשימה מסודרת לפי סוג מוצר: חברה מאוחדת רק בתוך אותו סוג
+  return out;
+}
+function paint() {
+  const out = document.getElementById("out"), q = norm(st.q);
+  const list = sortRows(st.rows, st.tab, st.order).filter(r => (!q || norm([r.company, r.track, r.type, r.number, r.note].join(" ")).includes(q)));
+  if (!list.length) { out.innerHTML = `<div class="state">${q ? "לא נמצאו מסלולים מתאימים" : "אין מסלולים להצגה"}</div>`; return; }
+  const sections = [];          // כותרת לכל סוג מוצר (הרשימה מסודרת לפי סוג); בתוך כל סוג - חברה מאוחדת לשורות רצופות
+  for (const r of list) { const sc = sections[sections.length - 1]; if (sc && sc.type === r.type) sc.rows.push(r); else sections.push({ type: r.type, rows: [r] }); }
+  const tc = t => (TYPE_COL.find(x => t.includes(x[0])) || ["", "", "#000000"]);
+  const tbl = `<table><thead><tr><th style="width:16%">שם חברה</th><th style="width:38%">שם מסלול</th><th style="width:14%">מספר קופה</th><th style="width:32%">הערות</th></tr></thead><tbody>` +
+    sections.map(sc => { const fg = tc(sc.type)[2];
+      return `<tr class="sec" style="--tc:${fg}"><td colspan="4">${hl(sc.type || "אחר")}</td></tr>` +
+        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
+  const cards = `<div class="cards">` + sections.map(sc => { const fg = tc(sc.type)[2];
+    return `<div class="sec-box" style="--tc:${fg}"><div class="sec-h" style="color:${fg}">${hl(sc.type || "אחר")}</div>` +
+      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
+  out.innerHTML = tbl + cards;
+}
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  st.tab = b.dataset.t;
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
+  paint();
+}));
+let tm; document.getElementById("q").addEventListener("input", e => { st.q = e.target.value; clearTimeout(tm); tm = setTimeout(paint, 150); });
+fetch("/api/glatt-funds").then(r => r.json()).then(d => {
+  if (d.error) throw new Error(d.error);
+  st.rows = d.rows || []; st.order = d.type_order || null;
+  document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
+  paint();
+}).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
 </script>
 </body>
 </html>

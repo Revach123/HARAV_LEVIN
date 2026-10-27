@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=78"></script>
+<script src="/permit-docs-test.js?v=79"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -906,6 +906,15 @@
   .home-wrap .idx-pie svg { width:clamp(70px,11vh,130px) !important; }
   .home-dash .home-grid { min-height:200px; }
   .home-wrap .home-card b { color:#fff; }
+  /* המסך הראשי בלי גלילה בכלל: הכל נכנס בגובה החלון (הכפתורים והמדדים מתכווצים לפי הגובה) */
+  html:has(.home-wrap), body:has(.home-wrap) { overflow:hidden !important; height:100%; }
+  .home-band::before { top:calc(-1 * clamp(10px,2.5vh,44px)) !important; bottom:calc(-1 * clamp(10px,2.5vh,44px)) !important; }
+  .home-wrap { height:calc(100vh - 86px) !important; min-height:0 !important; gap:clamp(24px,5.5vh,90px) !important; overflow:hidden; padding-bottom:clamp(6px,1.5vh,16px) !important; }
+  .home-top { height:clamp(48px,8vh,96px) !important; }
+  .home-mid { height:clamp(64px,14vh,160px) !important; }
+  .home-bot { flex:1 1 0 !important; min-height:0 !important; }
+  .home-dash .home-grid { min-height:0 !important; }
+  .home-wrap .idx-pie svg { width:clamp(46px,9vh,130px) !important; }
   .home-wrap .home-card:hover { background:linear-gradient(180deg,#41788d 0%,#2f5d6d 55%,#244a58 100%); border-color:#1fa59a; }
   body:has(.home-wrap) { background:linear-gradient(180deg,#10222a 0%,#1a3640 100%) fixed; }
   .home-dash .pd-homeh { color:#fff; }
@@ -1698,7 +1707,7 @@ function loadJoinersCount() {
   joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
 }
 // ════════════════════════════════════════════
-//  מסלולים וקרנות גלאט הון: עריכת הרשימה שמוצגת בדף funds_test.html (API: /api/glatt-funds)
+//  מסלולים וקרנות גלאט הון: עריכת הרשימה שמוצגת בדף funds.html (API: /api/glatt-funds)
 // ════════════════════════════════════════════
 const GF = { types: {}, rows: [], updated: "", tab: "pension", q: "", dirty: false, loaded: false, loading: false, saving: false, err: "", savedAt: "" };
 const GF_TABS = [["pension", "קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד"], ["savings", "תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל"]];
@@ -1812,14 +1821,14 @@ function renderHome() {
   return `<div class="home-wrap"><div class="home-band">
     <div class="home-top">
       <button class="home-card" onclick="PD.openDash('e')"><span class="ico ico-white">👥</span><b>מצטרפים<span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></b></button>
-      <button class="home-card home-gf" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
     </div>
     <div class="home-mid">
       <button class="home-card" onclick="openForm(null)"><span class="ico">${ADD_ICON}</span><b>הוספת עסק</b></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div></div>
-    <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
+    <div class="home-bot"><div class="home-dash"><h3 class="pd-homeh">ניהול</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:960px">${window.PD ? PD.homeCards(true) : ""}
+      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b><span class="sub">הרשימה בדף funds</span></button></div></div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 

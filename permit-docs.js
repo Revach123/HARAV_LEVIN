@@ -256,9 +256,13 @@
   });
 
   // כרטיסי הדף הראשי: "מסמכי היתר עיסקא"
-  function homeCards() {
+  function homeCards(compact) {
     if (!S.loaded && !S.loading && typeof isAdmin !== "undefined" && isAdmin) load();
     const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
+    if (compact) {          // כפתור אחד לניהול השטרות (הלשוניות בתוך הדשבורד), והמספרים בשורה מתחת
+      const c = t => (S.loaded && !S.err ? ndCount(t) : "…");
+      return `<button class="home-card" onclick="PD.openDash('a')"><span class="ico">🗂</span><b>ניהול שטרות היתר עיסקא</b><span class="sub">חסרים שטרות: ${c("a")} · מחכים לשיוך: ${c("b")} · לא רשומות: ${c("c")}</span></button>`;
+    }
     return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px">
       <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b></button>
       <button class="home-card" onclick="PD.openDash('b')"><span class="ico">📥</span><b>שטרות שמחכים לשיוך${n("b")}</b></button>

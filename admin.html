@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261026n"></script>
+<script src="/permit-docs.js?v=20261027a"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -346,6 +346,16 @@
 
   /* ── מסך ראשי של הניהול + חיפוש במאגר ── */
   .home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:900px; margin:2.5rem auto; }
+  .gf-tbl { width:100%; border-collapse:collapse; background:var(--bg2); font-size:14px; }
+  .gf-tbl th { background:var(--navy); color:#fff; text-align:right; padding:6px 8px; position:sticky; top:0; z-index:1; font-size:13px; }
+  .gf-tbl td { padding:3px 4px; border-top:1px solid var(--border); }
+  .gf-tbl input { width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:5px; font-size:14px; background:transparent; color:var(--text); font-family:inherit; }
+  .gf-tbl input:hover { border-color:var(--border); }
+  .gf-tbl input:focus { border-color:var(--accent); background:var(--bg); outline:none; }
+  .gf-tbl tr.gf-add td { border-top:0; padding:2px 6px 8px; }
+  .gf-tbl tr.gf-sec td { background:var(--bg); color:var(--navy); font-weight:700; font-size:15px; padding:8px 10px; border-top:2px solid var(--navy); }
+  .gf-b { border:1px solid var(--border); background:var(--bg); border-radius:5px; padding:2px 7px; margin:0 1px; cursor:pointer; font-size:12px; }
+  .gf-b:disabled { opacity:.35; cursor:default; }
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
   .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
   .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
@@ -893,6 +903,15 @@
   .home-wrap .idx-pie svg { width:clamp(70px,11vh,130px) !important; }
   .home-dash .home-grid { min-height:200px; }
   .home-wrap .home-card b { color:#fff; }
+  /* המסך הראשי בלי גלילה בכלל: הכל נכנס בגובה החלון (הכפתורים והמדדים מתכווצים לפי הגובה) */
+  html:has(.home-wrap), body:has(.home-wrap) { overflow:hidden !important; height:100%; }
+  .home-band::before { top:calc(-1 * clamp(10px,2.5vh,44px)) !important; bottom:calc(-1 * clamp(10px,2.5vh,44px)) !important; }
+  .home-wrap { height:calc(100vh - 86px) !important; min-height:0 !important; gap:clamp(24px,5.5vh,90px) !important; overflow:hidden; padding-bottom:clamp(6px,1.5vh,16px) !important; }
+  .home-top { height:clamp(48px,8vh,96px) !important; }
+  .home-mid { height:clamp(64px,14vh,160px) !important; }
+  .home-bot { flex:1 1 0 !important; min-height:0 !important; }
+  .home-dash .home-grid { min-height:0 !important; }
+  .home-wrap .idx-pie svg { width:clamp(46px,9vh,130px) !important; }
   .home-wrap .home-card:hover { background:linear-gradient(180deg,#41788d 0%,#2f5d6d 55%,#244a58 100%); border-color:#1fa59a; }
   body:has(.home-wrap) { background:linear-gradient(180deg,#10222a 0%,#1a3640 100%) fixed; }
   .home-dash .pd-homeh { color:#fff; }
@@ -1160,6 +1179,7 @@ function render() {
   else if (view === "form")       { if (formModal) ensureFormModal().innerHTML = renderForm(); else app.innerHTML = adminTabs() + renderForm(); }
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
+  else if (view === "gfunds")     { app.innerHTML = renderGFunds(); if (!GF.loaded && !GF.loading) gfLoad(); }
   bindEvents();
   if (view === "admin") admWatch();
   document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
@@ -1718,6 +1738,116 @@ function loadJoinersCount() {
   if (joinersCountP) return;
   joinersCountP = apiFetch("/joiners?count=1").then(c => { if (c && typeof c.total === "number") { joinersCount = c; const el = document.getElementById("home-jn"); if (el) el.textContent = joinersCountText(); } }).catch(() => { joinersCountP = null; });
 }
+// ════════════════════════════════════════════
+//  מסלולים וקרנות גלאט הון: עריכת הרשימה שמוצגת בדף funds.html (API: /api/glatt-funds)
+// ════════════════════════════════════════════
+const GF = { types: {}, rows: [], updated: "", tab: "pension", q: "", dirty: false, loaded: false, loading: false, saving: false, err: "", savedAt: "" };
+const GF_TABS = [["pension", "קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד"], ["savings", "תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל"]];
+const GF_FIELDS = [["company", "שם חברה", "16%"], ["track", "שם מסלול", "30%"], ["type", "סוג", "20%"], ["number", "מספר קופה", "10%"], ["note", "הערות", "24%"]];
+async function gfLoad() {
+  GF.loading = true; GF.err = "";
+  try {
+    const r = await fetch("/api/glatt-funds", { cache: "no-store" }); const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.statusText);
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.loaded = true; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
+  } catch (e) { GF.err = e.message; }
+  GF.loading = false;
+  if (view === "gfunds") render();
+}
+function gfMatch(r) { const q = GF.q.trim().toLowerCase(); return !q || [r.company, r.track, r.type, r.number, r.note].join(" ").toLowerCase().includes(q); }
+function renderGFunds() {
+  const head = `<div class="admin-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="margin:0">📋 מסלולים וקרנות גלאט הון</h2>
+    <span style="flex:1"></span>
+
+    <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
+  if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
+  const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => gfIn(r, k)).length})</button>`).join("")}
+    <input type="search" value="${escHtml(GF.q)}" placeholder="סינון בטבלה…" oninput="GF.q=this.value;gfPaintBody()" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></div>`;
+  const types = [...new Set(GF.rows.map(r => r.type).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  const cos = [...new Set(GF.rows.map(r => r.company).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
+  return head + tabs + `<datalist id="gf-types">${types.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist><datalist id="gf-cos">${cos.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist>
+    <div style="overflow:auto"><table class="gf-tbl"><thead><tr><th style="width:28px">#</th>${GF_FIELDS.map(([, l, w]) => `<th style="width:${w}">${l}</th>`).join("")}<th style="width:60px">מחיקה</th></tr></thead><tbody id="gf-body">${gfBodyHtml()}</tbody></table></div>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="btn-ghost" onclick="gfAdd(-1)">➕ סוג מוצר חדש</button></div>
+    ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
+}
+// סדר קבוע ואוטומטי: לפי סוג מוצר (בסדר הקיים; סוג חדש - בסוף), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
+const GF_FIRST = ["מיטב", "הראל"];
+function gfCoRank(c) { c = String(c || "").trim(); const k = GF_FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [GF_FIRST.length, c] : [GF_FIRST.length + 1, ""]; }
+// סוג מוצר שמופיע בשתי הרשימות (למשל קופת גמל להשקעה): השורות שלו נשמרות פעם אחת (tab = both) ומוצגות בשתי הלשוניות - כל שינוי חל על שתיהן
+const gfIn = (r, tab) => r.tab === tab || r.tab === "both";
+const gfShared = (type, except) => GF.rows.some(r => r !== except && r.tab === "both" && r.type === type);
+function gfOrderFrom(o) { const out = {}; for (const [t] of GF_TABS) out[t] = Array.isArray(o && o[t]) ? [...o[t]] : []; return out; }
+function gfTypeOrder(tab) {          // סדר הסוגים בלשונית: הסדר שנשמר, וסוג שלא היה - בסוף
+  const o = GF.types[tab] = GF.types[tab] || [];
+  for (const r of GF.rows) if (gfIn(r, tab) && !o.includes(r.type)) o.push(r.type);
+  const live = new Set(GF.rows.filter(r => gfIn(r, tab)).map(r => r.type));
+  GF.types[tab] = o.filter(t => live.has(t));
+  return GF.types[tab];
+}
+function gfSort() {
+  const ord = {}; for (const [tab] of GF_TABS) ord[tab] = gfTypeOrder(tab);
+  const key = r => { const tab = r.tab === "both" ? "pension" : r.tab; return [GF_TABS.findIndex(x => x[0] === tab), ord[tab].indexOf(r.type)]; };
+  GF.rows = GF.rows.map((r, n) => ({ r, n })).sort((a, b) => { const ka = key(a.r), kb = key(b.r); if (ka[0] !== kb[0]) return ka[0] - kb[0]; if (ka[1] !== kb[1]) return ka[1] - kb[1];
+    const ca = gfCoRank(a.r.company), cb = gfCoRank(b.r.company); return (ca[0] - cb[0]) || ca[1].localeCompare(cb[1], "he") || (a.n - b.n); }).map(x => x.r);
+}
+function gfBodyHtml() {
+  const order = gfTypeOrder(GF.tab); let n = 0;
+  return order.map((t, ti) => {
+    const rows = GF.rows.map((r, i) => ({ r, i })).filter(x => gfIn(x.r, GF.tab) && x.r.type === t);
+    const shown = rows.filter(x => gfMatch(x.r));
+    if (GF.q.trim() && !shown.length) return "";
+    return `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(t || "(סוג מוצר חדש: כתבו את שם הסוג בעמודת הסוג)")}${gfShared(t) ? ' <span style="font-weight:400;font-size:12px;color:var(--muted)">(מופיע בשתי הרשימות)</span>' : ""}</td></tr>` +
+      shown.map(({ r, i }) => `<tr data-i="${i}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+        <td style="text-align:center"><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`).join("") +
+      `<tr class="gf-add"><td colspan="${GF_FIELDS.length + 2}"><button class="gf-b" onclick="gfAdd(${ti})">➕ הוספת שורה ל${escHtml(t || "סוג החדש")}</button></td></tr>`;
+  }).join("");
+}
+function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
+function gfDirty() { GF.dirty = true; formDirty = false; const b = document.getElementById("gf-save"); if (b) { b.disabled = GF.saving; b.textContent = "💾 שמירה"; } }
+function gfSet(i, k, v) { GF.rows[i][k] = v; gfDirty(); }
+function gfFocus(row, field) {          // אחרי ציור מחדש: מיקוד בשדה של השורה (לפי מקומה החדש ברשימה)
+  setTimeout(() => { const tr = document.querySelector(`#gf-body tr[data-i="${GF.rows.indexOf(row)}"]`); if (!tr) return; const inp = tr.querySelectorAll("input")[GF_FIELDS.findIndex(f => f[0] === field)]; tr.scrollIntoView({ block: "center" }); if (inp) inp.focus(); }, 0);
+}
+function gfResort(i, k) {          // שינוי חברה / סוג: השורה עוברת למקום שלה לפי הסדר הקבוע
+  const row = GF.rows[i];
+  if (k === "type") row.tab = gfShared(row.type, row) ? "both" : (row.tab === "both" ? GF.tab : row.tab);          // סוג משותף לשתי הרשימות - השורה בשתיהן
+  gfSort(); render(); gfFocus(row, k === "type" ? "company" : "track");
+}
+function gfAdd(ti) {          // שורה חדשה בסוף הסוג (ti = מיקום הסוג), או סוג מוצר חדש (ti = -1)
+  const order = gfTypeOrder(GF.tab), type = ti >= 0 ? order[ti] : "";
+  if (ti < 0 && order.includes("")) { gfFocus(GF.rows.find(r => gfIn(r, GF.tab) && r.type === ""), "type"); return; }
+  const row = { tab: type && gfShared(type) ? "both" : GF.tab, company: "", track: "", type, number: "", note: "" };
+  GF.rows.push(row); GF.q = ""; gfSort(); gfDirty(); render(); gfFocus(row, ti >= 0 ? "company" : "type");
+}
+function gfDel(i) {
+  const r = GF.rows[i]; if (!confirm(`למחוק את השורה "${[r.company, r.track, r.number].filter(Boolean).join(" · ") || "ריקה"}"? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
+  GF.rows.splice(i, 1); gfDirty(); render();
+}
+function gfHebDate(d) {          // "חשוון תשפ"ז": החודש העברי הנוכחי ושנה באותיות (בלי האלפים) - נרשם אוטומטית בכל שמירה
+  const parts = new Intl.DateTimeFormat("he-u-ca-hebrew", { month: "long", year: "numeric" }).formatToParts(d);
+  const month = (parts.find(p => p.type === "month") || {}).value || "", y = parseInt((parts.find(p => p.type === "year") || {}).value, 10) % 1000;
+  const L = [[400, "ת"], [300, "ש"], [200, "ר"], [100, "ק"], [90, "צ"], [80, "פ"], [70, "ע"], [60, "ס"], [50, "נ"], [40, "מ"], [30, "ל"], [20, "כ"], [10, "י"], [9, "ט"], [8, "ח"], [7, "ז"], [6, "ו"], [5, "ה"], [4, "ד"], [3, "ג"], [2, "ב"], [1, "א"]];
+  let n = y, out = "";
+  while (n > 0) { if (n % 100 === 15 || n % 100 === 16) { out += "ט" + (n % 100 === 15 ? "ו" : "ז"); n -= n % 100; continue; } const [v, c] = L.find(x => x[0] <= n); out += c; n -= v; }
+  const year = out.length > 1 ? out.slice(0, -1) + '"' + out.slice(-1) : out + "'";
+  return (month + " " + year).trim();
+}
+async function gfSave() {
+  if (!GF.dirty || GF.saving) return;
+  GF.saving = true; render();
+  try {
+    gfSort();
+    try { GF.updated = gfHebDate(new Date()); } catch { /* בלי לוח עברי בדפדפן: נשאר התאריך הקודם */ }
+    const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, type_order: { pension: gfTypeOrder("pension"), savings: gfTypeOrder("savings") }, rows: GF.rows }) });
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
+    showStatus("הרשימה נשמרה");
+  } catch (e) { if (e.message === "Unauthorized") { GF.saving = false; handleUnauth(); return; } alert("השמירה נכשלה: " + e.message); }
+  GF.saving = false; render();
+}
+window.addEventListener("beforeunload", e => { if (GF.dirty) { e.preventDefault(); e.returnValue = ""; } });
+
 function renderHome() {
   if (isAdmin) setTimeout(loadJoinersCount, 0);
   return `<div class="home-wrap"><div class="home-band">
@@ -1729,7 +1859,8 @@ function renderHome() {
       <button class="home-card" onclick="openForm(null)"><span class="ico">${ADD_ICON}</span><b>הוספת עסק</b></button>
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div></div>
-    <div class="home-bot"><div class="home-dash">${window.PD ? PD.homeCards() : ""}</div>
+    <div class="home-bot"><div class="home-dash"><h3 class="pd-homeh">ניהול</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:960px">${window.PD ? PD.homeCards(true) : ""}
+      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b><span class="sub">הרשימה בדף funds</span></button></div></div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
@@ -1959,6 +2090,7 @@ const confirmLeave = () => confirm("השינויים שעשית לא נשמרו.
 window.addEventListener("beforeunload", e => { if (view === "form" && formDirty) { e.preventDefault(); e.returnValue = ""; } });
 let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
+  if (view === "gfunds" && v !== "gfunds" && GF.dirty && !confirm("יש שינויים ברשימת המסלולים שלא נשמרו. לצאת בלי לשמור?")) return;
   if (v === "home" || v === "admin" || v === "form") setTimeout(() => checkUpdates(true), 0);
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (formModal && v !== "form") closeFormModal(false);
