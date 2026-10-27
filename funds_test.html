@@ -26,31 +26,30 @@
   .bar input:focus{outline:none;border-color:var(--accent)}
   .upd{font-size:14px;color:var(--muted);white-space:nowrap}
   .state{text-align:center;color:var(--muted);padding:2.5rem 0}
-  table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border:2px solid var(--accent-border);border-radius:10px;overflow:hidden;margin-top:.8rem}
-  th{background:var(--navy);color:#fff;font-size:15px;text-align:right;padding:.5rem .6rem;position:sticky;top:0}
-  td{padding:.45rem .6rem;border-top:1px solid var(--line);vertical-align:top;font-size:16px}
-  td.co{font-weight:700;border-left:1px solid rgba(0,0,0,.08);width:15%}
-  td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
-  td.note{font-size:14px;color:var(--muted)}
-  tr.sec td{font-weight:700;font-size:16px;padding:.5rem .7rem;border-top:0}
-  td{border-top-color:rgba(0,0,0,.07)}
-  tr.cg td{border-top:3px solid var(--tc)}
-  .sec-box{border:2px solid;border-radius:12px;padding:0 .5rem .5rem;margin:.9rem 0;overflow:hidden}
-  .sec-h{font-weight:700;font-size:16px;padding:.45rem .7rem;margin:0 -.5rem .5rem}
-  .tp{display:inline-block;font-size:13.5px;font-weight:700;padding:.08rem .5rem;border-radius:20px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  /* בסגנון הרשימה הישנה (אקסל): רקע לבן, קווי טבלה שחורים, טקסט בצבע לפי סוג המוצר, קו עבה בין חברה לחברה */
+  table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff;border:3px solid #000;margin-top:.8rem}
+  th{background:#fff;color:#000;font-size:16px;font-weight:700;text-align:right;padding:.45rem .6rem;border:1px solid #000;border-bottom:3px solid #000;position:sticky;top:0}
+  th:first-child{color:#1f4e9c}
+  td{padding:.35rem .6rem;border:1px solid #000;vertical-align:middle;font-size:16px;font-weight:700;color:var(--tc,#000)}
+  td.co{border-left:1px solid #000}
+  td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.sec td{font-size:17px;padding:.45rem .7rem;border-top:3px solid #000;border-bottom:2px solid #000;text-decoration:underline;text-underline-offset:4px}
+  tr.cg td{border-top:3px solid #000}
+  .sec-box{margin:.9rem 0}
+  .sec-h{font-weight:700;font-size:17px;padding:.3rem .2rem;text-decoration:underline;text-underline-offset:4px}
   mark{background:#fff3a6;color:inherit;border-radius:3px;padding:0 1px}
   .cards{display:none}
   @media (max-width:760px){
     table{display:none}
     .cards{display:block;margin-top:.8rem}
-    .card{background:transparent;border:2px solid var(--accent-border);border-radius:12px;margin-bottom:.7rem;overflow:hidden}
-    .card h3{font-size:17px;color:#fff;background:var(--navy);padding:.4rem .7rem}
-    .it{padding:.5rem .7rem;border-top:1px solid rgba(0,0,0,.08)}
+    .card{background:#fff;border:3px solid #000;margin-bottom:.6rem;color:var(--tc,#000)}
+    .card h3{font-size:17px;color:var(--tc,#000);padding:.35rem .7rem;border-bottom:2px solid #000}
+    .it{padding:.45rem .7rem;border-top:1px solid #000;font-weight:700}
     .it:first-of-type{border-top:0}
     .it b{display:block;font-size:16px}
     .it .meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.2rem}
     .it .num{direction:ltr;font-weight:700;font-variant-numeric:tabular-nums}
-    .it .note{font-size:14px;color:var(--muted);margin-top:.15rem}
+    .it .note{font-size:14px;margin-top:.15rem}
   }
 </style>
 </head>
@@ -71,7 +70,7 @@ const st = { tab: "pension", q: "", rows: [] };
 const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const norm = s => String(s || "").toLowerCase().replace(/["'׳״`]/g, "").replace(/\s+/g, " ").trim();
 // צבע לפי סוג (כמו בצבעים של הרשימה הקודמת): גוון קבוע לכל סוג
-const TYPE_COL = [["פנסיה", "#ede4f7", "#6a3fa0"], ["פנסיונרים", "#f6eedb", "#8a6410"], ["לשכירים", "#e3ebf5", "#244a7c"], ["להשקעה", "#e2f4e7", "#1d7a3e"], ["השתלמות", "#f7e6dc", "#93451f"], ["ילד", "#e2f0fa", "#1d6497"], ["סל", "#efe5f7", "#6b2f9a"], ["נאמנות", "#eceff1", "#37474f"], ["כספית", "#fdecdc", "#b35a00"], ["ביטוח", "#e2f3fb", "#0d6d96"], ["בטוח", "#e2f3fb", "#0d6d96"], ["חיסכון", "#e2f3fb", "#0d6d96"]];
+const TYPE_COL = [["פנסיונרים", "", "#9c6b00"], ["לשכירים", "", "#1f3864"], ["להשקעה", "", "#00a650"], ["לעובדי הוראה (", "", "#00a0e0"], ["ייעודי", "", "#8cc34a"], ["השתלמות", "", "#a0522d"], ["פנסיה", "", "#7030a0"], ["בטוח מנהלים", "", "#000000"], ["ילד", "", "#2e75b6"], ["תוכנית חיסכון", "", "#00a0e0"], ["סל", "", "#7030a0"], ["כספית", "", "#e46c0a"], ["נאמנות", "", "#000000"]];          // צבע הטקסט לכל סוג, כמו ברשימה הישנה
 function hl(s) {
   const q = st.q.trim(); if (!q) return E(s);
   const i = String(s).toLowerCase().indexOf(q.toLowerCase()); if (i < 0) return E(s);
@@ -97,15 +96,14 @@ function paint() {
   if (!list.length) { out.innerHTML = `<div class="state">${q ? "לא נמצאו מסלולים מתאימים" : "אין מסלולים להצגה"}</div>`; return; }
   const sections = [];          // כותרת לכל סוג מוצר (הרשימה מסודרת לפי סוג); בתוך כל סוג - חברה מאוחדת לשורות רצופות
   for (const r of list) { const sc = sections[sections.length - 1]; if (sc && sc.type === r.type) sc.rows.push(r); else sections.push({ type: r.type, rows: [r] }); }
-  const tc = t => (TYPE_COL.find(x => t.includes(x[0])) || ["", "#eef2f3", "#3b3d3d"]);
-  // כל אזור הסוג ברקע אחיד בצבע הסוג; הכותרת בגוון החזק של אותו צבע; פס עבה בין חברה לחברה
+  const tc = t => (TYPE_COL.find(x => t.includes(x[0])) || ["", "", "#000000"]);
   const tbl = `<table><thead><tr><th style="width:16%">שם חברה</th><th style="width:38%">שם מסלול</th><th style="width:14%">מספר קופה</th><th style="width:32%">הערות</th></tr></thead><tbody>` +
-    sections.map(sc => { const [, bg, fg] = tc(sc.type);
-      return `<tr class="sec"><td colspan="4" style="background:${fg};color:#fff">${hl(sc.type || "אחר")}</td></tr>` +
-        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}" style="background:${bg};--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}" style="color:${fg}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
-  const cards = `<div class="cards">` + sections.map(sc => { const [, bg, fg] = tc(sc.type);
-    return `<div class="sec-box" style="background:${bg};border-color:${fg}"><div class="sec-h" style="background:${fg};color:#fff">${hl(sc.type || "אחר")}</div>` +
-      groups(sc.rows).map(g => `<div class="card" style="border-color:${fg}">${g.co ? `<h3 style="background:${fg}">${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
+    sections.map(sc => { const fg = tc(sc.type)[2];
+      return `<tr class="sec" style="--tc:${fg}"><td colspan="4">${hl(sc.type || "אחר")}</td></tr>` +
+        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
+  const cards = `<div class="cards">` + sections.map(sc => { const fg = tc(sc.type)[2];
+    return `<div class="sec-box" style="--tc:${fg}"><div class="sec-h" style="color:${fg}">${hl(sc.type || "אחר")}</div>` +
+      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
   out.innerHTML = tbl + cards;
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
