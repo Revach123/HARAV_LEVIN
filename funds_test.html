@@ -70,7 +70,7 @@
       <button role="tab" aria-selected="true" data-t="pension">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
       <button role="tab" aria-selected="false" data-t="savings">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
     </div>
-    <div class="bar"><input id="q" type="search" placeholder="חיפוש: חברה, מסלול, סוג או מספר קופה" autocomplete="off"><span class="upd" id="upd"></span></div>
+    <div class="bar"><span class="upd" id="upd"></span></div>
   </header>
   <main id="out"><div class="state">טוען…</div></main>
 </div>
@@ -120,7 +120,6 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
   paint();
 }));
-let tm; document.getElementById("q").addEventListener("input", e => { st.q = e.target.value; clearTimeout(tm); tm = setTimeout(paint, 150); });
 fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
   st.rows = d.rows || []; st.order = d.type_order || null;

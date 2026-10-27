@@ -1,8 +1,8 @@
 // הטמעת רשימת המסלולים והקרנות (funds.html) באתר iska.co.il - שורה אחת בוורדפרס (Avada → Code Block):
 //   <script src="https://harav-levin.pages.dev/funds-embed.js"></script>
 // אופציונלי: data-offset="140" = גובה הכותרת הקבועה של האתר (אם לא מזוהה אוטומטית).
-// בעמוד נבנה סרגל (לשוניות, חיפוש, תאריך עדכון) שנצמד לראש העמוד מתחת לכותרת האתר בגלילה (כמו ברשימת החברות),
-// ומתחתיו iframe באורך התוכן (בלי גלילה פנימית). הסרגל שולט ברשימה שב-iframe בהודעות (setTab / setQ). העדכונים מהניהול מופיעים מיד.
+// בעמוד נבנה סרגל (לשוניות; תאריך העדכון בבאנר של העמוד, ואם אין באנר - בסרגל) שנצמד לראש העמוד מתחת לכותרת האתר בגלילה (כמו ברשימת החברות),
+// ומתחתיו iframe באורך התוכן (בלי גלילה פנימית). הסרגל שולט ברשימה שב-iframe בהודעות (setTab). העדכונים מהניהול מופיעים מיד.
 (function () {
   var sc = document.currentScript, O = sc && sc.src ? new URL(sc.src).origin : "https://harav-levin.pages.dev";
   var OFF0 = Number(sc && sc.getAttribute("data-offset")) || 0;
@@ -15,20 +15,19 @@
     "#ifb .ifb-tabs button:hover{color:#1e8f85}" +
     "#ifb .ifb-tabs button.on{color:#1e8f85;border-top-color:#2aada1;background:#e9f6f5}" +
     "#ifb .ifb-row{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;padding:0 .2rem}" +
-    "#ifb input{flex:1;min-width:180px;box-sizing:border-box;margin:0;font:inherit;font-size:16px;padding:.4rem .8rem;border:2px solid #b9e3de;border-radius:10px;background:#fff;color:#3b3d3d;min-height:42px;height:auto;box-shadow:none}" +
     "#ifb .ifb-upd{font-size:14px;color:#6a7c82;white-space:nowrap}" +
     "@media (max-width:560px){#ifb .ifb-tabs button{font-size:15px;padding:.6rem .5rem}}";
   document.head.appendChild(css);
   var ph = document.createElement("div"), bar = document.createElement("div"), f = document.createElement("iframe");
   ph.id = "ifb-ph"; bar.id = "ifb";
   bar.innerHTML = '<div class="ifb-tabs"><button type="button" data-t="pension" class="on">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button><button type="button" data-t="savings">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button></div>' +
-    '<div class="ifb-row"><input type="search" placeholder="חיפוש: חברה, מסלול, סוג או מספר קופה" aria-label="חיפוש" autocomplete="off"><span class="ifb-upd"></span></div>';
+    '<div class="ifb-row"><span class="ifb-upd"></span></div>';
   ph.appendChild(bar);
   f.title = "רשימת הקרנות ומסלולים המאושרים"; f.setAttribute("scrolling", "no");
   f.style.cssText = "width:100%;border:0;min-height:600px;display:block;background:transparent";
   f.src = O + "/funds.html?embed=1";
   if (sc && sc.parentNode) { sc.parentNode.insertBefore(ph, sc); sc.parentNode.insertBefore(f, sc); } else { document.body.appendChild(ph); document.body.appendChild(f); }
-  var tabsEl = bar.querySelector(".ifb-tabs"), q = bar.querySelector("input"), upd = bar.querySelector(".ifb-upd"), qt = null;
+  var tabsEl = bar.querySelector(".ifb-tabs"), row = bar.querySelector(".ifb-row"), upd = bar.querySelector(".ifb-upd");
   function send(m) { m.source = "harav-parent"; if (f.contentWindow) { f.contentWindow.postMessage(m, O); } }
   tabsEl.addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) { return; }
@@ -36,7 +35,6 @@
     send({ type: "setTab", value: b.getAttribute("data-t") });
     if (pinned) { window.scrollTo({ top: window.pageYOffset + ph.getBoundingClientRect().top - OFFSET, behavior: "smooth" }); }          // מעבר לשונית בזמן גלילה: חוזרים לראש הרשימה
   });
-  q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { send({ type: "setQ", value: q.value }); }, 150); });
   f.addEventListener("load", function () { send({ type: "hello" }); });
   window.addEventListener("message", function (e) {
     if (e.origin !== O || e.source !== f.contentWindow || !e.data) { return; }
@@ -44,8 +42,8 @@
     if (e.data.type === "funds-spec") {
       // תאריך העדכון מוצג בבאנר של העמוד, במקום הניווט "דף הבית » ..." (Avada); אם אין באנר כזה - בסרגל
       var bc = document.querySelector(".fusion-page-title-bar .fusion-breadcrumbs") || document.querySelector(".fusion-breadcrumbs") || document.querySelector(".fusion-page-title-secondary");
-      if (bc && e.data.updated) { bc.textContent = e.data.updated; upd.textContent = ""; upd.style.display = "none"; }
-      else { upd.textContent = e.data.updated || ""; upd.style.display = ""; }
+      if (bc && e.data.updated) { bc.textContent = e.data.updated; upd.textContent = ""; row.style.display = "none"; }
+      else { upd.textContent = e.data.updated || ""; row.style.display = upd.textContent ? "" : "none"; }
       Array.prototype.forEach.call(tabsEl.children, function (x) { x.className = x.getAttribute("data-t") === e.data.tab ? "on" : ""; });
     }
   });
