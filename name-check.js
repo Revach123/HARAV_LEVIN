@@ -5,7 +5,7 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const E = s => String(s ?? "").replace(/[&<>"]/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
-  const S = { items: [], i: 0, done: new Map(), showDone: false, when: "", blobUrl: "", seq: 0, saving: false };
+  const S = { items: [], i: 0, done: new Map(), showDone: false, skipped: new Set(), when: "", blobUrl: "", seq: 0, saving: false };
   const hdr = () => (typeof adminToken !== "undefined" && adminToken ? { Authorization: "Bearer " + adminToken } : {});
   const key = it => "namecheck:" + it.bid + ":" + it.doc_id;
   const SLOT = { general: "כללי", private: "פרטי", "general,private": "כללי+פרטי" };
@@ -36,13 +36,13 @@
     S.done = new Map((rv.items || []).filter(x => x.key.startsWith("namecheck:")).map(x => [x.key, x]));
     S.when = d.when || "";
   }
-  const pending = () => S.items.map((it, n) => n).filter(n => S.showDone || !S.done.has(key(S.items[n])));
+  const pending = () => S.items.map((it, n) => n).filter(n => !S.skipped.has(key(S.items[n])) && (S.showDone || !S.done.has(key(S.items[n]))));      // דילוג נשמר עד לפתיחה חוזרת של החלון
 
   function paint() {
     S.reg = "";
     const box = $("nc-body"); if (!box) return;
     const list = pending();
-    if (!list.length) { box.innerHTML = `<div style="padding:50px;text-align:center;font-size:20px">אין עוד פריטים לבדיקה 🎉<br><br><button class="btn-ghost" onclick="NC.toggleDone()">${S.showDone ? "הסתר" : "הצג"} פריטים שטופלו</button></div>`; return; }
+    if (!list.length) { box.innerHTML = `<div style="padding:50px;text-align:center;font-size:20px">אין עוד פריטים לבדיקה 🎉${S.skipped.size ? `<div style="font-size:14px;color:#667;margin-top:6px">דולגו ${S.skipped.size} פריטים (יחזרו בפתיחה חוזרת של החלון)</div>` : ""}<br><button class="btn-ghost" onclick="NC.toggleDone()">${S.showDone ? "הסתר" : "הצג"} פריטים שטופלו</button></div>`; return; }
     if (!list.includes(S.i)) S.i = list.find(n => n >= S.i) ?? list[list.length - 1];
     const it = S.items[S.i], pos = list.indexOf(S.i) + 1, dn = String(it.doc_names || "").split(" | ").map(x => x.trim()).filter(x => x.length >= 4);
     const dec = S.done.get(key(it));
@@ -69,7 +69,7 @@
       </div></div>`;
     box.querySelectorAll(".nc-chip").forEach(b => b.onclick = () => { $("nc-name").value = b.dataset.v; $("nc-name").focus(); });
     $("nc-name").oninput = same; same();
-    $("nc-reg").onclick = pullReg; $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = () => step(1); $("nc-prev").onclick = () => step(-1);
+    $("nc-reg").onclick = pullReg; $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = skip; $("nc-prev").onclick = () => step(-1);
     $("nc-sd").onchange = e => { S.showDone = e.target.checked; paint(); };
     const my = ++S.seq;
     pdfBlob(it.doc_id).then(b => { if (my !== S.seq || !$("nc-view")) return; if (S.blobUrl) URL.revokeObjectURL(S.blobUrl); S.blobUrl = URL.createObjectURL(b); $("nc-view").innerHTML = `<iframe src="${S.blobUrl}#toolbar=0&navpanes=0&view=FitH" style="width:100%;height:100%;border:0" title="השטר"></iframe>`; })
@@ -91,6 +91,10 @@
       $("nc-name").value = r.name; S.reg = r.name; msg.textContent = "נמשך מהרשם: " + r.name; same();
     } catch (e) { msg.style.color = "#a33"; msg.textContent = e.message; }
     b.disabled = false;
+  }
+  function skip() {          // דלג: הפריט יוצא מהתור עד פתיחה חוזרת של החלון (לא חוזר אחרי השטר הבא)
+    const list = pending(), k = list.indexOf(S.i); S.skipped.add(key(S.items[S.i]));
+    const rest = pending(); S.i = rest.find(n => n > S.i) ?? rest[rest.length - 1] ?? S.i; paint();
   }
   function step(d) { const list = pending(), k = list.indexOf(S.i); const n = list[Math.min(Math.max(k + d, 0), list.length - 1)]; S.i = n ?? S.i; paint(); }
   async function review(it, note) {
@@ -119,7 +123,7 @@
   }
   function close() { const ov = $("nc-ov"); if (ov) ov.remove(); document.body.style.overflow = ""; if (S.blobUrl) { URL.revokeObjectURL(S.blobUrl); S.blobUrl = ""; } S.seq++; }
   async function open() {
-    close();
+    close(); S.skipped = new Set();
     const ov = document.createElement("div"); ov.id = "nc-ov";
     ov.style.cssText = "position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column;direction:rtl;padding:12px 16px;box-sizing:border-box";
     ov.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0;font-size:20px">בדיקת השמות בשטרות <small id="nc-when" style="font-weight:400;font-size:12px;color:#667"></small></h2><button class="btn-ghost" onclick="NC.close()">✕ סגירה</button></div><div id="nc-body" style="flex:1;min-height:0"><div style="padding:40px;text-align:center">טוען…</div></div>`;
