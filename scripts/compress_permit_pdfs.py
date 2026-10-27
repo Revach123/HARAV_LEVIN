@@ -10,7 +10,7 @@
 מצב ברירת מחדל: dry-run - מדווח חיסכון צפוי בלי לשנות כלום.
 
 שימוש: python compress_permit_pdfs.py [--apply] [--limit N] [--min-bytes B] [--min-gain 0.15]
-דורש: wrangler (npx), ghostscript, poppler-utils, ומשתני סביבה CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
+דורש: wrangler, ghostscript, poppler-utils, ומשתני סביבה CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
 """
 import argparse, json, os, re, shutil, subprocess, sys, tempfile
 
@@ -20,15 +20,22 @@ KEY_RE = re.compile(r"^[A-Za-z0-9._/-]+$")
 ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
-def sh(cmd, check=True, **kw):
-    r = subprocess.run(cmd, capture_output=True, text=True, **kw)
+def log(*a):
+    print(*a, flush=True)
+
+
+def sh(cmd, check=True, timeout=240, **kw):
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, **kw)
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"timeout {timeout}s: {' '.join(cmd[:6])}")
     if check and r.returncode != 0:
         raise RuntimeError(f"{' '.join(cmd[:6])} -> {r.returncode}: {(r.stderr or r.stdout)[-400:]}")
     return r
 
 
 def wr(*args, check=True):
-    return sh(["npx", "--yes", "wrangler@4", *args], check=check)
+    return sh(["wrangler", *args], check=check, timeout=240)
 
 
 def d1(sql):
@@ -76,7 +83,7 @@ def compress(src, dst):
         "-dAutoFilterColorImages=false", "-dColorImageFilter=/DCTEncode", "-dJPEGQ=65",
         "-dAutoFilterGrayImages=false", "-dGrayImageFilter=/DCTEncode",
         "-dDetectDuplicateImages=true", "-dCompressFonts=true", "-dSubsetFonts=true",
-        f"-sOutputFile={dst}", src])
+        f"-sOutputFile={dst}", src], timeout=600)
 
 
 def verify(src, dst, min_gain):
@@ -101,35 +108,38 @@ def main():
     if not shutil.which("gs"): sys.exit("ghostscript (gs) לא מותקן")
 
     rows = d1(f"SELECT id, file_key, size FROM permit_docs WHERE size > {int(a.min_bytes)} ORDER BY size DESC")
-    print(f"{len(rows)} מסמכים מעל {a.min_bytes} בייט")
+    log(f"{len(rows)} מסמכים מעל {a.min_bytes} בייט")
     done = tot_before = tot_after = 0
     lines = []
     for r in rows:
         if a.limit and done >= a.limit: break
         id_, key, size = str(r["id"]), str(r["file_key"]), int(r["size"] or 0)
         if not ID_RE.match(id_) or not KEY_RE.match(key) or ".." in key:
-            print(f"דילוג על מפתח לא תקין: {id_}"); continue
+            log(f"דילוג על מפתח לא תקין: {id_}"); continue
+        log(f"{id_}: בודק אם כבר טופל")
         if r2_exists(f"backup/{key}.done") or r2_exists(f"backup/{key}.skip"):          # סימונים קטנים (לא הגיבוי עצמו)
             continue
         with tempfile.TemporaryDirectory() as td:
             src, dst = os.path.join(td, "o.pdf"), os.path.join(td, "c.pdf")
             try:
+                log(f"{id_}: {size} בייט - מוריד")
                 r2_get(key, src)
+                log(f"{id_}: דוחס")
                 compress(src, dst)
                 ok, why = verify(src, dst, a.min_gain)
             except Exception as e:
                 ok, why = False, f"error: {e}"
-                print(f"{id_}: {why}"); lines.append(f"| {id_} | {size} | - | נכשל |"); continue
+                log(f"{id_}: {why}"); lines.append(f"| {id_} | {size} | - | נכשל |"); continue
             done += 1
             if not ok:
-                print(f"{id_}: לא מוחלף ({why})")
+                log(f"{id_}: לא מוחלף ({why})")
                 lines.append(f"| {id_} | {size} | - | לא מוחלף: {why} |")
                 if a.apply:
                     put_marker(td, f"backup/{key}.skip")
                 continue
             new = os.path.getsize(dst)
             tot_before += size; tot_after += new
-            print(f"{id_}: {size} -> {new} ({100 - 100 * new // size}% חיסכון)")
+            log(f"{id_}: {size} -> {new} ({100 - 100 * new // size}% חיסכון)")
             lines.append(f"| {id_} | {size} | {new} | {'הוחלף' if a.apply else 'dry-run'} |")
             if a.apply:
                 r2_put(f"backup/{key}", src)       # קודם גיבוי - רק אחריו מחליפים
@@ -140,7 +150,7 @@ def main():
     summary = f"## דחיסת PDF ({'הוחלפו' if a.apply else 'dry-run - לא שונה כלום'})\n\n" \
               f"עובדו {done}, חיסכון {saved/1e6:.1f}MB מתוך {tot_before/1e6:.1f}MB\n\n" \
               "| מסמך | לפני | אחרי | סטטוס |\n|---|---|---|---|\n" + "\n".join(lines) + "\n"
-    print(summary)
+    log(summary)
     if os.environ.get("GITHUB_STEP_SUMMARY"):
         open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8").write(summary)
 

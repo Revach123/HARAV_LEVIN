@@ -38,7 +38,14 @@ jobs:
         run: |
           [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::חסרים הסודות CF_D1_TOKEN / CF_ACCOUNT_ID"; exit 1; }
       - name: Install tools
-        run: sudo apt-get update -q && sudo apt-get install -y -q ghostscript poppler-utils >/dev/null
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ghostscript poppler-utils >/dev/null
+          npm install -g wrangler@4 >/dev/null 2>&1
+          wrangler --version
+      - name: Check token access (R2 + D1)
+        run: |
+          wrangler d1 execute business-registry-db --remote --command "SELECT COUNT(*) AS n FROM permit_docs" || { echo "::error::D1 לא נגיש עם הטוקן"; exit 1; }
+          wrangler r2 bucket list || echo "::warning::אין הרשאת R2 בטוקן? (Workers R2 Storage - Edit)"
       - name: Compress
         env:
           APPLY: ${{ inputs.apply }}
@@ -48,4 +55,4 @@ jobs:
           [[ "$LIMIT" =~ ^[0-9]+$ && "$MIN_BYTES" =~ ^[0-9]+$ ]] || { echo "::error::limit / min_bytes חייבים להיות מספרים"; exit 1; }
           ARGS="--limit $LIMIT --min-bytes $MIN_BYTES"
           [ "$APPLY" = "true" ] && ARGS="$ARGS --apply"
-          python3 scripts/compress_permit_pdfs.py $ARGS
+          python3 -u scripts/compress_permit_pdfs.py $ARGS
