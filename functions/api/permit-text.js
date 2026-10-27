@@ -50,6 +50,36 @@ export async function onRequestGet({ request, env }) {
 const STOP = new Set(["בעמ", "ובעמ", "חברה", "חב", "ל", "של", "את", "ו", "בע", "מ"]);
 const nz = s => String(s || "").toLowerCase().replace(/["'`״׳]/g, "").replace(/[\u0591-\u05C7]/g, "").replace(/[^0-9a-z\u05d0-\u05ea]+/g, " ").replace(/\s+/g, " ").trim();
 const toks = s => nz(s).split(" ").filter(t => t && !STOP.has(t) && (t.length > 1 || /\d/.test(t)));
+// התאמה עמידה ל-OCR: מילת שם נחשבת נמצאה אם יש בשטר מילה זהה או קרובה (עד 1 שגיאה במילה של 4-6 אותיות, עד 2 במילה ארוכה יותר)
+function lev(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i]; let mn = i;
+    for (let j = 1; j <= b.length; j++) { const v = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); cur.push(v); if (v < mn) mn = v; }
+    if (mn > max) return max + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function matchName(name, t, dt) {
+  const tk = toks(name); if (!tk.length) return { cover: 0, snippet: "" };
+  const full = nz(name).replace(/\s?בעמ$/, "").trim();
+  if (full.length > 2 && t.includes(full)) { const k = t.indexOf(full); return { cover: 1, snippet: t.slice(Math.max(0, k - 10), k + full.length + 30) }; }
+  const pos = new Map();      // מילת שם -> מיקומים בשטר (מדויק או קרוב)
+  for (const w of tk) {
+    const mx = w.length <= 3 ? 0 : w.length <= 6 ? 1 : 2, at = [];
+    for (let i = 0; i < dt.length; i++) { const d = dt[i]; if (d === w || (mx && d.length > 2 && lev(w, d, mx) <= mx)) at.push(i); }
+    if (at.length) pos.set(w, at);
+  }
+  const cover = pos.size / tk.length;
+  let bestI = -1, bestC = 0; const L = tk.length + 3;      // חלון הטקסט עם מירב מילות השם
+  for (const at of pos.values()) for (const i0 of at) {
+    const c = [...pos.values()].filter(a2 => a2.some(x => x >= i0 && x < i0 + L)).length;
+    if (c > bestC) { bestC = c; bestI = i0; }
+  }
+  return { cover, snippet: bestI >= 0 ? dt.slice(Math.max(0, bestI - 2), bestI + L).join(" ") : "" };
+}
 async function nameCheck(env, offset, limit) {
   const base = `SELECT c.doc_id AS doc_id, d.sha256 AS sha, d.original_name AS doc_name, d.intel AS intel, b.id AS bid, b.permit_name AS permit_name, b.registrar_name AS registrar_name, b.chp_number AS chp, c.slot AS slot FROM permit_doc_companies c JOIN permit_docs d ON d.id = c.doc_id JOIN businesses b ON b.id = c.business_id WHERE c.slot != ''
     UNION ALL SELECT s.doc_id, d.sha256, d.original_name, d.intel, b.id, b.permit_name, b.registrar_name, b.chp_number, s.slot FROM permit_doc_subs s JOIN permit_docs d ON d.id = s.doc_id JOIN businesses b ON b.id = s.sub_id WHERE s.slot != ''`;
@@ -64,21 +94,18 @@ async function nameCheck(env, offset, limit) {
   if (shas.length) for (const h of (await env.DB.prepare(`SELECT sha256, hp FROM permit_doc_hp WHERE sha256 IN (${shas.map(() => "?").join(",")})`).bind(...shas).all()).results ?? []) { if (!hps.has(h.sha256)) hps.set(h.sha256, new Set()); hps.get(h.sha256).add(String(h.hp)); }
   const dn = new Map();      // sha -> השמות שנמצאו בשטר (permit_doc_name: ביטויים עם בע"מ / שורות פתיחה), עד 6
   if (shas.length) for (const h of (await env.DB.prepare(`SELECT sha256, name FROM permit_doc_name WHERE sha256 IN (${shas.map(() => "?").join(",")}) AND length(name) BETWEEN 4 AND 90 ORDER BY (name LIKE '%בע%מ%') DESC, length(name)`).bind(...shas).all()).results ?? []) { const a = dn.get(h.sha256) || []; if (a.length < 6 && !a.includes(h.name)) { a.push(h.name); dn.set(h.sha256, a); } }
+  const dtoks = new Map();
   const out = rows.map(r => {
     let prev = "";      // ממצא הסריקה הקודמת (build_cases.py, נשמר ב-permit_docs.intel): שם הפוסט באתר הישן מול השם במסמך
     try { prev = (JSON.parse(r.intel || "{}").f || []).filter(x => x.c === "name_differs").map(x => x.d).join(" ; "); } catch { /* intel לא תקין */ }
     const t = text.get(r.sha) || "", hpIn = r.chp ? (hps.get(r.sha)?.has(String(r.chp).trim()) ? 1 : 0) : -1, len = t.length;
     if (!t) return { ...r, sha: undefined, intel: undefined, prev_scan: prev, status: "notext", cover: 0, best: "", hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
-    let best = { cover: -1, name: "", full: false };
-    for (const name of [r.permit_name, r.registrar_name]) {
-      const tk = toks(name); if (!tk.length) continue;
-      const full = nz(name).length > 2 && t.includes(nz(name).replace(/\s?בעמ$/, "").trim());
-      const cover = tk.filter(x => t.includes(x)).length / tk.length;
-      if (full || cover > best.cover) best = { cover: full ? 1 : cover, name, full: full || best.full };
-      if (full) break;
-    }
-    const status = best.cover >= 1 ? "ok" : best.cover >= 0.6 ? "partial" : "none";
-    return { ...r, sha: undefined, intel: undefined, prev_scan: prev, status, cover: Math.round(Math.max(best.cover, 0) * 100), best: best.name, hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
+    const dt = dtoks.get(r.sha) || dtoks.set(r.sha, t.split(" ")).get(r.sha);
+    const pn = (r.permit_name || "").trim() || (r.registrar_name || "").trim();      // השם שבאתר = "שם בהיתר עסקה" (אם ריק - השם ברשם)
+    const m = matchName(pn, t, dt);
+    const m2 = r.registrar_name && r.registrar_name.trim() && r.registrar_name.trim() !== pn ? matchName(r.registrar_name, t, dt) : null;
+    const status = m.cover >= 1 ? "ok" : m.cover >= 0.6 ? "partial" : "none";
+    return { ...r, sha: undefined, intel: undefined, prev_scan: prev, status, cover: Math.round(m.cover * 100), best: pn, snippet: m.snippet, reg_cover: m2 ? Math.round(m2.cover * 100) : "", hp_in_doc: hpIn, len, doc_names: (dn.get(r.sha) || []).join(" | ") };
   });
   return { total, offset, next: offset + rows.length < total ? offset + rows.length : null, rows: out };
 }
