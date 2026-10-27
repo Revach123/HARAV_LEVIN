@@ -261,7 +261,7 @@
     const n = t => (S.loaded && !S.err ? ` (${ndCount(t)})` : "");
     if (compact) {          // כפתור אחד לניהול השטרות (הלשוניות בתוך הדשבורד), והמספרים בשורה מתחת
       const c = t => (S.loaded && !S.err ? ndCount(t) : "…");
-      return `<button class="home-card" onclick="PD.openDash('a')"><span class="ico">🗂</span><b>ניהול שטרות היתר עיסקא</b><span class="sub">חסרים שטרות: ${c("a")} · מחכים לשיוך: ${c("b")} · לא רשומות: ${c("c")}</span></button>`;
+      return `<button class="home-card" onclick="PD.openDash('a')"><span class="ico">🗂</span><b>ניהול שטרות היתר עיסקא</b><span class="chips"><span class="chip">חסרים שטרות <i>${c("a")}</i></span><span class="chip">מחכים לשיוך <i>${c("b")}</i></span><span class="chip">לא רשומות <i>${c("c")}</i></span></span></button>`;
     }
     return `<h3 class="pd-homeh">ניהול שטרות היתר עיסקא</h3><div class="home-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px">
       <button class="home-card" onclick="PD.openDash('a')"><span class="ico">📋</span><b>חברות שחסרים להן שטרות${n("a")}</b></button>
