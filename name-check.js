@@ -11,7 +11,17 @@
   const SLOT = { general: "כללי", private: "פרטי", "general,private": "כללי+פרטי" };
   const ST = { none: "אין התאמה", partial: "חלקית", notext: "אין טקסט" };
 
-  async function pdfBlob(id) {
+  // טעינה מראש: השטרות הבאים בתור נטענים ברקע (עד 4 במקביל קדימה) ונשמרים בזיכרון, כך שמעבר לשטר הבא מיידי
+  const cache = new Map();
+  function pdfBlob(id) {
+    if (!cache.has(id)) { const p = pdfBlobNet(id); p.catch(() => cache.delete(id)); cache.set(id, p); if (cache.size > 14) cache.delete(cache.keys().next().value); }
+    return cache.get(id);
+  }
+  function prefetch() {
+    const list = pending(), k = Math.max(0, list.indexOf(S.i));
+    for (const n of list.slice(k, k + 5)) pdfBlob(S.items[n].doc_id).catch(() => {});
+  }
+  async function pdfBlobNet(id) {
     const viaJson = async () => {
       const r = await fetch(`/api/permit-docs/${id}/file?enc=b64`, { headers: hdr() }), j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || "HTTP " + r.status);
@@ -72,7 +82,7 @@
     $("nc-rl").onclick = () => rotate(-90); $("nc-rr").onclick = () => rotate(90);
     $("nc-reg").onclick = pullReg; $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = skip; $("nc-prev").onclick = () => step(-1);
     $("nc-sd").onchange = e => { S.showDone = e.target.checked; paint(); };
-    const my = ++S.seq;
+    const my = ++S.seq; prefetch();
     pdfBlob(it.doc_id).then(b => { if (my !== S.seq || !$("nc-view")) return; if (S.blobUrl) URL.revokeObjectURL(S.blobUrl); S.blobUrl = URL.createObjectURL(b); $("nc-view").innerHTML = `<iframe id="nc-frame" src="${S.blobUrl}#toolbar=0&navpanes=0&view=FitH" style="position:absolute;border:0" title="השטר"></iframe>`; applyRot(); })
       .catch(e => { if (my === S.seq && $("nc-view")) $("nc-view").innerHTML = `<div style="padding:30px;color:#a33">לא ניתן לטעון את השטר: ${E(e.message)}</div>`; });
   }
