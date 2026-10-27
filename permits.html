@@ -83,17 +83,45 @@ const AUTO = window.parent !== window && new URLSearchParams(location.search).ha
 if (AUTO) document.body.classList.add("auto"), document.documentElement.classList.add("auto");
 let CAT = "", Q = "";
 
-// צפייה והורדה כ-JSON (base64): רשתות עם סינון תוכן חוסמות הורדת PDF ישירה. אם נכשל - נופלים לקישור הישיר
-async function fetchPdf(id) {
-  const r = await fetch(`${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}?enc=b64`);
+// צפייה והורדה. קודם ניסיון ישיר (Blob, בלי קידוד); אם הרשת מסננת תוכן (נטפרי) וחוסמת PDF - נופלים ל-JSON (base64), והבחירה נשמרת שבוע בדפדפן.
+// הקובץ נטען מראש כשהעכבר / האצבע על האייקון, ולכן הלחיצה בדרך כלל פותחת מיד. אם גם זה נכשל - נופלים לקישור הישיר.
+const MODE_KEY = "permitsPdfMode", PDFS = new Map();
+const pdfUrl = id => `${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}`;
+const b64Mode = () => { try { return +localStorage.getItem(MODE_KEY) > Date.now(); } catch (e) { return false; } };
+const setB64Mode = () => { try { localStorage.setItem(MODE_KEY, String(Date.now() + 7 * 864e5)); } catch (e) {} };
+async function fetchDirect(id) {
+  const r = await fetch(pdfUrl(id));
   if (!r.ok) throw new Error(r.status);
-  const j = await r.json(), bin = atob(j.data), u8 = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-  return { blob: new Blob([u8], { type: "application/pdf" }), name: j.name || "permit.pdf" };
+  const blob = await r.blob();
+  if ((await blob.slice(0, 5).text()) !== "%PDF-") throw new Error("not pdf");          // דף חסימה של סינון במקום קובץ
+  const m = /filename\*=UTF-8''([^;]+)/i.exec(r.headers.get("Content-Disposition") || "");
+  return { blob: blob.type === "application/pdf" ? blob : new Blob([blob], { type: "application/pdf" }), name: m ? decodeURIComponent(m[1]) : "permit.pdf" };
+}
+async function fetchB64(id) {
+  const r = await fetch(`${pdfUrl(id)}?enc=b64`);
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  let blob;
+  try { blob = await (await fetch("data:application/pdf;base64," + j.data)).blob(); }          // פענוח מהיר בדפדפן; אחרת בלולאה
+  catch (e) { const bin = atob(j.data), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); blob = new Blob([u8], { type: "application/pdf" }); }
+  return { blob, name: j.name || "permit.pdf" };
+}
+function fetchPdf(id) {
+  let p = PDFS.get(id);
+  if (p) return p;
+  p = (async () => {
+    if (b64Mode()) return fetchB64(id);
+    try { return await fetchDirect(id); } catch (e) { if (String(e.message) === "404") throw e; }
+    const f = await fetchB64(id); setB64Mode(); return f;
+  })();
+  PDFS.set(id, p);
+  p.catch(() => PDFS.delete(id));
+  while (PDFS.size > 8) PDFS.delete(PDFS.keys().next().value);          // שומרים רק כמה אחרונים בזיכרון
+  return p;
 }
 async function pdView(ev, id) {
   ev.preventDefault();
-  const direct = `${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}`, w = window.open("", "_blank");
+  const direct = pdfUrl(id), w = window.open("", "_blank");
   if (!w) { location.href = direct; return false; }
   try { w.document.title = "טוען…"; w.document.body.innerHTML = '<p style="font:16px sans-serif;text-align:center;margin-top:30vh" dir="rtl">טוען את המסמך…</p>'; } catch (e) {}
   try { w.location.href = URL.createObjectURL((await fetchPdf(id)).blob); } catch (e) { w.location.href = direct; }
@@ -105,26 +133,38 @@ async function pdDownload(ev, id) {
   try {
     const f = await fetchPdf(id), url = URL.createObjectURL(f.blob), d = document.createElement("a");
     d.href = url; d.download = f.name; document.body.appendChild(d); d.click(); d.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
-  } catch (e) { window.open(`${API_BASE}/api/permit-docs-public/${encodeURIComponent(id)}?dl=1`, "_blank"); }
+  } catch (e) { window.open(`${pdfUrl(id)}?dl=1`, "_blank"); }
   finally { a.style.opacity = ""; a.style.pointerEvents = ""; }
   return false;
 }
-const lnk = (id, ic, label, dl) => `<a class="ic" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener" title="${label}" aria-label="${label}" onclick="return ${dl ? "pdDownload" : "pdView"}(event,'${esc(id)}')"${dl ? " download" : ""}>${ic}</a>`;
+const lnk = (id, ic, label, dl) => `<a class="ic" data-id="${esc(id)}" href="${API_BASE}/api/permit-docs-public/${esc(id)}${dl ? "?dl=1" : ""}" target="_blank" rel="noopener" title="${label}" aria-label="${label}" onclick="return ${dl ? "pdDownload" : "pdView"}(event,'${esc(id)}')"${dl ? " download" : ""}>${ic}</a>`;
 const pair = id => `<div class="pair">${lnk(id, ICON_VIEW, "צפייה")}${lnk(id, ICON_DL, "הורדה", 1)}</div>`;
+// טעינה מוקדמת: עכבר שעומד על אייקון (150ms) או נגיעה - מתחילים להוריד את הקובץ, כך שהלחיצה מוצאת אותו כבר בזיכרון
+{
+  const L = document.getElementById("list"); let t = 0;
+  const warm = a => { if (a && a.dataset.id) fetchPdf(a.dataset.id).catch(() => {}); };
+  L.addEventListener("mouseover", e => { const a = e.target.closest && e.target.closest("a.ic"); clearTimeout(t); if (a) t = setTimeout(() => warm(a), 150); });
+  L.addEventListener("mouseout", () => clearTimeout(t));
+  L.addEventListener("touchstart", e => warm(e.target.closest && e.target.closest("a.ic")), { passive: true });
+}
 
 // כמו display.html: שמות החברות והשיוך ללשונית (פרטי / כללי) מגיעים מרשימות /api/lists, והמסמכים לפי השיוך שבניהול
 const TABS = {};          // רשימה אחת (כללי + פרטי): אין לשוניות
 const LISTS = {};
-let LINKS = null, TAB = "all";
+let LINKS_P = null, TAB = "all";
 const qnorm = s => String(s || "").replace(/["'׳״]/g, "");
+// קישורי המסמכים נטענים פעם אחת (הבטחה משותפת) - גם כשהרשימות הכללית והפרטית נטענות במקביל
+const getLinks = () => LINKS_P || (LINKS_P = fetch(`${API_BASE}/api/permit-docs-public`).then(r => r.json()).then(d => d.links || []).catch(() => []));
 async function loadTab(level) {
   if (LISTS[level]) return LISTS[level];
-  if (!LINKS) LINKS = await fetch(`${API_BASE}/api/permit-docs-public`).then(r => r.json()).then(d => d.links || []).catch(() => []);
+  const listP = fetch(`${API_BASE}/api/lists?type=companies-${level}`).then(r => r.json());          // יוצאת במקביל לקישורים
+  listP.catch(() => {});
+  const LINKS = await getLinks();
   const byChp = new Map(), byName = new Map();
   const subs = new Map();          // תת-שורה (אותו ח.פ., למשל "מסלול הלכה"): רק המסמכים שלה, לא של הראשית
   for (const l of LINKS) { if (l.sub) { const k = String(l.chp || "").trim(); if (!subs.has(k)) subs.set(k, []); subs.get(k).push(l); } else if (l.chp) byChp.set(String(l.chp).trim(), l); else byName.set(l.name, l); }
   const linkOf = (chp, name) => { const k = String(chp || "").trim(), n = String(name || "").replace(/\s+/g, " ").trim(); return (subs.get(k) || []).find(l => n === l.sub || n.endsWith(`(${l.sub})`)) || byChp.get(k) || byName.get(name); };
-  const lr = await fetch(`${API_BASE}/api/lists?type=companies-${level}`).then(r => r.json());
+  const lr = await listP;
   const rows = [];
   for (const b of lr.rows || []) {
     let cats = String(b.permits_category || "").split("|").map(x => x.trim()).filter(Boolean).filter(x => x !== "שונות");          // בלי קטגוריה = "שונות"; עם קטגוריה ספציפית - לא ב"שונות"
@@ -177,7 +217,9 @@ async function draw() {
   if (AUTO) window.parent.postMessage({ source: "harav-levin", type: "permits-spec", tab: TAB, tabs: TABS, cat: CAT, cats: names.map(c => [c, cats.get(c)]), total: ROWS.length, count: rows.length }, "*");
 }
 function setHash() { location.hash = (CAT ? "cat=" + encodeURIComponent(CAT) : ""); }
-document.getElementById("q").addEventListener("input", e => { Q = e.target.value; draw(); });
+let drawT = 0;
+const drawSoon = () => { clearTimeout(drawT); drawT = setTimeout(draw, 90); };          // הקלדה מהירה: ציור אחד אחרי הפסקה קצרה במקום אחרי כל תו
+document.getElementById("q").addEventListener("input", e => { Q = e.target.value; drawSoon(); });
 document.getElementById("side").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; CAT = b.dataset.c === CAT ? "" : b.dataset.c; setHash(); draw(); });
 // ── הטמעה באתר (permits-embed.js): דיווח גובה לעמוד האב, ושליטה מהסרגל הקבוע שבעמוד האב (לשונית / חיפוש / קטגוריה) ──
 if (AUTO) {
@@ -188,7 +230,7 @@ if (AUTO) {
   addEventListener("message", e => {
     const d = e.data; if (!d || d.source !== "harav-parent") return;
     if (d.type === "setCat") { CAT = String(d.value || ""); setHash(); draw(); }
-    else if (d.type === "setQ") { Q = String(d.value || ""); draw(); }
+    else if (d.type === "setQ") { Q = String(d.value || ""); drawSoon(); }
     else if (d.type === "ext") { document.body.classList.toggle("ext", !!d.on); report(); }
   });
   report();
