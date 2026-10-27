@@ -129,18 +129,20 @@
         if (!name) throw new Error("השם ריק");
         const biz = (typeof businesses !== "undefined" ? businesses : []).find(b => String(b.id) === String(it.bid));
         if (!biz) throw new Error("העסק לא נמצא ברשימה שנטענה (לרענן את הדף)");
-        if (name !== (biz.permit_name || "")) {
+        const regPulled = !!S.reg && S.reg === name && (biz.registrar_name || "") !== name;      // נמשך מהרשם והשם ברשם השמור שונה: מתעדכן גם הוא
+        if (name !== (biz.permit_name || "") || regPulled) {
           const upd = { ...biz, permit_name: name }; if (S.reg && S.reg === name) upd.registrar_name = name;      // נמשך מהרשם: גם השם ברשם מתעדכן
           await apiFetch("/businesses/" + encodeURIComponent(biz.id), { method: "PUT", body: JSON.stringify(upd) });
-          const old = biz.permit_name || ""; biz.permit_name = name; it.permit_name = name; if (upd.registrar_name !== undefined) { biz.registrar_name = upd.registrar_name; it.registrar_name = upd.registrar_name; }
-          await review(it, `עודכן: ${old} ← ${name}`);
+          const old = biz.permit_name || ""; biz.permit_name = name; it.permit_name = name; S.changed = true;
+          if (upd.registrar_name !== undefined) { biz.registrar_name = upd.registrar_name; it.registrar_name = upd.registrar_name; }
+          await review(it, name !== old ? `עודכן: ${old} ← ${name}` : "עודכן השם ברשם");
         } else await review(it, "השם תקין");
       } else await review(it, "השם תקין");
       const list = pending(); const k = list.indexOf(S.i); S.i = list[k + 1] ?? list[k - 1] ?? S.i;
       S.saving = false; paint();
     } catch (e) { S.saving = false; msg.style.color = "#a33"; msg.textContent = e.message; }
   }
-  function close() { const ov = $("nc-ov"); if (ov) ov.remove(); document.body.style.overflow = ""; if (S.blobUrl) { URL.revokeObjectURL(S.blobUrl); S.blobUrl = ""; } S.seq++; }
+  function close() { if (S.changed) { S.changed = false; try { render(); } catch (e) { /* אין מסך */ } } const ov = $("nc-ov"); if (ov) ov.remove(); document.body.style.overflow = ""; if (S.blobUrl) { URL.revokeObjectURL(S.blobUrl); S.blobUrl = ""; } S.seq++; }
   async function open() {
     close(); S.skipped = new Set(); S.rot = new Map();
     const ov = document.createElement("div"); ov.id = "nc-ov";
