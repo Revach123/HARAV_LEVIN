@@ -8,6 +8,7 @@
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
 <script src="/permit-docs.js?v=20261027b"></script>
+<script src="/name-check.js?v=20261028a"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1889,7 +1890,8 @@ function renderHome() {
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div></div>
     <div class="home-bot"><div class="home-dash"><h3 class="pd-homeh">ניהול</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:960px">${window.PD ? PD.homeCards(true) : ""}
-      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button></div></div>
+      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button>
+      <button class="home-card" onclick="NC.open()"><span class="ico">🔎</span><b>בדיקת השמות בשטרות</b></button></div></div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
