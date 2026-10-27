@@ -73,6 +73,21 @@
     if (e.data.type === "permits-spec") { curTab = e.data.tab; spec(e.data); }
   });
   sidebar.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setCat", value: b.getAttribute("data-c") }); } });
+  // הרחבה מעבר לעמודת התוכן של האתר: ה-iframe (והסרגל שמעליו) ברוחב המסך פחות שוליים קטנים, ממורכזים
+  var lastWide = -1, wideN = 0, wKey = "";
+  function widen() {
+    var W = window.innerWidth, par = ph.parentNode; if (!par) { return; }
+    var tgt = W >= 992 ? Math.min(W - 24, 1700) : 0, pr = par.getBoundingClientRect(), pcs = window.getComputedStyle(par), key;
+    var pl = parseFloat(pcs.paddingLeft) || 0, prr = parseFloat(pcs.paddingRight) || 0, cw = pr.width - pl - prr;       // רוחב עמודת התוכן בלי ריפוד
+    if (!tgt || tgt <= cw + 1) { key = "off"; tgt = 0; }
+    else {
+      var rtl = pcs.direction === "rtl", now = rtl ? pr.right - prr - tgt : pr.left + pl;
+      key = tgt + "|" + Math.round((W - tgt) / 2 - now);
+    }
+    if (key === wKey) { return; }
+    wKey = key;
+    [ph, f].forEach(function (el) { el.style.position = tgt ? "relative" : ""; el.style.width = tgt ? tgt + "px" : (el === f ? "100%" : ""); el.style.left = tgt ? key.split("|")[1] + "px" : ""; });
+  }
   var pinned = false, lastL = -1, lastW = -1;
   // גובה הכותרת הקבועה של האתר נמדד בכל פריים (אוואדה מכווצת אותה בגלילה); אם אין כותרת קבועה - data-offset
   function hdrBottom() {
@@ -97,6 +112,7 @@
     return best > 40 ? Math.round(best) : 0;   // סרגל הניהול של וורדפרס (32px) בלבד אינו כותרת האתר
   }
   function tick() {
+    if ((wideN++ % 40) === 0 || window.innerWidth !== lastWide) { lastWide = window.innerWidth; widen(); }
     var hb = hdrBottom(); OFFSET = hb > 0 ? hb : OFF0;
     var pr = ph.getBoundingClientRect(), fr = f.getBoundingClientRect(), bh = bar.offsetHeight, wide = window.innerWidth >= 992;
     var nar = wide && !!GEO && sidebar.children.length > 0, barW = nar ? Math.max(300, GEO.l - 16) : 0;     // רחב: הסרגל רק מעל עמודת הרשימה, התפריט בצד מתחיל בגובה הסרגל
