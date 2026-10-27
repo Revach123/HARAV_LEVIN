@@ -1,31 +1,12 @@
 {
- "updated": "2026-10-26",
+ "updated": "2026-10-27",
  "status": "ok",
- "datawise_date": "2026-10-23",
- "expected": 763,
- "maya": 763,
+ "datawise_date": "2026-10-26",
+ "expected": 773,
+ "maya": 773,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
- "limit": 22,
- "dropped_no_terms": [
-  {
-   "security_id": 1216621,
-   "security_name": "מגוריט אגח ז",
-   "company": "מגוריט ישראל בע\"מ",
-   "chp_number": "515434074"
-  },
-  {
-   "security_id": 1240860,
-   "security_name": "מגוריט אגח יב",
-   "company": "מגוריט ישראל בע\"מ",
-   "chp_number": "515434074"
-  },
-  {
-   "security_id": 1248723,
-   "security_name": "מגוריט אגח יג",
-   "company": "מגוריט ישראל בע\"מ",
-   "chp_number": "515434074"
-  }
- ]
+ "limit": 23,
+ "dropped_no_terms": []
 }
