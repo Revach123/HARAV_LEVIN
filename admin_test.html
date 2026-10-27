@@ -346,9 +346,6 @@
 
   /* ── מסך ראשי של הניהול + חיפוש במאגר ── */
   .home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:900px; margin:2.5rem auto; }
-  .home-card.home-gf { padding:.5rem .8rem !important; display:flex; align-items:center; justify-content:center; gap:10px; }
-  .home-card.home-gf .ico { display:none !important; }
-  .home-card.home-gf b { font-size:clamp(14px,1.15vw,19px) !important; margin:0 !important; line-height:1.25; }
   .gf-tbl { width:100%; border-collapse:collapse; background:var(--bg2); font-size:14px; }
   .gf-tbl th { background:var(--navy); color:#fff; text-align:right; padding:6px 8px; position:sticky; top:0; z-index:1; font-size:13px; }
   .gf-tbl td { padding:3px 4px; border-top:1px solid var(--border); }
@@ -914,6 +911,11 @@
   .home-mid { height:clamp(64px,14vh,160px) !important; }
   .home-bot { flex:1 1 0 !important; min-height:0 !important; }
   .home-dash .home-grid { min-height:0 !important; }
+  /* כפתורי הניהול באותו גודל כמו שאר הכפתורים בדף (לא נמתחים לכל הגובה); המספרים כתגיות ברורות */
+  .home-dash .home-grid { flex:none !important; grid-auto-rows:clamp(100px,14vh,160px) !important; align-content:start; }
+  .home-wrap .home-card .chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:4px; }
+  .home-wrap .home-card .chip { background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.4); color:#fff; border-radius:999px; padding:1px 10px; font-size:clamp(12px,.95vw,16px); line-height:1.5; white-space:nowrap; }
+  .home-wrap .home-card .chip i { font-style:normal; font-weight:800; color:#7fe3d8; margin-inline-start:4px; }
   .home-wrap .idx-pie svg { width:clamp(46px,9vh,130px) !important; }
   .home-wrap .home-card:hover { background:linear-gradient(180deg,#41788d 0%,#2f5d6d 55%,#244a58 100%); border-color:#1fa59a; }
   body:has(.home-wrap) { background:linear-gradient(180deg,#10222a 0%,#1a3640 100%) fixed; }
@@ -1057,12 +1059,46 @@ async function apiFetch(path, opts = {}) {
   const headers = { "Content-Type": "application/json" };
   if (adminToken) headers["Authorization"] = `Bearer ${adminToken}`;
   const res = await fetch("/api" + path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } });
+  noteDataVer(res.headers.get("X-Data-Ver"), path, opts.method);
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }
   return res.json();
 }
+
+// ── בדיקת עדכונים: שינוי שנעשה ממחשב אחר נכנס מיד בכניסה לדף הראשי / עדכון קיים / הוספה / חלון המסמכים, בחזרה לחלון, ופעם בדקה וחצי ──
+// השרת מחזיר גרסה לכל קבוצת נתונים (עסקים / מסמכים); רק קבוצה שהשתנתה נטענת מחדש
+let dataVer = { biz: null, docs: null }, verCheckAt = 0, verChecking = false;
+const verSame = (a, b) => !!a && !!b && a.v === b.v && a.s === b.s;
+function noteDataVer(h, path, method) {          // גרסה שהגיעה עם תשובה מהשרת
+  if (!h) return; let v; try { v = JSON.parse(h); } catch { return; }
+  const write = method && method !== "GET";
+  if (!write) {          // טעינת רשימה מלאה: הנתונים שהגיעו חדשים לפחות כמו הגרסה הזו
+    if (/^\/businesses(\?|$)/.test(path)) dataVer.biz = v.biz;
+    if (/^\/permit-docs(\?|$)/.test(path) && !/sha=/.test(path)) dataVer.docs = v.docs;
+    return;
+  }
+  for (const g of ["biz", "docs"]) {          // אחרי שינוי שלנו: מאמצים את הגרסה רק אם אין באמצע שינוי של מישהו אחר
+    const k = dataVer[g], n = v[g]; if (!k || !n) continue;
+    if (n.v === k.v + 1 || (n.v === k.v && n.s === k.s)) dataVer[g] = n;
+  }
+}
+async function checkUpdates(force) {
+  if (!isAdmin || verChecking || (!force && Date.now() - verCheckAt < 4000)) return;
+  if (!dataVer.biz && !dataVer.docs) return;          // עוד לא נטען כלום
+  verChecking = true; verCheckAt = Date.now();
+  try {
+    const v = await apiFetch("/data-version");
+    if (dataVer.biz && !verSame(dataVer.biz, v.biz)) await loadBusinesses();
+    if (dataVer.docs && !verSame(dataVer.docs, v.docs) && window.PD && PD.reload) await PD.reload();
+  } catch { /* בלי חיבור: נבדוק בפעם הבאה */ }
+  finally { verChecking = false; }
+}
+window.checkUpdates = checkUpdates; window.noteDataVer = noteDataVer;
+window.addEventListener("focus", () => checkUpdates());
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkUpdates(); });
+setInterval(() => { if (document.visibilityState === "visible") checkUpdates(); }, 90000);
 
 let bizLoaded = false, adminDeferred = false;
 // רשימת העסקים נשמרת בדפדפן: בכניסה מוצג מיד העותק האחרון, והנתונים העדכניים מחליפים אותו כשהם מגיעים (ברשת איטית זה החלק הארוך).
@@ -1080,7 +1116,8 @@ async function loadBusinesses() {
   try { businesses = await bizFreshP; } finally { bizStale = false; }
   bizLoaded = true;
   try { localStorage.setItem(BIZ_CACHE, JSON.stringify(businesses)); } catch { /* אין מקום / חסום */ }
-  render();
+  if (view === "form") { if (typeof refreshFormLists === "function") refreshFormLists(); }          // בטופס לא מציירים מחדש (כדי לא לאבד מה שהוקלד); הנתונים עצמם כבר עודכנו
+  else render();
 }
 
 // ─────────────────────────────────────────────
@@ -1828,7 +1865,7 @@ function renderHome() {
       <button class="home-card" onclick="setView('admin')"><span class="ico">✏️</span><b>עדכון עסק קיים</b></button>
     </div></div>
     <div class="home-bot"><div class="home-dash"><h3 class="pd-homeh">ניהול</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:960px">${window.PD ? PD.homeCards(true) : ""}
-      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b><span class="sub">הרשימה בדף funds</span></button></div></div>
+      <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button></div></div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
@@ -2059,6 +2096,7 @@ window.addEventListener("beforeunload", e => { if (view === "form" && formDirty)
 let formModal = false;          // הטופס מוצג כחלון צף (ר' openForm)
 function setView(v) {
   if (view === "gfunds" && v !== "gfunds" && GF.dirty && !confirm("יש שינויים ברשימת המסלולים שלא נשמרו. לצאת בלי לשמור?")) return;
+  if (v === "home" || v === "admin" || v === "form") setTimeout(() => checkUpdates(true), 0);
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (formModal && v !== "form") closeFormModal(false);
   if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
