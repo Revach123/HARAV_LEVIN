@@ -46,13 +46,13 @@
     S.done = new Map((rv.items || []).filter(x => x.key.startsWith("namecheck:")).map(x => [x.key, x]));
     S.when = d.when || "";
   }
-  const pending = () => S.items.map((it, n) => n).filter(n => !S.skipped.has(key(S.items[n])) && (S.showDone || !S.done.has(key(S.items[n]))));      // דילוג נשמר עד לפתיחה חוזרת של החלון
+  const pending = () => S.items.map((it, n) => n).filter(n => !S.skipped.has(String(S.items[n].bid)) && (S.showDone || !S.done.has(key(S.items[n]))));      // דילוג נשמר עד לפתיחה חוזרת של החלון
 
   function paint() {
     S.reg = "";
     const box = $("nc-body"); if (!box) return;
     const list = pending();
-    if (!list.length) { box.innerHTML = `<div style="padding:50px;text-align:center;font-size:20px">אין עוד פריטים לבדיקה 🎉${S.skipped.size ? `<div style="font-size:14px;color:#667;margin-top:6px">דולגו ${S.skipped.size} פריטים (יחזרו בפתיחה חוזרת של החלון)</div>` : ""}<br><button class="btn-ghost" onclick="NC.toggleDone()">${S.showDone ? "הסתר" : "הצג"} פריטים שטופלו</button></div>`; return; }
+    if (!list.length) { box.innerHTML = `<div style="padding:50px;text-align:center;font-size:20px">אין עוד פריטים לבדיקה 🎉${S.skipped.size ? `<div style="font-size:14px;color:#667;margin-top:6px">דולגו ${S.skipped.size} חברות (יחזרו בפתיחה חוזרת של החלון)</div>` : ""}<br><button class="btn-ghost" onclick="NC.toggleDone()">${S.showDone ? "הסתר" : "הצג"} פריטים שטופלו</button></div>`; return; }
     if (!list.includes(S.i)) S.i = list.find(n => n >= S.i) ?? list[list.length - 1];
     const it = S.items[S.i], pos = list.indexOf(S.i) + 1, dn = String(it.doc_names || "").split(" | ").map(x => x.trim()).filter(x => x.length >= 4);
     const dec = S.done.get(key(it));
@@ -112,7 +112,7 @@
   function rotate(d) { const id = S.items[S.i].doc_id; S.rot.set(id, (((S.rot.get(id) || 0) + d) % 360 + 360) % 360); applyRot(); }
   window.addEventListener("resize", () => applyRot());
   function skip() {          // דלג: הפריט יוצא מהתור עד פתיחה חוזרת של החלון (לא חוזר אחרי השטר הבא)
-    const list = pending(), k = list.indexOf(S.i); S.skipped.add(key(S.items[S.i]));
+    const list = pending(), k = list.indexOf(S.i); S.skipped.add(String(S.items[S.i].bid));          // לפי עסק: גם השטר השני של אותה חברה (כללי / פרטי) מדולג, לא רק השורה הנוכחית
     const rest = pending(); S.i = rest.find(n => n > S.i) ?? rest[rest.length - 1] ?? S.i; paint();
   }
   function step(d) { const list = pending(), k = list.indexOf(S.i); const n = list[Math.min(Math.max(k + d, 0), list.length - 1)]; S.i = n ?? S.i; paint(); }
