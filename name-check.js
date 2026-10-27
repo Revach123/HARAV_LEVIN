@@ -53,6 +53,7 @@
         ${dec ? `<div style="background:#e6f4ea;border:1px solid #a8d5b4;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:13px">כבר טופל: ${E(dec.note || "אושר")}</div>` : ""}
         <label style="font-size:13px;color:#445">שם בהיתר עסקה (באתר)</label>
         <div style="display:flex;gap:6px;margin:2px 0 8px"><input id="nc-name" type="text" value="${E(it.permit_name || it.registrar_name || "")}" style="flex:1;min-width:0;box-sizing:border-box;font:inherit;font-size:18px;padding:8px 10px;border:2px solid #8fb7c2;border-radius:6px"><button type="button" class="btn-ghost" id="nc-reg" title="${it.chp ? "משיכת השם הרשמי מהרשם לפי ח.פ." : "אין ח.פ. - ייעשה שימוש בשם ברשם השמור"}" style="white-space:nowrap;padding:6px 12px">משיכה מהרשם</button></div>
+        <div id="nc-same" style="display:none;background:#e6f4ea;border:1px solid #a8d5b4;border-radius:6px;padding:5px 10px;margin-bottom:8px;font-size:14px;font-weight:700;color:#1b6b3a">✓ זהה לשם מהרשם. אפשר לאשר בלי למשוך שוב</div>
         <div style="font-size:13px;color:#556;margin-bottom:8px">שם ברשם: <b>${E(it.registrar_name || "—")}</b>${it.reg_cover !== "" && it.reg_cover != null ? ` · התאמה לשטר ${E(it.reg_cover)}%` : ""} · ח.פ. ${E(it.chp || "—")}</div>
         ${it.snippet ? `<div style="font-size:13px;color:#445;margin-bottom:3px">הקטע בשטר הדומה ביותר לשם:</div><div dir="rtl" style="background:#fffbe6;border:1px solid #eadf9c;border-radius:6px;padding:8px 10px;font-size:15px;margin-bottom:8px">${E(it.snippet)}</div>` : `<div style="font-size:13px;color:#a33;margin-bottom:8px">לא נמצא בשטר קטע דומה לשם (ייתכן שטר סרוק / כתב יד).</div>`}
         ${dn.length ? `<div style="font-size:13px;color:#445;margin-bottom:3px">שמות שחולצו מהשטר (לחיצה מעתיקה לשדה השם):</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${dn.map(x => `<button type="button" class="btn-ghost nc-chip" data-v="${E(x)}" style="font-size:13px;padding:3px 9px">${E(x.length > 60 ? x.slice(0, 60) + "…" : x)}</button>`).join("")}</div>` : ""}
@@ -67,20 +68,27 @@
         <div style="margin-top:14px"><label style="font-size:13px"><input type="checkbox" id="nc-sd" ${S.showDone ? "checked" : ""}> הצג גם פריטים שטופלו</label></div>
       </div></div>`;
     box.querySelectorAll(".nc-chip").forEach(b => b.onclick = () => { $("nc-name").value = b.dataset.v; $("nc-name").focus(); });
+    $("nc-name").oninput = same; same();
     $("nc-reg").onclick = pullReg; $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = () => step(1); $("nc-prev").onclick = () => step(-1);
     $("nc-sd").onchange = e => { S.showDone = e.target.checked; paint(); };
     const my = ++S.seq;
     pdfBlob(it.doc_id).then(b => { if (my !== S.seq || !$("nc-view")) return; if (S.blobUrl) URL.revokeObjectURL(S.blobUrl); S.blobUrl = URL.createObjectURL(b); $("nc-view").innerHTML = `<iframe src="${S.blobUrl}#toolbar=0&navpanes=0&view=FitH" style="width:100%;height:100%;border:0" title="השטר"></iframe>`; })
       .catch(e => { if (my === S.seq && $("nc-view")) $("nc-view").innerHTML = `<div style="padding:30px;color:#a33">לא ניתן לטעון את השטר: ${E(e.message)}</div>`; });
   }
+  const nm = x => String(x || "").replace(/["'`״׳]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+  function same() {          // השם בשדה זהה (אחרי נרמול גרשיים ורווחים) לשם ברשם: מציינים וממליצים לאשר בלי למשוך שוב
+    const it = S.items[S.i], v = nm($("nc-name").value), isSame = !!v && (v === nm(it.registrar_name) || (!!S.reg && v === nm(S.reg)));
+    $("nc-same").style.display = isSame ? "" : "none";
+    $("nc-ok").className = isSame ? "btn-primary" : "btn-ghost"; $("nc-upd").className = isSame ? "btn-ghost" : "btn-primary";
+  }
   async function pullReg() {          // השם הרשמי העדכני מהרשם (לפי ח.פ.), במקום הקלדה ידנית
     const it = S.items[S.i], msg = $("nc-msg"), b = $("nc-reg"); msg.style.color = "#556";
-    if (!it.chp) { if (it.registrar_name) { $("nc-name").value = it.registrar_name; S.reg = it.registrar_name; msg.textContent = "אין ח.פ.: הוכנס השם ברשם השמור"; } else { msg.style.color = "#a33"; msg.textContent = "אין ח.פ. ואין שם ברשם"; } return; }
+    if (!it.chp) { if (it.registrar_name) { $("nc-name").value = it.registrar_name; S.reg = it.registrar_name; msg.textContent = "אין ח.פ.: הוכנס השם ברשם השמור"; same(); } else { msg.style.color = "#a33"; msg.textContent = "אין ח.פ. ואין שם ברשם"; } return; }
     b.disabled = true; msg.textContent = "מושך מהרשם…";
     try {
       const r = await apiFetch("/lookup?number=" + encodeURIComponent(it.chp));
       if (!r.found) throw new Error("לא נמצא תאגיד עם ח.פ. " + it.chp + " ברשם");
-      $("nc-name").value = r.name; S.reg = r.name; msg.textContent = "נמשך מהרשם: " + r.name;
+      $("nc-name").value = r.name; S.reg = r.name; msg.textContent = "נמשך מהרשם: " + r.name; same();
     } catch (e) { msg.style.color = "#a33"; msg.textContent = e.message; }
     b.disabled = false;
   }
