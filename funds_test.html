@@ -54,7 +54,12 @@
     .it .num{direction:ltr;font-weight:700;font-variant-numeric:tabular-nums}
     .it .note{font-size:14px;margin-top:.15rem}
   }
+  /* הטמעה באתר iska.co.il (funds.html?embed=1): בלי כפתור חזרה וכותרת, בלי הצמדה (ה-iframe באורך התוכן), רקע שקוף */
+  html.embed .back, html.embed h1{display:none}
+  html.embed .top{position:static;box-shadow:none;background:transparent;margin:0;padding:0 0 .4rem}
+  html.embed body{background:transparent;padding:0 0 .5rem}
 </style>
+<script>if (/[?&]embed\b/.test(location.search)) document.documentElement.classList.add("embed");</script>
 </head>
 <body>
 <div class="wrap">
@@ -121,6 +126,12 @@ fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
   paint();
 }).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
+// בהטמעה: מדווחים לדף המארח את גובה התוכן (ה-iframe מתאים את גובהו, בלי גלילה פנימית)
+if (document.documentElement.classList.contains("embed") && parent !== window) {
+  let lastH = 0;
+  const sendH = () => { const h = Math.ceil(document.body.getBoundingClientRect().height + 8); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-funds-height", h }, "*"); } catch {} } };
+  new ResizeObserver(sendH).observe(document.body); window.addEventListener("load", sendH); sendH();
+}
 </script>
 </body>
 </html>
