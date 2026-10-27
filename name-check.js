@@ -39,6 +39,7 @@
   const pending = () => S.items.map((it, n) => n).filter(n => S.showDone || !S.done.has(key(S.items[n])));
 
   function paint() {
+    S.reg = "";
     const box = $("nc-body"); if (!box) return;
     const list = pending();
     if (!list.length) { box.innerHTML = `<div style="padding:50px;text-align:center;font-size:20px">אין עוד פריטים לבדיקה 🎉<br><br><button class="btn-ghost" onclick="NC.toggleDone()">${S.showDone ? "הסתר" : "הצג"} פריטים שטופלו</button></div>`; return; }
@@ -51,7 +52,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:16px">${pos} / ${list.length}</b><span style="font-size:13px;padding:2px 10px;border-radius:999px;background:${it.status === "none" ? "#fde4e1" : "#fff1d6"}">${E(ST[it.status] || it.status)} · ${it.cover}%</span></div>
         ${dec ? `<div style="background:#e6f4ea;border:1px solid #a8d5b4;border-radius:6px;padding:6px 10px;margin-bottom:8px;font-size:13px">כבר טופל: ${E(dec.note || "אושר")}</div>` : ""}
         <label style="font-size:13px;color:#445">שם בהיתר עסקה (באתר)</label>
-        <input id="nc-name" type="text" value="${E(it.permit_name || it.registrar_name || "")}" style="width:100%;box-sizing:border-box;font:inherit;font-size:18px;padding:8px 10px;border:2px solid #8fb7c2;border-radius:6px;margin:2px 0 8px">
+        <div style="display:flex;gap:6px;margin:2px 0 8px"><input id="nc-name" type="text" value="${E(it.permit_name || it.registrar_name || "")}" style="flex:1;min-width:0;box-sizing:border-box;font:inherit;font-size:18px;padding:8px 10px;border:2px solid #8fb7c2;border-radius:6px"><button type="button" class="btn-ghost" id="nc-reg" title="${it.chp ? "משיכת השם הרשמי מהרשם לפי ח.פ." : "אין ח.פ. - ייעשה שימוש בשם ברשם השמור"}" style="white-space:nowrap;padding:6px 12px">משיכה מהרשם</button></div>
         <div style="font-size:13px;color:#556;margin-bottom:8px">שם ברשם: <b>${E(it.registrar_name || "—")}</b>${it.reg_cover !== "" && it.reg_cover != null ? ` · התאמה לשטר ${E(it.reg_cover)}%` : ""} · ח.פ. ${E(it.chp || "—")}</div>
         ${it.snippet ? `<div style="font-size:13px;color:#445;margin-bottom:3px">הקטע בשטר הדומה ביותר לשם:</div><div dir="rtl" style="background:#fffbe6;border:1px solid #eadf9c;border-radius:6px;padding:8px 10px;font-size:15px;margin-bottom:8px">${E(it.snippet)}</div>` : `<div style="font-size:13px;color:#a33;margin-bottom:8px">לא נמצא בשטר קטע דומה לשם (ייתכן שטר סרוק / כתב יד).</div>`}
         ${dn.length ? `<div style="font-size:13px;color:#445;margin-bottom:3px">שמות שחולצו מהשטר (לחיצה מעתיקה לשדה השם):</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${dn.map(x => `<button type="button" class="btn-ghost nc-chip" data-v="${E(x)}" style="font-size:13px;padding:3px 9px">${E(x.length > 60 ? x.slice(0, 60) + "…" : x)}</button>`).join("")}</div>` : ""}
@@ -66,11 +67,22 @@
         <div style="margin-top:14px"><label style="font-size:13px"><input type="checkbox" id="nc-sd" ${S.showDone ? "checked" : ""}> הצג גם פריטים שטופלו</label></div>
       </div></div>`;
     box.querySelectorAll(".nc-chip").forEach(b => b.onclick = () => { $("nc-name").value = b.dataset.v; $("nc-name").focus(); });
-    $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = () => step(1); $("nc-prev").onclick = () => step(-1);
+    $("nc-reg").onclick = pullReg; $("nc-upd").onclick = () => act("upd"); $("nc-ok").onclick = () => act("ok"); $("nc-skip").onclick = () => step(1); $("nc-prev").onclick = () => step(-1);
     $("nc-sd").onchange = e => { S.showDone = e.target.checked; paint(); };
     const my = ++S.seq;
     pdfBlob(it.doc_id).then(b => { if (my !== S.seq || !$("nc-view")) return; if (S.blobUrl) URL.revokeObjectURL(S.blobUrl); S.blobUrl = URL.createObjectURL(b); $("nc-view").innerHTML = `<iframe src="${S.blobUrl}#toolbar=0&navpanes=0&view=FitH" style="width:100%;height:100%;border:0" title="השטר"></iframe>`; })
       .catch(e => { if (my === S.seq && $("nc-view")) $("nc-view").innerHTML = `<div style="padding:30px;color:#a33">לא ניתן לטעון את השטר: ${E(e.message)}</div>`; });
+  }
+  async function pullReg() {          // השם הרשמי העדכני מהרשם (לפי ח.פ.), במקום הקלדה ידנית
+    const it = S.items[S.i], msg = $("nc-msg"), b = $("nc-reg"); msg.style.color = "#556";
+    if (!it.chp) { if (it.registrar_name) { $("nc-name").value = it.registrar_name; S.reg = it.registrar_name; msg.textContent = "אין ח.פ.: הוכנס השם ברשם השמור"; } else { msg.style.color = "#a33"; msg.textContent = "אין ח.פ. ואין שם ברשם"; } return; }
+    b.disabled = true; msg.textContent = "מושך מהרשם…";
+    try {
+      const r = await apiFetch("/lookup?number=" + encodeURIComponent(it.chp));
+      if (!r.found) throw new Error("לא נמצא תאגיד עם ח.פ. " + it.chp + " ברשם");
+      $("nc-name").value = r.name; S.reg = r.name; msg.textContent = "נמשך מהרשם: " + r.name;
+    } catch (e) { msg.style.color = "#a33"; msg.textContent = e.message; }
+    b.disabled = false;
   }
   function step(d) { const list = pending(), k = list.indexOf(S.i); const n = list[Math.min(Math.max(k + d, 0), list.length - 1)]; S.i = n ?? S.i; paint(); }
   async function review(it, note) {
@@ -87,8 +99,9 @@
         const biz = (typeof businesses !== "undefined" ? businesses : []).find(b => String(b.id) === String(it.bid));
         if (!biz) throw new Error("העסק לא נמצא ברשימה שנטענה (לרענן את הדף)");
         if (name !== (biz.permit_name || "")) {
-          await apiFetch("/businesses/" + encodeURIComponent(biz.id), { method: "PUT", body: JSON.stringify({ ...biz, permit_name: name }) });
-          const old = biz.permit_name || ""; biz.permit_name = name; it.permit_name = name;
+          const upd = { ...biz, permit_name: name }; if (S.reg && S.reg === name) upd.registrar_name = name;      // נמשך מהרשם: גם השם ברשם מתעדכן
+          await apiFetch("/businesses/" + encodeURIComponent(biz.id), { method: "PUT", body: JSON.stringify(upd) });
+          const old = biz.permit_name || ""; biz.permit_name = name; it.permit_name = name; if (upd.registrar_name !== undefined) { biz.registrar_name = upd.registrar_name; it.registrar_name = upd.registrar_name; }
           await review(it, `עודכן: ${old} ← ${name}`);
         } else await review(it, "השם תקין");
       } else await review(it, "השם תקין");
