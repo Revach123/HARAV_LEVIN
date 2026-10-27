@@ -27,7 +27,7 @@ jobs:
             if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp_nc/p$i.json)"; exit 1; fi
             off=$(jq -r '.next' "tmp_nc/p$i.json"); i=$((i+1))
           done
-          jq -s '{total: (.[0].total), rows: (map(.rows) | add)}' tmp_nc/p*.json > data/probe/permit_name_check.json
+          jq -s --arg w "$(date -u +%FT%TZ)" '{when: $w, total: (.[0].total), rows: (map(.rows) | add)}' tmp_nc/p*.json > data/probe/permit_name_check.json
           python3 - <<'PY'
           import json, csv
           d = json.load(open("data/probe/permit_name_check.json", encoding="utf-8"))
