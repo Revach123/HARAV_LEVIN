@@ -348,6 +348,10 @@
   .home-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; max-width:900px; margin:2.5rem auto; }
   .gf-tbl { width:100%; border-collapse:collapse; background:var(--bg2); font-size:14px; }
   .gf-tbl th { background:var(--navy); color:#fff; text-align:right; padding:6px 8px; position:sticky; top:0; z-index:1; font-size:13px; }
+  /* לשוניות קבועות: נצמדות מתחת לכותרת הדף בגלילה, וכותרות הטבלה מתחתיהן (במחשב) */
+  .gf-tabs { display:flex; gap:8px; flex-wrap:wrap; align-items:center; position:sticky; top:56px; z-index:8; background:#fff; padding:8px 0; margin:2px 0 8px; box-shadow:0 4px 6px -5px rgba(0,0,0,.25); }
+  .gf-wrap { overflow:auto; }
+  @media (min-width: 900px) { .gf-wrap { overflow:visible; } .gf-tbl th { top:calc(56px + var(--gft, 56px)); z-index:7; } }
   .gf-tbl td { padding:3px 4px; border-top:1px solid var(--border); }
   .gf-tbl input { width:100%; box-sizing:border-box; padding:5px 7px; border:1px solid transparent; border-radius:5px; font-size:14px; background:transparent; color:var(--text); font-family:inherit; }
   .gf-tbl input:hover { border-color:var(--border); }
@@ -356,6 +360,11 @@
   .gf-tbl tr.gf-sec td { background:var(--bg); color:var(--navy); font-weight:700; font-size:15px; padding:8px 10px; border-top:2px solid var(--navy); }
   .gf-b { border:1px solid var(--border); background:var(--bg); border-radius:5px; padding:2px 7px; margin:0 1px; cursor:pointer; font-size:12px; }
   .gf-b:disabled { opacity:.35; cursor:default; }
+  .gf-tbl tr.gf-new td { background:#fff59d; }          /* מסלול חדש: רקע צהוב עד ביטול הסימון */
+  .gf-tbl tr.gf-del td { background:#ffcdd2; }          /* מסלול שהוסר: רקע אדום וקו חוצה; רק ההערות ניתנות לעריכה */
+  .gf-tbl tr.gf-del input:not([data-k=note]) { text-decoration:line-through; color:#8b1a1a; }
+  .gf-tbl tr.gf-new input, .gf-tbl tr.gf-del input { color:#000; }
+  .gf-tbl tr.gf-del input:not([data-k=note]) { color:#8b1a1a; }
   .home-card { background:var(--bg2); border:1.5px solid var(--border); border-radius:14px; padding:1.8rem 1.4rem; text-align:center; cursor:pointer; font-family:inherit; transition:.15s; color:var(--navy); }
   .home-card:hover { border-color:var(--navy); box-shadow:0 4px 14px rgba(0,0,0,.08); transform:translateY(-2px); }
   .home-card .ico { font-size:34px; display:block; margin-bottom:10px; }
@@ -1188,7 +1197,7 @@ function render() {
   else if (view === "form")       { if (formModal) ensureFormModal().innerHTML = renderForm(); else app.innerHTML = adminTabs() + renderForm(); }
   else if (view === "csv-import") app.innerHTML = adminTabs() + renderCsvImport();
   else if (view === "dash")       { if (window.PD) PD.dashPage(app); }
-  else if (view === "gfunds")     { app.innerHTML = renderGFunds(); if (!GF.loaded && !GF.loading) gfLoad(); }
+  else if (view === "gfunds")     { app.innerHTML = renderGFunds(); gfTabsH(); if (!GF.loaded && !GF.loading) gfLoad(); }
   bindEvents();
   if (view === "admin") admWatch();
   document.getElementById("admin-toggle").style.display = isAdmin ? "none" : "";          // בלי כפתור "יציאה ממנהל"
@@ -1758,7 +1767,7 @@ async function gfLoad() {
   try {
     const r = await fetch("/api/glatt-funds", { cache: "no-store" }); const d = await r.json();
     if (!r.ok || d.error) throw new Error(d.error || r.statusText);
-    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note, mark: x.mark || "" }));
     GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.loaded = true; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
   } catch (e) { GF.err = e.message; }
   GF.loading = false;
@@ -1771,12 +1780,12 @@ function renderGFunds() {
 
     <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
   if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
-  const tabs = `<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => gfIn(r, k)).length})</button>`).join("")}
+  const tabs = `<div class="gf-tabs">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => gfIn(r, k)).length})</button>`).join("")}
     <input type="search" value="${escHtml(GF.q)}" placeholder="סינון בטבלה…" oninput="GF.q=this.value;gfPaintBody()" style="flex:1;min-width:180px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg);color:var(--text)"></div>`;
   const types = [...new Set(GF.rows.map(r => r.type).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
   const cos = [...new Set(GF.rows.map(r => r.company).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
   return head + tabs + `<datalist id="gf-types">${types.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist><datalist id="gf-cos">${cos.map(t => `<option value="${escHtml(t)}">`).join("")}</datalist>
-    <div style="overflow:auto"><table class="gf-tbl"><thead><tr><th style="width:28px">#</th>${GF_FIELDS.map(([, l, w]) => `<th style="width:${w}">${l}</th>`).join("")}<th style="width:60px">מחיקה</th></tr></thead><tbody id="gf-body">${gfBodyHtml()}</tbody></table></div>
+    <div class="gf-wrap"><table class="gf-tbl"><thead><tr><th style="width:28px">#</th>${GF_FIELDS.map(([, l, w]) => `<th style="width:${w}">${l}</th>`).join("")}<th style="width:160px">פעולות</th></tr></thead><tbody id="gf-body">${gfBodyHtml()}</tbody></table></div>
     <div style="margin-top:10px;display:flex;gap:8px;align-items:center"><button class="btn-ghost" onclick="gfAdd(-1)">➕ סוג מוצר חדש</button></div>
     ${GF.savedAt ? `<div style="font-size:12px;color:var(--muted);margin-top:8px">נשמר לאחרונה: ${escHtml(GF.savedAt)} (UTC)</div>` : ""}`;
 }
@@ -1807,11 +1816,15 @@ function gfBodyHtml() {
     const shown = rows.filter(x => gfMatch(x.r));
     if (GF.q.trim() && !shown.length) return "";
     return `<tr class="gf-sec"><td colspan="${GF_FIELDS.length + 2}">${escHtml(t || "(סוג מוצר חדש: כתבו את שם הסוג בעמודת הסוג)")}${gfShared(t) ? ' <span style="font-weight:400;font-size:12px;color:var(--muted)">(מופיע בשתי הרשימות)</span>' : ""}</td></tr>` +
-      shown.map(({ r, i }) => `<tr data-i="${i}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" value="${escHtml(r[k])}" ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
-        <td style="text-align:center"><button class="gf-b" title="מחיקת השורה" style="color:var(--red)" onclick="gfDel(${i})">✕</button></td></tr>`).join("") +
+      shown.map(({ r, i }) => { const del = r.mark === "del";          // שורה שהוסרה: רק ההערות ניתנות לעריכה
+        return `<tr data-i="${i}" class="${del ? "gf-del" : r.mark === "new" ? "gf-new" : ""}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" data-k="${k}" value="${escHtml(r[k])}" ${del && k !== "note" ? "readonly" : ""} ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
+        <td style="text-align:center;white-space:nowrap">${del
+          ? `<button class="gf-b" title="החזרת המסלול לרשימה" onclick="gfMark(${i},'')">↩ שחזור</button><button class="gf-b" title="מחיקה סופית מהרשימה" style="color:var(--red)" onclick="gfDel(${i},1)">🗑 סופית</button>`
+          : `${r.mark === "new" ? `<button class="gf-b" title="ביטול הסימון הצהוב (מסלול חדש)" onclick="gfMark(${i},'')">✓ לא חדש</button>` : ""}<button class="gf-b" title="סימון כהוסר (רקע אדום וקו חוצה)" style="color:var(--red)" onclick="gfDel(${i})">✕</button>`}</td></tr>`; }).join("") +
       `<tr class="gf-add"><td colspan="${GF_FIELDS.length + 2}"><button class="gf-b" onclick="gfAdd(${ti})">➕ הוספת שורה ל${escHtml(t || "סוג החדש")}</button></td></tr>`;
   }).join("");
 }
+function gfTabsH() { const t = document.querySelector(".gf-tabs"); if (t) document.documentElement.style.setProperty("--gft", t.offsetHeight + 10 + "px"); }          // גובה הלשוניות הקבועות (כותרות הטבלה נצמדות מתחתיהן)
 function gfPaintBody() { const b = document.getElementById("gf-body"); if (b) b.innerHTML = gfBodyHtml(); }
 function gfDirty() { GF.dirty = true; formDirty = false; const b = document.getElementById("gf-save"); if (b) { b.disabled = GF.saving; b.textContent = "💾 שמירה"; } }
 function gfSet(i, k, v) { GF.rows[i][k] = v; gfDirty(); }
@@ -1826,11 +1839,14 @@ function gfResort(i, k) {          // שינוי חברה / סוג: השורה �
 function gfAdd(ti) {          // שורה חדשה בסוף הסוג (ti = מיקום הסוג), או סוג מוצר חדש (ti = -1)
   const order = gfTypeOrder(GF.tab), type = ti >= 0 ? order[ti] : "";
   if (ti < 0 && order.includes("")) { gfFocus(GF.rows.find(r => gfIn(r, GF.tab) && r.type === ""), "type"); return; }
-  const row = { tab: type && gfShared(type) ? "both" : GF.tab, company: "", track: "", type, number: "", note: "" };
+  const row = { tab: type && gfShared(type) ? "both" : GF.tab, company: "", track: "", type, number: "", note: "", mark: "new" };          // שורה חדשה מסומנת אוטומטית כחדשה (צהוב)
   GF.rows.push(row); GF.q = ""; gfSort(); gfDirty(); render(); gfFocus(row, ti >= 0 ? "company" : "type");
 }
-function gfDel(i) {
-  const r = GF.rows[i]; if (!confirm(`למחוק את השורה "${[r.company, r.track, r.number].filter(Boolean).join(" · ") || "ריקה"}"? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
+function gfMark(i, m) { GF.rows[i].mark = m; gfDirty(); gfPaintBody(); }
+function gfDel(i, final) {          // מחיקה: השורה נשארת מסומנת כהוסרה (אדום וקו חוצה); מחיקה סופית - רק משורה שכבר סומנה, או משורה ריקה
+  const r = GF.rows[i], label = [r.company, r.track, r.number].filter(Boolean).join(" · ");
+  if (!final && label) { gfMark(i, "del"); return; }
+  if (label && !confirm(`למחוק סופית את "${label}" מהרשימה? (השינוי נשמר רק בלחיצה על שמירה)`)) return;
   GF.rows.splice(i, 1); gfDirty(); render();
 }
 function gfHebDate(d) {          // "חשוון תשפ"ז": החודש העברי הנוכחי ושנה באותיות (בלי האלפים) - נרשם אוטומטית בכל שמירה
@@ -1849,7 +1865,7 @@ async function gfSave() {
     gfSort();
     try { GF.updated = gfHebDate(new Date()); } catch { /* בלי לוח עברי בדפדפן: נשאר התאריך הקודם */ }
     const d = await apiFetch("/glatt-funds", { method: "PUT", body: JSON.stringify({ updated: GF.updated, type_order: { pension: gfTypeOrder("pension"), savings: gfTypeOrder("savings") }, rows: GF.rows }) });
-    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note }));
+    GF.rows = (d.rows || []).map(x => ({ tab: x.tab, company: x.company, track: x.track, type: x.type, number: x.number, note: x.note, mark: x.mark || "" }));
     GF.updated = d.updated || ""; GF.savedAt = d.saved_at || ""; GF.dirty = false; GF.types = gfOrderFrom(d.type_order); gfSort();
     showStatus("הרשימה נשמרה");
   } catch (e) { if (e.message === "Unauthorized") { GF.saving = false; handleUnauth(); return; } alert("השמירה נכשלה: " + e.message); }

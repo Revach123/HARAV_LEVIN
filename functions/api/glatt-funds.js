@@ -1,7 +1,8 @@
 import { checkAdmin } from "./_shared/auth.js";
 import { SEED, SEED_UPDATED } from "./_shared/glatt-funds-seed.js";
 // רשימת מסלולים וקרנות גלאט הון (דף funds_test.html + ניהול ב-admin_test.html)
-// GET  /api/glatt-funds → { updated, type_order: { pension: [...], savings: [...] }, rows: [{ id, tab, company, track, type, number, note }] }   (ציבורי)
+// GET  /api/glatt-funds → { updated, type_order: { pension: [...], savings: [...] }, rows: [{ id, tab, company, track, type, number, note, mark }] }   (ציבורי)
+// mark: '' רגיל | 'new' = מסלול חדש (רקע צהוב, עד שהמנהל מבטל את הסימון) | 'del' = הוסר (רקע אדום וקו חוצה; נשאר עד מחיקה סופית)
 // PUT  /api/glatt-funds   { updated, type_order, rows } → החלפה מלאה של הרשימה (מנהל בלבד)
 // tab: pension / savings, או both = סוג מוצר שמופיע בשתי הרשימות (למשל קופת גמל להשקעה): שורה אחת שמוצגת בשתיהן
 // הטבלה נוצרת וממולאת ברשימה ההתחלתית (מהתמונות) בפעם הראשונה; אין צורך במיגרציה ידנית.
@@ -16,6 +17,8 @@ async function ensure(env) {
       number TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '')`),
     env.DB.prepare("CREATE TABLE IF NOT EXISTS glatt_funds_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL DEFAULT '')"),
   ]);
+  try { await env.DB.prepare("SELECT mark FROM glatt_funds LIMIT 1").first(); }
+  catch { try { await env.DB.prepare("ALTER TABLE glatt_funds ADD COLUMN mark TEXT NOT NULL DEFAULT ''").run(); } catch { /* נוספה במקביל */ } }
   const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM glatt_funds").first();
   const seeded = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'seeded'").first();
   if (!n.n && !seeded) await replaceAll(env, SEED, SEED_UPDATED, null, true);
@@ -44,13 +47,13 @@ async function migrateShared(env) {
 
 function clean(r, i) {
   const s = (v, max) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, max);
-  return { tab: TABS.includes(r.tab) ? r.tab : "pension", sort: i, company: s(r.company, 120), track: s(r.track, 300), type: s(r.type, 160), number: s(r.number, 60), note: s(r.note, 400) };
+  return { tab: TABS.includes(r.tab) ? r.tab : "pension", sort: i, company: s(r.company, 120), track: s(r.track, 300), type: s(r.type, 160), number: s(r.number, 60), note: s(r.note, 400), mark: r.mark === "new" || r.mark === "del" ? r.mark : "" };
 }
 
 async function replaceAll(env, rows, updated, typeOrder, seed) {
   const list = rows.map(clean);
   const stmts = [env.DB.prepare("DELETE FROM glatt_funds")];
-  for (const r of list) stmts.push(env.DB.prepare("INSERT INTO glatt_funds (tab, sort, company, track, type, number, note) VALUES (?,?,?,?,?,?,?)").bind(r.tab, r.sort, r.company, r.track, r.type, r.number, r.note));
+  for (const r of list) stmts.push(env.DB.prepare("INSERT INTO glatt_funds (tab, sort, company, track, type, number, note, mark) VALUES (?,?,?,?,?,?,?,?)").bind(r.tab, r.sort, r.company, r.track, r.type, r.number, r.note, r.mark));
   stmts.push(env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('updated', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v").bind(String(updated || "").trim().slice(0, 60)));
   stmts.push(env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('saved_at', datetime('now')) ON CONFLICT(k) DO UPDATE SET v = excluded.v"));
   if (typeOrder && typeof typeOrder === "object") {
@@ -62,7 +65,7 @@ async function replaceAll(env, rows, updated, typeOrder, seed) {
 }
 
 async function read(env) {
-  const rows = (await env.DB.prepare("SELECT id, tab, company, track, type, number, note FROM glatt_funds ORDER BY CASE tab WHEN 'pension' THEN 0 ELSE 1 END, sort, id").all()).results || [];
+  const rows = (await env.DB.prepare("SELECT id, tab, company, track, type, number, note, mark FROM glatt_funds ORDER BY CASE tab WHEN 'pension' THEN 0 ELSE 1 END, sort, id").all()).results || [];
   const meta = Object.fromEntries(((await env.DB.prepare("SELECT k, v FROM glatt_funds_meta").all()).results || []).map(x => [x.k, x.v]));
   let typeOrder = null; try { typeOrder = JSON.parse(meta.type_order || "null"); } catch { typeOrder = null; }
   return { updated: meta.updated || "", saved_at: meta.saved_at || "", type_order: typeOrder, rows };

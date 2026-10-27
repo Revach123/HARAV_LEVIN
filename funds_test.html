@@ -38,6 +38,10 @@
   td.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   tr.sec td{font-size:20px;padding:.55rem .7rem;border-top:3px solid #000;border-bottom:2px solid #000;text-decoration:underline;text-underline-offset:4px}
   tr.cg td{border-top:3px solid #000}
+  /* מסלול חדש: רקע צהוב. מסלול שהוסר: רקע אדום וקו חוצה (ההערה נשארת קריאה, בלי קו) */
+  tr.mk-new td:not(.co){background:#fff59d}
+  tr.mk-del td:not(.co){background:#ffcdd2}
+  tr.mk-del td:not(.co):not(.note){text-decoration:line-through}
   .sec-box{margin:.9rem 0}
   .sec-h{font-weight:700;font-size:21px;line-height:1.3;padding:.35rem .2rem .3rem;margin-bottom:.35rem;border-bottom:3px solid currentColor}          /* כותרת סוג המוצר: גדולה וברורה */
   mark{background:#fff3a6;color:inherit;border-radius:3px;padding:0 1px}
@@ -53,6 +57,9 @@
     .it .meta{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin-top:.2rem}
     .it .num{direction:ltr;font-weight:700;font-variant-numeric:tabular-nums}
     .it .note{font-size:14px;margin-top:.15rem}
+    .it.mk-new{background:#fff59d}
+    .it.mk-del{background:#ffcdd2}
+    .it.mk-del b,.it.mk-del .meta{text-decoration:line-through}
   }
   /* מסך נייד (כניסה מדף "קהילות"): כפתור החזרה והכותרת בשורה אחת, ורק הלשוניות נצמדות לראש המסך - כדי שיישאר מקום לרשימה עצמה */
   @media (max-width:760px){
@@ -126,10 +133,10 @@ function paint() {
   const tbl = `<table><thead><tr><th style="width:16%">שם חברה</th><th style="width:38%">שם מסלול</th><th style="width:14%">מספר קופה</th><th style="width:32%">הערות</th></tr></thead><tbody>` +
     sections.map(sc => { const fg = tc(sc.type)[2];
       return `<tr class="sec" style="--tc:${fg}"><td colspan="4">${hl(sc.type || "אחר")}</td></tr>` +
-        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
+        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}${r.mark ? " mk-" + r.mark : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
   const cards = `<div class="cards">` + sections.map(sc => { const fg = tc(sc.type)[2];
     return `<div class="sec-box" style="--tc:${fg}"><div class="sec-h" style="color:${fg}">${hl(sc.type || "אחר")}</div>` +
-      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
+      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it${r.mark ? " mk-" + r.mark : ""}">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
   out.innerHTML = tbl + cards;
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
