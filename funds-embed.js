@@ -5,7 +5,7 @@
   var sc = document.currentScript, O = sc && sc.src ? new URL(sc.src).origin : "https://harav-levin.pages.dev";
   var f = document.createElement("iframe");
   f.src = O + "/funds.html?embed=1";
-  f.title = "רשימת מסלולים וקרנות מאושרים";
+  f.title = "רשימת הקרנות ומסלולים המאושרים";
   f.setAttribute("scrolling", "no");
   f.style.cssText = "width:100%;border:0;min-height:600px;display:block;background:transparent";
   sc.parentNode.insertBefore(f, sc);
