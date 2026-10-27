@@ -1,0 +1,51 @@
+name: Compress permit PDFs (manual)
+
+# דוחס קובצי היתר גדולים ב-R2 כדי שפתיחת שטר תהיה מהירה. ברירת מחדל: dry-run (מדווח חיסכון, לא משנה כלום).
+# עם apply: מגבה את המקור ב-R2 (backup/<key>, פרטי - לא ב-git), מחליף את הקובץ באותו מפתח ומעדכן את permit_docs.size.
+# ריצה בחלקים (limit) וממשיכה מאיפה שעצרה: מסמך שכבר עובד מדולג.
+# סודות נדרשים בריפו: CLOUDFLARE_API_TOKEN (הרשאות: Workers R2 Storage - Edit, D1 - Edit), CLOUDFLARE_ACCOUNT_ID.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "להחליף בפועל (אחרת dry-run)"
+        type: boolean
+        default: false
+      limit:
+        description: "כמה מסמכים לעבד בריצה (0 = הכל)"
+        default: "25"
+      min_bytes:
+        description: "רק מסמכים גדולים מזה (בייט)"
+        default: "400000"
+
+permissions:
+  contents: read
+
+concurrency: compress-permit-pdfs
+
+jobs:
+  compress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Check secrets
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::חסרים הסודות CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID"; exit 1; }
+      - name: Install tools
+        run: sudo apt-get update -q && sudo apt-get install -y -q ghostscript poppler-utils >/dev/null
+      - name: Compress
+        env:
+          APPLY: ${{ inputs.apply }}
+          LIMIT: ${{ inputs.limit }}
+          MIN_BYTES: ${{ inputs.min_bytes }}
+        run: |
+          [[ "$LIMIT" =~ ^[0-9]+$ && "$MIN_BYTES" =~ ^[0-9]+$ ]] || { echo "::error::limit / min_bytes חייבים להיות מספרים"; exit 1; }
+          ARGS="--limit $LIMIT --min-bytes $MIN_BYTES"
+          [ "$APPLY" = "true" ] && ARGS="$ARGS --apply"
+          python3 scripts/compress_permit_pdfs.py $ARGS
