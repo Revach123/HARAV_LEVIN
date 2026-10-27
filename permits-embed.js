@@ -18,7 +18,7 @@
     "#ipb .ipb-tabs button.on{color:#1e8f85;border-top-color:#2aada1;background:#e9f6f5}" +
     "#ipb .ipb-row{display:flex;gap:.5rem;align-items:center;padding:.5rem .6rem;flex-wrap:wrap}" +
     "#ipb input,#ipb select{box-sizing:border-box;margin:0;font:inherit;font-size:16px;padding:.4rem .8rem;border:2px solid #b9e3de;border-radius:10px;background:#fff;color:#3b3d3d;min-height:42px;height:auto;box-shadow:none}" +
-    "#ipb input{flex:1;min-width:160px}#ipb select{min-width:190px}" +
+    "#ipb input{flex:1;min-width:160px}#ipb select{min-width:190px}#ipb.nar select{display:none}#ipb.nar{margin-right:auto;margin-left:0}" +
     "#ipb .ipb-cnt{font-size:14px;color:#6a7c82}" +
     "#ipb-side{position:fixed;display:none;z-index:98;direction:rtl;box-sizing:border-box;overflow-y:auto;background:#fff;font-family:inherit}" +
     "#ipb-side button{display:flex;width:100%;justify-content:space-between;align-items:center;margin:0;font:inherit;font-size:18px;line-height:1.15;color:#274d5b;background:none;border:0;border-bottom:1px solid #dfe7e8;border-radius:0;box-shadow:none;text-transform:none;padding:.18rem .4rem;cursor:pointer;text-align:start}" +
@@ -32,12 +32,12 @@
   bar.innerHTML = '<div class="ipb-tabs"></div><div class="ipb-row"><input type="search" placeholder="חיפוש חברה…" aria-label="חיפוש חברה" autocomplete="off"><select aria-label="קטגוריה"></select><span class="ipb-cnt"></span></div><div class="ipb-title" hidden></div>';
   ph.appendChild(bar);
   var sidebar = document.createElement("nav"); sidebar.id = "ipb-side"; sidebar.setAttribute("aria-label", "קטגוריות"); document.body.appendChild(sidebar);
-  var GEO = null, sideKey = "", extOn = null, sL = -1, sW = -1, sT = -1, sM = -1;
+  var narOn = null, barWOn = -1, GEO = null, sideKey = "", extOn = null, sL = -1, sW = -1, sT = -1, sM = -1;
   f.id = "iska-permits"; f.title = "שטרות היתר עיסקא"; f.setAttribute("scrolling", "no");
   f.style.cssText = "width:100%;height:700px;border:0;display:block";
-  f.src = O + "/permits.html?embed=1&auto=1#t=" + T;
+  f.src = O + "/permits.html?embed=1&auto=1";
   // גובה ה-iframe מתחיל מהגובה האחרון שנשמר ללשונית (ולא מ-700 הקבועים), וירידה בגובה מתעכבת - כדי שהדף לא יקפוץ בטעינה
-  var curTab = T, st = null;
+  var curTab = "all", st = null;
   function hk() { return "ip-h-" + curTab; }
   try { var H0 = Number(window.localStorage.getItem(hk())); if (H0 > 0) { f.style.height = H0 + "px"; } } catch (x) { }
   function applyH(h) { f.style.height = h + "px"; try { window.localStorage.setItem(hk(), String(h)); } catch (x) { } }
@@ -46,10 +46,11 @@
   var tabsEl = bar.querySelector(".ipb-tabs"), q = bar.querySelector("input"), sel = bar.querySelector("select"), cnt = bar.querySelector(".ipb-cnt"), ttl = bar.querySelector(".ipb-title");
   function send(m) { m.source = "harav-parent"; if (f.contentWindow) { f.contentWindow.postMessage(m, O); } }
   // הלשוניות נבנות מיד (לפני שהרשימה נטענת), כדי שהסרגל לא יגדל ויזיז את הדף כשהנתונים מגיעים
-  var TABS0 = { private: "שטרות היתר עיסקא פרטי", general: "שטרות היתר עיסקא כללי" };
+  var TABS0 = {};          // רשימה אחת: אין לשוניות
   var tabsKey = JSON.stringify(TABS0), catsKey = "", qt = null;
   tabsEl.innerHTML = Object.keys(TABS0).map(function (k) { return '<button type="button" data-t="' + k + '"' + (k === T ? ' class="on"' : "") + ">" + TABS0[k] + "</button>"; }).join("");
   sel.innerHTML = '<option value="">כל הקטגוריות</option>'; cnt.textContent = "\u00a0";
+  tabsEl.style.display = "none";
   tabsEl.addEventListener("click", function (e) { var b = e.target.closest("button"); if (b) { send({ type: "setTab", value: b.getAttribute("data-t") }); } });
   sel.addEventListener("change", function () { send({ type: "setCat", value: sel.value }); });
   q.addEventListener("input", function () { clearTimeout(qt); qt = setTimeout(function () { send({ type: "setQ", value: q.value }); }, 120); });
@@ -98,19 +99,21 @@
   function tick() {
     var hb = hdrBottom(); OFFSET = hb > 0 ? hb : OFF0;
     var pr = ph.getBoundingClientRect(), fr = f.getBoundingClientRect(), bh = bar.offsetHeight, wide = window.innerWidth >= 992;
+    var nar = wide && !!GEO && sidebar.children.length > 0, barW = nar ? Math.max(300, GEO.l - 16) : 0;     // רחב: הסרגל רק מעל עמודת הרשימה, התפריט בצד מתחיל בגובה הסרגל
+    if (nar !== narOn || barW !== barWOn) { narOn = nar; barWOn = barW; bar.classList.toggle("nar", nar); bar.style.width = nar ? barW + "px" : ""; }
     var pin = wide && pr.top < OFFSET && fr.bottom - bh - 60 > OFFSET;
     if (pin) {
-      if (!pinned) { ph.style.height = bh + "px"; bar.style.position = "fixed"; bar.style.top = OFFSET + "px"; bar.style.zIndex = "99"; bar.className = "pin"; pinned = true; lastL = lastW = -1; }
+      if (!pinned) { ph.style.height = bh + "px"; bar.style.position = "fixed"; bar.style.top = OFFSET + "px"; bar.style.zIndex = "99"; bar.className = "pin" + (nar ? " nar" : ""); pinned = true; lastL = lastW = -1; }
       bar.style.top = OFFSET + "px";
-      var l = Math.round(fr.left), w = Math.round(fr.width);
+      var l = Math.round(fr.left), w = nar ? barW : Math.round(fr.width);
       if (l !== lastL || w !== lastW) { bar.style.left = l + "px"; bar.style.width = w + "px"; lastL = l; lastW = w; }
     } else if (pinned) {
-      ph.style.height = ""; bar.style.position = ""; bar.style.top = ""; bar.style.left = ""; bar.style.width = ""; bar.style.zIndex = ""; bar.className = ""; pinned = false;
+      ph.style.height = ""; bar.style.position = ""; bar.style.top = ""; bar.style.left = ""; bar.style.zIndex = ""; bar.className = nar ? "nar" : ""; if (!nar) bar.style.width = ""; pinned = false;
     }
     var ext = wide && !!GEO && sidebar.children.length > 0;     // התפריט בצד נשאר קבוע בעמוד האב (כמו הסרגל העליון) - באותו פריים של הגלילה, בלי מעבר הודעות
     if (ext !== extOn) { extOn = ext; send({ type: "ext", on: ext }); sidebar.style.display = ext ? "block" : "none"; }
     if (ext) {
-      var pinTop = OFFSET + bh + 10, nat = fr.top + GEO.t, lb = fr.top + GEO.t + GEO.h, mh = Math.max(160, window.innerHeight - pinTop - 12);
+      var pinTop = OFFSET + 10, nat = fr.top + GEO.t, lb = fr.top + GEO.t + GEO.h, mh = Math.max(160, window.innerHeight - pinTop - 12);
       if (sidebar.style.maxHeight !== mh + "px") { sidebar.style.maxHeight = mh + "px"; }
       var tp = Math.round(Math.min(Math.max(nat, pinTop), lb - sidebar.offsetHeight)), lf = Math.round(fr.left + GEO.l), wd = GEO.w;
       if (tp !== sT) { sidebar.style.top = tp + "px"; sT = tp; }

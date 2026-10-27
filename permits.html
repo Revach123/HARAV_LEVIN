@@ -39,7 +39,7 @@
   .it{display:flex;justify-content:space-between;align-items:center;gap:.8rem;break-inside:avoid;background:#fff;border:1px solid var(--border);border-radius:12px;padding:.55rem .8rem;margin-bottom:.6rem;box-shadow:0 1px 2px rgba(0,0,0,.04)}
   .nm{flex:1 1 0;min-width:0;font-size:20px;color:#2f6270;overflow-wrap:anywhere;text-align:start}.nm .p{display:block;font-size:14px;color:var(--muted)}
   .act{flex:none;display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:flex-end;gap:.5rem .9rem}
-  .grp{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:13px;color:var(--navy);font-weight:700;min-width:44px}
+  .grp{display:flex;flex-direction:row;align-items:center;gap:6px;font-size:13px;color:var(--navy);font-weight:700;min-width:44px}
   .pair{display:flex;gap:5px}
   a.ic{display:inline-flex;width:34px;height:32px;align-items:center;justify-content:center;border:1px solid var(--accent-border);border-radius:6px;background:#fff;color:var(--accent-dark);text-decoration:none}
   a.ic:hover{background:var(--accent-bg)}
@@ -62,7 +62,6 @@
 <div class="wrap">
   <header class="hero"><h1>שטרות היתר עיסקא</h1><div class="bc" id="bc">דף הבית « שטרות היתר עיסקא</div></header>
   <div class="stick" id="stick">
-    <div class="tabs" id="tabs" role="tablist"><button role="tab" data-t="private">שטרות היתר עיסקא פרטי</button><button role="tab" data-t="general">שטרות היתר עיסקא כללי</button></div>
     <div class="bar"><input type="search" id="q" placeholder="חיפוש חברה…" autocomplete="off" aria-label="חיפוש חברה"><span class="cnt" id="cnt"></span></div>
     <h2 class="curcat" id="curcat" hidden></h2>
   </div>
@@ -113,9 +112,9 @@ const lnk = (id, ic, label, dl) => `<a class="ic" href="${API_BASE}/api/permit-d
 const pair = id => `<div class="pair">${lnk(id, ICON_VIEW, "צפייה")}${lnk(id, ICON_DL, "הורדה", 1)}</div>`;
 
 // כמו display.html: שמות החברות והשיוך ללשונית (פרטי / כללי) מגיעים מרשימות /api/lists, והמסמכים לפי השיוך שבניהול
-const TABS = { private: "שטרות היתר עיסקא פרטי", general: "שטרות היתר עיסקא כללי" };
+const TABS = {};          // רשימה אחת (כללי + פרטי): אין לשוניות
 const LISTS = {};
-let LINKS = null, TAB = "private";
+let LINKS = null, TAB = "all";
 const qnorm = s => String(s || "").replace(/["'׳״]/g, "");
 async function loadTab(level) {
   if (LISTS[level]) return LISTS[level];
@@ -132,43 +131,52 @@ async function loadTab(level) {
     if ((b.permit_name || b._registrar) === "מסלול הלכה") continue;
     const l = linkOf(b.chp_number, b.permit_name) || {};
     const gen = level === "general";
-    const row = { name: b.permit_name || b._registrar || "—", doc: l[level] || "", priv: gen ? (l.private || "") : "", hasPriv: gen && (b.has_private_permit === "כן" || !!l.private), specials: l.specials || [], hay: `${b.permit_name || ""} ${b._registrar || ""} ${b.chp_number || ""}`.toLowerCase() };
+    const row = { key: String(b.chp_number || "").trim() || b.permit_name || b._registrar || "", name: b.permit_name || b._registrar || "—", doc: l[level] || "", priv: gen ? (l.private || "") : "", hasPriv: gen && (b.has_private_permit === "כן" || !!l.private), specials: l.specials || [], hay: `${b.permit_name || ""} ${b._registrar || ""} ${b.chp_number || ""}`.toLowerCase() };
     if (!row.doc && !row.priv && !row.specials.length) continue;          // רק חברה עם שטר משויך
     for (const cat of cats) rows.push({ ...row, cat });
   }
   return LISTS[level] = rows;
 }
+// רשימה אחת: בסיס = רשימת הכללי (עם הפרטי שלה אם יש), ובנוסף חברות שיש להן רק שטר פרטי; מי שיש לו רק סוג אחד מקבל כיתוב "כללי" / "פרטי"
+async function loadAll() {
+  if (LISTS.all) return LISTS.all;
+  const [gen, prv] = await Promise.all([loadTab("general"), loadTab("private")]);
+  const rows = gen.map(r => ({ ...r, gdoc: r.doc, pdoc: r.priv }));
+  const have = new Set(rows.map(r => r.key + "|" + r.cat));
+  for (const r of prv) if (!have.has(r.key + "|" + r.cat)) rows.push({ ...r, gdoc: "", pdoc: r.doc, hasPriv: false });
+  return LISTS.all = rows;
+}
 async function draw() {
-  document.querySelectorAll("#tabs button").forEach(t => t.classList.toggle("on", t.dataset.t === TAB));
-  document.getElementById("bc").textContent = "דף הבית « " + TABS[TAB];
-  document.title = TABS[TAB];
+  document.getElementById("bc").textContent = "דף הבית « שטרות היתר עיסקא";
   const list = document.getElementById("list");
   let ROWS;
-  try { ROWS = await loadTab(TAB); } catch (e) { list.innerHTML = '<div class="state">הרשימה לא זמינה כרגע. נסו שוב מאוחר יותר.</div>'; return; }
+  try { ROWS = await loadAll(); } catch (e) { list.innerHTML = '<div class="state">הרשימה לא זמינה כרגע. נסו שוב מאוחר יותר.</div>'; return; }
   const q = Q.trim().toLowerCase(), cats = new Map();
   for (const r of ROWS) cats.set(r.cat, (cats.get(r.cat) || 0) + 1);
   if (CAT && !cats.has(CAT)) CAT = "";
   const names = [...cats.keys()].sort((a, b) => a.localeCompare(b, "he"));
   document.getElementById("side").innerHTML = `<button data-c=""${CAT ? "" : ' class="on"'}>כל הקטגוריות<small>${ROWS.length}</small></button>` + names.map(c => `<button data-c="${esc(c)}"${c === CAT ? ' class="on"' : ""}>${esc(c)}<small>${cats.get(c)}</small></button>`).join("");
   fitKey = ""; placeSide();
-  const rows = ROWS.filter(r => (!CAT || r.cat === CAT) && (!q || r.hay.includes(q)));
+  const qn = qnorm(q), words = qn.split(/\s+/).filter(Boolean);
+  // חיפוש מאות אחת: קודם מי ששמו מתחיל במה שהוקלד (המילה הראשונה), אחר כך מי שמילה אחרת בשמו מתחילה בכך, ואחר כך כל השאר
+  const score = r => { if (!qn) return 0; const n = qnorm(r.name).toLowerCase(); if (n.startsWith(qn)) return 0; const w = n.split(/[\s\-–,()]+/); return words.every(t => w.some(x => x.startsWith(t))) ? 1 : 2; };
+  const rows = ROWS.filter(r => (!CAT || r.cat === CAT) && (!qn || (r.hn || (r.hn = qnorm(r.hay))).includes(qn))).map(r => ({ ...r, sc: score(r) }));
   document.getElementById("cnt").textContent = rows.length + " חברות";
   const cc = document.getElementById("curcat"); cc.hidden = !CAT; cc.textContent = CAT;          // כותרת הקטגוריה הנבחרת: קבועה בראש הדף
   const by = new Map();
   for (const r of rows) { if (!by.has(r.cat)) by.set(r.cat, []); by.get(r.cat).push(r); }
-  const out = [...by.keys()].sort((a, b) => a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}<div class="items">${by.get(c).sort((x, y) => qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
-    const two = !!(r.doc && r.priv);          // שני מסמכים (ברשימת הכללי): כיתוב רק אז, כדי להבדיל ביניהם
-    const main = r.doc ? `<div class="grp">${two ? "כללי " : ""}${pair(r.doc)}</div>` : "";
-    const side = r.hasPriv ? `<div class="grp">${r.priv ? (two ? "פרטי " : "") + pair(r.priv) : '<span class="none">יש פרטי</span>'}</div>` : "";
+  const bestSc = c => Math.min(...by.get(c).map(r => r.sc));
+  const out = [...by.keys()].sort((a, b) => (qn ? bestSc(a) - bestSc(b) : 0) || a.localeCompare(b, "he")).map(c => `${CAT ? "" : `<h2 class="cat">${esc(c)}<small>${by.get(c).length}</small></h2>`}<div class="items">${by.get(c).sort((x, y) => x.sc - y.sc || qnorm(x.name).localeCompare(qnorm(y.name), "he")).map(r => {
+    const main = r.gdoc ? `<div class="grp">כללי ${pair(r.gdoc)}</div>` : "";          // תמיד עם כיתוב: כללי / פרטי
+    const side = r.pdoc ? `<div class="grp">פרטי ${pair(r.pdoc)}</div>` : r.hasPriv ? '<div class="grp"><span class="none">יש פרטי</span></div>' : "";
     const sp = r.specials.map(x => `<div class="grp"><span>${esc(x.title)}</span> ${pair(x.id)}</div>`).join("");
     return `<div class="it"><div class="nm">${esc(r.name)}</div><div class="act">${main}${side}${sp}${main || side || sp ? "" : '<div class="grp none">—</div>'}</div></div>`;
   }).join("")}</div>`).join("");
   list.innerHTML = out || '<div class="state">לא נמצאו חברות</div>';
   if (AUTO) window.parent.postMessage({ source: "harav-levin", type: "permits-spec", tab: TAB, tabs: TABS, cat: CAT, cats: names.map(c => [c, cats.get(c)]), total: ROWS.length, count: rows.length }, "*");
 }
-function setHash() { location.hash = `t=${TAB}` + (CAT ? "&cat=" + encodeURIComponent(CAT) : ""); }
+function setHash() { location.hash = (CAT ? "cat=" + encodeURIComponent(CAT) : ""); }
 document.getElementById("q").addEventListener("input", e => { Q = e.target.value; draw(); });
-document.getElementById("tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; TAB = b.dataset.t; CAT = ""; setHash(); draw(); });
 document.getElementById("side").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; CAT = b.dataset.c; setHash(); draw(); });
 // ── הטמעה באתר (permits-embed.js): דיווח גובה לעמוד האב, ושליטה מהסרגל הקבוע שבעמוד האב (לשונית / חיפוש / קטגוריה) ──
 if (AUTO) {
@@ -178,8 +186,7 @@ if (AUTO) {
   new ResizeObserver(report).observe(document.body);
   addEventListener("message", e => {
     const d = e.data; if (!d || d.source !== "harav-parent") return;
-    if (d.type === "setTab" && TABS[d.value]) { TAB = d.value; CAT = ""; setHash(); draw(); }
-    else if (d.type === "setCat") { CAT = String(d.value || ""); setHash(); draw(); }
+    if (d.type === "setCat") { CAT = String(d.value || ""); setHash(); draw(); }
     else if (d.type === "setQ") { Q = String(d.value || ""); draw(); }
     else if (d.type === "ext") { document.body.classList.toggle("ext", !!d.on); report(); }
   });
@@ -201,8 +208,8 @@ addEventListener("resize", () => { fitKey = ""; placeSide(); });
   sh(); addEventListener("resize", sh); setTimeout(placeSide, 0); if (window.ResizeObserver) new ResizeObserver(sh).observe(document.getElementById("stick"));
 }
 {
-  const t = /t=(private|general)/.exec(location.hash), m = /cat=([^&]+)/.exec(location.hash);
-  if (t) TAB = t[1]; if (m) CAT = decodeURIComponent(m[1]);
+  const m = /cat=([^&]+)/.exec(location.hash);
+  if (m) CAT = decodeURIComponent(m[1]);
   draw();
 }
 </script>
