@@ -2760,7 +2760,7 @@
   const loadXlsx = () => window.XLSX ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = XLSX_URL; sc.onload = () => ok(); sc.onerror = () => no(new Error("טעינת קורא האקסל נכשלה")); document.head.appendChild(sc); });
   const XL_FIELDS = [["first", "שם פרטי", /פרטי|first/i], ["last", "שם משפחה", /משפחה|last|family/i], ["full", "שם מלא (יפוצל לפרטי ומשפחה)", /^(שם|שם מלא|שם ומשפחה|name|full)/i],
     ["phone", "טלפון", /נייד|טלפון|פלאפון|סלולר|phone|tel|mobile/i], ["phone2", "טלפון נוסף", /נוסף|בית|phone2|tel2/i], ["email", 'דוא"ל', /מייל|דוא|אימייל|mail/i], ["id", "ת.ז.", /ת\.?ז|זהות|\bid\b/i],
-    ["companies", "חברות", /חברות|חברה|companies/i], ["address", "כתובת", /כתובת|עיר|address|city/i], ["date", "תאריך", /תאריך|date/i], ["note", "הערה", /הערה|הערות|note/i]];
+    ["companies", "חברות", /חברות|חברה|companies/i], ["address", "כתובת", /כתובת|רחוב|address|street/i], ["city", "עיר", /עיר|city|יישוב|ישוב/i], ["date", "תאריך", /תאריך|date/i], ["note", "הערה", /הערה|הערות|note/i]];
   function jXl() {
     const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls,.csv,.tsv,.txt";
     inp.onchange = async () => {
@@ -2787,11 +2787,11 @@
       const build = () => data.map(r => {
         let first = val(r, "first"), last = val(r, "last"); const full = val(r, "full");
         if (full && !first && !last) { const w = full.split(/\s+/); first = w.shift() || ""; last = w.join(" "); }
-        return { first, last, phone: val(r, "phone"), phone2: val(r, "phone2"), email: val(r, "email"), id: val(r, "id"), companies: val(r, "companies"), address: val(r, "address"), date: val(r, "date"), note: val(r, "note") };
+        return { first, last, phone: val(r, "phone"), phone2: val(r, "phone2"), email: val(r, "email"), id: val(r, "id"), companies: val(r, "companies"), address: [val(r, "address"), val(r, "city")].filter(Boolean).join(", "), date: val(r, "date"), note: val(r, "note") };
       }).filter(x => x.first || x.last || x.phone || x.email || x.id);
       const prev = () => { const b = build().slice(0, 3); $("pd-xl-prev").innerHTML = b.length ? "תצוגה מקדימה: " + b.map(x => E([x.first, x.last].filter(Boolean).join(" ") + " · " + (x.phone || x.email || x.id || ""))).join(" | ") : '<span style="color:#c0392b">לא זוהו שורות עם פרטים לפי המיפוי</span>'; $("pd-xl-go").disabled = true; };
       document.querySelectorAll("#pd-jxl select").forEach(el => el.onchange = prev); prev();
-      const run = async dry => { const rows = build(), label = $("pd-xl-label").value.trim(), t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 300) { const r = await api("/joiners-import", "POST", { kind: "mapped", dry, label, rows: rows.slice(i, i + 300) }); for (const k in t) t[k] += r[k]; } return { t, n: rows.length }; };
+      const run = async dry => { const rows = build(), label = $("pd-xl-label").value.trim(), t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 200) { const r = await api("/joiners-import", "POST", { kind: "mapped", dry, label, rows: rows.slice(i, i + 200) }); $("pd-xl-res") && ($("pd-xl-res").textContent = (dry ? "בודק… " : "מייבא… ") + Math.min(i + 200, rows.length) + " / " + rows.length); for (const k in t) t[k] += r[k]; } return { t, n: rows.length }; };
       $("pd-xl-chk").onclick = async () => {
         $("pd-xl-res").textContent = "בודק…";
         try { const { t, n } = await run(true); $("pd-xl-res").innerHTML = `מתוך <b>${n}</b> שורות עם פרטים: חדשים (יתווספו) <b>${t.added}</b> · כבר קיימים ברשימה (לא ישונו) ${t.existing} · דולגו ${t.skipped}`; $("pd-xl-go").disabled = !t.added; $("pd-xl-go").textContent = `ייבוא ${t.added} חדשים`; }
