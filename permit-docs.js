@@ -2655,7 +2655,7 @@
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
         <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
-        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button></div>
+        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button> <button class="pd-btn" onclick="PD._jXl()">📥 ייבוא רשימה (אקסל / CSV)</button></div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
         <tr class="pd-cfrow">${J_COLS.map(c => c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => String(jX(r).src || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
@@ -2754,6 +2754,56 @@
     if (rows.length < 2) return [];
     const head = rows[0].map(h => h.trim().toLowerCase().replace(/[_\-\s]+/g, " "));
     return rows.slice(1).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || "").trim()])));
+  }
+  // ייבוא רשימת מצטרפים חיצונית (למשל מקהילה): אקסל / CSV בכל מבנה. בוחרים לכל שדה את העמודה (ברירת המחדל לפי שמות העמודות), ובודקים לפני הייבוא כמה חדשים וכמה כבר קיימים
+  const XLSX_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+  const loadXlsx = () => window.XLSX ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = XLSX_URL; sc.onload = () => ok(); sc.onerror = () => no(new Error("טעינת קורא האקסל נכשלה")); document.head.appendChild(sc); });
+  const XL_FIELDS = [["first", "שם פרטי", /פרטי|first/i], ["last", "שם משפחה", /משפחה|last|family/i], ["full", "שם מלא (יפוצל לפרטי ומשפחה)", /^(שם|שם מלא|שם ומשפחה|name|full)/i],
+    ["phone", "טלפון", /נייד|טלפון|פלאפון|סלולר|phone|tel|mobile/i], ["phone2", "טלפון נוסף", /נוסף|בית|phone2|tel2/i], ["email", 'דוא"ל', /מייל|דוא|אימייל|mail/i], ["id", "ת.ז.", /ת\.?ז|זהות|\bid\b/i],
+    ["companies", "חברות", /חברות|חברה|companies/i], ["address", "כתובת", /כתובת|עיר|address|city/i], ["date", "תאריך", /תאריך|date/i], ["note", "הערה", /הערה|הערות|note/i]];
+  function jXl() {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.xls,.csv,.tsv,.txt";
+    inp.onchange = async () => {
+      const file = inp.files[0]; if (!file) return;
+      let m;
+      try {
+        if (/\.(xlsx|xls)$/i.test(file.name)) { await loadXlsx(); const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true }); m = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "", raw: false }); }
+        else { const rows = parseCsv(await file.text()); const hs = rows.length ? Object.keys(rows[0]) : []; m = hs.length ? [hs, ...rows.map(r => hs.map(h => r[h]))] : []; }
+      } catch (e) { alert("קריאת הקובץ נכשלה: " + e.message); return; }
+      m = m.filter(r => r.some(c => String(c ?? "").trim())); if (m.length < 2) { alert("לא נמצאו שורות בקובץ."); return; }
+      const heads = m[0].map(h => String(h ?? "").trim()), data = m.slice(1), used = new Set(), guess = {};
+      for (const [k, , re] of XL_FIELDS) { const i = heads.findIndex((h, j) => !used.has(j) && re.test(h)); if (i >= 0) { guess[k] = i; used.add(i); } }
+      const sel = k => `<select id="pd-xl-${k}" style="min-width:150px"><option value="">— בלי —</option>${heads.map((h, i) => `<option value="${i}" ${guess[k] === i ? "selected" : ""}>${E(h || "עמודה " + (i + 1))}</option>`).join("")}</select>`;
+      overlay("pd-jxl", `<div class="pd-head"><b>ייבוא רשימה מאקסל / CSV</b><button class="pd-x" onclick="PD._close('pd-jxl')">✕</button></div>
+        <div style="padding:14px;line-height:1.9;max-height:78vh;overflow:auto">
+          <div class="pd-sub">${E(file.name)}: ${data.length} שורות. לכל שדה בחרו את העמודה המתאימה (מאותרת אוטומטית לפי שם העמודה). צריך לפחות שם, טלפון, דוא"ל או ת.ז.</div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;margin-top:8px">${XL_FIELDS.map(([k, l]) => `<span>${E(l)}</span>${sel(k)}`).join("")}
+            <span>מקור / קהילה</span><input class="pd-in" id="pd-xl-label" value="${E(file.name.replace(/\.[^.]+$/, ""))}" style="max-width:260px"></div>
+          <div class="pd-sub" id="pd-xl-prev" style="margin-top:8px"></div>
+          <div id="pd-xl-res" style="margin-top:8px"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" id="pd-xl-chk">בדיקה (בלי לייבא)</button><button class="pd-btn primary" id="pd-xl-go" disabled>ייבוא</button></div>
+        </div>`);
+      const val = (r, k) => { const i = $("pd-xl-" + k).value; return i === "" ? "" : String(r[+i] ?? "").trim(); };
+      const build = () => data.map(r => {
+        let first = val(r, "first"), last = val(r, "last"); const full = val(r, "full");
+        if (full && !first && !last) { const w = full.split(/\s+/); first = w.shift() || ""; last = w.join(" "); }
+        return { first, last, phone: val(r, "phone"), phone2: val(r, "phone2"), email: val(r, "email"), id: val(r, "id"), companies: val(r, "companies"), address: val(r, "address"), date: val(r, "date"), note: val(r, "note") };
+      }).filter(x => x.first || x.last || x.phone || x.email || x.id);
+      const prev = () => { const b = build().slice(0, 3); $("pd-xl-prev").innerHTML = b.length ? "תצוגה מקדימה: " + b.map(x => E([x.first, x.last].filter(Boolean).join(" ") + " · " + (x.phone || x.email || x.id || ""))).join(" | ") : '<span style="color:#c0392b">לא זוהו שורות עם פרטים לפי המיפוי</span>'; $("pd-xl-go").disabled = true; };
+      document.querySelectorAll("#pd-jxl select").forEach(el => el.onchange = prev); prev();
+      const run = async dry => { const rows = build(), label = $("pd-xl-label").value.trim(), t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 300) { const r = await api("/joiners-import", "POST", { kind: "mapped", dry, label, rows: rows.slice(i, i + 300) }); for (const k in t) t[k] += r[k]; } return { t, n: rows.length }; };
+      $("pd-xl-chk").onclick = async () => {
+        $("pd-xl-res").textContent = "בודק…";
+        try { const { t, n } = await run(true); $("pd-xl-res").innerHTML = `מתוך <b>${n}</b> שורות עם פרטים: חדשים (יתווספו) <b>${t.added}</b> · כבר קיימים ברשימה (לא ישונו) ${t.existing} · דולגו ${t.skipped}`; $("pd-xl-go").disabled = !t.added; $("pd-xl-go").textContent = `ייבוא ${t.added} חדשים`; }
+        catch (e) { $("pd-xl-res").innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span>`; }
+      };
+      $("pd-xl-go").onclick = async () => {
+        $("pd-xl-go").disabled = true; $("pd-xl-go").textContent = "מייבא…";
+        try { const { t } = await run(false); close("pd-jxl"); J.rows = null; J.cl = null; ndShow(); alert(`יובאו ${t.added} מצטרפים חדשים (כבר היו ${t.existing}).`); }
+        catch (e) { $("pd-xl-go").disabled = false; $("pd-xl-go").textContent = "נסה שוב"; $("pd-xl-res").innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span>`; }
+      };
+    };
+    inp.click();
   }
   function jImp() {
     const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".csv,.tsv,.txt,text/csv";
@@ -3313,7 +3363,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
