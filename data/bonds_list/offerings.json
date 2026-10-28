@@ -359,14 +359,14 @@
    "chp_number": "514481233"
   },
   {
-   "id": 10355,
-   "maya_report_id": 1774331,
+   "id": 10396,
+   "maya_report_id": 1778358,
    "company_name": "מיכל פקדונות",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": 1,
+   "draft_no": 2,
    "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1774331",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1778358",
    "link_trust_indenture": null,
    "link_presentation": null,
    "securities": [
@@ -567,6 +567,29 @@
     }
    ],
    "chp_number": ""
+  },
+  {
+   "chp_number": "517207239",
+   "company_name": "מיכל פקדונות",
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10355,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1774331",
+   "link_trust_indenture": null,
+   "maya_report_id": 1774331,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il",
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-28"
   }
  ],
  "open": [

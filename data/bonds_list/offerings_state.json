@@ -708,6 +708,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-28"
   },
+  "U10396": {
+   "data": {
+    "chp_number": "517207239",
+    "company_name": "מיכל פקדונות",
+    "draft_no": 2,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10396,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1778358",
+    "link_trust_indenture": null,
+    "maya_report_id": 1778358,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-28"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
