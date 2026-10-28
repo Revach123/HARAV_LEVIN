@@ -49,6 +49,7 @@ export async function onRequestPost({ request, env }) {
   if (b.kind === "mapped") {          // רשימה חיצונית (למשל מקהילה, מאקסל): עמודות כבר ממופות בדפדפן. כפילות לפי ת.ז. (גם מול מצטרפים קיימים מכל מקור), ובלעדיה לפי טלפון / מייל / שם
     const label = clean(String(b.label || "").trim(), 80) || "רשימה חיצונית";
     try {
+      const items = [], seen = new Set(), seenIh = new Set();
       for (const r of b.rows) {
         const p = { first: clean(g(r, "first"), 60), last: clean(g(r, "last"), 60), phone: clean(g(r, "phone"), 40), email: clean(g(r, "email"), 120), id: clean(g(r, "id"), 20), ip: "",
           companies: clean(g(r, "companies"), 4000), all: "", pdf: "", src: "excel:" + label };
@@ -57,10 +58,21 @@ export async function onRequestPost({ request, env }) {
         if (!p.first && !p.last && !p.phone && !p.email && !p.id) { skipped++; continue; }
         const digits = p.id.replace(/\D/g, ""), ph = p.phone.replace(/\D/g, ""), base = digits || ph || p.email.toLowerCase() || (p.first + " " + p.last).trim();
         const rid = await sha1_16("xl:" + base), ih = digits ? await identHash(env, digits) : "";
-        if (await env.DB.prepare("SELECT id FROM joiners WHERE id = ?").bind(rid).first() || (ih && await env.DB.prepare("SELECT id FROM joiners WHERE ident_hash = ?").bind(ih).first())) { existing++; continue; }
-        const when = parseDate(g(r, "date")) || new Date().toISOString().replace("T", " ").slice(0, 19);
-        if (!b.dry) await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)").bind(rid, when, ih, await encryptPii(key, rid, p)).run();
-        added++;
+        if (seen.has(rid) || (ih && seenIh.has(ih))) { existing++; continue; }          // כפילות בתוך הקובץ עצמו
+        seen.add(rid); if (ih) seenIh.add(ih);
+        items.push({ rid, ih, p, when: parseDate(g(r, "date")) || new Date().toISOString().replace("T", " ").slice(0, 19) });
+      }
+      // בדיקת קיימים בשאילתות מרוכזות (עד 90 פרמטרים בשאילתה) במקום שאילתה לכל שורה
+      const have = new Set(), haveIh = new Set(), chunk = (arr, n) => Array.from({ length: Math.ceil(arr.length / n) }, (_, k) => arr.slice(k * n, k * n + n));
+      await Promise.all([
+        ...chunk(items.map(x => x.rid), 90).map(async c => { for (const row of (await env.DB.prepare(`SELECT id FROM joiners WHERE id IN (${c.map(() => "?").join(",")})`).bind(...c).all()).results ?? []) have.add(row.id); }),
+        ...chunk([...new Set(items.map(x => x.ih).filter(Boolean))], 90).map(async c => { for (const row of (await env.DB.prepare(`SELECT ident_hash FROM joiners WHERE ident_hash IN (${c.map(() => "?").join(",")})`).bind(...c).all()).results ?? []) haveIh.add(row.ident_hash); }),
+      ]);
+      const fresh = items.filter(x => !have.has(x.rid) && !(x.ih && haveIh.has(x.ih)));
+      existing += items.length - fresh.length; added = fresh.length;
+      if (!b.dry) for (const c of chunk(fresh, 40)) {          // כתיבה: קריאה אחת למנה
+        const stmts = []; for (const x of c) stmts.push(env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)").bind(x.rid, x.when, x.ih, await encryptPii(key, x.rid, x.p)));
+        await env.DB.batch(stmts);
       }
       return out({ ok: true, dry: !!b.dry, total: b.rows.length, added, existing, skipped });
     } catch { return out({ error: "שגיאה בייבוא" }, 500); }
