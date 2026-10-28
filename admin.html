@@ -1821,7 +1821,7 @@ function gfBodyHtml() {
         return `<tr data-i="${i}" class="${del ? "gf-del" : r.mark === "new" ? "gf-new" : ""}"><td style="color:var(--muted);font-size:12px">${++n}</td>${GF_FIELDS.map(([k]) => `<td><input type="text" data-k="${k}" value="${escHtml(r[k])}" ${del && k !== "note" ? "readonly" : ""} ${k === "type" ? 'list="gf-types"' : k === "company" ? 'list="gf-cos"' : ""} oninput="gfSet(${i},'${k}',this.value)" ${k === "type" || k === "company" || k === "number" ? `onchange="gfResort(${i},'${k}')"` : ""} ${k === "number" ? 'dir="ltr"' : ""}></td>`).join("")}
         <td style="text-align:center;white-space:nowrap">${del
           ? `<button class="gf-b" title="החזרת המסלול לרשימה" onclick="gfMark(${i},'')">↩ שחזור</button><button class="gf-b" title="מחיקה סופית מהרשימה" style="color:var(--red)" onclick="gfDel(${i},1)">🗑 סופית</button>`
-          : `${r.mark === "new" ? `<button class="gf-b" title="ביטול הסימון הצהוב (מסלול חדש)" onclick="gfMark(${i},'')">✓ לא חדש</button>` : ""}<button class="gf-b" title="סימון כהוסר (רקע אדום וקו חוצה)" style="color:var(--red)" onclick="gfDel(${i})">✕</button>`}</td></tr>`; }).join("") +
+          : `${r.mark === "new" ? `<button class="gf-b" title="ביטול הסימון הצהוב (מסלול חדש)" onclick="gfMark(${i},'')">✓ לא חדש</button>` : `<button class="gf-b" title="סימון ידני כמסלול חדש (רקע צהוב)" onclick="gfMark(${i},'new')">★ סמן כחדש</button>`}<button class="gf-b" title="סימון כהוסר (רקע אדום וקו חוצה)" style="color:var(--red)" onclick="gfDel(${i})">✕</button>`}</td></tr>`; }).join("") +
       `<tr class="gf-add"><td colspan="${GF_FIELDS.length + 2}"><button class="gf-b" onclick="gfAdd(${ti})">➕ הוספת שורה ל${escHtml(t || "סוג החדש")}</button></td></tr>`;
   }).join("");
 }
