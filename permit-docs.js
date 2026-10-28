@@ -631,7 +631,7 @@
     o.bufP = file.arrayBuffer().then(b => (o.buf = b));
     o.promise = UP_CHAIN = UP_CHAIN.then(async () => {
       try { const buf = await o.bufP; o.sha = await sha256(buf); const ex = await api("/permit-docs?sha=" + o.sha); if (ex.exists) o.dup = ex.doc; } catch (e) { o.err = e.message; }
-      if (!o.dup) { try { const r = await extractText(o.buf, 15); o.text = r.text; o.pages = r.pages; } catch (e) { o.textErr = e.message; } }
+      { try { const r = await extractText(o.buf, 15); o.text = r.text; o.pages = r.pages; } catch (e) { o.textErr = e.message; } }          // גם לקובץ שכבר קיים (כדי שיוצעו חברות לשיוך)
       o.done = true;
     }).catch(() => { o.done = true; });
     return o;
@@ -650,7 +650,7 @@
     o.promise.then(() => {
       if (U.cur !== c) return;
       c.analyzing = false; c.sha = o.sha;
-      if (o.dup) { upDuplicate(o.dup); return; }
+      c.dupDoc = o.dup || null;          // קובץ שכבר קיים: ממשיכים לבחירת חברות; השמירה מוסיפה את השיוך לקובץ הקיים (לא נשאר בלי אפשרות לשייך)
       c.text = o.text || ""; c.pages = o.pages; c.textErr = o.textErr;
       upReview(true);
       findBonds(c.text).then(b => { if (U.cur === c && b.length) { c.bonds = b; c.bondSel = new Set(b.map(x => x.row.id)); upReview(false); } }).catch(() => {});
@@ -688,6 +688,7 @@
         <div class="pd-view"><iframe src="${c.url}#toolbar=0&navpanes=0&view=FitH" title="תצוגה מקדימה"></iframe></div>
         <div class="pd-side">
           <div class="pd-sub">${E(c.file.name)} · ${fmtSize(c.file.size)}${c.pages ? " · " + c.pages + " עמ'" : ""}${U.queue.length ? " · נותרו בתור: " + U.queue.length : ""}</div>
+          ${c.dupDoc ? `<div class="pd-warnbox">⚠ קובץ זהה כבר קיים במאגר (${E(c.dupDoc.original_name || c.dupDoc.id)}).${dupRoleHtml(c.dupDoc)}<div class="pd-sub">אפשר לבחור חברות ולשמור: השיוך יתווסף לקובץ הקיים.</div></div>` : ""}
           ${ocrBox(c, noText)}
           ${c.analyzing ? `<div class="pd-warnbox" style="background:#eef3fb;border-color:#b9c9e6;color:#1a3a5c">⏳ מנתח את המסמך ברקע (טקסט, ח.פ., הצעות שיוך). אפשר כבר לבחור חברה, סיווג ולשמור.</div>` : ""}
           <h4>שיוך לחברה ${sug.shared ? '<span class="pd-tag">מסמך משותף: כמה חברות</span>' : ""}${sug.doubt ? '<span class="pd-tag warn">יש ספק: כמה התאמות לפי שם</span>' : ""}</h4>
@@ -1030,9 +1031,23 @@
     } catch (e) { const el = $("pd-up-err"); if (el) el.textContent = "השמירה נכשלה: " + e.message; }
   }
   // שמירה ברקע: לחיצה על "שמירה" עוברת מיד לקובץ הבא; ההעלאה לאתר ממשיכה בתור, והמצב מוצג בראש החלון
+  // קישור מיד גם לרשימה (פרטי / כללי), לא רק שיוך לחברה: לפי סוג המסמך, לכל חברה שנבחרה שצריכה את הסוג הזה והמקום אצלה פנוי.
+  // שטר קיים באותו מקום לא מוחלף בשקט (נשאר כמועמד לבדיקה, כמו קודם)
+  function autoSlots(c) {
+    const want = c.type === "both" ? ["private", "general"] : c.type === "private" || c.type === "general" ? [c.type] : [];
+    if (!want.length) return null;
+    const out = {};
+    for (const id of c.sel) {
+      const b = bizById(id); if (!b) continue;
+      const need = needOf(b);
+      const free = want.filter(t => need[t] && (!slotDoc(id, t) || (c.dupDoc && slotDoc(id, t).id === c.dupDoc.id)));
+      if (free.length) out[id] = free;
+    }
+    return Object.keys(out).length ? out : null;
+  }
   function upSave() {
     const c = U.cur; if (!c) return;
-    const job = { c, ids: [...c.sel], type: c.type, note: c.note || "", name: c.file.name, status: "run", msg: "" };
+    const job = { c, ids: [...c.sel], type: c.type, note: c.note || "", name: c.file.name, status: "run", msg: "", slots: autoSlots(c) };
     U.jobs.push(job); upBg();
     if (U.queue.length) upNext(); else { U.cur = { ...c, url: "" }; upPick("✓ כל הקבצים נשלחו לשמירה. השמירה ממשיכה ברקע."); }
     U.jchain = U.jchain.then(() => upSend(job));
@@ -1050,6 +1065,11 @@
         if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
         if (job.vis && typeof inlineUpdateMany === "function") await inlineUpdateMany(job.vis.id, { visibility: job.vis.value });
         if (job.slots) { await upLink(job, data.doc); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
+        if (job.ids && job.ids.length) {          // קובץ קיים, שיוך בלי קישור לרשימה (למשל סוג לא ידוע): מוסיפים את החברות לקובץ הקיים
+          const d0 = S.byId.get(data.doc.id) || data.doc, have = d0.business_ids || [], ids = [...new Set([...have, ...job.ids])];
+          if (ids.length !== have.length) replaceDoc((await api("/permit-docs/" + d0.id, "PUT", { business_ids: ids })).doc);
+          job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: נוסף לו השיוך"; S._fm = null; refresh(); upBg(); return;
+        }
         job.status = "dup"; job.msg = "קובץ זהה כבר קיים (" + (data.doc.original_name || data.doc.id) + ")"; upBg(); return;
       }
       if (!res.ok) throw new Error(data.error || res.statusText);
@@ -1062,10 +1082,10 @@
     } catch (e) { job.status = "fail"; job.msg = e.message; upBg(); if (!$("pd-up-bg")) alert("השמירה של " + job.name + " נכשלה: " + e.message); }
   }
   async function upLink(job, doc) {          // שיוך לסלוט (פרטי / כללי / שניהם); השטר הקיים באותו סלוט עובר למסמכים נוספים (השרת מחליף), וטוענים אותו מחדש
-    const bid = Object.keys(job.slots)[0], slots = job.slots[bid];
-    const displaced = slots.map(t => slotDoc(bid, t)).filter(d => d && d.id !== doc.id).map(d => d.id);
-    const ids = [...new Set([...(doc.business_ids || []), bid])];
-    const r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: ids, doc_type: job.type, slots: { [bid]: slots } });
+    const bids = Object.keys(job.slots);          // כמה חברות (העלאה רגילה עם בחירת כמה חברות) או אחת (חלון ההוספה)
+    const displaced = [...new Set(bids.flatMap(bid => job.slots[bid].map(t => slotDoc(bid, t)).filter(d => d && d.id !== doc.id).map(d => d.id)))];
+    const ids = [...new Set([...(doc.business_ids || []), ...(job.ids || []), ...bids])];
+    const r = await api("/permit-docs/" + doc.id, "PUT", { business_ids: ids, doc_type: job.type, slots: job.slots });
     replaceDoc(r.doc); if (displaced.length) await refetchDocs(displaced);
   }
   function upBg() {
@@ -1504,6 +1524,7 @@
       for (const g of grp.slice().reverse()) for (const o of g.others || []) { try { const r2 = await api("/permit-docs/" + o.id, "PUT", { slots: { [o.bid]: o.slot } }); replaceDoc(r2.doc); } catch { /* המסמך כבר לא קיים */ } }
     } catch (err) { alert("הביטול נכשל: " + err.message); return; }
     histSet(h.slice(0, from)); say("השיוך בוטל"); refresh();
+    if (isApproved("doc:" + e.id)) { try { await setReview("doc:" + e.id, ""); } catch { /* ללא */ } }          // אחרת המסמך נשאר "מאושר" ונעלם מרשימת הלא משויכים (למרות שנספר בלשונית)
     if ($("pd-un")) { Q.curId = ""; uqShow(); }
     undoRefresh();
   }
