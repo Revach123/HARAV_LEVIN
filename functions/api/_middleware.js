@@ -10,7 +10,11 @@ function edgeTtl(url) {
     return (t === "companies-private" || t === "companies-general") && url.searchParams.get("format") !== "csv" ? EDGE_TTL.lists : 0;
   }
   if (p === "/api/permit-docs-public") return EDGE_TTL.links;
-  if (/^\/api\/permit-docs-public\/[^/]+$/.test(p)) return EDGE_TTL.doc;
+  if (/^\/api\/permit-docs-public\/[^/]+$/.test(p)) {
+    // המקור המלא (הורדה: ?dl=1 / ?full=1) הוא קובץ גדול שמורידים לעיתים רחוקות - לא נשמר במטמון (הזרמה ללקוח איטי במקביל לשמירה גרמה להורדה חתוכה);
+    // הגרסה הקלה (צפייה) קטנה ונשמרת
+    return url.searchParams.get("dl") || url.searchParams.get("full") ? 0 : EDGE_TTL.doc;
+  }
   return 0;
 }
 
