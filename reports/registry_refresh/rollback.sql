@@ -1,2 +1,1 @@
-UPDATE businesses SET registry_status = '', biz_type = '', tase_has_agch = '' WHERE id = 'mvp75ozejpfu';
-UPDATE businesses SET registry_status = '', biz_type = '', tase_has_agch = '' WHERE id = 'mvpqvd1kaql7';
+UPDATE businesses SET registry_status = '', biz_type = '', tase_has_agch = '' WHERE id = 'mvr526nfhz8t';
