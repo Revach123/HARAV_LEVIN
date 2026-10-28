@@ -2366,11 +2366,50 @@
       return `<tr class="go" onclick="PD.openDoc('${x.id}')"><td>${E(x.name || x.id)}</td><td>${x.page}</td><td class="pd-nd-hl">${E(x.snippet || "").replace(/\[/g, "<mark>").replace(/\]/g, "</mark>")}</td><td class="pd-sub">${cos ? E(cos) : "לא משויך"}</td></tr>`; }).join("") + "</tbody></table>" : '<div class="pd-sub">לא נמצא בטקסט המסמכים</div>';
   }
   // ───────── לשונית חיפוש: בצד אחד חברות (מאגר + רשם, התאמה מקורבת), בצד השני חיפוש בתוך טקסט השטרות ─────────
-  function ndTabF() {
-    return `<div class="pd-f-cols"><div class="pd-f-col"><h4>חיפוש חברות (מהמאגר ומהרשם)</h4>
-        <input class="pd-in" id="pd-f-q" value="${E(ND.fq)}" placeholder="שם חברה / שותפות / עמותה, או ח.פ." oninput="PD._fQ(this.value)" autocomplete="off"><div id="pd-f-res" style="margin-top:8px"></div></div>
-      <div class="pd-f-col"><h4>חיפוש בתוך השטרות</h4>
-        <input class="pd-in" id="pd-nd-tq" value="${E(ND.tq)}" placeholder="חיפוש בטקסט של כל המסמכים (למשל: מסלול הלכה)" oninput="PD._ndTq(this.value)" autocomplete="off"><div id="pd-nd-tres" style="margin-top:8px"></div></div></div>`;
+  function ndTabF() {          // שדה אחד שמחפש בכל מקום, והתוצאות מחולקות לפי סוג: חברות, אג"ח, שטרות לפי שם, שטרות לפי תוכן
+    const sec = (id, ico, title, cnt) => `<div class="pd-f-sec"><h4 class="pd-f-h">${ico} ${title}${cnt ? ` <span class="pd-tabn" id="${cnt}"></span>` : ""}</h4><div id="${id}" style="margin-top:6px"></div></div>`;
+    return `<div class="pd-f-one">
+      <input class="pd-in" id="pd-f-q" value="${E(ND.fq)}" placeholder='חיפוש בכל האתר: שם חברה / ח.פ., אג"ח, שם קובץ של שטר, או טקסט בתוך השטרות (למשל: מסלול הלכה)' oninput="PD._fQ(this.value)" autocomplete="off" style="font-size:16px;padding:10px 12px">
+      <div class="pd-sub" id="pd-f-hint" style="margin:4px 0 10px">הקלד 2 תווים לפחות. התוצאות מחולקות לפי סוג.</div>
+      ${sec("pd-f-res", "🏢", "חברות (מהמאגר ומהרשם)")}
+      ${sec("pd-f-bonds", "📈", 'אג"ח', "pd-f-bn")}
+      ${sec("pd-f-docs", "📄", "שטרות לפי שם הקובץ / כותרת / הערה / שם החברה", "pd-f-dn")}
+      ${sec("pd-nd-tres", "🔎", "שטרות לפי תוכן (טקסט בתוך המסמך)")}
+    </div>`;
+  }
+  const normQ = x => String(x || "").replace(/["'׳״`]/g, "").toLowerCase();
+  const qWords = q => normQ(q).split(/\s+/).filter(Boolean);
+  function docsByNameSearch(q) {          // שטרות לפי שם הקובץ (וגם כותרת, הערה ושמות החברות המשויכות); כל המילים חייבות להופיע
+    const box = $("pd-f-docs"); if (!box) return;
+    const ws = qWords(q), n = $("pd-f-dn");
+    const rows = S.docs.filter(d => { const h = normQ(docHay(d)); return ws.every(w => h.includes(w)); }).slice(0, 40);
+    if (n) n.textContent = rows.length ? (rows.length >= 40 ? "40+" : rows.length) : "";
+    box.innerHTML = rows.length ? `<table class="pd-nd-tbl"><thead><tr><th>שם הקובץ</th><th>סיווג</th><th>שיוך</th></tr></thead><tbody>` + rows.map(d => {
+      const cos = (d.business_ids || []).map(b => displayName(bizById(b) || { permit_name: "?" })).join(", ");
+      return `<tr class="go" onclick="PD.openDoc('${d.id}')"><td>${E(d.original_name || d.id)}${d.source_title ? `<div class="pd-sub">${E(d.source_title)}</div>` : ""}</td><td><span class="pd-chip" style="background:${TCOL[d.doc_type] || TCOL.unknown}">${TL[d.doc_type] || ""}</span></td><td class="pd-sub">${cos ? E(cos) : "לא משויך"}</td></tr>`; }).join("") + "</tbody></table>"
+      : `<div class="pd-sub">לא נמצא שטר בשם הזה</div>`;
+  }
+  async function bondsSearch(q) {          // אג"ח: שם הנייר, סימול, מספר נייר, שם החברה המנפיקה או ח.פ.
+    const box = $("pd-f-bonds"); if (!box) return;
+    const seq = ND._bseq = (ND._bseq || 0) + 1, ws = qWords(q);
+    const all = await bondList(); if (seq !== ND._bseq || !$("pd-f-bonds")) return;
+    const rows = all.filter(r => { const h = normQ(`${r.name} ${r.symbol} ${r.id} ${r.company} ${r.chp}`); return ws.every(w => h.includes(w)); }).slice(0, 30);
+    const n = $("pd-f-bn"); if (n) n.textContent = rows.length ? (rows.length >= 30 ? "30+" : rows.length) : "";
+    const byChp = new Map(bizList().filter(b => digitsOf(b.chp_number)).map(b => [digitsOf(b.chp_number), b]));
+    box.innerHTML = rows.length ? rows.map(r => { const b = byChp.get(digitsOf(r.chp));
+      return `<div class="pd-reg"${b ? ` style="cursor:pointer" onclick="PD.openManage('${b.id}')" title="פתיחת החברה"` : ""}><div><b>${E(r.name)}</b> <span class="pd-sub">${E(r.symbol)} · נייר ${E(r.id)}</span></div><div class="pd-sub">${E(r.company)}${r.chp ? " · ח.פ. " + E(r.chp) : ""}</div></div>`; }).join("")
+      : `<div class="pd-sub">לא נמצאה אג"ח</div>`;
+  }
+  function unifiedSearch() {          // כל סוגי החיפוש מאותו שדה
+    const q = String(ND.fq || "").trim(); ND.tq = ND.fq;
+    const hint = $("pd-f-hint");
+    if (q.length < 2) {
+      for (const id of ["pd-f-res", "pd-f-bonds", "pd-f-docs", "pd-nd-tres"]) { const el = $(id); if (el) el.innerHTML = ""; }
+      for (const id of ["pd-f-bn", "pd-f-dn"]) { const el = $(id); if (el) el.textContent = ""; }
+      if (hint) hint.style.display = ""; return;
+    }
+    if (hint) hint.style.display = "none";
+    fSearch(); bondsSearch(q); docsByNameSearch(q); ndTextSearch(q);
   }
   const levelColor = { "פרטי": "#7a3b8f", "כללי": "#1e4570", "רק פרטי": "#b8860b" };
   function fCard(b, sc) {
@@ -2403,7 +2442,7 @@
   function searchPage(el) {          // דף "חיפוש" בראשי הניהול (במקום לשונית בדשבורד)
     if (!el) return;
     el.innerHTML = ndTabF();
-    const go = () => { if ($("pd-f-q")) { if (ND.fq.trim().length >= 2) fSearch(); if (ND.tq.trim().length >= 2) ndTextSearch(ND.tq); } };
+    const go = () => { if ($("pd-f-q") && ND.fq.trim().length >= 2) unifiedSearch(); };
     go(); (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(go);
   }
   function ndTabC() {
@@ -3229,7 +3268,7 @@
   .pd-mg-bempty{border:1.5px dashed #cfcac0;border-radius:6px;padding:7px;text-align:center;font-size:12px;color:#777}
   .pd-mg-bdoc{display:flex;gap:6px;align-items:center;margin-bottom:3px}.pd-mg-bth{width:42px;height:54px;flex:none;background:#eee;border-radius:4px;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}.pd-mg-bth img{max-width:100%;max-height:100%;display:block}.pd-mg-bth img:not([src]){display:none}.pd-mg-bth .pd-mg-ld{font-size:9px;line-height:1.1;text-align:center}
   @media(max-width:900px){.pd-mg-top{flex-direction:column}.pd-mg-grid{grid-template-columns:1fr}}
-  .pd-f-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pd-f-col{min-width:0}@media(max-width:900px){.pd-f-cols{grid-template-columns:1fr}}
+  .pd-f-one{max-width:1000px}.pd-f-h{margin:16px 0 4px;color:#1a3a5c;border-bottom:2px solid #d5e0f0;padding-bottom:3px}.pd-f-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pd-f-col{min-width:0}@media(max-width:900px){.pd-f-cols{grid-template-columns:1fr}}
   .pd-homeh{margin:26px 0 10px;font-size:16px;color:#1a3a5c}
   .pd-missing{background:#fdecea;color:#c0392b;border:1px solid #e6a39b;border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .pd-ok{background:#fff;border:1px solid #d6d2ca;border-radius:6px;padding:3px 8px;font-size:12px;cursor:pointer;display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap}
@@ -3274,7 +3313,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", fSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
