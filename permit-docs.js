@@ -35,6 +35,7 @@
     if (v === "form") { const el = document.getElementById("pd-form-strip"); if (el && typeof editBiz !== "undefined" && editBiz) el.innerHTML = cell(editBiz); }
     else if (typeof render === "function") render();
     if ($("pd-manage") && S._paintMg) S._paintMg();
+    if ($("pd-nd-body") && !S._ndLock) { try { ndShow(); } catch (e) { /* הדשבורד עדיין לא מוכן */ } }          // רשימות הדשבורד (חסרים / מחכים לשיוך) מתעדכנות אחרי שיוך ברקע, בלי לעבור לשונית
   }
   const say = () => {};          // הודעות הצלחה שגרתיות בוטלו (המצב החדש נראה על המסך); שגיאות וחלונות אישור נשארים
   const bizList = () => (typeof businesses !== "undefined" ? businesses : []);
@@ -664,7 +665,7 @@
   }
   function upDuplicate(doc) {
     $("pd-up-body").innerHTML = `<div class="pd-dup"><b>⚠ קובץ זהה בדיוק כבר קיים במאגר</b> (${E(doc.original_name || doc.id)}).${(doc.business_ids || []).length ? dupRoleHtml(doc, true) : "<br>המסמך עדיין לא משויך לאף חברה."}<div class="pd-sub" style="margin-top:6px">קובץ זהה לא נכנס פעמיים. אפשר לפתוח את המסמך הקיים ולהוסיף לו שיוך.</div></div>
-      <div class="pd-btns" style="margin-top:12px"><button class="pd-btn primary" onclick="PD._close('pd-upload');PD.openDoc('${doc.id}')">פתיחת המסמך הקיים</button><button class="pd-btn" onclick="PD._next()">${U.queue.length ? "דילוג לקובץ הבא" : "סיום"}</button></div>`;
+      <div class="pd-btns" style="margin-top:12px">${(doc.business_ids || []).length ? "" : `<button class="pd-btn primary" onclick="PD._close('pd-upload');PD._ndOpenDoc('${doc.id}')">שיוך המסמך לחברה</button>`}<button class="pd-btn ${(doc.business_ids || []).length ? "primary" : ""}" onclick="PD._close('pd-upload');PD.openDoc('${doc.id}')">פתיחת המסמך הקיים</button><button class="pd-btn" onclick="PD._next()">${U.queue.length ? "דילוג לקובץ הבא" : "סיום"}</button></div>`;
   }
   function upReview(fresh) {
     if (U.addCompany) return upReviewAC(fresh);
@@ -1157,7 +1158,7 @@
   }
   function unassignedList() {
     const f = Q.filter.trim().toLowerCase();
-    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && (!Q.batch || d.source_ref === Q.batch) && srcOk(d) && !Q.skipped.has(d.id) && !Q.busy.has(d.id) && !isApproved("doc:" + d.id) &&
+    const l = S.docs.filter(d => (inView(d, Q.view) || (d.id === Q.curId && !isOther(d))) && (!Q.batch || d.source_ref === Q.batch) && srcOk(d) && !Q.skipped.has(d.id) && !Q.busy.has(d.id) && (!isApproved("doc:" + d.id) || (Q.view === "un" && isUnassigned(d))) &&
         (!f || docHay(d).includes(f)));
     if (Q.view === "review") return l.sort((a, b) => String(bizName((a.business_ids || [])[0])).localeCompare(String(bizName((b.business_ids || [])[0])), "he") || String(a.original_name || "").localeCompare(String(b.original_name || ""), "he") || String(a.id).localeCompare(String(b.id)));      // מסמכים של אותה חברה צמודים; סדר יציב
     return l.sort((a, b) => sugOf(b).length - sugOf(a).length || String(a.source_title || a.original_name).localeCompare(String(b.source_title || b.original_name), "he"));
@@ -1977,7 +1978,7 @@
     const d = unassignedList()[Q.i]; if (!d) return;
     if ((d.business_ids || []).length === 1 && !(d.ext_ids || []).length && !confirm("זו החברה האחרונה של המסמך. הוא יחזור למסמכים הלא משויכים. להמשיך?")) return;
     const before = snapDoc(d);
-    api("/permit-docs/" + d.id, "PUT", { business_ids: (d.business_ids || []).filter(x => x !== bizId) }).then(r => { replaceDoc(r.doc); pushHist(before, "הוסר שיוך ל" + bizName(bizId)); uqAfter(); refresh(); }).catch(e => alert("הפעולה נכשלה: " + e.message));
+    api("/permit-docs/" + d.id, "PUT", { business_ids: (d.business_ids || []).filter(x => x !== bizId) }).then(r => { replaceDoc(r.doc); if (isUnassigned(r.doc) && isApproved("doc:" + d.id)) setReview("doc:" + d.id, "").catch(() => {}); pushHist(before, "הוסר שיוך ל" + bizName(bizId)); uqAfter(); refresh(); }).catch(e => alert("הפעולה נכשלה: " + e.message));
   }
   async function uqRestore() {
     const d = unassignedList()[Q.i]; if (!d) return;
