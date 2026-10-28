@@ -2781,7 +2781,7 @@
             <span>מקור / קהילה</span><input class="pd-in" id="pd-xl-label" value="${E(file.name.replace(/\.[^.]+$/, ""))}" style="max-width:260px"></div>
           <div class="pd-sub" id="pd-xl-prev" style="margin-top:8px"></div>
           <div id="pd-xl-res" style="margin-top:8px"></div>
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" id="pd-xl-chk">בדיקה (בלי לייבא)</button><button class="pd-btn primary" id="pd-xl-go" disabled>ייבוא</button></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" id="pd-xl-chk">בדיקה (בלי לייבא)</button><button class="pd-btn primary" id="pd-xl-go">ייבוא (כולל בדיקת כפילויות)</button></div>
         </div>`);
       const val = (r, k) => { const i = $("pd-xl-" + k).value; return i === "" ? "" : String(r[+i] ?? "").trim(); };
       const build = () => data.map(r => {
@@ -2789,12 +2789,12 @@
         if (full && !first && !last) { const w = full.split(/\s+/); first = w.shift() || ""; last = w.join(" "); }
         return { first, last, phone: val(r, "phone"), phone2: val(r, "phone2"), email: val(r, "email"), id: val(r, "id"), companies: val(r, "companies"), address: [val(r, "address"), val(r, "city")].filter(Boolean).join(", "), date: val(r, "date"), note: val(r, "note") };
       }).filter(x => x.first || x.last || x.phone || x.email || x.id);
-      const prev = () => { const b = build().slice(0, 3); $("pd-xl-prev").innerHTML = b.length ? "תצוגה מקדימה: " + b.map(x => E([x.first, x.last].filter(Boolean).join(" ") + " · " + (x.phone || x.email || x.id || ""))).join(" | ") : '<span style="color:#c0392b">לא זוהו שורות עם פרטים לפי המיפוי</span>'; $("pd-xl-go").disabled = true; };
+      const prev = () => { const b = build().slice(0, 3); $("pd-xl-prev").innerHTML = b.length ? "תצוגה מקדימה: " + b.map(x => E([x.first, x.last].filter(Boolean).join(" ") + " · " + (x.phone || x.email || x.id || ""))).join(" | ") : '<span style="color:#c0392b">לא זוהו שורות עם פרטים לפי המיפוי</span>'; };
       document.querySelectorAll("#pd-jxl select").forEach(el => el.onchange = prev); prev();
-      const run = async dry => { const rows = build(), label = $("pd-xl-label").value.trim(), t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 200) { const r = await api("/joiners-import", "POST", { kind: "mapped", dry, label, rows: rows.slice(i, i + 200) }); $("pd-xl-res") && ($("pd-xl-res").textContent = (dry ? "בודק… " : "מייבא… ") + Math.min(i + 200, rows.length) + " / " + rows.length); for (const k in t) t[k] += r[k]; } return { t, n: rows.length }; };
+      const run = async dry => { const rows = build(), label = $("pd-xl-label").value.trim(), t = { added: 0, existing: 0, skipped: 0 }; for (let i = 0; i < rows.length; i += 400) { const r = await api("/joiners-import", "POST", { kind: "mapped", dry, label, rows: rows.slice(i, i + 400) }); $("pd-xl-res") && ($("pd-xl-res").textContent = (dry ? "בודק… " : "מייבא… ") + Math.min(i + 400, rows.length) + " / " + rows.length); for (const k in t) t[k] += r[k]; } return { t, n: rows.length }; };
       $("pd-xl-chk").onclick = async () => {
         $("pd-xl-res").textContent = "בודק…";
-        try { const { t, n } = await run(true); $("pd-xl-res").innerHTML = `מתוך <b>${n}</b> שורות עם פרטים: חדשים (יתווספו) <b>${t.added}</b> · כבר קיימים ברשימה (לא ישונו) ${t.existing} · דולגו ${t.skipped}`; $("pd-xl-go").disabled = !t.added; $("pd-xl-go").textContent = `ייבוא ${t.added} חדשים`; }
+        try { const { t, n } = await run(true); $("pd-xl-res").innerHTML = `מתוך <b>${n}</b> שורות עם פרטים: חדשים (יתווספו) <b>${t.added}</b> · כבר קיימים ברשימה (לא ישונו) ${t.existing} · דולגו ${t.skipped}`; $("pd-xl-go").textContent = `ייבוא ${t.added} חדשים`; }
         catch (e) { $("pd-xl-res").innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span>`; }
       };
       $("pd-xl-go").onclick = async () => {
