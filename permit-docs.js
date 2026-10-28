@@ -2598,6 +2598,7 @@
     if (/^nedarim/.test(s)) return "נדרים פלוס";
     if (s === "site:embed") return "אתר";
     if (s === "site:kehilot") return "קהילות";
+    if (/^import:/.test(s)) return s.slice(7);          // רשימה שיובאה מקובץ: שם הרשימה / הקהילה
     if (/^cfdb7/.test(s)) return "אתר ישן";
     if (s === "admin") return "ידני";
     return "";
@@ -2655,7 +2656,7 @@
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
         <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
-        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button></div>
+        <button class="pd-btn" onclick="PD._jImpX()" title="העלאת רשימה מקובץ Excel / CSV (למשל רשימה מקהילה)">📥 ייבוא מקובץ</button> <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button></div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
         <tr class="pd-cfrow">${J_COLS.map(c => c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => String(jX(r).src || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
@@ -2774,6 +2775,142 @@
           catch (e) { go.disabled = false; go.textContent = "נסה שוב"; $("pd-jimp-e").textContent = e.message || "שגיאה"; }
         };
       } catch (e) { const b = $("pd-jimp-b"); if (b) b.innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span><div style="margin-top:10px"><button class="pd-mini" onclick="PD._close('pd-jimp')">סגירה</button></div>`; }
+    };
+    inp.click();
+  }
+  // ── קריאת קובץ טבלה בדפדפן: CSV / TSV, או Excel (.xlsx) בלי ספרייה חיצונית (פתיחת ה-zip ב-DecompressionStream) ──
+  const xmlUnesc = t => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/&amp;/g, "&");
+  async function zipFiles(buf, want) {
+    const dv = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder();
+    let eocd = -1; for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--) if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    if (eocd < 0) throw new Error("הקובץ אינו Excel תקין");
+    const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true); const out = {};
+    for (let k = 0; k < n; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true), csz = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+      const name = dec.decode(u8.subarray(p + 46, p + 46 + nl)); p += 46 + nl + el + cl;
+      if (!want(name)) continue;
+      const lnl = dv.getUint16(off + 26, true), lel = dv.getUint16(off + 28, true), data = u8.subarray(off + 30 + lnl + lel, off + 30 + lnl + lel + csz);
+      out[name] = method === 0 ? dec.decode(data) : dec.decode(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    }
+    return out;
+  }
+  async function xlsxRows(buf) {
+    const f = await zipFiles(buf, nm => nm === "xl/sharedStrings.xml" || /^xl\/worksheets\/sheet\d+\.xml$/.test(nm));
+    const sheets = Object.keys(f).filter(x => /worksheets\//.test(x)).sort((a, b) => parseInt(a.match(/(\d+)\.xml/)[1]) - parseInt(b.match(/(\d+)\.xml/)[1]));
+    if (!sheets.length) throw new Error("לא נמצאה גליון בקובץ");
+    const strs = [...(f["xl/sharedStrings.xml"] || "").matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => xmlUnesc([...m[1].matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(x => x[1]).join("")));
+    const colIdx = ref => { let n = 0; for (const ch of ref.replace(/\d/g, "")) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+    const rows = [];
+    for (const rm of f[sheets[0]].matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)) {
+      const row = [];
+      for (const cm of rm[1].matchAll(/<c ([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const at = cm[1], ref = (at.match(/\br="([A-Z]+\d+)"/) || [])[1], t = (at.match(/\bt="(\w+)"/) || [])[1], body = cm[2] || "";
+        if (!ref) continue;
+        const v = (body.match(/<v>([\s\S]*?)<\/v>/) || [])[1], is = (body.match(/<is>([\s\S]*?)<\/is>/) || [])[1];
+        let val = "";
+        if (t === "s") val = strs[+v] || ""; else if (t === "inlineStr") val = xmlUnesc([...(is || "").matchAll(/<t[^>]*>([\s\S]*?)<\/t>/g)].map(x => x[1]).join("")); else if (v !== undefined) val = xmlUnesc(v);
+        row[colIdx(ref)] = String(val).trim();
+      }
+      if (row.some(x => x)) rows.push(Array.from(row, x => x || ""));
+    }
+    return rows;
+  }
+  function csvTable(text) {
+    text = text.replace(/^﻿/, "");
+    const first = text.split(/\r?\n/, 1)[0], cnt = c => first.split(c).length;
+    const d = cnt("\t") >= cnt(",") && cnt("\t") >= cnt(";") ? "\t" : cnt(";") > cnt(",") ? ";" : ",";
+    const rows = []; let row = [], fld = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { fld += '"'; i++; } else q = false; } else fld += c; }
+      else if (c === '"') q = true;
+      else if (c === d) { row.push(fld); fld = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(fld); fld = ""; if (row.some(x => x !== "")) rows.push(row); row = []; }
+      else fld += c;
+    }
+    row.push(fld); if (row.some(x => x !== "")) rows.push(row);
+    return rows.map(r => r.map(x => x.trim()));
+  }
+  async function readTableFile(file) {          // -> { head: [שמות עמודות], rows: [[...]] } (השורה הראשונה = כותרות)
+    const buf = await file.arrayBuffer();
+    const isX = /\.xlsx$/i.test(file.name) || (new Uint8Array(buf, 0, 2)[0] === 0x50 && new Uint8Array(buf, 0, 2)[1] === 0x4b);
+    const all = isX ? await xlsxRows(buf) : csvTable(new TextDecoder("utf-8").decode(buf));
+    if (all.length < 2) throw new Error("לא נמצאו שורות נתונים בקובץ");
+    const w = Math.max(...all.map(r => r.length)), head = Array.from({ length: w }, (_, i) => all[0][i] || `עמודה ${i + 1}`);
+    return { head, rows: all.slice(1).map(r => Array.from({ length: w }, (_, i) => r[i] || "")) };
+  }
+  // ── ייבוא רשימת מצטרפים מקובץ כלשהו (Excel / CSV, למשל רשימה מקהילה): בוחרים לאיזה שדה כל עמודה, בדיקה מקדימה, והוספת החדשים בלבד ──
+  const JX_FIELDS = [
+    ["first", "שם פרטי", /שם פרטי|^פרטי$|first/i], ["last", "שם משפחה", /משפחה|last|family|surname/i], ["full", "שם מלא (יפוצל)", /^שם( מלא)?$|שם ומשפחה|full ?name|^name$/i],
+    ["phone", "טלפון / נייד", /טלפון|נייד|פלאפון|סלולר|phone|tel|mobile|cell/i], ["email", "אימייל", /מייל|דוא|email|e-mail|mail/i], ["id", "ת.ז.", /ת\.?\s?ז|זהות|תעודה|\bid\b/i],
+    ["addr", "כתובת / עיר", /כתובת|עיר|ישוב|רחוב|address|city/i], ["companies", "חברות", /חברות|חברה|company|companies/i], ["note", "הערה", /הערה|הערות|note|comment/i], ["date", "תאריך הצטרפות", /תאריך|date/i]];
+  const JX = { head: [], rows: [], map: {}, label: "", other: true, famFirst: false, dry: null };
+  const jxVal = (r, f) => JX.map[f] >= 0 ? String(r[JX.map[f]] || "").trim() : "";
+  const jxDate = v => { v = String(v || "").trim(); if (/^\d{5}$/.test(v)) { const d = new Date(Date.UTC(1899, 11, 30) + Number(v) * 864e5); return d.toISOString().slice(0, 10); } return v; };          // תאריך Excel (מספר סידורי)
+  function jxRow(r) {
+    let first = jxVal(r, "first"), last = jxVal(r, "last"); const full = jxVal(r, "full");
+    if (!first && !last && full) { const w = full.split(/\s+/); if (JX.famFirst) { last = w[0]; first = w.slice(1).join(" "); } else { first = w[0]; last = w.slice(1).join(" "); } }
+    const extra = {}; if (JX.other) JX.head.forEach((h, i) => { if (!Object.values(JX.map).includes(i) && r[i]) extra[h] = r[i]; });
+    return { first, last, phone: jxVal(r, "phone"), email: jxVal(r, "email"), id: jxVal(r, "id"), addr: jxVal(r, "addr"), companies: jxVal(r, "companies"), note: jxVal(r, "note"), date: jxDate(jxVal(r, "date")), extra };
+  }
+  function jxRows() {          // השורות אחרי מיפוי; כפילויות בתוך הקובץ (אותה ת.ז. / טלפון / מייל / שם) מוסרות
+    const seen = new Set(), out = []; let dup = 0, empty = 0;
+    for (const r of JX.rows) {
+      const m = jxRow(r); if (!m.first && !m.last && !m.phone && !m.email && !m.id) { empty++; continue; }
+      const k = m.id.replace(/\D/g, "") || m.phone.replace(/\D/g, "") || m.email.toLowerCase() || m.first + "|" + m.last;
+      if (seen.has(k)) { dup++; continue; } seen.add(k); out.push(m);
+    }
+    return { rows: out, dup, empty };
+  }
+  function jxGuess() {
+    const used = new Set(); JX.map = {};
+    for (const [f, , re] of JX_FIELDS) { const i = JX.head.findIndex((h, k) => !used.has(k) && re.test(h)); JX.map[f] = i; if (i >= 0) used.add(i); }
+  }
+  function jxPaint() {
+    const b = $("pd-jx-b"); if (!b) return;
+    const sample = i => E(String((JX.rows.find(r => r[i]) || [])[i] || "").slice(0, 24));
+    const prev = jxRows(), pr = prev.rows.slice(0, 4);
+    b.innerHTML = `<div class="pd-sub">נמצאו <b>${JX.rows.length}</b> שורות. בחרו לכל שדה את העמודה המתאימה בקובץ (אפשר להשאיר ריק).</div>
+      <div style="margin:8px 0"><label>שם הרשימה / הקהילה (יופיע בעמודת "מקור"): <input class="pd-in" id="pd-jx-src" value="${E(JX.label)}" style="max-width:260px" oninput="PD._jxSet('label',this.value)"></label></div>
+      <table class="pd-nd-tbl" style="max-width:640px"><tbody>${JX_FIELDS.map(([f, name]) => `<tr><td><b>${name}</b></td><td><select class="pd-in" onchange="PD._jxMap('${f}',this.value)"><option value="-1">— לא מיובא —</option>${JX.head.map((h, i) => `<option value="${i}" ${JX.map[f] === i ? "selected" : ""}>${E(h)}  (${sample(i)})</option>`).join("")}</select></td></tr>`).join("")}</tbody></table>
+      <label class="pd-sub" style="display:block;margin:6px 0"><input type="checkbox" ${JX.famFirst ? "checked" : ""} onchange="PD._jxSet('famFirst',this.checked)"> בשם מלא: המילה הראשונה היא שם המשפחה</label>
+      <label class="pd-sub" style="display:block;margin:6px 0"><input type="checkbox" ${JX.other ? "checked" : ""} onchange="PD._jxSet('other',this.checked)"> לשמור גם את שאר העמודות (בשדה "פרטים נוספים")</label>
+      <div class="pd-sub" style="margin-top:8px"><b>תצוגה מקדימה</b> (${prev.rows.length} שורות תקינות${prev.dup ? `, ${prev.dup} כפולות בקובץ` : ""}${prev.empty ? `, ${prev.empty} ריקות` : ""}):</div>
+      <table class="pd-nd-tbl"><thead><tr><th>פרטי</th><th>משפחה</th><th>טלפון</th><th>מייל</th><th>ת.ז.</th></tr></thead><tbody>${pr.map(m => `<tr><td>${E(m.first)}</td><td>${E(m.last)}</td><td dir="ltr">${E(m.phone)}</td><td dir="ltr">${E(m.email)}</td><td dir="ltr">${E(m.id)}</td></tr>`).join("")}</tbody></table>
+      <div id="pd-jx-res" style="margin-top:10px;line-height:1.8"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="pd-btn" id="pd-jx-chk">בדיקה מקדימה</button><button class="pd-mini" onclick="PD._close('pd-jimpx')">סגירה</button></div>`;
+    $("pd-jx-chk").onclick = jxCheck;
+  }
+  async function jxSend(dry) {
+    const { rows } = jxRows(), t = { added: 0, existing: 0, skipped: 0 };
+    for (let i = 0; i < rows.length; i += 300) { const r = await api("/joiners-import", "POST", { format: "mapped", dry, source: JX.label, rows: rows.slice(i, i + 300) }); for (const k in t) t[k] += r[k] || 0; }
+    return t;
+  }
+  async function jxCheck() {
+    const res = $("pd-jx-res"), btn = $("pd-jx-chk"); if (!res) return;
+    if (!JX.label.trim()) { res.innerHTML = `<span style="color:#c0392b">נא למלא שם לרשימה / קהילה.</span>`; return; }
+    btn.disabled = true; res.textContent = "בודק…";
+    try {
+      const t = await jxSend(true);
+      res.innerHTML = `חדשים (יתווספו): <b>${t.added}</b> · כבר קיימים במאגר (לא ישונו): ${t.existing} · דולגו: ${t.skipped}
+        ${t.added ? `<div style="margin-top:8px"><button class="pd-btn primary" id="pd-jx-go">ייבוא ${t.added} חדשים</button></div>` : ""}`;
+      const go = $("pd-jx-go"); if (go) go.onclick = async () => {
+        go.disabled = true; go.textContent = "מייבא…";
+        try { const r = await jxSend(false); close("pd-jimpx"); J.rows = null; J.cl = null; ndShow(); alert(`יובאו ${r.added} מצטרפים חדשים מ"${JX.label}".`); }
+        catch (e) { go.disabled = false; go.textContent = "נסה שוב"; res.insertAdjacentHTML("beforeend", `<div style="color:#c0392b">${E(e.message || "שגיאה")}</div>`); }
+      };
+    } catch (e) { res.innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span>`; }
+    btn.disabled = false;
+  }
+  function jImpX() {
+    const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".xlsx,.csv,.tsv,.txt";
+    inp.onchange = async () => {
+      const file = inp.files[0]; if (!file) return;
+      let t; try { t = await readTableFile(file); } catch (e) { alert("הקובץ לא נקרא: " + (e.message || "שגיאה") + "\nאם זה קובץ Excel ישן (xls) - שמרו אותו כ-xlsx או כ-CSV."); return; }
+      Object.assign(JX, { head: t.head, rows: t.rows, label: file.name.replace(/\.[^.]+$/, ""), other: true, famFirst: false }); jxGuess();
+      overlay("pd-jimpx", `<div class="pd-head"><b>ייבוא רשימת מצטרפים מקובץ</b><button class="pd-x" onclick="PD._close('pd-jimpx')">✕</button></div><div style="padding:14px" id="pd-jx-b"></div>`);
+      jxPaint();
     };
     inp.click();
   }
@@ -3313,7 +3450,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jImpX: jImpX, _jxMap: (f, v) => { JX.map[f] = Number(v); jxPaint(); }, _jxSet: (k, v) => { JX[k] = v; if (k !== "label") jxPaint(); }, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,

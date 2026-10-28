@@ -6,7 +6,7 @@
 import { checkAdmin } from "./_shared/auth.js";
 import { noAuth } from "./_shared/permit-docs.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
-import { originOk, readJson, clean } from "./_shared/join-common.js";
+import { originOk, readJson, clean, normalizePhone, jerusalemNow } from "./_shared/join-common.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
@@ -38,12 +38,48 @@ export function mapRow(r) {
   };
 }
 
+// ייבוא רשימה מקובץ כלשהו (Excel / CSV של קהילה וכד'): הדפדפן ממפה את העמודות ושולח שורות מוכנות { first, last, phone, email, id, addr, companies, note, date, extra }.
+// כפילות: אותה ת.ז. שכבר במאגר (ident_hash, מכל מקור) או אותה שורה מאותו מקור (ת.ז. / טלפון / מייל / שם) - לא נכנסת שוב ושום רשומה קיימת לא נדרסת. dry=true רק בודק.
+export async function importMapped(b, env) {
+  const label = clean(b.source, 60) || "קובץ";
+  let key; try { key = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
+  let added = 0, existing = 0, skipped = 0;
+  const seen = new Set();
+  try {
+    for (const r of b.rows) {
+      const x = {};
+      if (clean(r.addr, 200)) x["כתובת"] = clean(r.addr, 200);
+      if (clean(r.note, 400)) x["הערה"] = clean(r.note, 400);
+      for (const [k, v] of Object.entries(r.extra && typeof r.extra === "object" ? r.extra : {})) if (clean(v, 300)) x[clean(k, 40)] = clean(v, 300);
+      x["מקור הרשימה"] = label;
+      const p = { first: clean(r.first, 60), last: clean(r.last, 60), phone: clean(r.phone, 40), email: clean(r.email, 120), id: clean(r.id, 20), ip: "", companies: clean(r.companies, 4000), all: "", pdf: "",
+        extra: JSON.stringify(x), src: "import:" + label };
+      if (!p.first && !p.last && !p.phone && !p.email && !p.id) { skipped++; continue; }
+      const digits = p.id.replace(/\D/g, "");
+      const k = digits || normalizePhone(p.phone) || p.email.toLowerCase() || p.first + "|" + p.last;
+      const rid = await sha1_16("import:" + label + ":" + k);
+      if (seen.has(rid)) { skipped++; continue; } seen.add(rid);
+      if (await env.DB.prepare("SELECT id FROM joiners WHERE id = ?").bind(rid).first()) { existing++; continue; }
+      const ih = digits ? await identHash(env, digits) : "";
+      if (ih && await env.DB.prepare("SELECT id FROM joiners WHERE ident_hash = ?").bind(ih).first()) { existing++; continue; }
+      if (!b.dry) {
+        const when = parseDate(g(r, "date")) || jerusalemNow();
+        await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
+          .bind(rid, when, ih, await encryptPii(key, rid, p)).run();
+      }
+      added++;
+    }
+    return out({ ok: true, dry: !!b.dry, total: b.rows.length, added, existing, skipped });
+  } catch { return out({ error: "שגיאה בייבוא" }, 500); }
+}
+
 export async function onRequestPost({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   if (!originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
   const b = await readJson(request, 3 * 1024 * 1024);
   if (!b || !Array.isArray(b.rows)) return out({ error: "הבקשה לא תקינה" }, 400);
   if (b.rows.length > 500) return out({ error: "עד 500 שורות בבקשה" }, 400);
+  if (b.format === "mapped") return importMapped(b, env);
   let key; try { key = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
   let added = 0, existing = 0, skipped = 0;
   try {
