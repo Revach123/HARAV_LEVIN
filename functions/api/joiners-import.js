@@ -46,6 +46,25 @@ export async function onRequestPost({ request, env }) {
   if (b.rows.length > 500) return out({ error: "עד 500 שורות בבקשה" }, 400);
   let key; try { key = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
   let added = 0, existing = 0, skipped = 0;
+  if (b.kind === "mapped") {          // רשימה חיצונית (למשל מקהילה, מאקסל): עמודות כבר ממופות בדפדפן. כפילות לפי ת.ז. (גם מול מצטרפים קיימים מכל מקור), ובלעדיה לפי טלפון / מייל / שם
+    const label = clean(String(b.label || "").trim(), 80) || "רשימה חיצונית";
+    try {
+      for (const r of b.rows) {
+        const p = { first: clean(g(r, "first"), 60), last: clean(g(r, "last"), 60), phone: clean(g(r, "phone"), 40), email: clean(g(r, "email"), 120), id: clean(g(r, "id"), 20), ip: "",
+          companies: clean(g(r, "companies"), 4000), all: "", pdf: "", src: "excel:" + label };
+        const x = {}; x["מקור"] = label; if (g(r, "address")) x["כתובת"] = clean(g(r, "address"), 200); if (g(r, "note")) x["הערה"] = clean(g(r, "note"), 300); if (g(r, "phone2")) x["טלפון נוסף"] = clean(g(r, "phone2"), 40);
+        p.extra = JSON.stringify(x);
+        if (!p.first && !p.last && !p.phone && !p.email && !p.id) { skipped++; continue; }
+        const digits = p.id.replace(/\D/g, ""), ph = p.phone.replace(/\D/g, ""), base = digits || ph || p.email.toLowerCase() || (p.first + " " + p.last).trim();
+        const rid = await sha1_16("xl:" + base), ih = digits ? await identHash(env, digits) : "";
+        if (await env.DB.prepare("SELECT id FROM joiners WHERE id = ?").bind(rid).first() || (ih && await env.DB.prepare("SELECT id FROM joiners WHERE ident_hash = ?").bind(ih).first())) { existing++; continue; }
+        const when = parseDate(g(r, "date")) || new Date().toISOString().replace("T", " ").slice(0, 19);
+        if (!b.dry) await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)").bind(rid, when, ih, await encryptPii(key, rid, p)).run();
+        added++;
+      }
+      return out({ ok: true, dry: !!b.dry, total: b.rows.length, added, existing, skipped });
+    } catch { return out({ error: "שגיאה בייבוא" }, 500); }
+  }
   try {
     for (const r of b.rows) {
       const cid = g(r, "id");
