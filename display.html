@@ -286,7 +286,7 @@ async function mountList(container, type) {
     usedSample = true;
   }
 
-  if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); }
+  if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); markRecentCompanies(rows); }
   const state = { rows, filtered: rows, cols, topic };
   render(container, state, type, usedSample);
 }
@@ -311,6 +311,15 @@ function markRecent(rows, started) {
   }
 }
 const NEW_TAG = { new: ["חדש", "נוספה לרשימה בשלושת השבועות האחרונים"], issue: ["הנפקה חדשה", "הופיעה לראשונה ברשימת הבורסה בשלושת השבועות האחרונים"], approval: ["אישור חדש", "אג\"ח שכבר נסחרה בבורסה ונוספה לרשימה בשלושת השבועות האחרונים (אושרה)"] };
+// חברות שנוספו לאחרונה (חודש): לפי תאריך היצירה של העסק במאגר (added_at). תאריך שבו נוספו המוני עסקים ביחד (ייבוא ראשוני) לא נחשב.
+const NEW_CO_DAYS = 30;
+function markRecentCompanies(rows) {
+  const cnt = {};
+  for (const r of rows) { const d = r.added_at || ""; if (d) cnt[d] = (cnt[d] || 0) + 1; }
+  const bulk = new Set(Object.keys(cnt).filter(d => cnt[d] >= 25));          // 25 עסקים ומעלה ביום אחד = ייבוא, לא הוספה ידנית
+  const since = ymd(new Date(Date.now() - NEW_CO_DAYS * 864e5));
+  for (const r of rows) { const d = r.added_at || ""; r._recent = !!(d && d >= since && !bulk.has(d)); r._kind = r._recent ? "new" : ""; }
+}
 function render(container, state, type, usedSample) {
   container.innerHTML = "";
 
@@ -508,6 +517,7 @@ function render(container, state, type, usedSample) {
         return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
       }).map(x => x[2]);
     }
+    if (state.topic === "companies" && !state.sort) rows = [...rows.filter(r => r._recent && !r._sub).sort((a, b) => String(b.added_at).localeCompare(String(a.added_at))), ...rows.filter(r => !(r._recent && !r._sub))];          // בלי מיון שנבחר: חברות שנוספו בחודש האחרון בראש הרשימה
     if (state.topic === "bonds" && !state.sort) rows = [...rows.filter(r => r._recent).sort((a, b) => ({ issue: 0, approval: 1, new: 2 }[a._kind]) - ({ issue: 0, approval: 1, new: 2 }[b._kind]) || String(b._kind === "issue" ? b.listed_first_seen : b.first_seen).localeCompare(String(a._kind === "issue" ? a.listed_first_seen : a.first_seen)) || (Number(b.security_id) || 0) - (Number(a.security_id) || 0)), ...rows.filter(r => !r._recent)];          // בלי מיון שנבחר: אג"ח שהונפקו לאחרונה בראש הרשימה
     state.filtered = groupSubRows(rows);
     ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
@@ -637,6 +647,7 @@ function cellFor(col, val, row) {
   if (col.cell === "name") {
     td.className = "name-cell";
     if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)
+    else if (row && row._recent && !row._sub && col.key === "permit_name") td.innerHTML = `${esc(val ?? "")} <span class="new-tag new" title="נוספה לרשימה בחודש האחרון">חדש</span>`;
     else if (row && row._recent && col.key === "security_name") td.innerHTML = `${esc(val ?? "")} <span class="new-tag ${row._kind}" title="${NEW_TAG[row._kind][1]}">${NEW_TAG[row._kind][0]}</span>`;
     else td.textContent = val ?? "";
     return td;
