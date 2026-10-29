@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-28",
+ "updated": "2026-10-29",
  "upcoming": [
   {
    "id": 10358,
@@ -594,31 +594,6 @@
  ],
  "open": [
   {
-   "offer_number": 1229194,
-   "issuer_id": 2457,
-   "issuer_name": "הראל ריביות",
-   "is_new_company": false,
-   "begins_at": "2026-10-28T09:00:00",
-   "ends_at": "2026-10-28T16:00:00",
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "interest": 0.18,
-   "is_variable_interest": true,
-   "price_per_unit": 1000,
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1778025",
-   "securities": [
-    {
-     "security_id": null,
-     "security_name": "אג\"ח ז",
-     "security_type": "אג\"ח מובנות",
-     "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": "Aaa.il"
-    }
-   ],
-   "chp_number": "516561875"
-  },
-  {
    "begins_at": "2026-10-26T09:30:00",
    "chp_number": "520033309",
    "ends_at": "2026-10-26T16:30:00",
@@ -644,6 +619,33 @@
    ],
    "carried": true,
    "last_seen": "2026-10-26"
+  },
+  {
+   "begins_at": "2026-10-28T09:00:00",
+   "chp_number": "516561875",
+   "ends_at": "2026-10-28T16:00:00",
+   "interest": 0.18,
+   "is_new_company": false,
+   "is_variable_interest": true,
+   "issuer_id": 2457,
+   "issuer_name": "הראל ריביות",
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1778025",
+   "offer_number": 1229194,
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "price_per_unit": 1000,
+   "securities": [
+    {
+     "linkage_type": "ללא",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il",
+     "security_id": null,
+     "security_name": "אג\"ח ז",
+     "security_type": "אג\"ח מובנות"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-28"
   }
  ],
  "companies": [
