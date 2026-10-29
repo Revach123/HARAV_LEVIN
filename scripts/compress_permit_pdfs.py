@@ -109,10 +109,22 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="0 = הכל")
     ap.add_argument("--min-bytes", type=int, default=400_000)
     ap.add_argument("--min-gain", type=float, default=0.15)
+    ap.add_argument("--new-days", type=int, default=0, help="מצב אוטומטי: רק מסמכים שהועלו ב-N הימים האחרונים ועוד לא טופלו (המעקב בטבלה permit_doc_lite)")
+    ap.add_argument("--count", action="store_true", help="רק מדפיס כמה מסמכים ממתינים (pending=N גם ל-GITHUB_OUTPUT) ויוצא")
     a = ap.parse_args()
-    if not shutil.which("gs"): sys.exit("ghostscript (gs) לא מותקן")
 
-    rows = d1(f"SELECT id, file_key, size FROM permit_docs WHERE size > {int(a.min_bytes)} ORDER BY size DESC")
+    if a.new_days:          # מעקב ב-D1 במקום בדיקת R2 לכל מסמך: שאילתה אחת, ורק מסמכים חדשים
+        d1("CREATE TABLE IF NOT EXISTS permit_doc_lite (doc_id TEXT PRIMARY KEY, status TEXT, lite_size INTEGER, at TEXT DEFAULT (datetime('now')))")
+        rows = d1(f"SELECT id, file_key, size FROM permit_docs WHERE size > {int(a.min_bytes)} AND created_at > datetime('now', '-{int(a.new_days)} days') "
+                  "AND id NOT IN (SELECT doc_id FROM permit_doc_lite) ORDER BY created_at")
+        if a.count:
+            log(f"ממתינים לדחיסה: {len(rows)}")
+            if os.environ.get("GITHUB_OUTPUT"): open(os.environ["GITHUB_OUTPUT"], "a").write(f"pending={len(rows)}\n")
+            return
+    else:
+        rows = None
+    if not shutil.which("gs"): sys.exit("ghostscript (gs) לא מותקן")
+    if rows is None: rows = d1(f"SELECT id, file_key, size FROM permit_docs WHERE size > {int(a.min_bytes)} ORDER BY size DESC")
     log(f"{len(rows)} מסמכים מעל {a.min_bytes} בייט")
     done = tot_before = tot_after = 0
     lines = []
@@ -123,7 +135,7 @@ def main():
             log(f"דילוג על מפתח לא תקין: {id_}"); continue
         lite = key.replace("docs/", "docs-lite/", 1) if key.startswith("docs/") else "docs-lite/" + key
         log(f"{id_}: בודק אם כבר טופל")
-        if r2_exists(f"{lite}.skip") or r2_exists(lite):
+        if not a.new_days and (r2_exists(f"{lite}.skip") or r2_exists(lite)):
             continue
         with tempfile.TemporaryDirectory() as td:
             src, dst = os.path.join(td, "o.pdf"), os.path.join(td, "c.pdf")
@@ -142,6 +154,7 @@ def main():
                 lines.append(f"| {id_} | {size} | - | ללא גרסה קלה: {why} |")
                 if a.apply:
                     put_marker(td, f"{lite}.skip")
+                    if a.new_days: d1(f"INSERT OR REPLACE INTO permit_doc_lite (doc_id, status, lite_size) VALUES ('{id_}', 'skip', 0)")
                 continue
             new = os.path.getsize(dst)
             tot_before += size; tot_after += new
@@ -149,6 +162,7 @@ def main():
             lines.append(f"| {id_} | {size} | {new} | {'הועלתה גרסה קלה' if a.apply else 'dry-run'} |")
             if a.apply:
                 r2_put(lite, dst)
+                if a.new_days: d1(f"INSERT OR REPLACE INTO permit_doc_lite (doc_id, status, lite_size) VALUES ('{id_}', 'done', {int(new)})")
     saved = tot_before - tot_after
     summary = f"## דחיסת PDF ({'הועלו' if a.apply else 'dry-run - לא שונה כלום'})\n\n" \
               f"עובדו {done}, חיסכון {saved/1e6:.1f}MB מתוך {tot_before/1e6:.1f}MB\n\n" \
