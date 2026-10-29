@@ -339,8 +339,8 @@ function liveNote(state, hasText, long) {
   if (!state.liveTs) return "";
   const hm = new Date(state.liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
   const sep = hasText ? " · " : "";
-  if (marketClosed()) return sep + "נתוני סוף יום מסחר" + (long ? `. התשואה לפדיון מחושבת לפי שער הסגירה והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)` : "");
-  return sep + `שערים נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)` + (long ? `. התשואה לפדיון מחושבת לפי השער הנוכחי והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)` : "");
+  if (marketClosed()) return sep + "נתוני סוף יום מסחר";
+  return sep + `שערים נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)`;
 }
 
 // אג"ח חדשות, בשלושה סוגים לפי מה שאפשר לדעת (universe_started = יום תחילת איסוף ההופעה הראשונה ברשימת הבורסה):
