@@ -87,7 +87,8 @@
   .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444;text-align:center}
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
-  tr.recent td{background:#fffbea}.new-line{margin-top:3px}.new-line .new-tag{margin:0}.new-tag.approval{background:#9cc4ea;color:#0b2f52}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:3px;padding:0 6px;font-size:11px;font-weight:700;margin-inline-start:4px;vertical-align:middle}
+  tr.recent td{background:#fffbea}.spin-s{display:inline-block;width:13px;height:13px;border:2px solid var(--accent-border);border-top-color:var(--accent);border-radius:50%;animation:spn .8s linear infinite;vertical-align:middle}@keyframes spn{to{transform:rotate(360deg)}}
+  .new-line{margin-top:3px}.new-line .new-tag{margin:0}.new-tag.approval{background:#9cc4ea;color:#0b2f52}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:3px;padding:0 6px;font-size:11px;font-weight:700;margin-inline-start:4px;vertical-align:middle}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   td.wrapok{white-space:normal}td.wrapok .badge-yes,td.wrapok .badge-bad,td.wrapok .badge-offer{white-space:normal;font-size:11.5px;line-height:1.3;padding:1px 6px}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
@@ -292,16 +293,29 @@ async function mountList(container, type) {
 
   if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); markRecentCompanies(rows); }
   const state = { rows, filtered: rows, cols, topic, liveTs: "" };
-  if (topic === "bonds" && !usedSample) {          // שערים עדכניים מהבורסה (עיכוב הבורסה כ-15 דקות); עד 3.5 שניות המתנה, אחרת מציגים את השער היומי ומעדכנים כשמגיע
-    const j = await Promise.race([livePrices(), new Promise(res => setTimeout(() => res(null), 1500))]);
-    if (applyPrices(rows, j)) state.liveTs = j.ts;
-    else livePrices().then(j2 => { if (applyPrices(rows, j2)) { state.liveTs = j2.ts; if (state.redraw) state.redraw(); if (state.noteUpd) state.noteUpd(); } });          // הגיע מאוחר: מעדכנים את הטבלה במקום (בלי לבנות את כל הרכיב מחדש - זה גרם לקפיצות ולרעידות בעמוד המוטמע)
+  if (topic === "bonds" && !usedSample) {          // שערים עדכניים מהבורסה (עיכוב הבורסה כ-15 דקות): הטבלה מוצגת מיד עם שאר הנתונים, ובעמודות השער והתשואה ספינר עד שהשערים מגיעים והתשואות מחושבות ברקע
+    state.liveLoading = true; for (const r of rows) r._livePending = true;
+    livePrices().then(async j => {
+      const ok = await applyPricesAsync(rows, j);
+      if (ok) state.liveTs = j.ts;
+      state.liveLoading = false; for (const r of rows) r._livePending = false;          // כשל / אין שערים: חוזרים לשער היומי מהקובץ
+      if (state.redraw) state.redraw(); if (state.noteUpd) state.noteUpd();
+    });
   }
   render(container, state, type, usedSample);
 }
 // שערי אג"ח חיים: /api/bond-prices (נתוני הבורסה הציבוריים, מטמון של 2 דקות). כשל = נשארים עם השער היומי מהקובץ
 let PRICES_P = null;
 const livePrices = () => PRICES_P || (PRICES_P = fetch(`${API_BASE}/api/bond-prices`).then(r => r.ok ? r.json() : null).catch(() => null));
+async function applyPricesAsync(rows, j) {          // החלת השערים וחישוב התשואות במנות קטנות, כדי שהדף לא יקפא
+  if (!j || !j.prices) return 0;
+  let n = 0;
+  for (let i = 0; i < rows.length; i += 120) {
+    for (const r of rows.slice(i, i + 120)) { const p = j.prices[String(r.security_id)]; if (p && p[0] > 0) { r.last_price = p[0]; liveYtm(r, p); n++; } }
+    await new Promise(res => setTimeout(res, 0));
+  }
+  return n;
+}
 function applyPrices(rows, j) {
   if (!j || !j.prices) return 0;
   let n = 0;
@@ -336,6 +350,7 @@ function marketClosed() {
   return m < open || m >= close;
 }
 function liveNote(state, hasText, long) {
+  if (state.liveLoading) return (hasText ? " · " : "") + "מעדכן שערים ותשואות…";
   if (!state.liveTs) return "";
   const hm = new Date(state.liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
   const sep = hasText ? " · " : "";
@@ -402,9 +417,10 @@ function render(container, state, type, usedSample) {
   const setNote = () => {          // שורת העדכון: בדף עצמו (עם הסבר) ובכותרת של עמוד האב (קצרה, כדי שלא תישבר לשתי שורות)
     const t = state._t || "";
     upd.textContent = t + liveNote(state, !!t, true);
-    if ((t || state.liveTs) && window.parent !== window) window.parent.postMessage({ source: "harav-levin", type: "updated", text: t + liveNote(state, !!t, false) }, "*");
+    if ((t || state.liveTs || state.liveLoading) && window.parent !== window) window.parent.postMessage({ source: "harav-levin", type: "updated", text: t + liveNote(state, !!t, false) }, "*");
   };
   state.noteUpd = setNote;
+  setNote();
   updatedText().then(t => { state._t = t; setNote(); });
 
   const wrap = el("div","table-wrap");
@@ -715,6 +731,7 @@ function updatedText() {
 const NOWRAP_KEYS = new Set(["symbol","redemption_date","midroog_rating","maalot_rating","chp_number","last_price"]);   // שאר העמודות (סוג נייר, הצמדה, קטגוריה...) מתפצלות לשתי שורות כשצריך
 function cellFor(col, val, row) {
   const td = el("td");
+  if (row && row._livePending && (col.key === "last_price" || col.key === "ytm_gross") && row.redemption_date) { td.className = "num"; td.innerHTML = '<span class="spin-s" title="מעדכן שער חי…"></span>'; return td; }          // שער / תשואה בחישוב: ספינר במקום הערך
   if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
   if (col.cell === "name") {
     td.className = "name-cell";
