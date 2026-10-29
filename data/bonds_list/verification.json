@@ -1,7 +1,7 @@
 {
- "updated": "2026-10-28",
+ "updated": "2026-10-29",
  "status": "ok",
- "datawise_date": "2026-10-26",
+ "datawise_date": "2026-10-28",
  "expected": 773,
  "maya": 773,
  "missing_in_maya": [],
@@ -10,22 +10,10 @@
  "limit": 23,
  "dropped_no_terms": [
   {
-   "security_id": 1138940,
-   "security_name": "סאמיט אגח ח",
-   "company": "סאמיט אחזקות נדל\"ן בע\"מ",
-   "chp_number": "520043720"
-  },
-  {
-   "security_id": 1175199,
-   "security_name": "דור אלון אגח ח",
-   "company": "דור-אלון אנרגיה בישראל (1988) בע\"מ/",
-   "chp_number": "520043878"
-  },
-  {
-   "security_id": 1217389,
-   "security_name": "דלק קב אגח מ",
-   "company": "קבוצת דלק בע\"מ",
-   "chp_number": "520044322"
+   "security_id": 1228345,
+   "security_name": "הראל הנפ אגח כב",
+   "company": "הראל ביטוח מימון והנפקות בע\"מ",
+   "chp_number": "513834200"
   }
  ]
 }
