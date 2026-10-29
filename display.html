@@ -87,6 +87,7 @@
   .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444;text-align:center}
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
+  tr.recent td{background:#fffbea}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:3px;padding:0 6px;font-size:11px;font-weight:700;margin-inline-start:4px;vertical-align:middle}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   td.wrapok{white-space:normal}td.wrapok .badge-yes,td.wrapok .badge-bad,td.wrapok .badge-offer{white-space:normal;font-size:11.5px;line-height:1.3;padding:1px 6px}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
@@ -273,6 +274,7 @@ async function mountList(container, type) {
       if (!res.ok) throw new Error("bonds file " + res.status);
       const data = await res.json();
       rows = (data.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() }));
+      markRecent(rows);
     } else {
       const res = await fetch(`${API_BASE}/api/lists?type=${type}`);
       const data = await res.json();
@@ -289,6 +291,20 @@ async function mountList(container, type) {
   render(container, state, type, usedSample);
 }
 
+// אג"ח שהונפקו לאחרונה: אין בנתוני הבורסה תאריך הנפקה, ולכן לפי המועד שבו האג"ח נוספה לרשימה (first_seen) בחודש וחצי האחרונים.
+// לא נחשבות: האג"ח שהיו בצילום הראשון של הרשימה, וסדרות שנוספו יחד (4 ומעלה באותו יום לאותה חברה) כשהחברה עצמה חדשה ברשימה (חברה שאושרה עכשיו: הסדרות שלה ישנות).
+const RECENT_DAYS = 45;
+function markRecent(rows) {
+  const cnt = {}, first = {};
+  for (const r of rows) { const fs = r.first_seen || ""; cnt[fs] = (cnt[fs] || 0) + 1; if (fs && (!first[r.company] || fs < first[r.company])) first[r.company] = fs; }
+  const base = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || "";          // התאריך הנפוץ ביותר = צילום הפתיחה של הרשימה
+  const byGrp = {}; for (const r of rows) { const k = r.company + "|" + r.first_seen; byGrp[k] = (byGrp[k] || 0) + 1; }
+  const since = new Date(Date.now() - RECENT_DAYS * 864e5).toISOString().slice(0, 10);
+  for (const r of rows) {
+    const fs = r.first_seen || "";
+    r._recent = !!(fs && fs >= since && fs !== base && r.redemption_date && !(byGrp[r.company + "|" + fs] >= 4 && first[r.company] === fs));
+  }
+}
 function render(container, state, type, usedSample) {
   container.innerHTML = "";
 
@@ -432,7 +448,7 @@ function render(container, state, type, usedSample) {
       return;
     }
     for (const row of state.filtered) {
-      const tr = el("tr");
+      const tr = el("tr"); if (row._recent) tr.className = "recent";
       if (row._isSub) tr.className = "sub-row";
       for (const c of state.cols) { let td; try { td = cellFor(c, row[c.key], row); } catch (e) { td = el("td"); } tr.appendChild(td); }
       tbody.appendChild(tr);
@@ -486,6 +502,7 @@ function render(container, state, type, usedSample) {
         return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
       }).map(x => x[2]);
     }
+    if (state.topic === "bonds" && !state.sort) rows = [...rows.filter(r => r._recent).sort((a, b) => String(b.first_seen).localeCompare(String(a.first_seen)) || (Number(b.security_id) || 0) - (Number(a.security_id) || 0)), ...rows.filter(r => !r._recent)];          // בלי מיון שנבחר: אג"ח שהונפקו לאחרונה בראש הרשימה
     state.filtered = groupSubRows(rows);
     ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
       th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
@@ -614,6 +631,7 @@ function cellFor(col, val, row) {
   if (col.cell === "name") {
     td.className = "name-cell";
     if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)
+    else if (row && row._recent && col.key === "security_name") td.innerHTML = `${esc(val ?? "")} <span class="new-tag" title="נוספה לרשימה בחודש וחצי האחרונים">חדש</span>`;
     else td.textContent = val ?? "";
     return td;
   }
