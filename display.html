@@ -311,12 +311,12 @@ function markRecent(rows, started) {
   }
 }
 const NEW_TAG = { new: ["חדש", "נוספה לרשימה בשלושת השבועות האחרונים"], issue: ["הנפקה חדשה", "הופיעה לראשונה ברשימת הבורסה בשלושת השבועות האחרונים"], approval: ["אישור חדש", "אג\"ח שכבר נסחרה בבורסה ונוספה לרשימה בשלושת השבועות האחרונים (אושרה)"] };
-// חברות שנוספו לאחרונה (חודש): לפי תאריך היצירה של העסק במאגר (added_at). תאריך שבו נוספו המוני עסקים ביחד (ייבוא ראשוני) לא נחשב.
+// חברות שנוספו לאחרונה (חודש): לפי תאריך היצירה של העסק במאגר (added_at). גם כשנוספו הרבה חברות ביחד הן מסומנות; רק יום של ייבוא ראשוני עצום לא נחשב.
 const NEW_CO_DAYS = 30;
 function markRecentCompanies(rows) {
   const cnt = {};
   for (const r of rows) { const d = r.added_at || ""; if (d) cnt[d] = (cnt[d] || 0) + 1; }
-  const bulk = new Set(Object.keys(cnt).filter(d => cnt[d] >= 25));          // 25 עסקים ומעלה ביום אחד = ייבוא, לא הוספה ידנית
+  const bulk = new Set(Object.keys(cnt).filter(d => cnt[d] >= 300));          // רק ייבוא ראשוני עצום (300 עסקים ומעלה ביום אחד) לא נחשב; גם הוספת עשרות חברות ביחד מסומנת
   const since = ymd(new Date(Date.now() - NEW_CO_DAYS * 864e5));
   for (const r of rows) { const d = r.added_at || ""; r._recent = !!(d && d >= since && !bulk.has(d)); r._kind = r._recent ? "new" : ""; }
 }
