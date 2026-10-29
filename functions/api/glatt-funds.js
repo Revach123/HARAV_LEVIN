@@ -28,6 +28,12 @@ async function ensure(env) {
     if (cur.rows.some(r => fundType(r.type, r.number) !== r.type)) await replaceAll(env, cur.rows, cur.updated, cur.type_order);
     await env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('fund_type_v1', '1') ON CONFLICT(k) DO NOTHING").run();
   }
+  if (!(await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'note_wording_v1'").first())) {          // חד-פעמי (לבקשת המנהל): "מבוסס על היתר עיסקא פרטי" -> "בהשקעה זו נצרך לסמוך על היתר עיסקא (פרטי)"
+    const cur = await read(env), re = /(?:מסלול זה )?מבוסס על היתר עיסק[אה] פרטי/g, to = "בהשקעה זו נצרך לסמוך על היתר עיסקא (פרטי)";
+    const rows = cur.rows.map(r => ({ ...r, note: String(r.note || "").replace(re, to) }));
+    if (rows.some((r, i) => r.note !== (cur.rows[i].note || ""))) await replaceAll(env, rows, cur.updated, cur.type_order);
+    await env.DB.prepare("INSERT INTO glatt_funds_meta (k, v) VALUES ('note_wording_v1', '1') ON CONFLICT(k) DO NOTHING").run();
+  }
   if (!(await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'dedupe_v1'").first())) {          // חד-פעמי (לבקשת המנהל): 5134531 ו-5134549 הופיעו גם כקרן סל וגם כקרן נאמנות; אחרי תיקון הסוג - נשארת שורה אחת לכל אחת
     const cur = await read(env), seen = new Set();
     const rows = cur.rows.filter(r => { if (!["5134531", "5134549"].includes(String(r.number).trim())) return true; const k = [r.tab, fundType(r.type, r.number), r.company, r.track, r.number].join("|"); if (seen.has(k)) return false; seen.add(k); return true; });
