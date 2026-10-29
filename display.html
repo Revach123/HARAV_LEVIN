@@ -87,7 +87,7 @@
   .doc-side{position:relative;align-self:stretch}.doc-side::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;border-inline-start:1px solid #d5dde5}.doc-tag{font-size:12px;font-weight:700;color:#1a3a5c;line-height:18px;height:18px;margin-bottom:-3px}.doc-sp-t{font-size:12px;font-weight:700;color:#444;text-align:center}
   .doc-link{display:inline-flex;gap:5px;align-items:center;line-height:20px}.doc-btn{width:34px;height:30px;justify-content:center;border:1px solid var(--accent-border,#b7d9d3);border-radius:5px;background:#fff}.doc-btn:hover{background:var(--accent-bg,#e8f5f3);text-decoration:none}.doc-ic{display:inline-block;width:18px;text-align:center}
   .doc-link{color:var(--accent-dark);font-weight:600;text-decoration:none;white-space:nowrap}.doc-link:hover{text-decoration:underline}
-  tr.recent td{background:#fffbea}.new-tag.approval{background:#9cc4ea;color:#0b2f52}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:3px;padding:0 6px;font-size:11px;font-weight:700;margin-inline-start:4px;vertical-align:middle}
+  tr.recent td{background:#fffbea}.new-line{margin-top:3px}.new-line .new-tag{margin:0}.new-tag.approval{background:#9cc4ea;color:#0b2f52}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:3px;padding:0 6px;font-size:11px;font-weight:700;margin-inline-start:4px;vertical-align:middle}
   .badge-yes{display:inline-block;background:var(--accent-bg);color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:3px;padding:1px 9px;font-size:12px;font-weight:600}
   td.wrapok{white-space:normal}td.wrapok .badge-yes,td.wrapok .badge-bad,td.wrapok .badge-offer{white-space:normal;font-size:11.5px;line-height:1.3;padding:1px 6px}
   .badge-bad{display:inline-block;background:#fdecea;color:var(--red);border:1px solid #f3b8b0;border-radius:3px;padding:1px 9px;font-size:13px;font-weight:700}
@@ -647,8 +647,8 @@ function cellFor(col, val, row) {
   if (col.cell === "name") {
     td.className = "name-cell";
     if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)
-    else if (row && row._recent && !row._sub && col.key === "permit_name") td.innerHTML = `${esc(val ?? "")} <span class="new-tag new" title="נוספה לרשימה בחודש האחרון">חדש</span>`;
-    else if (row && row._recent && col.key === "security_name") td.innerHTML = `${esc(val ?? "")} <span class="new-tag ${row._kind}" title="${NEW_TAG[row._kind][1]}">${NEW_TAG[row._kind][0]}</span>`;
+    else if (row && row._recent && !row._sub && col.key === "permit_name") td.innerHTML = `${esc(val ?? "")}<div class="new-line"><span class="new-tag new" title="נוספה לרשימה בחודש האחרון">חדש</span></div>`;
+    else if (row && row._recent && col.key === "security_name") td.innerHTML = `${esc(val ?? "")}<div class="new-line"><span class="new-tag ${row._kind}" title="${NEW_TAG[row._kind][1]}">${NEW_TAG[row._kind][0]}</span></div>`;
     else td.textContent = val ?? "";
     return td;
   }
