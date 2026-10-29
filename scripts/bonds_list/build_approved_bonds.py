@@ -76,6 +76,7 @@ COLUMNS = [
     "redemption_date", "annual_interest", "linkage", "linkage_type",
     "last_price", "annual_yield", "base_indices", "is_tradable",
     "first_seen",
+    "listed_first_seen",   # מתי הנייר הופיע לראשונה ברשימת הבורסה (כל האג"ח, לא רק מאושרות): בסיס ל"הנפקה חדשה"; universe_seen.json
     "midroog_rating", "maalot_rating", "ytm_gross",   # enrich.py: דירוגים + תשואה ברוטו לפדיון (לא צמוד בלבד)
 ]
 
@@ -434,6 +435,35 @@ def load_state():
     return {"securities_first_seen": {}}
 
 
+# ── 4ב. מאגר כל האג"ח בבורסה: מתי כל נייר הופיע לראשונה ברשימת datawise (לא רק מאושרות) ──────────
+# first_seen = מתי נכנס לרשימה שלנו (אישור); listed_first_seen = מתי נרשם בבורסה (הנפקה). אין בנתוני הבורסה תאריך הנפקה, ולכן אוספים אותו מהיום.
+# "started" = יום תחילת האיסוף: ניירות שהופיעו ביום הזה היו קיימים קודם (צילום פתיחה), ורק מי שנראה אחריו הוא באמת חדש. התצוגה מתחילה להשתמש בזה חודש אחרי started.
+UNIVERSE_PATH = os.path.join(OUT, "universe_seen.json")
+UNIVERSE = {"started": "", "seen": {}}
+
+
+def update_universe(by_chp):
+    global UNIVERSE
+    u = {"started": TODAY, "seen": {}}
+    if os.path.exists(UNIVERSE_PATH):
+        try:
+            with open(UNIVERSE_PATH, encoding="utf-8") as f:
+                u = json.load(f)
+        except (OSError, ValueError):
+            pass
+    seen = u.setdefault("seen", {})
+    u.setdefault("started", TODAY)
+    for items in by_chp.values():
+        for r, _t in items:
+            seen.setdefault(str(r["securityId"]), TODAY)      # רק ניירות חדשים מקבלים תאריך; קיימים לא משתנים, ונייר שנעלם זמנית מהרשימה לא נמחק
+    u["updated"] = TODAY
+    os.makedirs(OUT, exist_ok=True)
+    with open(UNIVERSE_PATH, "w", encoding="utf-8") as f:
+        json.dump(u, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    UNIVERSE = u
+    return u
+
+
 def apply_first_seen(bonds, state):
     first = state.setdefault("securities_first_seen", {})
     for b in bonds:
@@ -445,6 +475,7 @@ def apply_first_seen(bonds, state):
 def write_lists(bonds):
     def view(b, lst=""):
         r = dict(b)
+        r["listed_first_seen"] = UNIVERSE["seen"].get(str(b.get("security_id")), "") if b.get("security_id") else ""
         r["is_private"] = "כן" if b["is_private"] else "לא"
         r["list"] = lst
         return r
@@ -463,7 +494,7 @@ def write_lists(bonds):
     def dump(name, rows, cols):
         rows = [{c: r.get(c, "") for c in cols} for r in rows]
         with open(os.path.join(OUT, f"{name}.json"), "w", encoding="utf-8") as f:
-            json.dump({"updated": TODAY, "count": len(rows), "columns": cols, "rows": rows},
+            json.dump({"updated": TODAY, "universe_started": UNIVERSE.get("started", ""), "count": len(rows), "columns": cols, "rows": rows},
                       f, ensure_ascii=False, indent=1)
         with open(os.path.join(OUT, f"{name}.csv"), "w", encoding="utf-8-sig", newline="") as f:
             w = csv.DictWriter(f, fieldnames=cols)
@@ -648,6 +679,7 @@ def main(companies_path=None):
     if not bonds or (prev and len(bonds) < 0.8 * prev):
         raise SystemExit(f"bond count looks wrong ({len(bonds)} vs previous {prev}) - output left untouched")
     stabilize_names(bonds)
+    update_universe(by_chp)
     snapshot = snapshot_from_datawise(by_chp)
     import company_ids      # כאן ולא בראש הקובץ: company_ids מייבא את הקובץ הזה
     cid_map = company_ids.get_ids({x["chp_number"] for x in bonds})     # מזהי חברה במאיה (להעשרה): מהמפה, לא מסריקה

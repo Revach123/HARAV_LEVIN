@@ -42,6 +42,7 @@ def main(chp_arg=""):
         raise SystemExit("datawise unavailable - lists left untouched")
     rows, _d, types = dw
     by_chp = bond_rows_by_chp(rows, types)
+    b.update_universe(by_chp)          # מאגר כל האג"ח: תאריך הופעה ראשונה ברשימת הבורסה
 
     current = {r["chp_number"] for r in regular}
     targets = set(manual) | {r["chp_number"] for r in regular if r.get("manual")}
