@@ -101,6 +101,10 @@
   /* גלילה לרוחב: סרגל גלילה נוסף מעל הטבלה (הסרגל התחתון נמצא בסוף הטבלה הארוכה ולכן לא נראה) */
   .hscroll-top{overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:3px;display:none}
   .hscroll-top div{height:1px}
+  /* רמז לעמודות נוספות: צל בקצה הטבלה בצד שיש בו עוד תוכן, ושורת הנחיה עם חצים */
+  .table-wrap.more-l{box-shadow:inset 16px 0 14px -12px rgba(39,77,91,.45)}.table-wrap.more-r{box-shadow:inset -16px 0 14px -12px rgba(39,77,91,.45)}.table-wrap.more-l.more-r{box-shadow:inset 16px 0 14px -12px rgba(39,77,91,.45),inset -16px 0 14px -12px rgba(39,77,91,.45)}
+  .hscroll-hint{display:none;align-items:center;gap:8px;margin:0 0 4px;font-size:13px;color:var(--navy);background:var(--accent-bg);border:1px solid var(--accent-border);border-radius:4px;padding:3px 8px}
+  .hscroll-hint button{font:inherit;font-size:13px;cursor:pointer;background:#fff;color:var(--accent-dark);border:1px solid var(--accent-border);border-radius:4px;padding:1px 10px}.hscroll-hint button:disabled{opacity:.35;cursor:default}
   body.embed{background:transparent;padding:0}
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
@@ -446,9 +450,22 @@ function render(container, state, type, usedSample) {
   const syncFrom = (src, dst) => () => { if (syncing) return; syncing = true; dst.scrollLeft = src.scrollLeft; syncing = false; if (!parentV5) postHeaderSpec(); schedHscroll(); };
   topBar.addEventListener("scroll", syncFrom(topBar, wrap));
   wrap.addEventListener("scroll", syncFrom(wrap, topBar));
-  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; topBar.style.display = table.scrollWidth > wrap.clientWidth + 1 ? "block" : "none"; postHscroll(); };
+  const hint = el("div", "hscroll-hint"), hl = el("button"), hr = el("button"), ht = el("span");
+  hl.type = hr.type = "button"; hl.textContent = "◀ שמאלה"; hr.textContent = "ימינה ▶"; ht.textContent = "↔ יש עוד עמודות בצדדים. גללו הצידה או לחצו על החצים";
+  hint.append(ht, hl, hr);
+  const step = dir => () => wrap.scrollBy({ left: dir * Math.max(200, wrap.clientWidth * 0.7), behavior: "smooth" });
+  hl.addEventListener("click", step(-1)); hr.addEventListener("click", step(1));
+  const edges = () => {          // כמה תוכן מוסתר בכל צד (גם בכיוון RTL, שבו scrollLeft שלילי)
+    const max = wrap.scrollWidth - wrap.clientWidth, pos = wrap.scrollLeft, rtl = getComputedStyle(wrap).direction === "rtl";
+    const left = rtl ? max + pos : pos, right = rtl ? -pos : max - pos;
+    wrap.classList.toggle("more-l", left > 2); wrap.classList.toggle("more-r", right > 2);
+    hl.disabled = !(left > 2); hr.disabled = !(right > 2);
+  };
+  wrap.addEventListener("scroll", edges);
+  const updateTop = () => { topInner.style.width = table.scrollWidth + "px"; const over = table.scrollWidth > wrap.clientWidth + 1; topBar.style.display = over ? "block" : "none"; hint.style.display = over ? "flex" : "none"; edges(); postHscroll(); };
   hscrollWrap = wrap;
   new ResizeObserver(updateTop).observe(wrap);
+  container.appendChild(hint);
   container.appendChild(topBar);
   container.appendChild(wrap);
   updateTop();
