@@ -67,6 +67,8 @@
   .card.fmt .ln{display:block;font-size:18px;line-height:1.55;color:var(--muted)}
   .card.fmt .ln b{font-weight:700;color:var(--navy);overflow-wrap:anywhere}
   .card.fmt .ln.name{font-size:20px}
+  .card.recent{background:#fffbea}.new-tag{display:inline-block;background:#f6b73c;color:#4a3000;border-radius:4px;padding:1px 9px;font-size:14px;font-weight:700}.new-tag.approval{background:#9cc4ea;color:#0b2f52}
+  .spin-s{display:inline-block;width:15px;height:15px;border:2px solid var(--accent-border);border-top-color:var(--accent);border-radius:50%;animation:spn .8s linear infinite;vertical-align:middle}@keyframes spn{to{transform:rotate(360deg)}}
   .card.fmt .ln.name b{color:var(--accent-dark)}
   .card.fmt .ln .bad{color:var(--red)} .card.fmt .ln .good{color:var(--green)}
   .top-btn{position:fixed;inset-inline-start:1rem;bottom:1rem;z-index:30;width:56px;height:56px;border-radius:50%;border:0;background:var(--navy);color:#fff;font-size:26px;cursor:pointer;display:none;box-shadow:0 2px 10px rgba(0,0,0,.25)}
@@ -125,20 +127,97 @@ function note(r) { return r.notes ? `<div class="note">${esc(r.notes)}</div>` : 
 
 // שורה בפורמט "תווית: ערך" (כמו במסך של נדרים פלוס). שורה בלי ערך לא מוצגת.
 function ln(label, val, cls) { return val === "" || val == null ? "" : `<span class="ln ${cls || ""}">${esc(label)}: <b>${val}</b></span>`; }
+// ── חדשים בראש הרשימה (כמו display.html): אג"ח לפי first_seen / listed_first_seen, חברות לפי added_at ──
+const ymd = d => d.toISOString().slice(0, 10);
+const RECENT_DAYS = 21, NEW_CO_DAYS = 30;
+const NEW_TAG = { new: "חדש", issue: "הנפקה חדשה", approval: "אישור חדש" };
+function markRecentBonds(rows, started) {
+  const cnt = {}; for (const r of rows) { const fs = r.first_seen || ""; cnt[fs] = (cnt[fs] || 0) + 1; }
+  const base = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || "", since = ymd(new Date(Date.now() - RECENT_DAYS * 864e5));
+  for (const r of rows) {
+    const fs = r.first_seen || "", ls = r.listed_first_seen || "", dated = !!r.redemption_date;
+    const iss = !!(started && ls && ls > started && ls >= since && dated), appr = !iss && !!(fs && fs >= since && fs !== base && dated);
+    r._kind = iss ? "issue" : appr ? (started && fs > started ? "approval" : "new") : ""; r._recent = !!r._kind;
+  }
+  const rank = { issue: 0, approval: 1, new: 2 }, date = r => String(r._kind === "issue" ? r.listed_first_seen : r.first_seen);
+  return [...rows.filter(r => r._recent).sort((a, b) => rank[a._kind] - rank[b._kind] || date(b).localeCompare(date(a)) || (Number(b.security_id) || 0) - (Number(a.security_id) || 0)), ...rows.filter(r => !r._recent)];
+}
+function markRecentCompanies(rows) {
+  const cnt = {}; for (const r of rows) { const d = r.added_at || ""; if (d) cnt[d] = (cnt[d] || 0) + 1; }
+  const bulk = new Set(Object.keys(cnt).filter(d => cnt[d] >= 300)), since = ymd(new Date(Date.now() - NEW_CO_DAYS * 864e5));
+  for (const r of rows) { const d = r.added_at || ""; r._recent = !!(d && d >= since && !bulk.has(d)); r._kind = r._recent ? "new" : ""; }
+  return [...rows.filter(r => r._recent).sort((a, b) => String(b.added_at).localeCompare(String(a.added_at))), ...rows.filter(r => !r._recent)];
+}
+const newTag = r => r._recent ? `<span class="ln"><span class="new-tag ${r._kind}">${NEW_TAG[r._kind]}</span></span>` : "";
+
+// ── שערים חיים (כמו display.html): הרשימה מוצגת מיד; שער ותשואה לפדיון נטענים ומחושבים ברקע, עם ספינר ──
+let PRICES_P = null;
+const livePrices = () => PRICES_P || (PRICES_P = fetch(`${API_BASE}/api/bond-prices`).then(r => r.ok ? r.json() : null).catch(() => null));
+function liveYtm(r, p) {
+  const fr = Number(r.interest_frequency); if (![1, 2, 4].includes(fr)) return;
+  const file = parseFloat(r.annual_interest), live = p[4], price = p[0];
+  if (p[6] || !Number.isFinite(file) || (live != null && Math.abs(live - file) > 0.001) || (p[5] && p[5] !== r.redemption_date)) { r.ytm_gross = ""; return; }
+  if (!(price >= 50 && price <= 200)) return;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(r.redemption_date || ""); if (!m) return;
+  const now = new Date(), d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1])), times = [];
+  while (d > now) { times.unshift((d - now) / (365.25 * 864e5)); d.setUTCMonth(d.getUTCMonth() - 12 / fr); }
+  if (!times.length) return;
+  const coupon = file / fr, full = price + coupon * Math.min(Math.max(1 - times[0] * fr, 0), 1);
+  const f = x => times.reduce((s, t) => s + coupon / Math.pow(1 + x, t * fr), 0) + 100 / Math.pow(1 + x, times[times.length - 1] * fr) - full;
+  let lo = -0.99, hi = 5; if (f(lo) * f(hi) > 0) return;
+  for (let i = 0; i < 100; i++) { const mid = (lo + hi) / 2, fm = f(mid); if (Math.abs(fm) < 1e-7) { lo = hi = mid; break; } if (f(lo) * fm < 0) hi = mid; else lo = mid; }
+  const y = (lo + hi) / 2 * fr * 100;
+  if (y >= -10 && y <= 60) r.ytm_gross = Math.round(y * 100) / 100;
+}
+async function applyPricesAsync(rows, j) {
+  if (!j || !j.prices) return 0;
+  let n = 0;
+  for (let i = 0; i < rows.length; i += 120) {
+    for (const r of rows.slice(i, i + 120)) { const p = j.prices[String(r.security_id)]; if (p && p[0] > 0) { r.last_price = p[0]; liveYtm(r, p); n++; } }
+    await new Promise(res => setTimeout(res, 0));
+  }
+  return n;
+}
+function marketClosed() {
+  const p = {};
+  for (const x of new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Jerusalem", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date())) p[x.type] = x.value;
+  const m = (+p.hour) * 60 + (+p.minute), day = p.weekday;
+  if (day === "Sat" || day === "Sun") return true;
+  return m < 9 * 60 + 59 || m >= (day === "Fri" ? 14 * 60 + 5 : 17 * 60 + 55);
+}
+let updBase = "", liveState = "", liveTs = "";
+function paintUpd() {
+  let note = "";
+  if (liveState === "loading") note = "מעדכן שערים ותשואות…";
+  else if (liveTs) note = marketClosed() ? "נתוני סוף יום מסחר" : `שערים נכון ל-${new Date(liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" })} (15 דקות השהייה)`;
+  $("upd").textContent = [updBase, note].filter(Boolean).join(" · ");
+}
+const spin = '<span class="spin-s" title="מעדכן שער חי…"></span>';
+function rerender() { $("grid").innerHTML = view.slice(0, shown).map(current.startsWith("bonds") ? bondCard : companyCard).join(""); }
+function startLive(type, list) {
+  liveState = "loading"; for (const r of list) r._livePending = true; paintUpd();
+  livePrices().then(async j => {
+    const ok = await applyPricesAsync(list, j);
+    for (const r of list) r._livePending = false;
+    if (ok) liveTs = j.ts;
+    liveState = ""; paintUpd();
+    if (current === type) rerender();
+  });
+}
 function companyCard(r) {
   const st = r.bonds_status || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח');
   const cls = /לא מאושר/.test(st) ? "bad" : /מאושר/.test(st) ? "good" : "";
   // בלי כותרות משנה: סטטוס האג"ח מוצג כשורה בפני עצמה, והיתר פרטי מוצג רק כשיש (ברשימת "כללי")
   const priv = r.has_private_permit === "כן" ? "יש גם היתר עיסקא פרטי" : "";
   const line = (v, c) => v ? `<span class="ln"><b class="${c || ""}">${esc(v)}</b></span>` : "";
-  return `<article class="card fmt">${ln("שם חברה", esc(r.permit_name), "name")}${ln("מספר", esc(r.chp_number))}${ln("עיסוק", esc(r.category))}${ln("אזור", esc(r.region))}
+  return `<article class="card fmt${r._recent ? " recent" : ""}">${ln("שם חברה", esc(r.permit_name), "name")}${newTag(r)}${ln("מספר", esc(r.chp_number))}${ln("עיסוק", esc(r.category))}${ln("אזור", esc(r.region))}
     ${line(st, cls)}${line(priv, "good")}${ln("הערות", esc(r.notes))}</article>`;
 }
 function bondCard(r) {
   const rating = [r.midroog_rating && "מידרוג " + r.midroog_rating, r.maalot_rating && "מעלות " + r.maalot_rating].filter(Boolean).join(" · ");
-  return `<article class="card fmt">${ln('אג"ח', esc(r.security_name), "name")}${ln("חברה", esc(r.company))}${ln("סימול", esc(r.symbol))}${ln("מספר נייר", esc(r.security_id))}${ln("סוג נייר", esc(r.security_type))}
-    ${ln("ריבית", esc(pct(r.annual_interest)))}${ln("מועד פדיון", esc(r.redemption_date))}${ln("הצמדה", esc(r.linkage))}${ln("שער אחרון", esc(num(r.last_price)))}
-    ${ln("תשואה לפדיון", esc(pct(r.ytm_gross)))}${ln("תשואה שנתית", esc(pct(r.annual_yield)))}${ln("דירוג", esc(rating))}${ln("הערות", esc(r.notes))}</article>`;
+  return `<article class="card fmt${r._recent ? " recent" : ""}">${ln('אג"ח', esc(r.security_name), "name")}${newTag(r)}${ln("חברה", esc(r.company))}${ln("סימול", esc(r.symbol))}${ln("מספר נייר", esc(r.security_id))}${ln("סוג נייר", esc(r.security_type))}
+    ${ln("ריבית", esc(pct(r.annual_interest)))}${ln("מועד פדיון", esc(r.redemption_date))}${ln("הצמדה", esc(r.linkage))}${r._livePending && r.redemption_date ? ln("שער אחרון", spin) : ln("שער אחרון", esc(num(r.last_price)))}
+    ${r._livePending && r.redemption_date ? ln("תשואה לפדיון", spin) : ln("תשואה לפדיון", esc(pct(r.ytm_gross)))}${ln("תשואה שנתית", esc(pct(r.annual_yield)))}${ln("דירוג", esc(rating))}${ln("הערות", esc(r.notes))}</article>`;
 }
 
 function haystack(r) {
@@ -176,11 +255,12 @@ async function load(type) {
     if (!cache[type]) {
       if (type.startsWith("bonds")) {
         const j = await fetch(`${API_BASE}/data/bonds_list/bonds_${type.split("-")[1]}.json`).then(r => { if (!r.ok) throw 0; return r.json(); });
-        cache[type] = (j.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() }));
+        cache[type] = markRecentBonds((j.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() })), j.universe_started || "");
+        startLive(type, cache[type]);
       } else {
         const j = await fetch(`${API_BASE}/api/lists?type=${type}`).then(r => r.json());
         if (!j || !j.ok) throw 0;
-        cache[type] = j.rows;
+        cache[type] = markRecentCompanies(j.rows);
       }
     }
   } catch (e) {
@@ -195,7 +275,7 @@ async function load(type) {
 // תאריך עדכון (לועזי פשוט; display.html מציג גם עברי)
 fetch(`${API_BASE}/data/bonds_list/verification.json`, { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(j => {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec((j && j.updated) || "");
-  if (m) $("upd").textContent = `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`;
+  if (m) { updBase = `עודכן לאחרונה: ${m[3]}.${m[2]}.${m[1]}`; paintUpd(); }
 }).catch(() => {});
 
 function pick(type) { if (type !== current) { query = ""; $("q").value = ""; load(type); window.scrollTo(0, 0); } }
