@@ -68,7 +68,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       throw e;
     }
     const row = await env.DB.prepare("SELECT * FROM permit_docs WHERE id = ?").bind(id).first();
-    triggerCompress(env, waitUntil, buf.byteLength);          // דחיסה מיידית של הגרסה הקלה לצפייה (ברקע; ללא סוד GH_DISPATCH_TOKEN - הריצה המתוזמנת מטפלת)
+    triggerCompress(env, waitUntil, buf.byteLength);          // דחיסה מיידית של הגרסה הקלה לצפייה (ברקע; ללא סוד GITHUB_DISPATCH_TOKEN - הריצה המתוזמנת מטפלת)
     return Response.json({ success: true, doc: (await withBusinesses(env, [row]))[0] });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
