@@ -338,15 +338,15 @@
    "chp_number": "511400723"
   },
   {
-   "id": 10372,
-   "maya_report_id": 1775870,
+   "id": 10397,
+   "maya_report_id": 1778433,
    "company_name": "אי.אס.איי",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775870",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778433",
    "link_presentation": null,
    "securities": [
     {
@@ -590,6 +590,29 @@
    ],
    "carried": true,
    "last_seen": "2026-10-28"
+  },
+  {
+   "chp_number": "514481233",
+   "company_name": "אי.אס.איי",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10372,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1775870",
+   "maya_report_id": 1775870,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-10-29"
   }
  ],
  "open": [
