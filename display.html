@@ -355,7 +355,7 @@ function liveNote(state, hasText, long) {
   const hm = new Date(state.liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
   const sep = hasText ? " · " : "";
   if (marketClosed()) return sep + "נתוני סוף יום מסחר";
-  return sep + `שערים נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)`;
+  return sep + `שערים נכון ל-${hm} (15 דקות השהייה)`;
 }
 
 // אג"ח חדשות, בשלושה סוגים לפי מה שאפשר לדעת (universe_started = יום תחילת איסוף ההופעה הראשונה ברשימת הבורסה):
