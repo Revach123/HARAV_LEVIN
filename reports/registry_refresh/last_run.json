@@ -6,33 +6,33 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 91
+   "biz_type": 90
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-28T09:03:07.924786Z",
+  "updated": "2026-10-29T08:57:20.776636Z",
   "source": "d1",
   "businesses": 1278,
   "numeric_chp": 1274,
   "found_in_registry": 1186,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2235,
-  "datawise_date": "2026-10-26",
+  "datawise_rows": 2236,
+  "datawise_date": "2026-10-28",
   "bond_companies": 364,
   "changes": {
    "registrar_name": 0,
-   "biz_type": 1,
-   "tase_has_agch": 1,
-   "registry_status": 1
+   "biz_type": 0,
+   "tase_has_agch": 0,
+   "registry_status": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 1,
-   "tase_has_agch": 1,
-   "registry_status": 1
+   "biz_type": 0,
+   "tase_has_agch": 0,
+   "registry_status": 0
   },
   "registry_status_counts": {
    "פעילה": 1073,
@@ -42,32 +42,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mvr526nfhz8t",
-   "chp": "514442722",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mvr526nfhz8t",
-   "chp": "514442722",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mvr526nfhz8t",
-   "chp": "514442722",
-   "field": "tase_has_agch",
-   "old": "",
-   "new": "אין"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
