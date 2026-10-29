@@ -213,7 +213,7 @@ export async function onRequestGet(context) {
                   ELSE ${notesExpr} END`
           : notesExpr;
         return `
-        SELECT permit_name, registrar_name AS _registrar, chp_number, category, region,
+        SELECT permit_name, registrar_name AS _registrar, chp_number, category, region, substr(COALESCE(created_at,''), 1, 10) AS added_at,
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
