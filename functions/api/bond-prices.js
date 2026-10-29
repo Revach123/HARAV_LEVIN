@@ -1,4 +1,5 @@
-// GET /api/bond-prices → { ts, count, prices: { "<מספר נייר>": [שער, "last"|"base", שעת עסקה, שינוי%] } }
+// GET /api/bond-prices → { ts, count, prices: { "<מספר נייר>": [שער, "last"|"base", שעת עסקה, שינוי%, ריבית שנתית בבורסה, מועד פדיון בבורסה, מושהה] } }
+// הריבית ומועד הפדיון מאותה תשובה: הדף משווה אותם לרשימה, ואם שונו (למשל הפחתת דירוג) לא מציג תשואה מחושבת.
 // שערים של כל אג"ח החברות מהנתונים הציבוריים של הבורסה (אותו API ש-market.tase.co.il משתמש בו; עיכוב הבורסה - כ-15 דקות), עם מטמון של 2 דקות.
 // "last" = שער עסקה אחרון (LastRate); "base" = שער הבסיס כשעוד לא היתה עסקה היום. אותה שיטה כמו revach: functions/api/tase-proxy.js.
 // הרשימה עצמה (אילו אג"ח) נשארת הקבצים הסטטיים; כאן רק השער. כשל = 502 והדף ממשיך להציג את השער היומי.
@@ -24,7 +25,8 @@ export async function loadPrices() {
   for (const it of items) {
     const sid = parseInt(String(it.Id), 10), last = Number(it.LastRate), base = Number(it.BaseRate);
     if (!sid || (!(last > 0) && !(base > 0))) continue;
-    prices[sid] = last > 0 ? [last, "last", it.DealTime || "", it.Change ?? null] : [base, "base", it.DealTime || "", null];
+    const ai = parseFloat(it.AnnualInterest), extra = [Number.isFinite(ai) ? ai : null, String(it.RedemptionDate || ""), !!it.SuspendStatus];
+    prices[sid] = last > 0 ? [last, "last", it.DealTime || "", it.Change ?? null, ...extra] : [base, "base", it.DealTime || "", null, ...extra];
   }
   return { ts: new Date().toISOString(), count: Object.keys(prices).length, prices };
 }
