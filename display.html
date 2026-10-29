@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+[Resource from github at repo://Revach123/HARAV_LEVIN/sha/b746b0f9002bfc63acd56d0fc1e957918fa18f5f/contents/display.html] <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -326,10 +326,21 @@ function liveYtm(r, p) {
   const y = (lo + hi) / 2 * fr * 100;
   if (y >= -10 && y <= 60) r.ytm_gross = Math.round(y * 100) / 100;
 }
+// האם המסחר בבורסה סגור (שישי אחרי הצהריים, שבת, או מחוץ לשעות המסחר, כולל 15 דקות העיכוב): אז השערים הם נתוני סוף היום
+function marketClosed() {
+  const p = {};
+  for (const x of new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Jerusalem", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date())) p[x.type] = x.value;
+  const m = (+p.hour) * 60 + (+p.minute), day = p.weekday;
+  if (day === "Sat" || day === "Sun") return true;
+  const open = 9 * 60 + 59, close = day === "Fri" ? 14 * 60 + 5 : 17 * 60 + 55;          // סוף המסחר (17:25 + מכרז סגירה; שישי 13:50) + 15 דקות עיכוב
+  return m < open || m >= close;
+}
 function liveNote(state, hasText, long) {
   if (!state.liveTs) return "";
   const hm = new Date(state.liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
-  return (hasText ? " · " : "") + `שערים נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)` + (long ? `. התשואה לפדיון מחושבת לפי השער הנוכחי והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)` : "");
+  const sep = hasText ? " · " : "";
+  if (marketClosed()) return sep + "נתוני סוף יום מסחר" + (long ? `. התשואה לפדיון מחושבת לפי שער הסגירה והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)` : "");
+  return sep + `שערים נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)` + (long ? `. התשואה לפדיון מחושבת לפי השער הנוכחי והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)` : "");
 }
 
 // אג"ח חדשות, בשלושה סוגים לפי מה שאפשר לדעת (universe_started = יום תחילת איסוף ההופעה הראשונה ברשימת הבורסה):
