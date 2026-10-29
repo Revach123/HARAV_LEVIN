@@ -291,25 +291,26 @@ async function mountList(container, type) {
   render(container, state, type, usedSample);
 }
 
-// אג"ח חדשות. שני סוגים: "הנפקה חדשה" = הנייר הופיע לראשונה ברשימת הבורסה (listed_first_seen) אחרי תחילת איסוף התאריכים; "אישור חדש" = הנייר נכנס לרשימה שלנו (first_seen),
-// גם אם הונפק מזמן. הפיצול לשני הסוגים מופעל רק חודש (SPLIT_AFTER_DAYS) אחרי תחילת האיסוף (universe_started בקובץ הנתונים), כדי שיהיו מספיק תאריכים אמינים; עד אז - תג "חדש" אחד לפי הכניסה לרשימה.
-const RECENT_DAYS = 45, SPLIT_AFTER_DAYS = 30;
+// אג"ח חדשות, בשלושה סוגים לפי מה שאפשר לדעת (universe_started = יום תחילת איסוף ההופעה הראשונה ברשימת הבורסה):
+//  "הנפקה חדשה"  - הנייר הופיע לראשונה ברשימת הבורסה אחרי תחילת האיסוף (listed_first_seen > universe_started).
+//  "אישור חדש"   - הנייר כבר היה ברשימת הבורסה בתחילת האיסוף, ונכנס לרשימה שלנו אחריה (first_seen > universe_started): אג"ח קיימת שאושרה.
+//  "חדש"         - נכנס לרשימה שלנו לפני / ביום תחילת האיסוף (כבר סומן חדש קודם): אי אפשר לדעת אם הונפק או אושר, נשאר בלי פירוט.
+const RECENT_DAYS = 21;          // שלושה שבועות
 const ymd = d => d.toISOString().slice(0, 10);
 function markRecent(rows, started) {
   const cnt = {};
   for (const r of rows) { const fs = r.first_seen || ""; cnt[fs] = (cnt[fs] || 0) + 1; }
   const base = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || "";          // התאריך הנפוץ ביותר = צילום הפתיחה של הרשימה (כולם "נכנסו" ביום אחד)
   const since = ymd(new Date(Date.now() - RECENT_DAYS * 864e5));
-  const split = !!started && ymd(new Date()) >= ymd(new Date(new Date(started).getTime() + SPLIT_AFTER_DAYS * 864e5));
   for (const r of rows) {
     const fs = r.first_seen || "", ls = r.listed_first_seen || "", dated = !!r.redemption_date;
-    const appr = !!(fs && fs >= since && fs !== base && dated);
-    if (!split) { r._recent = appr; r._kind = appr ? "new" : ""; continue; }
-    const iss = !!(ls && ls > started && ls >= since && dated);
-    r._recent = iss || appr; r._kind = iss ? "issue" : appr ? "approval" : "";
+    const iss = !!(started && ls && ls > started && ls >= since && dated);
+    const appr = !iss && !!(fs && fs >= since && fs !== base && dated);
+    r._kind = iss ? "issue" : appr ? (started && fs > started ? "approval" : "new") : "";
+    r._recent = !!r._kind;
   }
 }
-const NEW_TAG = { new: ["חדש", "נוספה לרשימה בחודש וחצי האחרונים"], issue: ["הנפקה חדשה", "הופיעה לראשונה ברשימת הבורסה בחודש וחצי האחרונים"], approval: ["אישור חדש", "אג\"ח קיימת שנוספה לרשימה בחודש וחצי האחרונים (אושרה)"] };
+const NEW_TAG = { new: ["חדש", "נוספה לרשימה בשלושת השבועות האחרונים"], issue: ["הנפקה חדשה", "הופיעה לראשונה ברשימת הבורסה בשלושת השבועות האחרונים"], approval: ["אישור חדש", "אג\"ח שכבר נסחרה בבורסה ונוספה לרשימה בשלושת השבועות האחרונים (אושרה)"] };
 function render(container, state, type, usedSample) {
   container.innerHTML = "";
 
@@ -507,7 +508,7 @@ function render(container, state, type, usedSample) {
         return (cmpVals(x[0], y[0]) * d) || (x[1] - y[1]);
       }).map(x => x[2]);
     }
-    if (state.topic === "bonds" && !state.sort) rows = [...rows.filter(r => r._recent).sort((a, b) => (a._kind === "issue" ? 0 : 1) - (b._kind === "issue" ? 0 : 1) || String(b._kind === "issue" ? b.listed_first_seen : b.first_seen).localeCompare(String(a._kind === "issue" ? a.listed_first_seen : a.first_seen)) || (Number(b.security_id) || 0) - (Number(a.security_id) || 0)), ...rows.filter(r => !r._recent)];          // בלי מיון שנבחר: אג"ח שהונפקו לאחרונה בראש הרשימה
+    if (state.topic === "bonds" && !state.sort) rows = [...rows.filter(r => r._recent).sort((a, b) => ({ issue: 0, approval: 1, new: 2 }[a._kind]) - ({ issue: 0, approval: 1, new: 2 }[b._kind]) || String(b._kind === "issue" ? b.listed_first_seen : b.first_seen).localeCompare(String(a._kind === "issue" ? a.listed_first_seen : a.first_seen)) || (Number(b.security_id) || 0) - (Number(a.security_id) || 0)), ...rows.filter(r => !r._recent)];          // בלי מיון שנבחר: אג"ח שהונפקו לאחרונה בראש הרשימה
     state.filtered = groupSubRows(rows);
     ths.forEach((th, i) => { const c = state.cols[i], on = state.sort && (state.sort.key === c.key || (state.sort.key === "__rating" && colKind(c).startsWith("rating")));
       th.innerHTML = esc(c.label) + (on ? `<span class="arr">${state.sort.dir === 1 ? "▲" : "▼"}</span>` : ""); });
