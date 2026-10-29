@@ -10,10 +10,16 @@
  "limit": 23,
  "dropped_no_terms": [
   {
-   "security_id": 1228345,
-   "security_name": "הראל הנפ אגח כב",
-   "company": "הראל ביטוח מימון והנפקות בע\"מ",
-   "chp_number": "513834200"
+   "security_id": 1230325,
+   "security_name": "מרב פקדון אגח ד",
+   "company": "מרב פקדונות בע\"מ",
+   "chp_number": "517081956"
+  },
+  {
+   "security_id": 1231737,
+   "security_name": "מרב פקדון אגח ה",
+   "company": "מרב פקדונות בע\"מ",
+   "chp_number": "517081956"
   }
  ]
 }
