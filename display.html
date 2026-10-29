@@ -305,13 +305,31 @@ const livePrices = () => PRICES_P || (PRICES_P = fetch(`${API_BASE}/api/bond-pri
 function applyPrices(rows, j) {
   if (!j || !j.prices) return 0;
   let n = 0;
-  for (const r of rows) { const p = j.prices[String(r.security_id)]; if (p && p[0] > 0) { r.last_price = p[0]; n++; } }
+  for (const r of rows) { const p = j.prices[String(r.security_id)]; if (p && p[0] > 0) { r.last_price = p[0]; liveYtm(r, p); n++; } }
   return n;
+}
+// תשואה לפדיון ברוטו לפי השער החי: רק לאג"ח כשירה (interest_frequency מהריצה היומית: לא צמודה, לא לשיעורין). אותה נוסחה כמו enrich.py / revach (solveYtm2).
+// בדיקות שמירה: אם הריבית או מועד הפדיון בבורסה שונים ממה שברשימה (למשל שינוי ריבית בעקבות הפחתת דירוג), או שהנייר מושהה - לא מציגים תשואה (ריק) עד שהרשימה היומית תתעדכן.
+function liveYtm(r, p) {
+  const fr = Number(r.interest_frequency); if (![1, 2, 4].includes(fr)) return;
+  const file = parseFloat(r.annual_interest), live = p[4], price = p[0];
+  if (p[6] || !Number.isFinite(file) || (live != null && Math.abs(live - file) > 0.001) || (p[5] && p[5] !== r.redemption_date)) { r.ytm_gross = ""; return; }
+  if (!(price >= 50 && price <= 200)) return;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(r.redemption_date || ""); if (!m) return;
+  const now = new Date(), d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1])), times = [];
+  while (d > now) { times.unshift((d - now) / (365.25 * 864e5)); d.setUTCMonth(d.getUTCMonth() - 12 / fr); }
+  if (!times.length) return;
+  const coupon = file / fr, full = price + coupon * Math.min(Math.max(1 - times[0] * fr, 0), 1);          // מחיר נקי + ריבית צבורה
+  const f = x => times.reduce((s, t) => s + coupon / Math.pow(1 + x, t * fr), 0) + 100 / Math.pow(1 + x, times[times.length - 1] * fr) - full;
+  let lo = -0.99, hi = 5; if (f(lo) * f(hi) > 0) return;
+  for (let i = 0; i < 100; i++) { const mid = (lo + hi) / 2, fm = f(mid); if (Math.abs(fm) < 1e-7) { lo = hi = mid; break; } if (f(lo) * fm < 0) hi = mid; else lo = mid; }
+  const y = (lo + hi) / 2 * fr * 100;
+  if (y >= -10 && y <= 60) r.ytm_gross = Math.round(y * 100) / 100;
 }
 function liveNote(state, hasText) {
   if (!state.liveTs) return "";
   const hm = new Date(state.liveTs).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jerusalem" });
-  return (hasText ? " · " : "") + `שערי האג"ח נכון ל-${hm} (עיכוב הבורסה כ-15 דקות)`;
+  return (hasText ? " · " : "") + `שערי האג"ח נכון ל-${hm} (עיכוב הבורסה כ-15 דקות). התשואה לפדיון מחושבת לפי השער הנוכחי והריבית הרשומה בבורסה; ריבית יכולה להשתנות (למשל בעקבות שינוי דירוג)`;
 }
 
 // אג"ח חדשות, בשלושה סוגים לפי מה שאפשר לדעת (universe_started = יום תחילת איסוף ההופעה הראשונה ברשימת הבורסה):

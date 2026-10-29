@@ -78,6 +78,7 @@ COLUMNS = [
     "first_seen",
     "listed_first_seen",   # מתי הנייר הופיע לראשונה ברשימת הבורסה (כל האג"ח, לא רק מאושרות): בסיס ל"הנפקה חדשה"; universe_seen.json
     "midroog_rating", "maalot_rating", "ytm_gross",   # enrich.py: דירוגים + תשואה ברוטו לפדיון (לא צמוד בלבד)
+    "interest_frequency",   # enrich.py: תשלומי ריבית בשנה, רק לאג"ח כשירה לחישוב תשואה (הדף מחשב מחדש לפי השער החי)
 ]
 
 

@@ -323,7 +323,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None, r
     now = datetime.datetime.now(datetime.timezone.utc)
     state = load_state(state_path)
     for b in bonds:
-        b.setdefault("midroog_rating", ""); b.setdefault("maalot_rating", ""); b.setdefault("ytm_gross", "")
+        b.setdefault("midroog_rating", ""); b.setdefault("maalot_rating", ""); b.setdefault("ytm_gross", ""); b.setdefault("interest_frequency", "")
 
     # 1. דירוגים: מידרוג (כל ההיסטוריה) + דוחות Maya (שתי החברות), עם נקודת ביקורת
     try:
@@ -409,6 +409,7 @@ def enrich(bonds, state_path=STATE_PATH, today=None, log=print, fetchers=None, r
         except (TypeError, ValueError):
             continue
         if fr and d and d > today and price > 0 and eligible_for_ytm(b, partial_ids):
+            b["interest_frequency"] = fr          # מפורסם כדי שהדף יחשב תשואה לפי השער החי (display.html); קיים רק לאג"ח כשירה: לא צמודה, לא לשיעורין, תדירות ידועה
             y = solve_ytm(price, coupon, fr, gen_coupon_times(d, fr, today))
             if y is not None and -10 <= y <= 60:
                 b["ytm_gross"] = round(y, 2)
