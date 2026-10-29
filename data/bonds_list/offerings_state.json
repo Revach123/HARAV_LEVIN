@@ -758,6 +758,56 @@
    "kind": "upcoming",
    "last_seen": "2026-10-29"
   },
+  "U10398": {
+   "data": {
+    "chp_number": "517207239",
+    "company_name": "מיכל פקדונות",
+    "draft_no": 3,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10398,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1778582",
+    "link_trust_indenture": null,
+    "maya_report_id": 1778582,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-29"
+  },
+  "U10399": {
+   "data": {
+    "chp_number": "514481233",
+    "company_name": "אי.אס.איי",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10399,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778433",
+    "maya_report_id": 1778585,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-29"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
