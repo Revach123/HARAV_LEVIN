@@ -804,6 +804,31 @@
    "kind": "upcoming",
    "last_seen": "2026-10-30"
   },
+  "U10401": {
+   "data": {
+    "chp_number": "520035171",
+    "company_name": "אדגר השקעות",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10401,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778715",
+    "maya_report_id": 1778715,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-10-30"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
