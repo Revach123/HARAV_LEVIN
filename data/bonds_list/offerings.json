@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29",
+ "updated": "2026-10-30",
  "upcoming": [
   {
    "id": 10358,
@@ -231,6 +231,27 @@
     }
    ],
    "chp_number": "515541415"
+  },
+  {
+   "id": 10400,
+   "maya_report_id": 1778768,
+   "company_name": "ברזאני",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1778768",
+   "link_trust_indenture": null,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1598266",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": "ilBBB+",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": ""
   },
   {
    "id": 9973,
@@ -663,33 +684,6 @@
  ],
  "open": [
   {
-   "begins_at": "2026-10-26T09:30:00",
-   "chp_number": "520033309",
-   "ends_at": "2026-10-26T16:30:00",
-   "interest": 6.95,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 823,
-   "issuer_name": "חג'ג' נדל\"ן",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1777831",
-   "offer_number": 1215318,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "security_id": null,
-     "security_name": "אגח טז",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-26"
-  },
-  {
    "begins_at": "2026-10-28T09:00:00",
    "chp_number": "516561875",
    "ends_at": "2026-10-28T16:00:00",
@@ -838,13 +832,6 @@
    ]
   },
   {
-   "chp_number": "520033309",
-   "name": "חג'ג' נדל\"ן",
-   "statuses": [
-    "בהנפקה"
-   ]
-  },
-  {
    "chp_number": "520034380",
    "name": "אינטרגאמא",
    "statuses": [
@@ -874,6 +861,7 @@
   }
  ],
  "unmatched": [
+  "ברזאני",
   "איגל פרופרטיז",
   "סלדן",
   "ניצנים",
