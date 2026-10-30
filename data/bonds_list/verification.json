@@ -1,19 +1,19 @@
 {
- "updated": "2026-10-29",
+ "updated": "2026-10-30",
  "status": "ok",
- "datawise_date": "2026-10-28",
- "expected": 773,
- "maya": 773,
+ "datawise_date": "2026-10-29",
+ "expected": 772,
+ "maya": 772,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
  "dropped_no_terms": [
   {
-   "security_id": 5390273,
-   "security_name": "רוטשטיין אגח י",
-   "company": "רוטשטיין נדל\"ן בע\"מ",
-   "chp_number": "520039959"
+   "security_id": 1212851,
+   "security_name": "ספנסר אגח ה",
+   "company": "ספנסר אקוויטי גרופ",
+   "chp_number": "1838863"
   }
  ]
 }
