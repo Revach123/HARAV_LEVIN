@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-29T10:26:58+00:00",
- "tradeDate": "29/10/2026",
+ "updated": "2026-10-30T10:28:46+00:00",
+ "tradeDate": "30/10/2026",
  "indices": {
   "709": {
    "name": "תל בונד 60 צמודות",
@@ -16,840 +16,840 @@
    "index": "709",
    "securityNumber": "1158476",
    "name": "מקורות   אגח 11",
-   "weight": 4.03665,
+   "weight": 4.06416,
    "hp": "520010869"
   },
   {
    "index": "709",
    "securityNumber": "1209253",
    "name": "עזריאלי   אגח ט",
-   "weight": 3.45623,
+   "weight": 3.4702,
    "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "1196799",
    "name": "חשמל     אגח 35",
-   "weight": 3.37573,
+   "weight": 3.37231,
    "hp": "520000472"
   },
   {
    "index": "709",
    "securityNumber": "1201839",
    "name": "לאומי אגח 186",
-   "weight": 3.24902,
+   "weight": 3.24524,
    "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "6040547",
    "name": "לאומי אגח 183",
-   "weight": 2.82935,
+   "weight": 2.82629,
    "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "6000285",
    "name": "חשמל     אגח 31",
-   "weight": 2.80482,
+   "weight": 2.80448,
    "hp": "520000472"
   },
   {
    "index": "709",
    "securityNumber": "1178680",
    "name": "עזריאלי   אגח ח",
-   "weight": 2.78682,
+   "weight": 2.78935,
    "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "1196781",
    "name": "חשמל     אגח 34",
-   "weight": 2.77966,
+   "weight": 2.77906,
    "hp": "520000472"
   },
   {
    "index": "709",
    "securityNumber": "6000392",
    "name": "חשמל     אגח 33",
-   "weight": 2.66063,
+   "weight": 2.6617,
    "hp": "520000472"
   },
   {
    "index": "709",
    "securityNumber": "1215953",
    "name": "דיסק מנ  אגח יז",
-   "weight": 2.3802,
+   "weight": 2.37383,
    "hp": "520029935"
   },
   {
    "index": "709",
    "securityNumber": "1156611",
    "name": "עזריאלי   אגח ו",
-   "weight": 2.32332,
+   "weight": 2.32437,
    "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "2310381",
    "name": "מז טפ הנפק   52",
-   "weight": 2.31137,
+   "weight": 2.3101,
    "hp": "520032046"
+  },
+  {
+   "index": "709",
+   "securityNumber": "1174556",
+   "name": "רבוע נדלן אגח ט",
+   "weight": 2.2988,
+   "hp": "513765859"
   },
   {
    "index": "709",
    "securityNumber": "2310498",
    "name": "מז טפ הנ אגח 62",
-   "weight": 2.29277,
+   "weight": 2.29108,
    "hp": "520032046"
   },
   {
    "index": "709",
    "securityNumber": "1228667",
    "name": "לאומי אגח 188",
-   "weight": 2.26686,
-   "hp": "520018078"
-  },
-  {
-   "index": "709",
-   "securityNumber": "6040539",
-   "name": "לאומי אגח 182",
-   "weight": 2.16898,
+   "weight": 2.26272,
    "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "1194638",
    "name": "מליסרון  אגח כא",
-   "weight": 2.13494,
+   "weight": 2.13534,
    "hp": "520037789"
   },
   {
    "index": "709",
    "securityNumber": "2260636",
    "name": "מבנה אגח כה",
-   "weight": 2.11119,
+   "weight": 2.11032,
    "hp": "520024126"
   },
   {
    "index": "709",
    "securityNumber": "1191345",
    "name": "פועלים  אגח 201",
-   "weight": 2.05132,
+   "weight": 2.04817,
    "hp": "520000118"
-  },
-  {
-   "index": "709",
-   "securityNumber": "1174556",
-   "name": "רבוע נדלן אגח ט",
-   "weight": 1.9031,
-   "hp": "513765859"
   },
   {
    "index": "709",
    "securityNumber": "1227453",
    "name": "פועלים  אגח 204",
-   "weight": 1.89571,
+   "weight": 1.89501,
    "hp": "520000118"
   },
   {
    "index": "709",
    "securityNumber": "6000210",
    "name": "חשמל     אגח 27",
-   "weight": 1.87177,
+   "weight": 1.8689,
    "hp": "520000472"
   },
   {
    "index": "709",
    "securityNumber": "7480304",
    "name": "דיסק מנ  אגח טו",
-   "weight": 1.80662,
+   "weight": 1.80401,
    "hp": "520029935"
   },
   {
    "index": "709",
    "securityNumber": "1172782",
    "name": "אמות      אגח ח",
-   "weight": 1.77654,
+   "weight": 1.77396,
    "hp": "520026683"
   },
   {
    "index": "709",
    "securityNumber": "1178672",
    "name": "עזריאלי   אגח ז",
-   "weight": 1.7188,
+   "weight": 1.71616,
    "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "1110915",
    "name": "אדמה אגח ב",
-   "weight": 1.69388,
+   "weight": 1.69022,
    "hp": "520043605"
   },
   {
    "index": "709",
    "securityNumber": "1213883",
    "name": "מז טפ הנ אגח 70",
-   "weight": 1.65263,
+   "weight": 1.6541,
    "hp": "520032046"
+  },
+  {
+   "index": "709",
+   "securityNumber": "6040539",
+   "name": "לאומי אגח 182",
+   "weight": 1.62424,
+   "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "1145572",
    "name": "נמלי ישראל אגחב",
-   "weight": 1.52093,
+   "weight": 1.51771,
    "hp": "513569780"
   },
   {
    "index": "709",
    "securityNumber": "1203157",
    "name": "דיסק מנ  אגח טז",
-   "weight": 1.51153,
+   "weight": 1.51089,
    "hp": "520029935"
   },
   {
    "index": "709",
    "securityNumber": "1234434",
    "name": "דיסק מנ  אגח יח",
-   "weight": 1.49851,
+   "weight": 1.49635,
    "hp": "520029935"
   },
   {
    "index": "709",
    "securityNumber": "1216423",
    "name": "לאומי התח נד406",
-   "weight": 1.47493,
+   "weight": 1.47375,
    "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "1202142",
    "name": "מז טפ הנ אגח 68",
-   "weight": 1.40411,
+   "weight": 1.40221,
    "hp": "520032046"
   },
   {
    "index": "709",
    "securityNumber": "1199868",
    "name": "פועלים  אגח 203",
-   "weight": 1.34428,
+   "weight": 1.34311,
    "hp": "520000118"
   },
   {
    "index": "709",
    "securityNumber": "3230398",
    "name": "מליסרון  אגח יט",
-   "weight": 1.33582,
+   "weight": 1.33513,
    "hp": "520037789"
   },
   {
    "index": "709",
    "securityNumber": "1158609",
    "name": "אמות      אגח ו",
-   "weight": 1.32172,
+   "weight": 1.3181,
    "hp": "520026683"
   },
   {
    "index": "709",
    "securityNumber": "1138650",
    "name": "עזריאלי   אגח ד",
-   "weight": 1.2741,
+   "weight": 1.27257,
+   "hp": "510960719"
+  },
+  {
+   "index": "709",
+   "securityNumber": "1243328",
+   "name": "עזריאלי  אגח יא",
+   "weight": 1.24879,
    "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "1201821",
    "name": "לאומי אגח 185",
-   "weight": 1.24261,
+   "weight": 1.2407,
    "hp": "520018078"
   },
   {
    "index": "709",
    "securityNumber": "2310555",
    "name": "מז טפ הנ אגח 64",
-   "weight": 1.23226,
+   "weight": 1.23159,
    "hp": "520032046"
   },
   {
    "index": "709",
    "securityNumber": "1193630",
    "name": "נכסים ובנ אגח י",
-   "weight": 1.20633,
+   "weight": 1.20616,
    "hp": "520025438"
   },
   {
    "index": "709",
    "securityNumber": "1160944",
    "name": "ארפורט    אגח ט",
-   "weight": 1.18979,
+   "weight": 1.18938,
    "hp": "511659401"
   },
   {
    "index": "709",
    "securityNumber": "1238237",
    "name": "בינל הנפק אגחיד",
-   "weight": 1.12009,
+   "weight": 1.11892,
    "hp": "513141879"
   },
   {
    "index": "709",
    "securityNumber": "1260785",
    "name": "ג'י סיטי אגח טז",
-   "weight": 1.10837,
+   "weight": 1.11279,
    "hp": "520033234"
   },
   {
    "index": "709",
    "securityNumber": "1229285",
    "name": "אמפא      אגח א",
-   "weight": 1.0992,
+   "weight": 1.09898,
    "hp": "510000813"
-  },
-  {
-   "index": "709",
-   "securityNumber": "2310225",
-   "name": "מז טפ הנפק   46",
-   "weight": 1.09549,
-   "hp": "520032046"
   },
   {
    "index": "709",
    "securityNumber": "3230273",
    "name": "מליסרון  אגח יז",
-   "weight": 1.07753,
+   "weight": 1.07738,
    "hp": "520037789"
   },
   {
    "index": "709",
    "securityNumber": "1195585",
    "name": "פניקס הון אגחיב",
-   "weight": 1.0714,
+   "weight": 1.07328,
    "hp": "514290345"
   },
   {
    "index": "709",
    "securityNumber": "1228469",
    "name": "בינל הנפק אגחיג",
-   "weight": 1.05581,
+   "weight": 1.0544,
    "hp": "513141879"
   },
   {
    "index": "709",
    "securityNumber": "1182831",
    "name": "מימון ישיר אגחה",
-   "weight": 1.03611,
+   "weight": 1.03479,
    "hp": "513893123"
   },
   {
    "index": "709",
    "securityNumber": "1260736",
    "name": "ג'י סיטי אגח יד",
-   "weight": 1.01911,
+   "weight": 1.01191,
    "hp": "520033234"
   },
   {
    "index": "709",
    "securityNumber": "1147503",
    "name": "נתיבי גז  אגח ד",
-   "weight": 1.0116,
+   "weight": 1.01111,
    "hp": "513436394"
   },
   {
    "index": "709",
    "securityNumber": "1165141",
    "name": "מגה אור   אגח ט",
-   "weight": 1.00893,
+   "weight": 1.0066,
    "hp": "513257873"
   },
   {
    "index": "709",
    "securityNumber": "1214121",
    "name": "פועלים הת נד יב",
-   "weight": 0.97988,
+   "weight": 0.97917,
    "hp": "520000118"
   },
   {
    "index": "709",
    "securityNumber": "1171271",
    "name": "ריט 1     אגח ז",
-   "weight": 0.96991,
+   "weight": 0.96907,
    "hp": "513821488"
   },
   {
    "index": "709",
    "securityNumber": "1214139",
    "name": "פועלים הת נד יג",
-   "weight": 0.9621,
+   "weight": 0.96062,
    "hp": "520000118"
   },
   {
    "index": "709",
    "securityNumber": "7670284",
    "name": "הפניקס    אגח 5",
-   "weight": 0.92205,
+   "weight": 0.92313,
    "hp": "520017450"
   },
   {
    "index": "709",
    "securityNumber": "1182989",
    "name": "אשטרום קב אגח ד",
-   "weight": 0.89376,
+   "weight": 0.89365,
    "hp": "510381601"
   },
   {
    "index": "709",
    "securityNumber": "2260495",
    "name": "מבנה אגח כ",
-   "weight": 0.88988,
+   "weight": 0.88701,
    "hp": "520024126"
   },
   {
    "index": "709",
    "securityNumber": "1197284",
    "name": "אלון רבוע אגח ט",
-   "weight": 0.88581,
+   "weight": 0.88485,
    "hp": "520042847"
-  },
-  {
-   "index": "709",
-   "securityNumber": "1178375",
-   "name": "מגה אור  אגח יא",
-   "weight": 0.83858,
-   "hp": "513257873"
-  },
-  {
-   "index": "709",
-   "securityNumber": "1243328",
-   "name": "עזריאלי  אגח יא",
-   "weight": 0.622,
-   "hp": "510960719"
   },
   {
    "index": "709",
    "securityNumber": "1204999",
    "name": "אמות      אגח ט",
-   "weight": 0.43654,
+   "weight": 0.87375,
    "hp": "520026683"
   },
   {
+   "index": "709",
+   "securityNumber": "1178375",
+   "name": "מגה אור  אגח יא",
+   "weight": 0.83813,
+   "hp": "513257873"
+  },
+  {
+   "index": "709",
+   "securityNumber": "1222587",
+   "name": "גב ים    אגח יב",
+   "weight": 0.20994,
+   "hp": "520001736"
+  },
+  {
    "index": "765",
-   "securityNumber": "1205566",
-   "name": "נכסים בנ אגח יא",
-   "weight": 2.04925,
-   "hp": "520025438"
+   "securityNumber": "1241967",
+   "name": "אפי נכסים אגחיח",
+   "weight": 2.03244,
+   "hp": "510560188"
   },
   {
    "index": "765",
    "securityNumber": "1216043",
    "name": "נאוויטס   אגח ז",
-   "weight": 2.04706,
+   "weight": 2.02458,
    "hp": "550263107"
   },
   {
    "index": "765",
-   "securityNumber": "1185628",
-   "name": "מגדל הון  אגח ט",
-   "weight": 2.04391,
-   "hp": "513230029"
+   "securityNumber": "1205004",
+   "name": "אמות      אגח י",
+   "weight": 2.01748,
+   "hp": "520026683"
   },
   {
    "index": "765",
-   "securityNumber": "7480163",
-   "name": "דיסק מנ  אגח יד",
-   "weight": 2.04129,
-   "hp": "520029935"
+   "securityNumber": "2300309",
+   "name": "בזק      אגח 13",
+   "weight": 2.01591,
+   "hp": "520031931"
   },
   {
    "index": "765",
-   "securityNumber": "1162817",
-   "name": "פז אנרגיה אגח ח",
-   "weight": 2.03753,
-   "hp": "510216054"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1197276",
-   "name": "אלון רבוע אגח ח",
-   "weight": 2.03711,
-   "hp": "520042847"
-  },
-  {
-   "index": "765",
-   "securityNumber": "2310548",
-   "name": "מז טפ הנ אגח 63",
-   "weight": 2.03529,
-   "hp": "520032046"
-  },
-  {
-   "index": "765",
-   "securityNumber": "3900495",
-   "name": "אלוני חץ אגח יב",
-   "weight": 2.02929,
-   "hp": "520038506"
-  },
-  {
-   "index": "765",
-   "securityNumber": "7670334",
-   "name": "הפניקס    אגח 6",
-   "weight": 2.02682,
-   "hp": "520017450"
-  },
-  {
-   "index": "765",
-   "securityNumber": "7590151",
-   "name": "גב ים     אגח ח",
-   "weight": 2.02354,
-   "hp": "520001736"
+   "securityNumber": "1218122",
+   "name": "אנלייט אנר אגחז",
+   "weight": 2.01535,
+   "hp": "520041146"
   },
   {
    "index": "765",
    "securityNumber": "1228659",
    "name": "לאומי אגח 187",
-   "weight": 2.02013,
+   "weight": 2.014,
    "hp": "520018078"
   },
   {
    "index": "765",
    "securityNumber": "1223452",
    "name": "פועלים  אגח 102",
-   "weight": 2.02011,
+   "weight": 2.01029,
    "hp": "520000118"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1215078",
-   "name": "קיסטון אינ אגחב",
-   "weight": 2.02001,
-   "hp": "515983476"
-  },
-  {
-   "index": "765",
-   "securityNumber": "7390263",
-   "name": "אלקטרה    אגח ו",
-   "weight": 2.0189,
-   "hp": "520028911"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1178417",
-   "name": "שפיר הנדס אגח ג",
-   "weight": 2.01399,
-   "hp": "514892801"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1218122",
-   "name": "אנלייט אנר אגחז",
-   "weight": 2.01163,
-   "hp": "520041146"
-  },
-  {
-   "index": "765",
-   "securityNumber": "2300309",
-   "name": "בזק      אגח 13",
-   "weight": 2.00794,
-   "hp": "520031931"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1207836",
-   "name": "ישראל קנדה אגחח",
-   "weight": 2.00697,
-   "hp": "520039298"
-  },
-  {
-   "index": "765",
-   "securityNumber": "7460421",
-   "name": "שטראוס    אגח ו",
-   "weight": 2.00443,
-   "hp": "520003781"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1205004",
-   "name": "אמות      אגח י",
-   "weight": 2.00359,
-   "hp": "520026683"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1220607",
-   "name": "הראל הנפק נד כא",
-   "weight": 1.99169,
-   "hp": "513834200"
-  },
-  {
-   "index": "765",
-   "securityNumber": "2810372",
-   "name": "אייסיאל   אגח ז",
-   "weight": 1.99121,
-   "hp": "520027830"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1220383",
-   "name": "אפי נכסים אגחיז",
-   "weight": 1.97458,
-   "hp": "510560188"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1228766",
-   "name": "שכון ובי אגח 11",
-   "weight": 1.9739,
-   "hp": "520036104"
   },
   {
    "index": "765",
    "securityNumber": "1228618",
    "name": "דלק קב   אגח מא",
-   "weight": 1.95767,
+   "weight": 2.01008,
    "hp": "520044322"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1205566",
+   "name": "נכסים בנ אגח יא",
+   "weight": 2.00829,
+   "hp": "520025438"
+  },
+  {
+   "index": "765",
+   "securityNumber": "7480163",
+   "name": "דיסק מנ  אגח יד",
+   "weight": 2.00829,
+   "hp": "520029935"
+  },
+  {
+   "index": "765",
+   "securityNumber": "2810372",
+   "name": "אייסיאל   אגח ז",
+   "weight": 2.00804,
+   "hp": "520027830"
+  },
+  {
+   "index": "765",
+   "securityNumber": "2310548",
+   "name": "מז טפ הנ אגח 63",
+   "weight": 2.00797,
+   "hp": "520032046"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1228766",
+   "name": "שכון ובי אגח 11",
+   "weight": 2.00778,
+   "hp": "520036104"
+  },
+  {
+   "index": "765",
+   "securityNumber": "7590151",
+   "name": "גב ים     אגח ח",
+   "weight": 2.00777,
+   "hp": "520001736"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1220607",
+   "name": "הראל הנפק נד כא",
+   "weight": 2.00741,
+   "hp": "513834200"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1162817",
+   "name": "פז אנרגיה אגח ח",
+   "weight": 2.0072,
+   "hp": "510216054"
+  },
+  {
+   "index": "765",
+   "securityNumber": "2590578",
+   "name": "בזן      אגח יב",
+   "weight": 2.00666,
+   "hp": "520036658"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1197276",
+   "name": "אלון רבוע אגח ח",
+   "weight": 2.00602,
+   "hp": "520042847"
+  },
+  {
+   "index": "765",
+   "securityNumber": "7460421",
+   "name": "שטראוס    אגח ו",
+   "weight": 2.00572,
+   "hp": "520003781"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1185628",
+   "name": "מגדל הון  אגח ט",
+   "weight": 2.00548,
+   "hp": "513230029"
+  },
+  {
+   "index": "765",
+   "securityNumber": "7670334",
+   "name": "הפניקס    אגח 6",
+   "weight": 2.0041,
+   "hp": "520017450"
+  },
+  {
+   "index": "765",
+   "securityNumber": "7390263",
+   "name": "אלקטרה    אגח ו",
+   "weight": 2.00368,
+   "hp": "520028911"
+  },
+  {
+   "index": "765",
+   "securityNumber": "3900495",
+   "name": "אלוני חץ אגח יב",
+   "weight": 2.00222,
+   "hp": "520038506"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1215078",
+   "name": "קיסטון אינ אגחב",
+   "weight": 2.0016,
+   "hp": "515983476"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1207836",
+   "name": "ישראל קנדה אגחח",
+   "weight": 1.99459,
+   "hp": "520039298"
   },
   {
    "index": "765",
    "securityNumber": "1211416",
    "name": "נופר אנרג אגח ד",
-   "weight": 1.95666,
+   "weight": 1.99316,
    "hp": "514599943"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1229004",
-   "name": "מנורה הון התח י",
-   "weight": 1.94013,
-   "hp": "513937714"
   },
   {
    "index": "765",
    "securityNumber": "1230309",
    "name": "כלל הון  אגח טו",
-   "weight": 1.9334,
+   "weight": 1.96312,
    "hp": "513754069"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1226331",
+   "name": "שפיר הנדס אגח ד",
+   "weight": 1.92495,
+   "hp": "514892801"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1229004",
+   "name": "מנורה הון התח י",
+   "weight": 1.91349,
+   "hp": "513937714"
   },
   {
    "index": "765",
    "securityNumber": "1216035",
    "name": "אלבר     אגח כב",
-   "weight": 1.9302,
+   "weight": 1.90558,
    "hp": "512025891"
   },
   {
    "index": "765",
    "securityNumber": "1192731",
    "name": "שלמה החז אגח יט",
-   "weight": 1.88366,
+   "weight": 1.85421,
    "hp": "520034372"
-  },
-  {
-   "index": "765",
-   "securityNumber": "2590578",
-   "name": "בזן      אגח יב",
-   "weight": 1.8755,
-   "hp": "520036658"
   },
   {
    "index": "765",
    "securityNumber": "1216233",
    "name": "קרסו נדלן אגח ב",
-   "weight": 1.76233,
+   "weight": 1.73259,
    "hp": "510488190"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1192616",
+   "name": "יוניברסל  אגח ו",
+   "weight": 1.71154,
+   "hp": "511809071"
   },
   {
    "index": "765",
    "securityNumber": "1183920",
    "name": "סאמיט    אגח יב",
-   "weight": 1.69305,
+   "weight": 1.66494,
    "hp": "520043720"
   },
   {
    "index": "765",
    "securityNumber": "1219286",
    "name": "פתאל אירו אגח ו",
-   "weight": 1.6874,
+   "weight": 1.66118,
    "hp": "515328250"
   },
   {
    "index": "765",
    "securityNumber": "1203942",
    "name": "פתאל החז  אגח ה",
-   "weight": 1.62426,
+   "weight": 1.59857,
    "hp": "512607888"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1203264",
-   "name": "או.פי.סי  אגח ד",
-   "weight": 1.57813,
-   "hp": "514401702"
   },
   {
    "index": "765",
    "securityNumber": "1223486",
    "name": "אזורים   אגח 16",
-   "weight": 1.57616,
+   "weight": 1.55108,
    "hp": "520025990"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1203264",
+   "name": "או.פי.סי  אגח ד",
+   "weight": 1.55087,
+   "hp": "514401702"
   },
   {
    "index": "765",
    "securityNumber": "1161751",
    "name": "אנרג'יקס  אגח א",
-   "weight": 1.5688,
+   "weight": 1.54506,
    "hp": "513901371"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1198571",
-   "name": "שוב אנרגיה אגחא",
-   "weight": 1.53347,
-   "hp": "510459928"
   },
   {
    "index": "765",
    "securityNumber": "1225291",
    "name": "אלדן תחבו אגחיא",
-   "weight": 1.52962,
+   "weight": 1.51049,
    "hp": "510454333"
+  },
+  {
+   "index": "765",
+   "securityNumber": "1198571",
+   "name": "שוב אנרגיה אגחא",
+   "weight": 1.50964,
+   "hp": "510459928"
   },
   {
    "index": "765",
    "securityNumber": "5760301",
    "name": "חברהלישראלאגח14",
-   "weight": 1.50086,
+   "weight": 1.47754,
    "hp": "520028010"
   },
   {
    "index": "765",
    "securityNumber": "1214428",
    "name": "אקונרג'י  אגח ב",
-   "weight": 1.42847,
+   "weight": 1.40929,
    "hp": "516339777"
   },
   {
    "index": "765",
    "securityNumber": "7770258",
    "name": "שופרסל    אגח ז",
-   "weight": 1.39407,
+   "weight": 1.37213,
    "hp": "520022732"
   },
   {
    "index": "765",
    "securityNumber": "1217694",
    "name": "מגדלי תיכוןאגחז",
-   "weight": 1.35057,
+   "weight": 1.32958,
    "hp": "512719485"
   },
   {
    "index": "765",
    "securityNumber": "1188572",
    "name": "אקרו      אגח א",
-   "weight": 1.32939,
+   "weight": 1.30873,
    "hp": "511996803"
   },
   {
    "index": "765",
    "securityNumber": "1240811",
    "name": "פוקס      אגח ב",
-   "weight": 1.31533,
+   "weight": 1.29271,
    "hp": "512157603"
   },
   {
    "index": "765",
    "securityNumber": "1178235",
    "name": "אלביט מע' אגח ב",
-   "weight": 1.26449,
+   "weight": 1.24341,
    "hp": "520043027"
   },
   {
    "index": "765",
    "securityNumber": "1143080",
    "name": "סלקום    אגח יב",
-   "weight": 1.25842,
+   "weight": 1.23874,
    "hp": "511930125"
   },
   {
    "index": "765",
    "securityNumber": "1242825",
    "name": "גמא       אגח ה",
-   "weight": 1.21622,
+   "weight": 1.19909,
    "hp": "512711789"
   },
   {
    "index": "765",
    "securityNumber": "1223296",
    "name": "אאורה אגח יט",
-   "weight": 1.21247,
+   "weight": 1.19478,
    "hp": "520038274"
   },
   {
    "index": "765",
    "securityNumber": "1223155",
    "name": "וילאר    אגח יא",
-   "weight": 1.20174,
+   "weight": 1.18566,
    "hp": "520038910"
   },
   {
    "index": "765",
    "securityNumber": "1140102",
    "name": "אשטרום קב אגח ג",
-   "weight": 1.19612,
+   "weight": 1.17683,
    "hp": "510381601"
   },
   {
    "index": "765",
    "securityNumber": "1161371",
    "name": "מיטב השק אגח ד",
-   "weight": 1.13033,
+   "weight": 1.11208,
    "hp": "520043795"
   },
   {
    "index": "765",
    "securityNumber": "1232834",
    "name": "ארפורט   אגח יג",
-   "weight": 1.07626,
+   "weight": 1.05922,
    "hp": "511659401"
   },
   {
    "index": "765",
    "securityNumber": "1207752",
    "name": "אלקו     אגח יד",
-   "weight": 1.03588,
+   "weight": 1.01959,
    "hp": "520025370"
-  },
-  {
-   "index": "765",
-   "securityNumber": "1229244",
-   "name": "ישראמקו   אגח ד",
-   "weight": 1.01297,
-   "hp": "550010003"
   },
   {
    "index": "765",
    "securityNumber": "1157668",
    "name": "שלמה נדלן אגח ד",
-   "weight": 0.99832,
+   "weight": 0.9826,
    "hp": "513957472"
   },
   {
    "index": "765",
    "securityNumber": "5010335",
    "name": "אלקטרה צר אגח א",
-   "weight": 0.9298,
+   "weight": 0.91516,
    "hp": "520039967"
   },
   {
    "index": "765",
    "securityNumber": "1203553",
    "name": "אלקטרהנדלן אגחז",
-   "weight": 0.86281,
+   "weight": 0.84763,
    "hp": "510607328"
   },
   {
    "index": "765",
    "securityNumber": "1186162",
    "name": "דמרי      אגח י",
-   "weight": 0.8249,
+   "weight": 0.81184,
    "hp": "511399388"
   }
  ],
@@ -1111,6 +1111,7 @@
    "hp": "520001736",
    "name": "חברת גב ים לקרקעות בע\"מ",
    "indices": [
+    "709",
     "765"
    ]
   },
@@ -1136,15 +1137,15 @@
    ]
   },
   {
-   "hp": "520039298",
-   "name": "ישראל קנדה (ט.ר) בע\"מ",
+   "hp": "511809071",
+   "name": "יוניברסל מוטורס ישראל בע\"מ",
    "indices": [
     "765"
    ]
   },
   {
-   "hp": "550010003",
-   "name": "ישראמקו נגב 2 שותפות מוגבלת",
+   "hp": "520039298",
+   "name": "ישראל קנדה (ט.ר) בע\"מ",
    "indices": [
     "765"
    ]
