@@ -1,7 +1,7 @@
 {
- "updated": "2026-10-30",
+ "updated": "2026-10-31",
  "status": "ok",
- "datawise_date": "2026-10-29",
+ "datawise_date": "2026-10-30",
  "expected": 772,
  "maya": 772,
  "missing_in_maya": [],
@@ -10,10 +10,10 @@
  "limit": 23,
  "dropped_no_terms": [
   {
-   "security_id": 1212851,
-   "security_name": "ספנסר אגח ה",
-   "company": "ספנסר אקוויטי גרופ",
-   "chp_number": "1838863"
+   "security_id": 1135417,
+   "security_name": "פניקס הון אגח ה",
+   "company": "הפניקס גיוסי הון (2009) בע\"מ",
+   "chp_number": "514290345"
   }
  ]
 }
