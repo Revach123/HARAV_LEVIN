@@ -12,21 +12,21 @@
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-30T09:01:12.328705Z",
+  "updated": "2026-10-31T08:53:20.646515Z",
   "source": "d1",
   "businesses": 1278,
   "numeric_chp": 1274,
   "found_in_registry": 1186,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2237,
-  "datawise_date": "2026-10-29",
+  "datawise_rows": 2236,
+  "datawise_date": "2026-10-30",
   "bond_companies": 364,
   "changes": {
    "registrar_name": 0,
    "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 1
+   "registry_status": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -42,18 +42,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64lu013jnm",
-   "chp": "511996803",
-   "field": "registry_status",
-   "old": "פעילה",
-   "new": "מחוסלת עקב מיזוג"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",

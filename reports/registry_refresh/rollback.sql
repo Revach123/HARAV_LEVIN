@@ -1,1 +1,0 @@
-UPDATE businesses SET registry_status = 'פעילה' WHERE id = 'mp64lu013jnm';
