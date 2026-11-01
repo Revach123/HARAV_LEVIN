@@ -421,6 +421,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:emailSpeakMix": {
+  "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אוֹת אַחַר אוֹת, לְאַט וּבְבֵרוּר. מִסְפָּרִים אֶפְשָׁר לְהַקִּישׁ בְּאֶמְצַע, בְּלִי לְהַפְסִיק. וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_be7f0c5add5ee21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:error": {
   "text": "אֵירְעָה שְׁגִיאָה. אָנָּא נַסּוּ שׁוּב מְאוּחָר יוֹתֵר",
   "voice": "he-IL-AvriNeural",
