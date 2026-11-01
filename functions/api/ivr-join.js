@@ -7,8 +7,8 @@
 //    fn, ln    שם פרטי, שם משפחה (שתי הקלטות)
 //    pc / ph   אם מספר המתקשר זוהה: 1 = משתמשים בו, 2 = מקישים אחר (ph)
 //    p2q / p2  טלפון נוסף (רשות)
-//    ct, st    עיר ורחוב: הקשת האותיות הראשונות (כל אות לפי מקומה במקש: ב = 33, ל = 555) ובחירה מרשימה
-//              כשנשארות עד 8 אפשרויות. אם השם לא נמצא (3 פעמים) - הקלטה. בלי נתוני ערים - הקלטת כתובת מלאה (ad), כמו קודם
+//    ct, st    עיר ורחוב: אות אחת בכל הקשה (לפי מקומה במקש: ב = 33, ל = 555), הקראת האות, ובחירה מרשימה
+//              כשנשארות עד 8 אפשרויות (ברחוב אפשר גם בלי "הרב" / "רבי" וכו'). אם השם לא נמצא (3 פעמים) - הקלטה. בלי נתוני ערים - הקלטת כתובת מלאה (ad), כמו קודם
 //    hn        מספר בית (הקשה; 0 = אין מספר)
 //    emq / em  אימייל (רשות, הקלטה)
 //    fxq / fx  פקס (רשות)
@@ -33,7 +33,7 @@ import { sendConfirmation } from './_shared/join-mail.js';
 import { pickEmail, spokenEmail, pickSegment, pickDomain } from './_shared/spoken-email.js';
 import { splitSpeechAndDigits } from './_shared/dtmf.js';
 import { spokenLetters } from './_shared/spoken-letters.js';
-import { matchNames, loadCities, loadStreets } from './_shared/ivr-addr.js';
+import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -138,43 +138,50 @@ async function step({ v, env, P, bk, done, origin }) {
     return { ask: readTap(`${T(say(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
 
-  // בחירת שם מרשימה (עיר / רחוב) בהקשת האותיות הראשונות. הקשות שבסבבים קודמים נשמרות (s_<name>_acc) ומצטרפות לחדשות.
-  // מצב: s_<name>_n סבב, s_<name>_list הרשימה שהוקראה (מופרדת ב-|), s_<name>_part הרשימה חלקית (שמות שהוקשו במלואם),
-  // s_<name>_f ניסיונות כושלים, s_<name>_rec = מעבר להקלטה, s_<name>_ok / s_<name>_x הבחירה.
+  // בחירת שם מרשימה (עיר / רחוב): אות אחת בכל הקשה. אחרי כל אות מוקראת האות שהוקשה, ואז מבקשים את האות הבאה,
+  // או מקריאים רשימה לבחירה כשנשארו עד 8 שמות. 0 = הסבר מקום האותיות במקשים, 1 = מחיקת האות האחרונה.
+  // מצב: s_<name>_acc האותיות שהוקשו, s_<name>_n סבב, s_<name>_list הרשימה שהוקראה (מופרדת ב-|), s_<name>_part רשימה חלקית
+  // (שמות שהוקשו במלואם, ויש עוד), s_<name>_f ניסיונות כושלים, s_<name>_rec = מעבר להקלטה, s_<name>_ok / s_<name>_x הבחירה.
   const pickStep = (name, names, askKey) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
     if (S(name, 'rec') === '1') return { rec: true };
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, mk = `${name}_m${n}`;
     const acc = S(name, 'acc') || '';
-    const tap = (prefix, i, a) => readTap(prefix + P(a ? 'join:moreLetters' : askKey), `${name}_${i}`, null, { max: 30, min: 1, empty: EMPTY });
-    const advance = (prefix, a) => { setS(name, 'n', n + 1); setS(name, 'acc', a); setS(name, 'list', ''); setS(name, 'part', ''); return { ask: tap(prefix, n + 1, a) }; };
-    const fail = (note) => {
+    // ההסבר המלא (askKey) רק בפעם הראשונה; אחר כך "האות הבאה" / "האות הראשונה" (אחרי מחיקת כל האותיות או טעות)
+    const tap = (prefix, i, a) => readTap(prefix + P(a ? 'join:nextLetter' : S(name, 'i') ? 'join:firstLetter' : askKey), `${name}_${i}`, null, { max: 3, min: 1, empty: EMPTY });
+    const advance = (prefix, a) => { setS(name, 'i', '1'); setS(name, 'n', n + 1); setS(name, 'acc', a); setS(name, 'list', ''); setS(name, 'part', ''); return { ask: tap(prefix, n + 1, a) }; };
+    const fail = (note, a = '') => {
       const f = Number(S(name, 'f') || 0) + 1; setS(name, 'f', f);
       if (f >= PICK_FAILS) { setS(name, 'rec', '1'); return { rec: true }; }
-      return advance(`${P(note)}.`, '');
+      return advance(`${P(note)}.`, a);
     };
-    const listAsk = (list, part) => readTap(`${list.map((x, i) => T(`ל${x} הקישו ${i + 1}`)).join('.')}.${P(part ? 'join:listMore' : 'join:notInList')}`,
+    const said = (l) => `${P('join:typed')}.${P(`letter:${l}`)}.`;
+    const listAsk = (prefix, list, part) => readTap(`${prefix}${list.map((x, i) => T(`ל${x} הקישו ${i + 1}`)).join('.')}.${P(part ? 'join:listMore' : 'join:notInList')}`,
       mk, [...list.map((_, i) => String(i + 1)), '9'], { empty: EMPTY });
     if (S(name, 'list')) {                                  // הוקראה רשימה: מחכים לבחירה
       const list = S(name, 'list').split('|'), c = Number(v[mk]);
       if (c >= 1 && c <= list.length) { setS(name, 'ok', '1'); setS(name, 'x', list[c - 1]); return { val: list[c - 1] }; }
       if (v[mk] === '9') return S(name, 'part') === '1' ? advance('', acc) : fail('join:pickAgain');
-      return { ask: listAsk(list, S(name, 'part') === '1') };
+      return { ask: listAsk('', list, S(name, 'part') === '1') };
     }
     const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
     if (!raw) return { ask: tap('', n, acc) };
     if (raw === '0') return advance(`${P('join:keyMap')}.`, acc);          // 0 = הסבר על מקום האותיות במקשים
-    const d = raw.replace(/[^2-9]/g, '');
-    if (!d) return advance(`${P('join:noHear')}.`, acc);
-    const all = acc + d, m = matchNames(names, all);
-    if (!m.list.length) return fail('join:noLetters');
+    if (raw === '1') {                                       // 1 = מחיקת האות האחרונה
+      const a = acc.slice(0, -1);
+      return advance(`${P('join:deleted')}.${a ? `${P('join:soFar')}.${[...a].map((l) => P(`letter:${l}`)).join('.')}.` : ''}`, a);
+    }
+    const l = tapLetter(raw);
+    if (!l) return advance(`${P('join:badLetter')}.`, acc);
+    const all = acc + l, m = matchNames(names, all);
+    if (!m.list.length) return fail('join:noLetterMatch', acc);          // האות לא מתאימה לאף שם: נשארים עם האותיות הקודמות
     let list = m.list, part = false;
     if (list.length > PICK_MAX) {
-      if (!m.exact.length || m.exact.length > PICK_MAX) return advance('', all);   // עוד הרבה אפשרויות: ממשיכים להקיש
+      if (!m.exact.length || m.exact.length > PICK_MAX) return advance(said(l), all);   // עוד הרבה אפשרויות: האות הבאה
       list = m.exact; part = true;                          // שם שהוקש במלואו, ויש עוד שמות שמתחילים בו
     }
     setS(name, 'acc', all); setS(name, 'list', list.join('|')); setS(name, 'part', part ? '1' : '');
-    return { ask: listAsk(list, part) };
+    return { ask: listAsk(said(l), list, part) };
   };
 
   // הקלטה -> זיהוי דיבור -> הקראת מה שזוהה + אישור (1) / שינוי (2) (הקלטה חוזרת). בלי הגדרת Azure: נשמרת ההקלטה בלבד.

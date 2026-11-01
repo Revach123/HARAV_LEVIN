@@ -2,23 +2,32 @@
 // הרצה: node --no-warnings scripts/voice_search/simulate_addr.mjs
 import assert from 'node:assert/strict';
 import { onRequest as join } from '../../functions/api/ivr-join.js';
-import { tapCode, matchNames, clearAddrCache } from '../../functions/api/_shared/ivr-addr.js';
+import { tapCode, tapLetter, matchNames, clearAddrCache } from '../../functions/api/_shared/ivr-addr.js';
 import { decryptPii, importKeyForWrite } from '../../functions/api/_shared/joiners-crypto.js';
 
 // ---- קידוד והתאמה ----
 assert.equal(tapCode('ב'), '33');
 assert.equal(tapCode('ל'), '555');
-assert.equal(tapCode('בני ברק'), '33' + '44' + '5' + '33' + '7' + '88');
 assert.equal(tapCode('ם'), tapCode('מ'));
+assert.equal(tapLetter('33'), 'ב'); assert.equal(tapLetter('555'), 'ל'); assert.equal(tapLetter('3'), 'א');
+assert.equal(tapLetter('34'), ''); assert.equal(tapLetter('4444'), ''); assert.equal(tapLetter('444'), '');   // מ נ - רק שתי אותיות
 const CITIES = [['3000', 'ירושלים'], ['6100', 'בני ברק'], ['2610', 'בית שמש'], ['1309', 'אלעד'], ['70', 'אשדוד'], ['2640', 'ראש העין'],
   ['5000', 'תל אביב - יפו'], ['6400', 'הרצליה'], ['9000', 'באר שבע'], ['7900', 'פתח תקווה'], ['3780', 'ביתר עילית'], ['1', 'בית אל'],
   ['2', 'בית דגן'], ['3', 'בית חלקיה'], ['4', 'בית חשמונאי'], ['5', 'בית ניר'], ['6', 'בית עוזיאל'], ['7', 'בית קמה'], ['8', 'בית רבן'], ['9', 'מושב קטן']];
 const names = CITIES.map((c) => c[1]);
-assert.deepEqual(matchNames(names, tapCode('אל')).list, ['אלעד']);
-assert.equal(matchNames(names, tapCode('בי')).list.length, 10);                  // "בית..." - יותר מ-8
-assert.deepEqual(matchNames(names, tapCode('בית')).exact, []);
-assert.deepEqual(matchNames(names, tapCode('קט')).list, ['מושב קטן']);          // התאמה לפי מילה שנייה
-assert.deepEqual(matchNames(['הרצל', 'הרצליה', 'הר', 'הרב קוק', 'הרדוף', 'הרימון', 'הרקפת', 'הרמב"ם', 'הרי"ף'], tapCode('הר')).exact, ['הר']);
+assert.deepEqual(matchNames(names, 'אל').list, ['אלעד']);
+assert.equal(matchNames(names, 'בי').list.length, 10);                  // "בית..." - יותר מ-8
+assert.deepEqual(matchNames(names, 'קט').list, ['מושב קטן']);          // התאמה לפי מילה שנייה
+assert.deepEqual(matchNames(['הרצל', 'הרצליה', 'הר', 'הרב קוק', 'הרדוף', 'הרימון', 'הרקפת', 'הרמב"ם', 'הרי"ף'], 'הר').exact, ['הר']);
+// תארים: "הרב קוק" / "רבי עקיבא" / "האדמו"ר מגור" נמצאים גם בלי התואר, לצד שמות שמתחילים באותן אותיות
+const ST = ['הרב קוק', 'קורח', 'רבי עקיבא', 'עזרא', 'האדמו"ר מגור', 'שדרות ירושלים', "ר' חיים עוזר", 'הרב רבי מאיר'];
+assert.deepEqual(matchNames(ST, 'קו').list, ['הרב קוק', 'קורח']);
+assert.deepEqual(matchNames(ST, 'עק').list, ['רבי עקיבא']);
+assert.deepEqual(matchNames(ST, 'מג').list, ['האדמו"ר מגור']);
+assert.deepEqual(matchNames(ST, 'ירו').list, ['שדרות ירושלים']);
+assert.deepEqual(matchNames(ST, 'חיי').list, ["ר' חיים עוזר"]);
+assert.deepEqual(matchNames(ST, 'מאי').list, ['הרב רבי מאיר']);
+assert.deepEqual(matchNames(ST, 'רב').list, ['רבי עקיבא', 'הרב רבי מאיר']);
 
 // ---- שיחה ----
 const STREETS = { 3000: ['יפו', 'בר אילן', 'בן יהודה', 'יואל', 'סורוצקין', 'מלכי ישראל', 'שדרות הרצל'], 1309: ['רבי עקיבא', 'בן זכאי'], 9: [] };
@@ -70,18 +79,20 @@ async function conversation(answers, { log = false } = {}) {
   }
   throw new Error('too many steps');
 }
+// אות אחר אות: כל אות היא תשובה נפרדת; אחרי כל אות (חוץ מהאחרונה) מוקראת האות ומתבקשת הבאה
+const spell = (word, firstRe) => [...word].map((ch, i) => [i === 0 ? firstRe : /הוקשה האות.*האות הבאה/, tapCode(ch)]);
 const lastExtra = async () => {
   const r = inserted.at(-1), key = await importKeyForWrite(env);
   const p = await decryptPii(key, r.rid, r.pii);
   return JSON.parse(p.extra);
 };
 
-// 1. ירושלים -> רשימה (אחרי "יר"), רחוב "בר" -> בר אילן, מספר בית 12
+// 1. ירושלים: י, ר -> רשימה; רחוב "בר" -> בר אילן; מספר בית 12
 let r = await conversation([
-  [/הקישו את האותיות הראשונות של שם העיר.*פעמים את הספרה שלוש/, tapCode('יר')],
-  [/לירושלים הקישו 1.*אינו ברשימה הקישו תשע/, '1'],
-  [/שם הרחוב/, tapCode('בר')],
-  [/לבר אילן הקישו 1/, '1'],
+  ...spell('י', /אות אחר אות.*פעמים את הספרה שלוש.*האות הראשונה של שם העיר/),
+  [/הוקשה האות.*יוד.*לירושלים הקישו 1.*אינו ברשימה הקישו תשע/, '1'],
+  ...spell('ב', /שם הרחוב.*בלי הרב או רבי/),
+  [/לבר אילן הקישו 1.*לבן יהודה הקישו 2/, '1'],
   [/מספר הבית/, '12'],
   [/מספר בית 12.*לאישור הקישו 1/, '1'],
 ]);
@@ -91,11 +102,13 @@ assert.equal(ex['עיר'], 'ירושלים'); assert.equal(ex['רחוב'], 'בר
 assert.equal(ex['כתובת'], 'בר אילן 12, ירושלים');
 assert.ok(!ex['הקלטת כתובת']);
 
-// 2. "בי" = הרבה אפשרויות -> המשך הקשה ("ת" ואז "ש") -> בית שמש; אין קובץ רחובות -> הקלטת רחוב; אין מספר בית (0)
+// 2. ב-י-ת (הרבה אפשרויות), מחיקה (1) והקשה חוזרת, ש -> בית שמש; אין קובץ רחובות -> הקלטת רחוב; אין מספר בית (0)
 r = await conversation([
-  [/שם העיר/, tapCode('בי')],
-  [/עדין הרבה אפשרויות/, tapCode('ת')],
-  [/עדין הרבה אפשרויות/, tapCode('ש')],
+  ...spell('בי', /שם העיר/),
+  [/הוקשה האות.*יוד.*האות הבאה/, '1'],
+  [/האות האחרונה נמחקה.*עד כה הוקשו.*בית.*האות הבאה/, tapCode('י')],
+  [/הוקשה האות.*יוד.*האות הבאה/, tapCode('ת')],
+  [/הוקשה האות.*תו.*האות הבאה/, tapCode('ש')],
   [/לבית שמש הקישו 1/, '1'],
   [/מספר הבית/, '0'],
   [/ללא מספר בית/, '1'],
@@ -104,13 +117,14 @@ ex = await lastExtra();
 assert.equal(ex['עיר'], 'בית שמש'); assert.ok(ex['הקלטת רחוב']); assert.ok(!ex['מספר בית']);
 assert.ok(r.said.some((s) => /אמרו את שם הרחוב/.test(s)));
 
-// 3. הסבר המקשים (0), שם לא קיים פעמיים, "לא ברשימה" (9) -> אחרי 3 כישלונות הקלטת עיר ורחוב
+// 3. הסבר המקשים (0), הקשה שאינה אות, אות שלא מתאימה פעמיים, "לא ברשימה" (9) -> אחרי 3 כישלונות הקלטת עיר ורחוב
 r = await conversation([
   [/שם העיר/, '0'],
-  [/מקום האותיות במקשים.*בספרה שלוש: אלף בית גימל.*שם העיר/, tapCode('עע')],
-  [/לא נמצא שם/, tapCode('אל')],
-  [/לאלעד הקישו 1/, '9'],
-  [/נסו שוב מההתחלה/, tapCode('עע')],
+  [/מקום האותיות במקשים.*בספרה שלוש: אלף בית גימל.*הקישו את האות הראשונה ואחריה/, '34'],
+  [/ההקשה אינה אות/, tapCode('צ')],
+  [/אין שם שמתאים לאות הזו/, tapCode('א')],
+  [/הוקשה האות.*אלף.*לאלעד הקישו 1.*לאשדוד הקישו 2/, '9'],
+  [/נסו שוב מההתחלה/, tapCode('ץ')],
   [/מספר הבית/, '5'],
   [/מספר בית 5/, '1'],
 ]);
@@ -118,16 +132,28 @@ ex = await lastExtra();
 assert.ok(ex['הקלטת עיר'] && ex['הקלטת רחוב']);
 assert.ok(r.said.some((s) => /לא מצאנו את העיר/.test(s)));
 
-// 4. יישוב בלי רחובות: לא נשאלת שאלת רחוב
+// 4. יישוב בלי רחובות (לפי מילה שנייה: "קט"): לא נשאלת שאלת רחוב
 r = await conversation([
-  [/שם העיר/, tapCode('קט')],
-  [/למושב קטן הקישו 1/, '1'],
+  ...spell('ק', /שם העיר/),
+  [/לבית קמה הקישו 1.*למושב קטן הקישו 2/, '2'],
   [/מספר הבית/, '3'],
   [/מספר בית 3/, '1'],
 ]);
 ex = await lastExtra();
 assert.equal(ex['כתובת'], '3, מושב קטן');
 assert.ok(!r.said.some((s) => /שם הרחוב/.test(s)));
+
+// 4ב. רחוב בלי התואר: באלעד "עק" -> רבי עקיבא
+r = await conversation([
+  ...spell('א', /שם העיר/),
+  [/לאלעד הקישו 1/, '1'],
+  [/שם הרחוב/, tapCode('ע')],
+  [/לרבי עקיבא הקישו 1/, '1'],
+  [/מספר הבית/, '7'],
+  [/מספר בית 7/, '1'],
+]);
+ex = await lastExtra();
+assert.equal(ex['כתובת'], 'רבי עקיבא 7, אלעד');
 
 // 5. בלי נתוני ערים: הקלטת כתובת מלאה, כמו קודם
 const saved = env.ASSETS; env.ASSETS = { fetch: async () => new Response('', { status: 404 }) }; clearAddrCache();
