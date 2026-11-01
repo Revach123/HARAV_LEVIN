@@ -211,6 +211,13 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
+ "join:askSpell": {
+  "text": "לֹא הִצְלַחְנוּ לְהָבִין. לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שֵׁם הַמִּשְׁפָּחָה אוֹת אַחַר אוֹת, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_69996dabe407e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:badEmail": {
   "text": "מֵיְיל לֹא תָּקִין",
   "voice": "he-IL-AvriNeural",
