@@ -43,7 +43,8 @@ jobs:
                 last_with_file: ([$r[]|select(.[1]==1)]|length), last_mail_sent: ([$r[]|select(.[2]==1)]|length),
                 last_valid_email: ([$r[]|select(.[3]==1)]|length),
                 last_valid_email_but_no_mail_sent: ([$r[]|select(.[3]==1 and .[2]==0 and .[4]==0)]|length),
-                last_no_file_not_cancelled: ([$r[]|select(.[1]==0 and .[4]==0)]|length) }' tmp_nr/p*.json > data/probe/nedarim_recent.json
+                last_no_file_not_cancelled: ([$r[]|select(.[1]==0 and .[4]==0)]|length),
+                by_day: ([$r[] | {d: (.[0][0:10]), v: .[3], m: .[2]}] | group_by(.d) | map({day: .[0].d, total: length, valid_email: (map(select(.v==1))|length), mail_sent: (map(select(.m==1))|length)})) }' tmp_nr/p*.json > data/probe/nedarim_recent.json
           jq -c . data/probe/nedarim_recent.json
       - name: Commit
         if: always()
