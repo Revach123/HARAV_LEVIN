@@ -1,0 +1,468 @@
+{
+ "when": "2026-11-01T12:14:23.950Z",
+ "saved_at": "2026-10-29 01:15:11",
+ "updated": "חשוון תשפ\"ז",
+ "current_rows": 83,
+ "seed_rows": 89,
+ "missing_from_current": [],
+ "added_vs_seed": [
+  {
+   "company": "קסם",
+   "track": "קסם KTF S&P500",
+   "type": "קרן נאמנות",
+   "number": "5124482",
+   "tab": "savings"
+  },
+  {
+   "company": "מגדל",
+   "track": "MTF סל (0A) אינדקס אג\"ח ממשלת ארה\"ב – מח\"מ 10 קבוע מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1243997",
+   "tab": "savings"
+  }
+ ],
+ "type_changed": [
+  {
+   "company": "הראל",
+   "track": "ביטוח / מסלול מחקה מדד S&P500",
+   "seed_type": "בטוח מנהלים",
+   "now": [
+    "ביטוח מנהלים/תכנית חסכון"
+   ]
+  },
+  {
+   "company": "הראל",
+   "track": "ביטוח / מסלול מחקה מדד S&P500",
+   "seed_type": "תוכנית חיסכון",
+   "now": [
+    "ביטוח מנהלים/תכנית חסכון"
+   ]
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל DJ industrial average [דאו ג'ונס]",
+   "seed_type": "קרן נאמנות",
+   "now": [
+    "קרן סל"
+   ]
+  },
+  {
+   "company": "מגדל",
+   "track": "MTF מחקה Nasdaq 100 (D4)",
+   "seed_type": "קרן סל",
+   "now": [
+    "קרן נאמנות"
+   ]
+  },
+  {
+   "company": "מגדל",
+   "track": "MTF מחקה Nasdaq 100 (A4) מנוטרלת מט\"ח",
+   "seed_type": "קרן סל",
+   "now": [
+    "קרן נאמנות"
+   ]
+  },
+  {
+   "company": "מגדל",
+   "track": "MTF מחקה אינדקס אג\"ח ממשלתי ארה\"ב מח\"מ 10 קבוע מנוטרלת מט\"ח",
+   "seed_type": "קרן סל",
+   "now": [
+    "קרן נאמנות"
+   ]
+  }
+ ],
+ "search": "הראל",
+ "search_current": [
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "קרן פנסיה",
+   "number": "2173",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "פנסיה מחקה מדד S&P500",
+   "type": "קרן פנסיה",
+   "number": "13415",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "פנסיה כללית מחקה מדד S&P500",
+   "type": "קרן פנסיה",
+   "number": "13424",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה למקבלי קצבה קיימים",
+   "type": "קופת פנסיונרים",
+   "number": "8806",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה למקבלי קצבה",
+   "type": "קופת פנסיונרים",
+   "number": "12028",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול כהלכה",
+   "type": "קופת גמל לשכירים",
+   "number": "1524",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קופת גמל לשכירים",
+   "number": "13501",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול כהלכה",
+   "type": "קרן השתלמות רגילה (גם לעובדי הוראה)",
+   "number": "1523",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קרן השתלמות רגילה (גם לעובדי הוראה)",
+   "number": "13502",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "חיסכון לכל ילד",
+   "number": "9555",
+   "tab": "pension"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קופת גמל להשקעה",
+   "number": "13414",
+   "tab": "both"
+  },
+  {
+   "company": "הראל",
+   "track": "ביטוח / מסלול מחקה מדד S&P500",
+   "type": "ביטוח מנהלים/תכנית חסכון",
+   "number": "13434",
+   "tab": "both"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה Russell 2000",
+   "type": "קרן נאמנות",
+   "number": "5129739",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה Dax מנוטרלת מט\"ח",
+   "type": "קרן נאמנות",
+   "number": "5127501",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה S&P 500 מנוטרלת מט\"ח",
+   "type": "קרן נאמנות",
+   "number": "5127527",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה S&P500 נקובה בדולר",
+   "type": "קרן נאמנות",
+   "number": "5118419",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל DJ industrial average [דאו ג'ונס]",
+   "type": "קרן סל",
+   "number": "1149228",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל EU STOXX50",
+   "type": "קרן סל",
+   "number": "1149244",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Nasdaq 100",
+   "type": "קרן סל",
+   "number": "1149038",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Nasdaq 100 מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149103",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P 500",
+   "type": "קרן סל",
+   "number": "1149020",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P 500 מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149137",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Dax",
+   "type": "קרן סל",
+   "number": "1149053",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Dax מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149160",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Euro Stoxx",
+   "type": "קרן סל",
+   "number": "1194244",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Stoxx Europe 600",
+   "type": "קרן סל",
+   "number": "1149889",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל MSCI AC World [עולמי כל המדינות]",
+   "type": "קרן סל",
+   "number": "1149335",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל MSCI Emerging Markets [שווקים מתעוררים]",
+   "type": "קרן סל",
+   "number": "1149301",
+   "tab": "savings"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P Energy [אנרגיה ארה\"ב]",
+   "type": "קרן סל",
+   "number": "1150036",
+   "tab": "savings"
+  }
+ ],
+ "search_seed": [
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "קרן פנסיה",
+   "number": "2173"
+  },
+  {
+   "company": "הראל",
+   "track": "פנסיה מחקה מדד S&P500",
+   "type": "קרן פנסיה",
+   "number": "13415"
+  },
+  {
+   "company": "הראל",
+   "track": "פנסיה כללית מחקה מדד S&P500",
+   "type": "קרן פנסיה",
+   "number": "13424"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה למקבלי קצבה קיימים",
+   "type": "קופת פנסיונרים",
+   "number": "8806"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה למקבלי קצבה",
+   "type": "קופת פנסיונרים",
+   "number": "12028"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול כהלכה",
+   "type": "קופת גמל לשכירים",
+   "number": "1524"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קופת גמל לשכירים",
+   "number": "13501"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קופת גמל להשקעה",
+   "number": "13414"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול כהלכה",
+   "type": "קרן השתלמות רגילה (גם לעובדי הוראה)",
+   "number": "1523"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קרן השתלמות רגילה (גם לעובדי הוראה)",
+   "number": "13502"
+  },
+  {
+   "company": "הראל",
+   "track": "ביטוח / מסלול מחקה מדד S&P500",
+   "type": "בטוח מנהלים",
+   "number": "13434"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "חיסכון לכל ילד",
+   "number": "9555"
+  },
+  {
+   "company": "הראל",
+   "track": "ביטוח / מסלול מחקה מדד S&P500",
+   "type": "תוכנית חיסכון",
+   "number": "13434"
+  },
+  {
+   "company": "הראל",
+   "track": "מחקה מדד S&P500",
+   "type": "קופת גמל להשקעה",
+   "number": "13414"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה Russell 2000",
+   "type": "קרן נאמנות",
+   "number": "5129739"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה Dax מנוטרלת מט\"ח",
+   "type": "קרן נאמנות",
+   "number": "5127501"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה S&P 500 מנוטרלת מט\"ח",
+   "type": "קרן נאמנות",
+   "number": "5127527"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל מחקה S&P500 נקובה בדולר",
+   "type": "קרן נאמנות",
+   "number": "5118419"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל DJ industrial average [דאו ג'ונס]",
+   "type": "קרן נאמנות",
+   "number": "1149228"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל EU STOXX50",
+   "type": "קרן סל",
+   "number": "1149244"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Nasdaq 100",
+   "type": "קרן סל",
+   "number": "1149038"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Nasdaq 100 מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149103"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P 500",
+   "type": "קרן סל",
+   "number": "1149020"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P 500 מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149137"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Dax",
+   "type": "קרן סל",
+   "number": "1149053"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Dax מנוטרלת מט\"ח",
+   "type": "קרן סל",
+   "number": "1149160"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Euro Stoxx",
+   "type": "קרן סל",
+   "number": "1194244"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל Stoxx Europe 600",
+   "type": "קרן סל",
+   "number": "1149889"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל MSCI AC World [עולמי כל המדינות]",
+   "type": "קרן סל",
+   "number": "1149335"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל MSCI Emerging Markets [שווקים מתעוררים]",
+   "type": "קרן סל",
+   "number": "1149301"
+  },
+  {
+   "company": "הראל",
+   "track": "הראל סל S&P Energy [אנרגיה ארה\"ב]",
+   "type": "קרן סל",
+   "number": "1150036"
+  }
+ ]
+}
