@@ -276,7 +276,7 @@ const spellEmail = (email) => {
   return `${spellChars(local)} שטרודל ${known ? known[1] : spellChars(domain)}`;
 };
 
-// הכתובת (בלי הסיומת) מוקלטת בהקלטה אחת, ואחריה בחירת סיומת, הקראה ואישור.
+// פעם ראשונה: הקלטה אחת בדיבור (אותיות ומספרים). אם לא נקלט / לא אושר: שילוב הקראות והקשות בקטעים. אחר כך בחירת סיומת, הקראה ואישור.
 // מצב צד-שרת: s_em_segs (קטעים מופרדים ב-|), s_em_r (סבב), s_em_phase ('dom'), s_em_k (ניסיון סיומת), s_em_note (הערה לשאלה הבאה).
 // בכל סבב משתנים חדשים (em_m<r> בחירה, em_v<r> קלט), כי ימות שומרת את הערכים הישנים.
 async function emailStep(ctx) {
@@ -297,23 +297,43 @@ async function emailStep(ctx) {
   const nextRound = (note) => { if (note) set('note', note); set('r', r + 1); return emailStep({ ...ctx, depth: ctx.depth + 1 }); };
   const recurse = () => emailStep({ ...ctx, depth: ctx.depth + 1 });
 
-  if (S('phase') !== 'dom' && S('phase') !== 'num') {
-    // הקלטה אחת: אותיות בדיבור, מספרים בהקשה (צלילי ההקשה מזוהים בקובץ) או בדיבור; בלי הסיומת
-    const vk = `em_v${r}`;
-    if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(noteTake() + P('join:emailSpeakMix'), vk, folder, recFile(vk), REC_MIN, 30) };
-    const seg = await transcribeMixed(env, v, vk, folder, recFile);
-    if (!seg) return nextRound('join:noHear');
-    set('segs', seg); set('phase', 'num');
-    return recurse();
-  }
-
-  // מספרים בהקשה (למקרה שהקשות באמצע ההקלטה לא נקלטו): מתווספים בסוף הכתובת
-  if (S('phase') === 'num') {
-    const qk = `em_q${r}`, tk = `em_t${r}`;
-    if (v[qk] !== '1' && v[qk] !== '2') return { ask: readTap(P('join:emailNumQ'), qk, ['1', '2'], { empty: EMPTY }) };
-    if (v[qk] === '2') { set('phase', 'dom'); return recurse(); }
-    if (!has(v, tk) || empty(v[tk]) || !/^\d{1,20}$/.test(String(v[tk]))) return { ask: readTap(P('join:emailNumAsk'), tk, null, { max: 20, min: 1, empty: EMPTY }) };
-    set('segs', S('segs') + String(v[tk])); set('phase', 'dom');
+  if (S('phase') !== 'dom') {
+    if (S('mode') !== 'seg') {
+      // פעם ראשונה: הקלטה אחת בדיבור בלבד (אותיות ומספרים), בלי הקשות
+      const vk = `em_v${r}`;
+      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(noteTake() + P('join:emailSpeakFirst'), vk, folder, recFile(vk), REC_MIN, 30) };
+      const seg = await transcribeMixed(env, v, vk, folder, recFile);
+      if (!seg) { set('mode', 'seg'); return nextRound('join:noHear'); }          // לא נקלט: שילוב הקראות והקשות בקטעים
+      set('segs', seg); set('phase', 'dom');
+      return recurse();
+    }
+    // שילוב הקראות והקשות: בכל סבב אותיות (הקלטה) / מספרים (הקשה) / סיום / מחיקת הקטע האחרון
+    const mk = `em_m${r}`, vk = `em_v${r}`;
+    const choice = v[mk];
+    if (!['1', '2', '3', '4'].includes(choice)) {
+      const list = segs();
+      const intro = S('intro') ? '' : `${P('join:emailInstr')}.`;
+      set('intro', '1');
+      const soFar = list.length ? `${P('join:emailSoFar')}.${T(spellChars(list.join('')))}.` : '';
+      return { ask: readTap(noteTake() + intro + soFar + P('join:emailMenu'), mk, ['1', '2', '3', '4'], { empty: EMPTY }) };
+    }
+    if (choice === '1') {
+      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P('join:emailSpeakMix'), vk, folder, recFile(vk), REC_MIN, 25) };
+      const seg = await transcribeMixed(env, v, vk, folder, recFile);
+      if (!seg) return nextRound('join:noHear');
+      set('segs', [...segs(), seg].join('|'));
+      return nextRound('');
+    }
+    if (choice === '2') {
+      if (!has(v, vk) || empty(v[vk])) return { ask: readTap(P('join:emailDigits'), vk, null, { max: 20, min: 1, empty: EMPTY }) };
+      if (!/^\d{1,20}$/.test(String(v[vk]))) return nextRound('join:noHear');
+      set('segs', [...segs(), String(v[vk])].join('|'));
+      return nextRound('');
+    }
+    if (choice === '4') { const l = segs(); l.pop(); set('segs', l.join('|')); return nextRound(''); }
+    // '3' - סיום
+    if (!segs().length) return nextRound('join:emailEmpty');
+    set('phase', 'dom');
     return recurse();
   }
 
@@ -334,8 +354,8 @@ async function emailStep(ctx) {
   if (!email || !spokenEmail(email)) { set('k', k + 1); set('note', 'join:badEmail'); return recurse(); }
   const ck = `em_c${k}`;
   if (v[ck] === '1') { v.emok = email; return { email }; }
-  if (v[ck] === '2') {          // מתחילים את הכתובת מחדש
-    set('segs', ''); set('phase', ''); set('r', r + 1); set('k', k + 1); set('intro', '');
+  if (v[ck] === '2') {
+    set('mode', 'seg'); set('phase', ''); set('r', r + 1); set('k', k + 1); set('intro', '');     // שינוי: עריכה בשילוב הקראות והקשות (הכתובת שנקלטה נשארת)
     return recurse();
   }
   return { ask: readTap(`${P('join:emailHeard')}.${T(spellEmail(email))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
