@@ -1,0 +1,1 @@
+UPDATE businesses SET registry_status = '', registrar_name = 'איילון חברה לביטוח בע"מ', biz_type = '', tase_has_agch = '' WHERE id = 'mvx1l6454q72';

@@ -6,46 +6,75 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-10-31T08:53:20.646515Z",
+  "updated": "2026-11-01T09:45:18.017082Z",
   "source": "d1",
-  "businesses": 1278,
-  "numeric_chp": 1274,
-  "found_in_registry": 1186,
+  "businesses": 1276,
+  "numeric_chp": 1272,
+  "found_in_registry": 1184,
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2236,
   "datawise_date": "2026-10-30",
   "bond_companies": 364,
   "changes": {
-   "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "registrar_name": 1,
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
-   "tase_has_agch": 0,
-   "registry_status": 0
+   "biz_type": 1,
+   "tase_has_agch": 1,
+   "registry_status": 1
   },
   "registry_status_counts": {
    "פעילה": 1072,
    "לא ידוע": 154,
-   "מחוסלת/חיסול": 36,
+   "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mvx1l6454q72",
+   "chp": "520030677",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mvx1l6454q72",
+   "chp": "520030677",
+   "field": "registrar_name",
+   "old": "איילון חברה לביטוח בע\"מ",
+   "new": "איילון חברה לביטוח   בע\"מ"
+  },
+  {
+   "id": "mvx1l6454q72",
+   "chp": "520030677",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה ציבורית - בע\"מ"
+  },
+  {
+   "id": "mvx1l6454q72",
+   "chp": "520030677",
+   "field": "tase_has_agch",
+   "old": "",
+   "new": "יש"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
