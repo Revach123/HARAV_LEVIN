@@ -37,27 +37,37 @@ export async function onRequestGet({ request, env }) {
     } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
   if (!(await checkAdmin(request, env))) return noAuth();
-  // ?typos=1: רשימה מלאה של כתובות אימייל עם שגיאת כתיב מוכרת בסיומת, והתיקון המוצע (מנהל בלבד; דף HTML קריא)
+  // ?typos=1: רשימה מלאה של כתובות אימייל עם שגיאת כתיב מוכרת בסיומת, והתיקון המוצע (מנהל בלבד, JSON).
+  // לכל שורה: רישומים דומים (אותה ת.ז. או אותו שם מלא) - עם הכתובת שלהם, כדי לראות אם כבר קיים רישום נוסף עם כתובת תקינה.
   if (u.searchParams.get("typos")) {
     try {
-      const key = await importKey(env), list = [];
+      const key = await importKey(env), all = [], list = [];
       for (let off = 0; ; off += 500) {
-        const rs = (await env.DB.prepare("SELECT id, submitted_at, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
+        const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
         if (!rs.length) break;
         for (const r of rs) {
           let p; try { p = await decryptPii(key, r.id, r.pii); } catch { continue; }
           const em = String((p && p.email) || "").trim(), at = em.lastIndexOf("@");
-          if (at < 1) continue;
-          const dom = em.slice(at + 1).toLowerCase(), nd = fixDomain(dom);
-          if (nd !== dom) list.push({ id: r.id, when: String(r.submitted_at || "").slice(0, 10), name: `${p.first || ""} ${p.last || ""}`.trim(), email: em, fixed: em.slice(0, at + 1) + nd });
+          const dom = at > 0 ? em.slice(at + 1).toLowerCase() : "", nd = dom ? fixDomain(dom) : "";
+          const name = `${p.first || ""} ${p.last || ""}`.replace(/\s+/g, " ").trim();
+          all.push({ id: r.id, when: String(r.submitted_at || "").slice(0, 10), cancelled: !!r.cancelled_at, name, idn: String(p.id || "").replace(/\D/g, ""), email: em, bad: !!dom && nd !== dom, fixed: at > 0 && nd !== dom ? em.slice(0, at + 1) + nd : "" });
         }
       }
+      const byId = new Map(), byName = new Map();
+      const add = (m, k, e) => { if (!k) return; (m.get(k) || m.set(k, []).get(k)).push(e); };
+      for (const e of all) { add(byId, e.idn.length >= 5 ? e.idn : "", e); add(byName, e.name.split(" ").length >= 2 ? e.name : "", e); }
+      for (const e of all) {
+        if (!e.bad) continue;
+        const rel = new Map();
+        for (const o of byId.get(e.idn.length >= 5 ? e.idn : "") || []) if (o !== e) rel.set(o.id, { o, by: ["ת.ז."] });
+        for (const o of byName.get(e.name.split(" ").length >= 2 ? e.name : "") || []) if (o !== e) { const x = rel.get(o.id); if (x) x.by.push("שם"); else rel.set(o.id, { o, by: ["שם"] }); }
+        const related = [...rel.values()].slice(0, 8).map(({ o, by }) => ({ when: o.when, name: o.name, email: o.email, by: by.join("+"), cancelled: o.cancelled, bad: o.bad,
+          same_fixed: !!e.fixed && o.email.toLowerCase() === e.fixed.toLowerCase(), good_email: !!o.email && !o.bad }));
+        list.push({ id: e.id, when: e.when, name: e.name, id_number: e.idn, email: e.email, fixed: e.fixed, related,
+          has_good_other: related.some(r => r.by.includes("ת.ז.") && r.good_email) });
+      }
       list.sort((a, b) => a.email.split("@")[1].localeCompare(b.email.split("@")[1]) || a.email.localeCompare(b.email));
-      if (u.searchParams.get("json")) return out({ list });
-      const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-      const html = `<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>שגיאות כתיב באימייל</title><body style="font-family:Arial;padding:16px"><h2>שגיאות כתיב בסיומת האימייל: ${list.length} כתובות</h2>
-<table border="1" cellpadding="6" style="border-collapse:collapse;font-size:15px"><tr style="background:#eef"><th>#</th><th>שם</th><th>תאריך הצטרפות</th><th>כתובת נוכחית</th><th>תיקון מוצע</th></tr>${list.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name)}</td><td>${esc(x.when)}</td><td dir="ltr">${esc(x.email)}</td><td dir="ltr">${esc(x.fixed)}</td></tr>`).join("")}</table></body></html>`;
-      return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+      return out({ list });
     } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
   try {
