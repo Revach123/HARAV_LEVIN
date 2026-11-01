@@ -139,15 +139,17 @@
         <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" style="text-align:right" required><div class="err" data-for="phone"></div></div>
       <div class="field"><label class="lbl" for="phone2">טלפון נוסף</label>
         <input id="phone2" name="phone2" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="phone2"></div></div>
-      <div class="field"><label class="lbl" for="emailLocal">אימייל</label>
+      <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
+        <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
+      <div class="field"><label class="lbl" for="emailLocal">מייל</label>
         <input id="email" name="email" type="hidden">
         <div class="emailrow" dir="ltr">
-          <input id="emailLocal" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" inputmode="email" autocomplete="username" maxlength="64" dir="ltr" aria-label="אימייל: החלק שלפני הסימן @">
-          <select id="emailDom" aria-label="סיומת האימייל">
+          <input id="emailLocal" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" inputmode="email" autocomplete="username" maxlength="64" dir="ltr" aria-label="מייל: החלק שלפני הסימן @">
+          <select id="emailDom" aria-label="סיומת המייל">
             <option value="gmail.com" selected>@gmail.com</option><option value="walla.co.il">@walla.co.il</option><option value="walla.com">@walla.com</option><option value="yahoo.com">@yahoo.com</option><option value="hotmail.com">@hotmail.com</option><option value="outlook.com">@outlook.com</option><option value="okmail.co.il">@okmail.co.il</option><option value="netvision.net.il">@netvision.net.il</option><option value="bezeqint.net">@bezeqint.net</option><option value="icloud.com">@icloud.com</option>
             <option value="__other">אחר (הקלדה ידנית)</option>
           </select>
-          <input id="emailOther" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" dir="ltr" placeholder="@example.co.il" aria-label="סיומת האימייל (הקלדה ידנית)" hidden>
+          <input id="emailOther" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" dir="ltr" placeholder="@example.co.il" aria-label="סיומת המייל (הקלדה ידנית)" hidden>
         </div>
         <div class="err" data-for="email"></div></div>
       <div class="field"><label class="lbl" for="fax">פקס</label>
@@ -158,8 +160,6 @@
         <label class="viaopt off" id="viaFaxL" title="אפשרות זו אינה פעילה עדיין"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס <small class="viasoon">- אפשרות זו אינה פעילה עדיין, בעז"ה בקרוב</small></span></label>
         <div class="viamsg" id="viaMsg" aria-live="polite"></div>
       </div>
-      <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
-        <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
       </div>
       <div class="hp" aria-hidden="true"><label>אל תמלאו שדה זה<input id="website" name="website" type="text" tabindex="-1" autocomplete="off"></label></div>
 
@@ -393,7 +393,7 @@ $("fJoin").addEventListener("submit", async e => {
   if (!validId(v("id"))) errs.id = "מספר תעודת הזהות אינו תקין";
   if (!validPhone(v("phone"))) errs.phone = "מספר הטלפון אינו תקין";
   if (v("phone2") && !validPhone(v("phone2"))) errs.phone2 = "מספר הטלפון הנוסף אינו תקין";
-  if ($("emailLocal").value.trim() && !$("emailDom").value) errs.email = "נא לבחור סיומת לאימייל";
+  if ($("emailLocal").value.trim() && !$("emailDom").value) errs.email = "נא לבחור סיומת למייל";
   else if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה (באותיות באנגלית בלבד)";
   if (v("address").length < 3) errs.address = "נא למלא כתובת";
   const ch = f.querySelector('input[name="choice"]:checked');
