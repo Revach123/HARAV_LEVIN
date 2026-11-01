@@ -13,6 +13,7 @@ export function buildConfirmation({ first, last, id, date, all, companies, origi
   companies = companies || [];
   const known = !!all || companies.length > 0;
   const choice = all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + companies.join(", ");
+  const pick = all ? "בחרת להתקשר מול כל עסקים שנרשמו למאגר, כולל עסקים שירשמו בהמשך" : "בחרת להתקשר מול החברות שנבחרו מהרשימה: " + companies.join(", ");
   const p = t => `<p style="margin:0 0 8px;font-size:14px;line-height:1.6">${esc(t)}</p>`;
   const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#eef2f2;font-family:Arial,Helvetica,sans-serif;color:#1f2d2d">
 <div dir="rtl" style="max-width:660px;margin:0 auto;padding:16px">
@@ -25,7 +26,7 @@ ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:
 <p style="margin:0 0 10px;font-size:17px;line-height:1.7">שלום ${esc(name)} ת.ז. ${esc(id)},</p>
 <p style="margin:0 0 10px;font-size:16px;line-height:1.7">הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.</p>
 <p style="margin:0 0 6px;font-size:16px"><b>תאריך:</b> ${esc(date)}</p>
-${known ? `<p style="margin:0 0 6px;font-size:15px"><b>התקשרות:</b> ${esc(choice)}</p>` : ""}
+${known ? `<p style="margin:0 0 6px;font-size:15px"><b>התקשרות:</b> ${esc(pick)}</p>` : ""}
 <div style="border-top:1px solid #cfdcdc;margin-top:16px;padding-top:14px">
 <h3 style="margin:0 0 8px;font-size:18px">שטר רישום להיתר עיסקא פרטי</h3>
 ${AGREEMENT_BEFORE_CHOICE.map(p).join("")}${AGREEMENT_AFTER_CHOICE.map(p).join("")}</div>
@@ -34,7 +35,7 @@ ${AGREEMENT_BEFORE_CHOICE.map(p).join("")}${AGREEMENT_AFTER_CHOICE.map(p).join("
 </div></div>
 <p style="text-align:center;font-size:12px;color:#6b7b7b;margin:14px 0 0">מייל זה נשלח אוטומטית. אין צורך להשיב עליו.</p>
 </div></body></html>`;
-  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${choice}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...AGREEMENT_BEFORE_CHOICE, ...(known ? [choice] : []), ...AGREEMENT_AFTER_CHOICE, "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
+  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...AGREEMENT_BEFORE_CHOICE, ...(known ? [choice] : []), ...AGREEMENT_AFTER_CHOICE, "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
   return { html, text };
 }
 
