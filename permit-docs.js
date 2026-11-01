@@ -2597,7 +2597,8 @@
     if (/טלפון/.test(o["ערוץ"] || "")) return "טלפון";
     if (/^nedarim/.test(s)) return "נדרים פלוס";
     if (s === "site:embed") return "אתר";
-    if (s === "site:kehilot") return "קהילות";
+    if (s === "site:kehilot") return "קהילות (אתר)";
+    if (/^excel:/.test(s)) return "קהילה: " + (o["מקור"] || s.slice(6));
     if (/^cfdb7/.test(s)) return "אתר ישן";
     if (s === "admin") return "ידני";
     return "";
@@ -2664,7 +2665,7 @@
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);
         return `<tr class="go" onclick="PD._jOpen('${r.id}')">${J_COLS.map(c => cell(c, r)).join("")}
           <td style="white-space:nowrap">${r.cancelled_at ? `<span class="pd-nd-miss" title="תאריך ביטול: ${E(r.cancelled_at)}">ביטל</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
-          <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div class="pd-jbtns"><button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jEdit('${r.id}')"><span>✏️</span>עריכה</button>${r.cancelled_at ? `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)"><span>↩</span>שחזור</button>` : `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)"><span>⛔</span>ביטול</button>`}<button class="pd-mini pd-ib" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')"><span>🗑</span>מחיקה</button></div></td></tr>`
+          <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div class="pd-jbtns"><button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jEdit('${r.id}')"><span>✏️</span>עריכה</button>${r.cancelled_at ? `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)"><span>↩</span>שחזור</button>` : `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)"><span>⛔</span>ביטול</button>`}<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jMine('${E(r.email || "")}','${E(r.id_number || "")}')"><span>👥</span>רישומים</button><button class="pd-mini pd-ib" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')"><span>🗑</span>מחיקה</button></div></td></tr>`
           + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: לבחירת כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>
       ${rows.length > J.shown ? `<div style="text-align:center;margin:10px"><button class="pd-btn" onclick="PD._jMore()">הצג עוד (${rows.length - J.shown})</button></div>` : ""}`;
   }
@@ -2764,6 +2765,52 @@
       rows.forEach(tr => { tr.style.opacity = ".35"; tr.style.textDecoration = "line-through"; const b = tr.querySelector("button"); if (b) { b.disabled = true; b.textContent = "נמחק"; } });
       if (J.rows) { J.rows = J.rows.filter(x => x.id !== id); J.total--; }
     } catch (e) { alert(e.message || "המחיקה נכשלה"); }
+  }
+  // "הרישומים של מצטרף": כל הרישומים לפי אותה כתובת אימייל (ואותה ת.ז.), מקובצים לפי ת.ז. - מחיקה, תיקון ומיזוג רישומים זהים
+  // (אותו מנגנון ישמש את המצטרף עצמו באתר, בהזדהות גוגל; כאן המנהל בודק אותו)
+  const JM_Q = { email: "", idn: "", recs: [], busy: false, err: "" };
+  async function jmineCall(body) {
+    JM_Q.busy = true; JM_Q.err = ""; jmineDraw();
+    try { const r = await api("/joiner-self", "POST", { admin: true, email: JM_Q.email, idn: JM_Q.idn, ...body }); JM_Q.recs = r.records || []; }
+    catch (e) { JM_Q.err = e.message || "שגיאה"; }
+    JM_Q.busy = false; jmineDraw();
+  }
+  function jMine(email, idn) { JM_Q.email = String(email || "").trim().toLowerCase(); JM_Q.idn = String(idn || "").replace(/\D/g, ""); JM_Q.recs = []; overlay("pd-jmine", `<div id="pd-jmine-b" style="padding:14px"></div>`, "wide"); jmineCall({ action: "list" }); }
+  const jmKey = r => [r.first, r.last].join(" ").replace(/\s+/g, " ").trim() + "|" + (r.phone || "") + "|" + (r.all ? "A" : (r.companies || ""));
+  function jmineDraw() {
+    const box = $("pd-jmine-b"); if (!box) return;
+    const act = JM_Q.recs.filter(r => !r.cancelled), groups = new Map();
+    for (const r of JM_Q.recs) (groups.get(r.id_number || "-") || groups.set(r.id_number || "-", []).get(r.id_number || "-")).push(r);
+    let dupGroups = 0;
+    const html = [...groups.entries()].map(([idn, list]) => {
+      list.sort((a, b) => a.when.localeCompare(b.when));
+      const live = list.filter(r => !r.cancelled), isDup = live.length > 1; if (isDup) dupGroups++;
+      const same = new Map(); for (const r of live) (same.get(jmKey(r)) || same.set(jmKey(r), []).get(jmKey(r))).push(r);
+      return `<div style="border:1px solid ${isDup ? "#e0b4b0" : "#cfe5d6"};border-radius:10px;margin:10px 0;overflow:hidden">
+        <div style="padding:8px 12px;background:${isDup ? "#fdeceb" : "#eaf6ee"};font-weight:700">ת.ז. <span dir="ltr">${E(idn)}</span> · ${live.length} רישומים פעילים${isDup ? ' <span style="color:#c0392b">- יש כפילות: יש למחוק או למזג</span>' : ' <span style="color:#1b8a4b">✓</span>'}</div>
+        <table class="pd-nd-tbl" style="width:100%"><thead><tr><th>איפה נרשם</th><th>תאריך</th><th>שם</th><th>טלפון</th><th>כתובת</th><th>חברות</th><th></th></tr></thead><tbody>${list.map(r => {
+          const twins = same.get(jmKey(r)) || [], first = twins[0] === r, canMerge = !r.cancelled && twins.length > 1 && !first;
+          return `<tr${r.cancelled ? ' style="opacity:.55"' : ""}><td><b>${E(r.src || "לא ידוע")}</b>${r.cancelled ? " · בוטל" : ""}</td><td>${E(r.when)}</td><td>${E(r.first + " " + r.last)}</td><td dir="ltr">${E(r.phone)}</td><td>${E(r.address)}</td><td style="max-width:240px">${r.all ? "כל החברות" : E(r.companies)}</td>
+            <td style="white-space:nowrap"><button class="pd-mini" onclick="PD._jmEdit('${r.rid}')">✏️ תיקון</button> <button class="pd-mini" style="color:#c0392b" onclick="PD._jmDel('${r.rid}')">🗑 מחיקה</button>${canMerge ? ` <button class="pd-mini" style="background:#fff3cd" onclick="PD._jmMerge('${twins[0].rid}','${r.rid}')" title="זהה לרישום מ-${E(twins[0].when)}">🔀 מיזוג עם ${E(twins[0].when)}</button>` : ""}</td></tr>`;
+        }).join("")}</tbody></table></div>`;
+    }).join("");
+    box.innerHTML = `<div class="pd-head" style="margin:-14px -14px 10px"><b>הרישומים של ${E(JM_Q.email || JM_Q.idn)}</b><button class="pd-x" onclick="PD._close('pd-jmine')">✕</button></div>
+      ${JM_Q.err ? `<div style="color:#c0392b">${E(JM_Q.err)}</div>` : ""}${JM_Q.busy ? '<div class="pd-sub">טוען…</div>' : ""}
+      <div class="pd-sub">${groups.size} ת.ז. · ${act.length} רישומים פעילים (לפי אותה כתובת אימייל או אותה ת.ז.)</div>${html || (JM_Q.busy ? "" : '<div class="pd-sub">לא נמצאו רישומים.</div>')}
+      <div style="margin-top:10px;padding:10px;border-radius:8px;background:${dupGroups ? "#fdeceb" : "#eaf6ee"};font-weight:700">${dupGroups ? `נשארו כפילויות ב-${dupGroups} ת.ז. - עד שיימחקו / ימוזגו לא ניתן לאשר.` : "אין כפילויות - אפשר לאשר."}</div>`;
+  }
+  async function jmDel(rid) { const r = JM_Q.recs.find(x => x.rid === rid); if (!r || !confirm(`למחוק את הרישום של ${r.first} ${r.last} (${r.src}, ${r.when})? הפעולה בלתי הפיכה.`)) return; await jmineCall({ action: "delete", rid }); J.rows = null; }
+  async function jmMerge(keep, drop) { if (!confirm("למזג: הרישום הראשון יישאר (עם השלמת פרטים חסרים), והשני יימחק?")) return; await jmineCall({ action: "merge", keep, drop }); J.rows = null; }
+  function jmEdit(rid) {
+    const r = JM_Q.recs.find(x => x.rid === rid); if (!r) return;
+    overlay("pd-jmedit", `<div class="pd-head"><b>תיקון רישום</b><button class="pd-x" onclick="PD._close('pd-jmedit')">✕</button></div><div style="padding:14px;display:grid;grid-template-columns:auto 1fr;gap:8px 10px;align-items:center">
+      <span>שם פרטי</span><input class="pd-in" id="jme-first" value="${E(r.first)}"><span>שם משפחה</span><input class="pd-in" id="jme-last" value="${E(r.last)}">
+      <span>טלפון</span><input class="pd-in" id="jme-phone" dir="ltr" value="${E(r.phone)}"><span>כתובת</span><input class="pd-in" id="jme-address" value="${E(r.address)}">
+      <div></div><div><button class="pd-btn primary" id="jme-go">שמירה</button> <span id="jme-err" style="color:#c0392b"></span></div></div>`);
+    $("jme-go").onclick = async () => {
+      try { await api("/joiner-self", "POST", { admin: true, email: JM_Q.email, idn: JM_Q.idn, action: "update", rid, first: $("jme-first").value, last: $("jme-last").value, phone: $("jme-phone").value, address: $("jme-address").value }); close("pd-jmedit"); J.rows = null; await jmineCall({ action: "list" }); }
+      catch (e) { $("jme-err").textContent = e.message || "שגיאה"; }
+    };
   }
   // רשימת כתובות אימייל עם שגיאת כתיב מוכרת בסיומת (gmil.com ...) והתיקון המוצע (קריאה בלבד)
   async function jTypos() {
@@ -3386,7 +3433,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jTypos: jTypos, _jtDel: jtDel, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jTypos: jTypos, _jMine: jMine, _jmDel: jmDel, _jmMerge: jmMerge, _jmEdit: jmEdit, _jtDel: jtDel, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
