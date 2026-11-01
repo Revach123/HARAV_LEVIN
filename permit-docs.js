@@ -2768,14 +2768,14 @@
   }
   // "הרישומים של מצטרף": כל הרישומים לפי אותה כתובת אימייל (ואותה ת.ז.), מקובצים לפי ת.ז. - מחיקה, תיקון ומיזוג רישומים זהים
   // (אותו מנגנון ישמש את המצטרף עצמו באתר, בהזדהות גוגל; כאן המנהל בודק אותו)
-  const JM_Q = { email: "", idn: "", recs: [], busy: false, err: "" };
+  const JM_Q = { email: "", idn: "", recs: [], busy: false, err: "", loaded: false };
   async function jmineCall(body) {
     JM_Q.busy = true; JM_Q.err = ""; jmineDraw();
-    try { const r = await api("/joiner-self", "POST", { admin: true, email: JM_Q.email, idn: JM_Q.idn, ...body }); JM_Q.recs = r.records || []; }
+    try { const r = await api("/joiner-self", "POST", { admin: true, email: JM_Q.email, idn: JM_Q.idn, ...body }); JM_Q.recs = r.records || []; JM_Q.loaded = true; }
     catch (e) { JM_Q.err = e.message || "שגיאה"; }
     JM_Q.busy = false; jmineDraw();
   }
-  function jMine(email, idn) { JM_Q.email = String(email || "").trim().toLowerCase(); JM_Q.idn = String(idn || "").replace(/\D/g, ""); JM_Q.recs = []; overlay("pd-jmine", `<div id="pd-jmine-b" style="padding:14px"></div>`, "wide"); jmineCall({ action: "list" }); }
+  function jMine(email, idn) { JM_Q.email = String(email || "").trim().toLowerCase(); JM_Q.idn = String(idn || "").replace(/\D/g, ""); JM_Q.recs = []; JM_Q.loaded = false; overlay("pd-jmine", `<div id="pd-jmine-b" style="padding:14px"></div>`, "wide"); jmineCall({ action: "list" }); }
   const jmKey = r => [r.first, r.last].join(" ").replace(/\s+/g, " ").trim() + "|" + (r.phone || "") + "|" + (r.all ? "A" : (r.companies || ""));
   function jmineDraw() {
     const box = $("pd-jmine-b"); if (!box) return;
@@ -2796,8 +2796,8 @@
     }).join("");
     box.innerHTML = `<div class="pd-head" style="margin:-14px -14px 10px"><b>הרישומים של ${E(JM_Q.email || JM_Q.idn)}</b><button class="pd-x" onclick="PD._close('pd-jmine')">✕</button></div>
       ${JM_Q.err ? `<div style="color:#c0392b">${E(JM_Q.err)}</div>` : ""}${JM_Q.busy ? '<div class="pd-sub">טוען…</div>' : ""}
-      <div class="pd-sub">${groups.size} ת.ז. · ${act.length} רישומים פעילים (לפי אותה כתובת אימייל או אותה ת.ז.)</div>${html || (JM_Q.busy ? "" : '<div class="pd-sub">לא נמצאו רישומים.</div>')}
-      <div style="margin-top:10px;padding:10px;border-radius:8px;background:${dupGroups ? "#fdeceb" : "#eaf6ee"};font-weight:700">${dupGroups ? `נשארו כפילויות ב-${dupGroups} ת.ז. - עד שיימחקו / ימוזגו לא ניתן לאשר.` : "אין כפילויות - אפשר לאשר."}</div>`;
+      ${JM_Q.loaded ? `<div class="pd-sub">${groups.size} ת.ז. · ${act.length} רישומים פעילים (לפי אותה כתובת אימייל או אותה ת.ז.)</div>` : ""}${html || (JM_Q.loaded && !JM_Q.busy ? '<div class="pd-sub">לא נמצאו רישומים.</div>' : "")}
+      ${JM_Q.loaded && !JM_Q.busy && !JM_Q.err ? `<div style="margin-top:10px;padding:10px;border-radius:8px;background:${dupGroups ? "#fdeceb" : "#eaf6ee"};font-weight:700">${dupGroups ? `נשארו כפילויות ב-${dupGroups} ת.ז. - עד שיימחקו / ימוזגו לא ניתן לאשר.` : "אין כפילויות - אפשר לאשר."}</div>` : ""}`;
   }
   async function jmDel(rid) { const r = JM_Q.recs.find(x => x.rid === rid); if (!r || !confirm(`למחוק את הרישום של ${r.first} ${r.last} (${r.src}, ${r.when})? הפעולה בלתי הפיכה.`)) return; await jmineCall({ action: "delete", rid }); J.rows = null; }
   async function jmMerge(keep, drop) { if (!confirm("למזג: הרישום הראשון יישאר (עם השלמת פרטים חסרים), והשני יימחק?")) return; await jmineCall({ action: "merge", keep, drop }); J.rows = null; }
