@@ -1,0 +1,29 @@
+name: Probe non-tradable bonds (read-only, manual)
+
+# בדיקה חד-פעמית: כמה אג"ח לא סחירות יש לחברות המאושרות (לא משנה את רשימות האג"ח). התוצאה: data/probe/nontradable_bonds.{json,csv}
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/bonds_list/probe_nontradable.py
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "probe-nontradable: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash -X theirs
+          git push
