@@ -298,8 +298,8 @@ async function emailStep(ctx) {
       return { ask: readTap(noteTake() + intro + soFar + P('join:emailMenu'), mk, ['1', '2', '3', '4'], { empty: EMPTY }) };
     }
     if (choice === '1') {
-      // IVR_EMAIL_MIXED=1: ההנחיה אומרת שאפשר להקיש מספרים באמצע ההקלטה (הקשות שנשמעות בהקלטה מזוהות כצלילי DTMF)
-      const speakKey = String(env.IVR_EMAIL_MIXED || '') === '1' ? 'join:emailSpeakMix' : 'join:emailSpeak';
+      // ההנחיה אומרת שאפשר להקיש מספרים באמצע ההקלטה (הקשות שנשמעות בהקלטה מזוהות כצלילי DTMF)
+      const speakKey = 'join:emailSpeakMix';
       if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P(speakKey), vk, folder, recFile(vk), REC_MIN, 25) };
       const seg = await transcribeMixed(env, v, vk, folder, recFile);
       if (!seg) return nextRound('join:noHear');
