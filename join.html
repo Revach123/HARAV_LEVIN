@@ -38,12 +38,10 @@
   .req{color:var(--red)}
   input[type=text],input[type=tel],input[type=email],input[type=search]{width:100%;min-height:54px;font:inherit;font-size:18px;padding:.4rem .9rem;color:var(--navy);background:#fff;
     border:2px solid var(--accent-border);border-radius:12px}
-  .emailrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-  .emailrow #emailLocal{flex:1 1 170px;min-width:0;width:auto}
-  .emailrow .at{font-size:22px;font-weight:700;color:var(--navy)}
-  .emailrow select{flex:1 1 150px;min-width:0;min-height:54px;font:inherit;font-size:18px;padding:.4rem .6rem;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .emailrow{display:flex;flex-direction:column;gap:8px}
+  .emailrow #emailLocal,.emailrow #emailOther{width:100%}
+  .emailrow select{width:100%;min-width:0;min-height:54px;font:inherit;font-size:18px;padding:.4rem .6rem;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px}
   .emailrow select:focus{outline:none;border-color:var(--accent)}
-  .emailrow #emailOther{flex:1 1 100%;width:100%}
   input:focus{outline:none;border-color:var(--accent)}
   input[readonly]{background:#eef3f3;color:var(--muted)}
   input.bad{border-color:var(--red)}
@@ -137,14 +135,12 @@
       <div class="field"><label class="lbl" for="emailLocal">אימייל</label>
         <input id="email" name="email" type="hidden">
         <div class="emailrow" dir="ltr">
-          <input id="emailLocal" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" inputmode="email" autocomplete="username" maxlength="64" dir="ltr" placeholder="שם המשתמש (לפני ה-@)" aria-label="אימייל: החלק שלפני הסימן @">
-          <span class="at" aria-hidden="true">@</span>
+          <input id="emailLocal" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" inputmode="email" autocomplete="username" maxlength="64" dir="ltr" aria-label="אימייל: החלק שלפני הסימן @">
           <select id="emailDom" aria-label="סיומת האימייל">
-            <option value="">בחרו סיומת</option>
-            <option>gmail.com</option><option>walla.co.il</option><option>walla.com</option><option>yahoo.com</option><option>hotmail.com</option><option>outlook.com</option><option>okmail.co.il</option><option>netvision.net.il</option><option>bezeqint.net</option><option>icloud.com</option>
-            <option value="__other">אחר</option>
+            <option value="gmail.com" selected>@gmail.com</option><option value="walla.co.il">@walla.co.il</option><option value="walla.com">@walla.com</option><option value="yahoo.com">@yahoo.com</option><option value="hotmail.com">@hotmail.com</option><option value="outlook.com">@outlook.com</option><option value="okmail.co.il">@okmail.co.il</option><option value="netvision.net.il">@netvision.net.il</option><option value="bezeqint.net">@bezeqint.net</option><option value="icloud.com">@icloud.com</option>
+            <option value="__other">אחר (הקלדה ידנית)</option>
           </select>
-          <input id="emailOther" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" dir="ltr" placeholder="הקלידו את הסיומת, למשל example.co.il" aria-label="סיומת האימייל (הקלדה ידנית)" hidden>
+          <input id="emailOther" type="text" lang="en" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="60" dir="ltr" placeholder="@example.co.il" aria-label="סיומת האימייל (הקלדה ידנית)" hidden>
         </div>
         <div class="err" data-for="email"></div></div>
       <div class="field"><label class="lbl" for="fax">פקס</label>
@@ -289,6 +285,7 @@ function setErrs(map, form) {
     O.hidden = D.value !== "__other";
   };
   const putDomain = d => { d = d.trim().toLowerCase(); if (!d) return; if (known.includes(d)) { D.value = d; } else { D.value = "__other"; O.value = d; } };
+  sync();
   L.addEventListener("keydown", e => { if (e.key === "@") { e.preventDefault(); if (!D.value) D.focus(); } });
   L.addEventListener("input", () => {
     let t = L.value.replace(/[^\x21-\x7e]/g, "");
