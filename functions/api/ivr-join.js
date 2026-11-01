@@ -145,7 +145,7 @@ async function step({ v, env, P, bk, done, origin }) {
     const ck = `${name}_c${n}`;
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { text }; }
     if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
-    return { ask: readTap(`${P('join:heard')}.${P(label)}.${T(text)}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    return { ask: readTap(`${T(text)}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
   let o;
 
