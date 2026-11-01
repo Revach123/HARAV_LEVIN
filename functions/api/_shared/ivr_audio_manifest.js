@@ -141,6 +141,20 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:askCity": {
+  "text": "עַכְשָׁיו נַכְנִיס אֶת כְּתֹבֶת הַמְּגוּרִים: עִיר, רְחוֹב וּמִסְפַּר בַּיִת. נַקִּישׁ אֶת שֵׁם הָעִיר אוֹת אַחַר אוֹת. כָּל אוֹת מַקִּישִׁים בַּמַּקָּשׁ שֶׁעָלָיו הִיא כְּתוּבָה, כַּמָּה פְּעָמִים לְפִי מְקוֹמָהּ בַּמַּקָּשׁ: הָאוֹת הָרִאשׁוֹנָה פַּעַם אַחַת, הַשְּׁנִיָּה פַּעֲמַיִם, וְהַשְּׁלִישִׁית שָׁלוֹשׁ פְּעָמִים, וְאַחֲרֶיהָ סוּלָּמִית. לְדֻגְמָה: לָאוֹת בֵּית מַקִּישִׁים פַּעֲמַיִם אֶת הַסִּפְרָה שָׁלוֹשׁ, וְלָאוֹת לָמֶד מַקִּישִׁים שָׁלוֹשׁ פְּעָמִים אֶת הַסִּפְרָה חָמֵשׁ. אַחֲרֵי כָּל אוֹת נַקְרִיא אֶת הָאוֹת שֶׁהוּקְשָׁה, וּכְשֶׁיִּשָּׁאֲרוּ מְעַט אֶפְשָׁרוּיוֹת נַקְרִיא רְשִׁימָה לִבְחִירָה. לִמְחִיקַת הָאוֹת הָאַחֲרוֹנָה הַקִּישׁוּ אַחַת, וְלִשְׁמִיעַת מְקוֹם כָּל הָאוֹתִיּוֹת בַּמַּקָּשִׁים הַקִּישׁוּ אֶפֶס. הַקִּישׁוּ עַכְשָׁיו אֶת הָאוֹת הָרִאשׁוֹנָה שֶׁל שֵׁם הָעִיר, וְאַחֲרֶיהָ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_bfd39534c89fe21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askCityRec": {
+  "text": "לֹא מָצָאנוּ אֶת הָעִיר. לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שֵׁם הָעִיר, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_cc807e551bc8e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:askEmail": {
   "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אֶת כְּתֹבֶת הָאִימֵיְיל אוֹת אַחַר אוֹת, לְאַט וּבְבֵרוּר, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
   "voice": "he-IL-AvriNeural",
@@ -159,6 +173,13 @@ export default {
   "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שִׁמְכֶם הַפְּרָטִי, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_66ffa8c25c9ae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askHouse": {
+  "text": "הַקִּישׁוּ אֶת מִסְפַּר הַבַּיִת, וְאַחֲרָיו סוּלָּמִית. אִם אֵין מִסְפַּר בַּיִת, הַקִּישׁוּ אֶפֶס וְאַחֲרָיו סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_f6d7b4f5719be21a05dc",
   "pron": "",
   "phoneme": false
  },
@@ -218,6 +239,20 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:askStreet": {
+  "text": "עַכְשָׁיו שֵׁם הָרְחוֹב, בְּאוֹתָהּ דֶּרֶךְ: אוֹת אַחַר אוֹת, וְאַחֲרֵי כָּל אוֹת סוּלָּמִית. אֶפְשָׁר לְהַתְחִיל גַּם מֵהַשֵּׁם עַצְמוֹ, בְּלִי הָרַב אוֹ רַבִּי. הַקִּישׁוּ אֶת הָאוֹת הָרִאשׁוֹנָה שֶׁל שֵׁם הָרְחוֹב, וְאַחֲרֶיהָ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_dab22213c8eee21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:askStreetRec": {
+  "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שֵׁם הָרְחוֹב, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_eca383a01566e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:badEmail": {
   "text": "מֵיְיל לֹא תָּקִין",
   "voice": "he-IL-AvriNeural",
@@ -232,10 +267,24 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:badHouse": {
+  "text": "מִסְפַּר הַבַּיִת אֵינוֹ תָּקִין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_fc698ea4faa9e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:badId": {
   "text": "מִסְפַּר תְּעוּדַת הַזֶּהוּת אֵינוֹ תָּקִין",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_e145c0fb75836a4e147f",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:badLetter": {
+  "text": "הַהַקָּשָׁה אֵינָהּ אוֹת. כָּל אוֹת מַקִּישִׁים בְּמַקָּשׁ אֶחָד: פַּעַם אַחַת, פַּעֲמַיִם אוֹ שָׁלוֹשׁ פְּעָמִים, וְאַחֲרֶיהָ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b794fa0ee849e21a05dc",
   "pron": "",
   "phoneme": false
  },
@@ -273,6 +322,13 @@ export default {
   "path": "/99/c6_bb9a0c4913dee21a05dc",
   "pron": "e21a05dc",
   "phoneme": true
+ },
+ "join:deleted": {
+  "text": "הָאוֹת הָאַחֲרוֹנָה נִמְחֲקָה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_35f50d0db442e21a05dc",
+  "pron": "",
+  "phoneme": false
  },
  "join:dom1": {
   "text": "לְגִימֵייל הַקִּישׁוּ 1",
@@ -470,6 +526,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:firstLetter": {
+  "text": "הַקִּישׁוּ אֶת הָאוֹת הָרִאשׁוֹנָה, וְאַחֲרֶיהָ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_7ce6832d5d4ae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:heard": {
   "text": "שָׁמַעְנוּ",
   "voice": "he-IL-AvriNeural",
@@ -481,6 +544,13 @@ export default {
   "text": "הִקַּשְׁתֶּם",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_3c6d1cdf49e8e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:keyMap": {
+  "text": "מְקוֹם הָאוֹתִיּוֹת בַּמַּקָּשִׁים: בַּסִּפְרָה שְׁתַּיִם: דָּלֶת, הֵא, וָו. בַּסִּפְרָה שָׁלוֹשׁ: אָלֶף, בֵּית, גִּימֶל. בַּסִּפְרָה אַרְבַּע: מֵם, נוּן. בַּסִּפְרָה חָמֵשׁ: יוּד, כָּף, לָמֶד. בַּסִּפְרָה שֵׁשׁ: זַיִן, חֵית, טֵית. בַּסִּפְרָה שֶׁבַע: רֵישׁ, שִׁין, תָּו. בַּסִּפְרָה שְׁמוֹנֶה: צָדִי, קוּף. בַּסִּפְרָה תֵּשַׁע: סָמֶךְ, עַיִן, פֵּא. אוֹתִיּוֹת סוֹפִיּוֹת מַקִּישִׁים כְּמוֹ הָרְגִילוֹת. אֶת הָאוֹת הָרִאשׁוֹנָה בַּמַּקָּשׁ מַקִּישִׁים פַּעַם אַחַת, אֶת הַשְּׁנִיָּה פַּעֲמַיִם, וְאֶת הַשְּׁלִישִׁית שָׁלוֹשׁ פְּעָמִים",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_77bccd1f8d8be21a05dc",
   "pron": "",
   "phoneme": false
  },
@@ -533,6 +603,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:listMore": {
+  "text": "לְשֵׁם אַחֵר, לְהֶמְשֵׁךְ הַקָּשַׁת אוֹתִיּוֹת, הַקִּישׁוּ תֵּשַׁע",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_7d8ae6de713ce21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:mailSent": {
   "text": "נִשְׁלַח אִישּׁוּר לַמֵּיְיל",
   "voice": "he-IL-AvriNeural",
@@ -540,10 +617,31 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:nextLetter": {
+  "text": "הַקִּישׁוּ אֶת הָאוֹת הַבָּאָה, וְאַחֲרֶיהָ סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b60fe09f4c2de21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:noHear": {
   "text": "לֹא הִצְלַחְנוּ לְהָבִין. אָנָּא נַסּוּ שׁוּב",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_53e8eed798f5e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:noLetterMatch": {
+  "text": "אֵין שֵׁם שֶׁמַּתְאִים לָאוֹת הַזּוֹ. נַסּוּ אוֹת אַחֶרֶת",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_dc72309b3fa4e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:notInList": {
+  "text": "אִם הַשֵּׁם אֵינוֹ בָּרְשִׁימָה, הַקִּישׁוּ תֵּשַׁע",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_f1db4f52ec7fe21a05dc",
   "pron": "",
   "phoneme": false
  },
@@ -582,6 +680,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:pickAgain": {
+  "text": "נַסּוּ שׁוּב מֵהַהַתְחָלָה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_233d57b43e35e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:received": {
   "text": "הַבַּקָּשָׁה הִתְקַבְּלָה",
   "voice": "he-IL-AvriNeural",
@@ -589,10 +694,178 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "join:soFar": {
+  "text": "עַד כֹּה הוּקְשׁוּ",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_51cde4d81884e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "join:thanks": {
   "text": "תּוֹדָה רַבָּה",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_a401c30bf9f6e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:typed": {
+  "text": "הוּקְשָׁה הָאוֹת",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_126f6b854e26e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:א": {
+  "text": "אָלֶף",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_6c85624be0fbe21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ב": {
+  "text": "בֵּית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_89bc5251c4dce21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ג": {
+  "text": "גִּימֶל",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_f681c90bd3cae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ד": {
+  "text": "דָּלֶת",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_2c7575e7c5cde21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ה": {
+  "text": "הֵא",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_a8d5a3c163a6e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ו": {
+  "text": "וָו",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_53357a0dffa8e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ז": {
+  "text": "זַיִן",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_fd2a556c57c6e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ח": {
+  "text": "חֵית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b8e2eb96a56ce21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ט": {
+  "text": "טֵית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_39be0b25c0d4e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:י": {
+  "text": "יוּד",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_178deafa978de21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:כ": {
+  "text": "כָּף",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_ed115684b028e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ל": {
+  "text": "לָמֶד",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_9d65395907fde21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:מ": {
+  "text": "מֵם",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b99d1149bd4ae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:נ": {
+  "text": "נוּן",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_eab9ab4064fae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ס": {
+  "text": "סָמֶךְ",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_8f224e1e4e3fe21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ע": {
+  "text": "עַיִן",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_1d4f0498ba80e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:פ": {
+  "text": "פֵּא",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_2d5da5e7f244e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:צ": {
+  "text": "צָדִי",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_0b16a3956cc8e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ק": {
+  "text": "קוּף",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_d81453ce94d5e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ר": {
+  "text": "רֵישׁ",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_ee3b80c43c31e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ש": {
+  "text": "שִׁין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_26d9fcd59feae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "letter:ת": {
+  "text": "תָּו",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_7a97098be95ee21a05dc",
   "pron": "",
   "phoneme": false
  },
