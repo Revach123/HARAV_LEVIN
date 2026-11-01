@@ -61,7 +61,7 @@ export async function onRequestGet({ request, env }) {
         const rel = new Map();
         for (const o of byId.get(e.idn.length >= 5 ? e.idn : "") || []) if (o !== e) rel.set(o.id, { o, by: ["ת.ז."] });
         for (const o of byName.get(e.name.split(" ").length >= 2 ? e.name : "") || []) if (o !== e) { const x = rel.get(o.id); if (x) x.by.push("שם"); else rel.set(o.id, { o, by: ["שם"] }); }
-        const related = [...rel.values()].slice(0, 8).map(({ o, by }) => ({ when: o.when, name: o.name, email: o.email, by: by.join("+"), cancelled: o.cancelled, bad: o.bad,
+        const related = [...rel.values()].slice(0, 8).map(({ o, by }) => ({ id: o.id, id_number: o.idn, when: o.when, name: o.name, email: o.email, by: by.join("+"), cancelled: o.cancelled, bad: o.bad,
           same_fixed: !!e.fixed && o.email.toLowerCase() === e.fixed.toLowerCase(), good_email: !!o.email && !o.bad }));
         list.push({ id: e.id, when: e.when, name: e.name, id_number: e.idn, email: e.email, fixed: e.fixed, related,
           has_good_other: related.some(r => r.by.includes("ת.ז.") && r.good_email) });
