@@ -155,11 +155,13 @@
         (d.more ? `<div class="pd-sub">יש עוד תוצאות: חדדו את החיפוש</div>` : "") : (inDb.length ? "" : `<div class="pd-sub">לא נמצאה גם ברשם</div>`));
   }
   let pendingAdd = null;
+  function skipFormDirty() { try { formDirty = false; } catch { /* אין טופס בדף */ } }
   function addReg(id, defunct, added, vis, pcat) {        // הוספת חברה שנמצאה ברשם למאגר: פותח את טופס "הוספת עסק" הרגיל עם ח.פ. ממולא; אם יש added - אחרי השמירה הוא משייך אוטומטית
     if (defunct && !confirm("החברה מחוסלת / נמחקה ברשם. להוסיף אותה למאגר בכל זאת?")) return;
     pendingAdd = added ? { chp: digitsOf(id), added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm === "function") {
+      skipFormDirty();          // הטופס שמאחורי חלון ההעלאה (למשל חיפוש שהוקלד בו) מוחלף בטופס החדש: בלי אזהרת "שינויים שלא נשמרו"
       openForm(null, true);          // חלון צף מעל הדף (ולא מעבר לתצוגת הטופס הרגילה)
       setTimeout(() => { if (typeof addCompany === "function") addCompany(String(id)); }, 150);
       if (vis !== undefined) for (const ms of [250, 900, 2000]) setTimeout(() => { const v = document.getElementById("f-visibility"); if (v && (v.value === "?" || v.value === "")) v.value = vis; }, ms);
@@ -171,6 +173,7 @@
     pendingAdd = added ? { chp: "", added } : null;
     ["pd-confirm", "pd-un", "pd-upload", "pd-doc", "pd-manage", "pd-company"].forEach(close);
     if (typeof openForm !== "function") return;
+    skipFormDirty();
     openForm(null, true);          // חלון צף מעל הדף
     const fill = () => {
       if (typeof toggleNoChp === "function" && typeof noChp !== "undefined" && !noChp) toggleNoChp();
