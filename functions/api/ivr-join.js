@@ -7,7 +7,9 @@
 //    fn, ln    שם פרטי, שם משפחה (שתי הקלטות)
 //    pc / ph   אם מספר המתקשר זוהה: 1 = משתמשים בו, 2 = מקישים אחר (ph)
 //    p2q / p2  טלפון נוסף (רשות)
-//    ad        כתובת (הקלטה)
+//    ct, st    עיר ורחוב: אות אחת בכל הקשה (לפי מקומה במקש: ב = 33, ל = 555), הקראת האות, ובחירה מרשימה
+//              כשנשארות עד 8 אפשרויות (ברחוב אפשר גם בלי "הרב" / "רבי" וכו'). אם השם לא נמצא (3 פעמים) - הקלטה. בלי נתוני ערים - הקלטת כתובת מלאה (ad), כמו קודם
+//    hn        מספר בית (הקשה; 0 = אין מספר)
 //    emq / em  אימייל (רשות, הקלטה)
 //    fxq / fx  פקס (רשות)
 //    ch, cl    1 = כל החברות, 2 = חברות מסוימות (cl = הקלטת השמות)
@@ -31,9 +33,12 @@ import { sendConfirmation } from './_shared/join-mail.js';
 import { pickEmail, spokenEmail, pickSegment, pickDomain } from './_shared/spoken-email.js';
 import { splitSpeechAndDigits } from './_shared/dtmf.js';
 import { spokenLetters } from './_shared/spoken-letters.js';
+import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
+const PICK_MAX = 8;                // עד כמה אפשרויות מוקראות כרשימה (9 = לא ברשימה)
+const PICK_FAILS = 3;              // אחרי כמה ניסיונות שלא נמצא שם עוברים להקלטה
 const AGREEMENT_VERSION = 'טלפוני-1';
 
 // ---- מצב שיחה מוצפן (ivr_join_state) ----
@@ -124,13 +129,59 @@ async function step({ v, env, P, bk, done, origin }) {
   const setS = (name, k, val) => { v[`s_${name}_${k}`] = String(val); };
 
   // ספרות בהקשה + הקראה לאישור (1) או שינוי (2). כל ניסיון במשתנה חדש (name_<n>), כי ימות שומרת את הערך הישן.
-  const numStep = (name, phrase, bad, norm, max, min, label) => {
+  const numStep = (name, phrase, bad, norm, max, min, label, say = spaced) => {
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
     const val = has(v, key) && !empty(v[key]) ? norm(v[key]) : '';
     if (!val) return { ask: readTap(again(bad, key) + P(phrase), key, null, { max, min, empty: EMPTY }) };
     if (v[ck] === '1') return { val };
     if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: readTap(P(phrase), `${name}_${n + 1}`, null, { max, min, empty: EMPTY }) }; }
-    return { ask: readTap(`${T(spaced(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    return { ask: readTap(`${T(say(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+  };
+
+  // בחירת שם מרשימה (עיר / רחוב): אות אחת בכל הקשה. אחרי כל אות מוקראת האות שהוקשה, ואז מבקשים את האות הבאה,
+  // או מקריאים רשימה לבחירה כשנשארו עד 8 שמות. 0 = הסבר מקום האותיות במקשים, 1 = מחיקת האות האחרונה.
+  // מצב: s_<name>_acc האותיות שהוקשו, s_<name>_n סבב, s_<name>_list הרשימה שהוקראה (מופרדת ב-|), s_<name>_part רשימה חלקית
+  // (שמות שהוקשו במלואם, ויש עוד), s_<name>_f ניסיונות כושלים, s_<name>_rec = מעבר להקלטה, s_<name>_ok / s_<name>_x הבחירה.
+  const pickStep = (name, names, askKey) => {
+    if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
+    if (S(name, 'rec') === '1') return { rec: true };
+    const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, mk = `${name}_m${n}`;
+    const acc = S(name, 'acc') || '';
+    // ההסבר המלא (askKey) רק בפעם הראשונה; אחר כך "האות הבאה" / "האות הראשונה" (אחרי מחיקת כל האותיות או טעות)
+    const tap = (prefix, i, a) => readTap(prefix + P(a ? 'join:nextLetter' : S(name, 'i') ? 'join:firstLetter' : askKey), `${name}_${i}`, null, { max: 3, min: 1, empty: EMPTY });
+    const advance = (prefix, a) => { setS(name, 'i', '1'); setS(name, 'n', n + 1); setS(name, 'acc', a); setS(name, 'list', ''); setS(name, 'part', ''); return { ask: tap(prefix, n + 1, a) }; };
+    const fail = (note, a = '') => {
+      const f = Number(S(name, 'f') || 0) + 1; setS(name, 'f', f);
+      if (f >= PICK_FAILS) { setS(name, 'rec', '1'); return { rec: true }; }
+      return advance(`${P(note)}.`, a);
+    };
+    const said = (l) => `${P('join:typed')}.${P(`letter:${l}`)}.`;
+    const listAsk = (prefix, list, part) => readTap(`${prefix}${list.map((x, i) => T(`ל${x} הקישו ${i + 1}`)).join('.')}.${P(part ? 'join:listMore' : 'join:notInList')}`,
+      mk, [...list.map((_, i) => String(i + 1)), '9'], { empty: EMPTY });
+    if (S(name, 'list')) {                                  // הוקראה רשימה: מחכים לבחירה
+      const list = S(name, 'list').split('|'), c = Number(v[mk]);
+      if (c >= 1 && c <= list.length) { setS(name, 'ok', '1'); setS(name, 'x', list[c - 1]); return { val: list[c - 1] }; }
+      if (v[mk] === '9') return S(name, 'part') === '1' ? advance('', acc) : fail('join:pickAgain');
+      return { ask: listAsk('', list, S(name, 'part') === '1') };
+    }
+    const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
+    if (!raw) return { ask: tap('', n, acc) };
+    if (raw === '0') return advance(`${P('join:keyMap')}.`, acc);          // 0 = הסבר על מקום האותיות במקשים
+    if (raw === '1') {                                       // 1 = מחיקת האות האחרונה
+      const a = acc.slice(0, -1);
+      return advance(`${P('join:deleted')}.${a ? `${P('join:soFar')}.${[...a].map((l) => P(`letter:${l}`)).join('.')}.` : ''}`, a);
+    }
+    const l = tapLetter(raw);
+    if (!l) return advance(`${P('join:badLetter')}.`, acc);
+    const all = acc + l, m = matchNames(names, all);
+    if (!m.list.length) return fail('join:noLetterMatch', acc);          // האות לא מתאימה לאף שם: נשארים עם האותיות הקודמות
+    let list = m.list, part = false;
+    if (list.length > PICK_MAX) {
+      if (!m.exact.length || m.exact.length > PICK_MAX) return advance(said(l), all);   // עוד הרבה אפשרויות: האות הבאה
+      list = m.exact; part = true;                          // שם שהוקש במלואו, ויש עוד שמות שמתחילים בו
+    }
+    setS(name, 'acc', all); setS(name, 'list', list.join('|')); setS(name, 'part', part ? '1' : '');
+    return { ask: listAsk(said(l), list, part) };
   };
 
   // הקלטה -> זיהוי דיבור -> הקראת מה שזוהה + אישור (1) / שינוי (2) (הקלטה חוזרת). בלי הגדרת Azure: נשמרת ההקלטה בלבד.
@@ -192,9 +243,38 @@ async function step({ v, env, P, bk, done, origin }) {
     phone2 = q.val;
   }
 
-  // 5. כתובת (הקלטה)
-  const adQ = await recStep('ad', 'join:askAddress', REC_ADDR_MAX, 'join:lblAddress');
-  if (adQ.ask) return adQ.ask;
+  // 5. כתובת: עיר, רחוב ומספר בית. עיר ורחוב בהקשת אותיות ובחירה מרשימה; בלי נתוני ערים - הקלטת הכתובת המלאה
+  const addr = { city: '', street: '', house: '', recs: [] };
+  let adQ = { text: '' };
+  const cities = await loadCities(env, origin);
+  if (!cities || has(v, 'ad_0') || v.s_ad_n) {            // שיחה שכבר התחילה בהקלטת כתובת - ממשיכה כך
+    adQ = await recStep('ad', 'join:askAddress', REC_ADDR_MAX, 'join:lblAddress');
+    if (adQ.ask) return adQ.ask;
+  } else {
+    let cityCode = '';
+    const ctQ = pickStep('ct', cities.map((c) => c[1]), 'join:askCity');
+    if (ctQ.ask) return ctQ.ask;
+    if (ctQ.rec) {
+      const q = await recStep('ctr', 'join:askCityRec', REC_MAX, 'join:lblCity');
+      if (q.ask) return q.ask;
+      addr.city = q.text; addr.recs.push('ctr');
+    } else { addr.city = ctQ.val; cityCode = (cities.find((c) => c[1] === ctQ.val) || [])[0] || ''; }
+    const streets = cityCode ? await loadStreets(env, origin, cityCode) : null;   // null = העיר הוקלטה / אין נתונים: הרחוב בהקלטה
+    if (!streets || streets.length) {                       // [] = יישוב בלי רחובות ברשימה: בלי שאלת רחוב
+      const stQ = streets ? pickStep('st', streets, 'join:askStreet') : { rec: true };
+      if (stQ.ask) return stQ.ask;
+      if (stQ.rec) {
+        const q = await recStep('str', 'join:askStreetRec', REC_MAX, 'join:lblStreet');
+        if (q.ask) return q.ask;
+        addr.street = q.text; addr.recs.push('str');
+      } else addr.street = stQ.val;
+    }
+    const hnQ = numStep('hn', 'join:askHouse', 'join:badHouse', (x) => (/^\d{1,4}$/.test(String(x)) ? String(Number(x)) : ''), 4, 1, 'join:lblHouse',
+      (x) => (x === '0' ? 'ללא מספר בית' : `מספר בית ${x}`));
+    if (hnQ.ask) return hnQ.ask;
+    addr.house = hnQ.val === '0' ? '' : hnQ.val;
+    adQ = { text: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
+  }
 
   // 6. אימייל (רשות): קטעים בדיבור ובהקשות, ואז סיומת מרשימה
   if ((o = yn('emq', 'join:emailQ'))) return o;
@@ -236,9 +316,12 @@ async function step({ v, env, P, bk, done, origin }) {
   const texts = { fn: fnQ.text || '', ln: lnQ.text || '', ad: adQ.text || '', cl: clQ.text || '' };
   const fileOf = (name) => S(name, 'f') || `${name}_0`;
   const saved = await save(env, {
-    id, phone, phone2, fax, all, texts, email, callId: String(v.ApiCallId || ''),
+    id, phone, phone2, fax, all, texts, email, addr, callId: String(v.ApiCallId || ''),
     files: {
-      'הקלטת שם פרטי': recPath(fileOf('fn')), 'הקלטת שם משפחה': recPath(fileOf('ln')), 'הקלטת כתובת': recPath(fileOf('ad')),
+      'הקלטת שם פרטי': recPath(fileOf('fn')), 'הקלטת שם משפחה': recPath(fileOf('ln')),
+      ...(has(v, 'ad_0') || v.s_ad_n ? { 'הקלטת כתובת': recPath(fileOf('ad')) } : {}),
+      ...(addr.recs.includes('ctr') ? { 'הקלטת עיר': recPath(fileOf('ctr')) } : {}),
+      ...(addr.recs.includes('str') ? { 'הקלטת רחוב': recPath(fileOf('str')) } : {}),
       ...(v.emq === '1' && !email && v.emf ? { 'הקלטת אימייל': recPath(v.emf) } : {}),
       ...(!all ? { 'הקלטת חברות': recPath(fileOf('cl')) } : {}),
     },
@@ -410,7 +493,7 @@ async function transcribeOne(env, v, folder, recFile, key) {
 
 export { spokenEmail };
 
-async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', callId }) {
+async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', addr = {}, callId }) {
   const key = await importKeyForWrite(env);
   const ih = await identHash(env, id);
   // הגנה מקריאה כפולה: אותה ת.ז. שנרשמה ב-3 הדקות האחרונות לא נרשמת שוב
@@ -425,6 +508,9 @@ async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email
     ...(phone2 ? { 'טלפון נוסף': phone2 } : {}),
     ...(fax ? { 'פקס': fax } : {}),
     'כתובת': texts.ad || '(ראו הקלטת כתובת)',
+    ...(addr.city ? { 'עיר': addr.city } : {}),
+    ...(addr.street ? { 'רחוב': addr.street } : {}),
+    ...(addr.house ? { 'מספר בית': addr.house } : {}),
     ...files,
     ...(Object.values(texts).some(Boolean) ? { 'זיהוי אוטומטי מהקלטות': 'כן - יש לבדוק מול ההקלטה' } : {}),
     'מזהה שיחה': callId,

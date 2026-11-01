@@ -1,0 +1,43 @@
+name: ivr-addr-data
+
+# רשימות הערים והרחובות לשלוחת ההצטרפות הטלפונית (בחירת עיר / רחוב בהקשת אותיות, ivr-join.js).
+# מוריד מ-data.gov.il ("רחובות בישראל") ושומר ב-data/ivr-addr/ (קבצים סטטיים של האתר). ריצה חודשית + ידנית.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 5 * *"
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/ivr-addr-data.yml
+      - scripts/ivr_addr/build_addr.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ivr-addr-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build
+        run: python scripts/ivr_addr/build_addr.py
+      - name: Commit
+        run: |
+          git add -A data/ivr-addr
+          if git diff --cached --quiet; then echo "אין שינוי."; exit 0; fi
+          git config user.name "ivr-addr-data"
+          git config user.email "ivr-addr-data@users.noreply.github.com"
+          git commit -m "ivr-addr-data: update cities and streets"
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
