@@ -1,61 +1,36 @@
 {
   "old_site_rows": 5456,
   "advcf7_rows": 474,
-  "advcf7_without_same_day_partner": 36,
-  "same_enough_to_merge": 0,
-  "different": 438,
+  "advcf7_without_partner": 1,
+  "same_enough_to_merge": 375,
+  "different": 98,
   "summary": {
-    "different: time+ip": 346,
-    "different: core+time+ip": 80,
-    "different: time+ip+extra": 8,
-    "different: core+time+ip+extra": 4
+    "same: tz+ipm": 375,
+    "different: core+tz+ipm": 84,
+    "different: tz+ipm+extra": 10,
+    "different: core+tz+ipm+extra": 4
   },
   "stats": {
     "time_delta": {
-      "1-2h": 380,
-      "2-3h": 56,
+      "1-2h": 412,
+      "2-3h": 59,
       "3-4h": 2
     },
     "time_sign": {
-      "cfdb7_later": 438
+      "cfdb7_later": 473
     },
     "hour_offsets": {
-      "2": 399,
-      "3": 39
+      "2": 433,
+      "3": 40
     },
     "ip": {
-      "cfdb7_empty": 438
+      "cfdb7_empty": 473
     },
     "core_fields": {
-      "phone": 84,
-      "first": 3,
-      "last": 5,
-      "email": 2
+      "phone": 87,
+      "first": 2,
+      "last": 3
     }
   },
-  "probe": [
-    {
-      "id_len": 9,
-      "src_cf": "cfdb7:1225",
-      "src_adv": "advcf7:1158",
-      "kinds": "time+ip",
-      "same_cls": "different",
-      "masked_diffs": [
-        "שעה: cfdb7=2024-02-25 14:33:29 advcf7=2024-02-25 12:33:29",
-        "IP: cfdb7 ריק / advcf7 יש"
-      ]
-    },
-    {
-      "id_len": 9,
-      "src_cf": "cfdb7:1226",
-      "src_adv": "advcf7:1159",
-      "kinds": "time+ip",
-      "same_cls": "different",
-      "masked_diffs": [
-        "שעה: cfdb7=2024-02-25 14:36:17 advcf7=2024-02-25 12:36:17",
-        "IP: cfdb7 ריק / advcf7 יש"
-      ]
-    }
-  ],
-  "when": "2026-11-01T08:59:59Z"
+  "when": "2026-11-01T09:03:18Z"
 }
