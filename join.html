@@ -42,6 +42,7 @@
   .viaopt{display:flex;align-items:center;gap:.7rem;padding:.35rem 0;font-size:19px;color:var(--navy);cursor:pointer}
   .viaopt input{width:24px;height:24px;flex:none;accent-color:var(--accent-dark);margin:0}
   .viaopt.off{color:#9aa7a7;cursor:not-allowed}
+  .viasoon{font-size:15px;font-weight:400}
   .viamsg{margin-top:.3rem;font-size:16px;font-weight:700;color:#8a5a00}
   .emailrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   .emailrow #emailLocal{flex:1 1 55%;min-width:0;width:auto}
@@ -154,7 +155,7 @@
       <div class="field sendvia" id="sendVia" role="radiogroup" aria-label="אישור הצטרפות ישלח ל">
         <div class="lbl">אישור הצטרפות ישלח ל...</div>
         <label class="viaopt off" id="viaMailL"><input type="radio" name="via" value="mail" id="viaMail" disabled><span>מייל</span></label>
-        <label class="viaopt off" id="viaFaxL"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס</span></label>
+        <label class="viaopt off" id="viaFaxL" title="אפשרות זו אינה פעילה עדיין"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס <small class="viasoon">- אפשרות זו אינה פעילה עדיין, בעז"ה בקרוב</small></span></label>
         <div class="viamsg" id="viaMsg" aria-live="polite"></div>
       </div>
       <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
@@ -312,31 +313,14 @@ function setErrs(map, form) {
 // בחירת אופן קבלת האישור: מייל (ברירת מחדל אם הוזנה כתובת) או פקס (עדיין לא פעיל). שורה בלי נתון - באפור וללא אפשרות בחירה.
 (function () {
   const L = $("emailLocal"), F = $("fax"), M = $("viaMail"), X = $("viaFax"), msg = $("viaMsg");
-  const faxOk = () => { let d = F.value.replace(/\D/g, ""); if (d.startsWith("972")) d = "0" + d.slice(3); return /^(0\d{8,9}|153\d{6,7})$/.test(d); };
-  function info(text) {
-    const o = document.createElement("div");
-    o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
-    o.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px";
-    o.innerHTML = `<div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:22px;text-align:center;font-size:19px;line-height:1.6;color:#1f3a3a"><p style="margin:0 0 16px"></p><button type="button" class="btn" style="min-height:50px">הבנתי</button></div>`;
-    o.querySelector("p").textContent = text;
-    const close = () => o.remove();
-    o.querySelector("button").onclick = close; o.addEventListener("click", e => { if (e.target === o) close(); });
-    document.body.appendChild(o); o.querySelector("button").focus();
-  }
   function upd() {
-    const mOk = L.value.trim().length > 0, fOk = faxOk();
-    M.disabled = !mOk; X.disabled = !fOk;
-    $("viaMailL").classList.toggle("off", !mOk); $("viaFaxL").classList.toggle("off", !fOk);
-    if (!mOk) M.checked = false; if (!fOk) X.checked = false;
-    if (mOk && !M.checked && !X.checked) M.checked = true;          // ברירת מחדל: מייל, אם הוזנה כתובת
-    msg.textContent = !L.value.trim() && !F.value.trim() ? "לקבלת אישור, יש להזין כתובת מייל או מספר פקס תקין" : "";
+    const mOk = L.value.trim().length > 0;
+    M.disabled = !mOk; X.disabled = true; X.checked = false;          // פקס: תמיד מושבת עד שהאפשרות תופעל
+    $("viaMailL").classList.toggle("off", !mOk); $("viaFaxL").classList.add("off");
+    if (!mOk) M.checked = false; else if (!M.checked) M.checked = true;          // ברירת מחדל: מייל, אם הוזנה כתובת
+    msg.textContent = !mOk ? "לקבלת אישור, יש להזין כתובת מייל תקינה (שליחה בפקס עדיין אינה פעילה)" : "";
   }
-  X.addEventListener("change", () => {
-    if (!X.checked) return;
-    info("אפשרות שליחת האישור בפקס אינו פעיל עדיין. בעז\"ה בקרוב יתאפשר קבלת האישור בפקס");
-    X.checked = false; if (!M.disabled) M.checked = true;
-  });
-  L.addEventListener("input", upd); F.addEventListener("input", upd); $("emailDom").addEventListener("change", upd);
+  L.addEventListener("input", upd); $("emailDom").addEventListener("change", upd);
   upd();
 })();
 // אימייל: רק תווים לועזיים (אותיות עבריות ורווחים נמחקים בהקלדה ובהדבקה). שאר השדות חופשיים.
