@@ -472,6 +472,18 @@ def apply_first_seen(bonds, state):
         b["first_seen"] = first[str(b["security_id"])]
 
 
+def bond_allowed(b, private):
+    if b.get("manual"):                 # אג"ח שנבחרה ידנית: לפי הבחירה (פרטי / כללי / שניהם)
+        return b["manual_scope"] in (("private", "both") if private else ("general", "both"))
+    if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
+        return True
+    scope = b.get("bond_scope", "both")   # האם האישור לאג"ח הוא גם לכללי וגם לפרטי
+    if private:   # סימון "פרטי" + מאושר (כן / רק פרטי), ולא אישור "רק כללי"
+        return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי") and scope != "general_only"
+    # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; "רק פרטי" (בשדה האישור או בהערה מפורשת) לא נכנס
+    return b["agch_approved"] in ("כן", "רק כללי") and scope != "private_only"
+
+
 # ── פלט ─────────────────────────────────────────────────────────────────────
 def write_lists(bonds):
     def view(b, lst=""):
@@ -481,16 +493,7 @@ def write_lists(bonds):
         r["list"] = lst
         return r
 
-    def allowed(b, private):
-        if b.get("manual"):                 # אג"ח שנבחרה ידנית: לפי הבחירה (פרטי / כללי / שניהם)
-            return b["manual_scope"] in (("private", "both") if private else ("general", "both"))
-        if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
-            return True
-        scope = b.get("bond_scope", "both")   # האם האישור לאג"ח הוא גם לכללי וגם לפרטי
-        if private:   # סימון "פרטי" + מאושר (כן / רק פרטי), ולא אישור "רק כללי"
-            return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי") and scope != "general_only"
-        # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; "רק פרטי" (בשדה האישור או בהערה מפורשת) לא נכנס
-        return b["agch_approved"] in ("כן", "רק כללי") and scope != "private_only"
+    allowed = bond_allowed
 
     def dump(name, rows, cols):
         rows = [{c: r.get(c, "") for c in cols} for r in rows]
