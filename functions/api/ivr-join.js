@@ -30,6 +30,7 @@ import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt
 import { sendConfirmation } from './_shared/join-mail.js';
 import { pickEmail, spokenEmail, pickSegment, pickDomain } from './_shared/spoken-email.js';
 import { splitSpeechAndDigits } from './_shared/dtmf.js';
+import { spokenLetters } from './_shared/spoken-letters.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -133,15 +134,24 @@ async function step({ v, env, P, bk, done, origin }) {
   };
 
   // הקלטה -> זיהוי דיבור -> הקראת מה שזוהה + אישור (1) / שינוי (2) (הקלטה חוזרת). בלי הגדרת Azure: נשמרת ההקלטה בלבד.
-  const recStep = async (name, askKey, max, label) => {
+  const recStep = async (name, askKey, max, label, spellKey = '') => {
     if (S(name, 'ok') === '1') return { text: S(name, 'x') || '' };
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`;
-    const askAt = (i, prefix = '') => readRecord(prefix + P(askKey), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
+    // spellKey: אם הזיהוי נכשל, מבקשים איות אות אחר אות (מצב sp)
+    const askAt = (i, prefix = '') => readRecord(prefix + P(S(name, 'sp') === '1' ? spellKey : askKey), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
     if (!sttConfigured(env)) { setS(name, 'ok', '1'); setS(name, 'x', ''); setS(name, 'f', key); return { text: '' }; }
-    if (S(name, 'tn') !== String(n)) { setS(name, 'x', await transcribeOne(env, v, folder, recFile, key)); setS(name, 'tn', n); }
+    if (S(name, 'tn') !== String(n)) {
+      const spelled = S(name, 'sp') === '1';
+      const t = await transcribeOne(env, v, folder, recFile, key);
+      setS(name, 'x', spelled ? spokenLetters(t) : t); setS(name, 'tn', n);
+    }
     const text = S(name, 'x') || '';
-    if (!text) { setS(name, 'n', n + 1); return { ask: askAt(n + 1, `${P('join:noHear')}.`) }; }
+    if (!text) {
+      setS(name, 'n', n + 1);
+      if (spellKey) { setS(name, 'sp', '1'); return { ask: askAt(n + 1) }; }          // לא זוהה: איות אות אחר אות
+      return { ask: askAt(n + 1, `${P('join:noHear')}.`) };
+    }
     const ck = `${name}_c${n}`;
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { text }; }
     if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
@@ -157,7 +167,7 @@ async function step({ v, env, P, bk, done, origin }) {
   // 2. שם פרטי ושם משפחה (שתי הקלטות נפרדות)
   const fnQ = await recStep('fn', 'join:askFirst', REC_MAX, 'join:lblFirst');
   if (fnQ.ask) return fnQ.ask;
-  const lnQ = await recStep('ln', 'join:askLast', REC_MAX, 'join:lblLast');
+  const lnQ = await recStep('ln', 'join:askLast', REC_MAX, 'join:lblLast', 'join:askSpell');
   if (lnQ.ask) return lnQ.ask;
 
   // 3. טלפון: אם זוהה מספר המתקשר - בוחרים בו (1) או מקישים אחר (2)
