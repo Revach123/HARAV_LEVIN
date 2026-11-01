@@ -310,9 +310,9 @@ export default {
   "phoneme": false
  },
  "join:dom7": {
-  "text": "לְאַיְיקְלָאוּד נְקֻדָּה קוֹם הַקִּישׁוּ 7",
+  "text": "לְאוֹקֵי מֵייל נְקֻדָּה קוֹ נְקֻדָּה אִיל הַקִּישׁוּ 7",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_df3122f9c63ee21a05dc",
+  "path": "/99/c6_d2340def2e42e21a05dc",
   "pron": "",
   "phoneme": false
  },
