@@ -331,9 +331,9 @@ export default {
   "phoneme": false
  },
  "join:domOther": {
-  "text": "לְסִיּוֹמֶת אַחֶרֶת הַקִּישׁוּ אֶפֶס",
+  "text": "לְהַקְלָטַת סִיּוֹמֶת שׁוֹנָה הַקִּישׁוּ אֶפֶס",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_48efad4c35dde21a05dc",
+  "path": "/99/c6_3afec136be87e21a05dc",
   "pron": "",
   "phoneme": false
  },
