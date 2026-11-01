@@ -1,0 +1,34 @@
+name: Joiner old-site pairs report (read-only, manual)
+
+# דוח כפילויות האתר הישן (cfdb7 מול advcf7): רק ספירות לפי סוג הבדל, בלי פרטים אישיים. קריאה בלבד.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe
+          code=$(curl -sS -m 300 -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" "https://harav-levin.pages.dev/api/joiners?oldpairs=1" -o tmp.json -w '%{http_code}')
+          if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp.json)"; exit 1; fi
+          jq --arg w "$(date -u +%FT%TZ)" '. + {when: $w}' tmp.json > data/probe/joiner_old_pairs.json
+          jq -c . data/probe/joiner_old_pairs.json
+          rm tmp.json
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/joiner_old_pairs.json || true
+          git diff --cached --quiet || (git commit -m "joiner old pairs" && git pull --rebase --autostash -X theirs && git push)
