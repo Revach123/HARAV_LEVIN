@@ -204,13 +204,13 @@ def load_manual_bonds(path=None):
 
 
 def company_names(companies):
-    """ח"פ -> שם להצגה, רק לחברות שאינן מחוסלות/מחוקות (לא מציגים אג"ח ידניות של חברה כזו)."""
+    """ח"פ -> שם להצגה (השם העדכני מהרשם; ואם אין - השם בהיתר עיסקא), רק לחברות שאינן מחוסלות/מחוקות (לא מציגים אג"ח ידניות של חברה כזו)."""
     out = {}
     for c in companies:
         k = chp_norm(c.get("chp_number"))
         reg = (c.get("registry_status") or "").strip()
         if k and k not in out and not reg.startswith(("מחוסל", "חיסול", "מחוק", "נגרע")):
-            out[k] = c.get("permit_name") or c.get("registrar_name") or ""
+            out[k] = c.get("registrar_name") or c.get("permit_name") or ""
     return out
 
 
@@ -228,7 +228,7 @@ def approved_map(companies):
         if k in out:
             continue
         out[k] = {
-            "company": c.get("permit_name") or c.get("registrar_name") or "",
+            "company": c.get("registrar_name") or c.get("permit_name") or "",
             "agch_approved": status,
             "goyim": is_goyim(c.get("notes")),
             "is_private": (c.get("visibility") or "").strip() == "פרטי",
