@@ -1,0 +1,772 @@
+{
+  "total": 27803,
+  "with_email": 16645,
+  "undecryptable": 0,
+  "domains": [
+    {
+      "domain": "gmail.com",
+      "n": 16051
+    },
+    {
+      "domain": "hotmail.com",
+      "n": 113
+    },
+    {
+      "domain": "okmail.co.il",
+      "n": 30
+    },
+    {
+      "domain": "gmil.com",
+      "n": 28
+    },
+    {
+      "domain": "0541234.com",
+      "n": 24
+    },
+    {
+      "domain": "30005000.com",
+      "n": 20
+    },
+    {
+      "domain": "gamil.com",
+      "n": 16
+    },
+    {
+      "domain": "walla.com",
+      "n": 16
+    },
+    {
+      "domain": "email36.com",
+      "n": 13
+    },
+    {
+      "domain": "bezeqint.net",
+      "n": 12
+    },
+    {
+      "domain": "wolf.org.il",
+      "n": 11
+    },
+    {
+      "domain": "gimel.com",
+      "n": 10
+    },
+    {
+      "domain": "gmail.co",
+      "n": 10
+    },
+    {
+      "domain": "gmeil.com",
+      "n": 9
+    },
+    {
+      "domain": "gimal.com",
+      "n": 9
+    },
+    {
+      "domain": "gefen-ins.co.il",
+      "n": 7
+    },
+    {
+      "domain": "gmaij.com",
+      "n": 7
+    },
+    {
+      "domain": "walla.co.il",
+      "n": 7
+    },
+    {
+      "domain": "gnail.com",
+      "n": 6
+    },
+    {
+      "domain": "mail.com",
+      "n": 5
+    },
+    {
+      "domain": "gmail.con",
+      "n": 4
+    },
+    {
+      "domain": "neto.net.il",
+      "n": 4
+    },
+    {
+      "domain": "jmail.com",
+      "n": 4
+    },
+    {
+      "domain": "gmial.com",
+      "n": 4
+    },
+    {
+      "domain": "gmaii.com",
+      "n": 4
+    },
+    {
+      "domain": "enativ.com",
+      "n": 4
+    },
+    {
+      "domain": "outlook.co.il",
+      "n": 4
+    },
+    {
+      "domain": "netvision.net.il",
+      "n": 4
+    },
+    {
+      "domain": "gmai.com",
+      "n": 3
+    },
+    {
+      "domain": "netivot-olam.com",
+      "n": 3
+    },
+    {
+      "domain": "017.net.il",
+      "n": 3
+    },
+    {
+      "domain": "seltenreichcpa.com",
+      "n": 3
+    },
+    {
+      "domain": "gail.com",
+      "n": 3
+    },
+    {
+      "domain": "gimail.com",
+      "n": 3
+    },
+    {
+      "domain": "gmaul.com",
+      "n": 3
+    },
+    {
+      "domain": "bydr.org.il",
+      "n": 3
+    },
+    {
+      "domain": "outlook.com",
+      "n": 3
+    },
+    {
+      "domain": "jmil.com",
+      "n": 2
+    },
+    {
+      "domain": "etrog.net.il",
+      "n": 2
+    },
+    {
+      "domain": "013net.net",
+      "n": 2
+    },
+    {
+      "domain": "google.com",
+      "n": 2
+    },
+    {
+      "domain": "gmyl.com",
+      "n": 2
+    },
+    {
+      "domain": "bbm.org.il",
+      "n": 2
+    },
+    {
+      "domain": "gmail.co.il",
+      "n": 2
+    },
+    {
+      "domain": "gmal.com",
+      "n": 2
+    },
+    {
+      "domain": "cybrella.io",
+      "n": 2
+    },
+    {
+      "domain": "gmail.cim",
+      "n": 2
+    },
+    {
+      "domain": "hotmail.fr",
+      "n": 2
+    },
+    {
+      "domain": "ami.org.il",
+      "n": 2
+    },
+    {
+      "domain": "gmail.comj",
+      "n": 2
+    },
+    {
+      "domain": "adler-media.com",
+      "n": 2
+    },
+    {
+      "domain": "yahoo.com",
+      "n": 2
+    },
+    {
+      "domain": "gimil.com",
+      "n": 2
+    },
+    {
+      "domain": "gmaui.com",
+      "n": 2
+    },
+    {
+      "domain": "laniado.org.il",
+      "n": 2
+    },
+    {
+      "domain": "gmail36.com",
+      "n": 2
+    },
+    {
+      "domain": "gmail.c0m",
+      "n": 2
+    },
+    {
+      "domain": "kupat.org",
+      "n": 2
+    },
+    {
+      "domain": "avnet.com",
+      "n": 2
+    },
+    {
+      "domain": "jmel.com",
+      "n": 2
+    },
+    {
+      "domain": "gmaj.com",
+      "n": 2
+    },
+    {
+      "domain": "ymail.com",
+      "n": 2
+    },
+    {
+      "domain": "gmeij.com",
+      "n": 2
+    },
+    {
+      "domain": "marve.co.il",
+      "n": 2
+    },
+    {
+      "domain": "proton.me",
+      "n": 2
+    },
+    {
+      "domain": "profit.org.il",
+      "n": 1
+    },
+    {
+      "domain": "gmel.com",
+      "n": 1
+    },
+    {
+      "domain": "rotner-law.com",
+      "n": 1
+    },
+    {
+      "domain": "gmaol.com",
+      "n": 1
+    },
+    {
+      "domain": "cpaisr.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gk-law.co.il",
+      "n": 1
+    },
+    {
+      "domain": "tiferet.org.il",
+      "n": 1
+    },
+    {
+      "domain": "meuhedet.co.il",
+      "n": 1
+    },
+    {
+      "domain": "icloud.com",
+      "n": 1
+    },
+    {
+      "domain": "gmabl.com",
+      "n": 1
+    },
+    {
+      "domain": "balasiano.co.il",
+      "n": 1
+    },
+    {
+      "domain": "802060.com",
+      "n": 1
+    },
+    {
+      "domain": "mniven.com",
+      "n": 1
+    },
+    {
+      "domain": "gmailc.om",
+      "n": 1
+    },
+    {
+      "domain": "jbanl.co.il",
+      "n": 1
+    },
+    {
+      "domain": "aviltot.tot",
+      "n": 1
+    },
+    {
+      "domain": "willi-food.co.il",
+      "n": 1
+    },
+    {
+      "domain": "bi-law.co.il",
+      "n": 1
+    },
+    {
+      "domain": "102.gov.il",
+      "n": 1
+    },
+    {
+      "domain": "gm.ica",
+      "n": 1
+    },
+    {
+      "domain": "gmil.cim",
+      "n": 1
+    },
+    {
+      "domain": "012.net.il",
+      "n": 1
+    },
+    {
+      "domain": "zzv.org.il",
+      "n": 1
+    },
+    {
+      "domain": "gmail.cum",
+      "n": 1
+    },
+    {
+      "domain": "gtmail.com",
+      "n": 1
+    },
+    {
+      "domain": "netnaki.net.il",
+      "n": 1
+    },
+    {
+      "domain": "yated.net",
+      "n": 1
+    },
+    {
+      "domain": "gvirtz.com",
+      "n": 1
+    },
+    {
+      "domain": "kiedf.org",
+      "n": 1
+    },
+    {
+      "domain": "hmail.com",
+      "n": 1
+    },
+    {
+      "domain": "doryres.co.il",
+      "n": 1
+    },
+    {
+      "domain": "kls.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmkil.ckm",
+      "n": 1
+    },
+    {
+      "domain": "gmail.comy",
+      "n": 1
+    },
+    {
+      "domain": "gmgila.com",
+      "n": 1
+    },
+    {
+      "domain": "gmail.fom",
+      "n": 1
+    },
+    {
+      "domain": "mailtop.top",
+      "n": 1
+    },
+    {
+      "domain": "gmail.cpm",
+      "n": 1
+    },
+    {
+      "domain": "gmnail.com",
+      "n": 1
+    },
+    {
+      "domain": "inter.net.il",
+      "n": 1
+    },
+    {
+      "domain": "africa-israel.com",
+      "n": 1
+    },
+    {
+      "domain": "hlp.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmiail.com",
+      "n": 1
+    },
+    {
+      "domain": "gmaul.cum",
+      "n": 1
+    },
+    {
+      "domain": "right4u.co.il",
+      "n": 1
+    },
+    {
+      "domain": "cha.org.il",
+      "n": 1
+    },
+    {
+      "domain": "iai.co.il",
+      "n": 1
+    },
+    {
+      "domain": "arachim.org",
+      "n": 1
+    },
+    {
+      "domain": "melavsky.co.il",
+      "n": 1
+    },
+    {
+      "domain": "sfr.fr",
+      "n": 1
+    },
+    {
+      "domain": "gamil.cpm",
+      "n": 1
+    },
+    {
+      "domain": "gml.com",
+      "n": 1
+    },
+    {
+      "domain": "enrholdings.net",
+      "n": 1
+    },
+    {
+      "domain": "bamaale.ort.org.il",
+      "n": 1
+    },
+    {
+      "domain": "gil.com",
+      "n": 1
+    },
+    {
+      "domain": "sapirtech.co.il",
+      "n": 1
+    },
+    {
+      "domain": "noamhatora.co.il",
+      "n": 1
+    },
+    {
+      "domain": "trust-group.info",
+      "n": 1
+    },
+    {
+      "domain": "mdt.co.il",
+      "n": 1
+    },
+    {
+      "domain": "walla.con",
+      "n": 1
+    },
+    {
+      "domain": "rubin-il.com",
+      "n": 1
+    },
+    {
+      "domain": "gmail.coml",
+      "n": 1
+    },
+    {
+      "domain": "infinya.co.il",
+      "n": 1
+    },
+    {
+      "domain": "jbank.co.il",
+      "n": 1
+    },
+    {
+      "domain": "maotltd.com",
+      "n": 1
+    },
+    {
+      "domain": "kpmg.com",
+      "n": 1
+    },
+    {
+      "domain": "shtilim.org",
+      "n": 1
+    },
+    {
+      "domain": "cps-il.com",
+      "n": 1
+    },
+    {
+      "domain": "eeeeg.cl",
+      "n": 1
+    },
+    {
+      "domain": "gmij.com",
+      "n": 1
+    },
+    {
+      "domain": "krm.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmail.comom",
+      "n": 1
+    },
+    {
+      "domain": "achdutgroup.com",
+      "n": 1
+    },
+    {
+      "domain": "qmail.com",
+      "n": 1
+    },
+    {
+      "domain": "fmail.com",
+      "n": 1
+    },
+    {
+      "domain": "yk-law.co.il",
+      "n": 1
+    },
+    {
+      "domain": "madisontitle.com",
+      "n": 1
+    },
+    {
+      "domain": "strauss-water.com",
+      "n": 1
+    },
+    {
+      "domain": "hotmail.co.uk",
+      "n": 1
+    },
+    {
+      "domain": "gmaum.com",
+      "n": 1
+    },
+    {
+      "domain": "semmeir.org",
+      "n": 1
+    },
+    {
+      "domain": "gwail.com",
+      "n": 1
+    },
+    {
+      "domain": "themir.org.il",
+      "n": 1
+    },
+    {
+      "domain": "doryes.co.il",
+      "n": 1
+    },
+    {
+      "domain": "grifin.me",
+      "n": 1
+    },
+    {
+      "domain": "ecobritelinen.com",
+      "n": 1
+    },
+    {
+      "domain": "gmailk.com",
+      "n": 1
+    },
+    {
+      "domain": "pragroup.com",
+      "n": 1
+    },
+    {
+      "domain": "gmsil.com",
+      "n": 1
+    },
+    {
+      "domain": "shvarts.co.il",
+      "n": 1
+    },
+    {
+      "domain": "yahoo.se",
+      "n": 1
+    },
+    {
+      "domain": "savyon-travel.com",
+      "n": 1
+    },
+    {
+      "domain": "rlf.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmqil.com",
+      "n": 1
+    },
+    {
+      "domain": "gmail.comhu",
+      "n": 1
+    },
+    {
+      "domain": "ygmqil.com",
+      "n": 1
+    },
+    {
+      "domain": "dermer.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmayl.com",
+      "n": 1
+    },
+    {
+      "domain": "shvileyor.co.il",
+      "n": 1
+    },
+    {
+      "domain": "ayalon-inv.co.il",
+      "n": 1
+    },
+    {
+      "domain": "giamel.com",
+      "n": 1
+    },
+    {
+      "domain": "dmail.com",
+      "n": 1
+    },
+    {
+      "domain": "marks.co.il",
+      "n": 1
+    },
+    {
+      "domain": "mkp.org.il",
+      "n": 1
+    },
+    {
+      "domain": "republic.org.il",
+      "n": 1
+    },
+    {
+      "domain": "arad-finance.co.il",
+      "n": 1
+    },
+    {
+      "domain": "rea.co.il",
+      "n": 1
+    },
+    {
+      "domain": "ovdeimedina.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gimij.com",
+      "n": 1
+    },
+    {
+      "domain": "nero.net.il",
+      "n": 1
+    },
+    {
+      "domain": "bluewin.ch",
+      "n": 1
+    },
+    {
+      "domain": "gmamil.com",
+      "n": 1
+    },
+    {
+      "domain": "mweb.co.il",
+      "n": 1
+    },
+    {
+      "domain": "gmaik.com",
+      "n": 1
+    },
+    {
+      "domain": "tichonpt.org.il",
+      "n": 1
+    },
+    {
+      "domain": "gmail.com.il",
+      "n": 1
+    },
+    {
+      "domain": "gmail.comdursui",
+      "n": 1
+    },
+    {
+      "domain": "gumal.com",
+      "n": 1
+    },
+    {
+      "domain": "haravrabi.co.il",
+      "n": 1
+    },
+    {
+      "domain": "imel36.com",
+      "n": 1
+    },
+    {
+      "domain": "gmaill.com",
+      "n": 1
+    },
+    {
+      "domain": "sb7.org.il",
+      "n": 1
+    },
+    {
+      "domain": "kayj.net",
+      "n": 1
+    },
+    {
+      "domain": "gmail.cam",
+      "n": 1
+    },
+    {
+      "domain": "kls.co.ilo",
+      "n": 1
+    },
+    {
+      "domain": "orchot.org.il",
+      "n": 1
+    }
+  ],
+  "when": "2026-11-01T07:35:15Z"
+}
