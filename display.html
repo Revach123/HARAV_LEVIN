@@ -110,6 +110,11 @@
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
   .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
+  .inst-bar{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin:0 0 .7rem}
+  .btn-inst{font:inherit;font-size:14px;font-weight:700;line-height:1.35;text-align:center;padding:.45rem 1rem;border-radius:10px;border:2px solid var(--accent-border);background:#fff;color:var(--accent-dark);cursor:pointer}
+  .btn-inst.on{background:var(--accent-bg);border-color:var(--accent)}
+  .inst-note{font-size:13px;color:#5a6b6b}
+  .new-tag.nt{background:#e8ecec;color:#4a5a5a;border-color:#c7d0d0}
   .clamp3{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:help}
 </style>
 </head>
@@ -266,13 +271,14 @@ function groupSubRows(list) {
 }
 
 // ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
+let FULL_INST = false; try { FULL_INST = sessionStorage.getItem("fullInst") === "1"; } catch {}
 async function mountList(container, type) {
   const topic = type.startsWith("bonds") ? "bonds" : "companies";
   const level = type.split("-")[1];                       // private | general
   const cols  = COLUMNS[topic].filter(c => !c.generalOnly || level === "general").map(c => c.cell === "doc" && level === "private" ? { ...c, px: 100, w: 8 } : c);          // ברשימת הפרטי: רק צפייה והורדה, בלי עמודת "יש פרטי" בצד
   container.innerHTML = '<div class="state">טוען…</div>';
 
-  let rows = null, usedSample = false;
+  let rows = null, usedSample = false, instCount = 0, instErr = false;
   try {
     if (topic === "bonds") {
       // רשימת האג"ח היחידה: הקבצים שנבנים כל יום מדף החברה במאיה (רק חברות מאושרות)
@@ -281,6 +287,17 @@ async function mountList(container, type) {
       const data = await res.json();
       rows = (data.rows || []).map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim() }));
       markRecent(rows, data.universe_started || "");
+      if (FULL_INST) {          // "רשימה מלאה למוסדיים": מוסיפים את האג"ח הלא סחירות הפעילות (bonds_institutional.json, נבנה יומית)
+        try {
+          const r2 = await fetch(`${API_BASE}/data/bonds_list/bonds_institutional.json`);
+          if (!r2.ok) throw new Error("institutional file " + r2.status);
+          const d2 = await r2.json(), want = type.split("-")[1] === "private" ? "פרטי" : "כללי", have = new Set(rows.map(r => String(r.security_id)));
+          const extra = (d2.rows || []).filter(r => String(r.list || "").includes(want) && !have.has(String(r.security_id)))
+            .map(r => ({ ...r, security_name: String(r.security_name || "").replace(/\s+/g, " ").trim(), _nontrad: true }));
+          rows = [...rows, ...extra].sort((a, b) => String(a.company).localeCompare(String(b.company), "he") || String(a.security_name).localeCompare(String(b.security_name), "he"));
+          instCount = extra.length;
+        } catch (e) { instErr = true; }
+      }
     } else {
       const res = await fetch(`${API_BASE}/api/lists?type=${type}`);
       const data = await res.json();
@@ -293,9 +310,9 @@ async function mountList(container, type) {
   }
 
   if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); markRecentCompanies(rows); }
-  const state = { rows, filtered: rows, cols, topic, liveTs: "" };
+  const state = { rows, filtered: rows, cols, topic, liveTs: "", instCount, instErr };
   if (topic === "bonds" && !usedSample) {          // שערים עדכניים מהבורסה (עיכוב הבורסה כ-15 דקות): הטבלה מוצגת מיד עם שאר הנתונים, ובעמודות השער והתשואה ספינר עד שהשערים מגיעים והתשואות מחושבות ברקע
-    state.liveLoading = true; for (const r of rows) r._livePending = true;
+    state.liveLoading = true; for (const r of rows) if (!r._nontrad) r._livePending = true;
     livePrices().then(async j => {
       const ok = await applyPricesAsync(rows, j);
       if (ok) state.liveTs = j.ts;
@@ -396,6 +413,16 @@ function render(container, state, type, usedSample) {
       'מוצגים נתוני דוגמה בלבד — ה-API לא נענה. אחרי פריסת <code>lists.js</code> יוצגו הנתונים האמיתיים.'));
   }
 
+  if (state.topic === "bonds") {          // כפתור "רשימה מלאה למוסדיים" בראש הרשימה (שתי שורות)
+    const bar = el("div", "inst-bar");
+    const ib = el("button", "btn-inst" + (FULL_INST ? " on" : ""));
+    ib.type = "button"; ib.setAttribute("aria-pressed", FULL_INST ? "true" : "false");
+    ib.innerHTML = 'רשימה מלאה למוסדיים<br>כולל ני"ע לא סחירות';
+    ib.onclick = () => { FULL_INST = !FULL_INST; try { sessionStorage.setItem("fullInst", FULL_INST ? "1" : ""); } catch {} mountList(container, type); };
+    bar.appendChild(ib);
+    if (FULL_INST) bar.appendChild(el("span", "inst-note", state.instErr ? "הרשימה המלאה עדיין לא זמינה" : `נוספו ${state.instCount} ניירות לא סחירים פעילים (בלי שער ותשואה). לרוב מיועדים למוסדיים.`));
+    container.appendChild(bar);
+  }
   const head = el("div","list-head");
   const title = el("div","list-title");
   const label = state.topic === "bonds" ? "איגרות חוב" : "חברות";
@@ -739,6 +766,7 @@ function cellFor(col, val, row) {
     td.className = "name-cell";
     if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)
     else if (row && row._recent && !row._sub && col.key === "permit_name") td.innerHTML = `${esc(val ?? "")}<div class="new-line"><span class="new-tag new" title="נוספה לרשימה בחודש האחרון">חדש</span></div>`;
+    else if (row && row._nontrad && col.key === "security_name") td.innerHTML = `${esc(val ?? "")}<div class="new-line"><span class="new-tag nt" title="נייר לא סחיר: אין שער ואין תשואה לפדיון">לא סחיר</span></div>`;
     else if (row && row._recent && col.key === "security_name") td.innerHTML = `${esc(val ?? "")}<div class="new-line"><span class="new-tag ${row._kind}" title="${NEW_TAG[row._kind][1]}">${NEW_TAG[row._kind][0]}</span></div>`;
     else td.textContent = val ?? "";
     return td;
