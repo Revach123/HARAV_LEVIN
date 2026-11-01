@@ -275,65 +275,65 @@ export default {
   "phoneme": true
  },
  "join:dom1": {
-  "text": "לְגִימֵייל נְקֻדָּה קוֹם הַקִּישׁוּ 1",
+  "text": "לְגִימֵייל הַקִּישׁוּ 1",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_34013c90ce9be21a05dc",
+  "path": "/99/c6_fcf52407435ce21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom2": {
-  "text": "לְוָואלָה נְקֻדָּה קוֹ נְקֻדָּה אִיל הַקִּישׁוּ 2",
+  "text": "לְוָואלָה יִשְׂרָאֵל הַקִּישׁוּ 2",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_4bbcac0f7feee21a05dc",
+  "path": "/99/c6_b87a952d31d5e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom3": {
-  "text": "לְוָואלָה נְקֻדָּה קוֹם הַקִּישׁוּ 3",
+  "text": "לְוָואלָה קוֹם הַקִּישׁוּ 3",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_68871737801de21a05dc",
+  "path": "/99/c6_0f2f41112213e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom4": {
-  "text": "לְיָאהוּ נְקֻדָּה קוֹם הַקִּישׁוּ 4",
+  "text": "לְיָאהוּ הַקִּישׁוּ 4",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_6a958366c9c5e21a05dc",
+  "path": "/99/c6_f4ccd1613880e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom5": {
-  "text": "לְהוֹטְמֵייל נְקֻדָּה קוֹם הַקִּישׁוּ 5",
+  "text": "לְהוֹטְמֵייל הַקִּישׁוּ 5",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_f87a4d6b80a5e21a05dc",
+  "path": "/99/c6_ed254e315e62e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom6": {
-  "text": "לְאַאוּטְלוּק נְקֻדָּה קוֹם הַקִּישׁוּ 6",
+  "text": "לְאַאוּטְלוּק הַקִּישׁוּ 6",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_fb9fe854d777e21a05dc",
+  "path": "/99/c6_c57eac53bd51e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom7": {
-  "text": "לְאוֹקֵי מֵייל נְקֻדָּה קוֹ נְקֻדָּה אִיל הַקִּישׁוּ 7",
+  "text": "לְאוֹקֵי מֵייל הַקִּישׁוּ 7",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_d2340def2e42e21a05dc",
+  "path": "/99/c6_02679a42b9a2e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom8": {
-  "text": "לְנֶטְוִויזְיוֹן נְקֻדָּה נֶט נְקֻדָּה אִיל הַקִּישׁוּ 8",
+  "text": "לְנֶטְוִויזְיוֹן הַקִּישׁוּ 8",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_fff9a966fe5ee21a05dc",
+  "path": "/99/c6_397c4210eb24e21a05dc",
   "pron": "",
   "phoneme": false
  },
  "join:dom9": {
-  "text": "לְבֵּזֶק אִינְטְ נְקֻדָּה נֶט הַקִּישׁוּ 9",
+  "text": "לְבֵּזֶק הַקִּישׁוּ 9",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_ef90db026b72e21a05dc",
+  "path": "/99/c6_3049691a1911e21a05dc",
   "pron": "",
   "phoneme": false
  },
@@ -397,6 +397,20 @@ export default {
   "text": "לְהַקְרָאַת אוֹתִיּוֹת הַקִּישׁוּ 1. לְהַקָּשַׁת מִסְפָּרִים הַקִּישׁוּ 2. לְסִיּוּם הַכְּתֹבֶת הַקִּישׁוּ 3. לִמְחִיקַת הַקֶּטַע הָאַחֲרוֹן הַקִּישׁוּ 4",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_e65f76a5e206e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:emailNumAsk": {
+  "text": "הַקִּישׁוּ אֶת הַמִּסְפָּרִים, וְאַחֲרֵיהֶם סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_86304fda9a2ae21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "join:emailNumQ": {
+  "text": "לְהוֹסָפַת מִסְפָּרִים בְּסוֹף הַכְּתֹבֶת הַקִּישׁוּ 1. לְהֶמְשֵׁךְ הַקִּישׁוּ 2",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_add3f6c43ab3e21a05dc",
   "pron": "",
   "phoneme": false
  },
