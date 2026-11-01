@@ -53,6 +53,7 @@ export async function onRequestGet({ request, env }) {
         }
       }
       list.sort((a, b) => a.email.split("@")[1].localeCompare(b.email.split("@")[1]) || a.email.localeCompare(b.email));
+      if (u.searchParams.get("json")) return out({ list });
       const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
       const html = `<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>שגיאות כתיב באימייל</title><body style="font-family:Arial;padding:16px"><h2>שגיאות כתיב בסיומת האימייל: ${list.length} כתובות</h2>
 <table border="1" cellpadding="6" style="border-collapse:collapse;font-size:15px"><tr style="background:#eef"><th>#</th><th>שם</th><th>תאריך הצטרפות</th><th>כתובת נוכחית</th><th>תיקון מוצע</th></tr>${list.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name)}</td><td>${esc(x.when)}</td><td dir="ltr">${esc(x.email)}</td><td dir="ltr">${esc(x.fixed)}</td></tr>`).join("")}</table></body></html>`;
