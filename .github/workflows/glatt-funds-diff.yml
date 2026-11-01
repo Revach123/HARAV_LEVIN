@@ -1,0 +1,31 @@
+name: Glatt funds list vs original (read-only, manual)
+
+# משווה את רשימת הקרנות הנוכחית באתר לרשימה המקורית (seed): מה נעלם, מה נוסף, מה השתנה. קריאה בלבד. התוצאה: data/probe/glatt_funds_diff.json
+on:
+  workflow_dispatch:
+    inputs:
+      q:
+        description: "טקסט לחיפוש בחברה/מסלול (ברירת מחדל: הראל)"
+        type: string
+        default: "הראל"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node scripts/probe/glatt_funds_diff.mjs "${{ inputs.q }}"
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/glatt_funds_diff.json || true
+          git diff --cached --quiet || (git commit -m "glatt funds diff" && git pull --rebase --autostash -X theirs && git push)
