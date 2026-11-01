@@ -1,0 +1,10 @@
+{
+  "dry": true,
+  "old_site_rows": 5456,
+  "advcf7_with_same_id_in_cfdb7": 473,
+  "identical_pairs": 0,
+  "merged": 0,
+  "near_identical_not_merged": 354,
+  "failed": 0,
+  "when": "2026-11-01T08:39:06Z"
+}
