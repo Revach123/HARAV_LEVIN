@@ -159,7 +159,7 @@ async function oldPairsReport(env, withDetails) {
   const t = x => { const m = String(x).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)/); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) / 1000 : null; };
   const nz = x => String(x ?? "").trim();
   const byId = new Map(); for (const r of rows) (byId.get(r.idn) || byId.set(r.idn, []).get(r.idn)).push(r);
-  const summary = {}, pairs = []; let advTotal = 0, noPartner = 0;
+  const summary = {}, pairs = [], stats = { time_delta: {}, time_sign: {}, hour_offsets: {}, ip: {}, core_fields: {} }; let advTotal = 0, noPartner = 0;
   const diffOf = (c, a) => {
     const d = [], det = [];
     for (const [k, label] of [["first", "שם פרטי"], ["last", "שם משפחה"], ["phone", "טלפון"], ["email", "אימייל"], ["companies", "חברות"], ["all", "כל החברות"]])
@@ -189,11 +189,17 @@ async function oldPairsReport(env, withDetails) {
       const sameEnough = kinds.every(x => x === "secs" || x === "form");
       const cls = sameEnough ? "same" : "different";
       const key = `${cls}: ${sig}`; summary[key] = (summary[key] || 0) + 1;
+      { // סטטיסטיקה לאבחון (בלי פרטים אישיים): התפלגות הפרש השעה, מי מהצדדים בלי IP, ואילו שדות ליבה נבדלים
+        const tc = t(best.c.at), ta = t(a.at);
+        if (tc != null && ta != null) { const dd = ta - tc, ad = Math.abs(dd), b = ad <= 120 ? "<=2m" : ad <= 600 ? "<=10m" : ad <= 3600 ? "<=1h" : ad <= 7200 ? "1-2h" : ad <= 10800 ? "2-3h" : ad <= 14400 ? "3-4h" : ">4h"; stats.time_delta[b] = (stats.time_delta[b] || 0) + 1; const sg = dd > 0 ? "advcf7_later" : dd < 0 ? "cfdb7_later" : "equal"; stats.time_sign[sg] = (stats.time_sign[sg] || 0) + 1; if (ad >= 3500 && ad % 60 === 0 || ad >= 3500) { const h = Math.round(ad / 3600 * 10) / 10; stats.hour_offsets[h] = (stats.hour_offsets[h] || 0) + 1; } }
+        const ipc = nz(best.c.p.ip), ipa = nz(a.p.ip), ik = !ipc && !ipa ? "both_empty" : !ipc ? "cfdb7_empty" : !ipa ? "advcf7_empty" : ipc === ipa ? "same" : "both_set_differ"; stats.ip[ik] = (stats.ip[ik] || 0) + 1;
+        for (const [k, label] of [["first", "first"], ["last", "last"], ["phone", "phone"], ["email", "email"], ["companies", "companies"], ["all", "all"]]) if (nz(best.c.p[k]) !== nz(a.p[k])) stats.core_fields[label] = (stats.core_fields[label] || 0) + 1;
+      }
       if (withDetails) pairs.push({ cls, sig, name: a.name, id_number: a.idn, when_cf: best.c.at, when_adv: a.at, src_cf: best.c.src, src_adv: a.src, rid_cf: best.c.rid, rid_adv: a.rid, diffs: best.r.det });
     }
   }
   const same = Object.entries(summary).filter(([k]) => k.startsWith("same")).reduce((n, [, v]) => n + v, 0);
-  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_same_day_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, ...(withDetails ? { pairs } : {}) };
+  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_same_day_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(withDetails ? { pairs } : {}) };
 }
 
 // מיזוג אוטומטי של כפילויות האתר הישן: אותה הגשה נשמרה בשני תוספים (cfdb7 ו-advcf7). ממזגים רק כשהרישומים זהים לגמרי:
