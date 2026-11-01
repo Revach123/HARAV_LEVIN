@@ -1,0 +1,15 @@
+{
+  "when": "2026-11-01T09:34:26Z",
+  "nedarim_total": 17852,
+  "all_with_file": 9,
+  "all_mail_sent": 41,
+  "last": 200,
+  "last_from": "2026-10-15 10:33",
+  "last_to": "2026-11-01 10:07",
+  "last_cancelled": 0,
+  "last_with_file": 9,
+  "last_mail_sent": 41,
+  "last_valid_email": 145,
+  "last_valid_email_but_no_mail_sent": 104,
+  "last_no_file_not_cancelled": 191
+}
