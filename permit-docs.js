@@ -2597,8 +2597,8 @@
     if (/טלפון/.test(o["ערוץ"] || "")) return "טלפון";
     if (/^nedarim/.test(s)) return "נדרים פלוס";
     if (s === "site:embed") return "אתר";
-    if (s === "site:kehilot") return "קהילות (אתר)";
-    if (/^excel:/.test(s)) return "קהילה: " + (o["מקור"] || s.slice(6));
+    if (s === "site:kehilot") return "אתר (ישיר)";          // הטופס הישיר (לא המוטמע בוורדפרס)
+    if (/^excel:/.test(s)) return o["מקור"] || s.slice(6);          // רשימה שיובאה (למשל "קהילות"): התווית כפי שהוזנה בייבוא
     if (/^(cfdb7|advcf7)/.test(s)) return "אתר ישן (טופס " + (s.split(":")[1] || "") + ")";
     if (s === "admin") return "ידני";
     return "";
