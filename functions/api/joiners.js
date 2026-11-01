@@ -37,6 +37,28 @@ export async function onRequestGet({ request, env }) {
     } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
   if (!(await checkAdmin(request, env))) return noAuth();
+  // ?typos=1: רשימה מלאה של כתובות אימייל עם שגיאת כתיב מוכרת בסיומת, והתיקון המוצע (מנהל בלבד; דף HTML קריא)
+  if (u.searchParams.get("typos")) {
+    try {
+      const key = await importKey(env), list = [];
+      for (let off = 0; ; off += 500) {
+        const rs = (await env.DB.prepare("SELECT id, submitted_at, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
+        if (!rs.length) break;
+        for (const r of rs) {
+          let p; try { p = await decryptPii(key, r.id, r.pii); } catch { continue; }
+          const em = String((p && p.email) || "").trim(), at = em.lastIndexOf("@");
+          if (at < 1) continue;
+          const dom = em.slice(at + 1).toLowerCase(), nd = fixDomain(dom);
+          if (nd !== dom) list.push({ id: r.id, when: String(r.submitted_at || "").slice(0, 10), name: `${p.first || ""} ${p.last || ""}`.trim(), email: em, fixed: em.slice(0, at + 1) + nd });
+        }
+      }
+      list.sort((a, b) => a.email.split("@")[1].localeCompare(b.email.split("@")[1]) || a.email.localeCompare(b.email));
+      const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+      const html = `<!doctype html><html lang="he" dir="rtl"><meta charset="utf-8"><title>שגיאות כתיב באימייל</title><body style="font-family:Arial;padding:16px"><h2>שגיאות כתיב בסיומת האימייל: ${list.length} כתובות</h2>
+<table border="1" cellpadding="6" style="border-collapse:collapse;font-size:15px"><tr style="background:#eef"><th>#</th><th>שם</th><th>תאריך הצטרפות</th><th>כתובת נוכחית</th><th>תיקון מוצע</th></tr>${list.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.name)}</td><td>${esc(x.when)}</td><td dir="ltr">${esc(x.email)}</td><td dir="ltr">${esc(x.fixed)}</td></tr>`).join("")}</table></body></html>`;
+      return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+    } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
   try {
     const sha = u.searchParams.get("file");
     if (sha) {
