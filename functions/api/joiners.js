@@ -40,7 +40,7 @@ export async function onRequestGet({ request, env }) {
   if (u.searchParams.get("oldpairs")) {
     const cs = request.headers.get("X-Cron-Secret") || "", isAdm = await checkAdmin(request, env);
     if (!isAdm && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
-    try { return out(await oldPairsReport(env, isAdm && u.searchParams.get("details") === "1")); } catch (e) { return out({ error: String(e.message || e) }, 500); }
+    try { return out(await oldPairsReport(env, isAdm && u.searchParams.get("details") === "1", String(u.searchParams.get("probe") || "").slice(0, 30))); } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
   if (!(await checkAdmin(request, env))) return noAuth();
   // ?typos=1: רשימה מלאה של כתובות אימייל עם שגיאת כתיב מוכרת בסיומת, והתיקון המוצע (מנהל בלבד, JSON).
@@ -141,7 +141,7 @@ const fixDomain = d => TYPO_GMAIL.has(d) ? "gmail.com" : d === "walla.con" ? "wa
 // דוח כפילויות האתר הישן (cfdb7 מול advcf7): לכל רישום advcf7 מוצא את רישום ה-cfdb7 של אותה ת.ז. באותו יום ומתאר במה שניהם נבדלים.
 // "זהה" = אותם שם, טלפון, אימייל, חברות, ביטול, והבדל רק בשניות (עד 120) ו/או בשם הטופס (src). הבדלים אחרים (IP, פרטים נוספים, קובץ אישור, שעה רחוקה) נספרים בנפרד ומוצגים.
 // withDetails=false (הרצה אוטומטית עם X-Cron-Secret): רק ספירות לפי סוג הבדל, בלי פרטים אישיים.
-async function oldPairsReport(env, withDetails) {
+async function oldPairsReport(env, withDetails, probe = "") {
   const key = await importKeyForWrite(env), rows = [];
   for (let off = 0; ; off += 500) {
     const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, file_sha256, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
@@ -159,22 +159,22 @@ async function oldPairsReport(env, withDetails) {
   const t = x => { const m = String(x).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)/); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) / 1000 : null; };
   const nz = x => String(x ?? "").trim();
   const byId = new Map(); for (const r of rows) (byId.get(r.idn) || byId.set(r.idn, []).get(r.idn)).push(r);
-  const summary = {}, pairs = [], stats = { time_delta: {}, time_sign: {}, hour_offsets: {}, ip: {}, core_fields: {} }; let advTotal = 0, noPartner = 0;
+  const probed = [], summary = {}, pairs = [], stats = { time_delta: {}, time_sign: {}, hour_offsets: {}, ip: {}, core_fields: {} }; let advTotal = 0, noPartner = 0;
   const diffOf = (c, a) => {
-    const d = [], det = [];
+    const d = [], det = [], mk = [];
     for (const [k, label] of [["first", "שם פרטי"], ["last", "שם משפחה"], ["phone", "טלפון"], ["email", "אימייל"], ["companies", "חברות"], ["all", "כל החברות"]])
-      if (nz(c.p[k]) !== nz(a.p[k])) { d.push("core"); det.push(`${label}: «${nz(c.p[k])}» / «${nz(a.p[k])}»`); }
-    if (!!c.canc !== !!a.canc) { d.push("cancel"); det.push(`ביטול: «${c.canc}» / «${a.canc}»`); }
+      if (nz(c.p[k]) !== nz(a.p[k])) { d.push("core"); det.push(`${label}: «${nz(c.p[k])}» / «${nz(a.p[k])}»`); mk.push(`${label}: שונה (אורך ${nz(c.p[k]).length} / ${nz(a.p[k]).length})`); }
+    if (!!c.canc !== !!a.canc) { d.push("cancel"); det.push(`ביטול: «${c.canc}» / «${a.canc}»`); mk.push("ביטול שונה"); }
     const tc = t(c.at), ta = t(a.at), dt = tc != null && ta != null ? Math.abs(tc - ta) : null;
-    if (c.at !== a.at) { if (dt != null && dt <= 120 && c.at.slice(0, 10) === a.at.slice(0, 10)) { d.push("secs"); det.push(`שעה: הפרש ${dt} שניות`); } else { d.push("time"); det.push(`שעה: ${c.at} / ${a.at}`); } }
-    if (nz(c.p.ip) !== nz(a.p.ip)) { d.push("ip"); det.push(`IP: ${nz(c.p.ip)} / ${nz(a.p.ip)}`); }
-    if (c.file !== a.file) { d.push("file"); det.push(`קובץ אישור: ${c.file ? "יש" : "אין"} / ${a.file ? "יש" : "אין"}${c.file && a.file ? " (שונה)" : ""}`); }
+    if (c.at !== a.at) { if (dt != null && dt <= 120 && c.at.slice(0, 10) === a.at.slice(0, 10)) { d.push("secs"); det.push(`שעה: הפרש ${dt} שניות`); mk.push(`שעה: הפרש ${dt} שניות`); } else { d.push("time"); det.push(`שעה: ${c.at} / ${a.at}`); mk.push(`שעה: cfdb7=${c.at} advcf7=${a.at}`); } }
+    if (nz(c.p.ip) !== nz(a.p.ip)) { d.push("ip"); det.push(`IP: ${nz(c.p.ip)} / ${nz(a.p.ip)}`); mk.push(`IP: cfdb7 ${nz(c.p.ip) ? "יש" : "ריק"} / advcf7 ${nz(a.p.ip) ? "יש" : "ריק"}`); }
+    if (c.file !== a.file) { d.push("file"); mk.push(`קובץ אישור: ${c.file ? "יש" : "אין"} / ${a.file ? "יש" : "אין"}`); det.push(`קובץ אישור: ${c.file ? "יש" : "אין"} / ${a.file ? "יש" : "אין"}${c.file && a.file ? " (שונה)" : ""}`); }
     const keys = [...new Set([...Object.keys(c.ex), ...Object.keys(a.ex)])].filter(k => nz(c.ex[k]) !== nz(a.ex[k]));
     const formKeys = keys.filter(k => /^(מקור|מפתח|טופס|form|submit_time|_wpcf7)/i.test(k)), other = keys.filter(k => !formKeys.includes(k));
-    if (formKeys.length) { d.push("form"); det.push(`שם/מזהה טופס: ${formKeys.join(", ")}`); }
-    if (other.length) { d.push("extra"); det.push(...other.map(k => `פרט נוסף «${k}»: «${nz(c.ex[k])}» / «${nz(a.ex[k])}»`)); }
+    if (formKeys.length) { d.push("form"); det.push(`שם/מזהה טופס: ${formKeys.join(", ")}`); mk.push(`טופס: ${formKeys.join(", ")}`); }
+    if (other.length) { d.push("extra"); mk.push(...other.map(k => `פרט נוסף «${k}» שונה`)); det.push(...other.map(k => `פרט נוסף «${k}»: «${nz(c.ex[k])}» / «${nz(a.ex[k])}»`)); }
     if (c.src !== a.src) d.push("src");
-    return { d: [...new Set(d)], det };
+    return { d: [...new Set(d)], det, mk };
   };
   for (const list of byId.values()) {
     const cf = list.filter(r => !r.adv), adv = list.filter(r => r.adv), used = new Set();
@@ -195,11 +195,12 @@ async function oldPairsReport(env, withDetails) {
         const ipc = nz(best.c.p.ip), ipa = nz(a.p.ip), ik = !ipc && !ipa ? "both_empty" : !ipc ? "cfdb7_empty" : !ipa ? "advcf7_empty" : ipc === ipa ? "same" : "both_set_differ"; stats.ip[ik] = (stats.ip[ik] || 0) + 1;
         for (const [k, label] of [["first", "first"], ["last", "last"], ["phone", "phone"], ["email", "email"], ["companies", "companies"], ["all", "all"]]) if (nz(best.c.p[k]) !== nz(a.p[k])) stats.core_fields[label] = (stats.core_fields[label] || 0) + 1;
       }
+      if (probe && a.name.includes(probe)) probed.push({ id_len: a.idn.length, src_cf: best.c.src, src_adv: a.src, kinds: sig, same_cls: cls, masked_diffs: best.r.mk });
       if (withDetails) pairs.push({ cls, sig, name: a.name, id_number: a.idn, when_cf: best.c.at, when_adv: a.at, src_cf: best.c.src, src_adv: a.src, rid_cf: best.c.rid, rid_adv: a.rid, diffs: best.r.det });
     }
   }
   const same = Object.entries(summary).filter(([k]) => k.startsWith("same")).reduce((n, [, v]) => n + v, 0);
-  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_same_day_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(withDetails ? { pairs } : {}) };
+  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_same_day_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(probe ? { probe: probed } : {}), ...(withDetails ? { pairs } : {}) };
 }
 
 // מיזוג אוטומטי של כפילויות האתר הישן: אותה הגשה נשמרה בשני תוספים (cfdb7 ו-advcf7). ממזגים רק כשהרישומים זהים לגמרי:
