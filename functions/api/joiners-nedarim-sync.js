@@ -9,7 +9,7 @@ import { checkAdmin } from "./_shared/auth.js";
 import { noAuth } from "./_shared/permit-docs.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { originOk, readJson, clean } from "./_shared/join-common.js";
-import { sendConfirmation } from "./_shared/join-mail.js";
+import { sendConfirmation, saveConfirmationFile } from "./_shared/join-mail.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
@@ -92,8 +92,10 @@ export async function onRequestPost({ request, env }) {
       const p = mapRow(r), when = parseDate(r.CreatedDate);
       if (!when || (!p.first && !p.last && !p.phone && !p.email && !p.id)) continue;
       const digits = p.id.replace(/\D/g, "");
-      await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
-        .bind(rid, when, digits ? await identHash(env, digits) : "", await encryptPii(wkey, rid, { ...p, src: "nedarim:" + tofes + ":" + r.ID })).run();
+      // קובץ אישור לכל מצטרף (גם בלי מייל), כמו בהצטרפות באתר
+      const fsha = await saveConfirmationFile(env, { first: p.first, last: p.last, id: p.id, date: when.slice(0, 10).split("-").reverse().join("/"), all: false, companies: [], origin: new URL(request.url).origin });
+      await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', ?, ?, ?)")
+        .bind(rid, when, fsha, digits ? await identHash(env, digits) : "", await encryptPii(wkey, rid, { ...p, src: "nedarim:" + tofes + ":" + r.ID })).run();
       added++;
       if (mail && validEmail(p.email)) {
         const d = when.slice(0, 10).split("-").reverse().join("/");

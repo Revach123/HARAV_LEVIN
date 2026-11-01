@@ -66,3 +66,16 @@ export async function sendCancelNotice(env, d) {
   const text = "בקשת ביטול הצטרפות\n" + rows.map(([k, v]) => `${k}: ${v}`).join("\n");
   return sendMail(env, { to: env.CANCEL_NOTIFY_TO || CANCEL_NOTIFY_TO, subject: "בקשת ביטול הצטרפות להיתר עיסקא: " + (d.name || ""), html, text });
 }
+
+// קובץ האישור (HTML) נשמר בדלי הפרטי (R2) ומשויך למצטרף (joiner_files). מחזיר את ה-sha256, או "" אם לא נשמר.
+export async function saveConfirmationFile(env, conf) {
+  if (!env.JOINERS) return "";
+  try {
+    const html = buildConfirmation(conf).html, buf = new TextEncoder().encode(html);
+    const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
+    const key = `forms/site/${sha}.html`;
+    await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
+    await env.DB.prepare("INSERT OR REPLACE INTO joiner_files (sha256, original_name, r2_key, size) VALUES (?, ?, ?, ?)").bind(sha, "אישור הצטרפות.html", key, buf.length).run();
+    return sha;
+  } catch { return ""; }
+}
