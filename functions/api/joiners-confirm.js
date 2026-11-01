@@ -22,7 +22,46 @@ export async function onRequestGet({ request, env }) {
   return out({ ok: true, sent: Object.fromEntries(rs.map(r => [r.id, r.sent_at])) });
 }
 
+// שליחה למצטרפים מנדרים פלוס בטווח תאריכים שעדיין לא קיבלו אישור (מנהל, או הרצה אוטומטית עם X-Cron-Secret ב-workflow joiner-nedarim-send).
+//   POST /api/joiners-confirm?nedarim=1  { from: "YYYY-MM-DD", to: "YYYY-MM-DD" (כולל), dry: true|false }
+//   dry: רק ספירה. אחרת שולח עד BATCH בקריאה, ומחזיר remaining (לקרוא שוב עד 0). לא שולח למבוטלים, בלי מייל תקין, או למי שכבר קיבל (joiner_mail).
+async function sendNedarimRange(request, env) {
+  const b = (await readJson(request, 2048)) || {};
+  const day = x => (/^\d{4}-\d{2}-\d{2}$/.test(String(x || "")) ? String(x) : "");
+  const from = day(b.from), to = day(b.to);
+  if (!from || !to) return out({ error: "חסר from / to (YYYY-MM-DD)" }, 400);
+  let key; try { key = await importKey(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
+  await table(env);
+  const end = new Date(Date.parse(to + "T00:00:00Z") + 86400000).toISOString().slice(0, 10);
+  const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, pii FROM joiners WHERE submitted_at >= ? AND submitted_at < ? ORDER BY submitted_at").bind(from, end).all()).results ?? [];
+  const sent = new Set(((await env.DB.prepare("SELECT id FROM joiner_mail").all()).results ?? []).map(r => r.id));
+  const todo = [];
+  for (const r of rs) {
+    if (r.cancelled_at || sent.has(r.id)) continue;
+    let p; try { p = await decryptPii(key, r.id, r.pii); } catch { continue; }
+    if (!/^nedarim/.test(String(p.src || ""))) continue;
+    const email = String(p.email || "").trim();
+    if (!validEmail(email)) continue;
+    todo.push({ r, p, email });
+  }
+  if (b.dry === true) return out({ ok: true, dry: true, in_range: rs.length, to_send: todo.length });
+  if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET) return out({ error: "שליחת מיילים לא מוגדרת באתר (WP_MAIL_URL / WP_MAIL_SECRET)" }, 503);
+  const origin = new URL(request.url).origin; let ok = 0, failed = 0;
+  for (const { r, p, email } of todo.slice(0, BATCH)) {
+    const d = String(r.submitted_at || "").slice(0, 10).split("-").reverse().join("/");
+    const sentOk = await sendConfirmation(env, email, { first: p.first || "", last: p.last || "", id: p.id || "", date: d, all: !!p.all, companies: String(p.companies || "").split(",").map(x => x.trim()).filter(Boolean), origin, intro: `מצורף אישור על הצטרפותך מתאריך ${d}.` });
+    if (sentOk) { await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(r.id).run(); ok++; } else failed++;
+  }
+  return out({ ok: true, sent: ok, failed, remaining: Math.max(0, todo.length - ok - failed) , to_send_before: todo.length });
+}
+
 export async function onRequestPost({ request, env }) {
+  if (new URL(request.url).searchParams.get("nedarim")) {
+    const cs = request.headers.get("X-Cron-Secret") || "", cron = !!env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET;
+    if (!cron && !(await checkAdmin(request, env))) return noAuth();
+    if (!cron && !originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
+    try { return await sendNedarimRange(request, env); } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
   if (!(await checkAdmin(request, env))) return noAuth();
   if (!originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET) return out({ error: "שליחת מיילים לא מוגדרת באתר (WP_MAIL_URL / WP_MAIL_SECRET)" }, 503);
