@@ -2,13 +2,14 @@
 export async function onRequestGet({ request, env, params }) {
   if (!env.PERMITS) return new Response("not found", { status: 404 });
   try {
+    // כלל אחד: מסמך שאינו מסוג "אחר" ויש לו שיוך לחברה (בכל חריץ, או מסמך מיוחד, או אג"ח) מוגש לצפייה ולהורדה
     const row = await env.DB.prepare(`
       SELECT d.file_key, d.original_name FROM permit_docs d
-      WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id AND c.slot != '')`).bind(params.id).first()
-      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)`).bind(params.id).first().catch(() => null)
-      // הת"ע מיוחד לאג"ח (תת-שורה לאג"ח): המסמך מקושר לאג"ח (permit_doc_bonds) ולחברה, גם כשאינו בחריץ כללי/פרטי של החברה. הרשימה הציבורית חושפת אותו (permit-docs-public.js), ולכן גם הקובץ מוגש
-      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other'
-           AND EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id) AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)`).bind(params.id).first().catch(() => null);
+      WHERE d.id = ? AND d.doc_type != 'other' AND (
+        EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)
+        OR EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)
+        OR EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id))`).bind(params.id).first().catch(() => null)
+      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)`).bind(params.id).first().catch(() => null);
     if (!row) {          // סיבה מפורשת (לאבחון): המסמך לא קיים / לא מקושר לרשימה ציבורית
       const any = await env.DB.prepare("SELECT doc_type FROM permit_docs WHERE id = ?").bind(params.id).first().catch(() => null);
       let detail = "";
