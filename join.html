@@ -43,9 +43,10 @@
   .viaopt input{width:24px;height:24px;flex:none;accent-color:var(--accent-dark);margin:0}
   .viaopt.off{color:#9aa7a7;cursor:not-allowed}
   .viamsg{margin-top:.3rem;font-size:16px;font-weight:700;color:#8a5a00}
-  .emailrow{display:flex;flex-direction:column;gap:8px}
-  .emailrow #emailLocal,.emailrow #emailOther{width:100%}
-  .emailrow select{width:100%;min-width:0;min-height:54px;font:inherit;font-size:18px;padding:.4rem .6rem;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px}
+  .emailrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .emailrow #emailLocal{flex:1 1 55%;min-width:0;width:auto}
+  .emailrow #emailOther{flex:1 1 100%;width:100%}
+  .emailrow select{flex:1 1 38%;min-width:0;min-height:54px;font:inherit;font-size:18px;padding:.4rem .6rem;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px}
   .emailrow select:focus{outline:none;border-color:var(--accent)}
   input:focus{outline:none;border-color:var(--accent)}
   input[readonly]{background:#eef3f3;color:var(--muted)}
