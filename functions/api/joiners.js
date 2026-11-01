@@ -166,8 +166,16 @@ async function oldPairsReport(env, withDetails, probe = "") {
       if (nz(c.p[k]) !== nz(a.p[k])) { d.push("core"); det.push(`${label}: «${nz(c.p[k])}» / «${nz(a.p[k])}»`); mk.push(`${label}: שונה (אורך ${nz(c.p[k]).length} / ${nz(a.p[k]).length})`); }
     if (!!c.canc !== !!a.canc) { d.push("cancel"); det.push(`ביטול: «${c.canc}» / «${a.canc}»`); mk.push("ביטול שונה"); }
     const tc = t(c.at), ta = t(a.at), dt = tc != null && ta != null ? Math.abs(tc - ta) : null;
-    if (c.at !== a.at) { if (dt != null && dt <= 120 && c.at.slice(0, 10) === a.at.slice(0, 10)) { d.push("secs"); det.push(`שעה: הפרש ${dt} שניות`); mk.push(`שעה: הפרש ${dt} שניות`); } else { d.push("time"); det.push(`שעה: ${c.at} / ${a.at}`); mk.push(`שעה: cfdb7=${c.at} advcf7=${a.at}`); } }
-    if (nz(c.p.ip) !== nz(a.p.ip)) { d.push("ip"); det.push(`IP: ${nz(c.p.ip)} / ${nz(a.p.ip)}`); mk.push(`IP: cfdb7 ${nz(c.p.ip) ? "יש" : "ריק"} / advcf7 ${nz(a.p.ip) ? "יש" : "ריק"}`); }
+    if (c.at !== a.at) {
+      const off = dt == null ? 0 : [1, 2, 3].find(h => Math.abs(dt - h * 3600) <= 5);          // אזור זמן: שעה / שעתיים / 3 שעות בדיוק (עד 5 שניות) = אותה שעה
+      if (off) { d.push("tz"); det.push(`שעה: הפרש ${off} שעות בדיוק (אזור זמן): ${c.at} / ${a.at}`); mk.push(`שעה: הפרש ${off} שעות בדיוק (אזור זמן)`); }
+      else if (dt != null && dt <= 120) { d.push("secs"); det.push(`שעה: הפרש ${dt} שניות`); mk.push(`שעה: הפרש ${dt} שניות`); }
+      else { d.push("time"); det.push(`שעה: ${c.at} / ${a.at}`); mk.push(`שעה: cfdb7=${c.at} advcf7=${a.at}`); }
+    }
+    if (nz(c.p.ip) !== nz(a.p.ip)) {
+      if (!nz(c.p.ip) || !nz(a.p.ip)) { d.push("ipm"); det.push(`IP: ${nz(c.p.ip) || "ריק"} / ${nz(a.p.ip) || "ריק"} (חסר בצד אחד)`); mk.push(`IP: cfdb7 ${nz(c.p.ip) ? "יש" : "ריק"} / advcf7 ${nz(a.p.ip) ? "יש" : "ריק"}`); }     // חסר בצד אחד = אין סתירה
+      else { d.push("ip"); det.push(`IP: ${nz(c.p.ip)} / ${nz(a.p.ip)}`); mk.push("IP: שונה בשני הצדדים"); }
+    }
     if (c.file !== a.file) { d.push("file"); mk.push(`קובץ אישור: ${c.file ? "יש" : "אין"} / ${a.file ? "יש" : "אין"}`); det.push(`קובץ אישור: ${c.file ? "יש" : "אין"} / ${a.file ? "יש" : "אין"}${c.file && a.file ? " (שונה)" : ""}`); }
     const keys = [...new Set([...Object.keys(c.ex), ...Object.keys(a.ex)])].filter(k => nz(c.ex[k]) !== nz(a.ex[k]));
     const formKeys = keys.filter(k => /^(מקור|מפתח|טופס|form|submit_time|_wpcf7)/i.test(k)), other = keys.filter(k => !formKeys.includes(k));
@@ -180,13 +188,13 @@ async function oldPairsReport(env, withDetails, probe = "") {
     const cf = list.filter(r => !r.adv), adv = list.filter(r => r.adv), used = new Set();
     for (const a of adv) {
       advTotal++;
-      const cands = cf.filter(x => !used.has(x) && x.at.slice(0, 10) === a.at.slice(0, 10));
+      const ta0 = t(a.at), cands = cf.filter(x => { if (used.has(x)) return false; const tx = t(x.at); return tx != null && ta0 != null ? Math.abs(tx - ta0) <= 5 * 3600 : x.at.slice(0, 10) === a.at.slice(0, 10); });
       if (!cands.length) { noPartner++; continue; }
       let best = null;
-      for (const c of cands) { const r = diffOf(c, a), w = r.d.filter(x => !["src", "form", "secs"].includes(x)).length; if (!best || w < best.w) best = { c, r, w }; }
+      for (const c of cands) { const r = diffOf(c, a), w = r.d.filter(x => !["src", "form", "secs", "tz", "ipm"].includes(x)).length; if (!best || w < best.w) best = { c, r, w }; }
       used.add(best.c);
       const kinds = best.r.d.filter(x => x !== "src"), sig = kinds.length ? kinds.join("+") : "identical";
-      const sameEnough = kinds.every(x => x === "secs" || x === "form");
+      const sameEnough = kinds.every(x => ["secs", "tz", "form", "ipm"].includes(x));
       const cls = sameEnough ? "same" : "different";
       const key = `${cls}: ${sig}`; summary[key] = (summary[key] || 0) + 1;
       { // סטטיסטיקה לאבחון (בלי פרטים אישיים): התפלגות הפרש השעה, מי מהצדדים בלי IP, ואילו שדות ליבה נבדלים
@@ -200,7 +208,7 @@ async function oldPairsReport(env, withDetails, probe = "") {
     }
   }
   const same = Object.entries(summary).filter(([k]) => k.startsWith("same")).reduce((n, [, v]) => n + v, 0);
-  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_same_day_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(probe ? { probe: probed } : {}), ...(withDetails ? { pairs } : {}) };
+  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(probe ? { probe: probed } : {}), ...(withDetails ? { pairs } : {}) };
 }
 
 // מיזוג אוטומטי של כפילויות האתר הישן: אותה הגשה נשמרה בשני תוספים (cfdb7 ו-advcf7). ממזגים רק כשהרישומים זהים לגמרי:

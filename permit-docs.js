@@ -2821,10 +2821,10 @@
       const sumRows = Object.entries(r.summary || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${E(k.startsWith("same") ? "זהה" : "שונה")}</td><td dir="ltr">${E(k.replace(/^(same|different): /, ""))}</td><td>${n}</td></tr>`).join("");
       const row = x => `<tr><td>${E(x.name)}</td><td dir="ltr">${E(x.id_number)}</td><td dir="ltr">${E(x.when_cf)}<br>${E(x.when_adv)}</td><td dir="ltr">${E(x.src_cf)}<br>${E(x.src_adv)}</td><td>${x.diffs.length ? x.diffs.map(E).join("<br>") : "<span style='color:#1b8a4b'>אין הבדל</span>"}</td></tr>`;
       const tbl = list => `<div style="overflow:auto;max-width:100%;max-height:45vh;border:1px solid #ddd"><table class="pd-nd-tbl" style="min-width:900px"><thead style="position:sticky;top:0;background:#f3f1ec"><tr><th>שם</th><th>ת.ז.</th><th>תאריך (cfdb7 / advcf7)</th><th>מקור</th><th>ההבדל בין שני הרישומים</th></tr></thead><tbody>${list.map(row).join("")}</tbody></table></div>`;
-      $("pd-jold-b").innerHTML = `<div class="pd-sub">רישומי אתר ישן: ${r.old_site_rows} · רישומי advcf7: ${r.advcf7_rows} · בלי רישום מקביל באותו יום: ${r.advcf7_without_same_day_partner}</div>
-        <div style="margin:8px 0;padding:10px;border-radius:8px;background:#eaf6ee;font-weight:700">זהים (הבדל רק בשניות / בשם הטופס): ${same.length} זוגות · שונים בדבר נוסף: ${diff.length} זוגות</div>
+      $("pd-jold-b").innerHTML = `<div class="pd-sub">רישומי אתר ישן: ${r.old_site_rows} · רישומי advcf7: ${r.advcf7_rows} · בלי רישום מקביל: ${r.advcf7_without_partner}</div>
+        <div style="margin:8px 0;padding:10px;border-radius:8px;background:#eaf6ee;font-weight:700">זהים לגמרי (הבדל רק בשעה של 1/2/3 שעות בדיוק - אזור זמן, שניות, שם הטופס, או IP שחסר בצד אחד): ${same.length} זוגות · שונים בדבר נוסף: ${diff.length} זוגות</div>
         <details><summary>פירוט לפי סוג הבדל</summary><table class="pd-nd-tbl"><thead><tr><th>סיווג</th><th>סוג ההבדל</th><th>זוגות</th></tr></thead><tbody>${sumRows}</tbody></table>
-        <div class="pd-sub">secs = הפרש שעה עד 120 שניות · form = שם/מזהה טופס · time = שעה רחוקה · ip · file = קובץ אישור · extra = פרט נוסף · core = שם/טלפון/אימייל/חברות · cancel = ביטול</div></details>
+        <div class="pd-sub">tz = הפרש של 1/2/3 שעות בדיוק (עד 5 שניות) · secs = הפרש עד 120 שניות · form = שם/מזהה טופס · ipm = IP חסר בצד אחד · time = שעה אחרת · ip = IP שונה בשני הצדדים · file = קובץ אישור · extra = פרט נוסף · core = שם/טלפון/אימייל/חברות · cancel = ביטול</div></details>
         <h4 style="margin:12px 0 4px">שונים בדבר נוסף (${diff.length})</h4>${tbl(diff)}<h4 style="margin:12px 0 4px">זהים (${same.length})</h4>${tbl(same)}`;
     } catch (e) { $("pd-jold-b").innerHTML = `<span style="color:#c0392b">${E(e.message || "שגיאה")}</span>`; }
   }
