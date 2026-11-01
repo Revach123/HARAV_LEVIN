@@ -1,0 +1,54 @@
+name: Nedarim confirmation mails for a date range (manual)
+
+# שולח מייל אישור הצטרפות למצטרפים מנדרים פלוס בטווח תאריכים שעדיין לא קיבלו (לא מבוטלים, עם מייל תקין, ופעם אחת בלבד - joiner_mail).
+# dry=true (ברירת מחדל): רק ספירה. dry=false: שולח (עד 8 בקריאה, בלולאה עד שאין עוד). מדווח ספירות בלבד.
+on:
+  workflow_dispatch:
+    inputs:
+      from:
+        description: "מתאריך (YYYY-MM-DD)"
+        type: string
+        default: "2026-10-15"
+      to:
+        description: "עד תאריך כולל (YYYY-MM-DD)"
+        type: string
+        default: "2026-10-28"
+      dry:
+        description: "בדיקה בלבד (true) או שליחה בפועל (false)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Send
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          FROM: ${{ inputs.from }}
+          TO: ${{ inputs.to }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          url="https://harav-levin.pages.dev/api/joiners-confirm?nedarim=1"
+          if [ "$DRY" = "true" ]; then
+            curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"from\":\"$FROM\",\"to\":\"$TO\",\"dry\":true}" "$url" | jq -c .
+            exit 0
+          fi
+          sent=0; failed=0
+          for i in $(seq 1 60); do
+            resp=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"from\":\"$FROM\",\"to\":\"$TO\",\"dry\":false}" "$url" -w '\n%{http_code}')
+            code=$(echo "$resp" | tail -n1); body=$(echo "$resp" | sed '$d')
+            if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(echo "$body" | head -c 300)"; exit 1; fi
+            s=$(echo "$body" | jq -r '.sent // 0'); f=$(echo "$body" | jq -r '.failed // 0'); rem=$(echo "$body" | jq -r '.remaining // 0')
+            sent=$((sent + s)); failed=$((failed + f)); echo "batch $i: sent=$s failed=$f remaining=$rem"
+            [ "$rem" -gt 0 ] || break
+            [ "$s" -gt 0 ] || { echo "::warning::לא נשלח דבר בקריאה - עוצר"; break; }
+          done
+          echo "נשלחו $sent, נכשלו $failed"
+          echo "### נשלחו $sent מיילי אישור (נכשלו $failed)" >> "$GITHUB_STEP_SUMMARY"
