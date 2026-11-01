@@ -7,7 +7,7 @@ export function srcLabel(src, extra) {
   if (s === "site:embed") return "אתר";
   if (s === "site:kehilot") return "קהילות (אתר)";
   if (/^excel:/.test(s)) return "קהילה: " + (o["מקור"] || s.slice(6));
-  if (/^cfdb7/.test(s)) return "אתר ישן";
+  if (/^(cfdb7|advcf7)/.test(s)) return "אתר ישן (טופס " + (s.split(":")[1] || "") + ")";
   if (s === "admin") return "ידני (מנהל)";
   return s || "";
 }
