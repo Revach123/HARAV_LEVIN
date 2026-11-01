@@ -95,7 +95,7 @@ export function pickSegment(texts) {
 export function pickDomain(texts) {
   for (const t of texts) {
     let d = spokenChars(t).replace(/^@+/, '').replace(/^\.+|\.+$/g, '');
-    if (/^(gmail|hotmail|yahoo|outlook|icloud|walla)$/.test(d)) d += d === 'walla' ? '.co.il' : '.com';
+    if (/^(gmail|hotmail|yahoo|outlook|icloud|walla|okmail)$/.test(d)) d += d === 'walla' || d === 'okmail' ? '.co.il' : '.com';
     if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d) && d.length <= 60) return d;
   }
   return '';
