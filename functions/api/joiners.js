@@ -15,8 +15,28 @@ const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at:
   first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "", src: p.src || "",
   undecryptable: !p.first && !p.last && !p.email && !p.phone ? 1 : 0 });
 export async function onRequestGet({ request, env }) {
-  if (!(await checkAdmin(request, env))) return noAuth();
   const u = new URL(request.url);
+  // ?domains=1: ספירת סיומות האימייל בלבד (בלי שום פרט אישי) - מנהל, או הרצה אוטומטית עם X-Cron-Secret (workflow joiner-email-domains)
+  if (u.searchParams.get("domains")) {
+    const cs = request.headers.get("X-Cron-Secret") || "";
+    if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
+    try {
+      const key = await importKey(env), counts = {}; let total = 0, withMail = 0, bad = 0;
+      for (let off = 0; ; off += 500) {
+        const rs = (await env.DB.prepare("SELECT id, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
+        if (!rs.length) break;
+        for (const r of rs) {
+          total++;
+          let p; try { p = await decryptPii(key, r.id, r.pii); } catch { bad++; continue; }
+          const m = String((p && p.email) || "").trim().toLowerCase().match(/@([^@\s]+)$/);
+          if (m) { withMail++; counts[m[1]] = (counts[m[1]] || 0) + 1; }
+        }
+      }
+      const domains = Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([domain, n]) => ({ domain, n }));
+      return out({ total, with_email: withMail, undecryptable: bad, domains });
+    } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
+  if (!(await checkAdmin(request, env))) return noAuth();
   try {
     const sha = u.searchParams.get("file");
     if (sha) {
