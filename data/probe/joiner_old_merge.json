@@ -1,10 +1,47 @@
 {
-  "dry": true,
   "old_site_rows": 5456,
-  "advcf7_with_same_id_in_cfdb7": 473,
-  "identical_pairs": 0,
+  "advcf7_rows": 474,
+  "advcf7_without_partner": 1,
+  "mode": "dry",
   "merged": 0,
-  "near_identical_not_merged": 354,
-  "failed": 0,
-  "when": "2026-11-01T08:39:06Z"
+  "merge_failed": 0,
+  "same_enough_to_merge": 375,
+  "different": 98,
+  "summary": {
+    "same: tz+ipm": 375,
+    "different: core+tz+ipm": 84,
+    "different: tz+ipm+extra": 10,
+    "different: core+tz+ipm+extra": 4
+  },
+  "stats": {
+    "time_delta": {
+      "1-2h": 412,
+      "2-3h": 59,
+      "3-4h": 2
+    },
+    "time_sign": {
+      "cfdb7_later": 473
+    },
+    "hour_offsets": {
+      "2": 433,
+      "3": 40
+    },
+    "ip": {
+      "cfdb7_empty": 473
+    },
+    "core_fields": {
+      "phone": 87,
+      "first": 2,
+      "last": 3
+    },
+    "groups": {
+      "phone:ערך שונה": 79,
+      "פרט נוסף: post_checkbox-154": 10,
+      "first:ערך שונה + phone:ערך שונה": 1,
+      "last:ערך שונה + phone:ערך שונה": 3,
+      "phone:ערך שונה + פרט נוסף: post_checkbox-154": 4,
+      "first:ערך שונה": 1
+    }
+  },
+  "when": "2026-11-01T09:26:32Z"
 }
