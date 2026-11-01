@@ -38,6 +38,11 @@
   .req{color:var(--red)}
   input[type=text],input[type=tel],input[type=email],input[type=search]{width:100%;min-height:54px;font:inherit;font-size:18px;padding:.4rem .9rem;color:var(--navy);background:#fff;
     border:2px solid var(--accent-border);border-radius:12px}
+  .sendvia{margin:.2rem 0 .6rem}
+  .viaopt{display:flex;align-items:center;gap:.7rem;padding:.35rem 0;font-size:19px;color:var(--navy);cursor:pointer}
+  .viaopt input{width:24px;height:24px;flex:none;accent-color:var(--accent-dark);margin:0}
+  .viaopt.off{color:#9aa7a7;cursor:not-allowed}
+  .viamsg{margin-top:.3rem;font-size:16px;font-weight:700;color:#8a5a00}
   .emailrow{display:flex;flex-direction:column;gap:8px}
   .emailrow #emailLocal,.emailrow #emailOther{width:100%}
   .emailrow select{width:100%;min-width:0;min-height:54px;font:inherit;font-size:18px;padding:.4rem .6rem;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:12px}
@@ -81,7 +86,7 @@
   @media (min-width:860px){
     .wrap{max-width:900px}
     .fgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:1.2rem}
-    .fgrid .field:has(#address){grid-column:1/-1}
+    .fgrid .field:has(#address),.fgrid .field:has(#emailLocal),.fgrid .field:has(#fax),.fgrid .sendvia{grid-column:1/-1}
     .btn{max-width:420px;margin-inline:auto}
     .fgrid .field{margin-bottom:.55rem}
     .fgrid input{min-height:46px}
@@ -145,6 +150,12 @@
         <div class="err" data-for="email"></div></div>
       <div class="field"><label class="lbl" for="fax">פקס</label>
         <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"></div>
+      <div class="field sendvia" id="sendVia" role="radiogroup" aria-label="אישור הצטרפות ישלח ל">
+        <div class="lbl">אישור הצטרפות ישלח ל...</div>
+        <label class="viaopt off" id="viaMailL"><input type="radio" name="via" value="mail" id="viaMail" disabled><span>מייל</span></label>
+        <label class="viaopt off" id="viaFaxL"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס</span></label>
+        <div class="viamsg" id="viaMsg" aria-live="polite"></div>
+      </div>
       <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
         <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
       </div>
@@ -297,6 +308,36 @@ function setErrs(map, form) {
   O.addEventListener("input", () => { const c = O.value.replace(/[^A-Za-z0-9.\-]/g, ""); if (c !== O.value) O.value = c; sync(); });
   document.querySelector("#fJoin").addEventListener("input", e => { if (e.target === L || e.target === O) { H.dispatchEvent(new Event("input", { bubbles: true })); } });
 })();
+// בחירת אופן קבלת האישור: מייל (ברירת מחדל אם הוזנה כתובת) או פקס (עדיין לא פעיל). שורה בלי נתון - באפור וללא אפשרות בחירה.
+(function () {
+  const L = $("emailLocal"), F = $("fax"), M = $("viaMail"), X = $("viaFax"), msg = $("viaMsg");
+  const faxOk = () => { let d = F.value.replace(/\D/g, ""); if (d.startsWith("972")) d = "0" + d.slice(3); return /^(0\d{8,9}|153\d{6,7})$/.test(d); };
+  function info(text) {
+    const o = document.createElement("div");
+    o.setAttribute("role", "dialog"); o.setAttribute("aria-modal", "true");
+    o.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99999;padding:16px";
+    o.innerHTML = `<div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:22px;text-align:center;font-size:19px;line-height:1.6;color:#1f3a3a"><p style="margin:0 0 16px"></p><button type="button" class="btn" style="min-height:50px">הבנתי</button></div>`;
+    o.querySelector("p").textContent = text;
+    const close = () => o.remove();
+    o.querySelector("button").onclick = close; o.addEventListener("click", e => { if (e.target === o) close(); });
+    document.body.appendChild(o); o.querySelector("button").focus();
+  }
+  function upd() {
+    const mOk = L.value.trim().length > 0, fOk = faxOk();
+    M.disabled = !mOk; X.disabled = !fOk;
+    $("viaMailL").classList.toggle("off", !mOk); $("viaFaxL").classList.toggle("off", !fOk);
+    if (!mOk) M.checked = false; if (!fOk) X.checked = false;
+    if (mOk && !M.checked && !X.checked) M.checked = true;          // ברירת מחדל: מייל, אם הוזנה כתובת
+    msg.textContent = !L.value.trim() && !F.value.trim() ? "לקבלת אישור, יש להזין כתובת מייל או מספר פקס תקין" : "";
+  }
+  X.addEventListener("change", () => {
+    if (!X.checked) return;
+    info("אפשרות שליחת האישור בפקס אינו פעיל עדיין. בעז\"ה בקרוב יתאפשר קבלת האישור בפקס");
+    X.checked = false; if (!M.disabled) M.checked = true;
+  });
+  L.addEventListener("input", upd); F.addEventListener("input", upd); $("emailDom").addEventListener("change", upd);
+  upd();
+})();
 // אימייל: רק תווים לועזיים (אותיות עבריות ורווחים נמחקים בהקלדה ובהדבקה). שאר השדות חופשיים.
 document.querySelectorAll("#cemail").forEach(el => el.addEventListener("input", () => {
   const c = el.value.replace(/[^\x21-\x7e]/g, ""); if (c !== el.value) el.value = c;
@@ -379,7 +420,7 @@ $("fJoin").addEventListener("submit", async e => {
   const btn = $("joinBtn"); btn.disabled = true; btn.textContent = "שולח…";
   try {
     const text = agreementText();
-    const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), address: v("address"),
+    const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), confirm_via: (document.querySelector("input[name=via]:checked") || {}).value || "", address: v("address"),
       choice: ch.value, companies: ch.value === "list" ? [...chosen] : [], consent: true, agreement_version: AGREEMENT_VERSION, agreement_sha256: await sha256Hex(text),
       form_date: todayIL, t: Date.now() - loadedAt, website: $("website").value, channel: document.body.classList.contains("embed") ? "site" : "kehilot" };
     const { status, j } = await post("/api/join", body);

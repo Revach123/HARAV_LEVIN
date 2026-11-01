@@ -35,6 +35,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   const first = clean(b.first, 40), last = clean(b.last, 40), address = clean(b.address, 160);
   const id = normalizeId(b.id), phone = normalizePhone(b.phone), phone2 = b.phone2 ? normalizePhone(b.phone2) : "";
   const email = clean(b.email, 120), fax = clean(b.fax, 30);
+  const via = b.confirm_via === "fax" ? "fax" : b.confirm_via === "mail" || (b.confirm_via === undefined && email) ? "mail" : "";          // אופן קבלת האישור (לקוח ישן בלי השדה: מייל אם יש)
   const errors = {};
   if (first.length < 2) errors.first = "נא למלא שם פרטי";
   if (last.length < 2) errors.last = "נא למלא שם משפחה";
@@ -70,6 +71,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     extra["גרסת שטר"] = clean(b.agreement_version, 40);
     extra["sha256 של נוסח השטר שהוצג"] = /^[0-9a-f]{64}$/.test(String(b.agreement_sha256 || "")) ? b.agreement_sha256 : "";
     extra["אושרו התנאים"] = "כן";
+    extra["אישור יישלח ב"] = via === "mail" ? "מייל" : via === "fax" ? "פקס (עדיין לא פעיל, לא נשלח)" : "לא נבחר";
     const payload = {
       first, last, phone, email, id,
       ip: request.headers.get("CF-Connecting-IP") || "",
@@ -82,11 +84,11 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const sha = await saveConfirmationFile(env, conf);
     await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', ?, ?, ?)")
       .bind(rid, now, sha, ih, await encryptPii(key, rid, payload)).run();
-    if (email) {
+    if (email && via === "mail") {
       const task = sendConfirmation(env, email, conf);
       if (waitUntil) waitUntil(task); else await task;
     }
-    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });
+    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && via === "mail" && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });
   } catch {
     return reply({ ok: false, error: "אירעה שגיאה בשמירת הטופס. נא לנסות שוב." }, 500);
   }
