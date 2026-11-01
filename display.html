@@ -110,6 +110,7 @@
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
   .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
+  .clamp3{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:help}
 </style>
 </head>
 <body>
@@ -733,6 +734,7 @@ function cellFor(col, val, row) {
   const td = el("td");
   if (row && row._livePending && (col.key === "last_price" || col.key === "ytm_gross") && row.redemption_date) { td.className = "num"; td.innerHTML = '<span class="spin-s" title="מעדכן שער חי…"></span>'; return td; }          // שער / תשואה בחישוב: ספינר במקום הערך
   if (NOWRAP_KEYS.has(col.key)) td.className = "nw";
+  if (col.key === "notes" && !col.cell && val) { const d = el("div"); d.className = "clamp3"; d.textContent = val; d.title = val; td.appendChild(d); return td; }   // הערה ארוכה: עד 3 שורות, "..." ו-tooltip עם הטקסט המלא
   if (col.cell === "name") {
     td.className = "name-cell";
     if (row && row._isSub) { td.classList.add("sub"); td.innerHTML = `<span class="sub-arrow">↲</span>${esc(val ?? "")}`; }          // חץ לכיוון הקריאה (עברית: ימין לשמאל)

@@ -8,7 +8,7 @@ const BASE = "https://datawise.tase.co.il";
 const BOND_PREFIXES = ["03", "05", "11", "36"];      // כמו scripts/bonds_list/build_approved_bonds.py
 const norm = v => String(v ?? "").trim().replace(/^0+/, "");
 
-async function tradeList(env, ctx) {
+export async function tradeList(env, ctx) {
   const headers = { accept: "application/json", "accept-language": "he-IL", apikey: env.TASE_DATAWISE_KEY };
   for (let d = 0; d <= 7; d++) {
     const dt = new Date(Date.now() - d * 86400000);
@@ -48,4 +48,15 @@ export async function onRequestGet({ request, env, waitUntil }) {
   } catch (e) {
     return Response.json({ ok: false, error: e.message }, { status: 502 });
   }
+}
+
+// בדיקה מיידית (בשמירת עסק): האם לח"פ יש אג"ח סחירה בבורסה. מחזיר "יש"/"אין", או null אם אי אפשר לבדוק (אין מפתח / כשל) - אז הדגל נשאר לריצה הלילית.
+export async function bondFlagFor(env, chp, ctx) {
+  const k = norm(chp);
+  if (!k || !env.TASE_DATAWISE_KEY) return null;
+  try {
+    const { list } = await tradeList(env, ctx);
+    if (!list.length) return null;
+    return list.some(r => norm(r.corporateId) === k && BOND_PREFIXES.includes(String(r.securityFullTypeCode || "").slice(0, 2))) ? "יש" : "אין";
+  } catch { return null; }
 }
