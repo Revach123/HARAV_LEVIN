@@ -97,7 +97,38 @@ function checkFields(b, old) {
   return { errors, v };
 }
 
+const TYPO_GMAIL = new Set(["gmil.com", "gamil.com", "gimel.com", "gmail.co", "gmeil.com", "gimal.com", "gmaij.com", "gnail.com", "gmail.con", "jmail.com", "gmial.com", "gmaii.com", "gmai.com", "gail.com", "gimail.com", "gmaul.com", "jmil.com", "gmyl.com", "gmail.co.il", "gmal.com", "gmail.cim", "gmail.comj", "gimil.com", "gmaui.com", "gmail.c0m", "jmel.com", "gmaj.com", "gmeij.com", "gmel.com", "gmaol.com", "gmabl.com", "gmailc.om", "gmil.cim", "gmail.cum", "gtmail.com", "gmkil.ckm", "gmail.comy", "gmgila.com", "gmail.fom", "gmail.cpm", "gmnail.com", "gmiail.com", "gmaul.cum", "gamil.cpm", "gmail.coml", "gmij.com", "gmail.comom", "qmail.com", "gmaum.com", "gwail.com", "gmailk.com", "gmsil.com", "gmqil.com", "gmail.comhu", "ygmqil.com", "gmayl.com", "giamel.com", "gimij.com", "gmamil.com", "gmaik.com", "gmail.com.il", "gumal.com", "gmaill.com", "gmail.cam"]);
+const fixDomain = d => TYPO_GMAIL.has(d) ? "gmail.com" : d === "walla.con" ? "walla.com" : d;
+// תיקון שגיאות כתיב מוכרות בסיומת האימייל (gmil.com -> gmail.com ...): רק לפי רשימה מפורשת, רק הסיומת (שם המשתמש לא נוגע), עם ?dry=1 לבדיקה בלבד.
+// מנהל, או הרצה אוטומטית עם X-Cron-Secret (workflow joiner-email-fix). מחזיר ספירה לפי סיומת בלבד.
+async function fixEmailDomains(request, env, dry) {
+  const key = await importKeyForWrite(env), changes = {}; let fixed = 0, bad = 0;
+  for (let off = 0; ; off += 300) {
+    const rs = (await env.DB.prepare("SELECT id, pii FROM joiners ORDER BY id LIMIT 300 OFFSET ?").bind(off).all()).results ?? [];
+    if (!rs.length) break;
+    for (const r of rs) {
+      let p; try { p = await decryptPii(key, r.id, r.pii); } catch { bad++; continue; }
+      const em = String((p && p.email) || "").trim(), at = em.lastIndexOf("@");
+      if (at < 1) continue;
+      const dom = em.slice(at + 1).toLowerCase(), nd = fixDomain(dom);
+      if (nd === dom) continue;
+      changes[`${dom} -> ${nd}`] = (changes[`${dom} -> ${nd}`] || 0) + 1; fixed++;
+      if (dry) continue;
+      p.email = em.slice(0, at + 1) + nd;
+      try { const x = typeof p.extra === "string" ? JSON.parse(p.extra || "{}") : (p.extra || {}); x["תיקון סיומת אימייל"] = `${dom} -> ${nd}`; p.extra = typeof p.extra === "string" ? JSON.stringify(x) : x; } catch {}
+      await env.DB.prepare("UPDATE joiners SET pii = ? WHERE id = ?").bind(await encryptPii(key, r.id, p), r.id).run();
+    }
+  }
+  return { dry: !!dry, fixed, undecryptable: bad, changes: Object.entries(changes).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({ change: k, n })) };
+}
+
 export async function onRequestPost({ request, env }) {
+  const u0 = new URL(request.url);
+  if (u0.searchParams.get("fixdomains")) {
+    const cs = request.headers.get("X-Cron-Secret") || "";
+    if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
+    try { return out(await fixEmailDomains(request, env, u0.searchParams.get("dry") === "1")); } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
   const g = await guard(request, env); if (g) return g;
   const b = await readJson(request, 40 * 1024); if (!b) return out({ error: "הבקשה לא תקינה" }, 400);
   const { errors, v } = checkFields(b, {});

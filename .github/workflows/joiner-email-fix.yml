@@ -1,0 +1,42 @@
+name: Joiner email domain typos fix (manual)
+
+# מתקן שגיאות כתיב מוכרות בסיומת האימייל של מצטרפים (gmil.com -> gmail.com ...), לפי רשימה מפורשת בלבד.
+# dry=true (ברירת מחדל): רק ספירה. dry=false: כותב. מחזיר/שומר רק ספירה לפי סיומת, בלי כתובות.
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "בדיקה בלבד (true) או תיקון בפועל (false)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DRY: ${{ inputs.dry }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe
+          q="fixdomains=1"; [ "$DRY" = "true" ] && q="$q&dry=1"
+          code=$(curl -sS -m 600 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" "https://harav-levin.pages.dev/api/joiners?$q" -o tmp.json -w '%{http_code}')
+          if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp.json)"; exit 1; fi
+          jq --arg w "$(date -u +%FT%TZ)" '. + {when: $w}' tmp.json > data/probe/joiner_email_fix.json
+          jq -r '"dry=\(.dry) fixed=\(.fixed) undecryptable=\(.undecryptable)", (.changes[] | "\(.n)\t\(.change)")' data/probe/joiner_email_fix.json
+          rm tmp.json
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/joiner_email_fix.json || true
+          git diff --cached --quiet || (git commit -m "joiner email fix" && git pull --rebase --autostash -X theirs && git push)
