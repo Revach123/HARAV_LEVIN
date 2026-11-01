@@ -1,0 +1,18 @@
+{
+ "approved_companies": 773,
+ "maya_companies_found": 1854,
+ "errors": 0,
+ "nontradable_live_bonds": 70,
+ "companies_with_nontradable": 50,
+ "by_security_type": {
+  "ני\"ע מסחריים": 68,
+  "אג\"ח להמרה": 1,
+  "אג\"ח קונצרני": 1
+ },
+ "flags": {
+  "live / tradable / bond": 772,
+  "live / non-tradable / other": 527,
+  "live / tradable / other": 203,
+  "live / non-tradable / bond": 70
+ }
+}
