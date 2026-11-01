@@ -5,7 +5,10 @@ export async function onRequestGet({ request, env, params }) {
     const row = await env.DB.prepare(`
       SELECT d.file_key, d.original_name FROM permit_docs d
       WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id AND c.slot != '')`).bind(params.id).first()
-      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)`).bind(params.id).first().catch(() => null);
+      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)`).bind(params.id).first().catch(() => null)
+      // הת"ע מיוחד לאג"ח (תת-שורה לאג"ח): המסמך מקושר לאג"ח (permit_doc_bonds) ולחברה, גם כשאינו בחריץ כללי/פרטי של החברה. הרשימה הציבורית חושפת אותו (permit-docs-public.js), ולכן גם הקובץ מוגש
+      || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other'
+           AND EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id) AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)`).bind(params.id).first().catch(() => null);
     if (!row) return new Response("not found", { status: 404 });
     // צפייה מוגשת מהגרסה הקלה (docs-lite/, נבנית ע"י scripts/compress_permit_pdfs.py) אם קיימת; הורדה (?dl=1 / ?full=1) - תמיד המקור
     const q = new URL(request.url).searchParams;
