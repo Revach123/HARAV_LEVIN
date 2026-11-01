@@ -1,11 +1,18 @@
 {
- "when": "2026-11-01T13:00:20.727Z",
- "saved_at": "2026-10-29 01:15:11",
+ "when": "2026-11-01T13:17:35.998Z",
+ "saved_at": "2026-11-01 13:04:40",
  "updated": "חשוון תשפ\"ז",
- "current_rows": 83,
+ "current_rows": 84,
  "seed_rows": 89,
  "missing_from_current": [],
  "added_vs_seed": [
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "קופת גמל להשקעה",
+   "number": "8523",
+   "tab": "both"
+  },
   {
    "company": "קסם",
    "track": "קסם KTF S&P500",
@@ -329,6 +336,13 @@
    "track": "מחקה מדד S&P500",
    "type": "קופת גמל להשקעה",
    "number": "13414",
+   "tab": "both"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "קופת גמל להשקעה",
+   "number": "8523",
    "tab": "both"
   },
   {
@@ -731,6 +745,13 @@
    "track": "מחקה מדד S&P500",
    "type": "קופת גמל להשקעה",
    "number": "13414",
+   "tab": "both"
+  },
+  {
+   "company": "הראל",
+   "track": "מסלול הלכה",
+   "type": "קופת גמל להשקעה",
+   "number": "8523",
    "tab": "both"
   },
   {
