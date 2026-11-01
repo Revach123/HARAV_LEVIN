@@ -1,4 +1,5 @@
 import { checkAdmin } from "./_shared/auth.js";
+import { removeRow } from "./joiner-self.js";
 import { noAuth } from "./_shared/permit-docs.js";
 import { importKey, decryptPii, importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
@@ -132,6 +133,45 @@ function checkFields(b, old) {
 
 const TYPO_GMAIL = new Set(["gmil.com", "gamil.com", "gimel.com", "gmail.co", "gmeil.com", "gimal.com", "gmaij.com", "gnail.com", "gmail.con", "jmail.com", "gmial.com", "gmaii.com", "gmai.com", "gail.com", "gimail.com", "gmaul.com", "jmil.com", "gmyl.com", "gmail.co.il", "gmal.com", "gmail.cim", "gmail.comj", "gimil.com", "gmaui.com", "gmail.c0m", "jmel.com", "gmaj.com", "gmeij.com", "gmel.com", "gmaol.com", "gmabl.com", "gmailc.om", "gmil.cim", "gmail.cum", "gtmail.com", "gmkil.ckm", "gmail.comy", "gmgila.com", "gmail.fom", "gmail.cpm", "gmnail.com", "gmiail.com", "gmaul.cum", "gamil.cpm", "gmail.coml", "gmij.com", "gmail.comom", "qmail.com", "gmaum.com", "gwail.com", "gmailk.com", "gmsil.com", "gmqil.com", "gmail.comhu", "ygmqil.com", "gmayl.com", "giamel.com", "gimij.com", "gmamil.com", "gmaik.com", "gmail.com.il", "gumal.com", "gmaill.com", "gmail.cam"]);
 const fixDomain = d => TYPO_GMAIL.has(d) ? "gmail.com" : d === "walla.con" ? "walla.com" : d;
+// מיזוג אוטומטי של כפילויות האתר הישן: אותה הגשה נשמרה בשני תוספים (cfdb7 ו-advcf7). זוג = אותה ת.ז., אותו יום, אותו שם וטלפון ואותה בחירת חברות.
+// נשאר רישום ה-cfdb7 (מושלם בפרטים חסרים מה-advcf7), וה-advcf7 נמחק. רישומים שונים (שם/טלפון/חברות/יום) לא נוגעים. dry = ספירה בלבד.
+async function mergeOldDuplicates(env, dry) {
+  const key = await importKeyForWrite(env), rows = [];
+  for (let off = 0; ; off += 500) {
+    const rs = (await env.DB.prepare("SELECT id, submitted_at, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
+    if (!rs.length) break;
+    for (const r of rs) {
+      let p; try { p = await decryptPii(key, r.id, r.pii); } catch { continue; }
+      if (!/^(cfdb7|advcf7)/.test(String(p.src || ""))) continue;
+      const idn = String(p.id || "").replace(/\D/g, "");
+      if (idn.length < 5) continue;
+      rows.push({ rid: r.id, day: String(r.submitted_at || "").slice(0, 10), p, idn, adv: /^advcf7/.test(p.src),
+        k: [p.first, p.last].join(" ").replace(/\s+/g, " ").trim() + "|" + String(p.phone || "").replace(/\D/g, "") + "|" + (p.all ? "A" : String(p.companies || "").trim()) });
+    }
+  }
+  const byId = new Map(); for (const r of rows) (byId.get(r.idn) || byId.set(r.idn, []).get(r.idn)).push(r);
+  let pairs = 0, merged = 0, differ = 0, failed = 0;
+  for (const list of byId.values()) {
+    const cf = list.filter(r => !r.adv), adv = list.filter(r => r.adv), used = new Set();
+    for (const a of adv) {
+      const c = cf.find(x => !used.has(x) && x.day === a.day && x.k === a.k);
+      if (!c) { if (cf.some(x => x.day === a.day)) differ++; continue; }
+      used.add(c); pairs++;
+      if (dry) continue;
+      try {
+        const p = c.p, xa = (() => { try { return JSON.parse(a.p.extra || "{}") || {}; } catch { return {}; } })(), xc = (() => { try { return JSON.parse(p.extra || "{}") || {}; } catch { return {}; } })();
+        for (const f of ["first", "last", "phone", "email"]) if (!p[f] && a.p[f]) p[f] = a.p[f];
+        for (const f of Object.keys(xa)) if (!xc[f] && xa[f]) xc[f] = xa[f];
+        xc["מוזג מ"] = a.p.src;
+        p.extra = JSON.stringify(xc);
+        await env.DB.prepare("UPDATE joiners SET pii = ? WHERE id = ?").bind(await encryptPii(key, c.rid, p), c.rid).run();
+        await removeRow(env, a.rid); merged++;
+      } catch { failed++; }
+    }
+  }
+  return { dry: !!dry, old_site_rows: rows.length, pairs, merged, same_day_but_different: differ, failed };
+}
+
 // תיקון שגיאות כתיב מוכרות בסיומת האימייל (gmil.com -> gmail.com ...): רק לפי רשימה מפורשת, רק הסיומת (שם המשתמש לא נוגע), עם ?dry=1 לבדיקה בלבד.
 // מנהל, או הרצה אוטומטית עם X-Cron-Secret (workflow joiner-email-fix). מחזיר ספירה לפי סיומת בלבד.
 async function fixEmailDomains(request, env, dry) {
@@ -157,6 +197,11 @@ async function fixEmailDomains(request, env, dry) {
 
 export async function onRequestPost({ request, env }) {
   const u0 = new URL(request.url);
+  if (u0.searchParams.get("mergeold")) {
+    const cs = request.headers.get("X-Cron-Secret") || "";
+    if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
+    try { return out(await mergeOldDuplicates(env, u0.searchParams.get("dry") === "1")); } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
   if (u0.searchParams.get("fixdomains")) {
     const cs = request.headers.get("X-Cron-Secret") || "";
     if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();

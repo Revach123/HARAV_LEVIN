@@ -30,7 +30,7 @@ async function loadMine(env, key, email, idn = "") {
   return out;
 }
 
-async function removeRow(env, rid) {
+export async function removeRow(env, rid) {
   const r = await env.DB.prepare("SELECT id, file_sha256 FROM joiners WHERE id = ?").bind(rid).first();
   if (!r) return;
   await env.DB.prepare("DELETE FROM joiners WHERE id = ?").bind(rid).run();
