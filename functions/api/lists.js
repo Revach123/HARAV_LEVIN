@@ -52,6 +52,15 @@ async function loadOfferings(request, env) {
   } catch { return { byChp: new Map(), byName: [] }; }
 }
 
+async function loadListedChps(request, env) {
+  try {
+    const url = new URL("/data/bonds_list/bonds_all.json", request.url), res = await (env.ASSETS ? env.ASSETS.fetch(url) : fetch(url));
+    if (!res.ok) return [];
+    const d = await res.json(), rows = Array.isArray(d) ? d : d.rows || [];
+    return [...new Set(rows.map(r => String(r.chp_number || "").trim()).filter(c => /^\d{6,10}$/.test(c)))];
+  } catch { return []; }
+}
+
 const nameWords = n => String(n || "").toLowerCase().replace(/בע"?מ|בע״מ|בע''מ/g, " ").split(/\s+/).map(w => w.replace(/[^0-9a-z\u0590-\u05ff]/g, "")).filter(Boolean);
 const startsWithWords = (full, short) => { const f = nameWords(full), w = short; return w.length > 0 && f.length >= w.length && w.every((v, i) => f[i] === v); };
 
@@ -178,7 +187,9 @@ export async function onRequestGet(context) {
       // כלל אחד: חברה בלי אג"ח (לפי הבורסה, tase_has_agch) = "אין אג"ח" - גם אם סומנה כמאושרת.
       // חברה עם אג"ח = "יש אג"ח - מאושר" או "יש אג"ח - לא מאושר". "בחירת אג"ח מסוימים" רק קובע איזו אג"ח מאושרת (ברשימת האג"ח), והסטטוס כאן נקבע באותו כלל.
       const selective = `agch_approved = 'בחירת אג"ח מסוימים'`;
-      const hasBonds = `COALESCE(tase_has_agch,'') = 'יש'`;
+      // גם חברה שיש לה אג"ח ברשימת האג"ח (נבנית גם מסריקת מאיה, לא רק מרשימת הבורסה) נחשבת "יש אג"ח" (למשל איילון)
+      const listed = await loadListedChps(request, env);
+      const hasBonds = `(COALESCE(tase_has_agch,'') = 'יש'${listed.length ? ` OR TRIM(COALESCE(chp_number,'')) IN (${listed.map(c => `'${c}'`).join(",")})` : ""})`;
       const approvedExpr = `CASE WHEN ${hasBonds} AND (${approvedCond} OR ${selective}) THEN 1 ELSE 0 END`;
       const bondsStatusExpr = `CASE WHEN NOT (${hasBonds}) THEN 'אין אג"ח'
                                     WHEN ${approvedCond} OR ${selective} THEN 'יש אג"ח - מאושר'

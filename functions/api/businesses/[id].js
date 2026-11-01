@@ -1,4 +1,5 @@
 import { checkAdmin } from "../_shared/auth.js";
+import { bondFlagFor } from "../company-bonds.js";
 import { normalizePcat } from "../_shared/pcat.js";
 // PUT    /api/businesses/:id   → update (admin only)
 // DELETE /api/businesses/:id   → delete (admin only)
@@ -51,6 +52,9 @@ export async function onRequestPut({ request, env, params }) {
     if (body.permits_category !== undefined) {          // קטגוריה עבור רשימת השטרות (migrations/0019); לפני המיגרציה מתעלמים
       try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(normalizePcat(body.permits_category), id).run(); }
       catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
+    }
+    {          // עדכון מיידי של דגל "יש אג"ח" (במקום להמתין לריצה הלילית)
+      try { const f = await bondFlagFor(env, chp_number); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
     }
     return Response.json({ success: true });
   } catch (e) {
