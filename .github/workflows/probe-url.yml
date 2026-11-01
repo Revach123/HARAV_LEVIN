@@ -1,0 +1,26 @@
+name: Probe a public URL (read-only, manual)
+
+# מביא כתובת ציבורית של האתר ומדפיס את הסטטוס, הכותרות ותחילת התשובה (לאבחון, למשל מסמך שלא נפתח). לא שולח מידע ולא משנה כלום.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "כתובת (חייבת להתחיל ב-https://harav-levin.pages.dev/ או https://iska.co.il/)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch
+        env:
+          URL: ${{ inputs.url }}
+        run: |
+          case "$URL" in https://harav-levin.pages.dev/*|https://iska.co.il/*) ;; *) echo "::error::כתובת לא מורשית"; exit 1;; esac
+          curl -sS -m 60 -A "Mozilla/5.0" -D - -o body.bin "$URL" | head -20
+          echo "--- body (first 300 bytes):"; head -c 300 body.bin | cat -v; echo; wc -c body.bin

@@ -20,6 +20,7 @@ const out = {
   missing_from_current: missing.map(r => ({ company: r.company, track: r.track, type: r.type, number: r.number })),
   added_vs_seed: added.map(r => ({ company: r.company, track: r.track, type: r.type, number: r.number, tab: r.tab })),
   type_changed: typeChanged.map(r => ({ company: r.company, track: r.track, seed_type: r.type, now: curKeys.get(key(r)).map(x => x.type) })),
+  current_all: cur.rows.map(r => ({ company: r.company, track: r.track, type: r.type, number: r.number, tab: r.tab })),
   search: q, search_current: cur.rows.filter(hit).map(r => ({ company: r.company, track: r.track, type: r.type, number: r.number, tab: r.tab })),
   search_seed: SEED.filter(hit).map(r => ({ company: r.company, track: r.track, type: r.type, number: r.number })),
 };

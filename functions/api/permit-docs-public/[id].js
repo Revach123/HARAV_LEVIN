@@ -9,13 +9,16 @@ export async function onRequestGet({ request, env, params }) {
       // הת"ע מיוחד לאג"ח (תת-שורה לאג"ח): המסמך מקושר לאג"ח (permit_doc_bonds) ולחברה, גם כשאינו בחריץ כללי/פרטי של החברה. הרשימה הציבורית חושפת אותו (permit-docs-public.js), ולכן גם הקובץ מוגש
       || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other'
            AND EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id) AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)`).bind(params.id).first().catch(() => null);
-    if (!row) return new Response("not found", { status: 404 });
+    if (!row) {          // סיבה מפורשת (לאבחון): המסמך לא קיים / לא מקושר לרשימה ציבורית
+      const any = await env.DB.prepare("SELECT doc_type FROM permit_docs WHERE id = ?").bind(params.id).first().catch(() => null);
+      return new Response(any ? `not found: document exists (type ${any.doc_type}) but is not linked to a public list` : "not found: no such document id", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    }
     // צפייה מוגשת מהגרסה הקלה (docs-lite/, נבנית ע"י scripts/compress_permit_pdfs.py) אם קיימת; הורדה (?dl=1 / ?full=1) - תמיד המקור
     const q = new URL(request.url).searchParams;
     let obj = null;
     if (!q.get("dl") && !q.get("full")) obj = await env.PERMITS.get(row.file_key.startsWith("docs/") ? "docs-lite/" + row.file_key.slice(5) : "docs-lite/" + row.file_key).catch(() => null);
     if (!obj) obj = await env.PERMITS.get(row.file_key);
-    if (!obj) return new Response("not found", { status: 404 });
+    if (!obj) return new Response("not found: file missing in storage (" + row.file_key + ")", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
     // ?enc=b64: הקובץ כ-JSON (base64), לרשתות עם סינון תוכן (נטפרי) שחוסמות הורדת PDF אבל לא JSON
     if (new URL(request.url).searchParams.get("enc") === "b64") {
       const u8 = new Uint8Array(await obj.arrayBuffer());
