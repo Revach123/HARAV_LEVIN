@@ -263,9 +263,9 @@ async function step({ v, env, P, bk, done, origin }) {
 // ---- אימייל ----
 // סיומות נפוצות (הקשה 1-9; 0 = סיומת אחרת בהקלטה). dom<N> = ביטוי ההקראה, he = ההגייה לאישור.
 const EMAIL_DOMAINS = [
-  ['gmail.com', 'גימייל נקודה קום'], ['walla.co.il', 'וואלה נקודה קו נקודה איל'], ['walla.com', 'וואלה נקודה קום'],
-  ['yahoo.com', 'יאהו נקודה קום'], ['hotmail.com', 'הוטמייל נקודה קום'], ['outlook.com', 'אאוטלוק נקודה קום'],
-  ['okmail.co.il', 'אוקי מייל נקודה קו נקודה איל'], ['netvision.net.il', 'נטוויזן נקודה נט נקודה איל'], ['bezeqint.net', 'בזקאינט נקודה נט'],
+  ['gmail.com', 'גימייל'], ['walla.co.il', 'וואלה ישראל'], ['walla.com', 'וואלה קום'],
+  ['yahoo.com', 'יאהו'], ['hotmail.com', 'הוטמייל'], ['outlook.com', 'אאוטלוק'],
+  ['okmail.co.il', 'אוקי מייל'], ['netvision.net.il', 'נטוויזיון'], ['bezeqint.net', 'בזק'],
 ];
 const LETTER_HE = { a: 'איי', b: 'בי', c: 'סי', d: 'די', e: 'אי', f: 'אף', g: "ג'י", h: "אייץ'", i: 'אַיי', j: "ג'יי", k: 'קיי', l: 'אל', m: 'אם',
   n: 'אן', o: 'או', p: 'פי', q: 'קיו', r: 'אר', s: 'אס', t: 'טי', u: 'יו', v: 'וי', w: 'דאבליו', x: 'אקס', y: 'וואי', z: 'זד' };
@@ -297,13 +297,23 @@ async function emailStep(ctx) {
   const nextRound = (note) => { if (note) set('note', note); set('r', r + 1); return emailStep({ ...ctx, depth: ctx.depth + 1 }); };
   const recurse = () => emailStep({ ...ctx, depth: ctx.depth + 1 });
 
-  if (S('phase') !== 'dom') {
+  if (S('phase') !== 'dom' && S('phase') !== 'num') {
     // הקלטה אחת: אותיות בדיבור, מספרים בהקשה (צלילי ההקשה מזוהים בקובץ) או בדיבור; בלי הסיומת
     const vk = `em_v${r}`;
     if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(noteTake() + P('join:emailSpeakMix'), vk, folder, recFile(vk), REC_MIN, 30) };
     const seg = await transcribeMixed(env, v, vk, folder, recFile);
     if (!seg) return nextRound('join:noHear');
-    set('segs', seg); set('phase', 'dom');
+    set('segs', seg); set('phase', 'num');
+    return recurse();
+  }
+
+  // מספרים בהקשה (למקרה שהקשות באמצע ההקלטה לא נקלטו): מתווספים בסוף הכתובת
+  if (S('phase') === 'num') {
+    const qk = `em_q${r}`, tk = `em_t${r}`;
+    if (v[qk] !== '1' && v[qk] !== '2') return { ask: readTap(P('join:emailNumQ'), qk, ['1', '2'], { empty: EMPTY }) };
+    if (v[qk] === '2') { set('phase', 'dom'); return recurse(); }
+    if (!has(v, tk) || empty(v[tk]) || !/^\d{1,20}$/.test(String(v[tk]))) return { ask: readTap(P('join:emailNumAsk'), tk, null, { max: 20, min: 1, empty: EMPTY }) };
+    set('segs', S('segs') + String(v[tk])); set('phase', 'dom');
     return recurse();
   }
 
