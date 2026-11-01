@@ -1,4 +1,5 @@
-// GET /api/permit-docs-public/:id → קובץ ה-PDF של מסמך שמקושר לרשימה (כללי / פרטי) של חברה. מסמך אחר: 404.
+// GET /api/permit-docs-public/:id → קובץ ה-PDF של מסמך שמקושר לחברה (כל חריץ / מסמך מיוחד / אג"ח / תיוג תת-שורה). מסמך אחר: 404.
+// ?check=1 → בדיקת הרשאה בלבד ({ ok: true }) בלי להביא את הקובץ (לאימות שכל מסמך שהרשימה הציבורית מציגה אכן נפתח).
 export async function onRequestGet({ request, env, params }) {
   if (!env.PERMITS) return new Response("not found", { status: 404 });
   try {
@@ -8,7 +9,8 @@ export async function onRequestGet({ request, env, params }) {
       WHERE d.id = ? AND d.doc_type != 'other' AND (
         EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)
         OR EXISTS (SELECT 1 FROM permit_doc_special s WHERE s.doc_id = d.id)
-        OR EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id))`).bind(params.id).first().catch(() => null)
+        OR EXISTS (SELECT 1 FROM permit_doc_bonds x WHERE x.doc_id = d.id)
+        OR EXISTS (SELECT 1 FROM permit_doc_subs t WHERE t.doc_id = d.id))`).bind(params.id).first().catch(() => null)
       || await env.DB.prepare(`SELECT d.file_key, d.original_name FROM permit_docs d WHERE d.id = ? AND d.doc_type != 'other' AND EXISTS (SELECT 1 FROM permit_doc_companies c WHERE c.doc_id = d.id)`).bind(params.id).first().catch(() => null);
     if (!row) {          // סיבה מפורשת (לאבחון): המסמך לא קיים / לא מקושר לרשימה ציבורית
       const any = await env.DB.prepare("SELECT doc_type FROM permit_docs WHERE id = ?").bind(params.id).first().catch(() => null);
@@ -21,6 +23,7 @@ export async function onRequestGet({ request, env, params }) {
       }
       return new Response((any ? `not found: document exists (type ${any.doc_type}) but is not linked to a public list` : "not found: no such document id") + detail, { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8" } });
     }
+    if (new URL(request.url).searchParams.get("check")) return Response.json({ ok: true }, { headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
     // צפייה מוגשת מהגרסה הקלה (docs-lite/, נבנית ע"י scripts/compress_permit_pdfs.py) אם קיימת; הורדה (?dl=1 / ?full=1) - תמיד המקור
     const q = new URL(request.url).searchParams;
     let obj = null;

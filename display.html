@@ -110,10 +110,8 @@
   body.embed .wrap{max-width:none;padding:0}
   body.no-nav .nav-tabs{display:none}
   .sample-note{background:#fff8e6;border:1px solid #eadfb0;color:#8a6d1a;font-size:13px;padding:.6rem .9rem;border-radius:8px;margin-bottom:.75rem}
-  .inst-bar{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;margin:0 0 .7rem}
-  .btn-inst{font:inherit;font-size:14px;font-weight:700;line-height:1.35;text-align:center;padding:.45rem 1rem;border-radius:10px;border:2px solid var(--accent-border);background:#fff;color:var(--accent-dark);cursor:pointer}
+  .btn-inst{margin-inline:auto;font:inherit;font-size:14px;font-weight:700;line-height:1.35;text-align:center;padding:.45rem 1rem;border-radius:10px;border:2px solid var(--accent-border);background:#fff;color:var(--accent-dark);cursor:pointer}
   .btn-inst.on{background:var(--accent-bg);border-color:var(--accent)}
-  .inst-note{font-size:13px;color:#5a6b6b}
   .new-tag.nt{background:#e8ecec;color:#4a5a5a;border-color:#c7d0d0}
   .clamp3{display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;cursor:help}
 </style>
@@ -413,16 +411,6 @@ function render(container, state, type, usedSample) {
       'מוצגים נתוני דוגמה בלבד — ה-API לא נענה. אחרי פריסת <code>lists.js</code> יוצגו הנתונים האמיתיים.'));
   }
 
-  if (state.topic === "bonds") {          // כפתור "רשימה מלאה למוסדיים" בראש הרשימה (שתי שורות)
-    const bar = el("div", "inst-bar");
-    const ib = el("button", "btn-inst" + (FULL_INST ? " on" : ""));
-    ib.type = "button"; ib.setAttribute("aria-pressed", FULL_INST ? "true" : "false");
-    ib.innerHTML = 'רשימה מלאה למוסדיים<br>כולל ני"ע לא סחירות';
-    ib.onclick = () => { FULL_INST = !FULL_INST; try { sessionStorage.setItem("fullInst", FULL_INST ? "1" : ""); } catch {} mountList(container, type); };
-    bar.appendChild(ib);
-    if (FULL_INST) bar.appendChild(el("span", "inst-note", state.instErr ? "הרשימה המלאה עדיין לא זמינה" : `נוספו ${state.instCount} ניירות לא סחירים פעילים (בלי שער ותשואה). לרוב מיועדים למוסדיים.`));
-    container.appendChild(bar);
-  }
   const head = el("div","list-head");
   const title = el("div","list-title");
   const label = state.topic === "bonds" ? "איגרות חוב" : "חברות";
@@ -439,12 +427,18 @@ function render(container, state, type, usedSample) {
   const clearBtn = el("button", "btn-clear", "✕ ביטול סינון");
   clearBtn.style.display = "none";
   tools.append(clearBtn, search, csvBtn);
-  head.append(title, tools);
+  if (state.topic === "bonds") {          // כפתור "רשימה מלאה למוסדיים" באמצע שורת הכותרת (שתי שורות בכפתור)
+    const ib = el("button", "btn-inst" + (FULL_INST ? " on" : ""));
+    ib.type = "button"; ib.setAttribute("aria-pressed", FULL_INST ? "true" : "false");
+    ib.innerHTML = 'רשימה מלאה למוסדיים<br>כולל ני"ע לא סחירות';
+    ib.onclick = () => { FULL_INST = !FULL_INST; try { sessionStorage.setItem("fullInst", FULL_INST ? "1" : ""); } catch {} mountList(container, type); };
+    head.append(title, ib, tools);
+  } else head.append(title, tools);
   container.appendChild(head);
   const upd = el("div","upd"); container.appendChild(upd);
   const setNote = () => {          // שורת העדכון: בדף עצמו (עם הסבר) ובכותרת של עמוד האב (קצרה, כדי שלא תישבר לשתי שורות)
     const t = state._t || "";
-    upd.textContent = t + liveNote(state, !!t, true);
+    upd.textContent = t + liveNote(state, !!t, true) + (FULL_INST && state.topic === "bonds" ? (state.instErr ? " · הרשימה המלאה עדיין לא זמינה" : ` · כולל ${state.instCount} ניירות לא סחירים פעילים (בלי שער ותשואה, לרוב למוסדיים)`) : "");
     if ((t || state.liveTs || state.liveLoading) && window.parent !== window) window.parent.postMessage({ source: "harav-levin", type: "updated", text: t + liveNote(state, !!t, false) }, "*");
   };
   state.noteUpd = setNote;

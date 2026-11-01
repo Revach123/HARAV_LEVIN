@@ -1,0 +1,26 @@
+name: Public permit docs consistency check (read-only, manual)
+
+# בודק שכל מסמך שהרשימה הציבורית (/api/permit-docs-public) מציגה אכן נפתח בכתובת ההגשה (/api/permit-docs-public/:id?check=1).
+# קריאה בלבד, בלי הורדת קבצים. מדווח כמה מסמכים נבדקו, ואילו נכשלו (מזהי מסמך + הסיבה).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check
+        run: |
+          set -euo pipefail
+          base="https://harav-levin.pages.dev/api/permit-docs-public"
+          curl -sS -m 60 -A "Mozilla/5.0" "$base" -o list.json
+          jq -r '[.links[] | (.general, .private), (.specials // [] | .[].id), (.bond_docs // [] | .[].id)] | map(select(. != null and . != "")) | unique | .[]' list.json > ids.txt
+          echo "docs exposed by the public list: $(wc -l < ids.txt)  (links: $(jq '.links | length' list.json), sub-rows: $(jq '[.links[] | select(.sub)] | length' list.json))"
+          check() { code=$(curl -sS -m 30 -A "Mozilla/5.0" -o out.$$ -w '%{http_code}' "$1/$2?check=1") || code=ERR; if [ "$code" != "200" ]; then echo "FAIL $2 $code $(head -c 160 out.$$)"; fi; rm -f out.$$; }
+          export -f check
+          cat ids.txt | xargs -P 8 -I{} bash -c 'check "$0" "{}"' "$base" > fails.txt || true
+          echo "failures: $(wc -l < fails.txt)"; head -40 fails.txt
