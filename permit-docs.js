@@ -2788,11 +2788,11 @@
       const same = new Map(); for (const r of live) (same.get(jmKey(r)) || same.set(jmKey(r), []).get(jmKey(r))).push(r);
       return `<div style="border:1px solid ${isDup ? "#e0b4b0" : "#cfe5d6"};border-radius:10px;margin:10px 0;overflow:hidden">
         <div style="padding:8px 12px;background:${isDup ? "#fdeceb" : "#eaf6ee"};font-weight:700">ת.ז. <span dir="ltr">${E(idn)}</span> · ${live.length} רישומים פעילים${isDup ? ' <span style="color:#c0392b">- יש כפילות: יש למחוק או למזג</span>' : ' <span style="color:#1b8a4b">✓</span>'}</div>
-        <table class="pd-nd-tbl" style="width:100%"><thead><tr><th>איפה נרשם</th><th>תאריך</th><th>שם</th><th>טלפון</th><th>כתובת</th><th>חברות</th><th></th></tr></thead><tbody>${list.map(r => {
+        <div style="overflow-x:auto"><table class="pd-nd-tbl" style="width:100%"><thead><tr><th>איפה נרשם</th><th>תאריך</th><th>שם</th><th>טלפון</th><th>כתובת</th><th>חברות</th><th></th></tr></thead><tbody>${list.map(r => {
           const twins = same.get(jmKey(r)) || [], first = twins[0] === r, canMerge = !r.cancelled && twins.length > 1 && !first;
           return `<tr${r.cancelled ? ' style="opacity:.55"' : ""}><td><b>${E(r.src || "לא ידוע")}</b>${r.cancelled ? " · בוטל" : ""}</td><td>${E(r.when)}</td><td>${E(r.first + " " + r.last)}</td><td dir="ltr">${E(r.phone)}</td><td>${E(r.address)}</td><td style="max-width:240px">${r.all ? "כל החברות" : E(r.companies)}</td>
-            <td style="white-space:nowrap"><button class="pd-mini" onclick="PD._jmEdit('${r.rid}')">✏️ תיקון</button> <button class="pd-mini" style="color:#c0392b" onclick="PD._jmDel('${r.rid}')">🗑 מחיקה</button>${canMerge ? ` <button class="pd-mini" style="background:#fff3cd" onclick="PD._jmMerge('${twins[0].rid}','${r.rid}')" title="זהה לרישום מ-${E(twins[0].when)}">🔀 מיזוג עם ${E(twins[0].when)}</button>` : ""}</td></tr>`;
-        }).join("")}</tbody></table></div>`;
+            <td style="min-width:150px;max-width:240px"><div style="display:flex;flex-wrap:wrap;gap:4px"><button class="pd-mini" onclick="PD._jmEdit('${r.rid}')">✏️ תיקון</button> <button class="pd-mini" style="color:#c0392b" onclick="PD._jmDel('${r.rid}')">🗑 מחיקה</button>${canMerge ? ` <button class="pd-mini" style="background:#fff3cd" onclick="PD._jmMerge('${twins[0].rid}','${r.rid}')" title="זהה לרישום מ-${E(twins[0].when)}">🔀 מיזוג</button>` : ""}</div></td></tr>`;
+        }).join("")}</tbody></table></div></div>`;
     }).join("");
     box.innerHTML = `<div class="pd-head" style="margin:-14px -14px 10px"><b>הרישומים של ${E(JM_Q.email || JM_Q.idn)}</b><button class="pd-x" onclick="PD._close('pd-jmine')">✕</button></div>
       ${JM_Q.err ? `<div style="color:#c0392b">${E(JM_Q.err)}</div>` : ""}${JM_Q.busy ? '<div class="pd-sub">טוען…</div>' : ""}
