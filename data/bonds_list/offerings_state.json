@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1246321": {
+   "data": {
+    "begins_at": "2026-11-03T08:00:00",
+    "chp_number": "517207239",
+    "ends_at": "2026-11-03T15:30:00",
+    "interest": 0.18,
+    "is_new_company": false,
+    "is_variable_interest": true,
+    "issuer_id": 2551,
+    "issuer_name": "מיכל פקדונות",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1778937",
+    "offer_number": 1246321,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "security_id": null,
+      "security_name": "אגח ה",
+      "security_type": "אג\"ח מובנות"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-01"
+  },
   "U10118": {
    "data": {
     "chp_number": "",
@@ -625,31 +654,6 @@
    "kind": "upcoming",
    "last_seen": "2026-11-01"
   },
-  "U10396": {
-   "data": {
-    "chp_number": "517207239",
-    "company_name": "מיכל פקדונות",
-    "draft_no": 2,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10396,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1778358",
-    "link_trust_indenture": null,
-    "maya_report_id": 1778358,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": "Aaa.il",
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-29"
-  },
   "U10397": {
    "data": {
     "chp_number": "514481233",
@@ -674,31 +678,6 @@
    },
    "kind": "upcoming",
    "last_seen": "2026-10-29"
-  },
-  "U10398": {
-   "data": {
-    "chp_number": "517207239",
-    "company_name": "מיכל פקדונות",
-    "draft_no": 3,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10398,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1778582",
-    "link_trust_indenture": null,
-    "maya_report_id": 1778582,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": "Aaa.il",
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-01"
   },
   "U10399": {
    "data": {
@@ -763,6 +742,62 @@
     "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778715",
     "maya_report_id": 1778715,
     "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-01"
+  },
+  "U10402": {
+   "data": {
+    "chp_number": "520000118",
+    "company_name": "פועלים",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10402,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778925",
+    "maya_report_id": 1778925,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilAAA",
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     },
+     {
+      "maalot_rating": "ilAAA",
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-01"
+  },
+  "U10404": {
+   "data": {
+    "chp_number": "",
+    "company_name": "לייטסטון מוקסי",
+    "draft_no": 1,
+    "draft_title": "טיוטת תשקיף להשלמה",
+    "id": 10404,
+    "is_new_company": true,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1778964",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1777847",
+    "link_trust_indenture": null,
+    "maya_report_id": 1778964,
+    "new_company_type": "חברת אג\"ח חדשה",
     "securities": [
      {
       "maalot_rating": null,
