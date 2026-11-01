@@ -1,0 +1,55 @@
+name: Nedarim joiners confirmation check (read-only, manual)
+
+# בודק למצטרפים האחרונים מנדרים פלוס אם קיים אישור: קובץ אישור ומייל אישור שנשלח. קריאה בלבד, רק ספירות (בלי פרטים אישיים).
+on:
+  workflow_dispatch:
+    inputs:
+      last:
+        description: "כמה מהמצטרפים האחרונים מנדרים לבדוק"
+        type: string
+        default: "200"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          LAST: ${{ inputs.last }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe tmp_nr
+          after=""; i=0
+          while true; do
+            code=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"after\":\"$after\",\"items\":true}" "https://harav-levin.pages.dev/api/joiners-nedarim-check" -o "tmp_nr/p$i.json" -w '%{http_code}')
+            if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp_nr/p$i.json)"; exit 1; fi
+            after=$(jq -r '.next' "tmp_nr/p$i.json"); i=$((i+1))
+            [ -z "$after" ] && break
+          done
+          jq -s --argjson n "${LAST:-200}" --arg w "$(date -u +%FT%TZ)" '
+            ([.[].items[]] | sort_by(.[0])) as $all
+            | ($all | .[-$n:]) as $r
+            | { when: $w, nedarim_total: ($all|length),
+                all_with_file: ([$all[]|select(.[1]==1)]|length), all_mail_sent: ([$all[]|select(.[2]==1)]|length),
+                last: $n, last_from: ($r[0][0]), last_to: ($r[-1][0]),
+                last_cancelled: ([$r[]|select(.[4]==1)]|length),
+                last_with_file: ([$r[]|select(.[1]==1)]|length), last_mail_sent: ([$r[]|select(.[2]==1)]|length),
+                last_valid_email: ([$r[]|select(.[3]==1)]|length),
+                last_valid_email_but_no_mail_sent: ([$r[]|select(.[3]==1 and .[2]==0 and .[4]==0)]|length),
+                last_no_file_not_cancelled: ([$r[]|select(.[1]==0 and .[4]==0)]|length) }' tmp_nr/p*.json > data/probe/nedarim_recent.json
+          jq -c . data/probe/nedarim_recent.json
+      - name: Commit
+        if: always()
+        run: |
+          rm -rf tmp_nr
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/nedarim_recent.json || true
+          git diff --cached --quiet || (git commit -m "nedarim recent check" && git pull --rebase --autostash -X theirs && git push)

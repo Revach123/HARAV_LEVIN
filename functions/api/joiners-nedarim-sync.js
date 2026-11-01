@@ -1,6 +1,6 @@
 // functions/api/joiners-nedarim-sync.js
 // קליטת הרשמות מהטופס המאוחסן בנדרים פלוס (קבלת נתונים בלבד - שום דבר לא נשלח אליהם). מנהל בלבד, רק מהאתר עצמו (Origin).
-// במשיכה האוטומטית נשלח גם מייל אישור לכל מצטרף חדש (בלחיצה על הכפתור בניהול - לא; לשם כך "שליחת אישורים").
+// במשיכה האוטומטית (הרצה יומית, או ברקע בפתיחת רשימת המצטרפים בניהול: mail:true) נשלח גם מייל אישור לכל מצטרף חדש. בלחיצה ידנית על הכפתור - לא.
 // משיכה יומית אוטומטית: .github/workflows/nedarim-sync.yml עם הסוד CRON_SECRET (אותו ערך ב-Cloudflare וב-GitHub).
 // דורש סוד NEDARIM_API_KEY (מפתח npk_… מוגבל להרשאה "משיכת רשומות טופס"). אופציונלי: NEDARIM_MOSAD_ID, NEDARIM_TOFES_ID (ברירת מחדל 7005939 / 800).
 //   POST /api/joiners-nedarim-sync  {}  → עד BATCH רשומות חדשות (מעבר ל"נקודת ההמשך" השמורה). תשובה: { ok, added, existing, more, last_id }
@@ -73,7 +73,7 @@ export async function onRequestPost({ request, env }) {
   const cron = await cronOk(request, env);
   if (!cron && !(await checkAdmin(request, env))) return noAuth();
   if (!cron && !originOk(request)) return out({ error: "הבקשה לא התקבלה (מקור לא מורשה)" }, 403);
-  await readJson(request, 1024);
+  const body = (await readJson(request, 1024)) || {};
   if (!env.NEDARIM_API_KEY) return out({ error: "המפתח NEDARIM_API_KEY לא מוגדר באתר" }, 503);
   let wkey; try { wkey = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
   const tofes = String(env.NEDARIM_TOFES_ID || "800"), SETTING = "nedarim_last_id_" + tofes;
@@ -81,7 +81,7 @@ export async function onRequestPost({ request, env }) {
     const saved = parseInt(await getSetting(env, SETTING), 10), since = Number.isFinite(saved) ? saved : 0;
     const rows = await pull(env, tofes, since);
     // במשיכה היומית האוטומטית: מייל אישור לכל מצטרף חדש עם דוא"ל תקין (פעם אחת - נרשם ב-joiner_mail, כמו בשליחה מהניהול)
-    const mail = cron && env.WP_MAIL_URL && env.WP_MAIL_SECRET;
+    const mail = (cron || body.mail === true) && env.WP_MAIL_URL && env.WP_MAIL_SECRET;          // אישור במייל למצטרפים החדשים: ברקע בפתיחת רשימת המצטרפים (mail:true) ובהרצה היומית
     if (mail) await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_mail (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
     const origin = new URL(request.url).origin, validEmail = v => /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v) && !/[<>"']/.test(v);
     let added = 0, existing = 0, last = since, mailed = 0, mailFailed = 0;
