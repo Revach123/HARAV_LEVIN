@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-31",
+ "updated": "2026-11-01",
  "upcoming": [
   {
    "id": 10358,
@@ -590,29 +590,6 @@
    "chp_number": ""
   },
   {
-   "chp_number": "517207239",
-   "company_name": "מיכל פקדונות",
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "id": 10355,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1774331",
-   "link_trust_indenture": null,
-   "maya_report_id": 1774331,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": "Aaa.il",
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-28"
-  },
-  {
    "chp_number": "514481233",
    "company_name": "אי.אס.איי",
    "draft_no": null,
@@ -705,35 +682,7 @@
    "last_seen": "2026-10-30"
   }
  ],
- "open": [
-  {
-   "begins_at": "2026-10-28T09:00:00",
-   "chp_number": "516561875",
-   "ends_at": "2026-10-28T16:00:00",
-   "interest": 0.18,
-   "is_new_company": false,
-   "is_variable_interest": true,
-   "issuer_id": 2457,
-   "issuer_name": "הראל ריביות",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1778025",
-   "offer_number": 1229194,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": "Aaa.il",
-     "security_id": null,
-     "security_name": "אג\"ח ז",
-     "security_type": "אג\"ח מובנות"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-28"
-  }
- ],
+ "open": [],
  "companies": [
   {
    "chp_number": "1811308",
@@ -824,13 +773,6 @@
    "name": "ג'י טי נדל\"ן",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "516561875",
-   "name": "הראל ריביות",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
