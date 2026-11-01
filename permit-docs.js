@@ -2547,6 +2547,7 @@
   async function jLoad() {
     if (J.loading || J.rows) return;
     J.loading = true; J.err = ""; J.rows = [];
+    if (!J.nedStarted) { J.nedStarted = true; jNedBg(); }          // פעם אחת בכל טעינה של הניהול
     try {
       for (let off = 0; ; off += 400) {
         const r = await api(`/joiners?offset=${off}&limit=400`);
@@ -2557,29 +2558,18 @@
     } catch (e) { J.err = e.message || "שגיאה"; J.rows = null; }
     J.loading = false;
     if (ND.tab === "e") ndShow();
-    if (J.rows && !J.autoDone) { J.autoDone = true; jAuto(); }          // פתיחת הרשימה: משיכה אוטומטית מנדרים פלוס + בדיקה שיש אישור לכל מצטרף משם
+    if (J.needReload) { J.needReload = false; J.rows = null; jLoad(); }          // המשיכה מנדרים הסתיימה בזמן הטעינה: טוענים מחדש
   }
-  // משיכה אוטומטית מנדרים פלוס ובדיקת אישורים (קובץ אישור הצטרפות לכל מצטרף מנדרים; חסרים נוצרים אוטומטית, בלי לשלוח מיילים)
-  function jNedSay(h) { J.ned = h; const el = $("pd-j-ned"); if (el) el.innerHTML = h; else if (ND.tab === "e") ndShow(); }
-  async function jAuto() {
-    try {
-      jNedSay("🔄 מושך הרשמות חדשות מנדרים פלוס…");
-      const t = { added: 0 };
-      try { for (let i = 0; i < 2000; i++) { const r = await api("/joiners-nedarim-sync", "POST", {}); t.added += r.added || 0; if (t.added) jNedSay(`🔄 מושך מנדרים פלוס… נוספו ${t.added}`); if (!r.more) break; } }
-      catch (e) { jNedSay(`⚠ משיכה מנדרים פלוס נכשלה: ${E(e.message || "שגיאה")}. ממשיך לבדיקת האישורים…`); }
-      if (t.added) { J.rows = null; J.autoDone = true; await jLoad(); }
-      const c = { nedarim: 0, with_file: 0, generated: 0, missing: 0, mail_sent: 0, no_email: 0 };
-      let after = "";
-      for (let i = 0; i < 400; i++) {
-        const r = await api("/joiners-nedarim-check", "POST", { after, fix: true });
-        for (const k in c) c[k] += r[k] || 0;
-        jNedSay(`🔎 בודק אישורים של מצטרפים מנדרים פלוס… נבדקו ${c.nedarim}${c.generated ? ` · נוצרו ${c.generated} אישורים חסרים` : ""}`);
-        if (!r.next) break; after = r.next;
-      }
-      if (c.generated) { J.rows = null; J.autoDone = true; await jLoad(); }
-      const ok = !c.missing;
-      jNedSay(`${ok ? "✅" : "⚠"} נדרים פלוס: ${c.nedarim} מצטרפים · ${ok ? "לכולם יש אישור" : `<b>חסר אישור ל-${c.missing}</b>`}${t.added ? ` · נוספו עכשיו ${t.added}` : ""}${c.generated ? ` · נוצרו ${c.generated} אישורים חסרים` : ""} · נשלח אישור במייל: ${c.mail_sent} · בלי כתובת מייל תקינה: ${c.no_email} <button class="pd-mini" onclick="PD._jAuto()">בדיקה מחדש</button>`);
-    } catch (e) { jNedSay(`<span style="color:#c0392b">בדיקת האישורים נכשלה: ${E(e.message || "שגיאה")}</span> <button class="pd-mini" onclick="PD._jAuto()">נסה שוב</button>`); }
+  // פתיחת רשימת המצטרפים: משיכה מנדרים פלוס ברקע (כולל שליחת אישורים למצטרפים חדשים), בלי לעכב את טעינת הנתונים; ספינר ליד הכפתור, ובסיום - רענון הרשימה
+  function jNedSpin() { const el = $("pd-j-nedspin"); if (el) el.innerHTML = J.nedBusy ? '<span class="pd-spin" title="מושך מנדרים פלוס ושולח אישורים…"></span>' : (J.nedErr ? `<span title="${E(J.nedErr)}" style="color:#c0392b">⚠</span>` : ""); }
+  async function jNedBg() {
+    if (J.nedBusy) return;
+    J.nedBusy = true; J.nedErr = ""; jNedSpin();
+    let added = 0;
+    try { for (let i = 0; i < 2000; i++) { const r = await api("/joiners-nedarim-sync", "POST", { mail: true }); added += r.added || 0; if (!r.more) break; } }
+    catch (e) { J.nedErr = "משיכה מנדרים פלוס נכשלה: " + (e.message || "שגיאה"); }
+    J.nedBusy = false; jNedSpin();
+    if (added) { if (J.loading) J.needReload = true; else { J.rows = null; jLoad(); } }
   }
   const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
   const jDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };          // יום/חודש/שנה
@@ -2679,8 +2669,7 @@
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
         <button class="pd-mini" onclick="PD._jView('cancels')">📋 בקשות ביטול (${J.cancels})</button>
-        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button> <button class="pd-btn" onclick="PD._jXl()">📥 ייבוא רשימה (אקסל / CSV)</button> <button class="pd-btn" onclick="PD._jTypos()">✉️ שגיאות כתיב באימייל</button> <button class="pd-btn" onclick="PD._jOldPairs()">👯 כפילויות האתר הישן</button></div>
-      <div class="pd-sub" id="pd-j-ned" style="margin-bottom:6px;font-weight:700">${J.ned || ""}</div>
+        <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button><span id="pd-j-nedspin" style="margin-inline:6px">${J.nedBusy ? '<span class="pd-spin"></span>' : ""}</span> <button class="pd-btn" onclick="PD._jXl()">📥 ייבוא רשימה (אקסל / CSV)</button> <button class="pd-btn" onclick="PD._jTypos()">✉️ שגיאות כתיב באימייל</button> <button class="pd-btn" onclick="PD._jOldPairs()">👯 כפילויות האתר הישן</button></div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
         <tr class="pd-cfrow">${J_COLS.map(c => c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => String(jX(r).src || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
@@ -3473,7 +3462,7 @@
   `;
   document.head.appendChild(css);
 
-  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jTypos: jTypos, _jAuto: () => jAuto(), _jOldPairs: jOldPairs, _jMine: jMine, _jmDel: jmDel, _jmMerge: jmMerge, _jmEdit: jmEdit, _jtDel: jtDel, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
+  window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jTypos: jTypos,  _jOldPairs: jOldPairs, _jMine: jMine, _jmDel: jmDel, _jmMerge: jmMerge, _jmEdit: jmEdit, _jtDel: jtDel, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
     _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
