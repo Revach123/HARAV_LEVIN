@@ -1,0 +1,14 @@
+{
+  "old_site_rows": 5456,
+  "advcf7_rows": 474,
+  "advcf7_without_same_day_partner": 36,
+  "same_enough_to_merge": 0,
+  "different": 438,
+  "summary": {
+    "different: time+ip": 346,
+    "different: core+time+ip": 80,
+    "different: time+ip+extra": 8,
+    "different: core+time+ip+extra": 4
+  },
+  "when": "2026-11-01T08:52:58Z"
+}
