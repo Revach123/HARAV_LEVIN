@@ -141,7 +141,7 @@ const fixDomain = d => TYPO_GMAIL.has(d) ? "gmail.com" : d === "walla.con" ? "wa
 // דוח כפילויות האתר הישן (cfdb7 מול advcf7): לכל רישום advcf7 מוצא את רישום ה-cfdb7 של אותה ת.ז. באותו יום ומתאר במה שניהם נבדלים.
 // "זהה" = אותם שם, טלפון, אימייל, חברות, ביטול, והבדל רק בשניות (עד 120) ו/או בשם הטופס (src). הבדלים אחרים (IP, פרטים נוספים, קובץ אישור, שעה רחוקה) נספרים בנפרד ומוצגים.
 // withDetails=false (הרצה אוטומטית עם X-Cron-Secret): רק ספירות לפי סוג הבדל, בלי פרטים אישיים.
-async function oldPairsReport(env, withDetails, probe = "") {
+async function oldPairsReport(env, withDetails, probe = "", mode = "") {
   const key = await importKeyForWrite(env), rows = [];
   for (let off = 0; ; off += 500) {
     const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, file_sha256, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
@@ -159,7 +159,7 @@ async function oldPairsReport(env, withDetails, probe = "") {
   const t = x => { const m = String(x).match(/^(\d{4})-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)/); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]) / 1000 : null; };
   const nz = x => String(x ?? "").trim();
   const byId = new Map(); for (const r of rows) (byId.get(r.idn) || byId.set(r.idn, []).get(r.idn)).push(r);
-  const probed = [], summary = {}, pairs = [], stats = { time_delta: {}, time_sign: {}, hour_offsets: {}, ip: {}, core_fields: {} }; let advTotal = 0, noPartner = 0;
+  const probed = [], summary = {}, pairs = [], stats = { time_delta: {}, time_sign: {}, hour_offsets: {}, ip: {}, core_fields: {}, groups: {} }, mergeTodo = []; let advTotal = 0, noPartner = 0;
   const diffOf = (c, a) => {
     const d = [], det = [], mk = [];
     for (const [k, label] of [["first", "שם פרטי"], ["last", "שם משפחה"], ["phone", "טלפון"], ["email", "אימייל"], ["companies", "חברות"], ["all", "כל החברות"]])
@@ -197,6 +197,24 @@ async function oldPairsReport(env, withDetails, probe = "") {
       const sameEnough = kinds.every(x => ["secs", "tz", "form", "ipm"].includes(x));
       const cls = sameEnough ? "same" : "different";
       const key = `${cls}: ${sig}`; summary[key] = (summary[key] || 0) + 1;
+      if (cls === "different") {          // קבוצות לפי מהות ההבדל (לבדיקת הקרובים שנשארו)
+        const toks = [];
+        const fmt = x => String(x ?? "").replace(/[\s\-().+"'׳״]/g, "").toLowerCase();
+        for (const k of ["first", "last", "phone", "email", "companies", "all"]) {
+          const x = nz(best.c.p[k]), y = nz(a.p[k]); if (x === y) continue;
+          toks.push(`${k}:${!x ? "ריק ב-cfdb7" : !y ? "ריק ב-advcf7" : fmt(x) === fmt(y) ? "פורמט בלבד" : (k === "phone" && fmt(x).replace(/^0/, "") === fmt(y).replace(/^0/, "") ? "אפס מוביל" : "ערך שונה")}`);
+        }
+        if (!!best.c.canc !== !!a.canc) toks.push("ביטול");
+        if (best.c.file !== a.file) toks.push("קובץ אישור");
+        if (best.r.d.includes("ip")) toks.push("IP שונה");
+        if (best.r.d.includes("time")) toks.push("שעה אחרת");
+        const xk = [...new Set([...Object.keys(best.c.ex), ...Object.keys(a.ex)])].filter(k => nz(best.c.ex[k]) !== nz(a.ex[k]) && !/^(מקור|מפתח|טופס|form|submit_time|_wpcf7)/i.test(k));
+        if (xk.length) toks.push("פרט נוסף: " + xk.slice(0, 3).join("/"));
+        const g = toks.sort().join(" + ") || "אחר"; stats.groups[g] = (stats.groups[g] || 0) + 1;
+      }
+      if (cls === "same" && (mode === "apply" || mode === "dry")) {          // מיזוג: נשאר cfdb7 (מושלם ב-IP שחסר בו), advcf7 נמחק
+        mergeTodo.push({ c: best.c, a });
+      }
       { // סטטיסטיקה לאבחון (בלי פרטים אישיים): התפלגות הפרש השעה, מי מהצדדים בלי IP, ואילו שדות ליבה נבדלים
         const tc = t(best.c.at), ta = t(a.at);
         if (tc != null && ta != null) { const dd = ta - tc, ad = Math.abs(dd), b = ad <= 120 ? "<=2m" : ad <= 600 ? "<=10m" : ad <= 3600 ? "<=1h" : ad <= 7200 ? "1-2h" : ad <= 10800 ? "2-3h" : ad <= 14400 ? "3-4h" : ">4h"; stats.time_delta[b] = (stats.time_delta[b] || 0) + 1; const sg = dd > 0 ? "advcf7_later" : dd < 0 ? "cfdb7_later" : "equal"; stats.time_sign[sg] = (stats.time_sign[sg] || 0) + 1; if (ad >= 3500 && ad % 60 === 0 || ad >= 3500) { const h = Math.round(ad / 3600 * 10) / 10; stats.hour_offsets[h] = (stats.hour_offsets[h] || 0) + 1; } }
@@ -207,8 +225,22 @@ async function oldPairsReport(env, withDetails, probe = "") {
       if (withDetails) pairs.push({ cls, sig, name: a.name, id_number: a.idn, when_cf: best.c.at, when_adv: a.at, src_cf: best.c.src, src_adv: a.src, rid_cf: best.c.rid, rid_adv: a.rid, diffs: best.r.det });
     }
   }
+  let merged = 0, failed = 0;
+  if (mode === "apply") {
+    for (const { c, a } of mergeTodo) {
+      try {
+        if (!nz(c.p.ip) && nz(a.p.ip)) {
+          const p = c.p; p.ip = a.p.ip;
+          let x = {}; try { x = JSON.parse(p.extra || "{}") || {}; } catch { /* טקסט חופשי */ }
+          if (typeof x === "object" && !Array.isArray(x)) { x["מוזג מ"] = a.src; p.extra = JSON.stringify(x); }
+          await env.DB.prepare("UPDATE joiners SET pii = ? WHERE id = ?").bind(await encryptPii(key, c.rid, p), c.rid).run();
+        }
+        await removeRow(env, a.rid); merged++;
+      } catch { failed++; }
+    }
+  }
   const same = Object.entries(summary).filter(([k]) => k.startsWith("same")).reduce((n, [, v]) => n + v, 0);
-  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_partner: noPartner, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(probe ? { probe: probed } : {}), ...(withDetails ? { pairs } : {}) };
+  return { old_site_rows: rows.length, advcf7_rows: advTotal, advcf7_without_partner: noPartner, mode: mode || "report", merged, merge_failed: failed, same_enough_to_merge: same, different: advTotal - noPartner - same, summary, stats, ...(probe ? { probe: probed } : {}), ...(withDetails ? { pairs } : {}) };
 }
 
 // מיזוג אוטומטי של כפילויות האתר הישן: אותה הגשה נשמרה בשני תוספים (cfdb7 ו-advcf7). ממזגים רק כשהרישומים זהים לגמרי:
@@ -277,7 +309,7 @@ export async function onRequestPost({ request, env }) {
   if (u0.searchParams.get("mergeold")) {
     const cs = request.headers.get("X-Cron-Secret") || "";
     if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
-    try { return out(await mergeOldDuplicates(env, u0.searchParams.get("dry") === "1")); } catch (e) { return out({ error: String(e.message || e) }, 500); }
+    try { return out(await oldPairsReport(env, false, "", u0.searchParams.get("dry") === "1" ? "dry" : "apply")); } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
   if (u0.searchParams.get("fixdomains")) {
     const cs = request.headers.get("X-Cron-Secret") || "";
