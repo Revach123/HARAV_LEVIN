@@ -2,8 +2,8 @@
   "old_site_rows": 5456,
   "advcf7_rows": 474,
   "advcf7_without_partner": 1,
-  "mode": "dry",
-  "merged": 0,
+  "mode": "apply",
+  "merged": 375,
   "merge_failed": 0,
   "same_enough_to_merge": 375,
   "different": 98,
@@ -43,5 +43,5 @@
       "first:ערך שונה": 1
     }
   },
-  "when": "2026-11-01T09:26:32Z"
+  "when": "2026-11-01T09:33:12Z"
 }
