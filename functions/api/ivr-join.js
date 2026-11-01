@@ -29,6 +29,7 @@ import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean } from './_s
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
 import { sendConfirmation } from './_shared/join-mail.js';
 import { pickEmail, spokenEmail, pickSegment, pickDomain } from './_shared/spoken-email.js';
+import { splitSpeechAndDigits } from './_shared/dtmf.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 8, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -297,8 +298,10 @@ async function emailStep(ctx) {
       return { ask: readTap(noteTake() + intro + soFar + P('join:emailMenu'), mk, ['1', '2', '3', '4'], { empty: EMPTY }) };
     }
     if (choice === '1') {
-      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P('join:emailSpeak'), vk, folder, recFile(vk), REC_MIN, 20) };
-      const seg = pickSegment(await transcribeLangs(env, v, vk, folder, recFile));
+      // IVR_EMAIL_MIXED=1: ההנחיה אומרת שאפשר להקיש מספרים באמצע ההקלטה (הקשות שנשמעות בהקלטה מזוהות כצלילי DTMF)
+      const speakKey = String(env.IVR_EMAIL_MIXED || '') === '1' ? 'join:emailSpeakMix' : 'join:emailSpeak';
+      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P(speakKey), vk, folder, recFile(vk), REC_MIN, 25) };
+      const seg = await transcribeMixed(env, v, vk, folder, recFile);
       if (!seg) return nextRound('join:noHear');
       set('segs', [...segs(), seg].join('|'));
       return nextRound('');
@@ -352,6 +355,27 @@ async function transcribeLangs(env, v, key, folder, recFile) {
     if (!rec) return [];
     return await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, rec.bytes, l), 200).replace(/[,!?]+$/g, '').trim()));
   } catch { return []; }
+}
+
+// הקלטה של אותיות בדיבור, אפשר עם הקשות באמצע: צלילי ההקשה מזוהים בקובץ (DTMF) והופכים לספרות, והדיבור שביניהם מתומלל בנפרד.
+async function transcribeMixed(env, v, key, folder, recFile) {
+  try {
+    const value = String(v[key] || '');
+    const rec = await downloadRecording(env, [
+      ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
+      `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
+    ]);
+    if (!rec) return '';
+    const parts = splitSpeechAndDigits(rec.bytes);
+    console.log(`ivr email parts: ${parts.map((x) => (x.type === 'digits' ? `D${x.digits.length}` : 'S')).join(',')}`);   // בלי תוכן אישי
+    let out = '';
+    for (const part of parts) {
+      if (part.type === 'digits') { out += part.digits; continue; }
+      const langs = await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, part.wav, l), 200).replace(/[,!?]+$/g, '').trim()));
+      out += pickSegment(langs);
+    }
+    return pickSegment([out]);
+  } catch { return ''; }
 }
 
 // הקלטה אחת -> טקסט (עברית). אין מחיקה של ההקלטה, כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
