@@ -276,7 +276,7 @@ const spellEmail = (email) => {
   return `${spellChars(local)} שטרודל ${known ? known[1] : spellChars(domain)}`;
 };
 
-// הכתובת נבנית בקטעים: בכל סבב בוחרים אותיות (הקלטה) / מספרים (הקשה) / סיום / מחיקת הקטע האחרון. אחרי הסיום - בחירת סיומת, הקראה ואישור.
+// הכתובת (בלי הסיומת) מוקלטת בהקלטה אחת, ואחריה בחירת סיומת, הקראה ואישור.
 // מצב צד-שרת: s_em_segs (קטעים מופרדים ב-|), s_em_r (סבב), s_em_phase ('dom'), s_em_k (ניסיון סיומת), s_em_note (הערה לשאלה הבאה).
 // בכל סבב משתנים חדשים (em_m<r> בחירה, em_v<r> קלט), כי ימות שומרת את הערכים הישנים.
 async function emailStep(ctx) {
@@ -298,34 +298,12 @@ async function emailStep(ctx) {
   const recurse = () => emailStep({ ...ctx, depth: ctx.depth + 1 });
 
   if (S('phase') !== 'dom') {
-    const mk = `em_m${r}`, vk = `em_v${r}`;
-    const choice = v[mk];
-    if (!['1', '2', '3', '4'].includes(choice)) {
-      const list = segs();
-      const intro = S('intro') ? '' : `${P('join:emailInstr')}.`;
-      set('intro', '1');
-      const soFar = list.length ? `${P('join:emailSoFar')}.${T(spellChars(list.join('')))}.` : '';
-      return { ask: readTap(noteTake() + intro + soFar + P('join:emailMenu'), mk, ['1', '2', '3', '4'], { empty: EMPTY }) };
-    }
-    if (choice === '1') {
-      // ההנחיה אומרת שאפשר להקיש מספרים באמצע ההקלטה (הקשות שנשמעות בהקלטה מזוהות כצלילי DTMF)
-      const speakKey = 'join:emailSpeakMix';
-      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P(speakKey), vk, folder, recFile(vk), REC_MIN, 25) };
-      const seg = await transcribeMixed(env, v, vk, folder, recFile);
-      if (!seg) return nextRound('join:noHear');
-      set('segs', [...segs(), seg].join('|'));
-      return nextRound('');
-    }
-    if (choice === '2') {
-      if (!has(v, vk) || empty(v[vk])) return { ask: readTap(P('join:emailDigits'), vk, null, { max: 20, min: 1, empty: EMPTY }) };
-      if (!/^\d{1,20}$/.test(String(v[vk]))) return nextRound('join:noHear');
-      set('segs', [...segs(), String(v[vk])].join('|'));
-      return nextRound('');
-    }
-    if (choice === '4') { const l = segs(); l.pop(); set('segs', l.join('|')); return nextRound(''); }
-    // '3' - סיום
-    if (!segs().length) return nextRound('join:emailEmpty');
-    set('phase', 'dom');
+    // הקלטה אחת: אותיות בדיבור, מספרים בהקשה (צלילי ההקשה מזוהים בקובץ) או בדיבור; בלי הסיומת
+    const vk = `em_v${r}`;
+    if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(noteTake() + P('join:emailSpeakMix'), vk, folder, recFile(vk), REC_MIN, 30) };
+    const seg = await transcribeMixed(env, v, vk, folder, recFile);
+    if (!seg) return nextRound('join:noHear');
+    set('segs', seg); set('phase', 'dom');
     return recurse();
   }
 
