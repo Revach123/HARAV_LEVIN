@@ -49,7 +49,8 @@ const DIGITS = {
   'אפס': '0', 'אחד': '1', 'שתיים': '2', 'שניים': '2', 'שלוש': '3', 'ארבע': '4', 'חמש': '5', 'שש': '6', 'שבע': '7', 'שמונה': '8', 'תשע': '9',
 };
 
-export function spokenEmail(t) {
+// הפיכת תמלול דיבור לתווי כתובת (בלי בדיקת תקינות): משותף לכתובת מלאה ולקטעים (שם המשתמש / הסיומת).
+function spokenChars(t) {
   let e = String(t || '').toLowerCase().trim()
     .replace(/דאבל\s?יו|דבל\s?יו|double\s?[-]?\s?(u|you)\b/g, (m) => (/[א-ת]/.test(m) ? 'דאבליו' : 'double-u'))
     .replace(/ג['׳’]?י\s?מ?ייל|ג['׳’]?ימל|\bg\s?mail\b|\bgee\s?mail\b/g, 'gmail')
@@ -62,6 +63,11 @@ export function spokenEmail(t) {
     return EN_LETTERS[bare] || HE_LETTERS[bare] || DIGITS[bare] || segmentHebrew(bare) || tok;
   }).join('');
   e = e.replace(/(^|[^א-ת])קום(?![א-ת])/g, '$1com').replace(/\.{2,}/g, '.').replace(/\.$/, '');
+  return e;
+}
+
+export function spokenEmail(t) {
+  let e = spokenChars(t);
   e = e.replace(/@(gmail|hotmail|yahoo|outlook|walla|icloud)(com)$/, '@$1.$2');       // "גימייל קום" בלי "נקודה"
   const at = e.indexOf('@');
   if (at > 0 && at === e.lastIndexOf('@') && !e.slice(at + 1).includes('.')) e += '.com';
@@ -74,4 +80,23 @@ const KNOWN_DOMAIN = /@(gmail|hotmail|yahoo|outlook|walla|icloud|live|msn)\./;
 export function pickEmail(texts) {
   const found = texts.map(spokenEmail).filter(Boolean);
   return found.find((x) => KNOWN_DOMAIN.test(x)) || found[0] || '';
+}
+
+/** קטע של שם המשתמש (אותיות בקול / מספרים / נקודה...): בוחר מבין הזיהויים תווים תקינים בלבד. */
+export function pickSegment(texts) {
+  for (const t of texts) {
+    const e = spokenChars(t).replace(/^\.+|\.+$/g, '');
+    if (/^[a-z0-9._+-]{1,60}$/.test(e)) return e;
+  }
+  return '';
+}
+
+/** סיומת שנאמרה במלואה ("gmail נקודה com") -> דומיין תקין, או ''. שם בלי סיומת (gmail) מושלם ל-.com. */
+export function pickDomain(texts) {
+  for (const t of texts) {
+    let d = spokenChars(t).replace(/^@+/, '').replace(/^\.+|\.+$/g, '');
+    if (/^(gmail|hotmail|yahoo|outlook|icloud|walla)$/.test(d)) d += d === 'walla' ? '.co.il' : '.com';
+    if (/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(d) && d.length <= 60) return d;
+  }
+  return '';
 }
