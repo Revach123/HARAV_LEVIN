@@ -129,7 +129,7 @@ async function step({ v, env, P, bk, done, origin }) {
     if (!val) return { ask: readTap(again(bad, key) + P(phrase), key, null, { max, min, empty: EMPTY }) };
     if (v[ck] === '1') return { val };
     if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: readTap(P(phrase), `${name}_${n + 1}`, null, { max, min, empty: EMPTY }) }; }
-    return { ask: readTap(`${P('join:heardTyped')}.${P(label)}.${T(spaced(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    return { ask: readTap(`${T(spaced(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
 
   // הקלטה -> זיהוי דיבור -> הקראת מה שזוהה + אישור (1) / שינוי (2) (הקלטה חוזרת). בלי הגדרת Azure: נשמרת ההקלטה בלבד.
