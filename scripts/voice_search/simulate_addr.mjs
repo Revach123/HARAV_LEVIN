@@ -1,7 +1,7 @@
 // סימולציה של שאלות הכתובת בשלוחת ההצטרפות (עיר / רחוב בהקשת אותיות, מספר בית), בלי ימות ובלי D1.
 // הרצה: node --no-warnings scripts/voice_search/simulate_addr.mjs
 import assert from 'node:assert/strict';
-import { onRequest as join } from '../../functions/api/ivr-join.js';
+import { onRequest as join, decodeTyped } from '../../functions/api/ivr-join.js';
 import { tapCode, tapLetter, matchNames, clearAddrCache } from '../../functions/api/_shared/ivr-addr.js';
 import { decryptPii, importKeyForWrite } from '../../functions/api/_shared/joiners-crypto.js';
 
@@ -52,10 +52,10 @@ env.DB = { prepare: (sql) => ({ run: async () => ({}), bind: (...a) => ({
 
 const plain = (x) => x.replace(/[ְ-ׇ]/g, '');
 let call = 0;
-async function conversation(answers, { log = false } = {}) {
+async function conversation(answers, { log = false, over = {} } = {}) {
   // answers: [regex על ההודעה, ערך] לפי הסדר; תשובות קבועות לשאר השאלות
   const callId = `c${++call}`, vars = { ApiPhone: '0501234567' };
-  const fixed = { id: '123456782', pc: '1', p2q: '2', emq: '2', fxq: '2', ch: '1', rd: '2', ag: '1' };
+  const fixed = { id: '123456782', pc: '1', p2q: '2', emq: '2', fxq: '2', ch: '1', rd: '2', ag: '1', ...over };
   const queue = [...answers], said = [];
   for (let i = 0; i < 80; i++) {
     const u = new URL('https://x/api/ivr-join');
@@ -162,5 +162,46 @@ env.ASSETS = saved;
 assert.ok(r.said.some((s) => /אמרו את כתבת מגוריכם/.test(s)));
 ex = await lastExtra();
 assert.ok(ex['הקלטת כתובת']);
+
+// ---- מייל בהקשה ----
+assert.deepEqual(decodeTyped('5'), { ch: '5' }); assert.deepEqual(decodeTyped('1'), { ch: '1' });
+assert.deepEqual(decodeTyped('12'), { ch: 'a' }); assert.deepEqual(decodeTyped('133'), { ch: 'e' }); assert.deepEqual(decodeTyped('17777'), { ch: 's' });
+assert.deepEqual(decodeTyped('19999'), { ch: 'z' }); assert.deepEqual(decodeTyped('11'), { ch: '.' }); assert.deepEqual(decodeTyped('1111'), { ch: '_' });
+assert.deepEqual(decodeTyped('10'), { del: true }); assert.deepEqual(decodeTyped('00'), { done: true });
+assert.deepEqual(decodeTyped('123'), {}); assert.deepEqual(decodeTyped('177777'), {}); assert.deepEqual(decodeTyped('55'), {});
+const EN = { a: '12', b: '122', c: '1222', d: '13', e: '133', f: '1333', g: '14', h: '144', i: '1444', j: '15', k: '155', l: '1555', m: '16', n: '166', o: '1666',
+  p: '17', q: '177', r: '1777', s: '17777', t: '18', u: '188', v: '1888', w: '19', x: '199', y: '1999', z: '19999', '.': '11', '-': '111', _: '1111' };
+const typed = (str) => [...str].map((ch) => EN[ch] || ch);
+const emailAnswers = (str, domKey, extra = []) => [
+  ...typed(str).map((k, i) => [i === 0 ? /נקיש את כתבת המייל.*לאות: מקישים אחת/ : /הקישו את התו הבא/, k]),
+  ...extra,
+  [/הקישו את התו הבא.*לסיום הקישו אפס אפס/, '00'],
+  [/עכשיו נבחר את הסיומת.*לגימייל הקישו 1/, domKey],
+];
+const ADDR = [...spell('י', /שם העיר/), [/לירושלים/, '1'], ...spell('ב', /שם הרחוב/), [/לבר אילן/, '1'], [/מספר הבית/, '4'], [/מספר בית 4/, '1']];
+
+// 1. moshe5 + מחיקה + gmail
+r = await conversation([...ADDR,
+  ...emailAnswers('moshe5', '1', [[/הקישו את התו הבא/, '7'], [/הקישו את התו הבא/, '10']]),
+  [/כתבת המייל שהוכנסה.*אם או אס אייץ אי 5 שטרודל גימייל.*לאישור הקישו 1/, '1'],
+], { over: { emq: '1' } });
+assert.ok(r.said.some((x) => /^t-שבע\.|\.t-7\./.test(x) || /t-7\./.test(x)));
+assert.ok(r.said.some((x) => /התו האחרון נמחק.*עד כה הוקשו.*אם או אס אייץ אי 5/.test(x)));
+let p = await (async () => { const rr = inserted.at(-1), key = await importKeyForWrite(env); return decryptPii(key, rr.rid, rr.pii); })();
+assert.equal(p.email, 'moshe5@gmail.com');
+
+// 2. סיומת אחרת בהקשה (0): a.b@mail.co.il; ואז שינוי (2) והקשה מחדש
+r = await conversation([...ADDR,
+  ...emailAnswers('a.b', '0'),
+  ...typed('mail.co.il').map((k, i) => [i === 0 ? /הקישו את הסיומת שאחרי השטרודל/ : /הקישו את התו הבא/, k]),
+  [/הקישו את התו הבא/, '00'],
+  [/כתבת המייל שהוכנסה.*איי נקודה בי שטרודל אם איי איי אל נקודה סי או נקודה איי אל/, '2'],
+  [/הקישו את התו הראשון/, EN.y],
+  [/הקישו את התו הבא/, '00'],
+  [/נבחר את הסיומת/, '1'],
+  [/וואי שטרודל גימייל/, '1'],
+], { over: { emq: '1' } });
+p = await (async () => { const rr = inserted.at(-1), key = await importKeyForWrite(env); return decryptPii(key, rr.rid, rr.pii); })();
+assert.equal(p.email, 'y@gmail.com');
 
 console.log('simulate_addr: ok');
