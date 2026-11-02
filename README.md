@@ -235,6 +235,7 @@ title=חיפוש היתר עסקה חברות
 - אבטחה: ב-CloudMailin מגדירים Authorization header (Bearer `<סוד>`, או Basic עם שם משתמש כלשהו והסוד), ובאתר את אותו סוד ב-`JOIN_EMAIL_SECRET`. בלי הסוד הכתובת מחזירה 403. עד 6 תשובות לשולח ביום ו-300 ביום בסך הכול (טבלה `join_email_log`).
 - בדיקה מקומית: `node --no-warnings scripts/voice_search/simulate_join_email.mjs`.
 - **טופס חי בתוך Gmail (AMP):** מייל הטופס כולל גם חלק AMP (`functions/api/_shared/join-amp.js`): שדות עם בדיקה, "כל החברות" / בחירה מרשימה עם חיפוש, נוסח השטר, תיבת אישור וכפתור שליחה בתוך המייל. השליחה ל-`/api/join-email-amp` (token חתום ב-`JOIN_EMAIL_SECRET` מזהה את הנמען, תוקף 30 יום). דורש את `wp-mail-endpoint.php` העדכני ב-WPCode (שולח multipart עם AMP דרך mail() של השרת). Gmail מציג את ה-AMP רק לשולח מאושר אצל Google (או בחשבון עם "מצב מפתחים" לשולח wordpress@iska.co.il); כל השאר רואים את ה-HTML. `JOIN_EMAIL_AMP = "0"` מכבה. בדיקת תקינות: workflow ‏**amp-validate**.
+- **רישום השולח ב-Google:** `https://harav-levin.pages.dev/api/join-email-register` (סיסמת הניהול) שולח את מייל הטופס עם ה-AMP ל-ampforemail.whitelisting@gmail.com עם עותק אליכם, ומציג את שעת השליחה והקישור לטופס הרישום של Google. דורש את `wp-mail-endpoint.php` שמכיר `cc`.
 - **בלי העברה ובלי CloudMailin:** `scripts/gmail_join/join_email.gs` - סקריפט Google Apps Script בתוך חשבון ה-Gmail של כתובת ההצטרפות. כל דקה הוא שולח לאתר מיילים חדשים עם "הצטרפות" בכותרת (באותו מבנה כמו CloudMailin). ההוראות בראש הקובץ.
 
 ## קליטת הרשמות מטופס נדרים פלוס (קבלה בלבד)
