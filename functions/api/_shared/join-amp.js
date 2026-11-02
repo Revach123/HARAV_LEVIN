@@ -61,7 +61,7 @@ h1{margin:0 0 6px;font-size:22px;color:#1b6b52}
 export function buildAmp({ action, token, names = [], code = '' }) {
   const field = (name, label, { hint = '', req = true, pattern = '', min = 0, max = 60, mode = '', msg = '' } = {}) => `
 <div class="row"><label class="lbl" for="f-${name}">${esc(label)}${hint ? ` <span class="hint">(${esc(hint)})</span>` : ''}</label>
-<input class="in" id="f-${name}" name="${name}" type="text"${req ? ' required' : ''}${pattern ? ` pattern="${esc(pattern)}"` : ''}${min ? ` minlength="${min}"` : ''} maxlength="${max}"${mode ? ` inputmode="${mode}"` : ''}>
+<input class="in" id="f-${name}" name="${name}" type="text"${req ? ' required' : ''}${pattern ? ` pattern="${esc(pattern)}"` : ''}${min ? ` minlength="${min}"` : ''} maxlength="${max}"${mode === 'tel' ? '' : ''}>
 ${req ? `<span class="err" visible-when-invalid="valueMissing" validation-for="f-${name}">שדה חובה</span>` : ''}
 ${pattern ? `<span class="err" visible-when-invalid="patternMismatch" validation-for="f-${name}">${esc(msg)}</span>` : ''}</div>`;
   const search = names.length && names.length <= 800;
@@ -101,7 +101,7 @@ ${search ? `<input class="in" type="text" placeholder="חיפוש חברה..." o
 <div class="list">${cos}</div>
 </div></div>
 
-<amp-accordion disable-session-states><section>
+<amp-accordion><section>
 <h4 class="acc">נוסח שטר הרישום (לחצו לקריאה)</h4>
 <div class="agr">${[...AGREEMENT_BEFORE_CHOICE, '[לבחירת כל החברות / לבחירה מתוך רשימה - לפי הבחירה למעלה]', ...AGREEMENT_AFTER_CHOICE].map((t) => `<p>${esc(t)}</p>`).join('')}</div>
 </section></amp-accordion>
