@@ -96,8 +96,12 @@ p = await decrypt(); assert.equal(p.all, 'כן');
 
 // 5. מייל אחר (למשל אימות העברה מ-Gmail) -> מועבר למכון
 sent.length = 0;
-r = await post(mail('forwarding-noreply@google.com', 'Gmail Forwarding Confirmation', 'Confirmation code: 123456'));
-assert.equal(r.text, 'forwarded'); assert.equal(sent[0].to, 'sl5742214@gmail.com'); assert.match(sent[0].text, /123456/);
+r = await post(mail('Gmail Team <forwarding-noreply@google.com>', '(#123456) Gmail Forwarding Confirmation - Receive Mail from IskaJoin@gmail.com',
+  'IskaJoin@gmail.com has requested to automatically forward mail to your email address eea6f909d9fc5ae94f3b@cloudmailin.net.\nConfirmation code: 123456'));
+assert.equal(r.text, 'forwarded'); assert.equal(sent[0].to, 'iskajoin@gmail.com'); assert.match(sent[0].text, /123456/);
+sent.length = 0;
+r = await post(mail('someone@example.com', 'שאלה', 'שלום'));
+assert.equal(r.text, 'forwarded'); assert.equal(sent[0].to, 'sl5742214@gmail.com');
 
 // 6. מיילים אוטומטיים לא מקבלים תשובה; הגבלת כמות לשולח
 assert.equal((await post(mail('mailer-daemon@x.com', 'הצטרפות', ''))).text, 'ignored');
