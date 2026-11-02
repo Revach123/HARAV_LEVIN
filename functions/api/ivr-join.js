@@ -10,13 +10,14 @@
 //    ct, st    עיר ורחוב: אות אחת בכל הקשה (לפי מקומה במקש: ב = 33, ל = 555), הקראת האות, ובחירה מרשימה
 //              כשנשארות עד 8 אפשרויות (ברחוב אפשר גם בלי "הרב" / "רבי" וכו'). אם השם לא נמצא (3 פעמים) - הקלטה. בלי נתוני ערים - הקלטת כתובת מלאה (ad), כמו קודם
 //    hn        מספר בית (הקשה; 0 = אין מספר)
-//    emq / em  אימייל (רשות, הקלטה)
+//    emq / eml מייל (רשות, בהקשה)
 //    fxq / fx  פקס (רשות)
 //    ch, cl    1 = כל החברות, 2 = חברות מסוימות (cl = הקלטת השמות)
 //    rd        1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
 //    ag        הצהרה: 1 = מאשר ונרשם, 2 = שמיעה חוזרת של השטר המלא, 3 = ביטול
 //  אחרי כל הקלטה / הקשה מוקרא למצטרף מה שזוהה / הוקש, עם אישור (1) או שינוי (2). לפני כל הקלטה נאמר לסיים בסולמית.
-//  אימייל: שילוב דיבור והקשות בקטעים (1 = אותיות בקול, 2 = מספרים בהקשה, 3 = סיום, 4 = מחיקת הקטע האחרון), ואחר כך סיומת מרשימה (או הקלטה).
+//  מייל: הקשה תו אחר תו (ספרה = הספרה; אות = 1 ואחריו האות לפי האותיות האנגליות במקש; 11 = נקודה, 10 = מחיקה, 00 = סיום),
+//  ואחר כך סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור.
 //  פקס: 9-10 ספרות (גם עם קידומת 153). בסוף - הקראת נוסח אישור הרישום.
 //  כל שאלה שלא נענתה נשאלת שוב ושוב (אותו משתנה), בלי הגבלת ניסיונות.
 //  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /1); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
@@ -27,11 +28,10 @@ import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_share
 import { AGREEMENT_KEYS, unit, ttsClean } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
-import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean } from './_shared/join-common.js';
+import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
 import { sendConfirmation } from './_shared/join-mail.js';
-import { pickEmail, spokenEmail, pickSegment, pickDomain } from './_shared/spoken-email.js';
-import { splitSpeechAndDigits } from './_shared/dtmf.js';
+import { spokenEmail } from './_shared/spoken-email.js';
 import { spokenLetters } from './_shared/spoken-letters.js';
 import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
 
@@ -280,7 +280,7 @@ async function step({ v, env, P, bk, done, origin }) {
   if ((o = yn('emq', 'join:emailQ'))) return o;
   let email = '';
   if (v.emq === '1') {
-    const q = await emailStep({ v, env, P, folder, recFile, depth: 0 });
+    const q = await emailStep({ v, P });
     if (q.ask) return q.ask;
     email = q.email || '';
   }
@@ -344,13 +344,13 @@ async function step({ v, env, P, bk, done, origin }) {
 }
 
 // ---- אימייל ----
-// סיומות נפוצות (הקשה 1-9; 0 = סיומת אחרת בהקלטה). dom<N> = ביטוי ההקראה, he = ההגייה לאישור.
+// סיומות נפוצות (הקשה 1-9; 0 = הקשת סיומת אחרת). dom<N> = ביטוי ההקראה, he = ההגייה לאישור.
 const EMAIL_DOMAINS = [
   ['gmail.com', 'גימייל'], ['walla.co.il', 'וואלה ישראל'], ['walla.com', 'וואלה קום'],
   ['yahoo.com', 'יאהו'], ['hotmail.com', 'הוטמייל'], ['outlook.com', 'אאוטלוק'],
   ['okmail.co.il', 'אוקי מייל'], ['netvision.net.il', 'נטוויזיון'], ['bezeqint.net', 'בזק'],
 ];
-const LETTER_HE = { a: 'איי', b: 'בי', c: 'סי', d: 'די', e: 'אי', f: 'אף', g: "ג'י", h: "אייץ'", i: 'אַיי', j: "ג'יי", k: 'קיי', l: 'אל', m: 'אם',
+const LETTER_HE = { a: 'אֵיי', b: 'בי', c: 'סי', d: 'די', e: 'אי', f: 'אף', g: "ג'י", h: "אייץ'", i: 'אַיי', j: "ג'יי", k: 'קיי', l: 'אל', m: 'אם',
   n: 'אן', o: 'או', p: 'פי', q: 'קיו', r: 'אר', s: 'אס', t: 'טי', u: 'יו', v: 'וי', w: 'דאבליו', x: 'אקס', y: 'וואי', z: 'זד' };
 const spellChars = (str) => String(str).toLowerCase().split('').map((c) => LETTER_HE[c] || (c === '.' ? 'נקודה' : c === '_' ? 'קו תחתון' : c === '-' ? 'מקף' : c === '+' ? 'פלוס' : c)).join(' ');
 const spellEmail = (email) => {
@@ -359,124 +359,81 @@ const spellEmail = (email) => {
   return `${spellChars(local)} שטרודל ${known ? known[1] : spellChars(domain)}`;
 };
 
-// פעם ראשונה: הקלטה אחת בדיבור (אותיות ומספרים). אם לא נקלט / לא אושר: שילוב הקראות והקשות בקטעים. אחר כך בחירת סיומת, הקראה ואישור.
-// מצב צד-שרת: s_em_segs (קטעים מופרדים ב-|), s_em_r (סבב), s_em_phase ('dom'), s_em_k (ניסיון סיומת), s_em_note (הערה לשאלה הבאה).
-// בכל סבב משתנים חדשים (em_m<r> בחירה, em_v<r> קלט), כי ימות שומרת את הערכים הישנים.
+// ---- הקשת טקסט באנגלית (כתובת מייל) בטלפון: תו אחד בכל הקשה, ואחריו סולמית ----
+//   ספרה: הספרה לבדה (5 = 5). אות: 1 ואחריו האות לפי מקומה במקש (2 = abc, 3 = def, 4 = ghi, 5 = jkl, 6 = mno,
+//   7 = pqrs, 8 = tuv, 9 = wxyz): 12 = a, 122 = b, 133 = e, 17777 = s. סימנים: 11 = נקודה, 111 = מקף, 1111 = קו תחתון.
+//   10 = מחיקת התו האחרון, 00 = סיום, 01 = הקראת מקום האותיות במקשים. אחרי כל תו מוקרא התו שהוקש.
+const EN_KEYS = { 2: 'abc', 3: 'def', 4: 'ghi', 5: 'jkl', 6: 'mno', 7: 'pqrs', 8: 'tuv', 9: 'wxyz' };
+export function decodeTyped(raw) {
+  const d = String(raw || '');
+  if (/^\d$/.test(d)) return { ch: d };
+  if (d === '00') return { done: true };
+  if (d === '10') return { del: true };
+  if (d === '01') return { help: true };
+  if (/^1(1{1,3})$/.test(d)) return { ch: ['.', '-', '_'][d.length - 2] };
+  const m = d.match(/^1(([2-9])\2*)$/);
+  if (m) { const l = EN_KEYS[m[2]][m[1].length - 1]; if (l) return { ch: l }; }
+  return {};
+}
+// מצב: s_<name>_x הטקסט, s_<name>_n סבב (משתנה ימות חדש בכל סבב), s_<name>_i ההסבר המלא כבר הושמע, s_<name>_ok סיום.
+function typeStep(v, P, name, askKey, max = 64) {
+  const S = (k) => v[`s_${name}_${k}`], set = (k, x) => { v[`s_${name}_${k}`] = String(x); };
+  if (S('ok') === '1') return { val: S('x') || '' };
+  const n = Number(S('n') || 0), key = `${name}_${n}`, acc = S('x') || '';
+  const prompt = (a) => P(!S('i') ? askKey : a ? 'join:emNext' : 'join:emFirst');
+  const read = (pre, i, a) => readTap(pre + prompt(a), `${name}_${i}`, null, { max: 6, min: 1, empty: EMPTY });
+  const next = (pre, a) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a) }; };
+  const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
+  if (!raw) return { ask: read('', n, acc) };
+  const k = decodeTyped(raw);
+  if (k.help) return next(`${P('join:emKeyMap')}.`, acc);
+  if (k.del) { const a = acc.slice(0, -1); return next(`${P('join:emDeleted')}.${a ? `${P('join:soFar')}.${T(spellChars(a))}.` : ''}`, a); }
+  if (k.done) {
+    if (!acc) return next(`${P('join:emailEmpty')}.`, acc);
+    set('ok', '1'); return { val: acc };
+  }
+  if (!k.ch) return next(`${P('join:emBad')}.`, acc);
+  if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
+  return next(`${T(spellChars(k.ch))}.`, acc + k.ch);
+}
+
+// כתובת המייל: החלק שלפני @ בהקשה, ואז סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור (2 = הקשה מחדש).
+// מצב: s_em_k ניסיון (משתני em_d<k> / em_c<k>), s_em_note הערה לשאלה הבאה.
 async function emailStep(ctx) {
-  const { v, env, P, folder, recFile } = ctx;
+  const { v, P } = ctx;
   if (v.emok) return { email: v.emok };
   if (v.emskip === '1') return {};
-  if (!sttConfigured(env)) {                       // אי אפשר לאמת דיבור: נשמרת ההקלטה בלבד
-    if (!has(v, 'em_0') || empty(v.em_0)) return { ask: readRecord(P('join:askEmail'), 'em_0', folder, recFile('em_0'), REC_MIN, REC_ADDR_MAX) };
-    v.emf = 'em_0';
-    return {};
-  }
-  if (ctx.depth > 6) return {};
   const S = (k, d = '') => (v[`s_em_${k}`] == null ? d : v[`s_em_${k}`]);
   const set = (k, val) => { v[`s_em_${k}`] = String(val); };
   const noteTake = () => { const n = S('note'); set('note', ''); return n ? `${P(n)}.` : ''; };
-  const segs = () => S('segs').split('|').filter(Boolean);
-  const r = Number(S('r', 0));
-  const nextRound = (note) => { if (note) set('note', note); set('r', r + 1); return emailStep({ ...ctx, depth: ctx.depth + 1 }); };
-  const recurse = () => emailStep({ ...ctx, depth: ctx.depth + 1 });
+  const restart = (note) => {          // הקשה מחדש: מאפסים את הטקסט, אבל לא את מספרי הסבבים (ימות שומרת ערכים ישנים)
+    for (const nm of ['eml', 'emx']) { v[`s_${nm}_x`] = ''; v[`s_${nm}_ok`] = ''; }
+    set('k', Number(S('k', 0)) + 1); set('note', note);
+    return emailStep(ctx);
+  };
 
-  if (S('phase') !== 'dom') {
-    if (S('mode') !== 'seg') {
-      // פעם ראשונה: הקלטה אחת בדיבור בלבד (אותיות ומספרים), בלי הקשות
-      const vk = `em_v${r}`;
-      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(noteTake() + P('join:emailSpeakFirst'), vk, folder, recFile(vk), REC_MIN, 30) };
-      const seg = await transcribeMixed(env, v, vk, folder, recFile);
-      if (!seg) { set('mode', 'seg'); return nextRound('join:noHear'); }          // לא נקלט: שילוב הקראות והקשות בקטעים
-      set('segs', seg); set('phase', 'dom');
-      return recurse();
-    }
-    // שילוב הקראות והקשות: בכל סבב אותיות (הקלטה) / מספרים (הקשה) / סיום / מחיקת הקטע האחרון
-    const mk = `em_m${r}`, vk = `em_v${r}`;
-    const choice = v[mk];
-    if (!['1', '2', '3', '4'].includes(choice)) {
-      const list = segs();
-      const intro = S('intro') ? '' : `${P('join:emailInstr')}.`;
-      set('intro', '1');
-      const soFar = list.length ? `${P('join:emailSoFar')}.${T(spellChars(list.join('')))}.` : '';
-      return { ask: readTap(noteTake() + intro + soFar + P('join:emailMenu'), mk, ['1', '2', '3', '4'], { empty: EMPTY }) };
-    }
-    if (choice === '1') {
-      if (!has(v, vk) || empty(v[vk])) return { ask: readRecord(P('join:emailSpeakMix'), vk, folder, recFile(vk), REC_MIN, 25) };
-      const seg = await transcribeMixed(env, v, vk, folder, recFile);
-      if (!seg) return nextRound('join:noHear');
-      set('segs', [...segs(), seg].join('|'));
-      return nextRound('');
-    }
-    if (choice === '2') {
-      if (!has(v, vk) || empty(v[vk])) return { ask: readTap(P('join:emailDigits'), vk, null, { max: 20, min: 1, empty: EMPTY }) };
-      if (!/^\d{1,20}$/.test(String(v[vk]))) return nextRound('join:noHear');
-      set('segs', [...segs(), String(v[vk])].join('|'));
-      return nextRound('');
-    }
-    if (choice === '4') { const l = segs(); l.pop(); set('segs', l.join('|')); return nextRound(''); }
-    // '3' - סיום
-    if (!segs().length) return nextRound('join:emailEmpty');
-    set('phase', 'dom');
-    return recurse();
-  }
+  const lq = typeStep(v, P, 'eml', 'join:emailType');
+  if (lq.ask) { const note = noteTake(); return { ask: note ? lq.ask.replace(/^read=/, `read=${note}`) : lq.ask }; }
+  const local = lq.val;
 
-  // סיומת
   const k = Number(S('k', 0)), dk = `em_d${k}`;
-  const local = segs().join('');
-  if (!['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'].includes(v[dk])) {
+  const DIG = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  if (!DIG.includes(v[dk])) {
     const opts = EMAIL_DOMAINS.map((_, i) => P(`join:dom${i + 1}`)).join('.');
-    return { ask: readTap(`${noteTake()}${P('join:emailDomIntro')}.${opts}.${P('join:domOther')}`, dk, ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'], { empty: EMPTY }) };
+    return { ask: readTap(`${noteTake()}${P('join:emailDomIntro')}.${opts}.${P('join:domOther')}`, dk, DIG, { empty: EMPTY }) };
   }
-  let domain = '';
+  let domain;
   if (v[dk] === '0') {
-    const xk = `em_x${k}`;
-    if (!has(v, xk) || empty(v[xk])) return { ask: readRecord(P('join:emailDomSpeak'), xk, folder, recFile(xk), REC_MIN, 15) };
-    domain = pickDomain(await transcribeLangs(env, v, xk, folder, recFile));
+    const xq = typeStep(v, P, 'emx', 'join:emailDomType');
+    if (xq.ask) return xq;
+    domain = xq.val.replace(/^@/, '');
   } else domain = EMAIL_DOMAINS[Number(v[dk]) - 1][0];
-  const email = domain ? `${local}@${domain}` : '';
-  if (!email || !spokenEmail(email)) { set('k', k + 1); set('note', 'join:badEmail'); return recurse(); }
+  const email = `${local}@${domain}`.toLowerCase();
+  if (!validEmail(email)) return restart('join:badEmail');
   const ck = `em_c${k}`;
   if (v[ck] === '1') { v.emok = email; return { email }; }
-  if (v[ck] === '2') {
-    set('mode', 'seg'); set('phase', ''); set('r', r + 1); set('k', k + 1); set('intro', '');     // שינוי: עריכה בשילוב הקראות והקשות (הכתובת שנקלטה נשארת)
-    return recurse();
-  }
+  if (v[ck] === '2') return restart('');
   return { ask: readTap(`${P('join:emailHeard')}.${T(spellEmail(email))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
-}
-
-// הקלטה אחת מזוהה בכמה שפות (עברית + אנגלית אמריקאית + בריטית): אותיות באנגלית מזוהות רק בזיהוי האנגלי, מילים בעברית רק בעברית.
-const EMAIL_LANGS = ['en-US', 'en-GB', 'he-IL'];
-async function transcribeLangs(env, v, key, folder, recFile) {
-  try {
-    const value = String(v[key] || '');
-    const rec = await downloadRecording(env, [
-      ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
-      `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
-    ]);
-    if (!rec) return [];
-    return await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, rec.bytes, l), 200).replace(/[,!?]+$/g, '').trim()));
-  } catch { return []; }
-}
-
-// הקלטה של אותיות בדיבור, אפשר עם הקשות באמצע: צלילי ההקשה מזוהים בקובץ (DTMF) והופכים לספרות, והדיבור שביניהם מתומלל בנפרד.
-async function transcribeMixed(env, v, key, folder, recFile) {
-  try {
-    const value = String(v[key] || '');
-    const rec = await downloadRecording(env, [
-      ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
-      `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
-    ]);
-    if (!rec) return '';
-    const parts = splitSpeechAndDigits(rec.bytes);
-    console.log(`ivr email parts: ${parts.map((x) => (x.type === 'digits' ? `D${x.digits.length}` : 'S')).join(',')}`);   // בלי תוכן אישי
-    let out = '';
-    for (const part of parts) {
-      if (part.type === 'digits') { out += part.digits; continue; }
-      const langs = await Promise.all(EMAIL_LANGS.map(async (l) => clean(await azureTranscribe(env, part.wav, l), 200).replace(/[,!?]+$/g, '').trim()));
-      out += pickSegment(langs);
-    }
-    return pickSegment([out]);
-  } catch { return ''; }
 }
 
 // הקלטה אחת -> טקסט (עברית). אין מחיקה של ההקלטה, כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
