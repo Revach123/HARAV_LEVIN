@@ -4,7 +4,7 @@
  * הוספה: WPCode → Add Snippet → PHP Snippet → הדבקה → Active. (אם התוסף מוסיף <?php בעצמו, להדביק בלי השורה הראשונה.)
  * חובה: להחליף את CHANGE_ME_LONG_RANDOM בסיסמה ארוכה אקראית. אותה סיסמה מוגדרת באתר החדש כ-WP_MAIL_SECRET.
  *   (בעדכון של קטע קיים: להעתיק קודם את הסיסמה שכבר כתובה בו, ולהחזיר אותה לשורה הזו.)
- * reply_to (לא חובה): כתובת לתשובות. amp (לא חובה): חלק AMP (טופס חי בתוך Gmail) - נשלח כמייל multipart/alternative
+ * reply_to (לא חובה): כתובת לתשובות. cc (לא חובה): עותק. amp (לא חובה): חלק AMP (טופס חי בתוך Gmail) - נשלח כמייל multipart/alternative
  *   (טקסט, AMP, HTML) דרך PHPMailer של וורדפרס; אם נכשל - נשלח המייל הרגיל, וב"הצגת המקור" כתוב X-Iska-Amp עם הסיבה.
  */
 const ISKA_MAIL_SECRET = 'CHANGE_ME_LONG_RANDOM';
@@ -13,7 +13,7 @@ const ISKA_MAIL_FROM   = 'מכון היתר עיסקא <wordpress@iska.co.il>';
 // מייל עם טופס חי (AMP): multipart/alternative (טקסט, AMP, HTML), נשלח דרך אותו PHPMailer של וורדפרס
 // (כולל הגדרות שליחה של תוספים, phpmailer_init), כמו המיילים הרגילים. מחזיר '' בהצלחה, או את סיבת הכישלון.
 if (!function_exists('iska_send_amp_mail')) {
-  function iska_send_amp_mail($to, $subject, $html, $text, $amp, $reply_to) {
+  function iska_send_amp_mail($to, $subject, $html, $text, $amp, $reply_to, $cc = '') {
     try {
       if (!class_exists('PHPMailer\\PHPMailer\\PHPMailer')) {
         require_once ABSPATH . WPINC . '/PHPMailer/PHPMailer.php';
@@ -33,6 +33,7 @@ if (!function_exists('iska_send_amp_mail')) {
       $mail->setFrom($from_addr, $from_name);
       $mail->addAddress($to);
       if ($reply_to) $mail->addReplyTo($reply_to);
+      if ($cc) $mail->addCC($cc);
       $mail->Subject = $subject;
       do_action_ref_array('phpmailer_init', [&$mail]);          // הגדרות השליחה של האתר (למשל SMTP), כמו ב-wp_mail
       $mail->isHTML(false);
@@ -64,16 +65,20 @@ add_action('rest_api_init', function () {
       // כתובת לתשובות (הצטרפות במייל): התשובה של המצטרף חוזרת לכתובת ההצטרפות ולא ל-wordpress@
       $reply_to = isset($b['reply_to']) ? sanitize_email($b['reply_to']) : '';
       if (!$reply_to || !is_email($reply_to)) $reply_to = '';
+      // עותק (למשל: מייל הרישום ל-Google, עם עותק למכון)
+      $cc = isset($b['cc']) ? sanitize_email($b['cc']) : '';
+      if (!$cc || !is_email($cc)) $cc = '';
       // טופס חי בתוך Gmail (AMP). אם נכשל - המייל הרגיל, עם הסיבה בכותרת X-Iska-Amp (לראות ב"הצגת המקור")
       $amp_note = 'none';
       if (!empty($b['amp'])) {
         $text = isset($b['text']) ? (string) $b['text'] : '';
-        $err = iska_send_amp_mail($to, $subject, (string) $b['html'], $text, (string) $b['amp'], $reply_to);
+        $err = iska_send_amp_mail($to, $subject, (string) $b['html'], $text, (string) $b['amp'], $reply_to, $cc);
         if ($err === '') return new WP_REST_Response(['ok' => true, 'amp' => true], 200);
         $amp_note = 'failed: ' . $err;
       }
       $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . ISKA_MAIL_FROM, 'X-Iska-Amp: ' . $amp_note];
       if ($reply_to) $headers[] = 'Reply-To: ' . $reply_to;
+      if ($cc) $headers[] = 'Cc: ' . $cc;
       $ok = wp_mail($to, $subject, (string) $b['html'], $headers);
       return new WP_REST_Response(['ok' => (bool) $ok], $ok ? 200 : 500);
     },

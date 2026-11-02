@@ -173,7 +173,7 @@ export function checkForm(f, names) {
 }
 
 // ---- המייל שנשלח: טופס, כפתור מילוי, רשימת החברות ונוסח השטר ----
-function formMail({ values = {}, errors = [], names = [], code = '', to = '' } = {}) {
+export function formMail({ values = {}, errors = [], names = [], code = '', to = '' } = {}) {
   const vals = { ...values, list: code };
   const formText = FIELDS.map((f) => `${lineOf(f)} ${vals[f[0]] || ''}`).join('\n');
   const p = (t, st = '') => `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;${st}">${esc(t)}</p>`;
@@ -226,7 +226,7 @@ export async function underLimit(env, sender) {
 
 const replyTo = (env) => addressOf(env.JOIN_EMAIL_REPLY_TO || '');
 // חלק ה-AMP (טופס חי בתוך Gmail). JOIN_EMAIL_AMP = "0" מכבה.
-async function ampPart(env, origin, to, names, code) {
+export async function ampPart(env, origin, to, names, code) {
   if (String(env.JOIN_EMAIL_AMP || '') === '0') return '';
   const token = await makeToken(env, to);
   return token ? buildAmp({ action: `${origin}/api/join-email-amp`, token, names, code }) : '';
