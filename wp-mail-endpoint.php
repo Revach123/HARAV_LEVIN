@@ -21,6 +21,9 @@ add_action('rest_api_init', function () {
       if (!$to || !is_email($to) || empty($b['html'])) return new WP_REST_Response(['ok' => false], 400);
       $subject = isset($b['subject']) ? wp_strip_all_tags((string) $b['subject']) : 'אישור הצטרפות';
       $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . ISKA_MAIL_FROM];
+      // כתובת לתשובות (הצטרפות במייל): התשובה של המצטרף חוזרת לכתובת ההצטרפות ולא ל-wordpress@
+      $reply_to = isset($b['reply_to']) ? sanitize_email($b['reply_to']) : '';
+      if ($reply_to && is_email($reply_to)) $headers[] = 'Reply-To: ' . $reply_to;
       $ok = wp_mail($to, $subject, (string) $b['html'], $headers);
       return new WP_REST_Response(['ok' => (bool) $ok], $ok ? 200 : 500);
     },

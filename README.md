@@ -227,6 +227,14 @@ title=חיפוש היתר עסקה חברות
 
 ---
 
+## הצטרפות במייל (CloudMailin)
+
+- הקוד: `functions/api/join-email.js`. CloudMailin (מסלול חינמי) מקבל את המיילים בכתובת `eea6f909d9fc5ae94f3b@cloudmailin.net` ומעביר כל מייל ל-`https://harav-levin.pages.dev/api/join-email` (פורמט **JSON - Normalized**). אפשר לפרסם כתובת אחרת ולהפנות ממנה (Forwarder ב-SiteGround מ-`join@iska.co.il`, או מסנן העברה ב-Gmail למיילים עם "הצטרפות" בכותרת).
+- מייל עם "הצטרפות" בכותרת ← תשובה אוטומטית: הסבר, טופס למילוי (שורות "כותרת: ערך") ונוסח השטר המלא. תשובה עם הטופס ממולא ← בדיקה (ת.ז. עם ספרת ביקורת, טלפון, עיר, רחוב, בחירת חברות, ו"מאשר" בשורת "אישור השטר"). חסר ← תשובה עם מה שחסר והטופס עם מה שמולא. תקין ← נשמר ברשימת המצטרפים (`src = email`, תווית "מייל") ונשלח מייל אישור. מייל אחר (למשל קוד אימות של העברה מ-Gmail) ← מועבר למכון (`JOIN_EMAIL_ADMIN`, ברירת מחדל sl5742214@gmail.com).
+- השליחה דרך וורדפרס (`WP_MAIL_URL`), עם Reply-To ל-`JOIN_EMAIL_REPLY_TO` (ב-`wrangler.toml`), כדי שהתשובות יחזרו ל-CloudMailin. **דורש את הגרסה העדכנית של `wp-mail-endpoint.php` ב-WPCode** (שורת `reply_to`).
+- אבטחה: ב-CloudMailin מגדירים Authorization header (Bearer `<סוד>`, או Basic עם שם משתמש כלשהו והסוד), ובאתר את אותו סוד ב-`JOIN_EMAIL_SECRET`. בלי הסוד הכתובת מחזירה 403. עד 6 תשובות לשולח ביום ו-300 ביום בסך הכול (טבלה `join_email_log`).
+- בדיקה מקומית: `node --no-warnings scripts/voice_search/simulate_join_email.mjs`.
+
 ## קליטת הרשמות מטופס נדרים פלוס (קבלה בלבד)
 - הקוד: `functions/api/joiners-nedarim-sync.js`. כפתור בניהול: טבלת המצטרפים → "🔄 משיכה מנדרים פלוס".
 - סוד ב-Cloudflare Pages: `NEDARIM_API_KEY` (מפתח `npk_…` מוגבל להרשאה "משיכת רשומות טופס"). אחרי הוספת הסוד - פריסה מחדש.
