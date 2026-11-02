@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261102d"></script>
+<script src="/permit-docs.js?v=20261102e"></script>
 <script src="/name-check.js?v=20261028h"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -962,6 +962,15 @@
   .sc-b { font-family:inherit; font-size:12px; color:var(--text); background:#fff; border:1px solid var(--border); border-radius:5px; padding:4px 10px; cursor:pointer; white-space:nowrap; }
   .sc-b.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); font-weight:700; }
   .sc-btns.need .sc-b { border-color:var(--red); }
+  .fd-box { border:1px dashed var(--border); border-radius:8px; padding:10px 12px; background:var(--bg); }
+  .fd-up { font-family:inherit; font-size:14px; padding:8px 14px; border:1px solid var(--accent); color:var(--accent-dark); background:#fff; border-radius:7px; cursor:pointer; font-weight:600; }
+  .fd-file { display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:14px; }
+  .fd-file button { border:none; background:none; color:var(--red); cursor:pointer; font-size:15px; }
+  .fd-slots { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .fd-slots .fd-s { font-family:inherit; font-size:14px; padding:9px 10px; border:1px solid var(--border); border-radius:7px; background:#fff; cursor:pointer; color:var(--text); }
+  .fd-slots .fd-s.wide { grid-column:1 / -1; }
+  .fd-slots .fd-s.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); font-weight:700; }
+  .fd-slots.need .fd-s { border-color:var(--red); }
   .pc-btn:hover { border-color:var(--accent); }
   .pc-btn.on { border-color:var(--accent); background:var(--accent-bg); color:var(--accent-dark); }
   #form-after-permit.locked { opacity:.35; pointer-events:none; user-select:none; }
@@ -1486,7 +1495,7 @@ function renderForm() {
       <div class="field-row">
         <div class="field">
           <label>פרטי / כללי</label>
-          <select id="f-visibility" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
+          <select id="f-visibility" onchange="formDocVis()" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
             ${b.id ? "" : `<option value="?" selected disabled>— לא מוגדר —</option>`}
             <option value=""   ${b.id && !b.visibility?"selected":""}>רק כללי</option>
             <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
@@ -1531,6 +1540,11 @@ function renderForm() {
         <label>תתי-שורות <span style="color:var(--light);font-weight:400">(רישום נוסף לאותה חברה, למשל "מסלול הלכה"; מופיע ברשימות מתחת לחברה)</span></label>
         <div id="subs-box">${formSubsHtml()}</div>
       </div>
+
+      ${!isEdit && !(window.PD && PD.hideTabs && PD.hideTabs()) ? `<div class="field">
+        <label>היתר עיסקא <span style="color:var(--light);font-weight:400">(לא חובה: המסמך יועלה וישויך לחברה עם שמירת העסק)</span></label>
+        <div class="fd-box" id="fd-box">${formDocHtml()}</div>
+      </div>` : ""}
 
       <p class="error-msg" id="form-err"></p>
       <button class="btn-primary" onclick="doSave()" ${saving?"disabled":""}>
@@ -2128,7 +2142,7 @@ function setView(v) {
   if (v === "home" || v === "admin" || v === "form") setTimeout(() => checkUpdates(true), 0);
   if (view === "form" && v !== "form" && formDirty && !confirmLeave()) return;
   if (formModal && v !== "form") closeFormModal(false);
-  if (v === "form" && view !== "form") { formDirty = false; newSubs = []; }
+  if (v === "form" && view !== "form") { formDirty = false; newSubs = []; formDocs = []; }
   view = v;
   if (window.PD && PD.onView) PD.onView(v);          // המשך העלאת קבצים אחרי הוספת עסק מתוך חלון ההעלאה
   if (v !== "csv-import") {
@@ -2964,6 +2978,14 @@ async function doSave() {
   }
   const visVal = (document.getElementById("f-visibility")?.value || "").trim();
   if (visVal === "?") { const e2 = document.getElementById("form-err"); if (e2) e2.textContent = "יש לבחור פרטי / כללי"; return; }
+  if (!editBiz?.id && formDocs.length) {          // היתר עיסקא שנבחר: חובה לבחור שיוך, ושיתאים ל"פרטי / כללי" של העסק
+    const e3 = document.getElementById("form-err"), open = formDocs.find(d => !d.slots);
+    if (open) { open.need = true; formDocPaint(); if (e3) e3.textContent = "יש לבחור לאיזה היתר עיסקא המסמך: פרטי / כללי / משותף"; return; }
+    const hasP = visVal === "פרטי" || visVal === "רק פרטי", hasG = visVal !== "רק פרטי";
+    if (formDocs.some(d => (d.slots.includes("private") && !hasP) || (d.slots.includes("general") && !hasG))) {
+      if (e3) e3.textContent = 'השיוך של ההיתר לא מתאים ל"פרטי / כללי" של העסק. יש לשנות אחד מהם.'; return;
+    }
+  }
   const payload = {
     id:             editBiz?.id || uid(),
     chp_number:     (document.getElementById("chp")?.value         || "").trim(),
@@ -3001,7 +3023,14 @@ async function doSave() {
     }
     newSubs = [];
     if (!isEdit && window.PD && PD.bizAdded) setTimeout(() => PD.bizAdded(payload), 400);      // שיוך אוטומטי של מסמך שממתין לחברה החדשה
-    showStatus(isEdit ? "עודכן בהצלחה" : "נוסף בהצלחה");
+    let docMsg = "";
+    if (!isEdit && formDocs.length && window.PD && PD.uploadForBiz) {          // היתרי עיסקא שנבחרו בטופס: העלאה ושיוך לעסק החדש
+      const fds = formDocs.filter(d => d.slots); formDocs = []; docMsg = fds.length > 1 ? "העסק נוסף, ושני השטרות הועלו ושויכו ✓" : "העסק נוסף, והיתר העיסקא הועלה ושויך ✓";
+      showStatus("מעלה את היתר העיסקא…");
+      try { for (const fd of fds) await PD.uploadForBiz(fd.file, payload.id, fd.slots); }
+      catch (e) { docMsg = ""; alert("העסק נוסף, אך העלאת היתר העיסקא נכשלה: " + (e.message || e) + "\nאפשר להעלות אותו מכפתור \"העלאת היתר\" של העסק."); }
+    }
+    showStatus(isEdit ? "עודכן בהצלחה" : (docMsg || "נוסף בהצלחה"));
     saving = false; formDirty = false; setView(formReturn);
   } catch(e) {
     saving = false;
@@ -3013,6 +3042,58 @@ async function doSave() {
 }
 
 let newSubs = [];          // תתי-שורות לעסק חדש: נוצרות אחרי "הוסף עסק"
+// היתר עיסקא לעסק חדש: עד שני שטרות (פרטי / כללי, או שטר אחד משותף), לפי "פרטי / כללי" של העסק.
+// "רק כללי" / "רק פרטי": כפתור אחד, השטר משויך ישר לסוג הזה. "יש גם פרטי": אחרי ההעלאה - פרטי / כללי / משותף,
+// ואם נבחר סוג אחד בלבד - "עדיין חסר שטר X", ואז "להעלאת השטר" או "שמירה בלי שטר X". המסמכים מועלים ומשויכים אחרי "הוסף עסק".
+let formDocs = [];          // [{ file, slots: null | ["private"] | ["general"] | ["private","general"] }]
+const FD_SLOTS = { private: ["private"], general: ["general"], both: ["private", "general"] };
+const FD_HE = { private: "פרטי", general: "כללי" };
+function fdVis() { return (document.getElementById("f-visibility")?.value ?? "?"); }
+function fdAllowed() { const v = fdVis(); return v === "" ? ["general"] : v === "רק פרטי" ? ["private"] : ["private", "general"]; }   // "?" = עוד לא נבחר: כמו שניהם
+function fdMissing() { const have = new Set(formDocs.flatMap(d => d.slots || [])); return fdAllowed().filter(t => !have.has(t)); }
+function formDocHtml() {
+  const allowed = fdAllowed(), single = allowed.length === 1;
+  const fileInput = `<input type="file" id="fd-file" accept=".pdf,image/*" style="display:none" onchange="formDocPick(this)">`;
+  if (!formDocs.length) return `<button type="button" class="fd-up" onclick="document.getElementById('fd-file').click()">📄 להעלאת היתר עיסקא${single ? ` (שטר ${FD_HE[allowed[0]]})` : ""}</button>` + fileInput;
+  const lines = formDocs.map((d, i) => `<div class="fd-file">📄 <b>${escHtml(d.file.name)}</b>${d.slots ? ` <span style="color:var(--accent-dark)">· ${d.slots.length === 2 ? "משותף: פרטי + כללי" : "שטר " + FD_HE[d.slots[0]]}</span>` : ""} <button type="button" title="הסרת הקובץ" onclick="formDocClear(${i})">✕</button></div>`).join("");
+  const last = formDocs[formDocs.length - 1];
+  if (!last.slots) {          // שטר ראשון בחברה עם פרטי וכללי: בחירת השיוך
+    const b = (v, t, w) => `<button type="button" class="fd-s ${w ? "wide" : ""}" onclick="formDocSlot('${v}')">${t}</button>`;
+    return lines + `<div style="font-size:13px;color:var(--light);margin-bottom:6px">לאיזה היתר עיסקא של החברה המסמך?</div>
+      <div class="fd-slots ${last.need ? "need" : ""}">${b("private", "📄 פרטי")}${b("general", "📄 כללי")}${b("both", "📄 משותף: פרטי + כללי", true)}</div>`;
+  }
+  const miss = fdMissing();
+  if (miss.length === 1 && !single) {          // נבחר סוג אחד: העלאת השטר השני, או שמירה בלעדיו
+    const he = FD_HE[miss[0]];
+    return lines + `<div style="font-size:14px;font-weight:700;color:#b85c00;margin:4px 0 6px">עדיין חסר שטר ${he}</div>
+      <div class="fd-slots">
+      <button type="button" class="fd-s on" onclick="document.getElementById('fd-file').click()">📄 להעלאת השטר</button>
+      <button type="button" class="fd-s" onclick="doSave()">💾 שמירה בלי שטר ${he}</button></div>` + fileInput;
+  }
+  return lines;
+}
+function formDocPaint() { const el = document.getElementById("fd-box"); if (el) el.innerHTML = formDocHtml(); }
+function formDocPick(inp) {
+  const f = inp.files && inp.files[0]; if (!f) return;
+  const allowed = fdAllowed(), miss = fdMissing();
+  // סוג אחד אפשרי (חברה עם סוג אחד, או השטר השני) - משויך ישר; אחרת בוחרים
+  const slots = allowed.length === 1 ? allowed : formDocs.length && miss.length === 1 ? miss : null;
+  formDocs.push({ file: f, slots }); formDirty = true; formDocPaint();
+}
+function formDocClear(i) { formDocs.splice(i, 1); formDocPaint(); }
+function formDocSlot(v) {
+  const d = formDocs[formDocs.length - 1]; if (!d) return;
+  d.slots = FD_SLOTS[v]; d.need = false; formDirty = true;
+  const sel = document.getElementById("f-visibility");          // "פרטי / כללי" שעוד לא נבחר: "יש גם פרטי" (השלוש מוצגות רק לחברה עם פרטי וכללי)
+  if (sel && sel.value === "?") sel.value = "פרטי";
+  formDocPaint();
+}
+// שינוי "פרטי / כללי" בטופס: שטר שכבר נבחר בחברה עם סוג אחד - לסוג הזה, והכפתורים מתעדכנים
+function formDocVis() {
+  const allowed = fdAllowed();
+  if (allowed.length === 1) formDocs = formDocs.slice(0, 1).map(d => ({ ...d, slots: allowed }));
+  formDocPaint();
+}
 function formSubsHtml() {
   const b = editBiz || {};
   if (b.id) {
