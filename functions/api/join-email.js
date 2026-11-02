@@ -6,7 +6,7 @@
 //       (ליד כל שדה מה מותר בו), כפתור שפותח תשובה עם הטופס מוכן למילוי, רשימת החברות הממוספרת ונוסח השטר המלא.
 //    2. הטופס ממולא -> בדיקה. חסר / שגוי -> תשובה עם מה שחסר (והטופס עם מה שכבר מולא).
 //       תקין -> נשמר ברשימת המצטרפים (src = email, אותה הצפנה כמו הטופס באתר) ונשלח מייל אישור.
-//    3. כל מייל אחר (למשל קוד אימות של העברה מ-Gmail) -> מועבר למכון (JOIN_EMAIL_ADMIN).
+//    3. קוד אימות של העברה מ-Gmail -> לתיבת ה-Gmail שביקשה את ההעברה. כל מייל אחר -> מועבר למכון (JOIN_EMAIL_ADMIN).
 //  חברות: "כל החברות", או מספרים מהרשימה שבמייל (או שמות). הרשימה נשמרת לפי "קוד רשימה" (שורה בטופס), כך שמספרים
 //  ממייל ישן מתפרשים לפי הרשימה שנשלחה בו גם אם הרשימה השתנתה מאז (טבלה join_email_lists).
 //  השליחה דרך וורדפרס (WP_MAIL_URL), עם Reply-To לכתובת ההצטרפות (JOIN_EMAIL_REPLY_TO), כדי שהתשובות יחזרו לכאן.
@@ -234,9 +234,15 @@ export async function onRequestPost({ request, env }) {
   const filled = Object.keys(fields).length >= 3;
   const list = parseForm(body).list;
   try {
-    if (!filled && !/הצטרפות/.test(subject)) {             // לא בקשת הצטרפות: מועבר למכון (למשל קוד אימות של העברה מ-Gmail)
+    if (!filled && !/הצטרפות/.test(subject)) {             // לא בקשת הצטרפות: מועבר למכון
+      // קוד אימות של העברה מ-Gmail: נשלח לתיבת ה-Gmail שביקשה את ההעברה (הכתובת שלה כתובה במייל האימות)
+      let to = env.JOIN_EMAIL_ADMIN || CANCEL_NOTIFY_TO;
+      if (/^forwarding-noreply@google\.com$/i.test(addressOf(header(msg, 'from')) || sender)) {
+        const asker = (String(body).match(/[\w.+-]+@(?:gmail|googlemail)\.com/gi) || []).map((x) => x.toLowerCase()).find((x) => !/^forwarding-noreply@/.test(x));
+        if (asker && (await underLimit(env, `fwd:${asker}`))) to = asker;
+      }
       await sendMail(env, {
-        to: env.JOIN_EMAIL_ADMIN || CANCEL_NOTIFY_TO, subject: `מייל שהתקבל בכתובת ההצטרפות: ${clean(subject, 120)}`,
+        to, subject: `מייל שהתקבל בכתובת ההצטרפות: ${clean(subject, 120)}`,
         html: `<div dir="rtl" style="font-family:Arial,sans-serif"><p><b>מאת:</b> <span dir="ltr">${esc(header(msg, 'from'))}</span><br><b>נושא:</b> ${esc(subject)}</p><pre style="white-space:pre-wrap;font-family:inherit" dir="auto">${esc(String(body).slice(0, 20000))}</pre></div>`,
         text: `מאת: ${header(msg, 'from')}\nנושא: ${subject}\n\n${String(body).slice(0, 20000)}`,
       });
