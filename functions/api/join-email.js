@@ -46,16 +46,20 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&':
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const ok = (body = 'ok', status = 200) => new Response(body, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 
-export function authOk(request, env) {
+// '' = מאושר; אחרת הסיבה (מוצגת ב-CloudMailin, בלי לחשוף את הסיסמה)
+export function authProblem(request, env) {
   const s = String(env.JOIN_EMAIL_SECRET || '').trim();
-  if (!s) return false;
+  if (!s) return 'the site has no JOIN_EMAIL_SECRET (Cloudflare: add it to Production, then Retry deployment)';
   const h = String(request.headers.get('authorization') || '').trim();
-  if (/^bearer\s+/i.test(h)) return h.replace(/^bearer\s+/i, '').trim() === s;
-  if (/^basic\s+/i.test(h)) {
-    try { const d = atob(h.replace(/^basic\s+/i, '').trim()); return d.slice(d.indexOf(':') + 1) === s; } catch { return false; }
-  }
-  return false;
+  if (!h) return 'no Authorization header (CloudMailin: set username and password on the address page)';
+  let given = null;
+  if (/^bearer\s+/i.test(h)) given = h.replace(/^bearer\s+/i, '').trim();
+  else if (/^basic\s+/i.test(h)) { try { const d = atob(h.replace(/^basic\s+/i, '').trim()); given = d.slice(d.indexOf(':') + 1).trim(); } catch { given = null; } }
+  if (given == null) return 'unsupported Authorization header (use Basic or Bearer)';
+  if (given !== s) return `password does not match JOIN_EMAIL_SECRET (lengths: sent ${given.length}, site ${s.length})`;
+  return '';
 }
+export const authOk = (request, env) => !authProblem(request, env);
 
 // כותרת מהמייל (CloudMailin: headers.{subject,from,reply_to,...}; לא תלוי באותיות גדולות / מקפים)
 function header(msg, name) {
@@ -222,7 +226,8 @@ const isAutomatic = (msg, sender) => /^(mailer-daemon|postmaster|no-?reply|bounc
   || /auto-(replied|generated)/i.test(header(msg, 'auto_submitted')) || /bulk|junk|list/i.test(header(msg, 'precedence'));
 
 export async function onRequestPost({ request, env }) {
-  if (!authOk(request, env)) return ok('unauthorized', 403);
+  const why = authProblem(request, env);
+  if (why) return ok(`unauthorized: ${why}`, 403);
   let msg;
   try { msg = await request.json(); } catch { return ok('bad request', 400); }
   const origin = new URL(request.url).origin;
