@@ -11,7 +11,7 @@
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
 
-import { applyBondPcatRows, loadNontradableChps, withBondPcat } from "./_shared/bond-pcat.js";
+import { applyBondPcatRows, withBondPcat } from "./_shared/bond-pcat.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -186,12 +186,11 @@ export async function onRequestGet(context) {
       const approvedCond = isPrivate
         ? "agch_approved IN ('כן','רק פרטי')"
         : "agch_approved IN ('כן','רק כללי')";
-      // כלל אחד: חברה בלי אג"ח (לפי הבורסה, tase_has_agch, כולל אג"ח לא סחירות) = "אין אג"ח" - גם אם סומנה כמאושרת.
+      // כלל אחד: חברה בלי אג"ח (לפי הבורסה, tase_has_agch) = "אין אג"ח" - גם אם סומנה כמאושרת.
       // חברה עם אג"ח = "יש אג"ח - מאושר" או "יש אג"ח - לא מאושר". "בחירת אג"ח מסוימים" רק קובע איזו אג"ח מאושרת (ברשימת האג"ח), והסטטוס כאן נקבע באותו כלל.
       const selective = `agch_approved = 'בחירת אג"ח מסוימים'`;
-      // גם חברה שיש לה אג"ח ברשימת האג"ח (נבנית גם מסריקת מאיה, לא רק מרשימת הבורסה) נחשבת "יש אג"ח" (למשל איילון),
-      // וגם חברה עם אג"ח לא סחירה פעילה (nontradable_chps.json, נבנה יומית) - מיד אחרי הבנייה, בלי לחכות לריצה הלילית של הדגל
-      const listed = [...new Set([...await loadListedChps(request, env), ...await loadNontradableChps(request, env)])];
+      // גם חברה שיש לה אג"ח ברשימת האג"ח (נבנית גם מסריקת מאיה, לא רק מרשימת הבורסה) נחשבת "יש אג"ח" (למשל איילון)
+      const listed = await loadListedChps(request, env);
       const hasBonds = `(COALESCE(tase_has_agch,'') = 'יש'${listed.length ? ` OR TRIM(COALESCE(chp_number,'')) IN (${listed.map(c => `'${c}'`).join(",")})` : ""})`;
       const approvedExpr = `CASE WHEN ${hasBonds} AND (${approvedCond} OR ${selective}) THEN 1 ELSE 0 END`;
       const bondsStatusExpr = `CASE WHEN NOT (${hasBonds}) THEN 'אין אג"ח'
@@ -276,11 +275,23 @@ export async function onRequestGet(context) {
     if (type === "companies-private" || type === "companies-general") {
       await addSelectiveNotes(request, env, results, type === "companies-private" ? "private" : "general");
       results = withRegistrarNames(results, await loadOfferings(request, env));
-      // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות: לפי מה שרשום בעמודת האג"ח ("יש אג"ח..." כולל לא סחירות ובהנפקה)
-      for (const r of results) if ("permits_category" in r)
-        r.permits_category = withBondPcat(r.permits_category, String(r.bonds_status || "").startsWith('יש אג"ח'));
+      // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות: לפי has_agch_any (יש אג"ח כולל לא סחיר, migrations/0022).
+      // עמודת האג"ח ברשימה עצמה (bonds_status) לא משתנה - היא לפי אג"ח סחירות בלבד.
+      if (results.some(r => "permits_category" in r)) {
+        let any = null;          // ח"פ -> יש אג"ח כולל לא סחיר. לפני המיגרציה: לפי האג"ח הסחירות (bonds_status, בלי הנפקות)
+        try {
+          any = new Map();
+          for (const x of (await env.DB.prepare("SELECT TRIM(COALESCE(chp_number,'')) AS c, has_agch_any AS a FROM businesses WHERE TRIM(COALESCE(has_agch_any,'')) != ''").all()).results ?? [])
+            if (x.c) any.set(x.c, any.get(x.c) || x.a === "יש");
+        } catch { any = null; }
+        for (const r of results) if ("permits_category" in r) {
+          const k = String(r.chp_number || "").trim(), st = String(r.bonds_status || "");
+          const has = any && any.has(k) ? any.get(k) : st.startsWith('יש אג"ח') && !st.includes("בהנפקה");
+          r.permits_category = withBondPcat(r.permits_category, has);
+        }
+      }
     } else if (type === "companies-all") {
-      results = await applyBondPcatRows(request, env, results);
+      results = applyBondPcatRows(results);
     }
 
     if (format === "csv") {

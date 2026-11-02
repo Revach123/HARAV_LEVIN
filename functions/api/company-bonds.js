@@ -1,5 +1,4 @@
 import { checkAdmin } from "./_shared/auth.js";
-import { loadNontradableChps } from "./_shared/bond-pcat.js";
 // GET /api/company-bonds?chp=ח"פ  (ניהול בלבד) - האג"ח הסחירות של חברה, בזמן אמת מ-datawise של הבורסה.
 // משמש את חלון "בחירת אג"ח מסוימים" לחברה חדשה שעוד לא נכנסה לקובץ שנבנה בבנייה (maya_securities.json).
 // דורש env.TASE_DATAWISE_KEY (סוד של Cloudflare Pages; אותו מפתח של ה-workflow). בלעדיו מוחזר error והחלון ממשיך לעבוד מהקובץ.
@@ -51,15 +50,10 @@ export async function onRequestGet({ request, env, waitUntil }) {
   }
 }
 
-// בדיקה מיידית (בשמירת עסק): האם לח"פ יש אג"ח - סחירה (datawise של הבורסה, בזמן אמת) או לא סחירה פעילה
-// (data/bonds_list/nontradable_chps.json - כל החברות במאיה, נבנה יומית). מחזיר "יש"/"אין", או null אם אי אפשר לבדוק - אז הדגל נשאר לריצה הלילית.
-export async function bondFlagFor(env, chp, ctx, request) {
+// בדיקה מיידית (בשמירת עסק): האם לח"פ יש אג"ח סחירה בבורסה. מחזיר "יש"/"אין", או null אם אי אפשר לבדוק (אין מפתח / כשל) - אז הדגל נשאר לריצה הלילית.
+export async function bondFlagFor(env, chp, ctx) {
   const k = norm(chp);
-  if (!k) return null;
-  let nontrad = null;
-  if (request) { try { const s = await loadNontradableChps(request, env); if (s.size) nontrad = [...s].some(c => norm(c) === k); } catch {} }
-  if (nontrad) return "יש";
-  if (!env.TASE_DATAWISE_KEY) return null;
+  if (!k || !env.TASE_DATAWISE_KEY) return null;
   try {
     const { list } = await tradeList(env, ctx);
     if (!list.length) return null;
