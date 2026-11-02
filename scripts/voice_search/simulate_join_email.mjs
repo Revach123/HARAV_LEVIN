@@ -104,4 +104,12 @@ assert.equal((await post(mail('mailer-daemon@x.com', 'הצטרפות', ''))).tex
 for (let i = 0; i < 6; i++) await post(mail('spam@x.com', 'הצטרפות', ''));
 assert.equal((await post(mail('spam@x.com', 'הצטרפות', ''))).text, 'limited');
 
+// 7. נשלח לכתובת ה-Gmail (שמעבירה ל-CloudMailin): התשובות והכפתור לכתובת הזו
+sent.length = 0;
+r = await post({ headers: { from: 'avi@example.com', to: 'Iska Join <IskaJoin@gmail.com>', subject: 'הצטרפות' }, plain: '' });
+assert.equal(r.text, 'form sent'); assert.equal(sent[0].reply_to, 'iskajoin@gmail.com'); assert.match(sent[0].html, /mailto:iskajoin@gmail\.com/);
+sent.length = 0;
+await post({ headers: { from: 'avi2@example.com', to: 'eea6f909d9fc5ae94f3b@cloudmailin.net', subject: 'הצטרפות' }, plain: '' });
+assert.equal(sent[0].reply_to, 'join@example.org');
+
 console.log('simulate_join_email: ok');

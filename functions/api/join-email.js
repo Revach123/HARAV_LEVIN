@@ -245,7 +245,9 @@ export async function onRequestPost({ request, env }) {
     if (!sender || isAutomatic(msg, sender)) return ok('ignored');
     if (!(await underLimit(env, sender))) return ok('limited');
 
-    const rt = replyTo(env);
+    // כתובת לתשובות ולכפתור המילוי: הכתובת שאליה נשלח המייל (למשל ה-Gmail שמעביר ל-CloudMailin), ואם נשלח ישר ל-CloudMailin - JOIN_EMAIL_REPLY_TO
+    const toAddr = addressOf(header(msg, 'to'));
+    const rt = toAddr && !/@cloudmailin\.net$/.test(toAddr) ? toAddr : replyTo(env);
     if (!filled) {                                           // בקשה ראשונה: שולחים את הטופס
       const { names, code } = await companyList(env, origin);
       await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt }), replyTo: rt });
