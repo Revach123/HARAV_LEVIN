@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs-test.js?v=80"></script>
+<script src="/permit-docs-test.js?v=81"></script>
 <script src="/name-check.js?v=20261028h"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1166,10 +1166,13 @@ function agchLabel(b) {
 
 const PCAT_SEP = "|";                       // כמה קטגוריות לעסק נשמרות בשדה אחד, מופרדות ב-|
 const pcatSplit = s => String(s || "").split(PCAT_SEP).map(x => x.trim()).filter(Boolean);
+const PCAT_BONDS = 'חברות מנפיקות אג"ח';          // נקבעת אוטומטית בשרת לפי "יש אג"ח" (כולל לא סחיר) - לא מוסיפים / מסירים ידנית
 function pcatBoxHtml(val) {
   const cur = pcatSplit(val), all = [...new Set(businesses.flatMap(x => pcatSplit(x.permits_category)))].sort((x, y) => x.localeCompare(y, "he"));
-  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${cur.map((c, i) => `<span style="background:#e8f0fb;border:1px solid #9bb8e0;border-radius:14px;padding:3px 10px;font-size:.9em">${escHtml(c)} <a href="#" style="color:#a00;text-decoration:none" onclick="pcatDel(${i});return false" title="הסר">✕</a></span>`).join("") || '<span style="color:var(--light)">ללא קטגוריה</span>'}</div>
-    <select onchange="pcatAdd(this)"><option value="">➕ הוספת קטגוריה…</option>${all.filter(x => !cur.includes(x)).map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${cur.map((c, i) => c === PCAT_BONDS
+      ? `<span style="background:#eef6ee;border:1px solid #9cc79c;border-radius:14px;padding:3px 10px;font-size:.9em" title="אוטומטי: חברה שרשום אצלה יש אג&quot;ח (כולל לא סחיר) נכנסת לקטגוריה הזו, ובלי אג&quot;ח יוצאת ממנה">${escHtml(c)} <span style="color:var(--muted)">(אוטומטי)</span></span>`
+      : `<span style="background:#e8f0fb;border:1px solid #9bb8e0;border-radius:14px;padding:3px 10px;font-size:.9em">${escHtml(c)} <a href="#" style="color:#a00;text-decoration:none" onclick="pcatDel(${i});return false" title="הסר">✕</a></span>`).join("") || '<span style="color:var(--light)">ללא קטגוריה</span>'}</div>
+    <select onchange="pcatAdd(this)"><option value="">➕ הוספת קטגוריה…</option>${all.filter(x => !cur.includes(x) && x !== PCAT_BONDS).map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
 }
 function pcatRender() { const h = document.getElementById("f-pcat"), b = document.getElementById("pcat-box"); if (h && b) b.innerHTML = pcatBoxHtml(h.value); }
 function pcatAdd(sel) {

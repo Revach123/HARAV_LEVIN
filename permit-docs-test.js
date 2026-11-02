@@ -735,8 +735,9 @@
   const PSEP = "|", pcatSp = s => String(s || "").split(PSEP).map(x => x.trim()).filter(Boolean);          // כמה קטגוריות לעסק: מופרדות ב-|
   const pcatList = () => [...new Set(bizList().flatMap(x => pcatSp(x.permits_category)))].sort((a, b) => a.localeCompare(b, "he"));
   function pcatSelect(cur) {          // "קטגוריות עבור רשימת השטרות": אפשר כמה; הסרה, בחירת קיימת או יצירת חדשה
-    const cs = pcatSp(cur), l = pcatList().filter(x => !cs.includes(x));
-    return `<span class="pd-pcats">${cs.map((x, i) => `<span class="pd-tag">${E(x)} <a href="#" style="color:#a00;text-decoration:none" onclick="PD._acPcat('del',${i});return false" title="הסר">✕</a></span>`).join(" ") || '<span class="pd-sub">ללא</span>'}</span> <select class="pd-in pd-ac-pcat" onchange="PD._acPcat('add',this)"><option value="">➕ הוספת קטגוריה…</option>${l.map(x => `<option value="${E(x)}">${E(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
+    const BONDS = 'חברות מנפיקות אג"ח';          // נקבעת אוטומטית בשרת לפי "יש אג"ח" (כולל לא סחיר) - לא מוסיפים / מסירים ידנית
+    const cs = pcatSp(cur), l = pcatList().filter(x => !cs.includes(x) && x !== BONDS);
+    return `<span class="pd-pcats">${cs.map((x, i) => x === BONDS ? `<span class="pd-tag" title="אוטומטי לפי יש אג&quot;ח">${E(x)} (אוטומטי)</span>` : `<span class="pd-tag">${E(x)} <a href="#" style="color:#a00;text-decoration:none" onclick="PD._acPcat('del',${i});return false" title="הסר">✕</a></span>`).join(" ") || '<span class="pd-sub">ללא</span>'}</span> <select class="pd-in pd-ac-pcat" onchange="PD._acPcat('add',this)"><option value="">➕ הוספת קטגוריה…</option>${l.map(x => `<option value="${E(x)}">${E(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
   }
   async function acPcat(op, arg) {
     const c = U.cur; if (!c || !c.pick) return;

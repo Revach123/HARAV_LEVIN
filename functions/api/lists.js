@@ -11,6 +11,8 @@
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
 
+import { applyBondPcatRows, loadNontradableChps, withBondPcat } from "./_shared/bond-pcat.js";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -273,6 +275,14 @@ export async function onRequestGet(context) {
     if (type === "companies-private" || type === "companies-general") {
       await addSelectiveNotes(request, env, results, type === "companies-private" ? "private" : "general");
       results = withRegistrarNames(results, await loadOfferings(request, env));
+      // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות: לפי מה שרשום בעמודת האג"ח ("יש אג"ח..." כולל בהנפקה), או אג"ח לא סחירה פעילה
+      if (results.some(r => "permits_category" in r)) {
+        const nontrad = await loadNontradableChps(request, env);
+        for (const r of results) if ("permits_category" in r)
+          r.permits_category = withBondPcat(r.permits_category, String(r.bonds_status || "").startsWith('יש אג"ח') || nontrad.has(String(r.chp_number || "").trim()));
+      }
+    } else if (type === "companies-all") {
+      results = await applyBondPcatRows(request, env, results);
     }
 
     if (format === "csv") {

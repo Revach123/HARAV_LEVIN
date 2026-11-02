@@ -1,17 +1,19 @@
 import { checkAdmin } from "./_shared/auth.js";
 import { bondFlagFor } from "./company-bonds.js";
 import { normalizePcat } from "./_shared/pcat.js";
+import { applyBondPcatRows, syncBondPcatFor } from "./_shared/bond-pcat.js";
 // GET  /api/businesses        → list all (public)
 // POST /api/businesses        → create new (admin only)
 
 const isAuthed = (request, env) => checkAdmin(request, env);
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
   try {
     const result = await env.DB
       .prepare("SELECT * FROM businesses ORDER BY registrar_name, permit_name COLLATE NOCASE")
       .all();
-    return Response.json(result.results ?? []);
+    // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות נקבעת אוטומטית לפי "יש אג"ח" (ר' _shared/bond-pcat.js)
+    return Response.json(await applyBondPcatRows(request, env, result.results ?? []));
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
@@ -64,6 +66,7 @@ export async function onRequestPost({ request, env }) {
     {          // דגל "יש אג"ח" מיידי (במקום לחכות לריצה הלילית); אם אי אפשר לבדוק נשאר ריק
       try { const f = await bondFlagFor(env, chp_number); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
     }
+    await syncBondPcatFor(request, env, id);          // "חברות מנפיקות אג"ח": נכנסת / יוצאת לפי "יש אג"ח" (_shared/bond-pcat.js)
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
