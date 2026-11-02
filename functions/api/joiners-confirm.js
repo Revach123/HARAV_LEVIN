@@ -35,15 +35,9 @@ async function sendNedarimRange(request, env) {
   const end = new Date(Date.parse(to + "T00:00:00Z") + 86400000).toISOString().slice(0, 10);
   const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, pii FROM joiners WHERE submitted_at >= ? AND submitted_at < ? ORDER BY submitted_at").bind(from, end).all()).results ?? [];
   const sent = new Set(((await env.DB.prepare("SELECT id FROM joiner_mail").all()).results ?? []).map(r => r.id));
-  // כתובות אימייל שכבר קיבלו אישור (גם ממצטרף אחר): לא שולחים אליהן שוב. וגם לא פעמיים לאותה כתובת באותה הרצה.
-  const gotEmail = new Set(), sentIds = [...sent];
-  for (let i = 0; i < sentIds.length; i += 90) {
-    const ids = sentIds.slice(i, i + 90);
-    for (const row of (await env.DB.prepare(`SELECT id, pii FROM joiners WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all()).results ?? []) {
-      try { const q = await decryptPii(key, row.id, row.pii); const e = String(q.email || "").trim().toLowerCase(); if (e) gotEmail.add(e); } catch { /* מדלגים */ }
-    }
-  }
-  const todo = [], seenNow = new Set(); let dupSkipped = 0, noEmail = 0, cancelled = 0, already = 0;
+  // כל נרשם מקבל את האישור שלו (פעם אחת לכל רישום), גם אם הכתובת כבר קיבלה אישור - ייתכן שזה עבור מישהו אחר.
+  // (טיפול ברישומים כפולים - בהמשך, באזור הניהול האישי)
+  const todo = []; let noEmail = 0, cancelled = 0, already = 0;
   for (const r of rs) {
     if (r.cancelled_at) { cancelled++; continue; }
     if (sent.has(r.id)) { already++; continue; }
@@ -51,12 +45,9 @@ async function sendNedarimRange(request, env) {
     if (!/^nedarim/.test(String(p.src || ""))) continue;
     const email = String(p.email || "").trim();
     if (!validEmail(email)) { noEmail++; continue; }
-    const k = email.toLowerCase();
-    if (gotEmail.has(k) || seenNow.has(k)) { dupSkipped++; continue; }
-    seenNow.add(k);
     todo.push({ r, p, email });
   }
-  if (b.dry === true) return out({ ok: true, dry: true, in_range: rs.length, to_send: todo.length, unique_emails: new Set(todo.map(x => x.email.toLowerCase())).size, skipped_same_email: dupSkipped, skipped_no_valid_email: noEmail, skipped_cancelled: cancelled, skipped_already_sent: already });
+  if (b.dry === true) return out({ ok: true, dry: true, in_range: rs.length, to_send: todo.length, unique_emails: new Set(todo.map(x => x.email.toLowerCase())).size, skipped_no_valid_email: noEmail, skipped_cancelled: cancelled, skipped_already_sent: already });
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET) return out({ error: "שליחת מיילים לא מוגדרת באתר (WP_MAIL_URL / WP_MAIL_SECRET)" }, 503);
   const origin = new URL(request.url).origin; let ok = 0, failed = 0;
   for (const { r, p, email } of todo.slice(0, BATCH)) {
@@ -64,7 +55,7 @@ async function sendNedarimRange(request, env) {
     const sentOk = await sendConfirmation(env, email, { first: p.first || "", last: p.last || "", id: p.id || "", date: d, all: !!p.all, companies: String(p.companies || "").split(",").map(x => x.trim()).filter(Boolean), origin, intro: `מצורף אישור על הצטרפותך מתאריך ${d}.` });
     if (sentOk) { await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(r.id).run(); ok++; } else failed++;
   }
-  return out({ ok: true, sent: ok, failed, remaining: Math.max(0, todo.length - ok - failed), to_send_before: todo.length, skipped_same_email: dupSkipped });
+  return out({ ok: true, sent: ok, failed, remaining: Math.max(0, todo.length - ok - failed), to_send_before: todo.length });
 }
 
 export async function onRequestPost({ request, env }) {
