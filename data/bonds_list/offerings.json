@@ -470,27 +470,6 @@
    "chp_number": "512084336"
   },
   {
-   "id": 10391,
-   "maya_report_id": 1777726,
-   "company_name": "איביאי ריב פיק",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 1,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1777726",
-   "link_trust_indenture": null,
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "517220448"
-  },
-  {
    "id": 10289,
    "maya_report_id": 1767283,
    "company_name": "נגה נכסים",
@@ -669,6 +648,31 @@
     }
    ],
    "chp_number": "517207239"
+  },
+  {
+   "offer_number": 1244805,
+   "issuer_id": 2580,
+   "issuer_name": "איביאי ריב פיק",
+   "is_new_company": false,
+   "begins_at": "2026-11-03T09:00:00",
+   "ends_at": "2026-11-03T16:00:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 0.18,
+   "is_variable_interest": true,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1779167",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אגח ב",
+     "security_type": "אג\"ח מובנות",
+     "linkage_type": "ללא",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": "517220448"
   }
  ],
  "companies": [
@@ -774,7 +778,7 @@
    "chp_number": "517220448",
    "name": "איביאי ריב פיק",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {

@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1244805": {
+   "data": {
+    "begins_at": "2026-11-03T09:00:00",
+    "chp_number": "517220448",
+    "ends_at": "2026-11-03T16:00:00",
+    "interest": 0.18,
+    "is_new_company": false,
+    "is_variable_interest": true,
+    "issuer_id": 2580,
+    "issuer_name": "איביאי ריב פיק",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1779167",
+    "offer_number": 1244805,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "security_id": null,
+      "security_name": "אגח ב",
+      "security_type": "אג\"ח מובנות"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-02"
+  },
   "O1246321": {
    "data": {
     "begins_at": "2026-11-03T08:00:00",
@@ -566,31 +595,6 @@
     "link_prospectus": null,
     "link_trust_indenture": "https://maya.tase.co.il/he/reports/1777220",
     "maya_report_id": 1777220,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-02"
-  },
-  "U10391": {
-   "data": {
-    "chp_number": "517220448",
-    "company_name": "איביאי ריב פיק",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10391,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1777726",
-    "link_trust_indenture": null,
-    "maya_report_id": 1777726,
     "new_company_type": null,
     "securities": [
      {
