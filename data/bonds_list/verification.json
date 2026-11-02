@@ -1,9 +1,9 @@
 {
- "updated": "2026-11-01",
+ "updated": "2026-11-02",
  "status": "ok",
  "datawise_date": "2026-10-30",
- "expected": 772,
- "maya": 772,
+ "expected": 775,
+ "maya": 775,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
@@ -14,6 +14,12 @@
    "security_name": "פניקס הון אגח ה",
    "company": "הפניקס גיוסי הון (2009) בע\"מ",
    "chp_number": "514290345"
+  },
+  {
+   "security_id": 6000384,
+   "security_name": "חשמל אגח 32",
+   "company": "חברת החשמל לישראל בעמ",
+   "chp_number": "520000472"
   }
  ]
 }
