@@ -234,6 +234,7 @@ title=חיפוש היתר עסקה חברות
 - השליחה דרך וורדפרס (`WP_MAIL_URL`), עם Reply-To ל-`JOIN_EMAIL_REPLY_TO` (ב-`wrangler.toml`), כדי שהתשובות יחזרו ל-CloudMailin. **דורש את הגרסה העדכנית של `wp-mail-endpoint.php` ב-WPCode** (שורת `reply_to`).
 - אבטחה: ב-CloudMailin מגדירים Authorization header (Bearer `<סוד>`, או Basic עם שם משתמש כלשהו והסוד), ובאתר את אותו סוד ב-`JOIN_EMAIL_SECRET`. בלי הסוד הכתובת מחזירה 403. עד 6 תשובות לשולח ביום ו-300 ביום בסך הכול (טבלה `join_email_log`).
 - בדיקה מקומית: `node --no-warnings scripts/voice_search/simulate_join_email.mjs`.
+- **בלי העברה ובלי CloudMailin:** `scripts/gmail_join/join_email.gs` - סקריפט Google Apps Script בתוך חשבון ה-Gmail של כתובת ההצטרפות. כל דקה הוא שולח לאתר מיילים חדשים עם "הצטרפות" בכותרת (באותו מבנה כמו CloudMailin). ההוראות בראש הקובץ.
 
 ## קליטת הרשמות מטופס נדרים פלוס (קבלה בלבד)
 - הקוד: `functions/api/joiners-nedarim-sync.js`. כפתור בניהול: טבלת המצטרפים → "🔄 משיכה מנדרים פלוס".
