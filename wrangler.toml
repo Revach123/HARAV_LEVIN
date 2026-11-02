@@ -33,6 +33,8 @@ bucket_name = "harav-levin-joiners"
 IVR_REC_MIN_SEC = "1"   # הקלטה: מינימום שניות
 IVR_REC_MAX_SEC = "6"   # הקלטה: מקסימום שניות ("0" = בלי הגבלה)
 # אופציונלי (ברירות המחדל בקוד): IVR_REC_FOLDER = "/6", IVR_BACK_FOLDER = "/5"
+# הצטרפות במייל (functions/api/join-email.js): כתובת CloudMailin שאליה חוזרות התשובות. הסוד JOIN_EMAIL_SECRET מוגדר בנפרד.
+JOIN_EMAIL_REPLY_TO = "eea6f909d9fc5ae94f3b@cloudmailin.net"
 
 # After setup, run:
 # npx wrangler d1 create business-registry-db

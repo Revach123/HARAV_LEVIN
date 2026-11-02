@@ -3,6 +3,7 @@ export function srcLabel(src, extra) {
   const s = String(src || "");
   let o = {}; try { const j = typeof extra === "string" ? JSON.parse(extra || "{}") : extra; if (j && typeof j === "object") o = j; } catch { /* טקסט חופשי */ }
   if (/טלפון/.test(o["ערוץ"] || "") || s === "ivr") return "טלפון";
+  if (s === "email") return "מייל";
   if (/^nedarim/.test(s)) return "נדרים פלוס";
   if (s === "site:embed") return "אתר";
   if (s === "site:kehilot") return "אתר (ישיר)";
