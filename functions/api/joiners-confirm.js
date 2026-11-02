@@ -34,9 +34,12 @@ async function sendNedarimRange(request, env) {
   await table(env);
   const end = new Date(Date.parse(to + "T00:00:00Z") + 86400000).toISOString().slice(0, 10);
   const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, pii FROM joiners WHERE submitted_at >= ? AND submitted_at < ? ORDER BY submitted_at").bind(from, end).all()).results ?? [];
-  const sent = new Set(((await env.DB.prepare("SELECT id FROM joiner_mail").all()).results ?? []).map(r => r.id));
+  const mailRows = (await env.DB.prepare("SELECT id, sent_at FROM joiner_mail").all()).results ?? [];
+  const sent = new Set(mailRows.map(r => r.id)), sentAt = new Map(mailRows.map(r => [r.id, String(r.sent_at || "")]));
   // כתובות אימייל שכבר קיבלו אישור (גם ממצטרף אחר): לא שולחים אליהן שוב. וגם לא פעמיים לאותה כתובת באותה הרצה.
-  const gotEmail = new Set(), sentIds = [...sent];
+  // retry (ניסיון חוזר יומי): רק אישור שנשלח מתחילת הטווח נחשב (הגשות כפולות באותו שבוע); אישור על הרשמה ישנה יותר לא מונע אישור להרשמה החדשה
+  const recentOnly = !!b.retry;
+  const gotEmail = new Set(), sentIds = [...sent].filter(id => !recentOnly || sentAt.get(id) >= from);
   for (let i = 0; i < sentIds.length; i += 90) {
     const ids = sentIds.slice(i, i + 90);
     for (const row of (await env.DB.prepare(`SELECT id, pii FROM joiners WHERE id IN (${ids.map(() => "?").join(",")})`).bind(...ids).all()).results ?? []) {

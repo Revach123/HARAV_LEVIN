@@ -2571,11 +2571,13 @@
   async function jNedBg() {
     if (J.nedBusy) return;
     J.nedBusy = true; J.nedErr = ""; jNedSpin();
-    let added = 0;
-    try { for (let i = 0; i < 2000; i++) { const r = await api("/joiners-nedarim-sync", "POST", { mail: true }); added += r.added || 0; if (!r.more) break; } }
+    let added = 0, mailed = 0;
+    try { for (let i = 0; i < 2000; i++) { const r = await api("/joiners-nedarim-sync", "POST", { mail: true }); added += r.added || 0; mailed += r.mailed || 0; if (!r.more) break; } }
     catch (e) { J.nedErr = "משיכה מנדרים פלוס נכשלה: " + (e.message || "שגיאה"); }
     J.nedBusy = false; jNedSpin();
     if (added) { if (J.loading) J.needReload = true; else { J.rows = null; jLoad(); } }
+    // אישורים שנשלחו במשיכה: מרעננים את עמודת "אישור במייל" גם אם הרשימה כבר נטענה (אחרת נשאר "לא נשלח" עד רענון הדף)
+    else if (mailed && J.rows) api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});
   }
   const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
   const jDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };          // יום/חודש/שנה
