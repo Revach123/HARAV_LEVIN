@@ -61,7 +61,7 @@ h1{margin:0 0 6px;font-size:22px;color:#1b6b52}
 export function buildAmp({ action, token, names = [], code = '' }) {
   const field = (name, label, { hint = '', req = true, pattern = '', min = 0, max = 60, mode = '', msg = '' } = {}) => `
 <div class="row"><label class="lbl" for="f-${name}">${esc(label)}${hint ? ` <span class="hint">(${esc(hint)})</span>` : ''}</label>
-<input class="in" id="f-${name}" name="${name}" type="text"${req ? ' required' : ''}${pattern ? ` pattern="${esc(pattern)}"` : ''}${min ? ` minlength="${min}"` : ''} maxlength="${max}"${mode === 'tel' ? '' : ''}>
+<input class="in" id="f-${name}" name="${name}" type="${mode === 'tel' ? 'tel' : 'text'}"${req ? ' required' : ''}${pattern ? ` pattern="${esc(pattern)}"` : ''}${min ? ` minlength="${min}"` : ''} maxlength="${max}">
 ${req ? `<span class="err" visible-when-invalid="valueMissing" validation-for="f-${name}">שדה חובה</span>` : ''}
 ${pattern ? `<span class="err" visible-when-invalid="patternMismatch" validation-for="f-${name}">${esc(msg)}</span>` : ''}</div>`;
   const search = names.length && names.length <= 800;
