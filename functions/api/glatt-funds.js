@@ -96,9 +96,37 @@ async function read(env) {
   return { updated: meta.updated || "", saved_at: meta.saved_at || "", type_order: typeOrder, rows };
 }
 
-export async function onRequestGet({ env }) {
-  try { await ensure(env); return Response.json(await read(env), { headers: { ...CORS, "Cache-Control": "public, max-age=60" } }); }
-  catch (e) { return Response.json({ error: e.message }, { status: 500, headers: CORS }); }
+// רשימה מוכנה אחת מתוך השתיים (למשל לנדרים פלוס), מתעדכנת אוטומטית בכל שינוי ברשימה:
+//   /api/glatt-funds?list=pension   "קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד"
+//   /api/glatt-funds?list=savings   "תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל"
+//   &format=csv - קובץ CSV (לאקסל). שורות שסומנו "הוסר" (del) לא נכללות. אותו סדר כמו בדף funds.html.
+const LISTS = { pension: "קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד", savings: "תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל" };
+const FIRST = ["מיטב", "הראל"];
+function listRows(data, tab) {          // כמו sortRows ב-funds.html: לפי סדר הסוגים, ובתוך כל סוג מיטב, הראל ואז שאר החברות לפי א-ב
+  const order = [...(((data.type_order || {})[tab]) || [])];
+  const rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
+  const mine = (data.rows || []).filter(r => (r.tab === tab || r.tab === "both") && r.mark !== "del");
+  mine.forEach(r => { if (!order.includes(r.type)) order.push(r.type); });
+  return mine.map((r, n) => ({ r, n })).sort((a, b) => (order.indexOf(a.r.type) - order.indexOf(b.r.type))
+    || (rank(a.r.company)[0] - rank(b.r.company)[0]) || rank(a.r.company)[1].localeCompare(rank(b.r.company)[1], "he") || (a.n - b.n))
+    .map(({ r }) => ({ type: r.type || "", company: r.company || "", track: r.track || "", number: r.number || "", note: r.note || "", ...(r.mark === "new" ? { new: true } : {}) }));
+}
+const csvCell = v => { const s = String(v == null ? "" : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+export async function onRequestGet({ request, env }) {
+  try {
+    await ensure(env);
+    const data = await read(env);
+    const p = new URL(request.url).searchParams, list = p.get("list");
+    if (!list) return Response.json(data, { headers: { ...CORS, "Cache-Control": "public, max-age=60" } });
+    if (!LISTS[list]) return Response.json({ error: "list חייב להיות pension או savings" }, { status: 400, headers: CORS });
+    const rows = listRows(data, list);
+    if ((p.get("format") || "").toLowerCase() === "csv") {
+      const lines = [["סוג", "שם חברה", "שם מסלול", "מספר קופה", "הערות"], ...rows.map(r => [r.type, r.company, r.track, r.number, r.note])].map(l => l.map(csvCell).join(","));
+      return new Response("\ufeff" + lines.join("\r\n") + "\r\n", { headers: { ...CORS, "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": `inline; filename="glatt-funds-${list}.csv"`, "Cache-Control": "public, max-age=60" } });
+    }
+    return Response.json({ list, title: LISTS[list], updated: data.updated || "", count: rows.length, rows }, { headers: { ...CORS, "Cache-Control": "public, max-age=60" } });
+  } catch (e) { return Response.json({ error: e.message }, { status: 500, headers: CORS }); }
 }
 
 export async function onRequestPut({ request, env }) {
