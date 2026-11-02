@@ -9,7 +9,8 @@ scripts/registry_refresh/refresh_businesses.py
      בבאצ'ים (datastore_search עם רשימת מספרים בפילטר; datastore_search_sql כבר מחזיר 404), לא בקשה לעסק.
      עדיפות: חברה > שותפות > עמותה (כמו ב-Worker). מעדכן registrar_name ו-biz_type כשהשתנו.
   2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך הסחירים של datawise (Securities Basic) — האם לח"פ
-     יש אג"ח סחירה (קוד סוג 03/05/11/36), *כולל ני"ע מסחריים*.
+     יש אג"ח סחירה (קוד סוג 03/05/11/36), *כולל ני"ע מסחריים*; וגם אג"ח *לא סחירה* פעילה - לפי
+     data/bonds_list/nontradable_chps.json (סריקת מאיה לכל החברות, נבנה יומית ב-bonds-list) ו-bonds_institutional.json.
 
 מצבים:
   * ברירת מחדל = בדיקה בלבד (dry-run): לא כותב כלום ל-D1, רק מחשב ושומר דוח.
@@ -241,6 +242,24 @@ def fetch_bond_corporate_ids():
     return None, 0, None
 
 
+def load_nontradable_chps():
+    """ח"פים עם אג"ח לא סחירה פעילה (מהבנייה היומית של רשימת האג"ח). קובץ חסר/פגום = קבוצה ריקה (רק סחירות)."""
+    out = set()
+    base = os.path.join(ROOT, "data", "bonds_list")
+    try:
+        with open(os.path.join(base, "nontradable_chps.json"), encoding="utf-8") as fh:
+            out |= {str(c).strip() for c in (json.load(fh).get("chps") or [])}
+    except (OSError, ValueError, AttributeError):
+        print("WARNING: nontradable_chps.json missing - non-tradable bonds not counted", file=sys.stderr)
+    try:
+        with open(os.path.join(base, "bonds_institutional.json"), encoding="utf-8") as fh:
+            out |= {str(r.get("chp_number") or "").strip() for r in (json.load(fh).get("rows") or [])}
+    except (OSError, ValueError, AttributeError):
+        pass
+    out.discard("")
+    return out
+
+
 # ── חישוב השינויים ───────────────────────────────────────────────────────────
 def is_liquidated(status):
     return str(status or "").startswith(("מחוסל", "חיסול", "מחוק", "נגרע"))
@@ -343,6 +362,10 @@ def main(apply=False, scope="all"):
             bond_ids = None
     if scope == "bonds" and bond_ids is None:
         sys.exit("datawise unavailable or too small - nothing was updated")
+    nontrad_ids = load_nontradable_chps() if bond_ids is not None else set()
+    if bond_ids is not None:          # "יש אג"ח" = סחירה או לא סחירה פעילה
+        traded_count = len(bond_ids)
+        bond_ids = bond_ids | nontrad_ids
 
     changes = compute_changes(businesses, registry, bond_ids)
     not_found = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name"),
@@ -379,6 +402,8 @@ def main(apply=False, scope="all"):
         "found_in_registry": len(registry), "found_ratio": round(found_ratio, 3),
         "failed_batches": failed_batches, "datawise_rows": dw_rows, "datawise_date": dw_date,
         "bond_companies": None if bond_ids is None else len(bond_ids),
+        "bond_companies_traded": None if bond_ids is None else traded_count,
+        "nontradable_companies": len(nontrad_ids),
         "changes": {f: sum(1 for c in changes if c["field"] == f)
                     for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status")},
         "fills_of_empty": {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())

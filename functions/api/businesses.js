@@ -64,7 +64,7 @@ export async function onRequestPost({ request, env }) {
       catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
     }
     {          // דגל "יש אג"ח" מיידי (במקום לחכות לריצה הלילית); אם אי אפשר לבדוק נשאר ריק
-      try { const f = await bondFlagFor(env, chp_number); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
+      try { const f = await bondFlagFor(env, chp_number, null, request); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
     }
     await syncBondPcatFor(request, env, id);          // "חברות מנפיקות אג"ח": נכנסת / יוצאת לפי "יש אג"ח" (_shared/bond-pcat.js)
     return Response.json({ success: true });
