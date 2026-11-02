@@ -19,6 +19,7 @@ import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE } from './_shared/agree
 import { importKeyForWrite, encryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, validEmail, clean, jerusalemNow, newRowId } from './_shared/join-common.js';
 import { onRequestGet as listsGet } from './lists.js';
+import { buildAmp, makeToken } from './_shared/join-amp.js';
 
 const AGREEMENT_VERSION = 'מייל-1';
 const PER_SENDER_DAY = 6, ALL_DAY = 300;
@@ -119,7 +120,7 @@ export async function companyList(env, origin) {
   } catch { /* בלי שמירה: מספרים יתפרשו לפי הרשימה העדכנית */ }
   return { names, code };
 }
-async function listByCode(env, origin, code) {
+export async function listByCode(env, origin, code) {
   if (/^\d{7}$/.test(String(code || ''))) {
     try {
       await listTable(env);
@@ -210,7 +211,7 @@ ${names.length ? `<div style="border-top:1px solid #cfdcdc;padding-top:12px;marg
 
 // ---- הגבלת כמות תשובות ----
 let logReady = false;
-async function underLimit(env, sender) {
+export async function underLimit(env, sender) {
   try {
     if (!logReady) { await env.DB.prepare('CREATE TABLE IF NOT EXISTS join_email_log (day TEXT, who TEXT, n INTEGER, PRIMARY KEY (day, who))').run(); logReady = true; }
     const day = jerusalemNow().slice(0, 10);
@@ -224,6 +225,12 @@ async function underLimit(env, sender) {
 }
 
 const replyTo = (env) => addressOf(env.JOIN_EMAIL_REPLY_TO || '');
+// חלק ה-AMP (טופס חי בתוך Gmail). JOIN_EMAIL_AMP = "0" מכבה.
+async function ampPart(env, origin, to, names, code) {
+  if (String(env.JOIN_EMAIL_AMP || '') === '0') return '';
+  const token = await makeToken(env, to);
+  return token ? buildAmp({ action: `${origin}/api/join-email-amp`, token, names, code }) : '';
+}
 const isAutomatic = (msg, sender) => /^(mailer-daemon|postmaster|no-?reply|bounce)/i.test(sender) || /^wordpress@/i.test(sender)
   || /auto-(replied|generated)/i.test(header(msg, 'auto_submitted')) || /bulk|junk|list/i.test(header(msg, 'precedence'));
 
@@ -263,7 +270,7 @@ export async function onRequestPost({ request, env }) {
     const rt = toAddr && !/@cloudmailin\.net$/.test(toAddr) ? toAddr : replyTo(env);
     if (!filled) {                                           // בקשה ראשונה: שולחים את הטופס
       const { names, code } = await companyList(env, origin);
-      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt }), replyTo: rt });
+      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt }), amp: await ampPart(env, origin, sender, names, code), replyTo: rt });
       return ok('form sent');
     }
     const ref = await listByCode(env, origin, list);
@@ -274,7 +281,7 @@ export async function onRequestPost({ request, env }) {
       if (!v.all && ref.code !== cur.code && v.companies.length) {          // הרשימה השתנתה: המספרים שנבחרו מתורגמים לרשימה החדשה
         values.companies = v.companies.map((n) => cur.names.indexOf(n) + 1).filter(Boolean).join(', ');
       }
-      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - יש לתקן את הטופס', ...formMail({ values, errors, names: cur.names, code: cur.code, to: rt }), replyTo: rt });
+      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - יש לתקן את הטופס', ...formMail({ values, errors, names: cur.names, code: cur.code, to: rt }), amp: await ampPart(env, origin, sender, cur.names, cur.code), replyTo: rt });
       return ok('missing');
     }
     await save(env, v, sender, header(msg, 'message_id'), origin);
@@ -285,7 +292,7 @@ export async function onRequestPost({ request, env }) {
   }
 }
 
-async function save(env, v, email, messageId, origin) {
+export async function save(env, v, email, messageId, origin, channel = 'מייל') {
   const key = await importKeyForWrite(env);
   const ih = await identHash(env, v.id);
   const recent = await env.DB.prepare('SELECT id FROM joiners WHERE ident_hash = ? AND submitted_at >= ? LIMIT 1')
@@ -294,7 +301,7 @@ async function save(env, v, email, messageId, origin) {
   const rid = newRowId(), now = jerusalemNow();
   const address = [[v.street, v.house].filter(Boolean).join(' '), v.city].filter(Boolean).join(', ');
   const extra = {
-    'ערוץ': 'מייל',
+    'ערוץ': channel,
     ...(v.phone2 ? { 'טלפון נוסף': v.phone2 } : {}),
     ...(v.fax ? { 'פקס': v.fax } : {}),
     'כתובת': address, 'עיר': v.city, 'רחוב': v.street, ...(v.house ? { 'מספר בית': v.house } : {}),

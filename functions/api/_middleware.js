@@ -55,7 +55,7 @@ export async function onRequest(context) {
 
   // Attach CORS to every response
   const newHeaders = new Headers(response.headers);
-  Object.entries(corsHeaders).forEach(([k, v]) => newHeaders.set(k, v));
+  Object.entries(corsHeaders).forEach(([k, v]) => { if (!newHeaders.has(k)) newHeaders.set(k, v); });   // תשובה שקבעה CORS בעצמה (למשל טופס AMP במייל) - נשארת
   if (ver) { newHeaders.set("X-Data-Ver", JSON.stringify(ver)); newHeaders.set("Access-Control-Expose-Headers", "X-Data-Ver"); }
 
   // נשמרות רק תשובות תקינות (200). קישורי השטרות בכשל חוזרים כ-200 בלי Cache-Control - לא נשמרים

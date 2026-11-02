@@ -41,11 +41,12 @@ ${AGREEMENT_BEFORE_CHOICE.map(p).join("")}${AGREEMENT_AFTER_CHOICE.map(p).join("
 
 // שליחת מייל כללית דרך וורדפרס. מחזיר true אם נשלח. לעולם לא זורק (כשל במייל לא פוגע בשמירת הנתונים).
 // replyTo: כתובת לתשובות (Reply-To), למשל כתובת ההצטרפות במייל (דורש את גרסת wp-mail-endpoint.php שמכירה reply_to)
-export async function sendMail(env, { to, subject, html, text, replyTo }) {
+// amp: חלק AMP (text/x-amp-html) אופציונלי - דורש את גרסת wp-mail-endpoint.php שמכירה amp
+export async function sendMail(env, { to, subject, html, text, replyTo, amp }) {
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
     const r = await fetch(env.WP_MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json", "X-Iska-Secret": env.WP_MAIL_SECRET },
-      body: JSON.stringify({ to, subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}) }) });
+      body: JSON.stringify({ to, subject, html, text, ...(replyTo ? { reply_to: replyTo } : {}), ...(amp ? { amp } : {}) }) });
     return r.ok;
   } catch { return false; }
 }

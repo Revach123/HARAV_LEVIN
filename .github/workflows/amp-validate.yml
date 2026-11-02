@@ -1,0 +1,27 @@
+name: amp-validate
+
+# בדיקת תקינות מייל ה-AMP של טופס ההצטרפות (functions/api/_shared/join-amp.js) ב-amphtml-validator (AMP4EMAIL).
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - functions/api/_shared/join-amp.js
+      - scripts/amp/**
+      - .github/workflows/amp-validate.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Build sample
+        run: node scripts/amp/sample_join_amp.mjs > sample.html && wc -c sample.html
+      - name: Validate (AMP4EMAIL)
+        run: npx -y amphtml-validator@1.0.38 --html_format AMP4EMAIL sample.html
