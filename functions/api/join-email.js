@@ -55,7 +55,9 @@ export function authProblem(request, env) {
   let given = null;
   if (/^bearer\s+/i.test(h)) given = h.replace(/^bearer\s+/i, '').trim();
   else if (/^basic\s+/i.test(h)) { try { const d = atob(h.replace(/^basic\s+/i, '').trim()); given = d.slice(d.indexOf(':') + 1).trim(); } catch { given = null; } }
-  if (given == null) return 'unsupported Authorization header (use Basic or Bearer)';
+  else if (/^(token|key)\s+/i.test(h)) given = h.replace(/^(token|key)\s+/i, '').trim();
+  else if (!/\s/.test(h)) given = h;                                       // הסיסמה עצמה, בלי סוג
+  if (given == null) return 'unsupported Authorization header (use Basic, Bearer, or just the password)';
   if (given !== s) return `password does not match JOIN_EMAIL_SECRET (lengths: sent ${given.length}, site ${s.length})`;
   return '';
 }
