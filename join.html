@@ -69,6 +69,12 @@
   .plist label{display:flex;align-items:center;gap:.7rem;min-height:50px;padding:.4rem .8rem;border-bottom:1px solid var(--border);font-size:17px;cursor:pointer}
   .plist label:last-child{border-bottom:0}
   .plist input{width:24px;height:24px;flex:none;accent-color:var(--accent-dark)}
+  .plist .grp{border-bottom:1px solid var(--border)}
+  .plist .grp label.gh{border-bottom:1px dashed var(--border);font-weight:700}
+  .plist .grp label.gh small{font-weight:400;color:var(--muted);font-size:14px}
+  .plist .grp label.sub{min-height:44px;padding-right:2.4rem;font-size:16px;border-bottom:1px dashed var(--border)}
+  .plist .grp label.sub:last-child{border-bottom:0}
+  .plist .grp label.sub .arr{color:var(--muted)}
   .pmeta{display:flex;justify-content:space-between;align-items:center;gap:.5rem;font-size:16px;color:var(--muted);margin-top:.4rem}
   .link{background:none;border:0;font:inherit;font-size:16px;font-weight:700;color:var(--accent-dark);cursor:pointer;min-height:44px;padding:0 .4rem}
   .btn{display:block;width:100%;min-height:62px;margin-top:1rem;font:inherit;font-size:22px;font-weight:700;color:#fff;background:var(--navy);border:0;border-radius:14px;cursor:pointer}
@@ -340,29 +346,62 @@ document.addEventListener("change", e => {
 });
 
 // ── בחירת חברות מתוך רשימה ──
-let companies = null; const chosen = new Set();
+// חברה עם תת-שורות (כמה רישומים עם אותו ח.פ., למשל "מסלול הלכה"): קבוצה - "כל החברה" למעלה, וכל תת-שורה בנפרד מתחתיה.
+// הבחירה נשמרת כרשימת השמות (כמו קודם): "כל החברה" = כל השורות של החברה.
+let companies = null, groups = null; const chosen = new Set();
 async function loadCompanies() {
   if (companies) return;
   $("plist").innerHTML = '<div style="padding:1rem;color:var(--muted)">טוען רשימה…</div>';
   try {
     const j = await fetch(`${API_BASE}/api/lists?type=companies-private`).then(r => r.json());
     if (!j || !j.ok) throw 0;
-    companies = [...new Set(j.rows.map(r => String(r.permit_name || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he"));
-  } catch { companies = null; $("plist").innerHTML = '<div style="padding:1rem;color:var(--red)">לא ניתן לטעון את הרשימה כרגע. נסו שוב בעוד רגע.</div>'; return; }
+    const byChp = new Map(), seen = new Set(), list = [];
+    for (const r of j.rows) {
+      const n = String(r.permit_name || "").trim(); if (!n || seen.has(n)) continue; seen.add(n);
+      const chp = String(r.chp_number || "").replace(/\D/g, "");
+      if (!chp) { list.push({ title: n, names: [n] }); continue; }
+      if (!byChp.has(chp)) { const g = { title: "", names: [] }; byChp.set(chp, g); list.push(g); }
+      byChp.get(chp).names.push(n);
+    }
+    for (const g of list) {
+      g.names.sort((a, b) => a.length - b.length || a.localeCompare(b, "he"));
+      // שם החברה: השם הקצר (בלי סוגריים בסוף), והתת-שורות מוצגות לפי הפירוט שבסוגריים
+      g.title = g.title || g.names[0].replace(/\s*\([^()]*\)\s*$/, "");
+      g.sub = n => n.startsWith(g.title + " (") && n.endsWith(")") ? n.slice(g.title.length + 2, -1) : n;
+    }
+    groups = list.sort((a, b) => a.title.localeCompare(b.title, "he"));
+    companies = groups.flatMap(g => g.names);
+  } catch { companies = groups = null; $("plist").innerHTML = '<div style="padding:1rem;color:var(--red)">לא ניתן לטעון את הרשימה כרגע. נסו שוב בעוד רגע.</div>'; return; }
   renderList();
 }
 function renderList() {
-  if (!companies) return;
+  if (!groups) return;
   const terms = norm($("psearch").value).split(" ").filter(Boolean);
-  const view = terms.length ? companies.filter(n => { const h = norm(n); return terms.every(t => h.includes(t)); }) : companies;
+  const hit = n => { const h = norm(n); return terms.every(t => h.includes(t)); };
+  const view = terms.length ? groups.filter(g => hit(g.title) || g.names.some(hit)) : groups;
   const shown = view.slice(0, 120);
-  $("plist").innerHTML = shown.map((n, i) => `<label><input type="checkbox" data-n="${esc(n)}" ${chosen.has(n) ? "checked" : ""}><span>${esc(n)}</span></label>`).join("")
+  $("plist").innerHTML = shown.map(g => {
+    const i = groups.indexOf(g);
+    if (g.names.length === 1) { const n = g.names[0]; return `<label><input type="checkbox" data-n="${esc(n)}" ${chosen.has(n) ? "checked" : ""}><span>${esc(n)}</span></label>`; }
+    const all = g.names.every(n => chosen.has(n));
+    return `<div class="grp"><label class="gh"><input type="checkbox" data-g="${i}" ${all ? "checked" : ""}><span>${esc(g.title)} <small>· כל החברה</small></span></label>`
+      + g.names.map(n => `<label class="sub"><input type="checkbox" data-n="${esc(n)}" ${chosen.has(n) ? "checked" : ""}><span><span class="arr">↳</span> ${esc(n === g.title ? "רישום ראשי" : g.sub(n))}</span></label>`).join("")
+      + "</div>";
+  }).join("")
     + (view.length > shown.length ? `<div style="padding:.7rem 1rem;color:var(--muted)">מוצגות ${shown.length} מתוך ${view.length}. הקלידו כדי לצמצם.</div>` : "")
     + (!view.length ? '<div style="padding:1rem;color:var(--muted)">לא נמצאו חברות</div>' : "");
+  // "כל החברה" חלקי (רק חלק מהתת-שורות נבחרו)
+  $("plist").querySelectorAll("input[data-g]").forEach(c => { const g = groups[+c.dataset.g]; c.indeterminate = !c.checked && g.names.some(n => chosen.has(n)); });
   updCount();
 }
 function updCount() { $("pcount").textContent = chosen.size ? `נבחרו ${chosen.size} חברות` : "לא נבחרו חברות"; }
-$("plist").addEventListener("change", e => { const c = e.target.closest("input[data-n]"); if (!c) return; c.checked ? chosen.add(c.dataset.n) : chosen.delete(c.dataset.n); updCount(); });
+$("plist").addEventListener("change", e => {
+  const gc = e.target.closest("input[data-g]");
+  if (gc) { const g = groups[+gc.dataset.g]; g.names.forEach(n => gc.checked ? chosen.add(n) : chosen.delete(n)); renderList(); return; }
+  const c = e.target.closest("input[data-n]"); if (!c) return;
+  c.checked ? chosen.add(c.dataset.n) : chosen.delete(c.dataset.n);
+  if (c.closest(".grp")) renderList(); else updCount();
+});
 let st; $("psearch").addEventListener("input", () => { clearTimeout(st); st = setTimeout(renderList, 200); });
 $("pclear").onclick = () => { chosen.clear(); renderList(); };
 document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListener("change", () => {

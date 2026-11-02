@@ -30,3 +30,24 @@ jobs:
           done
           echo "נוספו $total הרשמות חדשות, נשלחו $mailed מיילי אישור, נכשלו $mfail"
           echo "### נדרים פלוס: נוספו $total הרשמות חדשות · נשלחו $mailed מיילי אישור$([ "$mfail" -gt 0 ] && echo " · נכשלו $mfail")" >> "$GITHUB_STEP_SUMMARY"
+      # מייל אישור שנכשל בזמן המשיכה (למשל תקלה רגעית בשליחה מוורדפרס) לא נשלח שוב מעצמו - כאן ניסיון חוזר
+      # לכל מצטרף מנדרים מ-7 הימים האחרונים שעוד לא קיבל אישור (פעם אחת לכל כתובת, כמו בשליחה מהניהול)
+      - name: Retry unsent confirmations (last 7 days)
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          FROM=$(date -u -d '7 days ago' +%F); TO=$(date -u +%F)
+          sent=0; failed=0
+          for i in $(seq 1 30); do
+            resp=$(curl -sS -m 120 -X POST "https://harav-levin.pages.dev/api/joiners-confirm?nedarim=1" \
+              -H "User-Agent: Mozilla/5.0" -H "Content-Type: application/json" -H "X-Cron-Secret: $CRON_SECRET" \
+              -d "{\"from\":\"$FROM\",\"to\":\"$TO\",\"dry\":false}" -w '\n%{http_code}')
+            code=$(echo "$resp" | tail -n1); body=$(echo "$resp" | sed '$d')
+            if [ "$code" != "200" ]; then echo "::warning::HTTP $code: $(echo "$body" | head -c 300)"; break; fi
+            s=$(echo "$body" | jq -r '.sent // 0'); f=$(echo "$body" | jq -r '.failed // 0'); rem=$(echo "$body" | jq -r '.remaining // 0')
+            sent=$((sent + s)); failed=$((failed + f))
+            [ "$rem" -gt 0 ] && [ "$s" -gt 0 ] || break
+          done
+          echo "ניסיון חוזר: נשלחו $sent אישורים, נכשלו $failed"
+          [ "$sent" -gt 0 ] || [ "$failed" -gt 0 ] && echo "### אישורים שלא נשלחו (7 ימים): נשלחו $sent$([ "$failed" -gt 0 ] && echo " · נכשלו $failed")" >> "$GITHUB_STEP_SUMMARY" || true
