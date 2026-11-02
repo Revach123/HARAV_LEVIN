@@ -10,6 +10,10 @@ scripts/registry_refresh/refresh_businesses.py
      עדיפות: חברה > שותפות > עמותה (כמו ב-Worker). מעדכן registrar_name ו-biz_type כשהשתנו.
   2. דגל tase_has_agch ("יש"/"אין"): לפי רשימת ניירות הערך הסחירים של datawise (Securities Basic) — האם לח"פ
      יש אג"ח סחירה (קוד סוג 03/05/11/36), *כולל ני"ע מסחריים*.
+  3. has_agch_any ("יש"/"אין", migrations/0022) = יש אג"ח *כולל לא סחיר*: סחירה (כמו בסעיף 2, או ח"פ ברשימת האג"ח bonds_all)
+     או אג"ח לא סחירה פעילה (data/bonds_list/nontradable_chps.json + bonds_institutional.json, נבנים יומית ב-bonds-list).
+     נפרד בכוונה מ-tase_has_agch (רשימות החברות מציגות "יש אג"ח" רק לפי סחירות). לפיו גם permits_category:
+     'יש' = בקטגוריה "חברות מנפיקות אג"ח", 'אין' = יוצאת ממנה (כמו functions/api/_shared/bond-pcat.js). מתעדכן יחד עם דגל האג"ח.
 
 מצבים:
   * ברירת מחדל = בדיקה בלבד (dry-run): לא כותב כלום ל-D1, רק מחשב ושומר דוח.
@@ -143,15 +147,25 @@ class D1:
         return res["result"]
 
 
+OPTIONAL_COLS = ("registry_status", "has_agch_any", "permits_category")   # עמודות שנוספו במיגרציות (0002 / 0022 / 0019)
+
+
 def load_businesses(d1):
     cols = "id, chp_number, permit_name, registrar_name, entity_type, biz_type, tase_has_agch"
     if d1.can_write:   # מקור אמת: D1 עצמו
-        try:   # registry_status = עמודה שנוספה בנפרד (migrations/0002); אם עוד לא קיימת - בלי עדכון סטטוס
-            rows = d1.query(f"SELECT {cols}, registry_status FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
+        try:
+            have = {r["name"] for r in d1.query("PRAGMA table_info(businesses)")[0]["results"]}
+        except (RuntimeError, KeyError, IndexError):
+            have = {"registry_status"}
+        extra = [c for c in OPTIONAL_COLS if c in have]
+        for c in OPTIONAL_COLS:
+            if c not in extra:
+                print(f"WARNING: column {c} missing in D1 - it will not be updated", file=sys.stderr)
+        try:
+            rows = d1.query(f"SELECT {', '.join([cols] + extra)} FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
         except RuntimeError as e:
-            if "registry_status" not in str(e):
+            if "no such column" not in str(e):
                 raise
-            print("WARNING: column registry_status missing in D1 - registry status will not be updated", file=sys.stderr)
             rows = d1.query(f"SELECT {cols} FROM businesses WHERE chp_number IS NOT NULL AND chp_number != ''")[0]["results"]
         return rows, "d1"
     rows = http_json(f"{SITE}/api/businesses")   # GET ציבורי — מספיק לבדיקה
@@ -241,12 +255,39 @@ def fetch_bond_corporate_ids():
     return None, 0, None
 
 
+BOND_PCAT = 'חברות מנפיקות אג"ח'
+
+
+def load_any_bond_chps():
+    """ח"פים עם אג"ח שאינם בדגל הסחירות: ברשימת האג"ח (bonds_all) או עם אג"ח לא סחירה פעילה. קובץ חסר = מדלגים עליו."""
+    base, out = os.path.join(ROOT, "data", "bonds_list"), set()
+    for name, get in (("bonds_all.json", lambda d: [r.get("chp_number") for r in d.get("rows") or []]),
+                      ("nontradable_chps.json", lambda d: d.get("chps") or []),
+                      ("bonds_institutional.json", lambda d: [r.get("chp_number") for r in d.get("rows") or []])):
+        try:
+            with open(os.path.join(base, name), encoding="utf-8") as fh:
+                out |= {str(c or "").strip() for c in get(json.load(fh))}
+        except (OSError, ValueError, AttributeError):
+            print(f"WARNING: {name} missing - has_agch_any computed without it", file=sys.stderr)
+    out.discard("")
+    return out
+
+
+def with_bond_pcat(value, has):
+    """כמו withBondPcat ב-functions/api/_shared/bond-pcat.js: מוסיף/מסיר את הקטגוריה; בלי קטגוריה = "שונות"."""
+    cur = [x.strip() for x in str(value or "").split("|")]
+    cur = [x for x in cur if x and x != "שונות" and (has or x != BOND_PCAT)]   # הסדר הקיים נשמר
+    if has and BOND_PCAT not in cur:
+        cur.append(BOND_PCAT)
+    return "|".join(cur) if cur else "שונות"
+
+
 # ── חישוב השינויים ───────────────────────────────────────────────────────────
 def is_liquidated(status):
     return str(status or "").startswith(("מחוסל", "חיסול", "מחוק", "נגרע"))
 
 
-def compute_changes(businesses, registry, bond_ids):
+def compute_changes(businesses, registry, bond_ids, any_extra=frozenset()):
     changes = []
     for b in businesses:
         key = numeric_chp(b.get("chp_number"))
@@ -266,6 +307,15 @@ def compute_changes(businesses, registry, bond_ids):
             if has != (b.get("tase_has_agch") or "").strip():
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "tase_has_agch",
                                 "old": b.get("tase_has_agch"), "new": has})
+            any_has = has == "יש" or str(b.get("chp_number") or "").strip() in any_extra   # יש אג"ח כולל לא סחיר
+            if "has_agch_any" in b and ("יש" if any_has else "אין") != (b.get("has_agch_any") or "").strip():
+                changes.append({"id": b["id"], "chp": b["chp_number"], "field": "has_agch_any",
+                                "old": b.get("has_agch_any"), "new": "יש" if any_has else "אין"})
+            if "permits_category" in b:
+                pc = with_bond_pcat(b.get("permits_category"), any_has)
+                if pc != (b.get("permits_category") or ""):
+                    changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permits_category",
+                                    "old": b.get("permits_category"), "new": pc})
     return changes
 
 
@@ -344,7 +394,7 @@ def main(apply=False, scope="all"):
     if scope == "bonds" and bond_ids is None:
         sys.exit("datawise unavailable or too small - nothing was updated")
 
-    changes = compute_changes(businesses, registry, bond_ids)
+    changes = compute_changes(businesses, registry, bond_ids, load_any_bond_chps() if bond_ids is not None else frozenset())
     not_found = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name"),
                   "registrar_name": b.get("registrar_name"), "entity_type": b.get("entity_type"),
                   "biz_type": b.get("biz_type")}
@@ -380,9 +430,9 @@ def main(apply=False, scope="all"):
         "failed_batches": failed_batches, "datawise_rows": dw_rows, "datawise_date": dw_date,
         "bond_companies": None if bond_ids is None else len(bond_ids),
         "changes": {f: sum(1 for c in changes if c["field"] == f)
-                    for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status")},
+                    for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status", "has_agch_any", "permits_category")},
         "fills_of_empty": {f: sum(1 for c in changes if c["field"] == f and not (c["old"] or "").strip())
-                           for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status")},
+                           for f in ("registrar_name", "biz_type", "tase_has_agch", "registry_status", "has_agch_any", "permits_category")},
         "registry_status_counts": status_counts,
     }
 
@@ -411,7 +461,7 @@ def main(apply=False, scope="all"):
         applied = apply_updates(d1, build_update_sql(changes))
         mode = "applied"
         # אימות קריאה-חוזרת: כל ערך חדש נמצא ב-D1
-        status_col = ", registry_status" if any("registry_status" in b for b in businesses) else ""
+        status_col = "".join(f", {c}" for c in OPTIONAL_COLS if any(c in b for b in businesses))
         after = {r["id"]: r for r in d1.query(f"SELECT id, registrar_name, biz_type, tase_has_agch{status_col} FROM businesses")[0]["results"]}
         bad = [c for c in changes if (after.get(c["id"], {}).get(c["field"]) or "") != (c["new"] or "")]
         summary["readback_mismatches"] = len(bad)

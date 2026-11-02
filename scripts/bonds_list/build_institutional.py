@@ -6,12 +6,16 @@ scripts/bonds_list/build_institutional.py
 (הבנייה היומית הרגילה כוללת רק סחירות, לפי datawise.) הפלט: data/bonds_list/bonds_institutional.json - שורות באותו מבנה של bonds_all,
 עם list = פרטי / כללי / פרטי+כללי לפי אותם כללי אישור, ו-is_tradable=false. הדף מוסיף אותן לרשימה כשבוחרים "רשימה מלאה למוסדיים".
 כשל / סריקה חלקית: הקובץ הקיים נשאר ולא נדרס. רץ אחרי הבנייה הרגילה (bonds-list.yml).
+בנוסף: data/bonds_list/nontradable_chps.json - ח"פים של *כל* החברות במאיה (לא רק שבמאגר, ולא רק מאושרות) שיש להן אג"ח לא סחירה פעילה.
+כך גם עסק שנוסף למאגר היום מקבל מיד סימון "יש אג"ח" נכון (functions/api/company-bonds.js: bondFlagFor), והריצה הלילית
+(scripts/registry_refresh/refresh_businesses.py) והרשימות (functions/api/lists.js) סופרות גם אג"ח לא סחירות.
 """
 import concurrent.futures, datetime, json, os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_approved_bonds as B
 
 OUT_PATH = os.path.join(B.OUT, "bonds_institutional.json")
+CHPS_PATH = os.path.join(B.OUT, "nontradable_chps.json")
 
 
 def parse_date(v):
@@ -27,7 +31,7 @@ def main():
     companies = B.load_companies()
     approved = B.approved_map(companies)
     print(f"approved companies: {len(approved)}")
-    rows, found, errors = [], 0, 0
+    rows, others, found, errors = [], [], 0, 0
     with concurrent.futures.ThreadPoolExecutor(B.WORKERS) as ex:
         for cid, body in ex.map(B.fetch_company, range(1, B.MAX_ID + 1)):
             if body == "error":
@@ -38,13 +42,16 @@ def main():
             found += 1
             k = B.chp_norm(body.get("corporateNo"))
             info = approved.get(k)
-            if not info:
+            if not k:
                 continue
             for sec in body.get("secrities") or []:
                 if sec.get("securityId") is None or sec.get("isDeleted") or sec.get("isTradable"):
                     continue
                 ac = B.coarse_type(sec.get("securityType"))
                 if ac not in B.BOND_COARSE:
+                    continue
+                if not info:          # חברה לא מאושרת (או שאינה במאגר): רק לרשימת הח"פים (צריך תאריך פדיון כדי לדלג על אג"ח שפקעה)
+                    others.append({"security_id": int(sec["securityId"]), "chp_number": k})
                     continue
                 rows.append({
                     "security_id": int(sec["securityId"]), "security_name": " ".join((sec.get("securityName") or "").split()),
@@ -56,8 +63,14 @@ def main():
                 })
     if found < 500 or errors > 0.05 * B.MAX_ID:
         raise SystemExit(f"Maya sweep looks partial (found={found}, errors={errors}) - institutional list left untouched")
-    B.add_terms(rows)
+    B.add_terms(rows + others)
     today, kept, old = datetime.date.today(), [], 0
+    live = lambda r: not ((d := parse_date(r.get("redemption_date"))) and d < today)
+    chps = sorted({r["chp_number"] for r in rows + others if live(r)}, key=lambda c: (len(c), c))
+    os.makedirs(B.OUT, exist_ok=True)
+    with open(CHPS_PATH, "w", encoding="utf-8") as f:
+        json.dump({"updated": B.TODAY, "count": len(chps), "chps": chps}, f, ensure_ascii=False, indent=1)
+    print(f"companies with live non-tradable bonds (all Maya companies): {len(chps)}")
     for r in rows:
         d = parse_date(r.get("redemption_date"))
         if d and d < today:                       # פקע: לא מציגים

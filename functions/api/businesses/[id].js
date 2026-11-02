@@ -1,6 +1,7 @@
 import { checkAdmin } from "../_shared/auth.js";
 import { bondFlagFor } from "../company-bonds.js";
 import { normalizePcat } from "../_shared/pcat.js";
+import { syncBondFlagsFor } from "../_shared/bond-pcat.js";
 // PUT    /api/businesses/:id   → update (admin only)
 // DELETE /api/businesses/:id   → delete (admin only)
 
@@ -56,6 +57,7 @@ export async function onRequestPut({ request, env, params }) {
     {          // עדכון מיידי של דגל "יש אג"ח" (במקום להמתין לריצה הלילית)
       try { const f = await bondFlagFor(env, chp_number); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
     }
+    await syncBondFlagsFor(request, env, id);          // has_agch_any (יש אג"ח כולל לא סחיר) + הקטגוריה "חברות מנפיקות אג"ח" (_shared/bond-pcat.js)
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

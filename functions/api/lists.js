@@ -11,6 +11,8 @@
 //     &format=csv   → מוריד CSV (BOM + כותרות, לאקסל)
 //     (ברירת מחדל)  → JSON
 
+import { applyBondPcatRows, withBondPcat } from "./_shared/bond-pcat.js";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -273,6 +275,23 @@ export async function onRequestGet(context) {
     if (type === "companies-private" || type === "companies-general") {
       await addSelectiveNotes(request, env, results, type === "companies-private" ? "private" : "general");
       results = withRegistrarNames(results, await loadOfferings(request, env));
+      // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות: לפי has_agch_any (יש אג"ח כולל לא סחיר, migrations/0022).
+      // עמודת האג"ח ברשימה עצמה (bonds_status) לא משתנה - היא לפי אג"ח סחירות בלבד.
+      if (results.some(r => "permits_category" in r)) {
+        let any = null;          // ח"פ -> יש אג"ח כולל לא סחיר. לפני המיגרציה: לפי האג"ח הסחירות (bonds_status, בלי הנפקות)
+        try {
+          any = new Map();
+          for (const x of (await env.DB.prepare("SELECT TRIM(COALESCE(chp_number,'')) AS c, has_agch_any AS a FROM businesses WHERE TRIM(COALESCE(has_agch_any,'')) != ''").all()).results ?? [])
+            if (x.c) any.set(x.c, any.get(x.c) || x.a === "יש");
+        } catch { any = null; }
+        for (const r of results) if ("permits_category" in r) {
+          const k = String(r.chp_number || "").trim(), st = String(r.bonds_status || "");
+          const has = any && any.has(k) ? any.get(k) : st.startsWith('יש אג"ח') && !st.includes("בהנפקה");
+          r.permits_category = withBondPcat(r.permits_category, has);
+        }
+      }
+    } else if (type === "companies-all") {
+      results = applyBondPcatRows(results);
     }
 
     if (format === "csv") {
