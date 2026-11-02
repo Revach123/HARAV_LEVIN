@@ -116,4 +116,36 @@ sent.length = 0;
 await post({ headers: { from: 'avi2@example.com', to: 'eea6f909d9fc5ae94f3b@cloudmailin.net', subject: 'הצטרפות' }, plain: '' });
 assert.equal(sent[0].reply_to, 'join@example.org');
 
+// ---- AMP: חלק AMP נשלח עם הטופס, ושליחה מתוך המייל ----
+const { onRequestPost: ampPost } = await import('../../functions/api/join-email-amp.js');
+const { readToken } = await import('../../functions/api/_shared/join-amp.js');
+sent.length = 0;
+await post(mail('rivka@example.com', 'הצטרפות', ''));
+const amp = sent[0].amp;
+assert.match(amp, /<html ⚡4email/); assert.match(amp, /action-xhr="https:\/\/site\/api\/join-email-amp"/);
+const tok = amp.match(/name="token" value="([^"]+)"/)[1], lcode = amp.match(/name="list" value="(\d+)"/)[1];
+assert.equal(await readToken(env, tok), 'rivka@example.com');
+assert.equal(await readToken(env, tok.replace(/.$/, (c) => (c === 'A' ? 'B' : 'A'))), '');
+const ampReq = (pairs, headers = {}) => {
+  const fd = new FormData(); for (const [k, v] of pairs) fd.append(k, v);
+  return ampPost({ request: new Request('https://site/api/join-email-amp?__amp_source_origin=wordpress%40iska.co.il', { method: 'POST', body: fd, headers: { Origin: 'https://mail.google.com', 'AMP-Email-Sender': 'wordpress@iska.co.il', ...headers } }), env });
+};
+const base = [['token', tok], ['list', lcode], ['first', 'רבקה'], ['last', 'לוי'], ['id', '123456782'], ['phone', '0541234567'], ['city', 'אלעד'], ['street', 'אבן גבירול']];
+let ar = await ampReq([...base, ['choice', 'list']]);
+assert.equal(ar.status, 400);
+let aj = await ar.json();
+assert.match(aj.errors.join('|'), /לסמן לפחות חברה/); assert.match(aj.errors.join('|'), /תיבת האישור/);
+assert.equal(ar.headers.get('AMP-Email-Allow-Sender'), 'wordpress@iska.co.il');
+assert.equal(ar.headers.get('Access-Control-Allow-Origin'), 'https://mail.google.com');
+assert.equal(ar.headers.get('AMP-Access-Control-Allow-Source-Origin'), 'wordpress@iska.co.il');
+sent.length = 0;
+ar = await ampReq([...base, ['choice', 'list'], ['c', '2'], ['c', '3'], ['approve', '1']]);
+aj = await ar.json();
+assert.equal(ar.status, 200, JSON.stringify(aj)); assert.match(aj.message, /תודה רבקה/);
+p = await decrypt();
+assert.equal(p.email, 'rivka@example.com'); assert.equal(JSON.parse(p.extra)['ערוץ'], 'מייל (טופס בתוך המייל)');
+assert.equal(p.companies.split(', ').length, 2);
+assert.match(sent[0].subject, /אישור הצטרפות/);
+assert.equal((await ampReq([['token', 'bad.1.x'], ['first', 'x']])).status, 400);
+
 console.log('simulate_join_email: ok');
