@@ -1,9 +1,11 @@
 // נוסח שטר הרישום: ברירת המחדל כאן; מנהל יכול לערוך מדף הניהול (עורך עם עיצוב; נשמר ב-D1, admin_settings, מפתח "agreement").
 // כל הצרכנים (join.html, מייל האישור, מייל ההצטרפות, AMP, הצטרפות טלפונית) קוראים דרך getAgreement - מקור אחד.
-// כל פסקה היא HTML מצומצם ומנוקה (b, i, u, span עם color / font-size וכד', br).
+// לכל שטר (ארוך / מקוצר) כותרת (טקסט רגיל) וגוף: פסקאות HTML מצומצם ומנוקה (b, i, u, br).
 export const DEFAULT_VERSION = "2026-11-03";
+export const DEFAULT_LONG_TITLE = "רישום לקוח להיתר עיסקא פרטי";
+export const DEFAULT_SHORT_TITLE = "";
 export const DEFAULT_LONG = [
- "<span style=\"color:#274d5b;font-weight:700\">הריני מצהיר ומתחייב בזה,</span>",
+ "<b>הריני מצהיר ומתחייב בזה,</b>",
  "הואיל ויתכן שאעשה, או עשיתי, עסקאות עם מדינה/חברה/עירייה/מוסד/ וכל גוף או בעל עסק (להלן ה\"חברה\"), כולל רכישת והחזקת אג\"ח ושאר ניי\"ע בכל אופן שהוא, וכן כל סוג עיסקה שתהיה (להלן עיסקה), ויתכן שיש או יהיה בעסקאות אלה חשש איסור ריבית,",
  "והואיל והחברה הביעה את הסכמתה להתקשרות באופן פרטי על פי היתר עיסקא עם מי שמעוניין בכך, וזאת ע\"י חתימתה על שטר רישום חברה להיתר עיסקא פרטי, או בכל דרך שהיא, ושם החברה מופיעה ברשימת מכון היתר עיסקא למהדרין ו/או ברשימת מכון כת\"ר לכלכלה על פי התורה ו/או בכל מקום אחר המתפעל הסדר כזה של התקשרות בהיתר עיסקא באופן פרטי (להלן המכון),",
  "והואיל וברצוני שכל עיסקה תהיה כפופה לתנאי ופרטי ההיתר עיסקא של החברה, ולתנאים שבשטר רישום של החברה (במקרה שיש לחברה נוסחאות שונות, הקובע יהיה הנוסח המופיע במכון היתר עיסקא למהדרין, במידה ומופיע), ולתנאים דלהלן בשטר זה (להלן \"הסכם הנפרד\"),",
@@ -28,15 +30,12 @@ export const DEFAULT_SHORT = [
 
 const ALLOWED = new Set(["b", "strong", "i", "em", "u", "span", "br", "sub", "sup"]);
 const escText = s => String(s).replace(/&(?!(?:amp|lt|gt|quot|nbsp|#\d{1,6});)/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-const SIZE_KW = "xx-small|x-small|small|medium|large|x-large|xx-large|xxx-large";
 function cleanStyle(st) {
   const out = [];
   for (const d of String(st).split(";")) {
     const i = d.indexOf(":"); if (i < 0) continue;
     const k = d.slice(0, i).trim().toLowerCase(), v = d.slice(i + 1).trim().toLowerCase();
-    if (k === "color" && /^(#[0-9a-f]{3,8}|rgba?\(\s*[\d.\s,%]+\)|[a-z]{3,20})$/.test(v)) out.push("color:" + v);
-    else if (k === "font-size" && new RegExp("^(\\d{1,3}(\\.\\d{1,2})?(px|pt|em|rem|%)|" + SIZE_KW + ")$").test(v)) out.push("font-size:" + v);
-    else if (k === "font-weight" && /^(bold|normal|[1-9]00)$/.test(v)) out.push("font-weight:" + v);
+    if (k === "font-weight" && /^(bold|normal|[1-9]00)$/.test(v)) out.push("font-weight:" + v);
     else if (k === "font-style" && /^(italic|normal)$/.test(v)) out.push("font-style:" + v);
     else if ((k === "text-decoration" || k === "text-decoration-line") && /^(underline|none|line-through)$/.test(v)) out.push("text-decoration:" + v);
   }
@@ -67,23 +66,24 @@ export function plain(html) {
     .replace(/\s+/g, " ").trim();
 }
 // מערך פסקאות מהמנהל -> פסקאות מנוקות (בלי ריקות)
+export const cleanTitle = t => plain(String(t == null ? "" : t)).slice(0, 200);
 export const cleanParas = arr => (Array.isArray(arr) ? arr : []).map(sanitizeHtml).filter(p => plain(p));
 // תאימות לאחור: פסקה שנשמרה בפורמט הישן ("# " = מודגש, טקסט רגיל)
-const legacy = p => /^#\s/.test(p) ? `<span style="color:#274d5b;font-weight:700">${escText(p.slice(2))}</span>` : p;
+const legacy = p => /^#\s/.test(p) ? `<b>${escText(p.slice(2))}</b>` : p;
 
 async function readSetting(env) {
   try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = 'agreement'").first(); return r ? JSON.parse(r.value) : null; } catch { return null; }
 }
-// {long:[html...], short:[html...], version, custom, updated}
+// {long:[html...], short:[html...], longTitle, shortTitle, version, custom, updated}
 export async function getAgreement(env) {
   const s = await readSetting(env);
-  if (s && Array.isArray(s.long) && s.long.length && Array.isArray(s.short) && s.short.length) return { long: s.long.map(legacy), short: s.short.map(legacy), version: s.version || "custom", custom: true, updated: s.updated || "" };
-  return { long: DEFAULT_LONG, short: DEFAULT_SHORT, version: DEFAULT_VERSION, custom: false, updated: "" };
+  if (s && Array.isArray(s.long) && s.long.length && Array.isArray(s.short) && s.short.length) return { long: s.long.map(legacy), short: s.short.map(legacy), longTitle: s.longTitle != null ? s.longTitle : DEFAULT_LONG_TITLE, shortTitle: s.shortTitle != null ? s.shortTitle : DEFAULT_SHORT_TITLE, version: s.version || "custom", custom: true, updated: s.updated || "" };
+  return { long: DEFAULT_LONG, short: DEFAULT_SHORT, longTitle: DEFAULT_LONG_TITLE, shortTitle: DEFAULT_SHORT_TITLE, version: DEFAULT_VERSION, custom: false, updated: "" };
 }
-export async function saveAgreement(env, long, short) {
+export async function saveAgreement(env, long, short, longTitle = "", shortTitle = "") {
   await env.DB.prepare("CREATE TABLE IF NOT EXISTS admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)").run();
   const now = new Date().toISOString();
-  await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('agreement', ?)").bind(JSON.stringify({ long, short, version: "A" + now.slice(0, 16).replace(/[-:T]/g, ""), updated: now })).run();
+  await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('agreement', ?)").bind(JSON.stringify({ long, short, longTitle, shortTitle, version: "A" + now.slice(0, 16).replace(/[-:T]/g, ""), updated: now })).run();
 }
 export async function resetAgreement(env) { await env.DB.prepare("DELETE FROM admin_settings WHERE key = 'agreement'").run(); }
 

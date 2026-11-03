@@ -309,7 +309,8 @@ async function step({ v, env, P, bk, done, origin }) {
     const replay = v.ag === '2' || (!has(v, 'ag') && v.rd === '1' && v.pl !== '1');
     if (replay) v.pl = '1';
     // הקראת השטר: TTS של ימות מהנוסח הנוכחי (נערך בניהול). בעתיד אפשר להחליף בהקלטות.
-    const full = replay ? (await getAgreement(env)).long.map((t) => T(speakable(t))).join('.') + '.' : '';
+    const ag = replay ? await getAgreement(env) : null;
+    const full = replay ? [ag.longTitle, ...ag.long].filter(Boolean).map((t) => T(speakable(t))).join('.') + '.' : '';
     return readTap(full + P('join:declare'), 'ag', ['1', '2', '3'], { empty: EMPTY });
   }
   if (v.ag === '3') { v.finished = true; return done('join:cancelled'); }

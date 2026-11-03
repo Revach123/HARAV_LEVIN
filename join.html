@@ -443,7 +443,7 @@ document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListene
 }));
 
 // נוסח השטר הקבוע בלבד (הפסקאות ושתי אפשרויות הבחירה), בלי מצב הטופס, כדי שה-sha256 יהיה זהה לכל מצטרף באותה גרסה
-// נוסח השטר נטען מהשרת (ניהול → עריכת נוסח השטר), כולל העיצוב (מודגש, צבע, גודל).
+// נוסח השטר נטען מהשרת (ניהול → עריכת נוסח השטר): כותרת לכל שטר, וגוף הטקסט (מודגש / נטוי / קו תחתון).
 (async function loadAgreement() {
   try {
     const j = await fetch(`${API_BASE}/api/agreement`, { cache: "no-store" }).then(r => r.json());
@@ -452,7 +452,7 @@ document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListene
       const mk = t => { const el = document.createElement("p"); el.innerHTML = t; return el; };          // HTML מנוקה בשרת (b/i/u/span עם צבע וגודל)
       box.replaceChildren(...(title ? [Object.assign(document.createElement("p"), { className: "bold", textContent: title })] : []), ...paras.map(mk));
     };
-    fill($("agreeLong"), j.long, "רישום לקוח להיתר עיסקא פרטי"); fill($("agreeShort"), j.short, "");
+    fill($("agreeLong"), j.long, j.longTitle || ""); fill($("agreeShort"), j.short, j.shortTitle || "");
     if (j.version) AGREEMENT_VERSION = j.version;
   } catch {}
 })();

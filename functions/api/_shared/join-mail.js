@@ -8,7 +8,7 @@ import { DEFAULT_LONG, getAgreement, plain } from "./agreement.js";
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // intro = משפט פתיחה (בשליחה חוזרת מהניהול). בלי בחירה ידועה (לא "כל החברות" ולא רשימה, למשל הרשמה מנדרים פלוס) - שורות הבחירה מושמטות
-export function buildConfirmation({ first, last, id, date, all, companies, origin, intro, agreement }) {
+export function buildConfirmation({ first, last, id, date, all, companies, origin, intro, agreement, agreementTitle }) {
   const name = `${first} ${last}`.trim();
   companies = companies || [];
   const known = !!all || companies.length > 0;
@@ -29,14 +29,14 @@ ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:
 <p style="margin:0 0 6px;font-size:16px"><b>תאריך:</b> ${esc(date)}</p>
 ${known ? `<p style="margin:0 0 6px;font-size:15px"><b>התקשרות:</b> ${esc(pick)}</p>` : ""}
 <div style="border-top:1px solid #cfdcdc;margin-top:16px;padding-top:14px">
-<h3 style="margin:0 0 8px;font-size:18px">שטר רישום להיתר עיסקא פרטי</h3>
+<h3 style="margin:0 0 8px;font-size:18px">${esc(agreementTitle || "שטר רישום להיתר עיסקא פרטי")}</h3>
 ${agr.map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.6"><b>התקשרותי על פי השטר:</b> ${esc(choice)}</p>` : ""}</div>
 <div style="border-top:2px solid #1b6b52;margin-top:18px;padding-top:12px;text-align:center;font-size:14px;line-height:1.8;color:#34504a">
 <b>מכון היתר עיסקא למהדרין</b><br>דוא"ל: <span dir="ltr">SL5742214@gmail.com</span> · טלפון: <span dir="ltr">052-7117041</span></div>
 </div></div>
 <p style="text-align:center;font-size:12px;color:#6b7b7b;margin:14px 0 0">מייל זה נשלח אוטומטית. אין צורך להשיב עליו.</p>
 </div></body></html>`;
-  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...agr.map(plain), ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
+  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", agreementTitle || "שטר רישום להיתר עיסקא פרטי", ...agr.map(plain), ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
   return { html, text };
 }
 
@@ -56,7 +56,8 @@ export async function sendMail(env, { to, subject, html, text, replyTo, amp, cc 
 export async function sendConfirmation(env, to, data) {
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
-    const { html, text } = buildConfirmation({ ...data, agreement: (await getAgreement(env)).long });
+    const ag = await getAgreement(env);
+    const { html, text } = buildConfirmation({ ...data, agreement: ag.long, agreementTitle: ag.longTitle });
     return await sendMail(env, { to, subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text });
   } catch { return false; }
 }
@@ -75,7 +76,7 @@ export async function sendCancelNotice(env, d) {
 export async function saveConfirmationFile(env, conf) {
   if (!env.JOINERS) return "";
   try {
-    const html = buildConfirmation({ ...conf, agreement: (await getAgreement(env)).long }).html, buf = new TextEncoder().encode(html);
+    const ag = await getAgreement(env), html = buildConfirmation({ ...conf, agreement: ag.long, agreementTitle: ag.longTitle }).html, buf = new TextEncoder().encode(html);
     const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
     const key = `forms/site/${sha}.html`;
     await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });

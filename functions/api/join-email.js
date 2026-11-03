@@ -173,7 +173,7 @@ export function checkForm(f, names) {
 }
 
 // ---- המייל שנשלח: טופס, כפתור מילוי, רשימת החברות ונוסח השטר ----
-export function formMail({ values = {}, errors = [], names = [], code = '', to = '', agreement = DEFAULT_LONG } = {}) {
+export function formMail({ values = {}, errors = [], names = [], code = '', to = '', agreement = DEFAULT_LONG, agreementTitle = '' } = {}) {
   const vals = { ...values, list: code };
   const formText = FIELDS.map((f) => `${lineOf(f)} ${vals[f[0]] || ''}`).join('\n');
   const p = (t, st = '') => `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;${st}">${esc(t)}</p>`;
@@ -193,7 +193,7 @@ ${mailto ? `<p style="margin:10px 0 14px"><a href="${esc(mailto)}" style="displa
 ${p('חברות: כתבו "כל החברות" (כל החברות שנרשמו ושיירשמו בהמשך), או את המספרים של החברות מהרשימה שלמטה, מופרדים בפסיק (למשל: 3, 17, 42).')}
 ${p('אישור השטר: כתבו "מאשר", לאחר קריאת נוסח שטר הרישום המלא שלמטה. זהו האישור על כל תנאי השטר.')}
 ${p('את השורה "קוד רשימה" אין לשנות.', 'color:#6b7b7b;font-size:13px')}
-<div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">שטר רישום להיתר עיסקא פרטי</h3>
+<div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">${esc(agreementTitle || 'שטר רישום להיתר עיסקא פרטי')}</h3>
 ${agreement.map(ph).join('')}${p('[לבחירת כל החברות שנרשמו וירשמו בהמשך / לבחירה מתוך רשימה - לפי מה שנכתב בשורה "חברות"]', 'color:#555')}</div>
 ${names.length ? `<div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">רשימת החברות (קוד רשימה ${esc(code)})</h3><div style="font-size:14px;line-height:1.7">${list}</div></div>` : ''}
 <p style="margin:14px 0 0;font-size:14px;color:#34504a;text-align:center"><b>מכון היתר עיסקא למהדרין</b> · טלפון: <span dir="ltr">052-7117041</span></p>
@@ -204,7 +204,7 @@ ${names.length ? `<div style="border-top:1px solid #cfdcdc;padding-top:12px;marg
     'איך ממלאים: משיבים למייל זה, כותבים את הפרטים אחרי הנקודתיים בכל שורה, ושולחים. הכל במייל אחד.', '',
     formText, '',
     'חברות: "כל החברות", או המספרים מהרשימה שלמטה מופרדים בפסיק. אישור השטר: "מאשר", לאחר קריאת נוסח השטר. את "קוד רשימה" אין לשנות.', '',
-    'שטר רישום להיתר עיסקא פרטי', ...agreement.map(plain), '',
+    agreementTitle || 'שטר רישום להיתר עיסקא פרטי', ...agreement.map(plain), '',
     ...(names.length ? [`רשימת החברות (קוד רשימה ${code})`, ...names.map((n, i) => `${i + 1}. ${n}`)] : []),
   ].join('\n');
   return { html, text };
@@ -230,7 +230,7 @@ const replyTo = (env) => addressOf(env.JOIN_EMAIL_REPLY_TO || '');
 export async function ampPart(env, origin, to, names, code) {
   if (String(env.JOIN_EMAIL_AMP || '') === '0') return '';
   const token = await makeToken(env, to);
-  return token ? buildAmp({ action: `${origin}/api/join-email-amp`, token, names, code, agreement: (await getAgreement(env)).long }) : '';
+  return token ? buildAmp({ action: `${origin}/api/join-email-amp`, token, names, code, agreement: (await getAgreement(env)).long, agreementTitle: (await getAgreement(env)).longTitle }) : '';
 }
 const isAutomatic = (msg, sender) => /^(mailer-daemon|postmaster|no-?reply|bounce)/i.test(sender) || /^wordpress@/i.test(sender)
   || /auto-(replied|generated)/i.test(header(msg, 'auto_submitted')) || /bulk|junk|list/i.test(header(msg, 'precedence'));
@@ -271,7 +271,7 @@ export async function onRequestPost({ request, env }) {
     const rt = toAddr && !/@cloudmailin\.net$/.test(toAddr) ? toAddr : replyTo(env);
     if (!filled) {                                           // בקשה ראשונה: שולחים את הטופס
       const { names, code } = await companyList(env, origin);
-      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt, agreement: (await getAgreement(env)).long }), amp: await ampPart(env, origin, sender, names, code), replyTo: rt });
+      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt, agreement: (await getAgreement(env)).long, agreementTitle: (await getAgreement(env)).longTitle }), amp: await ampPart(env, origin, sender, names, code), replyTo: rt });
       return ok('form sent');
     }
     const ref = await listByCode(env, origin, list);
@@ -282,7 +282,7 @@ export async function onRequestPost({ request, env }) {
       if (!v.all && ref.code !== cur.code && v.companies.length) {          // הרשימה השתנתה: המספרים שנבחרו מתורגמים לרשימה החדשה
         values.companies = v.companies.map((n) => cur.names.indexOf(n) + 1).filter(Boolean).join(', ');
       }
-      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - יש לתקן את הטופס', ...formMail({ values, errors, names: cur.names, code: cur.code, to: rt, agreement: (await getAgreement(env)).long }), amp: await ampPart(env, origin, sender, cur.names, cur.code), replyTo: rt });
+      await sendMail(env, { to: sender, subject: 'הצטרפות להיתר עיסקא פרטי - יש לתקן את הטופס', ...formMail({ values, errors, names: cur.names, code: cur.code, to: rt, agreement: (await getAgreement(env)).long, agreementTitle: (await getAgreement(env)).longTitle }), amp: await ampPart(env, origin, sender, cur.names, cur.code), replyTo: rt });
       return ok('missing');
     }
     await save(env, v, sender, header(msg, 'message_id'), origin);

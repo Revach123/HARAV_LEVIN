@@ -16,7 +16,7 @@ const MAX_BODY = 40 * 1024, MAX_COMPANIES = 300, MIN_FILL_MS = 4000;
 async function saveConfirmationFile(env, conf) {
   if (!env.JOINERS) return "";
   try {
-    const html = buildConfirmation({ ...conf, agreement: (await getAgreement(env)).long }).html, buf = new TextEncoder().encode(html);
+    const ag = await getAgreement(env), html = buildConfirmation({ ...conf, agreement: ag.long, agreementTitle: ag.longTitle }).html, buf = new TextEncoder().encode(html);
     const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
     const key = `forms/site/${sha}.html`;
     await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });
