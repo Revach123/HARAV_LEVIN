@@ -27,7 +27,7 @@
     ]
    },
    "kind": "open",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "O1246321": {
    "data": {
@@ -56,7 +56,7 @@
     ]
    },
    "kind": "open",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10118": {
    "data": {
@@ -81,7 +81,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10121": {
    "data": {
@@ -106,7 +106,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10128": {
    "data": {
@@ -131,7 +131,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10131": {
    "data": {
@@ -156,7 +156,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10225": {
    "data": {
@@ -181,7 +181,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10227": {
    "data": {
@@ -206,7 +206,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10237": {
    "data": {
@@ -231,7 +231,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10243": {
    "data": {
@@ -256,7 +256,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10259": {
    "data": {
@@ -281,7 +281,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10287": {
    "data": {
@@ -306,7 +306,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10289": {
    "data": {
@@ -331,7 +331,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10296": {
    "data": {
@@ -356,7 +356,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10300": {
    "data": {
@@ -381,7 +381,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10316": {
    "data": {
@@ -406,7 +406,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10319": {
    "data": {
@@ -456,7 +456,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10358": {
    "data": {
@@ -481,7 +481,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10371": {
    "data": {
@@ -506,7 +506,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10378": {
    "data": {
@@ -531,7 +531,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10379": {
    "data": {
@@ -556,7 +556,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10382": {
    "data": {
@@ -581,7 +581,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10387": {
    "data": {
@@ -606,7 +606,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10394": {
    "data": {
@@ -656,32 +656,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
-  },
-  "U10400": {
-   "data": {
-    "chp_number": "",
-    "company_name": "ברזאני",
-    "draft_no": 1,
-    "draft_title": "טיוטת תשקיף",
-    "id": 10400,
-    "is_new_company": true,
-    "link_presentation": "https://maya.tase.co.il/he/reports/1598266",
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1778768",
-    "link_trust_indenture": null,
-    "maya_report_id": 1778768,
-    "new_company_type": "חברת אג\"ח חדשה",
-    "securities": [
-     {
-      "maalot_rating": "ilBBB+",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-10-30"
+   "last_seen": "2026-11-03"
   },
   "U10401": {
    "data": {
@@ -706,7 +681,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10402": {
    "data": {
@@ -737,7 +712,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U10404": {
    "data": {
@@ -762,7 +737,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   },
   "U9973": {
    "data": {
@@ -787,7 +762,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-03"
   }
  }
 }

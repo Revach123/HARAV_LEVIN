@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02",
+ "updated": "2026-11-03",
  "upcoming": [
   {
    "id": 10358,
@@ -598,29 +598,6 @@
    ],
    "carried": true,
    "last_seen": "2026-11-01"
-  },
-  {
-   "chp_number": "",
-   "company_name": "ברזאני",
-   "draft_no": 1,
-   "draft_title": "טיוטת תשקיף",
-   "id": 10400,
-   "is_new_company": true,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1598266",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1778768",
-   "link_trust_indenture": null,
-   "maya_report_id": 1778768,
-   "new_company_type": "חברת אג\"ח חדשה",
-   "securities": [
-    {
-     "maalot_rating": "ilBBB+",
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-10-30"
   }
  ],
  "open": [
@@ -839,7 +816,6 @@
   "פישר ברדרס פרופ",
   "עמרם את נידם",
   "לייטסטון מוקסי",
-  "לייטסטון מוקסי",
-  "ברזאני"
+  "לייטסטון מוקסי"
  ]
 }
