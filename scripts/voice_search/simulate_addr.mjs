@@ -164,16 +164,18 @@ ex = await lastExtra();
 assert.ok(ex['הקלטת כתובת']);
 
 // ---- מייל בהקשה ----
-assert.deepEqual(decodeTyped('5'), { ch: '5' }); assert.deepEqual(decodeTyped('1'), { ch: '1' });
-assert.deepEqual(decodeTyped('12'), { ch: 'a' }); assert.deepEqual(decodeTyped('133'), { ch: 'e' }); assert.deepEqual(decodeTyped('17777'), { ch: 's' });
-assert.deepEqual(decodeTyped('19999'), { ch: 'z' }); assert.deepEqual(decodeTyped('11'), { ch: '.' }); assert.deepEqual(decodeTyped('1111'), { ch: '_' });
-assert.deepEqual(decodeTyped('10'), { del: true }); assert.deepEqual(decodeTyped('00'), { done: true });
-assert.deepEqual(decodeTyped('123'), {}); assert.deepEqual(decodeTyped('177777'), {}); assert.deepEqual(decodeTyped('55'), {});
-const EN = { a: '12', b: '122', c: '1222', d: '13', e: '133', f: '1333', g: '14', h: '144', i: '1444', j: '15', k: '155', l: '1555', m: '16', n: '166', o: '1666',
-  p: '17', q: '177', r: '1777', s: '17777', t: '18', u: '188', v: '1888', w: '19', x: '199', y: '1999', z: '19999', '.': '11', '-': '111', _: '1111' };
-const typed = (str) => [...str].map((ch) => EN[ch] || ch);
+// מצב אותיות (ברירת מחדל): מקש = מקומה של האות במקש; 1/11/111 = . - _ ; מצב מספרים (אחרי כוכבית): ספרה אחת
+assert.deepEqual(decodeTyped('2'), { ch: 'a' }); assert.deepEqual(decodeTyped('22'), { ch: 'b' }); assert.deepEqual(decodeTyped('33'), { ch: 'e' });
+assert.deepEqual(decodeTyped('7777'), { ch: 's' }); assert.deepEqual(decodeTyped('9999'), { ch: 'z' });
+assert.deepEqual(decodeTyped('1'), { ch: '.' }); assert.deepEqual(decodeTyped('11'), { ch: '-' }); assert.deepEqual(decodeTyped('111'), { ch: '_' });
+assert.deepEqual(decodeTyped('*'), { toggle: true }); assert.deepEqual(decodeTyped('10'), { del: true }); assert.deepEqual(decodeTyped('00'), { done: true });
+assert.deepEqual(decodeTyped('222'), { ch: 'c' }); assert.deepEqual(decodeTyped('2222'), {}); assert.deepEqual(decodeTyped('23'), {}); assert.deepEqual(decodeTyped('1111'), {});
+assert.deepEqual(decodeTyped('5', 'n'), { ch: '5' }); assert.deepEqual(decodeTyped('55', 'n'), {}); assert.deepEqual(decodeTyped('*', 'n'), { toggle: true });
+const EN = { a: '2', b: '22', c: '222', d: '3', e: '33', f: '333', g: '4', h: '44', i: '444', j: '5', k: '55', l: '555', m: '6', n: '66', o: '666',
+  p: '7', q: '77', r: '777', s: '7777', t: '8', u: '88', v: '888', w: '9', x: '99', y: '999', z: '9999', '.': '1', '-': '11', _: '111' };
+const typed = (str) => { const out = []; let mode = 'l'; for (const ch of str) { const want = /\d/.test(ch) ? 'n' : 'l'; if (want !== mode) { out.push('*'); mode = want; } out.push(/\d/.test(ch) ? ch : EN[ch]); } return out; };
 const emailAnswers = (str, domKey, extra = []) => [
-  ...typed(str).map((k, i) => [i === 0 ? /נקיש את כתבת המייל.*לאות: מקישים אחת/ : /הקישו את התו הבא/, k]),
+  ...typed(str).map((k, i) => [i === 0 ? /הקישו את כתבת המייל.*כוכבית/ : /הקישו את התו הבא/, k]),
   ...extra,
   [/הקישו את התו הבא.*לסיום הקישו אפס אפס/, '00'],
   [/עכשיו נבחר את הסיומת.*לגימייל הקישו 1/, domKey],
