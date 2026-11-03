@@ -3,12 +3,12 @@
 //   WP_MAIL_URL     (רגיל)  https://iska.co.il/wp-json/iska/v1/send-confirmation
 //   WP_MAIL_SECRET  (סוד)   אותה סיסמה שמוגדרת בסקריפט בוורדפרס (wp-mail-endpoint.php)
 // בלי שניהם לא נשלח מייל וההרשמה ממשיכה כרגיל.
-import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE, AGREEMENT_SHORT } from "./agreement.js";
+import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE } from "./agreement.js";
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // intro = משפט פתיחה (בשליחה חוזרת מהניהול). בלי בחירה ידועה (לא "כל החברות" ולא רשימה, למשל הרשמה מנדרים פלוס) - שורות הבחירה מושמטות
-export function buildConfirmation({ first, last, id, date, all, companies, origin, intro, short }) {
+export function buildConfirmation({ first, last, id, date, all, companies, origin, intro }) {
   const name = `${first} ${last}`.trim();
   companies = companies || [];
   const known = !!all || companies.length > 0;
@@ -29,13 +29,13 @@ ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:
 ${known ? `<p style="margin:0 0 6px;font-size:15px"><b>התקשרות:</b> ${esc(pick)}</p>` : ""}
 <div style="border-top:1px solid #cfdcdc;margin-top:16px;padding-top:14px">
 <h3 style="margin:0 0 8px;font-size:18px">שטר רישום להיתר עיסקא פרטי</h3>
-${(short ? AGREEMENT_SHORT : [...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE]).map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.6"><b>התקשרותי על פי השטר:</b> ${esc(choice)}</p>` : ""}</div>
+${[...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE].map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.6"><b>התקשרותי על פי השטר:</b> ${esc(choice)}</p>` : ""}</div>
 <div style="border-top:2px solid #1b6b52;margin-top:18px;padding-top:12px;text-align:center;font-size:14px;line-height:1.8;color:#34504a">
 <b>מכון היתר עיסקא למהדרין</b><br>דוא"ל: <span dir="ltr">SL5742214@gmail.com</span> · טלפון: <span dir="ltr">052-7117041</span></div>
 </div></div>
 <p style="text-align:center;font-size:12px;color:#6b7b7b;margin:14px 0 0">מייל זה נשלח אוטומטית. אין צורך להשיב עליו.</p>
 </div></body></html>`;
-  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...(short ? AGREEMENT_SHORT : [...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE]), ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
+  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE, ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
   return { html, text };
 }
 
