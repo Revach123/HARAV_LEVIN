@@ -103,7 +103,7 @@ ${search ? `<input class="in" type="text" placeholder="חיפוש חברה..." o
 
 <amp-accordion><section>
 <h4 class="acc">נוסח שטר הרישום (לחצו לקריאה)</h4>
-<div class="agr">${[...AGREEMENT_BEFORE_CHOICE, '[לבחירת כל החברות / לבחירה מתוך רשימה - לפי הבחירה למעלה]', ...AGREEMENT_AFTER_CHOICE].map((t) => `<p>${esc(t)}</p>`).join('')}</div>
+<div class="agr">${[...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE, '[לבחירת כל החברות / לבחירה מתוך רשימה - לפי הבחירה למעלה]'].map((t) => `<p>${esc(t)}</p>`).join('')}</div>
 </section></amp-accordion>
 
 <label class="approve"><input type="checkbox" name="approve" value="1" required> קראתי את נוסח השטר, ואני מאשר את כל תנאיו</label>

@@ -80,7 +80,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       pdf: "", extra: JSON.stringify(extra), src: b.channel === "site" ? "site:embed" : "site:kehilot",          // site:embed = הטופס המוטמע באתר (וורדפרס)
     };
     // קובץ האישור נשמר (HTML, בדלי הפרטי) ומשויך למצטרף; נכשל ההעלאה - ההרשמה נשמרת בלי קובץ
-    const conf = { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin };
+    const conf = { first, last, id, date: now.slice(0, 10).split("-").reverse().join("/"), all: choice === "all", companies, origin: new URL(request.url).origin, short: /-short$/.test(String(b.agreement_version || "")) };
     const sha = await saveConfirmationFile(env, conf);
     await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', ?, ?, ?)")
       .bind(rid, now, sha, ih, await encryptPii(key, rid, payload)).run();

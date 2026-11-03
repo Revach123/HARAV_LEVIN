@@ -193,7 +193,7 @@ ${p('חברות: כתבו "כל החברות" (כל החברות שנרשמו ו
 ${p('אישור השטר: כתבו "מאשר", לאחר קריאת נוסח שטר הרישום המלא שלמטה. זהו האישור על כל תנאי השטר.')}
 ${p('את השורה "קוד רשימה" אין לשנות.', 'color:#6b7b7b;font-size:13px')}
 <div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">שטר רישום להיתר עיסקא פרטי</h3>
-${AGREEMENT_BEFORE_CHOICE.map((t) => p(t)).join('')}${p('[לבחירת כל החברות שנרשמו וירשמו בהמשך / לבחירה מתוך רשימה - לפי מה שנכתב בשורה "חברות"]', 'color:#555')}${AGREEMENT_AFTER_CHOICE.map((t) => p(t)).join('')}</div>
+${AGREEMENT_BEFORE_CHOICE.map((t) => p(t)).join('')}${AGREEMENT_AFTER_CHOICE.map((t) => p(t)).join('')}${p('[לבחירת כל החברות שנרשמו וירשמו בהמשך / לבחירה מתוך רשימה - לפי מה שנכתב בשורה "חברות"]', 'color:#555')}</div>
 ${names.length ? `<div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">רשימת החברות (קוד רשימה ${esc(code)})</h3><div style="font-size:14px;line-height:1.7">${list}</div></div>` : ''}
 <p style="margin:14px 0 0;font-size:14px;color:#34504a;text-align:center"><b>מכון היתר עיסקא למהדרין</b> · טלפון: <span dir="ltr">052-7117041</span></p>
 </div></div></body></html>`;
