@@ -5,7 +5,7 @@
 //  (או בחשבון שהפעיל "מצב מפתחים" לשולח הזה); כל השאר רואים את גרסת ה-HTML / הטקסט.
 //  השליחה מהטופס: POST ל-/api/join-email-amp (functions/api/join-email-amp.js), עם token חתום שמזהה את הנמען.
 // ============================================================================
-import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE } from './agreement.js';
+import { DEFAULT_LONG, plain } from './agreement.js';
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -58,7 +58,7 @@ h1{margin:0 0 6px;font-size:22px;color:#1b6b52}
 `;
 
 /** מסמך AMP4EMAIL של טופס ההצטרפות */
-export function buildAmp({ action, token, names = [], code = '' }) {
+export function buildAmp({ action, token, names = [], code = '', agreement = DEFAULT_LONG }) {
   const field = (name, label, { hint = '', req = true, pattern = '', min = 0, max = 60, mode = '', msg = '' } = {}) => `
 <div class="row"><label class="lbl" for="f-${name}">${esc(label)}${hint ? ` <span class="hint">(${esc(hint)})</span>` : ''}</label>
 <input class="in" id="f-${name}" name="${name}" type="${mode === 'tel' ? 'tel' : 'text'}"${req ? ' required' : ''}${pattern ? ` pattern="${esc(pattern)}"` : ''}${min ? ` minlength="${min}"` : ''} maxlength="${max}">
@@ -103,7 +103,7 @@ ${search ? `<input class="in" type="text" placeholder="חיפוש חברה..." o
 
 <amp-accordion><section>
 <h4 class="acc">נוסח שטר הרישום (לחצו לקריאה)</h4>
-<div class="agr">${[...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE, '[לבחירת כל החברות / לבחירה מתוך רשימה - לפי הבחירה למעלה]'].map((t) => `<p>${esc(t)}</p>`).join('')}</div>
+<div class="agr">${[...agreement.map(plain), '[לבחירת כל החברות / לבחירה מתוך רשימה - לפי הבחירה למעלה]'].map((t) => `<p>${esc(t)}</p>`).join('')}</div>
 </section></amp-accordion>
 
 <label class="approve"><input type="checkbox" name="approve" value="1" required> קראתי את נוסח השטר, ואני מאשר את כל תנאיו</label>

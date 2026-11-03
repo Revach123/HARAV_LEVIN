@@ -10,6 +10,7 @@ import { checkAdmin, checkPassword } from './_shared/auth.js';
 import { sendMail } from './_shared/join-mail.js';
 import { companyList, formMail, ampPart, addressOf } from './join-email.js';
 import { jerusalemNow } from './_shared/join-common.js';
+import { getAgreement } from './_shared/agreement.js';
 
 const GOOGLE = 'ampforemail.whitelisting@gmail.com';
 const FORM = 'https://docs.google.com/forms/d/e/1FAIpQLSdso95e7UDLk_R-bnpzsAmuUMDQEMUgTErcfGGItBDkghHU2A/viewform';
@@ -44,7 +45,7 @@ export async function onRequestPost({ request, env }) {
   const amp = await ampPart(env, origin, GOOGLE, names, code);
   if (!amp) return formPage('<p class="bad">חלק הטופס החי לא נוצר (חסר JOIN_EMAIL_SECRET או ש-JOIN_EMAIL_AMP כבוי)</p>');
   const when = jerusalemNow();
-  const sent = await sendMail(env, { to: GOOGLE, cc, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt }), amp, replyTo: rt });
+  const sent = await sendMail(env, { to: GOOGLE, cc, subject: 'הצטרפות להיתר עיסקא פרטי - טופס למילוי', ...formMail({ names, code, to: rt, agreement: (await getAgreement(env)).long }), amp, replyTo: rt });
   if (!sent) return formPage('<p class="bad">השליחה נכשלה (בדקו את WP_MAIL_URL / WP_MAIL_SECRET ואת קטע הקוד ב-WPCode)</p>');
   return page(`<h1>נשלח ✓</h1><div class="ok">
 <p>מייל הטופס נשלח ל-<code>${GOOGLE}</code>, עם עותק ל-<code>${esc(cc)}</code>.</p>

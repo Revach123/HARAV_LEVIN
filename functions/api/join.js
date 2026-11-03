@@ -7,6 +7,7 @@
 // הפרטים האישיים מוצפנים כאן (AES-256-GCM, המפתח JOINERS_KEY) באותו פורמט של joiners_import.py, ונכתבים לטבלה joiners (migrations/0017).
 // בלוגים לא נרשם שום פרט אישי.
 import { sendConfirmation, buildConfirmation } from "./_shared/join-mail.js";
+import { getAgreement } from "./_shared/agreement.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
 
@@ -15,7 +16,7 @@ const MAX_BODY = 40 * 1024, MAX_COMPANIES = 300, MIN_FILL_MS = 4000;
 async function saveConfirmationFile(env, conf) {
   if (!env.JOINERS) return "";
   try {
-    const html = buildConfirmation(conf).html, buf = new TextEncoder().encode(html);
+    const html = buildConfirmation({ ...conf, agreement: (await getAgreement(env)).long }).html, buf = new TextEncoder().encode(html);
     const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
     const key = `forms/site/${sha}.html`;
     await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });

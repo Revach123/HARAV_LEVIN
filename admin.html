@@ -1908,7 +1908,8 @@ function renderHome() {
     </div></div>
     <div class="home-bot"><div class="home-dash"><h3 class="pd-homeh">ניהול</h3><div class="home-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:960px">${window.PD ? PD.homeCards(true) : ""}
       <button class="home-card" onclick="setView('gfunds')"><span class="ico">📋</span><b>עדכון מסלולים וקרנות גלאט הון</b></button>
-      <button class="home-card" onclick="NC.open()"><span class="ico">🔎</span><b>בדיקת השמות בשטרות</b></button></div></div>
+      <button class="home-card" onclick="NC.open()"><span class="ico">🔎</span><b>בדיקת השמות בשטרות</b></button>
+      <button class="home-card" onclick="openAgreementEditor()"><span class="ico">📝</span><b>עריכת נוסח שטר ההצטרפות</b></button></div></div>
       <div class="idx-row" id="idx-row">${idxBoxHtml()}</div></div></div>`;
 }
 
@@ -2730,6 +2731,37 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
   if (!v) { showStatus("שם העסק לא יכול להיות ריק"); render(); return; }
   await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
   render();
+}
+
+// ── עריכת נוסח שטר ההצטרפות (ארוך ומקוצר): נשמר בשרת ומתעדכן אוטומטית בטופס ההצטרפות (join / kehilot / אתר), באישור הנשלח במייל, ובמיילי ההצטרפות ──
+async function openAgreementEditor() {
+  document.getElementById("ag-root")?.remove();
+  const root = document.createElement("div"); root.id = "ag-root";
+  root.innerHTML = `<div class="modal-overlay"><div class="modal-box" style="max-width:820px;width:96vw;text-align:right;max-height:92vh;overflow:auto;"><div class="modal-title">עריכת נוסח שטר ההצטרפות</div><p style="color:var(--muted)">טוען…</p></div></div>`;
+  document.body.appendChild(root);
+  let a; try { a = await apiFetch("/agreement"); } catch (e) { root.remove(); return showStatus("טעינת הנוסח נכשלה: " + e.message); }
+  const box = root.querySelector(".modal-box");
+  const ta = (id, label, arr) => `<div class="field"><label>${label}</label><textarea id="${id}" rows="14" style="width:100%;font:inherit;line-height:1.6;padding:8px;border:1px solid var(--border);border-radius:8px;">${escHtml(arr.join("\n\n"))}</textarea></div>`;
+  box.innerHTML = `<div class="modal-title">עריכת נוסח שטר ההצטרפות</div>
+    <p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 10px;">כל פסקה מופרדת משנייה בשורה ריקה. פסקה שמתחילה ב-<b dir="ltr">#</b> ורווח מוצגת מודגשת. השינוי מתעדכן מיד בטופס ההצטרפות (גם בקהילות ובאתר), באישור שנשלח במייל ובמיילי ההצטרפות.
+    האישור במייל נשלח תמיד בנוסח הארוך. בחירת החברות מוצגת אחרי הנוסח ואינה חלק מהטקסט. ${a.custom ? "כרגע מוצג נוסח שעודכן בניהול." : "כרגע מוצג נוסח ברירת המחדל."}</p>
+    ${ta("ag-long", "נוסח ארוך", a.long)}${ta("ag-short", "נוסח מקוצר", a.short)}
+    <p class="error-msg" id="ag-err"></p>
+    <div class="modal-actions" style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;">
+      <button class="btn-ghost" onclick="resetAgreementText()">↺ חזרה לברירת המחדל</button>
+      <span style="display:flex;gap:8px;"><button class="btn-ghost" onclick="document.getElementById('ag-root').remove()">ביטול</button><button class="btn-primary" style="width:auto;padding:0 22px;" onclick="saveAgreementText()">שמירה</button></span></div>`;
+}
+async function saveAgreementText() {
+  const err = document.getElementById("ag-err");
+  try {
+    await apiFetch("/agreement", { method: "POST", body: JSON.stringify({ long: document.getElementById("ag-long").value, short: document.getElementById("ag-short").value }) });
+    document.getElementById("ag-root").remove(); showStatus("נוסח השטר נשמר ועודכן בכל המקומות ✓");
+  } catch (e) { err.textContent = e.message; }
+}
+async function resetAgreementText() {
+  if (!confirm("לחזור לנוסח ברירת המחדל? הנוסח שערכת יימחק.")) return;
+  try { await apiFetch("/agreement", { method: "POST", body: JSON.stringify({ reset: true }) }); document.getElementById("ag-root").remove(); showStatus("הנוסח הוחזר לברירת המחדל ✓"); }
+  catch (e) { document.getElementById("ag-err").textContent = e.message; }
 }
 
 // ── שינוי סיסמה (כפתור בכותרת, בכל אזורי הניהול) ──

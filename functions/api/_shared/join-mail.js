@@ -3,18 +3,19 @@
 //   WP_MAIL_URL     (רגיל)  https://iska.co.il/wp-json/iska/v1/send-confirmation
 //   WP_MAIL_SECRET  (סוד)   אותה סיסמה שמוגדרת בסקריפט בוורדפרס (wp-mail-endpoint.php)
 // בלי שניהם לא נשלח מייל וההרשמה ממשיכה כרגיל.
-import { AGREEMENT_BEFORE_CHOICE, AGREEMENT_AFTER_CHOICE } from "./agreement.js";
+import { DEFAULT_LONG, getAgreement, isBold, plain } from "./agreement.js";
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 // intro = משפט פתיחה (בשליחה חוזרת מהניהול). בלי בחירה ידועה (לא "כל החברות" ולא רשימה, למשל הרשמה מנדרים פלוס) - שורות הבחירה מושמטות
-export function buildConfirmation({ first, last, id, date, all, companies, origin, intro }) {
+export function buildConfirmation({ first, last, id, date, all, companies, origin, intro, agreement }) {
   const name = `${first} ${last}`.trim();
   companies = companies || [];
   const known = !!all || companies.length > 0;
   const choice = all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + companies.join(", ");
   const pick = all ? "בחרת להתקשר מול כל עסקים שנרשמו למאגר, כולל עסקים שירשמו בהמשך" : "בחרת להתקשר מול החברות שנבחרו מהרשימה: " + companies.join(", ");
-  const p = t => `<p style="margin:0 0 8px;font-size:14px;line-height:1.6">${esc(t)}</p>`;
+  const agr = agreement || DEFAULT_LONG;
+  const p = t => `<p style="margin:0 0 8px;font-size:14px;line-height:1.6">${isBold(t) ? `<b>${esc(plain(t))}</b>` : esc(t)}</p>`;
   const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#eef2f2;font-family:Arial,Helvetica,sans-serif;color:#1f2d2d">
 <div dir="rtl" style="max-width:660px;margin:0 auto;padding:16px">
 ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:center">${esc(intro)}</p>` : ""}
@@ -29,13 +30,13 @@ ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:
 ${known ? `<p style="margin:0 0 6px;font-size:15px"><b>התקשרות:</b> ${esc(pick)}</p>` : ""}
 <div style="border-top:1px solid #cfdcdc;margin-top:16px;padding-top:14px">
 <h3 style="margin:0 0 8px;font-size:18px">שטר רישום להיתר עיסקא פרטי</h3>
-${[...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE].map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.6"><b>התקשרותי על פי השטר:</b> ${esc(choice)}</p>` : ""}</div>
+${agr.map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.6"><b>התקשרותי על פי השטר:</b> ${esc(choice)}</p>` : ""}</div>
 <div style="border-top:2px solid #1b6b52;margin-top:18px;padding-top:12px;text-align:center;font-size:14px;line-height:1.8;color:#34504a">
 <b>מכון היתר עיסקא למהדרין</b><br>דוא"ל: <span dir="ltr">SL5742214@gmail.com</span> · טלפון: <span dir="ltr">052-7117041</span></div>
 </div></div>
 <p style="text-align:center;font-size:12px;color:#6b7b7b;margin:14px 0 0">מייל זה נשלח אוטומטית. אין צורך להשיב עליו.</p>
 </div></body></html>`;
-  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...AGREEMENT_BEFORE_CHOICE, ...AGREEMENT_AFTER_CHOICE, ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
+  const text = [...(intro ? [intro, ""] : []), "אישור רישום למכון היתר עיסקא למהדרין", "", `שלום ${name} ת.ז. ${id},`, "הרינו לאשר בזאת שהתקבל הרישום למכון היתר עיסקא למהדרין. פרטי ההצטרפות נשמרו במכון.", `תאריך: ${date}`, ...(known ? [`התקשרות: ${pick}`] : []), "", "שטר רישום להיתר עיסקא פרטי", ...agr.map(plain), ...(known ? ["התקשרותי על פי השטר: " + choice] : []), "", "מכון היתר עיסקא למהדרין", 'דוא"ל: SL5742214@gmail.com · טלפון: 052-7117041'].join("\n");
   return { html, text };
 }
 
@@ -55,7 +56,7 @@ export async function sendMail(env, { to, subject, html, text, replyTo, amp, cc 
 export async function sendConfirmation(env, to, data) {
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
-    const { html, text } = buildConfirmation(data);
+    const { html, text } = buildConfirmation({ ...data, agreement: (await getAgreement(env)).long });
     return await sendMail(env, { to, subject: "אישור הצטרפות להיתר עיסקא פרטי", html, text });
   } catch { return false; }
 }
@@ -74,7 +75,7 @@ export async function sendCancelNotice(env, d) {
 export async function saveConfirmationFile(env, conf) {
   if (!env.JOINERS) return "";
   try {
-    const html = buildConfirmation(conf).html, buf = new TextEncoder().encode(html);
+    const html = buildConfirmation({ ...conf, agreement: (await getAgreement(env)).long }).html, buf = new TextEncoder().encode(html);
     const sha = [...new Uint8Array(await crypto.subtle.digest("SHA-256", buf))].map(x => x.toString(16).padStart(2, "0")).join("");
     const key = `forms/site/${sha}.html`;
     await env.JOINERS.put(key, buf, { httpMetadata: { contentType: "text/html; charset=utf-8" } });

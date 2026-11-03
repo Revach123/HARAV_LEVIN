@@ -286,7 +286,7 @@
 
 <script>
 const API_BASE = /pages\.dev$|localhost|127\.0\.0\.1/.test(location.hostname) ? "" : "https://harav-levin.pages.dev";
-const AGREEMENT_VERSION = "2026-11-03";
+let AGREEMENT_VERSION = "2026-11-03";   // מתעדכן מהשרת (נוסח השטר נערך בניהול); הנוסח הסטטי בדף הוא רק גיבוי אם השרת לא זמין
 const $ = id => document.getElementById(id);
 const loadedAt = Date.now();
 const norm = s => String(s ?? "").toLowerCase().replace(/["'״׳]/g, "").replace(/\s+/g, " ").trim();
@@ -443,6 +443,20 @@ document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListene
 }));
 
 // נוסח השטר הקבוע בלבד (הפסקאות ושתי אפשרויות הבחירה), בלי מצב הטופס, כדי שה-sha256 יהיה זהה לכל מצטרף באותה גרסה
+// נוסח השטר נטען מהשרת (ניהול → עריכת נוסח השטר). פסקה שמתחילה ב-"# " מודגשת.
+(async function loadAgreement() {
+  try {
+    const j = await fetch(`${API_BASE}/api/agreement`, { cache: "no-store" }).then(r => r.json());
+    if (!j || !j.ok || !Array.isArray(j.long) || !j.long.length || !Array.isArray(j.short) || !j.short.length) return;
+    const fill = (box, paras, title) => {
+      const mk = t => { const el = document.createElement("p"), b = /^#\s/.test(t); if (b) el.className = "bold"; el.textContent = t.replace(/^#\s+/, ""); return el; };
+      box.replaceChildren(...(title ? [Object.assign(document.createElement("p"), { className: "bold", textContent: title })] : []), ...paras.map(mk));
+    };
+    fill($("agreeLong"), j.long, "רישום לקוח להיתר עיסקא פרטי"); fill($("agreeShort"), j.short, "");
+    if (j.version) AGREEMENT_VERSION = j.version;
+  } catch {}
+})();
+
 // השטר מוצג בשני נוסחים (ארוך / מקוצר). לוחצים על הכפתור כדי להחליף ביניהם; נשמר הנוסח שמוצג בפועל.
 let shortMode = false;
 $("toggleForm").onclick = () => {
