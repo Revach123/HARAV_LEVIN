@@ -1,8 +1,8 @@
 // functions/api/agreement.js
 // GET  (ציבורי)  -> { ok, long:[פסקאות], short:[פסקאות], version, custom }   נוסח השטר הנוכחי (טופס ההצטרפות קורא אותו בכל טעינה)
-// POST (מנהל)    { long: "טקסט", short: "טקסט" }  או  { reset: true }  -> שומר / מחזיר לברירת המחדל
+// POST (מנהל)    { long: [פסקאות HTML], short: [פסקאות HTML] }  או  { reset: true }   (ה-HTML מנוקה בשרת)  -> שומר / מחזיר לברירת המחדל
 import { checkAdmin } from "./_shared/auth.js";
-import { getAgreement, saveAgreement, resetAgreement, parseParas } from "./_shared/agreement.js";
+import { getAgreement, saveAgreement, resetAgreement, cleanParas } from "./_shared/agreement.js";
 
 const H = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
 const reply = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: H });
@@ -18,9 +18,9 @@ export async function onRequestPost({ request, env }) {
   try {
     if (b.reset) await resetAgreement(env);
     else {
-      const long = parseParas(b.long), short = parseParas(b.short);
+      const long = cleanParas(b.long), short = cleanParas(b.short);
       if (!long.length || !short.length) return reply({ error: "שני הנוסחים (הארוך והמקוצר) חייבים להכיל טקסט" }, 400);
-      if (long.join("").length > 20000 || short.join("").length > 20000) return reply({ error: "הנוסח ארוך מדי" }, 400);
+      if (JSON.stringify(long).length > 60000 || JSON.stringify(short).length > 60000) return reply({ error: "הנוסח ארוך מדי" }, 400);
       await saveAgreement(env, long, short);
     }
   } catch (e) { return reply({ error: "השמירה נכשלה: " + e.message }, 500); }

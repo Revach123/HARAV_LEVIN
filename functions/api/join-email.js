@@ -15,7 +15,7 @@
 //  בלוגים לא נרשם שום פרט אישי.
 // ============================================================================
 import { sendMail, sendConfirmation, saveConfirmationFile, CANCEL_NOTIFY_TO } from './_shared/join-mail.js';
-import { DEFAULT_LONG, getAgreement, isBold, plain } from './_shared/agreement.js';
+import { DEFAULT_LONG, getAgreement, plain } from './_shared/agreement.js';
 import { importKeyForWrite, encryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, validEmail, clean, jerusalemNow, newRowId } from './_shared/join-common.js';
 import { onRequestGet as listsGet } from './lists.js';
@@ -177,6 +177,7 @@ export function formMail({ values = {}, errors = [], names = [], code = '', to =
   const vals = { ...values, list: code };
   const formText = FIELDS.map((f) => `${lineOf(f)} ${vals[f[0]] || ''}`).join('\n');
   const p = (t, st = '') => `<p style="margin:0 0 8px;font-size:15px;line-height:1.6;${st}">${esc(t)}</p>`;
+  const ph = (t) => `<p style="margin:0 0 8px;font-size:15px;line-height:1.6">${t}</p>`;   // פסקת שטר: HTML מנוקה מהניהול
   const lines = FIELDS.map((f) => `<div style="font-size:16px;line-height:2"><b>${esc(f[1])}</b>${f[2] ? ` <span style="color:#6b7b7b;font-size:13px">(${esc(f[2])})</span>` : ''}: ${esc(vals[f[0]] || '')}</div>`).join('');
   const mailto = to ? `mailto:${encodeURIComponent(to).replace(/%40/g, '@')}?subject=${encodeURIComponent('הצטרפות - טופס ממולא')}&body=${encodeURIComponent(formText + '\n')}` : '';
   const errBox = errors.length ? `<div style="background:#fdecea;border:1px solid #e0a39c;border-radius:6px;padding:10px 14px;margin:0 0 14px">
@@ -193,7 +194,7 @@ ${p('חברות: כתבו "כל החברות" (כל החברות שנרשמו ו
 ${p('אישור השטר: כתבו "מאשר", לאחר קריאת נוסח שטר הרישום המלא שלמטה. זהו האישור על כל תנאי השטר.')}
 ${p('את השורה "קוד רשימה" אין לשנות.', 'color:#6b7b7b;font-size:13px')}
 <div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">שטר רישום להיתר עיסקא פרטי</h3>
-${agreement.map((t) => (isBold(t) ? p(plain(t), 'font-weight:bold') : p(t))).join('')}${p('[לבחירת כל החברות שנרשמו וירשמו בהמשך / לבחירה מתוך רשימה - לפי מה שנכתב בשורה "חברות"]', 'color:#555')}</div>
+${agreement.map(ph).join('')}${p('[לבחירת כל החברות שנרשמו וירשמו בהמשך / לבחירה מתוך רשימה - לפי מה שנכתב בשורה "חברות"]', 'color:#555')}</div>
 ${names.length ? `<div style="border-top:1px solid #cfdcdc;padding-top:12px;margin-top:6px"><h3 style="margin:0 0 8px">רשימת החברות (קוד רשימה ${esc(code)})</h3><div style="font-size:14px;line-height:1.7">${list}</div></div>` : ''}
 <p style="margin:14px 0 0;font-size:14px;color:#34504a;text-align:center"><b>מכון היתר עיסקא למהדרין</b> · טלפון: <span dir="ltr">052-7117041</span></p>
 </div></div></body></html>`;

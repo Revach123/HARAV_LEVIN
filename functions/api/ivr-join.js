@@ -25,7 +25,8 @@
 //  דרישות: IVR_SECRET (או IVR_SECRET_NEW), JOINERS_KEY, binding DB.
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
-import { AGREEMENT_KEYS, unit, ttsClean } from './_shared/ivr_phrases.js';
+import { unit, ttsClean } from './_shared/ivr_phrases.js';
+import { getAgreement, speakable } from './_shared/agreement.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
@@ -307,7 +308,8 @@ async function step({ v, env, P, bk, done, origin }) {
     // pl: השטר המלא כבר הושמע פעם אחת בשיחה הזו (נשמר גם בשרת) - לא משמיעים אותו שוב מעצמנו, רק בבקשה (2).
     const replay = v.ag === '2' || (!has(v, 'ag') && v.rd === '1' && v.pl !== '1');
     if (replay) v.pl = '1';
-    const full = replay ? AGREEMENT_KEYS.map(P).join('.') + '.' : '';
+    // הקראת השטר: TTS של ימות מהנוסח הנוכחי (נערך בניהול). בעתיד אפשר להחליף בהקלטות.
+    const full = replay ? (await getAgreement(env)).long.map((t) => T(speakable(t))).join('.') + '.' : '';
     return readTap(full + P('join:declare'), 'ag', ['1', '2', '3'], { empty: EMPTY });
   }
   if (v.ag === '3') { v.finished = true; return done('join:cancelled'); }

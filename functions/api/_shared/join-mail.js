@@ -3,7 +3,7 @@
 //   WP_MAIL_URL     (רגיל)  https://iska.co.il/wp-json/iska/v1/send-confirmation
 //   WP_MAIL_SECRET  (סוד)   אותה סיסמה שמוגדרת בסקריפט בוורדפרס (wp-mail-endpoint.php)
 // בלי שניהם לא נשלח מייל וההרשמה ממשיכה כרגיל.
-import { DEFAULT_LONG, getAgreement, isBold, plain } from "./agreement.js";
+import { DEFAULT_LONG, getAgreement, plain } from "./agreement.js";
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -15,7 +15,7 @@ export function buildConfirmation({ first, last, id, date, all, companies, origi
   const choice = all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + companies.join(", ");
   const pick = all ? "בחרת להתקשר מול כל עסקים שנרשמו למאגר, כולל עסקים שירשמו בהמשך" : "בחרת להתקשר מול החברות שנבחרו מהרשימה: " + companies.join(", ");
   const agr = agreement || DEFAULT_LONG;
-  const p = t => `<p style="margin:0 0 8px;font-size:14px;line-height:1.6">${isBold(t) ? `<b>${esc(plain(t))}</b>` : esc(t)}</p>`;
+  const p = t => `<p style="margin:0 0 8px;font-size:14px;line-height:1.6">${t}</p>`;          // t = HTML מנוקה מהניהול
   const html = `<!doctype html><html lang="he" dir="rtl"><body style="margin:0;background:#eef2f2;font-family:Arial,Helvetica,sans-serif;color:#1f2d2d">
 <div dir="rtl" style="max-width:660px;margin:0 auto;padding:16px">
 ${intro ? `<p style="margin:0 0 12px;font-size:15px;font-weight:bold;text-align:center">${esc(intro)}</p>` : ""}

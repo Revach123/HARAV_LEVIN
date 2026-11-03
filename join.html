@@ -443,13 +443,13 @@ document.querySelectorAll('input[name="choice"]').forEach(r => r.addEventListene
 }));
 
 // נוסח השטר הקבוע בלבד (הפסקאות ושתי אפשרויות הבחירה), בלי מצב הטופס, כדי שה-sha256 יהיה זהה לכל מצטרף באותה גרסה
-// נוסח השטר נטען מהשרת (ניהול → עריכת נוסח השטר). פסקה שמתחילה ב-"# " מודגשת.
+// נוסח השטר נטען מהשרת (ניהול → עריכת נוסח השטר), כולל העיצוב (מודגש, צבע, גודל).
 (async function loadAgreement() {
   try {
     const j = await fetch(`${API_BASE}/api/agreement`, { cache: "no-store" }).then(r => r.json());
     if (!j || !j.ok || !Array.isArray(j.long) || !j.long.length || !Array.isArray(j.short) || !j.short.length) return;
     const fill = (box, paras, title) => {
-      const mk = t => { const el = document.createElement("p"), b = /^#\s/.test(t); if (b) el.className = "bold"; el.textContent = t.replace(/^#\s+/, ""); return el; };
+      const mk = t => { const el = document.createElement("p"); el.innerHTML = t; return el; };          // HTML מנוקה בשרת (b/i/u/span עם צבע וגודל)
       box.replaceChildren(...(title ? [Object.assign(document.createElement("p"), { className: "bold", textContent: title })] : []), ...paras.map(mk));
     };
     fill($("agreeLong"), j.long, "רישום לקוח להיתר עיסקא פרטי"); fill($("agreeShort"), j.short, "");
@@ -511,7 +511,7 @@ $("fJoin").addEventListener("submit", async e => {
       $("dChoice").textContent = ch.value === "all" ? "התקשרות: בחרת להתקשר מול כל עסקים שנרשמו למאגר, כולל עסקים שירשמו בהמשך" : `התקשרות: בחרת להתקשר מול ${chosen.size} חברות שנבחרו מהרשימה`;
       $("printAgree").innerHTML = `<h2>שטר רישום להיתר עיסקא פרטי</h2><p>${esc(body.first)} ${esc(body.last)} · ת.ז. ${esc(body.id)} · ${todayIL}</p>`
         + `<p><b>התקשרות:</b> ${ch.value === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" : "לבחירה מתוך רשימה: " + esc([...chosen].join(", "))}</p>`
-        + [...shownAgree().querySelectorAll("p")].map(p => `<p>${esc(p.textContent)}</p>`).join("");
+        + [...shownAgree().querySelectorAll("p")].map(p => `<p>${p.innerHTML}</p>`).join("");
       document.body.setAttribute("data-view", "done"); window.scrollTo(0, 0);
       return;
     }

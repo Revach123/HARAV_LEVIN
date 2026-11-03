@@ -2733,7 +2733,43 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
   render();
 }
 
-// ── עריכת נוסח שטר ההצטרפות (ארוך ומקוצר): נשמר בשרת ומתעדכן אוטומטית בטופס ההצטרפות (join / kehilot / אתר), באישור הנשלח במייל, ובמיילי ההצטרפות ──
+// ── עריכת נוסח שטר ההצטרפות (ארוך ומקוצר): עורך עם עיצוב (מודגש, נטוי, קו תחתון, גודל, צבע). נשמר בשרת ומתעדכן בכל המקומות ──
+const AG_LAST = {};   // הבחירה האחרונה בכל עורך (כדי שלחיצה על כפתור / בורר צבע לא תאבד אותה)
+function agEditor(id, paras) {
+  return `<div class="ag-ed" id="${id}" contenteditable="true" dir="rtl" spellcheck="false">${paras.map(p => `<p>${p}</p>`).join("")}</div>`;
+}
+function agCur() { return document.querySelector(".ag-ed.cur") || document.getElementById("ag-long"); }
+function agRestore() { const ed = agCur(), r = AG_LAST[ed.id]; ed.focus(); if (r) { const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } return ed; }
+function agFix(ed) {                      // <font> -> <span style>, כדי שהעיצוב יישמר בצורה אחידה
+  ed.querySelectorAll("font").forEach(f => {
+    const sp = document.createElement("span"), st = [];
+    if (f.getAttribute("color")) st.push("color:" + f.getAttribute("color"));
+    if (st.length) sp.setAttribute("style", st.join(";"));
+    while (f.firstChild) sp.appendChild(f.firstChild);
+    f.replaceWith(sp);
+  });
+}
+function agCmd(cmd, val) {
+  const ed = agRestore();
+  const css = cmd === "size" || cmd === "foreColor";          // גודל וצבע: span עם style (משנים במקום, כדי שהבחירה לא תאבד). מודגש/נטוי/קו תחתון: תגיות b/i/u
+  document.execCommand("styleWithCSS", false, css);
+  if (cmd === "size") {
+    if (!val) document.execCommand("removeFormat");
+    else { document.execCommand("fontSize", false, "7"); ed.querySelectorAll('[style*="xxx-large"]').forEach(sp => { sp.style.fontSize = val; }); }
+  } else document.execCommand(cmd, false, val || null);
+  const sel = getSelection(); if (sel.rangeCount) AG_LAST[ed.id] = sel.getRangeAt(0).cloneRange();
+}
+function agParas(ed) {
+  const out = []; let cur = "";
+  const flush = () => { if (cur.replace(/<br\s*\/?>|\s|&nbsp;/g, "")) out.push(cur); cur = ""; };
+  agFix(ed);
+  for (const n of ed.childNodes) {
+    if (n.nodeType === 1 && /^(P|DIV|LI|H[1-6])$/.test(n.tagName)) { flush(); out.push(n.innerHTML); }
+    else if (n.nodeType === 1) cur += n.outerHTML;
+    else if (n.nodeType === 3) cur += escHtml(n.textContent);
+  }
+  flush(); return out;
+}
 async function openAgreementEditor() {
   document.getElementById("ag-root")?.remove();
   const root = document.createElement("div"); root.id = "ag-root";
@@ -2741,20 +2777,41 @@ async function openAgreementEditor() {
   document.body.appendChild(root);
   let a; try { a = await apiFetch("/agreement"); } catch (e) { root.remove(); return showStatus("טעינת הנוסח נכשלה: " + e.message); }
   const box = root.querySelector(".modal-box");
-  const ta = (id, label, arr) => `<div class="field"><label>${label}</label><textarea id="${id}" rows="14" style="width:100%;font:inherit;line-height:1.6;padding:8px;border:1px solid var(--border);border-radius:8px;">${escHtml(arr.join("\n\n"))}</textarea></div>`;
-  box.innerHTML = `<div class="modal-title">עריכת נוסח שטר ההצטרפות</div>
-    <p style="color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 10px;">כל פסקה מופרדת משנייה בשורה ריקה. פסקה שמתחילה ב-<b dir="ltr">#</b> ורווח מוצגת מודגשת. השינוי מתעדכן מיד בטופס ההצטרפות (גם בקהילות ובאתר), באישור שנשלח במייל ובמיילי ההצטרפות.
-    האישור במייל נשלח תמיד בנוסח הארוך. בחירת החברות מוצגת אחרי הנוסח ואינה חלק מהטקסט. ${a.custom ? "כרגע מוצג נוסח שעודכן בניהול." : "כרגע מוצג נוסח ברירת המחדל."}</p>
-    ${ta("ag-long", "נוסח ארוך", a.long)}${ta("ag-short", "נוסח מקוצר", a.short)}
+  const btn = (cmd, label, st = "") => `<button type="button" class="ag-b" style="${st}" onmousedown="event.preventDefault();agCmd('${cmd}')" title="${label}">${label}</button>`;
+  box.innerHTML = `<style>
+      .ag-bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;position:sticky;top:0;background:#fff;padding:6px 0;z-index:2;border-bottom:1px solid var(--border);margin-bottom:8px}
+      .ag-b{min-width:36px;height:34px;padding:0 8px;font:inherit;font-size:16px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer}
+      .ag-bar select,.ag-bar input[type=color]{height:34px;border:1px solid var(--border);border-radius:6px;background:#fff;font:inherit}
+      .ag-bar input[type=color]{width:42px;padding:2px;cursor:pointer}
+      .ag-ed{min-height:220px;max-height:340px;overflow:auto;background:#fff;border:1px solid var(--border);border-inline-start:6px solid #2aada1;border-radius:14px;padding:1rem 1.1rem;font-size:17px;line-height:1.7;color:#3b3d3d;font-family:'Alef','Heebo','Assistant',system-ui,sans-serif;outline:none}
+      .ag-ed:focus{border-color:#2aada1}.ag-ed p{margin:0 0 .7rem}
+      .ag-h{font-weight:700;margin:14px 0 6px;color:var(--navy,#274d5b)}
+    </style>
+    <div class="modal-title">עריכת נוסח שטר ההצטרפות</div>
+    <div class="ag-bar" id="ag-bar">
+      ${btn("bold", "<b>B</b>")}${btn("italic", "<i>I</i>")}${btn("underline", "<u>U</u>")}
+      <select title="גודל" onchange="agCmd('size', this.value); this.selectedIndex=0"><option value="">גודל…</option><option value="14px">קטן (14)</option><option value="17px">רגיל (17)</option><option value="20px">בינוני (20)</option><option value="24px">גדול (24)</option><option value="30px">גדול מאוד (30)</option></select>
+      <input type="color" id="ag-color" value="#274d5b" title="צבע טקסט" oninput="agCmd('foreColor', this.value)">
+      ${btn("removeFormat", "ניקוי עיצוב", "font-size:14px")}${btn("undo", "↶")}${btn("redo", "↷")}
+    </div>
+    <div class="ag-h">נוסח ארוך</div>${agEditor("ag-long", a.long)}
+    <div class="ag-h">נוסח מקוצר</div>${agEditor("ag-short", a.short)}
     <p class="error-msg" id="ag-err"></p>
-    <div class="modal-actions" style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;">
+    <div class="modal-actions" style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:10px">
       <button class="btn-ghost" onclick="resetAgreementText()">↺ חזרה לברירת המחדל</button>
       <span style="display:flex;gap:8px;"><button class="btn-ghost" onclick="document.getElementById('ag-root').remove()">ביטול</button><button class="btn-primary" style="width:auto;padding:0 22px;" onclick="saveAgreementText()">שמירה</button></span></div>`;
+  box.querySelectorAll(".ag-ed").forEach(ed => {
+    ed.addEventListener("focus", () => { box.querySelectorAll(".ag-ed").forEach(x => x.classList.toggle("cur", x === ed)); });
+    ed.addEventListener("keyup", () => { const sel = getSelection(); if (sel.rangeCount && ed.contains(sel.anchorNode)) AG_LAST[ed.id] = sel.getRangeAt(0).cloneRange(); });
+    ed.addEventListener("mouseup", () => { const sel = getSelection(); if (sel.rangeCount && ed.contains(sel.anchorNode)) AG_LAST[ed.id] = sel.getRangeAt(0).cloneRange(); });
+    ed.addEventListener("paste", e => { e.preventDefault(); document.execCommand("insertText", false, (e.clipboardData || window.clipboardData).getData("text")); });   // הדבקה כטקסט נקי
+  });
+  document.getElementById("ag-long").classList.add("cur");
 }
 async function saveAgreementText() {
   const err = document.getElementById("ag-err");
   try {
-    await apiFetch("/agreement", { method: "POST", body: JSON.stringify({ long: document.getElementById("ag-long").value, short: document.getElementById("ag-short").value }) });
+    await apiFetch("/agreement", { method: "POST", body: JSON.stringify({ long: agParas(document.getElementById("ag-long")), short: agParas(document.getElementById("ag-short")) }) });
     document.getElementById("ag-root").remove(); showStatus("נוסח השטר נשמר ועודכן בכל המקומות ✓");
   } catch (e) { err.textContent = e.message; }
 }
