@@ -367,18 +367,21 @@ const spellEmail = (email) => {
 //   7 = pqrs, 8 = tuv, 9 = wxyz): 12 = a, 122 = b, 133 = e, 17777 = s. סימנים: 11 = נקודה, 111 = מקף, 1111 = קו תחתון.
 //   10 = מחיקת התו האחרון, 00 = סיום, 01 = הקראת מקום האותיות במקשים. אחרי כל תו מוקרא התו שהוקש.
 const EN_KEYS = { 2: 'abc', 3: 'def', 4: 'ghi', 5: 'jkl', 6: 'mno', 7: 'pqrs', 8: 'tuv', 9: 'wxyz' };
-export function decodeTyped(raw) {
+// פענוח הקשה אחת (עד סולמית). שני מצבים, מעבר ביניהם בכוכבית: מצב אותיות (ברירת מחדל): מקש 2-9 כמספר מקומה של האות במקש (2 = a, 22 = b, 222 = c ...),
+// 1 = נקודה, 11 = מקף, 111 = קו תחתון. מצב מספרים: ספרה אחת = הספרה. בשני המצבים: * = מעבר מצב, 00 = סיום, 10 = מחיקה, 01 = עזרה.
+export function decodeTyped(raw, mode = 'l') {
   const d = String(raw || '');
-  if (/^\d$/.test(d)) return { ch: d };
+  if (d === '*') return { toggle: true };
   if (d === '00') return { done: true };
   if (d === '10') return { del: true };
   if (d === '01') return { help: true };
-  if (/^1(1{1,3})$/.test(d)) return { ch: ['.', '-', '_'][d.length - 2] };
-  const m = d.match(/^1(([2-9])\2*)$/);
-  if (m) { const l = EN_KEYS[m[2]][m[1].length - 1]; if (l) return { ch: l }; }
+  if (mode === 'n') return /^\d$/.test(d) ? { ch: d } : {};
+  if (/^1{1,3}$/.test(d)) return { ch: ['.', '-', '_'][d.length - 1] };
+  const m = d.match(/^([2-9])\1*$/);
+  if (m) { const l = EN_KEYS[m[1]][d.length - 1]; if (l) return { ch: l }; }
   return {};
 }
-// מצב: s_<name>_x הטקסט, s_<name>_n סבב (משתנה ימות חדש בכל סבב), s_<name>_i ההסבר המלא כבר הושמע, s_<name>_ok סיום.
+// מצב: s_<name>_x הטקסט, s_<name>_n סבב (משתנה ימות חדש בכל סבב), s_<name>_i ההסבר המלא כבר הושמע, s_<name>_m מצב הקשה (l אותיות / n מספרים), s_<name>_ok סיום.
 function typeStep(v, P, name, askKey, max = 64) {
   const S = (k) => v[`s_${name}_${k}`], set = (k, x) => { v[`s_${name}_${k}`] = String(x); };
   if (S('ok') === '1') return { val: S('x') || '' };
@@ -388,7 +391,9 @@ function typeStep(v, P, name, askKey, max = 64) {
   const next = (pre, a) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a) }; };
   const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
   if (!raw) return { ask: read('', n, acc) };
-  const k = decodeTyped(raw);
+  const mode = S('m') === 'n' ? 'n' : 'l';
+  const k = decodeTyped(raw, mode);
+  if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(`${P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet')}.`, acc); }
   if (k.help) return next(`${P('join:emKeyMap')}.`, acc);
   if (k.del) { const a = acc.slice(0, -1); return next(`${P('join:emDeleted')}.${a ? `${P('join:soFar')}.${T(spellChars(a))}.` : ''}`, a); }
   if (k.done) {
