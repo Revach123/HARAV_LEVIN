@@ -739,6 +739,31 @@
    "kind": "upcoming",
    "last_seen": "2026-11-03"
   },
+  "U10405": {
+   "data": {
+    "chp_number": "",
+    "company_name": "ענבר ריביות",
+    "draft_no": null,
+    "draft_title": "תשקיף להשלמה",
+    "id": 10405,
+    "is_new_company": true,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1779465",
+    "link_trust_indenture": null,
+    "maya_report_id": 1779465,
+    "new_company_type": "חברת אג\"ח חדשה",
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-03"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",

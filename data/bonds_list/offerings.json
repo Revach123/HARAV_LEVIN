@@ -554,6 +554,27 @@
    "chp_number": ""
   },
   {
+   "id": 10405,
+   "maya_report_id": 1779465,
+   "company_name": "ענבר ריביות",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": null,
+   "draft_title": "תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1779465",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": ""
+  },
+  {
    "chp_number": "515125862",
    "company_name": "י.ע.ז יזמות",
    "draft_no": 2,
@@ -816,6 +837,7 @@
   "פישר ברדרס פרופ",
   "עמרם את נידם",
   "לייטסטון מוקסי",
+  "ענבר ריביות",
   "לייטסטון מוקסי"
  ]
 }
