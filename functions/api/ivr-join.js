@@ -401,7 +401,8 @@ function typeStep(v, P, name, askKey, max = 64) {
   if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet'), acc, true); }          // רק שם המצב, בלי לחזור על ההוראות
   if (!k.ch) return next(`${P('join:emBad')}.`, acc);
   if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
-  return next(`${T(spellChars(k.ch))}.`, acc + k.ch);
+  // מצב אותיות: מוקראת רק האות שהוקשה (בלי אישור ובלי לחזור על ההוראות). מצב מספרים: כמו קודם
+  return mode === 'l' ? next(T(spellChars(k.ch)), acc + k.ch, true) : next(`${T(spellChars(k.ch))}.`, acc + k.ch);
 }
 
 // כתובת המייל: החלק שלפני @ בהקשה, ואז סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור (2 = הקשה מחדש).
