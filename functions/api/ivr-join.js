@@ -17,7 +17,8 @@
 //    ag        הצהרה: 1 = מאשר ונרשם, 2 = שמיעה חוזרת של השטר המלא, 3 = ביטול
 //  אחרי כל הקלטה / הקשה מוקרא למצטרף מה שזוהה / הוקש, עם אישור (1) או שינוי (2). לפני כל הקלטה נאמר לסיים בסולמית.
 //  מייל: הקשה תו אחר תו, ואחריו סולמית. שני מצבים, מעבר ביניהם בכוכבית (*): אותיות (ברירת מחדל: מקש 2-9 כמספר מקומה של האות, 2 = a, 22 = b;
-//  1 = נקודה, 11 = מקף, 111 = קו תחתון) או מספרים (ספרה אחת = הספרה). בשני המצבים: 10 = מחיקה, 00 = סיום, 01 = עזרה,
+//  1 = נקודה, 11 = מקף, 111 = קו תחתון) או מספרים (ספרה אחת = הספרה). בשני המצבים: 10 = מחיקה, 01 = עזרה, וסיום = סולמית לבדה (סולמית פעמיים ברצף).
+//  ('00' אינו סיום: ייתכן 00 בכתובת)
 //  ואחר כך סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור.
 //  פקס: 9-10 ספרות (גם עם קידומת 153). בסוף - הקראת נוסח אישור הרישום.
 //  כל שאלה שלא נענתה נשאלת שוב ושוב (אותו משתנה), בלי הגבלת ניסיונות.
@@ -363,44 +364,43 @@ const spellEmail = (email) => {
   return `${spellChars(local)} שטרודל ${known ? known[1] : spellChars(domain)}`;
 };
 
-// ---- הקשת טקסט באנגלית (כתובת מייל) בטלפון: תו אחד בכל הקשה, ואחריו סולמית ----
-//   ספרה: הספרה לבדה (5 = 5). אות: 1 ואחריו האות לפי מקומה במקש (2 = abc, 3 = def, 4 = ghi, 5 = jkl, 6 = mno,
-//   7 = pqrs, 8 = tuv, 9 = wxyz): 12 = a, 122 = b, 133 = e, 17777 = s. סימנים: 11 = נקודה, 111 = מקף, 1111 = קו תחתון.
-//   10 = מחיקת התו האחרון, 00 = סיום, 01 = הקראת מקום האותיות במקשים. אחרי כל תו מוקרא התו שהוקש.
+// ---- הקשת טקסט באנגלית (כתובת מייל) בטלפון ----
+//   מצב אותיות (ברירת מחדל): מקש 2-9 כמספר מקומה של האות במקש (2 = a, 22 = b, 222 = c ...), ואחרי כל אות סולמית. 1 = נקודה, 11 = מקף, 111 = קו תחתון.
+//   מצב מספרים: ספרה אחת = הספרה, בלי סולמית (נקלטת מיד).
+//   כוכבית: מעבר בין המצבים (במצב אותיות: כוכבית וסולמית). 0 (במצב אותיות) = התחלה מחדש. סיום: סולמית לבדה (הקשה ריקה): במצב אותיות זו
+//   הסולמית השנייה ברצף. אין מחיקה ואין עזרה. ('00' אינו סיום: ייתכן 00 בכתובת.)
 const EN_KEYS = { 2: 'abc', 3: 'def', 4: 'ghi', 5: 'jkl', 6: 'mno', 7: 'pqrs', 8: 'tuv', 9: 'wxyz' };
-// פענוח הקשה אחת (עד סולמית). שני מצבים, מעבר ביניהם בכוכבית: מצב אותיות (ברירת מחדל): מקש 2-9 כמספר מקומה של האות במקש (2 = a, 22 = b, 222 = c ...),
-// 1 = נקודה, 11 = מקף, 111 = קו תחתון. מצב מספרים: ספרה אחת = הספרה. בשני המצבים: * = מעבר מצב, 00 = סיום, 10 = מחיקה, 01 = עזרה.
 export function decodeTyped(raw, mode = 'l') {
   const d = String(raw || '');
   if (d === '*') return { toggle: true };
-  if (d === '00') return { done: true };
-  if (d === '10') return { del: true };
-  if (d === '01') return { help: true };
   if (mode === 'n') return /^\d$/.test(d) ? { ch: d } : {};
+  if (d === '0') return { restart: true };
   if (/^1{1,3}$/.test(d)) return { ch: ['.', '-', '_'][d.length - 1] };
   const m = d.match(/^([2-9])\1*$/);
   if (m) { const l = EN_KEYS[m[1]][d.length - 1]; if (l) return { ch: l }; }
   return {};
 }
 // מצב: s_<name>_x הטקסט, s_<name>_n סבב (משתנה ימות חדש בכל סבב), s_<name>_i ההסבר המלא כבר הושמע, s_<name>_m מצב הקשה (l אותיות / n מספרים), s_<name>_ok סיום.
+// מחזיר {val} בסיום, {ask} לשאלה הבאה, או {restart:true} להתחלה מחדש.
 function typeStep(v, P, name, askKey, max = 64) {
   const S = (k) => v[`s_${name}_${k}`], set = (k, x) => { v[`s_${name}_${k}`] = String(x); };
   if (S('ok') === '1') return { val: S('x') || '' };
   const n = Number(S('n') || 0), key = `${name}_${n}`, acc = S('x') || '';
-  const prompt = (a) => P(!S('i') ? askKey : a ? 'join:emNext' : 'join:emFirst');
-  const read = (pre, i, a) => readTap(pre + prompt(a), `${name}_${i}`, null, { max: 6, min: 1, empty: EMPTY });
+  const numMode = () => S('m') === 'n';
+  const prompt = (a) => P(!S('i') ? askKey : numMode() ? 'join:emNextNum' : a ? 'join:emNext' : 'join:emFirst');
+  // מצב מספרים: ספרה אחת נקלטת מיד (max 1). מצב אותיות: עד 6 ספרות עד סולמית. min 0: סולמית לבדה = הקשה ריקה (סיום)
+  const read = (pre, i, a) => readTap(pre + prompt(a), `${name}_${i}`, null, { max: numMode() ? 1 : 6, min: 0, wait: 15, empty: EMPTY });
   const next = (pre, a) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a) }; };
-  const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
-  if (!raw) return { ask: read('', n, acc) };
-  const mode = S('m') === 'n' ? 'n' : 'l';
-  const k = decodeTyped(raw, mode);
-  if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(`${P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet')}.`, acc); }
-  if (k.help) return next(`${P('join:emKeyMap')}.`, acc);
-  if (k.del) { const a = acc.slice(0, -1); return next(`${P('join:emDeleted')}.${a ? `${P('join:soFar')}.${T(spellChars(a))}.` : ''}`, a); }
-  if (k.done) {
+  const answered = has(v, key), raw = answered && !empty(v[key]) ? String(v[key]) : '';
+  if (!answered) return { ask: read('', n, acc) };
+  if (!raw) {          // הקשה ריקה (סולמית לבדה / שתיקה ארוכה) = סיום; אם עוד לא הוקש כלום - שואלים שוב
     if (!acc) return next(`${P('join:emailEmpty')}.`, acc);
     set('ok', '1'); return { val: acc };
   }
+  const mode = numMode() ? 'n' : 'l';
+  const k = decodeTyped(raw, mode);
+  if (k.restart) { set('n', n + 1); return { restart: true }; }          // סבב חדש, כדי שההקשה הישנה (0) לא תיקרא שוב
+  if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(`${P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet')}.`, acc); }
   if (!k.ch) return next(`${P('join:emBad')}.`, acc);
   if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
   return next(`${T(spellChars(k.ch))}.`, acc + k.ch);
@@ -416,12 +416,13 @@ async function emailStep(ctx) {
   const set = (k, val) => { v[`s_em_${k}`] = String(val); };
   const noteTake = () => { const n = S('note'); set('note', ''); return n ? `${P(n)}.` : ''; };
   const restart = (note) => {          // הקשה מחדש: מאפסים את הטקסט, אבל לא את מספרי הסבבים (ימות שומרת ערכים ישנים)
-    for (const nm of ['eml', 'emx']) { v[`s_${nm}_x`] = ''; v[`s_${nm}_ok`] = ''; }
+    for (const nm of ['eml', 'emx']) { v[`s_${nm}_x`] = ''; v[`s_${nm}_ok`] = ''; v[`s_${nm}_m`] = ''; }
     set('k', Number(S('k', 0)) + 1); set('note', note);
     return emailStep(ctx);
   };
 
   const lq = typeStep(v, P, 'eml', 'join:emailType');
+  if (lq.restart) return restart('join:emRestarted');
   if (lq.ask) { const note = noteTake(); return { ask: note ? lq.ask.replace(/^read=/, `read=${note}`) : lq.ask }; }
   const local = lq.val;
 
@@ -434,6 +435,7 @@ async function emailStep(ctx) {
   let domain;
   if (v[dk] === '0') {
     const xq = typeStep(v, P, 'emx', 'join:emailDomType');
+    if (xq.restart) return restart('join:emRestarted');
     if (xq.ask) return xq;
     domain = xq.val.replace(/^@/, '');
   } else domain = EMAIL_DOMAINS[Number(v[dk]) - 1][0];
