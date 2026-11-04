@@ -188,11 +188,51 @@ async function step({ v, env, P, bk, done, origin }) {
   };
 
   // הקלטה -> זיהוי דיבור -> הקראת מה שזוהה + אישור (1) / שינוי (2) (הקלטה חוזרת). בלי הגדרת Azure: נשמרת ההקלטה בלבד.
-  const recStep = async (name, askKey, max, label, spellKey = '') => {
+  // typeOpt: אחרי שתי הקלטות שלא אושרו מוצעת הקשת אותיות (או הקלטה שלישית); הקלטה שלישית שלא אושרה = מעבר אוטומטי להקשת אותיות.
+  const FINAL = { כ: 'ך', מ: 'ם', נ: 'ן', פ: 'ף', צ: 'ץ' };
+  const hebType = (name) => {
+    const r = Number(S(name, 'tn') || 0), key = `${name}_t${r}`, acc = S(name, 'tx') || '';
+    const final = (t) => (t ? t.slice(0, -1) + (FINAL[t.slice(-1)] || t.slice(-1)) : t);
+    const tap = (pre, i, a) => readTap(pre + P(a ? 'join:nextLetter' : S(name, 'ti') ? 'join:firstLetter' : 'join:fnType'), `${name}_t${i}`, null, { max: 3, min: 0, wait: 15, empty: EMPTY });
+    const advance = (pre, a) => { setS(name, 'ti', '1'); setS(name, 'tn', r + 1); setS(name, 'tx', a); return { ask: tap(pre, r + 1, a) }; };
+    const ck = `${name}_tc${S(name, 'tk') || 0}`;
+    if (S(name, 'tf') === '1') {                             // אישור הכתוב
+      if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'x', final(acc)); return { text: final(acc) }; }
+      if (v[ck] === '2') { setS(name, 'tk', Number(S(name, 'tk') || 0) + 1); setS(name, 'tf', ''); setS(name, 'ti', ''); return advance('', ''); }
+      return { ask: readTap(`${T(final(acc))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    }
+    const raw = has(v, key) && !empty(v[key]) ? String(v[key]) : '';
+    if (!has(v, key)) return { ask: tap('', r, acc) };
+    if (!raw) {                                              // סולמית לבדה = סיום
+      if (!acc) return advance('', '');
+      setS(name, 'tf', '1'); return { ask: readTap(`${T(final(acc))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    }
+    if (raw === '0') return advance(`${P('join:keyMap')}.`, acc);
+    if (raw === '1') { const a = acc.slice(0, -1); return advance(`${P('join:deleted')}.`, a); }
+    const l = tapLetter(raw);
+    if (!l) return advance(`${P('join:badLetter')}.`, acc);
+    return advance(`${P('join:typed')}.${P(`letter:${l}`)}.`, acc + l);
+  };
+  const recStep = async (name, askKey, max, label, spellKey = '', typeOpt = false) => {
     if (S(name, 'ok') === '1') return { text: S(name, 'x') || '' };
+    if (typeOpt && S(name, 't') === '1') return hebType(name);
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`;
-    // spellKey: אם הזיהוי נכשל, מבקשים איות אות אחר אות (מצב sp)
     const askAt = (i, prefix = '') => readRecord(prefix + P(S(name, 'sp') === '1' ? spellKey : askKey), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
+    const att = () => Number(S(name, 'att') || 0);
+    // דחייה (לא זוהה / שונה): מונים ניסיון; אחרי שניים - הצעה; אחרי שלישית - הקשת אותיות
+    const reject = (prefix = '') => {
+      setS(name, 'att', att() + 1); setS(name, 'n', n + 1);
+      if (typeOpt && S(name, 'o3') === '1') { setS(name, 't', '1'); return hebType(name); }
+      if (typeOpt && att() >= 2) return { ask: readTap(prefix + P('join:recOrType'), `${name}_o`, ['1', '2'], { empty: EMPTY }) };
+      return { ask: askAt(n + 1, prefix) };
+    };
+    if (typeOpt && att() >= 2 && S(name, 'o3') !== '1') {          // הצעה: 1 = הקלטה שלישית, 2 = הקשת אותיות
+      const ov = v[`${name}_o`];
+      if (ov === '2') { setS(name, 't', '1'); return hebType(name); }
+      if (ov === '1') { setS(name, 'o3', '1'); return { ask: askAt(n) }; }
+      return { ask: readTap(P('join:recOrType'), `${name}_o`, ['1', '2'], { empty: EMPTY }) };
+    }
+    // spellKey: אם הזיהוי נכשל, מבקשים איות אות אחר אות (מצב sp)
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
     if (!sttConfigured(env)) { setS(name, 'ok', '1'); setS(name, 'x', ''); setS(name, 'f', key); return { text: '' }; }
     if (S(name, 'tn') !== String(n)) {
@@ -202,13 +242,14 @@ async function step({ v, env, P, bk, done, origin }) {
     }
     const text = S(name, 'x') || '';
     if (!text) {
+      if (typeOpt) return reject(`${P('join:noHear')}.`);
       setS(name, 'n', n + 1);
       if (spellKey) { setS(name, 'sp', '1'); return { ask: askAt(n + 1) }; }          // לא זוהה: איות אות אחר אות
       return { ask: askAt(n + 1, `${P('join:noHear')}.`) };
     }
     const ck = `${name}_c${n}`;
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { text }; }
-    if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
+    if (v[ck] === '2') { if (typeOpt) return reject(); setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
     return { ask: readTap(`${T(text)}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
   let o;
@@ -219,7 +260,7 @@ async function step({ v, env, P, bk, done, origin }) {
   const id = idQ.val;
 
   // 2. שם פרטי ושם משפחה (שתי הקלטות נפרדות)
-  const fnQ = await recStep('fn', 'join:askFirst', REC_MAX, 'join:lblFirst');
+  const fnQ = await recStep('fn', 'join:askFirst', REC_MAX, 'join:lblFirst', '', true);
   if (fnQ.ask) return fnQ.ask;
   const lnQ = await recStep('ln', 'join:askLast', REC_MAX, 'join:lblLast', 'join:askSpell');
   if (lnQ.ask) return lnQ.ask;
@@ -374,7 +415,7 @@ export function decodeTyped(raw, mode = 'l') {
   const d = String(raw || '');
   if (d === '*' || /^\d*\*$/.test(d) && d.length > 1) return { toggle: true };          // כוכבית (גם אם ימות החזירה אותה עם ספרות שהוקשו קודם בסבב)
   if (mode === 'n') return /^\d$/.test(d) ? { ch: d } : {};
-  if (/^1{1,3}$/.test(d)) return { ch: ['.', '-', '_'][d.length - 1] };
+  if (d === '1') return { punct: true };                                                // 1 = תפריט סימנים (נקודה / מקף / קו תחתון)
   const m = d.match(/^([2-9])\1*$/);
   if (m) { const l = EN_KEYS[m[1]][d.length - 1]; if (l) return { ch: l }; }
   return {};
@@ -390,6 +431,17 @@ function typeStep(v, P, name, askKey, max = 64) {
   // מצב מספרים: ספרה אחת נקלטת מיד (max 1). מצב אותיות: עד 6 ספרות עד סולמית. min 0: סולמית לבדה = הקשה ריקה (סיום)
   const read = (pre, i, a, bare) => readTap(pre + (bare ? '' : prompt(a)), `${name}_${i}`, null, { max: numMode() ? 1 : 6, min: 0, wait: 15, empty: EMPTY });
   const next = (pre, a, bare) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a, bare) }; };
+  // תפריט סימנים: 1 = נקודה, 2 = מקף, 3 = קו תחתון; סולמית = חזרה להקשת אותיות / מספרים
+  if (S('p') === '1') {
+    const pk = `${name}_p${n}`, c = v[pk];
+    if (['1', '2', '3'].includes(c)) {
+      set('p', ''); if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
+      const ch = ['.', '-', '_'][Number(c) - 1];
+      return next(T(spellChars(ch)), acc + ch, true);
+    }
+    if (has(v, pk)) { set('p', ''); return next(P(numMode() ? 'join:emModeNum' : 'join:emModeLet'), acc, true); }
+    return { ask: readTap(P('join:emPunct'), pk, ['1', '2', '3'], { max: 1, min: 0, wait: 10, empty: EMPTY }) };
+  }
   const answered = has(v, key), raw = answered && !empty(v[key]) ? String(v[key]) : '';
   if (!answered) return { ask: read('', n, acc) };
   if (!raw) {          // הקשה ריקה (סולמית לבדה / שתיקה ארוכה) = סיום; אם עוד לא הוקש כלום - שואלים שוב
@@ -399,6 +451,7 @@ function typeStep(v, P, name, askKey, max = 64) {
   const mode = numMode() ? 'n' : 'l';
   const k = decodeTyped(raw, mode);
   if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet'), acc, true); }          // רק שם המצב, בלי לחזור על ההוראות
+  if (k.punct) { set('p', '1'); return { ask: readTap(P('join:emPunct'), `${name}_p${n}`, ['1', '2', '3'], { max: 1, min: 0, wait: 10, empty: EMPTY }) }; }
   if (!k.ch) return next(`${P('join:emBad')}.`, acc);
   if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
   // מצב אותיות: מוקראת רק האות שהוקשה (בלי אישור ובלי לחזור על ההוראות). מצב מספרים: כמו קודם

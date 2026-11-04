@@ -68,7 +68,7 @@ async function conversation(answers, { log = false, over = {} } = {}) {
     said.push(msg);
     const base = name.replace(/_\d+$/, '').replace(/_[a-z]\d+$/, '');
     if (rec) { vars[name] = `/1/${name}.wav`; continue; }
-    if (/^(fn|ln)$/.test(base)) continue;
+    if (/^(fn|ln)_\d+$/.test(name)) continue;
     if (fixed[name] !== undefined) { vars[name] = fixed[name]; continue; }
     if (/^id_\d+$/.test(name)) { vars[name] = fixed.id; continue; }
     if (/^id_c\d+$/.test(name)) { vars[name] = '1'; continue; }
@@ -167,15 +167,16 @@ assert.ok(ex['הקלטת כתובת']);
 // מצב אותיות (ברירת מחדל): מקש = מקומה של האות במקש; 1/11/111 = . - _ ; מצב מספרים (אחרי כוכבית): ספרה אחת
 assert.deepEqual(decodeTyped('2'), { ch: 'a' }); assert.deepEqual(decodeTyped('22'), { ch: 'b' }); assert.deepEqual(decodeTyped('33'), { ch: 'e' });
 assert.deepEqual(decodeTyped('7777'), { ch: 's' }); assert.deepEqual(decodeTyped('9999'), { ch: 'z' });
-assert.deepEqual(decodeTyped('1'), { ch: '.' }); assert.deepEqual(decodeTyped('11'), { ch: '-' }); assert.deepEqual(decodeTyped('111'), { ch: '_' });
+assert.deepEqual(decodeTyped('1'), { punct: true }); assert.deepEqual(decodeTyped('11'), {}); assert.deepEqual(decodeTyped('111'), {});
 assert.deepEqual(decodeTyped('*'), { toggle: true }); assert.deepEqual(decodeTyped('0'), {}); assert.deepEqual(decodeTyped('10'), {}); assert.deepEqual(decodeTyped('01'), {}); assert.deepEqual(decodeTyped('00'), {}); assert.deepEqual(decodeTyped('00', 'n'), {}); assert.deepEqual(decodeTyped('0', 'n'), { ch: '0' });
-assert.deepEqual(decodeTyped('222'), { ch: 'c' }); assert.deepEqual(decodeTyped('2222'), {}); assert.deepEqual(decodeTyped('23'), {}); assert.deepEqual(decodeTyped('1111'), {});
+assert.deepEqual(decodeTyped('222'), { ch: 'c' }); assert.deepEqual(decodeTyped('2222'), {}); assert.deepEqual(decodeTyped('23'), {}); 
 assert.deepEqual(decodeTyped('5', 'n'), { ch: '5' }); assert.deepEqual(decodeTyped('55', 'n'), {}); assert.deepEqual(decodeTyped('*', 'n'), { toggle: true });
 const EN = { a: '2', b: '22', c: '222', d: '3', e: '33', f: '333', g: '4', h: '44', i: '444', j: '5', k: '55', l: '555', m: '6', n: '66', o: '666',
-  p: '7', q: '77', r: '777', s: '7777', t: '8', u: '88', v: '888', w: '9', x: '99', y: '999', z: '9999', '.': '1', '-': '11', _: '111' };
-const typed = (str) => { const out = []; let mode = 'l'; for (const ch of str) { const want = /\d/.test(ch) ? 'n' : 'l'; if (want !== mode) { out.push('*'); mode = want; } out.push(/\d/.test(ch) ? ch : EN[ch]); } return out; };
+  p: '7', q: '77', r: '777', s: '7777', t: '8', u: '88', v: '888', w: '9', x: '99', y: '999', z: '9999', '.': 'P1', '-': 'P2', _: 'P3' };
+const typed = (str) => { const out = []; let mode = 'l'; for (const ch of str) { const want = /\d/.test(ch) ? 'n' : 'l'; if (want !== mode) { out.push('*'); mode = want; } const t = /\d/.test(ch) ? ch : EN[ch]; if (t[0] === 'P') out.push('1', t); else out.push(t); } return out; };
+const ans = (k, firstRe) => (k[0] === 'P' ? [/לנקדה הקישו אחת.*לחזרה סולמית/, k[1]] : [firstRe, k]);
 const emailAnswers = (str, domKey, extra = []) => [
-  ...typed(str).map((k, i) => [i === 0 ? /הקישו את כתבת המייל.*כוכבית/ : /^t-/, k]),
+  ...typed(str).map((k, i) => ans(k, i === 0 ? /הקישו את כתבת המייל.*כוכבית/ : /^t-/)),
   ...extra,
   [/^t-/, 'NONE'],
   [/עכשיו נבחר את הסיומת.*לגימייל הקישו 1/, domKey],
@@ -193,7 +194,7 @@ assert.equal(p.email, 'moshe5@gmail.com');
 // 2. סיומת אחרת בהקשה (0): a.b@mail.co.il; ואז שינוי (2) והקשה מחדש
 r = await conversation([...ADDR,
   ...emailAnswers('a.b', '0'),
-  ...typed('mail.co.il').map((k, i) => [i === 0 ? /הקישו את הסיומת שאחרי השטרודל/ : /^t-/, k]),
+  ...typed('mail.co.il').map((k, i) => ans(k, i === 0 ? /הקישו את הסיומת שאחרי השטרודל/ : /^t-/)),
   [/^t-/, 'NONE'],
   [/כתבת המייל שהוכנסה.*איי נקודה בי שטרודל אם איי איי אל נקודה סי או נקודה איי אל/, '2'],
   [/הקישו את התו הראשון/, EN.y],
@@ -214,4 +215,29 @@ r = await conversation([...ADDR,
 p = await (async () => { const rr = inserted.at(-1), key = await importKeyForWrite(env); return decryptPii(key, rr.rid, rr.pii); })();
 assert.equal(p.email, 'y00z@gmail.com');
 
+// ---- שם פרטי: אחרי שתי הקלטות שלא זוהו - הצעה; 2 = הקשת אותיות; הקלטה שלישית שלא זוהתה = הקשת אותיות אוטומטית ----
+{
+  const realFetch = globalThis.fetch;
+  const wav = new Uint8Array(100); wav.set([0x52, 0x49, 0x46, 0x46]);
+  globalThis.fetch = async (u, o) => {
+    u = String(u);
+    if (u.includes('DownloadFile')) return u.includes('ln_') ? new Response(wav) : new Response('x', { status: 404 });
+    if (u.includes('stt.speech')) return Response.json({ RecognitionStatus: 'Success', DisplayText: 'כהן' });
+    return realFetch(u, o);
+  };
+  env.AZURE_SPEECH_KEY = 'k'; env.YEMOT_TOKEN = 't';
+  const lnOk = [[/כהן.*לאישור הקישו 1/, '1']];
+  const hebWord = [
+    [/הקישו את השם הפרטי אות אחר אות/, tapCode('מ')], [/הוקשה האות.*האות הבאה/, tapCode('ש')],
+    [/הוקשה האות.*האות הבאה/, tapCode('ה')], [/הוקשה האות.*האות הבאה/, tapCode('נ')], [/הוקשה האות.*האות הבאה/, 'NONE'],
+    [/מששנ.*לאישור הקישו 1|משהן.*לאישור הקישו 1/, '1'],
+  ];
+  // א. פעמיים לא זוהה -> הצעה -> 2 -> הקשה
+  r = await conversation([[/להקלטה נוספת.*להקשת השם/, "2"], ...hebWord, ...lnOk, ...ADDR], { over: { emq: "2" }, log: process.env.LOG });
+  assert.ok(r.said, 'A: ' + (r.message || r.out));
+  // ב. הצעה -> 1 (הקלטה שלישית) -> לא זוהתה -> הקשה אוטומטית
+  r = await conversation([[/להקלטה נוספת.*להקשת השם/, '1'], ...hebWord, ...lnOk, ...ADDR], { over: { emq: '2' } });
+  assert.ok(r.said, 'B: ' + (r.message || r.out));
+  globalThis.fetch = realFetch; delete env.AZURE_SPEECH_KEY; delete env.YEMOT_TOKEN;
+}
 console.log('simulate_addr: ok');
