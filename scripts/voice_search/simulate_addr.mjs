@@ -168,16 +168,16 @@ assert.ok(ex['הקלטת כתובת']);
 assert.deepEqual(decodeTyped('2'), { ch: 'a' }); assert.deepEqual(decodeTyped('22'), { ch: 'b' }); assert.deepEqual(decodeTyped('33'), { ch: 'e' });
 assert.deepEqual(decodeTyped('7777'), { ch: 's' }); assert.deepEqual(decodeTyped('9999'), { ch: 'z' });
 assert.deepEqual(decodeTyped('1'), { ch: '.' }); assert.deepEqual(decodeTyped('11'), { ch: '-' }); assert.deepEqual(decodeTyped('111'), { ch: '_' });
-assert.deepEqual(decodeTyped('*'), { toggle: true }); assert.deepEqual(decodeTyped('0'), { restart: true }); assert.deepEqual(decodeTyped('10'), {}); assert.deepEqual(decodeTyped('01'), {}); assert.deepEqual(decodeTyped('00'), {}); assert.deepEqual(decodeTyped('00', 'n'), {}); assert.deepEqual(decodeTyped('0', 'n'), { ch: '0' });
+assert.deepEqual(decodeTyped('*'), { toggle: true }); assert.deepEqual(decodeTyped('0'), {}); assert.deepEqual(decodeTyped('10'), {}); assert.deepEqual(decodeTyped('01'), {}); assert.deepEqual(decodeTyped('00'), {}); assert.deepEqual(decodeTyped('00', 'n'), {}); assert.deepEqual(decodeTyped('0', 'n'), { ch: '0' });
 assert.deepEqual(decodeTyped('222'), { ch: 'c' }); assert.deepEqual(decodeTyped('2222'), {}); assert.deepEqual(decodeTyped('23'), {}); assert.deepEqual(decodeTyped('1111'), {});
 assert.deepEqual(decodeTyped('5', 'n'), { ch: '5' }); assert.deepEqual(decodeTyped('55', 'n'), {}); assert.deepEqual(decodeTyped('*', 'n'), { toggle: true });
 const EN = { a: '2', b: '22', c: '222', d: '3', e: '33', f: '333', g: '4', h: '44', i: '444', j: '5', k: '55', l: '555', m: '6', n: '66', o: '666',
   p: '7', q: '77', r: '777', s: '7777', t: '8', u: '88', v: '888', w: '9', x: '99', y: '999', z: '9999', '.': '1', '-': '11', _: '111' };
 const typed = (str) => { const out = []; let mode = 'l'; for (const ch of str) { const want = /\d/.test(ch) ? 'n' : 'l'; if (want !== mode) { out.push('*'); mode = want; } out.push(/\d/.test(ch) ? ch : EN[ch]); } return out; };
 const emailAnswers = (str, domKey, extra = []) => [
-  ...typed(str).map((k, i) => [i === 0 ? /הקישו את כתבת המייל.*כוכבית/ : /הקישו את (התו|הספרה) הב/, k]),
+  ...typed(str).map((k, i) => [i === 0 ? /הקישו את כתבת המייל.*כוכבית/ : /הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, k]),
   ...extra,
-  [/הקישו את (התו|הספרה) הב/, 'NONE'],
+  [/הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, 'NONE'],
   [/עכשיו נבחר את הסיומת.*לגימייל הקישו 1/, domKey],
 ];
 const ADDR = [...spell('י', /שם העיר/), [/לירושלים/, '1'], ...spell('ב', /שם הרחוב/), [/לבר אילן/, '1'], [/מספר הבית/, '4'], [/מספר בית 4/, '1']];
@@ -193,27 +193,25 @@ assert.equal(p.email, 'moshe5@gmail.com');
 // 2. סיומת אחרת בהקשה (0): a.b@mail.co.il; ואז שינוי (2) והקשה מחדש
 r = await conversation([...ADDR,
   ...emailAnswers('a.b', '0'),
-  ...typed('mail.co.il').map((k, i) => [i === 0 ? /הקישו את הסיומת שאחרי השטרודל/ : /הקישו את (התו|הספרה) הב/, k]),
-  [/הקישו את (התו|הספרה) הב/, 'NONE'],
+  ...typed('mail.co.il').map((k, i) => [i === 0 ? /הקישו את הסיומת שאחרי השטרודל/ : /הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, k]),
+  [/הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, 'NONE'],
   [/כתבת המייל שהוכנסה.*איי נקודה בי שטרודל אם איי איי אל נקודה סי או נקודה איי אל/, '2'],
   [/הקישו את התו הראשון/, EN.y],
-  [/הקישו את (התו|הספרה) הב/, 'NONE'],
+  [/הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, 'NONE'],
   [/נבחר את הסיומת/, '1'],
   [/וואי שטרודל גימייל/, '1'],
 ], { over: { emq: '1' } });
 p = await (async () => { const rr = inserted.at(-1), key = await importKeyForWrite(env); return decryptPii(key, rr.rid, rr.pii); })();
 assert.equal(p.email, 'y@gmail.com');
 
-// 3. התחלה מחדש (0 במצב אותיות) באמצע ההקשה, ו-00 במצב מספרים אינו סיום (ספרות 0 ו-0 נקלטות כשתי ספרות)
+// 3. 00 במצב מספרים אינו סיום (ספרות 0 ו-0), וכוכבית משמיעה רק את שם המצב
 r = await conversation([...ADDR,
-  [/הקישו את כתבת המייל/, EN.q],
-  [/הקישו את (התו|הספרה) הב/, '0'],
-  [/מתחילים מחדש.*הקישו את התו הראשון/, EN.y], [/הקישו את (התו|הספרה) הב/, '*'], [/מצב מספרים.*הקישו את הספרה הבאה/, '0'], [/הקישו את הספרה הבאה/, '0'],
-  [/הקישו את הספרה הבאה/, 'NONE'],
+  [/הקישו את כתבת המייל/, EN.y], [/הקישו את (התו|הספרה) הב|^t-מצב (מספרים|אותיות)$/, '*'], [/^t-מצב מספרים$/, '0'], [/הקישו את הספרה הבאה/, '0'],
+  [/הקישו את הספרה הבאה/, '*'], [/^t-מצב אותיות$/, EN.z], [/הקישו את התו הבא/, 'NONE'],
   [/נבחר את הסיומת/, '1'],
-  [/וואי 0 0 שטרודל גימייל/, '1'],
+  [/וואי 0 0 זד שטרודל גימייל/, '1'],
 ], { over: { emq: '1' } });
 p = await (async () => { const rr = inserted.at(-1), key = await importKeyForWrite(env); return decryptPii(key, rr.rid, rr.pii); })();
-assert.equal(p.email, 'y00@gmail.com');
+assert.equal(p.email, 'y00z@gmail.com');
 
 console.log('simulate_addr: ok');

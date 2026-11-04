@@ -367,21 +367,20 @@ const spellEmail = (email) => {
 // ---- הקשת טקסט באנגלית (כתובת מייל) בטלפון ----
 //   מצב אותיות (ברירת מחדל): מקש 2-9 כמספר מקומה של האות במקש (2 = a, 22 = b, 222 = c ...), ואחרי כל אות סולמית. 1 = נקודה, 11 = מקף, 111 = קו תחתון.
 //   מצב מספרים: ספרה אחת = הספרה, בלי סולמית (נקלטת מיד).
-//   כוכבית: מעבר בין המצבים (במצב אותיות: כוכבית וסולמית). 0 (במצב אותיות) = התחלה מחדש. סיום: סולמית לבדה (הקשה ריקה): במצב אותיות זו
-//   הסולמית השנייה ברצף. אין מחיקה ואין עזרה. ('00' אינו סיום: ייתכן 00 בכתובת.)
+//   כוכבית (בלי סולמית): מעבר בין המצבים, ומוקרא רק "מצב אותיות" / "מצב מספרים". סיום: סולמית לבדה (הקשה ריקה): במצב אותיות זו
+//   הסולמית השנייה ברצף. אין מחיקה, עזרה או התחלה מחדש (בסוף יש אישור: 2 = הקשה מחדש). ('00' אינו סיום: ייתכן 00 בכתובת.)
 const EN_KEYS = { 2: 'abc', 3: 'def', 4: 'ghi', 5: 'jkl', 6: 'mno', 7: 'pqrs', 8: 'tuv', 9: 'wxyz' };
 export function decodeTyped(raw, mode = 'l') {
   const d = String(raw || '');
-  if (d === '*') return { toggle: true };
+  if (d === '*' || /^\d*\*$/.test(d) && d.length > 1) return { toggle: true };          // כוכבית (גם אם ימות החזירה אותה עם ספרות שהוקשו קודם בסבב)
   if (mode === 'n') return /^\d$/.test(d) ? { ch: d } : {};
-  if (d === '0') return { restart: true };
   if (/^1{1,3}$/.test(d)) return { ch: ['.', '-', '_'][d.length - 1] };
   const m = d.match(/^([2-9])\1*$/);
   if (m) { const l = EN_KEYS[m[1]][d.length - 1]; if (l) return { ch: l }; }
   return {};
 }
 // מצב: s_<name>_x הטקסט, s_<name>_n סבב (משתנה ימות חדש בכל סבב), s_<name>_i ההסבר המלא כבר הושמע, s_<name>_m מצב הקשה (l אותיות / n מספרים), s_<name>_ok סיום.
-// מחזיר {val} בסיום, {ask} לשאלה הבאה, או {restart:true} להתחלה מחדש.
+// מחזיר {val} בסיום, או {ask} לשאלה הבאה.
 function typeStep(v, P, name, askKey, max = 64) {
   const S = (k) => v[`s_${name}_${k}`], set = (k, x) => { v[`s_${name}_${k}`] = String(x); };
   if (S('ok') === '1') return { val: S('x') || '' };
@@ -389,8 +388,8 @@ function typeStep(v, P, name, askKey, max = 64) {
   const numMode = () => S('m') === 'n';
   const prompt = (a) => P(!S('i') ? askKey : numMode() ? 'join:emNextNum' : a ? 'join:emNext' : 'join:emFirst');
   // מצב מספרים: ספרה אחת נקלטת מיד (max 1). מצב אותיות: עד 6 ספרות עד סולמית. min 0: סולמית לבדה = הקשה ריקה (סיום)
-  const read = (pre, i, a) => readTap(pre + prompt(a), `${name}_${i}`, null, { max: numMode() ? 1 : 6, min: 0, wait: 15, empty: EMPTY });
-  const next = (pre, a) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a) }; };
+  const read = (pre, i, a, bare) => readTap(pre + (bare ? '' : prompt(a)), `${name}_${i}`, null, { max: numMode() ? 1 : 6, min: 0, wait: 15, empty: EMPTY });
+  const next = (pre, a, bare) => { set('i', '1'); set('n', n + 1); set('x', a); return { ask: read(pre, n + 1, a, bare) }; };
   const answered = has(v, key), raw = answered && !empty(v[key]) ? String(v[key]) : '';
   if (!answered) return { ask: read('', n, acc) };
   if (!raw) {          // הקשה ריקה (סולמית לבדה / שתיקה ארוכה) = סיום; אם עוד לא הוקש כלום - שואלים שוב
@@ -399,8 +398,7 @@ function typeStep(v, P, name, askKey, max = 64) {
   }
   const mode = numMode() ? 'n' : 'l';
   const k = decodeTyped(raw, mode);
-  if (k.restart) { set('n', n + 1); return { restart: true }; }          // סבב חדש, כדי שההקשה הישנה (0) לא תיקרא שוב
-  if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(`${P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet')}.`, acc); }
+  if (k.toggle) { const nm = mode === 'l' ? 'n' : 'l'; set('m', nm); return next(P(nm === 'n' ? 'join:emModeNum' : 'join:emModeLet'), acc, true); }          // רק שם המצב, בלי לחזור על ההוראות
   if (!k.ch) return next(`${P('join:emBad')}.`, acc);
   if (acc.length >= max) return next(`${P('join:emTooLong')}.`, acc);
   return next(`${T(spellChars(k.ch))}.`, acc + k.ch);
@@ -422,7 +420,6 @@ async function emailStep(ctx) {
   };
 
   const lq = typeStep(v, P, 'eml', 'join:emailType');
-  if (lq.restart) return restart('join:emRestarted');
   if (lq.ask) { const note = noteTake(); return { ask: note ? lq.ask.replace(/^read=/, `read=${note}`) : lq.ask }; }
   const local = lq.val;
 
@@ -435,7 +432,6 @@ async function emailStep(ctx) {
   let domain;
   if (v[dk] === '0') {
     const xq = typeStep(v, P, 'emx', 'join:emailDomType');
-    if (xq.restart) return restart('join:emRestarted');
     if (xq.ask) return xq;
     domain = xq.val.replace(/^@/, '');
   } else domain = EMAIL_DOMAINS[Number(v[dk]) - 1][0];
