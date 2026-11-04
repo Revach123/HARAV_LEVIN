@@ -66,7 +66,7 @@ async function loadListedChps(request, env) {
 const nameWords = n => String(n || "").toLowerCase().replace(/בע"?מ|בע״מ|בע''מ/g, " ").split(/\s+/).map(w => w.replace(/[^0-9a-z\u0590-\u05ff]/g, "")).filter(Boolean);
 const startsWithWords = (full, short) => { const f = nameWords(full), w = short; return w.length > 0 && f.length >= w.length && w.every((v, i) => f[i] === v); };
 
-function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) {
+function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }, hebById = new Map()) {
   // הנפקות בלי ח.פ.: מותאמות לשורה רק אם הן תחילת שם של שורה אחת בלבד
   const byRow = new Map();
   for (const o of offerings.byName) {
@@ -75,7 +75,7 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
     if (hit.length === 1) { const cur = byRow.get(hit[0]); if (cur !== "open") byRow.set(hit[0], o.kind); }
   }
   const out = rows.map(r => {
-    const { _registrar, _bonds_note_all, _selective, _bonds_ok, ...rest } = r;
+    const { _bid, _registrar, _bonds_note_all, _selective, _bonds_ok, ...rest } = r;
     // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית) + מאושר / לא מאושר (לפי אישור האג"ח של החברה), והערת אישור האג"ח חוזרת להופיע
     const off = rest.bonds_status === 'אין אג"ח' ? (offerings.byChp.get(String(rest.chp_number || "").trim()) || byRow.get(r)) : "";
     if (off) {
@@ -87,6 +87,8 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }) 
     const permit = String(r.permit_name || "").replace(/\s+/g, " ").trim();
     let name = permit;
     if (reg) name = !permit || sameName(reg, permit) ? reg : `${reg} (${permit})`;
+    const heb = String(hebById.get(_bid) || "").replace(/\s+/g, " ").trim();          // שם העסק בעברית (לעסק עם שם באנגלית): בסוגריים, וכך גם החיפוש מוצא אותו
+    if (heb && !sameName(heb, name) && !name.includes(heb)) name = `${name} (${heb})`;
     return { ...rest, permit_name: name };
   });
   const key = n => String(n || "").replace(/^[\s"'`״׳“”‘’]+/, "");          // מיון א-ב: מדלגים על גרשיים בתחילת המילה הראשונה
@@ -226,7 +228,7 @@ export async function onRequestGet(context) {
                   ELSE ${notesExpr} END`
           : notesExpr;
         return `
-        SELECT permit_name, registrar_name AS _registrar, chp_number, category, region, substr(COALESCE(created_at,''), 1, 10) AS added_at,
+        SELECT id AS _bid, permit_name, registrar_name AS _registrar, chp_number, category, region, substr(COALESCE(created_at,''), 1, 10) AS added_at,
                ${hasPrivateExpr} AS has_private_permit,
                ${approvedExpr} AS approved,
                ${bondsStatusExpr} AS bonds_status,
@@ -274,7 +276,9 @@ export async function onRequestGet(context) {
 
     if (type === "companies-private" || type === "companies-general") {
       await addSelectiveNotes(request, env, results, type === "companies-private" ? "private" : "general");
-      results = withRegistrarNames(results, await loadOfferings(request, env));
+      let hebById = new Map();          // migrations/0023_heb_name.sql; לפני המיגרציה אין שמות בעברית
+      try { for (const x of (await env.DB.prepare("SELECT id, heb_name FROM businesses WHERE TRIM(COALESCE(heb_name,'')) != ''").all()).results ?? []) hebById.set(x.id, x.heb_name); } catch {}
+      results = withRegistrarNames(results, await loadOfferings(request, env), hebById);
       // "חברות מנפיקות אג"ח" בקטגוריה לרשימת השטרות: לפי has_agch_any (יש אג"ח כולל לא סחיר, migrations/0022).
       // עמודת האג"ח ברשימה עצמה (bonds_status) לא משתנה - היא לפי אג"ח סחירות בלבד.
       if (results.some(r => "permits_category" in r)) {

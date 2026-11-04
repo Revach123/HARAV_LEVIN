@@ -50,6 +50,10 @@ export async function onRequestPut({ request, env, params }) {
     if (result.changes === 0) {
       return Response.json({ error: "העסק כבר לא קיים במאגר (אולי נמחק בינתיים). רעננו את הדף" }, { status: 404 });
     }
+    if (body.heb_name !== undefined) {          // שם העסק בעברית (migrations/0023); לפני המיגרציה מתעלמים
+      try { await env.DB.prepare("UPDATE businesses SET heb_name = ? WHERE id = ?").bind(String(body.heb_name || "").trim().slice(0, 200), id).run(); }
+      catch (e) { if (!/no such column: heb_name/i.test(String(e.message))) throw e; }
+    }
     if (body.permits_category !== undefined) {          // קטגוריה עבור רשימת השטרות (migrations/0019); לפני המיגרציה מתעלמים
       try { await env.DB.prepare("UPDATE businesses SET permits_category = ? WHERE id = ?").bind(normalizePcat(body.permits_category), id).run(); }
       catch (e) { if (!/no such column: permits_category/i.test(String(e.message))) throw e; }
