@@ -6,35 +6,35 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 92
+   "biz_type": 90
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-11-03T10:03:40.704185Z",
+  "updated": "2026-11-04T09:53:50.879355Z",
   "source": "d1",
   "businesses": 1279,
   "numeric_chp": 1275,
   "found_in_registry": 1187,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2234,
-  "datawise_date": "2026-11-02",
+  "datawise_rows": 2235,
+  "datawise_date": "2026-11-03",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 1,
-   "biz_type": 2,
-   "tase_has_agch": 1,
-   "registry_status": 2,
-   "has_agch_any": 6,
-   "permits_category": 6
+   "registrar_name": 0,
+   "biz_type": 0,
+   "tase_has_agch": 0,
+   "registry_status": 0,
+   "has_agch_any": 0,
+   "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 2,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 2,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
@@ -46,137 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 8,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64jp9hgg50",
-   "chp": "511043457",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64jp9hgg50",
-   "chp": "511043457",
-   "field": "permits_category",
-   "old": "שונות",
-   "new": "חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mp64kb8oftzj",
-   "chp": "513026484",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64kb8oftzj",
-   "chp": "513026484",
-   "field": "permits_category",
-   "old": "חברות ביטוח",
-   "new": "חברות ביטוח|חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mp64knce30xe",
-   "chp": "520042482",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64knce30xe",
-   "chp": "520042482",
-   "field": "permits_category",
-   "old": "שונות",
-   "new": "חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mp64lhx7jqoq",
-   "chp": "511863805",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64lhx7jqoq",
-   "chp": "511863805",
-   "field": "permits_category",
-   "old": "שונות",
-   "new": "חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mp64lu013jnm",
-   "chp": "511996803",
-   "field": "tase_has_agch",
-   "old": "יש",
-   "new": "אין"
-  },
-  {
-   "id": "mp64lu013jnm",
-   "chp": "511996803",
-   "field": "has_agch_any",
-   "old": "יש",
-   "new": "אין"
-  },
-  {
-   "id": "mp64lu013jnm",
-   "chp": "511996803",
-   "field": "permits_category",
-   "old": "חברות מנפיקות אג\"ח|חברות נדל\"ן ובינוי",
-   "new": "חברות נדל\"ן ובינוי"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "2c5d5e7b1c3c",
-   "chp": "516568318",
-   "field": "permits_category",
-   "old": "חברות אשראי",
-   "new": "חברות אשראי|חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mvzalgnw49xe",
-   "chp": "510355647",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mvzalgnw49xe",
-   "chp": "510355647",
-   "field": "registrar_name",
-   "old": "מרדכי י. שמשינס בע\"מ",
-   "new": "מרדכי י. שמשינס  בע\"מ"
-  },
-  {
-   "id": "mvzalgnw49xe",
-   "chp": "510355647",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mvzao222bga5",
-   "chp": "511256141",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mvzao222bga5",
-   "chp": "511256141",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
