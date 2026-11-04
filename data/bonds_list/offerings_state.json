@@ -764,6 +764,62 @@
    "kind": "upcoming",
    "last_seen": "2026-11-04"
   },
+  "U10407": {
+   "data": {
+    "chp_number": "520000118",
+    "company_name": "פועלים",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10407,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779679",
+    "maya_report_id": 1779679,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilAAA",
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     },
+     {
+      "maalot_rating": "ilAAA",
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-04"
+  },
+  "U10408": {
+   "data": {
+    "chp_number": "513141879",
+    "company_name": "בינלאומי הנפקות",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10408,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779696",
+    "maya_report_id": 1779696,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-04"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
