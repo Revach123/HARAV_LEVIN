@@ -1445,7 +1445,7 @@ function renderForm() {
       </div>
 
       <div class="field" id="heb-field" style="display:none;">
-        <label>שם העסק בעברית <span style="color:var(--light);font-weight:400">(יוצג בסוגריים אחרי השם, ויאפשר חיפוש בעברית)</span></label>
+        <label>שם העסק בעברית</label>
         <input type="text" id="f-heb" value="${escHtml(b.heb_name || "")}" autocomplete="off" oninput="formDirty=true">
       </div>
 
@@ -2235,7 +2235,7 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
   const hf = document.getElementById("heb-field");          // עסק בלי ח.פ. ושם באנגלית (בלי עברית): שדה נוסף "שם העסק בעברית"
-  if (hf) { const heb = document.getElementById("f-heb"); const rv = (document.getElementById("f-reg")?.value || "").trim(); hf.style.display = (isEngName(v) || isEngName(rv) || (heb && heb.value.trim())) ? "" : "none"; }
+  if (hf) { const heb = document.getElementById("f-heb"); const rv = (document.getElementById("f-reg")?.value || "").trim(); hf.style.display = (isEngName(v) || isEngName(rv)) ? "" : "none"; }
   const hint = document.getElementById("permit-hint"); if (hint) hint.style.color = (permitMode === "other" && v.length < 4 && v.length > 0) ? "var(--red)" : "var(--light)";
   updateSimilar();
 }
@@ -2741,7 +2741,7 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
 }
 const isEngName = n => /[A-Za-z]/.test(n || "") && !/[\u0590-\u05ff]/.test(n || "");
 function hebBox(b) {      // עסק (עם או בלי ח.פ.) שהשם שלו באנגלית: שדה "שם העסק בעברית" מתחת לשם (נשמר בנפרד, מוצג בסוגריים ברשימות)
-  if (b._isSub || !(isEngName(b.registrar_name) || isEngName(b.permit_name) || (b.heb_name || "").trim())) return "";
+  if (b._isSub || !(isEngName(b.registrar_name) || isEngName(b.permit_name))) return "";
   return `<span class="k"></span><span class="v"><div style="margin-top:3px;font-size:11px;color:var(--muted)">שם העסק בעברית</div><input type="text" value="${escHtml((b.heb_name || "").trim())}" placeholder="שם בעברית" onchange="hebInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>`;
 }
 async function hebInline(id, raw) {
