@@ -1335,7 +1335,7 @@ function admRowsHtml(items, grp0) {
             const bsubs = (window.PD && PD.bondDocs) ? PD.bondDocs(b.id) : [], alt = gi % 2 ? " alt" : "";          // חברה עם תת-שורות אג"ח: קבוצה אחת (אותו רקע, מסגרת ופס צבע בצד)
             return `
               <tr class="${b0._isSub ? "sub-row" : ""}${alt}${bsubs.length ? " has-bonds" : ""}">
-                <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml(((b0._isSub ? b.permit_name : "") || b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div>${!b0._isSub && (b.chp_number || "").toString().trim() ? subAddWidget(b.id) : ""}</td>
+                <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml(((b0._isSub ? b.permit_name : "") || b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">${/[A-Za-z]/.test(b.permit_name || "") && !/[\u0590-\u05ff]/.test(b.permit_name || "") ? `<div style="margin-top:3px;font-size:11px;color:var(--muted)">שם העסק בעברית</div><input type="text" value="${escHtml((b.registrar_name || "").trim() !== (b.permit_name || "").trim() ? (b.registrar_name || "").trim() : "")}" placeholder="שם בעברית" onchange="hebInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : ""}`}</span>${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div>${!b0._isSub && (b.chp_number || "").toString().trim() ? subAddWidget(b.id) : ""}</td>
                 <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${(b.chp_number || "").toString().trim() || b0._isSub ? (escHtml(b.chp_number)||"—") : `<button type="button" class="btn-ghost" style="padding:1px 8px;font-size:12px;direction:rtl" onclick="addChp('${b.id}')">➕ הוספת ח.פ.</button>`}</span>
                   <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
                   <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
@@ -1442,6 +1442,11 @@ function renderForm() {
         <div id="permit-input-wrap" style="margin-top:8px;${permitMode === "other" ? "" : "display:none;"}">
           <input type="text" id="f-permit" value="${permitMode === "other" ? escHtml(b.permit_name||"") : ""}" autocomplete="off">
         </div>
+      </div>
+
+      <div class="field" id="heb-field" style="display:none;">
+        <label>שם העסק בעברית <span style="color:var(--light);font-weight:400">(יוצג בסוגריים אחרי השם, ויאפשר חיפוש בעברית)</span></label>
+        <input type="text" id="f-heb" value="${(!b.chp_number && b.registrar_name && b.registrar_name !== b.permit_name) ? escHtml(b.registrar_name) : ""}" autocomplete="off" oninput="formDirty=true">
       </div>
 
       <div id="sim-warn"></div>
@@ -2229,6 +2234,8 @@ function updatePermitGate() {          // שאר הטופס נפתח רק אחר
   w.classList.toggle("locked", !ok);
   if ("inert" in w) w.inert = !ok;
   const rn = document.getElementById("pc-reg-name"); if (rn) rn.textContent = (document.getElementById("f-reg")?.value || "").trim();
+  const hf = document.getElementById("heb-field");          // עסק בלי ח.פ. ושם באנגלית (בלי עברית): שדה נוסף "שם העסק בעברית"
+  if (hf) { const heb = document.getElementById("f-heb"); hf.style.display = noChp && ((/[A-Za-z]/.test(v) && !/[\u0590-\u05ff]/.test(v)) || (heb && heb.value.trim())) ? "" : "none"; }
   const hint = document.getElementById("permit-hint"); if (hint) hint.style.color = (permitMode === "other" && v.length < 4 && v.length > 0) ? "var(--red)" : "var(--light)";
   updateSimilar();
 }
@@ -2729,7 +2736,15 @@ async function nameInline(id, raw) {      // עסק בלי ח.פ.: שם אחד, 
   await bizFresh();
   const v = (raw || "").trim();
   if (!v) { showStatus("שם העסק לא יכול להיות ריק"); render(); return; }
-  await inlineUpdateMany(id, { permit_name: v, registrar_name: v });
+  const b0 = businesses.find(b => b.id === id), old = (b0?.permit_name || b0?.registrar_name || "").trim(), reg = (b0?.registrar_name || "").trim();
+  await inlineUpdateMany(id, { permit_name: v, registrar_name: !reg || reg === old ? v : reg });      // שם בעברית שהוזן בנפרד נשמר
+  render();
+}
+async function hebInline(id, raw) {      // עסק בלי ח.פ.: "שם העסק בעברית" (נשמר כשם הרשם; ריק = כמו שם ההיתר)
+  await bizFresh();
+  const biz = businesses.find(b => b.id === id); if (!biz) return;
+  const v = (raw || "").trim() || (biz.permit_name || "").trim();
+  if (v !== (biz.registrar_name || "").trim()) await inlineUpdateMany(id, { registrar_name: v });
   render();
 }
 
@@ -3036,7 +3051,7 @@ async function doSave() {
   await bizFresh();
   let regName    = (document.getElementById("f-reg")?.value    || "").trim();
   let permitName = (document.getElementById("f-permit")?.value || "").trim();
-  if (noChp) regName = permitName;                                     // בלי ח.פ.: שם אחד, נשמר בשני השדות
+  if (noChp) regName = (document.getElementById("f-heb")?.value || "").trim() || permitName;   // בלי ח.פ.: שם אחד בשני השדות; אם הוקלד שם בעברית - הוא נשמר כשם הרשם (מוצג בסוגריים)
   if (permitMode === "reg") permitName = regName;                      // "שם מהרשם"
   else if (!editBiz?.id && permitName.length < (noChp ? 1 : 4)) { const e0 = document.getElementById("form-err"); if (e0) e0.textContent = "יש לבחור שם להיתר עסקה: שם מהרשם, או שם אחר (4 תווים לפחות)"; return; }
   const errEl = document.getElementById("form-err");
