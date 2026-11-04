@@ -93,7 +93,7 @@
       <button role="tab" aria-selected="true" data-t="pension">קרנות פנסיה, גמל והשתלמות וחיסכון לכל ילד</button>
       <button role="tab" aria-selected="false" data-t="savings">תוכנית חיסכון, ביטוח, גמל להשקעה, קרנות סל</button>
     </div>
-    <div class="bar"><span class="upd" id="upd"></span></div>
+    <div class="bar"><input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="חיפוש לפי חברה, שם מסלול או מספר קופה…" autocomplete="off" aria-label="חיפוש מסלול"><span class="upd" id="upd"></span></div>
   </header>
   <main id="out"><div class="state">טוען…</div></main>
 </div>
@@ -124,7 +124,10 @@ function groups(list) {          // שורות רצופות של אותה חבר
 }
 function paint() {
   const out = document.getElementById("out"), q = norm(st.q);
-  const list = sortRows(st.rows, st.tab, st.order).filter(r => (!q || norm([r.company, r.track, r.type, r.number, r.note].join(" ")).includes(q)));
+  // חיפוש: בשתי הרשימות (קרנות פנסיה, גמל והשתלמות + חיסכון, ביטוח, גמל להשקעה וקרנות סל), בלי תלות בלשונית
+  const hit = r => norm([r.company, r.track, r.type, r.number, r.note].join(" ")).includes(q);
+  const list = q ? [...new Set([...sortRows(st.rows, "pension", st.order), ...sortRows(st.rows, "savings", st.order)])].filter(hit)
+                 : sortRows(st.rows, st.tab, st.order);
   if (!list.length) { out.innerHTML = `<div class="state">${q ? "לא נמצאו מסלולים מתאימים" : "אין מסלולים להצגה"}</div>`; return; }
   const sections = [];          // כותרת לכל סוג מוצר (הרשימה מסודרת לפי סוג); בתוך כל סוג - חברה מאוחדת לשורות רצופות
   for (const r of list) { const sc = sections[sections.length - 1]; if (sc && sc.type === r.type) sc.rows.push(r); else sections.push({ type: r.type, rows: [r] }); }
@@ -156,6 +159,7 @@ if (document.documentElement.classList.contains("embed") && parent !== window) {
     const m = e.data; if (!m || m.source !== "harav-parent" || e.source !== parent) return;
     if (m.type === "setTab" && (m.value === "pension" || m.value === "savings")) { st.tab = m.value; document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x.dataset.t === st.tab ? "true" : "false")); paint(); spec(); }
     if (m.type === "setQ") { st.q = String(m.value || ""); paint(); }
+
     if (m.type === "hello") spec();
   });
   new MutationObserver(spec).observe(document.getElementById("upd"), { childList: true, characterData: true, subtree: true });
@@ -164,6 +168,9 @@ if (document.documentElement.classList.contains("embed") && parent !== window) {
   const sendH = () => { const h = Math.ceil(document.body.getBoundingClientRect().height + 8); if (h !== lastH) { lastH = h; try { parent.postMessage({ type: "iska-funds-height", h }, "*"); } catch {} } };
   new ResizeObserver(sendH).observe(document.body); window.addEventListener("load", sendH); sendH();
 }
+// חיפוש בדף עצמו (כשהדף נפתח ישירות, למשל מדף הקהילות). בהטמעה - החיפוש בדף המארח
+{ const qi = document.getElementById("q"); let qt;
+  if (qi) qi.addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(() => { st.q = qi.value; paint(); }, 200); }); }
 </script>
 </body>
 </html>
