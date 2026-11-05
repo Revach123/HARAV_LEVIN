@@ -1,5 +1,34 @@
 {
  "items": {
+  "O1216225": {
+   "data": {
+    "begins_at": "2026-11-05T08:30:00",
+    "chp_number": "510488190",
+    "ends_at": "2026-11-05T15:30:00",
+    "interest": 5.74,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 2384,
+    "issuer_name": "קרסו נדל\"ן",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1779720",
+    "offer_number": 1216225,
+    "offer_type": "מחיר",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1023,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": "ilA",
+      "midroog_rating": null,
+      "security_id": 1216233,
+      "security_name": "קרסו נדלן אגח ב",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-05"
+  },
   "O1244805": {
    "data": {
     "begins_at": "2026-11-03T09:00:00",
@@ -782,6 +811,31 @@
     "link_prospectus": null,
     "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779696",
     "maya_report_id": 1779696,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-05"
+  },
+  "U10409": {
+   "data": {
+    "chp_number": "516901774",
+    "company_name": "פאי פלוס",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10409,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779793",
+    "maya_report_id": 1779793,
     "new_company_type": null,
     "securities": [
      {
