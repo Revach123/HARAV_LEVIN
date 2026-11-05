@@ -849,6 +849,31 @@
    "kind": "upcoming",
    "last_seen": "2026-11-05"
   },
+  "U10410": {
+   "data": {
+    "chp_number": "514481233",
+    "company_name": "אי.אס.איי",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10410,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779927",
+    "maya_report_id": 1779927,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-05"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
