@@ -12,15 +12,15 @@
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-11-04T09:53:50.879355Z",
+  "updated": "2026-11-05T09:53:27.280424Z",
   "source": "d1",
   "businesses": 1279,
   "numeric_chp": 1275,
   "found_in_registry": 1187,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2235,
-  "datawise_date": "2026-11-03",
+  "datawise_rows": 2238,
+  "datawise_date": "2026-11-04",
   "bond_companies": 363,
   "changes": {
    "registrar_name": 0,
@@ -366,7 +366,7 @@
   {
    "id": "mp64kuzmd8u9",
    "chp": "1838682",
-   "permit_name": "לייטסטון אנטרפרייזס",
+   "permit_name": "Lightstone Enterprises Limited",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -726,7 +726,7 @@
   {
    "id": "c7e34d31fdc1",
    "chp": "2023950211",
-   "permit_name": "אינפליי אויל",
+   "permit_name": "INPLAY OIL CORP.",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
