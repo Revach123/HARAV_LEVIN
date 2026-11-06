@@ -2564,6 +2564,7 @@
     if (J.loading || J.rows) return;
     J.loading = true; J.err = ""; J.rows = [];
     if (!J.nedStarted) { J.nedStarted = true; jNedBg(); }          // פעם אחת בכל טעינה של הניהול
+    J.mailLoaded = false; api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; J.mailLoaded = true; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});          // מי קיבל אישור: נטען במקביל לרשימה (עד שנטען - העמודה ריקה, ולא "לא נשלח")
     try {
       for (let off = 0; ; off += 400) {
         const r = await api(`/joiners?offset=${off}&limit=400`);
@@ -2574,7 +2575,6 @@
     } catch (e) { J.err = e.message || "שגיאה"; J.rows = null; }
     J.loading = false;
     if (ND.tab === "e") ndShow();
-    if (J.rows) api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});          // מי כבר קיבל אישור במייל (לעמודה "אישור במייל")
     if (J.needReload) { J.needReload = false; J.rows = null; jLoad(); }          // המשיכה מנדרים הסתיימה בזמן הטעינה: טוענים מחדש
   }
   // פתיחת רשימת המצטרפים: משיכה מנדרים פלוס ברקע (כולל שליחת אישורים למצטרפים חדשים), בלי לעכב את טעינת הנתונים; ספינר ליד הכפתור, ובסיום - רענון הרשימה
@@ -2659,7 +2659,7 @@
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
     { k: "co", h: "חברות", wide: 1, v: r => { const nd = jNdChoice(r); return (r.all || nd === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || (nd === "some" ? "חברות נבחרות מהרשימה" : "")); } },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
-    { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
+    { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (!J.mailLoaded ? "" : J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
   ];
   function jFiltered() {
     const f = J.q.trim().toLowerCase(), d = f.replace(/\D/g, "");
