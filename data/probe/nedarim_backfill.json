@@ -1,11 +1,11 @@
 {
-  "when": "2026-11-06T07:53:21Z",
-  "apply": false,
-  "scanned": 17946,
+  "when": "2026-11-06T13:28:27Z",
+  "apply": true,
+  "scanned": 17951,
   "updated": 169,
-  "same": 0,
-  "missing": 6,
-  "added": 0,
+  "same": 6,
+  "missing": 5,
+  "added": 5,
   "no_choice": 17771,
   "sel": 5
 }
