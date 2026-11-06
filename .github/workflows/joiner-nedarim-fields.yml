@@ -1,0 +1,35 @@
+name: Nedarim form fields (read-only, manual)
+
+# גילוי שדות הטופס בנדרים פלוס (למשל "נוסח השטר שהוצג", "התקשרות על פי הסכם הנפרד"): אילו שדות מוחזרים, כמה מלאים, ובשדות עם מעט ערכים - הערכים.
+# קריאה בלבד. התוצאה: data/probe/nedarim_fields.json
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe
+          code=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d '{"fields":true}' "https://harav-levin.pages.dev/api/joiners-nedarim-check" -o tmp.json -w '%{http_code}')
+          if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp.json)"; exit 1; fi
+          jq --arg w "$(date -u +%FT%TZ)" '. + {when: $w}' tmp.json > data/probe/nedarim_fields.json
+          jq -c '.fields | to_entries[] | select(.value.filled > 0) | {k: .key, filled: .value.filled, distinct: .value.distinct, values: .value.values}' data/probe/nedarim_fields.json
+          rm tmp.json
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/nedarim_fields.json || true
+          git diff --cached --quiet || (git commit -m "nedarim fields" && git pull --rebase --autostash -X theirs && git push)
