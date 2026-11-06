@@ -1,34 +1,5 @@
 {
  "items": {
-  "O1216225": {
-   "data": {
-    "begins_at": "2026-11-05T08:30:00",
-    "chp_number": "510488190",
-    "ends_at": "2026-11-05T15:30:00",
-    "interest": 5.74,
-    "is_new_company": false,
-    "is_variable_interest": false,
-    "issuer_id": 2384,
-    "issuer_name": "קרסו נדל\"ן",
-    "link_offer_report": "https://maya.tase.co.il/he/reports/1779720",
-    "offer_number": 1216225,
-    "offer_type": "מחיר",
-    "offering_type": "הצעה אחידה",
-    "price_per_unit": 1023,
-    "securities": [
-     {
-      "linkage_type": "ללא",
-      "maalot_rating": "ilA",
-      "midroog_rating": null,
-      "security_id": 1216233,
-      "security_name": "קרסו נדלן אגח ב",
-      "security_type": "אג\"ח קונצרני"
-     }
-    ]
-   },
-   "kind": "open",
-   "last_seen": "2026-11-05"
-  },
   "O1244805": {
    "data": {
     "begins_at": "2026-11-03T09:00:00",
@@ -110,7 +81,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10121": {
    "data": {
@@ -135,7 +106,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10128": {
    "data": {
@@ -160,7 +131,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10131": {
    "data": {
@@ -185,7 +156,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10225": {
    "data": {
@@ -210,7 +181,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10227": {
    "data": {
@@ -235,7 +206,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10237": {
    "data": {
@@ -260,7 +231,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10243": {
    "data": {
@@ -285,7 +256,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10259": {
    "data": {
@@ -310,7 +281,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10287": {
    "data": {
@@ -335,7 +306,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10289": {
    "data": {
@@ -360,7 +331,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10296": {
    "data": {
@@ -385,7 +356,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10300": {
    "data": {
@@ -410,7 +381,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10316": {
    "data": {
@@ -435,32 +406,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
-  },
-  "U10319": {
-   "data": {
-    "chp_number": "515125862",
-    "company_name": "י.ע.ז יזמות",
-    "draft_no": 2,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10319,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1770386",
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1758892",
-    "maya_report_id": 1770386,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-02"
+   "last_seen": "2026-11-06"
   },
   "U10329": {
    "data": {
@@ -485,7 +431,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10358": {
    "data": {
@@ -510,7 +456,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10371": {
    "data": {
@@ -535,7 +481,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10378": {
    "data": {
@@ -560,7 +506,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10379": {
    "data": {
@@ -585,7 +531,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10382": {
    "data": {
@@ -610,7 +556,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10387": {
    "data": {
@@ -635,7 +581,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10399": {
    "data": {
@@ -685,7 +631,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10402": {
    "data": {
@@ -741,7 +687,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10405": {
    "data": {
@@ -766,7 +712,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10407": {
    "data": {
@@ -797,7 +743,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10408": {
    "data": {
@@ -822,7 +768,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10409": {
    "data": {
@@ -847,7 +793,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U10410": {
    "data": {
@@ -872,7 +818,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   },
   "U9973": {
    "data": {
@@ -897,7 +843,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-05"
+   "last_seen": "2026-11-06"
   }
  }
 }
