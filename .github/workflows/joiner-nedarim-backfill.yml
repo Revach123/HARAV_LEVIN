@@ -36,7 +36,7 @@ jobs:
             more=$(jq -r '.more' "tmp_nb/p$i.json"); after=$(jq -r '.last_id' "tmp_nb/p$i.json"); i=$((i+1))
             [ "$more" != "true" ] && break
           done
-          jq -s --arg w "$(date -u +%FT%TZ)" --argjson a "$ap" '{when:$w, apply:$a, scanned:(map(.scanned)|add), updated:(map(.updated)|add), same:(map(.same)|add), missing:(map(.missing)|add), added:(map(.added)|add), no_choice:(map(.no_choice)|add)}' tmp_nb/p*.json | tee data/probe/nedarim_backfill.json
+          jq -s --arg w "$(date -u +%FT%TZ)" --argjson a "$ap" '{when:$w, apply:$a, scanned:(map(.scanned)|add), updated:(map(.updated)|add), same:(map(.same)|add), missing:(map(.missing)|add), added:(map(.added)|add), no_choice:(map(.no_choice)|add), sel:(map(.sel)|add), sel_f13:(map(.sel_f13)|add)}' tmp_nb/p*.json | tee data/probe/nedarim_backfill.json
       - name: Commit
         if: always()
         run: |
