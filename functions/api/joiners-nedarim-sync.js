@@ -7,14 +7,14 @@
 // הלקוח קורא שוב ושוב עד more=false. רשומה שכבר נקלטה (אותו מזהה) לא נדרסת.
 import { checkAdmin } from "./_shared/auth.js";
 import { noAuth } from "./_shared/permit-docs.js";
-import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
+import { importKeyForWrite, encryptPii, decryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { originOk, readJson, clean } from "./_shared/join-common.js";
 import { sendConfirmation, saveConfirmationFile } from "./_shared/join-mail.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
 const BATCH = 15, API = "https://matara.pro/nedarimplus/Forms/Manage.aspx";
-const FIELDS = Array.from({ length: 16 }, (_, i) => "Field" + (i + 1));
+const FIELDS = Array.from({ length: 14 }, (_, i) => "Field" + (i + 1));
 const sha1_16 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-1", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
 const g = (f, n) => String(f[n] ?? "").trim();
 
@@ -34,7 +34,6 @@ export function mapRow(r) {
   if (g(r, "Field9")) extra["סוג מזהה"] = g(r, "Field9");
   if (g(r, "Field8")) extra["Field8"] = g(r, "Field8");
   for (const n of ["Field1", "Field11", "Field12"]) if (g(r, n)) extra[n] = g(r, n);
-  if (g(r, "Field15")) extra["נוסח השטר"] = g(r, "Field15");          // שטר מלא / מקוצר
   if (g(r, "Field14")) extra["פקס"] = g(r, "Field14");
   if (r.TransactionId) extra["תשלום בנדרים"] = String(r.TransactionId);
   return {
@@ -57,10 +56,10 @@ async function setSetting(env, k, v) {
   await env.DB.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES (?, ?)").bind(k, String(v)).run();
 }
 
-async function pull(env, tofes, lastId) {
+async function pull(env, tofes, lastId, max = BATCH) {
   const body = new URLSearchParams({
     Action: "GetJson", MosadId: env.NEDARIM_MOSAD_ID || "7005939", ApiPassword: env.NEDARIM_API_KEY, TofesId: tofes,
-    MaxId: String(BATCH), LastId: String(lastId),
+    MaxId: String(max), LastId: String(lastId),
     GetJsonParam: JSON.stringify(Object.fromEntries([...FIELDS, "UpdateDate"].map(n => [n, n]))),
   });
   const r = await fetch(API, { method: "POST", body });
@@ -79,6 +78,36 @@ export async function onRequestPost({ request, env }) {
   if (!env.NEDARIM_API_KEY) return out({ error: "המפתח NEDARIM_API_KEY לא מוגדר באתר" }, 503);
   let wkey; try { wkey = await importKeyForWrite(env); } catch { return out({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, 503); }
   const tofes = String(env.NEDARIM_TOFES_ID || "800"), SETTING = "nedarim_last_id_" + tofes;
+  if (body.backfill) {          // השלמה מהרשומות הישנות: מעדכן "כל החברות / חברות נבחרות" ברשומות שכבר קיימות, ומוסיף רשומות שחסרות (בלי קובץ אישור ובלי מייל). apply=false: רק ספירה
+    const MAX = 100, apply = !!body.apply, after = Number(body.after) || 0, t = { scanned: 0, updated: 0, same: 0, missing: 0, added: 0, no_choice: 0 };
+    try {
+      const rows = await pull(env, tofes, after, MAX);
+      let last = after;
+      for (const r of rows) {
+        const n = parseInt(r.ID, 10); if (Number.isFinite(n)) last = Math.max(last, n);
+        t.scanned++;
+        const rid = await sha1_16("nedarim:" + tofes + ":" + r.ID), p = mapRow(r);
+        const row = await env.DB.prepare("SELECT id, pii FROM joiners WHERE id = ?").bind(rid).first();
+        if (!row) {
+          t.missing++;
+          const when = parseDate(r.CreatedDate);
+          if (apply && when && (p.first || p.last || p.phone || p.email || p.id)) {
+            const digits = p.id.replace(/\D/g, "");
+            await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
+              .bind(rid, when, digits ? await identHash(env, digits) : "", await encryptPii(wkey, rid, { ...p, src: "nedarim:" + tofes + ":" + r.ID })).run();
+            t.added++;
+          }
+          continue;
+        }
+        if (!p.all && !p.companies) { t.no_choice++; continue; }
+        let old; try { old = await decryptPii(wkey, rid, row.pii); } catch { continue; }
+        if (String(old.all || "") === p.all && String(old.companies || "") === p.companies) { t.same++; continue; }
+        t.updated++;
+        if (apply) await env.DB.prepare("UPDATE joiners SET pii = ? WHERE id = ?").bind(await encryptPii(wkey, rid, { ...old, all: p.all, companies: p.companies }), rid).run();
+      }
+      return out({ ok: true, ...t, apply, more: rows.length === MAX, last_id: last });
+    } catch (e) { return out({ error: e && e.message ? e.message : "שגיאה" }, 502); }
+  }
   try {
     const saved = parseInt(await getSetting(env, SETTING), 10), since = Number.isFinite(saved) ? saved : 0;
     const rows = await pull(env, tofes, since);
