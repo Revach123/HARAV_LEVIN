@@ -14,7 +14,7 @@ import { sendConfirmation, saveConfirmationFile } from "./_shared/join-mail.js";
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
 const BATCH = 15, API = "https://matara.pro/nedarimplus/Forms/Manage.aspx";
-const FIELDS = Array.from({ length: 12 }, (_, i) => "Field" + (i + 1));
+const FIELDS = Array.from({ length: 16 }, (_, i) => "Field" + (i + 1));
 const sha1_16 = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-1", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
 const g = (f, n) => String(f[n] ?? "").trim();
 
@@ -34,10 +34,12 @@ export function mapRow(r) {
   if (g(r, "Field9")) extra["סוג מזהה"] = g(r, "Field9");
   if (g(r, "Field8")) extra["Field8"] = g(r, "Field8");
   for (const n of ["Field1", "Field11", "Field12"]) if (g(r, n)) extra[n] = g(r, n);
+  if (g(r, "Field15")) extra["נוסח השטר"] = g(r, "Field15");          // שטר מלא / מקוצר
+  if (g(r, "Field14")) extra["פקס"] = g(r, "Field14");
   if (r.TransactionId) extra["תשלום בנדרים"] = String(r.TransactionId);
   return {
     first: clean(g(r, "Field3"), 60), last: clean(g(r, "Field2"), 60), phone: clean(g(r, "Field6"), 40), email: clean(g(r, "Field7"), 120),
-    id: clean(g(r, "Field4") || g(r, "Field10"), 20), ip: "", companies: "", all: "", pdf: "",
+    id: clean(g(r, "Field4") || g(r, "Field10"), 20), ip: "", companies: /נבחרות/.test(g(r, "Field11")) ? "חברות נבחרות מהרשימה" : "", all: /כל החברות/.test(g(r, "Field11")) ? "1" : "", pdf: "",
     extra: Object.keys(extra).length ? JSON.stringify(extra) : "",
   };
 }
