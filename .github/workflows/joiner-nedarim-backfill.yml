@@ -1,0 +1,46 @@
+name: Nedarim backfill old joiners (manual)
+
+# משיכת כל הרשומות הישנות מנדרים פלוס: מעדכן ברשומות הקיימות "כל החברות / חברות נבחרות" (לפי שדה 11 בטופס) ומוסיף רשומות שחסרות (בלי מייל ובלי קובץ אישור).
+# apply=false: רק ספירה, בלי שינוי. apply=true: מבצע.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "true = לבצע עדכון והוספה; false = ספירה בלבד"
+        type: string
+        default: "false"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backfill
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          mkdir -p data/probe tmp_nb
+          ap=false; [ "$APPLY" = "true" ] && ap=true
+          after=0; i=0
+          while true; do
+            code=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"backfill\":true,\"apply\":$ap,\"after\":$after}" "https://harav-levin.pages.dev/api/joiners-nedarim-sync" -o "tmp_nb/p$i.json" -w '%{http_code}')
+            if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp_nb/p$i.json)"; exit 1; fi
+            if jq -e '.error' "tmp_nb/p$i.json" >/dev/null; then echo "::error::$(cat tmp_nb/p$i.json)"; exit 1; fi
+            more=$(jq -r '.more' "tmp_nb/p$i.json"); after=$(jq -r '.last_id' "tmp_nb/p$i.json"); i=$((i+1))
+            [ "$more" != "true" ] && break
+          done
+          jq -s --arg w "$(date -u +%FT%TZ)" --argjson a "$ap" '{when:$w, apply:$a, scanned:(map(.scanned)|add), updated:(map(.updated)|add), same:(map(.same)|add), missing:(map(.missing)|add), added:(map(.added)|add), no_choice:(map(.no_choice)|add)}' tmp_nb/p*.json | tee data/probe/nedarim_backfill.json
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/probe/nedarim_backfill.json || true
+          git diff --cached --quiet || (git commit -m "nedarim backfill" && git pull --rebase --autostash -X theirs && git push)
