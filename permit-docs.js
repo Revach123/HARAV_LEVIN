@@ -2641,6 +2641,9 @@
     return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
       rest: Object.keys(o).filter(k => !shown.has(k) && o[k]).map(k => `${k}: ${o[k]}`).join(" · "), raw: Object.keys(o).length ? "" : String(r.extra || "") });
   }
+  // קבוצת מקור לסינון (לכל טופס באתר הישן יש מספר משלו - בסינון הם אחת): טלפון / אתר / נדרים פלוס / קהילות / אתר ישן / ידני
+  const J_GRPS = ["אתר", "נדרים פלוס", "קהילות", "ידני", "טלפון", "אתר ישן"];
+  function jGrp(r) { const s = jX(r).src || ""; return /^קהילות/.test(s) ? "קהילות" : /^אתר ישן/.test(s) ? "אתר ישן" : s; }
   // עמודות הטבלה: nar = צרה (בלי שבירת שורה), ltr = מספרים/אימייל
   const J_COLS = [
     { k: "date", h: "תאריך", nar: 1, ltr: 1, v: r => jDate(r.submitted_at) },
@@ -2651,7 +2654,7 @@
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
-    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") },
+    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") || (/^nedarim/.test(String(r.src || "")) ? "לא נבחר בטופס נדרים" : "") },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
     { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
   ];
@@ -2660,7 +2663,7 @@
     const dup = new Map(); for (const r of J.rows) if (r.ident_hash) dup.set(r.ident_hash, (dup.get(r.ident_hash) || 0) + 1);
     const cfs = J_COLS.map(c => [c, (J.cf[c.k] || "").trim().toLowerCase()]).filter(x => x[1]);
     const rows = J.rows.filter(r => (J.f === "all" || (J.f === "cancelled" ? r.cancelled_at : !r.cancelled_at)) && (J.fa === "all" || (J.fa === "file" ? r.file_sha256 : !r.file_sha256))
-      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src" || c.k === "mail") return v === q; return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
+      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v === q; return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
       && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number} ${jX(r).addr} ${jX(r).phone2}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
     return { rows, dup };
   }
@@ -2691,7 +2694,7 @@
         <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button><span id="pd-j-nedspin" style="margin-inline:6px">${J.nedBusy ? '<span class="pd-spin"></span>' : ""}</span> <button class="pd-btn" onclick="PD._jXl()">📥 ייבוא רשימה (אקסל / CSV)</button> ${J_HIDDEN_TOOLS ? `<button class="pd-btn" onclick="PD._jTypos()">✉️ שגיאות כתיב באימייל</button> <button class="pd-btn" onclick="PD._jOldPairs()">👯 כפילויות האתר הישן</button>` : ""}</div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
-        <tr class="pd-cfrow">${J_COLS.map(c => c.k === "mail" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('mail',this.value)">${[["", "הכל"], ["נשלח", "נשלח"], ["לא נשלח", "לא נשלח (יש מייל)"], ["אין מייל", "אין מייל"]].map(([k, l]) => `<option value="${E(k)}"${(J.cf.mail || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => String(jX(r).src || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
+        <tr class="pd-cfrow">${J_COLS.map(c => c.k === "mail" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('mail',this.value)">${[["", "הכל"], ["נשלח", "נשלח"], ["לא נשלח", "לא נשלח (יש מייל)"], ["אין מייל", "אין מייל"]].map(([k, l]) => `<option value="${E(k)}"${(J.cf.mail || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => jGrp(r)).filter(Boolean))].sort((a, b) => (J_GRPS.indexOf(a) + 1 || 99) - (J_GRPS.indexOf(b) + 1 || 99) || a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
           <th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jF", J.f, [["all", "הכל"], ["cancelled", "ביטלו"], ["active", "פעילים"]])}</th><th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jFA", J.fa, [["all", "הכל"], ["file", "יש"], ["nofile", "אין"]])}</th><th class="pd-j-act"></th></tr></thead>
       <tbody>${rows.slice(0, J.shown).map(r => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);
