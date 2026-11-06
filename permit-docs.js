@@ -2638,13 +2638,15 @@
   function jX(r) {
     if (r._x) return r._x;
     let o = {}; try { const j = JSON.parse(r.extra || ""); if (j && typeof j === "object" && !Array.isArray(j)) o = j; } catch { /* טקסט חופשי */ }
-    const shown = new Set(["כתובת", "טלפון נוסף", "פקס", "ערוץ", ...Object.keys(J_REC)]);
+    const shown = new Set(["כתובת", "טלפון נוסף", "פקס", "ערוץ", "Field1", "Field11", "Field12", ...Object.keys(J_REC)]);
     return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
       rest: Object.keys(o).filter(k => !shown.has(k) && o[k]).map(k => `${k}: ${o[k]}`).join(" · "), raw: Object.keys(o).length ? "" : String(r.extra || "") });
   }
   // קבוצת מקור לסינון (לכל טופס באתר הישן יש מספר משלו - בסינון הם אחת): טלפון / אתר / נדרים פלוס / קהילות / אתר ישן / ידני
   const J_GRPS = ["אתר", "נדרים פלוס", "קהילות", "ידני", "טלפון", "אתר ישן"];
   function jGrp(r) { const s = jX(r).src || ""; return /^קהילות/.test(s) ? "קהילות" : /^אתר ישן/.test(s) ? "אתר ישן" : s; }
+  // רישום מנדרים שנשמר לפני שהבחירה נשמרה בשדות: הבחירה (Field11 מהטופס בנדרים) נמצאת ב-extra
+  function jNdChoice(r) { if (r.all || r.companies || !/^nedarim/.test(String(r.src || "")) || !r.extra) return ""; try { const f = String(JSON.parse(r.extra).Field11 || ""); return /כל החברות/.test(f) ? "all" : /נבחרות/.test(f) ? "some" : ""; } catch { return ""; } }
   // עמודות הטבלה: nar = צרה (בלי שבירת שורה), ltr = מספרים/אימייל
   const J_COLS = [
     { k: "date", h: "תאריך", nar: 1, ltr: 1, v: r => jDate(r.submitted_at) },
@@ -2655,7 +2657,7 @@
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
-    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") },
+    { k: "co", h: "חברות", wide: 1, v: r => { const nd = jNdChoice(r); return (r.all || nd === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || (nd === "some" ? "חברות נבחרות מהרשימה" : "")); } },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
     { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
   ];
