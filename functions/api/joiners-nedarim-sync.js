@@ -38,7 +38,7 @@ export function mapRow(r) {
   if (r.TransactionId) extra["תשלום בנדרים"] = String(r.TransactionId);
   return {
     first: clean(g(r, "Field3"), 60), last: clean(g(r, "Field2"), 60), phone: clean(g(r, "Field6"), 40), email: clean(g(r, "Field7"), 120),
-    id: clean(g(r, "Field4") || g(r, "Field10"), 20), ip: "", companies: /נבחרות/.test(g(r, "Field11")) ? (clean(g(r, "Field13"), 2000) || "חברות נבחרות מהרשימה") : "",          // Field13 = "חברות שנבחרו מהרשימה" (ניחוש לפי סדר העמודות; מאומת בהשלמה) all: /כל החברות/.test(g(r, "Field11")) ? "1" : "", pdf: "",
+    id: clean(g(r, "Field4") || g(r, "Field10"), 20), ip: "", companies: /נבחרות/.test(g(r, "Field11")) ? "חברות נבחרות מהרשימה" : "", all: /כל החברות/.test(g(r, "Field11")) ? "1" : "", pdf: "",
     extra: Object.keys(extra).length ? JSON.stringify(extra) : "",
   };
 }
@@ -87,7 +87,7 @@ export async function onRequestPost({ request, env }) {
         const n = parseInt(r.ID, 10); if (Number.isFinite(n)) last = Math.max(last, n);
         t.scanned++;
         const rid = await sha1_16("nedarim:" + tofes + ":" + r.ID), p = mapRow(r);
-        if (/נבחרות/.test(g(r, "Field11"))) { t.sel++; if (g(r, "Field13")) t.sel_f13++; }
+        if (/נבחרות/.test(g(r, "Field11"))) t.sel++;
         const row = await env.DB.prepare("SELECT id, pii FROM joiners WHERE id = ?").bind(rid).first();
         if (!row) {
           t.missing++;

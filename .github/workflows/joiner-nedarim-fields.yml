@@ -5,6 +5,10 @@ name: Nedarim form fields (read-only, manual)
 on:
   workflow_dispatch:
     inputs:
+      names:
+        description: "שמות עמודה נוספים לבדיקה (מופרדים בפסיק)"
+        type: string
+        default: ""
       last_id:
         description: "להתחיל אחרי מזהה רשומה זה (ריק = 300 האחרונות)"
         type: string
@@ -23,11 +27,12 @@ jobs:
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           LAST_ID: ${{ inputs.last_id }}
+          NAMES: ${{ inputs.names }}
         run: |
           set -euo pipefail
           if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
           mkdir -p data/probe
-          code=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"fields\":true,\"lastId\":${LAST_ID:-0}}" "https://harav-levin.pages.dev/api/joiners-nedarim-check" -o tmp.json -w '%{http_code}')
+          code=$(curl -sS -m 120 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" -H "Content-Type: application/json" -d "{\"fields\":true,\"lastId\":${LAST_ID:-0},\"names\":\"$NAMES\"}" "https://harav-levin.pages.dev/api/joiners-nedarim-check" -o tmp.json -w '%{http_code}')
           if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 tmp.json)"; exit 1; fi
           jq --arg w "$(date -u +%FT%TZ)" '. + {when: $w}' tmp.json > data/probe/nedarim_fields.json
           jq -c '.error // empty, .invalid, (.fields // {} | to_entries[] | select(.value.filled > 0) | {k: .key, filled: .value.filled, distinct: .value.distinct, values: .value.values})' data/probe/nedarim_fields.json

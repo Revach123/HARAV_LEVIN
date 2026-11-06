@@ -21,7 +21,7 @@ export async function onRequestPost({ request, env }) {
     try {
       let saved = 0; try { const r = await env.DB.prepare("SELECT value FROM admin_settings WHERE key = ?").bind("nedarim_last_id_" + String(env.NEDARIM_TOFES_ID || "800")).first(); saved = parseInt(r && r.value, 10) || 0; } catch { /* אין הגדרה */ }
       const lastId = Number(b.lastId) || Math.max(0, saved - 300);          // הרשומות האחרונות (שדות חדשים מופיעים רק בהן)
-      const names = Array.from({ length: 40 }, (_, i) => "Field" + (i + 1)).concat(["UpdateDate"]);
+      const names = Array.from({ length: 40 }, (_, i) => "Field" + (i + 1)).concat(["UpdateDate", ...Array.from({ length: 40 }, (_, i) => "Field" + (i + 41)), ...String(b.names || "").split(",").map(x => x.trim()).filter(Boolean)]);
       let j, dropped = [];
       for (let t = 0; t < 45; t++) {          // שם עמודה לא קיים בטופס: מורידים אותו וחוזרים על הבקשה
         const body = new URLSearchParams({ Action: "GetJson", MosadId: env.NEDARIM_MOSAD_ID || "7005939", ApiPassword: env.NEDARIM_API_KEY, TofesId: String(env.NEDARIM_TOFES_ID || "800"),
