@@ -1,4 +1,279 @@
 {
-  "error": "שם עמודה לא חוקי - Comments",
-  "when": "2026-11-06T06:53:55Z"
+  "ok": true,
+  "rows": 3,
+  "from_id": 4444434,
+  "invalid": [],
+  "fields": {
+    "Field37": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field36": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field31": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field24": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field33": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field16": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field3": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "123": 1,
+        "שמואל יוסף": 1,
+        "יוסף": 1
+      }
+    },
+    "Field40": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field2": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "123": 1,
+        "לוין": 1,
+        "ליוור": 1
+      }
+    },
+    "UpdateDate": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field1": {
+      "filled": 3,
+      "distinct": 1,
+      "values": {
+        "מסומן": 3
+      }
+    },
+    "ID": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "4444508": 1,
+        "4444734": 1,
+        "4444780": 1
+      }
+    },
+    "Field39": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field27": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field6": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "0527117041": 1,
+        "0548402390": 1,
+        "0583232500": 1
+      }
+    },
+    "Field5": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "0527117041": 1,
+        "דיגחלשיג": 1,
+        "חזון איש 31/5 רכסים": 1
+      }
+    },
+    "Field4": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "218762334": 1,
+        "305361107": 1,
+        "317800795": 1
+      }
+    },
+    "Field26": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field13": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "TransactionId": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field8": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field7": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "SL5742214@GMAIL.COM": 1,
+        "azzlevy@gmail.com": 1,
+        "m0527139862@gmail.com": 1
+      }
+    },
+    "Field9": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field30": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field29": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field28": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field19": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field18": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field25": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field17": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field15": {
+      "filled": 3,
+      "distinct": 2,
+      "values": {
+        "שטר מקוצר": 1,
+        "שטר מלא": 2
+      }
+    },
+    "Field14": {
+      "filled": 1,
+      "distinct": 1,
+      "values": {
+        "15335742214": 1
+      }
+    },
+    "Field21": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field20": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field11": {
+      "filled": 3,
+      "distinct": 1,
+      "values": {
+        "כל החברות שנרשמו וירשמו בהמשך": 3
+      }
+    },
+    "Field10": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "CreatedDate": {
+      "filled": 3,
+      "distinct": 3,
+      "values": {
+        "06/11/2026 01:17:51": 1,
+        "06/11/2026 08:31:24": 1,
+        "06/11/2026 08:54:19": 1
+      }
+    },
+    "Field12": {
+      "filled": 3,
+      "distinct": 1,
+      "values": {
+        "06/11/2026": 3
+      }
+    },
+    "Field23": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field32": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "MasofId": {
+      "filled": 1,
+      "distinct": 1,
+      "values": {
+        "25": 1
+      }
+    },
+    "Field38": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field34": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field35": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    },
+    "Field22": {
+      "filled": 0,
+      "distinct": 0,
+      "values": {}
+    }
+  },
+  "when": "2026-11-06T06:57:10Z"
 }
