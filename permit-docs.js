@@ -2341,6 +2341,7 @@
       return;
     }
     body.innerHTML = ND.tab === "a" ? ndTabA() : ND.tab === "b" ? ndTabB() : ND.tab === "e" ? ndTabE() : ndTabC();
+    if (ND.tab === "e") jWatch();
     if (keepEl) { const n = $(keepEl.id); if (n) { n.replaceWith(keepEl); keepEl.focus(); try { keepEl.setSelectionRange(ks[0], ks[1]); } catch { /* בלי בחירה */ } } }          // שדה החיפוש נשאר אותו אלמנט: ההקלדה לא נקטעת ולא נאבדים תווים
   }
   const ndSearchBox = ph => `<input class="pd-in" id="pd-nd-q" style="flex:1;min-width:220px" placeholder="${ph}" value="${E(ND.tab === "c" ? ND.sq : ND.q)}" oninput="PD._ndQ(this.value)" autocomplete="off">`;
@@ -2654,7 +2655,7 @@
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
-    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") || (/^nedarim/.test(String(r.src || "")) ? "לא נבחר בטופס נדרים" : "") },
+    { k: "co", h: "חברות", wide: 1, v: r => (r.all ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || "") },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
     { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
   ];
@@ -2681,6 +2682,14 @@
         <td>${c.matched ? '<span class="pd-nd-sug">הותאם וסומן כמבוטל</span>' : '<span class="pd-nd-miss">לא הותאם</span>'}${c.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
         <td style="white-space:nowrap"><button class="pd-mini" onclick="PD._jFind('${c.id}')">🔍 חיפוש מצטרף</button> <button class="pd-mini" style="color:#c0392b" onclick="PD._jCDel('${c.id}')">🗑 מחיקה</button></td></tr>`).join("") || `<tr><td colspan="7" class="pd-sub">אין בקשות ביטול.</td></tr>`}</tbody></table></div>`;
   }
+  // טעינה אוטומטית: כשהשורה ה-80 לפני סוף הרשימה המוצגת נכנסת לתצוגה, מוסיפים עוד שורות (הכפתור "הצג עוד" נשאר כגיבוי)
+  let jObs = null;
+  function jWatch() {
+    if (jObs) { jObs.disconnect(); jObs = null; }
+    const el = $("pd-j-end"); if (!el || !("IntersectionObserver" in window)) return;
+    jObs = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { jObs.disconnect(); jObs = null; J.shown += 300; ndShow(); } }, { rootMargin: "600px" });
+    jObs.observe(el);
+  }
   function ndTabE() {
     if (J.view === "cancels") return ndCancels();
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
@@ -2696,9 +2705,9 @@
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
         <tr class="pd-cfrow">${J_COLS.map(c => c.k === "mail" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('mail',this.value)">${[["", "הכל"], ["נשלח", "נשלח"], ["לא נשלח", "לא נשלח (יש מייל)"], ["אין מייל", "אין מייל"]].map(([k, l]) => `<option value="${E(k)}"${(J.cf.mail || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => jGrp(r)).filter(Boolean))].sort((a, b) => (J_GRPS.indexOf(a) + 1 || 99) - (J_GRPS.indexOf(b) + 1 || 99) || a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
           <th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jF", J.f, [["all", "הכל"], ["cancelled", "ביטלו"], ["active", "פעילים"]])}</th><th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jFA", J.fa, [["all", "הכל"], ["file", "יש"], ["nofile", "אין"]])}</th><th class="pd-j-act"></th></tr></thead>
-      <tbody>${rows.slice(0, J.shown).map(r => {
+      <tbody>${rows.slice(0, J.shown).map((r, ri) => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);
-        return `<tr class="go" onclick="PD._jOpen('${r.id}')">${J_COLS.map(c => cell(c, r)).join("")}
+        return `<tr class="go"${ri === J.shown - 80 && rows.length > J.shown ? ' id="pd-j-end"' : ""} onclick="PD._jOpen('${r.id}')">${J_COLS.map(c => cell(c, r)).join("")}
           <td style="white-space:nowrap">${r.cancelled_at ? `<span class="pd-nd-miss" title="תאריך ביטול: ${E(r.cancelled_at)}">ביטל</span>` : ""}${n > 1 ? `<span class="pd-nd-sug">${n} הגשות</span>` : ""}${r.undecryptable ? '<span class="pd-nd-miss">לא פוענח</span>' : ""}</td>
           <td style="white-space:nowrap">${r.file_sha256 ? `<button class="pd-mini" onclick="event.stopPropagation();PD._jFile('${r.file_sha256}')">📄</button>` : '<span class="pd-sub">-</span>'}</td><td class="pd-j-act"><div class="pd-jbtns"><button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jEdit('${r.id}')"><span>✏️</span>עריכה</button>${r.cancelled_at ? `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',0)"><span>↩</span>שחזור</button>` : `<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jCancel('${r.id}',1)"><span>⛔</span>ביטול</button>`}<button class="pd-mini pd-ib" onclick="event.stopPropagation();PD._jMine('${E(r.email || "")}','${E(r.id_number || "")}')"><span>👥</span>רישומים</button><button class="pd-mini pd-ib" style="color:#c0392b" onclick="event.stopPropagation();PD._jDel('${r.id}')"><span>🗑</span>מחיקה</button></div></td></tr>`
           + (open ? `<tr><td colspan="${N}" style="background:#f7fafa"><div class="pd-sub" style="line-height:1.9">כתובת IP: <span dir="ltr">${E(r.ip || "-")}</span>${r.all ? " · סימן: לבחירת כל החברות שנרשמו וירשמו בהמשך" : ""}${x.rest ? `<br>שדות נוספים: ${E(x.rest)}` : ""}${x.raw ? `<br>שדות נוספים: ${E(x.raw)}` : ""}</div></td></tr>` : ""); }).join("") || `<tr><td colspan="${N}" class="pd-sub">אין תוצאות.</td></tr>`}</tbody></table></div>

@@ -37,6 +37,27 @@ export async function onRequestGet({ request, env }) {
       return out({ total, with_email: withMail, undecryptable: bad, domains });
     } catch (e) { return out({ error: String(e.message || e) }, 500); }
   }
+  // ?scopes=1: לכל מקור - כמה רישומים עם "כל החברות", כמה עם חברות מסוימות, וכמה בלי אף אחד מהם (ספירה בלבד, בלי פרטים אישיים)
+  if (u.searchParams.get("scopes")) {
+    const cs = request.headers.get("X-Cron-Secret") || "";
+    if (!(await checkAdmin(request, env)) && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
+    try {
+      const key = await importKey(env), g = {};
+      for (let off = 0; ; off += 500) {
+        const rs = (await env.DB.prepare("SELECT id, submitted_at, pii FROM joiners ORDER BY id LIMIT 500 OFFSET ?").bind(off).all()).results ?? [];
+        if (!rs.length) break;
+        for (const r of rs) {
+          let p; try { p = await decryptPii(key, r.id, r.pii); } catch { continue; }
+          let src = String(p.src || "(ריק)");
+          if (/^excel:/.test(src)) { let o = {}; try { o = JSON.parse(p.extra || "{}"); } catch {} src = "excel:" + (o["מקור"] || src.slice(6)); }
+          const x = g[src] || (g[src] = { src, n: 0, all: 0, companies: 0, neither: 0, first: "9", last: "" });
+          x.n++; if (p.all) x.all++; else if (String(p.companies || "").trim()) x.companies++; else x.neither++;
+          const d = String(r.submitted_at || "").slice(0, 10); if (d && d < x.first) x.first = d; if (d > x.last) x.last = d;
+        }
+      }
+      return out({ groups: Object.values(g).sort((a, b) => b.n - a.n) });
+    } catch (e) { return out({ error: String(e.message || e) }, 500); }
+  }
   if (u.searchParams.get("oldpairs")) {
     const cs = request.headers.get("X-Cron-Secret") || "", isAdm = await checkAdmin(request, env);
     if (!isAdm && !(env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET)) return noAuth();
