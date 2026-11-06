@@ -6,50 +6,114 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 94
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-11-05T09:53:27.280424Z",
+  "updated": "2026-11-06T09:52:27.866370Z",
   "source": "d1",
-  "businesses": 1279,
-  "numeric_chp": 1275,
-  "found_in_registry": 1187,
+  "businesses": 1283,
+  "numeric_chp": 1279,
+  "found_in_registry": 1191,
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2238,
-  "datawise_date": "2026-11-04",
+  "datawise_date": "2026-11-05",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 0,
-   "biz_type": 0,
+   "registrar_name": 1,
+   "biz_type": 4,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 4,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 4,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 4,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "פעילה": 1075,
+   "פעילה": 1079,
    "לא ידוע": 154,
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 4,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mw4aexfirrrb",
+   "chp": "516414992",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw4aexfirrrb",
+   "chp": "516414992",
+   "field": "registrar_name",
+   "old": "אלטשולר שחם טרייד בע\"מ",
+   "new": "אלטשולר שחם טרייד  בע\"מ"
+  },
+  {
+   "id": "mw4aexfirrrb",
+   "chp": "516414992",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mw4ahg6p0qx2",
+   "chp": "515552636",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw4ahg6p0qx2",
+   "chp": "515552636",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mw4aj55yb2rr",
+   "chp": "511944670",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw4aj55yb2rr",
+   "chp": "511944670",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mw4akkreysky",
+   "chp": "514979715",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw4akkreysky",
+   "chp": "514979715",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
@@ -166,7 +230,7 @@
   {
    "id": "mp64jo9xyqq2",
    "chp": "2059088",
-   "permit_name": "אנקור הזדמנויות",
+   "permit_name": "אנקור הזדמנויות ENCORE OPPORTUNITIES",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -270,7 +334,7 @@
   {
    "id": "mp64kcaqbxm7",
    "chp": "1957081",
-   "permit_name": "הרץ פרופרטיס גרופ",
+   "permit_name": "הרץ פרופרטיס גרופ Hertz Properties Group",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -734,7 +798,7 @@
   {
    "id": "636475105429",
    "chp": "2203094",
-   "permit_name": "יילוסטון ריל אסטייט קפיטל",
+   "permit_name": "יילוסטון ריל אסטייט קפיטל YELLOWSTONE REAL ESTATE CAPITAL",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
