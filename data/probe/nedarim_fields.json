@@ -1,7 +1,7 @@
 {
   "ok": true,
-  "rows": 3,
-  "from_id": 4444434,
+  "rows": 159,
+  "from_id": 4406872,
   "invalid": [],
   "fields": {
     "Field37": {
@@ -35,13 +35,8 @@
       "values": {}
     },
     "Field3": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "123": 1,
-        "שמואל יוסף": 1,
-        "יוסף": 1
-      }
+      "filled": 159,
+      "distinct": 115
     },
     "Field40": {
       "filled": 0,
@@ -49,13 +44,8 @@
       "values": {}
     },
     "Field2": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "123": 1,
-        "לוין": 1,
-        "ליוור": 1
-      }
+      "filled": 159,
+      "distinct": 121
     },
     "UpdateDate": {
       "filled": 0,
@@ -63,20 +53,15 @@
       "values": {}
     },
     "Field1": {
-      "filled": 3,
+      "filled": 159,
       "distinct": 1,
       "values": {
-        "מסומן": 3
+        "מסומן": 159
       }
     },
     "ID": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "4444508": 1,
-        "4444734": 1,
-        "4444780": 1
-      }
+      "filled": 159,
+      "distinct": 159
     },
     "Field39": {
       "filled": 0,
@@ -89,31 +74,16 @@
       "values": {}
     },
     "Field6": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "0527117041": 1,
-        "0548402390": 1,
-        "0583232500": 1
-      }
+      "filled": 159,
+      "distinct": 144
     },
     "Field5": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "0527117041": 1,
-        "דיגחלשיג": 1,
-        "חזון איש 31/5 רכסים": 1
-      }
+      "filled": 159,
+      "distinct": 141
     },
     "Field4": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "218762334": 1,
-        "305361107": 1,
-        "317800795": 1
-      }
+      "filled": 155,
+      "distinct": 148
     },
     "Field26": {
       "filled": 0,
@@ -121,9 +91,12 @@
       "values": {}
     },
     "Field13": {
-      "filled": 0,
-      "distinct": 0,
-      "values": {}
+      "filled": 2,
+      "distinct": 2,
+      "values": {
+        "0534145161": 1,
+        "0583202703": 1
+      }
     },
     "TransactionId": {
       "filled": 0,
@@ -136,18 +109,16 @@
       "values": {}
     },
     "Field7": {
-      "filled": 3,
-      "distinct": 3,
-      "values": {
-        "SL5742214@GMAIL.COM": 1,
-        "azzlevy@gmail.com": 1,
-        "m0527139862@gmail.com": 1
-      }
+      "filled": 117,
+      "distinct": 96
     },
     "Field9": {
-      "filled": 0,
-      "distinct": 0,
-      "values": {}
+      "filled": 151,
+      "distinct": 2,
+      "values": {
+        "ת.ז.": 147,
+        "דרכון": 4
+      }
     },
     "Field30": {
       "filled": 0,
@@ -185,11 +156,11 @@
       "values": {}
     },
     "Field15": {
-      "filled": 3,
+      "filled": 8,
       "distinct": 2,
       "values": {
-        "שטר מקוצר": 1,
-        "שטר מלא": 2
+        "שטר מקוצר": 2,
+        "שטר מלא": 6
       }
     },
     "Field14": {
@@ -210,30 +181,32 @@
       "values": {}
     },
     "Field11": {
-      "filled": 3,
-      "distinct": 1,
+      "filled": 159,
+      "distinct": 2,
       "values": {
-        "כל החברות שנרשמו וירשמו בהמשך": 3
+        "חברות נבחרות מהרשימה": 5,
+        "כל החברות שנרשמו וירשמו בהמשך": 154
       }
     },
     "Field10": {
-      "filled": 0,
-      "distinct": 0,
-      "values": {}
-    },
-    "CreatedDate": {
-      "filled": 3,
-      "distinct": 3,
+      "filled": 4,
+      "distinct": 4,
       "values": {
-        "06/11/2026 01:17:51": 1,
-        "06/11/2026 08:31:24": 1,
-        "06/11/2026 08:54:19": 1
+        "123121493": 1,
+        "317759900": 1,
+        "562402318": 1,
+        "22ah36652": 1
       }
     },
+    "CreatedDate": {
+      "filled": 159,
+      "distinct": 159
+    },
     "Field12": {
-      "filled": 3,
-      "distinct": 1,
+      "filled": 8,
+      "distinct": 2,
       "values": {
+        "05/11/2026": 5,
         "06/11/2026": 3
       }
     },
@@ -248,11 +221,8 @@
       "values": {}
     },
     "MasofId": {
-      "filled": 1,
-      "distinct": 1,
-      "values": {
-        "25": 1
-      }
+      "filled": 86,
+      "distinct": 69
     },
     "Field38": {
       "filled": 0,
@@ -275,5 +245,5 @@
       "values": {}
     }
   },
-  "when": "2026-11-06T06:57:10Z"
+  "when": "2026-11-06T07:08:58Z"
 }
