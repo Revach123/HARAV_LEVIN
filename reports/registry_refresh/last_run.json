@@ -6,35 +6,35 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 94
+   "biz_type": 90
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-11-06T09:52:27.866370Z",
+  "updated": "2026-11-07T09:16:23.566774Z",
   "source": "d1",
   "businesses": 1283,
   "numeric_chp": 1279,
   "found_in_registry": 1191,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2238,
-  "datawise_date": "2026-11-05",
+  "datawise_rows": 2239,
+  "datawise_date": "2026-11-06",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 1,
-   "biz_type": 4,
+   "registrar_name": 0,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 4,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 4,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 4,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
@@ -46,74 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 4,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mw4aexfirrrb",
-   "chp": "516414992",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw4aexfirrrb",
-   "chp": "516414992",
-   "field": "registrar_name",
-   "old": "אלטשולר שחם טרייד בע\"מ",
-   "new": "אלטשולר שחם טרייד  בע\"מ"
-  },
-  {
-   "id": "mw4aexfirrrb",
-   "chp": "516414992",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mw4ahg6p0qx2",
-   "chp": "515552636",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw4ahg6p0qx2",
-   "chp": "515552636",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mw4aj55yb2rr",
-   "chp": "511944670",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw4aj55yb2rr",
-   "chp": "511944670",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mw4akkreysky",
-   "chp": "514979715",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw4akkreysky",
-   "chp": "514979715",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
@@ -198,7 +134,7 @@
   {
    "id": "mp64jmhjxtwo",
    "chp": "1981143",
-   "permit_name": "אמ. ג'י. ג'י (בי.וי.אי)",
+   "permit_name": "אמ. ג'י. ג'י (בי.וי.אי) MGG (BVI)",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -438,7 +374,7 @@
   {
    "id": "mp64kv30f2xt",
    "chp": "1001171286",
-   "permit_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ",
+   "permit_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ LANTERRA CANADA ENTERPRISES LIMITED PARTNERSHIP",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -534,7 +470,7 @@
   {
    "id": "mp64lc7mo4z6",
    "chp": "1905761",
-   "permit_name": "נמקו ריאלטי",
+   "permit_name": "נמקו ריאלטי NAMCO REALTY LTD",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -646,7 +582,7 @@
   {
    "id": "mp64lqwhk28r",
    "chp": "1900288",
-   "permit_name": "פסיפיק אוק אסאואר הולדינגס",
+   "permit_name": "פסיפיק אוק אסאואר הולדינגס PACIFIC OAK SOR (BVI) HOLDINGS",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -686,7 +622,7 @@
   {
    "id": "mp64lxntnwig",
    "chp": "2100460",
-   "permit_name": "קלקן קפיטל",
+   "permit_name": "קלקן קפיטל KALKAN CAPITAL",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -806,7 +742,7 @@
   {
    "id": "425a44d2a8b5",
    "chp": "2185699",
-   "permit_name": "קוהאן פרופרטיס",
+   "permit_name": "קוהאן פרופרטיס KOHAN PROPERTIES",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
