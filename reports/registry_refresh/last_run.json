@@ -6,17 +6,17 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 90,
    "biz_type": 90
   },
-  "updated": "2026-11-07T09:16:23.566774Z",
+  "updated": "2026-11-08T09:31:18.751269Z",
   "source": "d1",
-  "businesses": 1283,
-  "numeric_chp": 1279,
-  "found_in_registry": 1191,
+  "businesses": 1284,
+  "numeric_chp": 1280,
+  "found_in_registry": 1192,
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2239,
@@ -24,32 +24,47 @@
   "bond_companies": 363,
   "changes": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 1,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 1,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 1,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 1,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "פעילה": 1079,
+   "פעילה": 1080,
    "לא ידוע": 154,
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mw6waxqamxxv",
+   "chp": "515741247",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw6waxqamxxv",
+   "chp": "515741247",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",

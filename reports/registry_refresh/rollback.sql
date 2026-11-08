@@ -1,0 +1,1 @@
+UPDATE businesses SET registry_status = '', biz_type = '' WHERE id = 'mw6waxqamxxv';
