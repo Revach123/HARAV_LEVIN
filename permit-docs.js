@@ -119,7 +119,7 @@
     clearTimeout(out._t);
     if (q.length < 2) { out.innerHTML = ""; out._seq = (out._seq || 0) + 1; return; }
     const dg = q.replace(/\D/g, "");
-    const local = bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10);
+    const local = bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (b.heb_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10);
     out.innerHTML = (local.map(b => o.card ? o.card(b) : `<button class="pd-pick" data-pick="${b.id}">${displayName(b, true)} <span class="pd-sub">${E(b.chp_number || "")}</span>${stTag(b.registry_status)}</button>`).join("") ||
       `<div class="pd-sub">לא נמצאה חברה במאגר שלנו</div>`) +
       (o.extpick ? S.ext.filter(x => (x.name || "").includes(q) || (dg.length >= 4 && (x.chp || "").includes(dg))).slice(0, 6).map(x => `<button class="pd-pick" data-extpick="${x.id}" style="border-color:#c9b46a;background:#fffaf0">${E(x.name)} <span class="pd-sub">${E(x.chp || "")}</span> <span class="pd-st bad">${EXT_HE[x.status] || x.status} · ברשימת החברות שאינן במאגר</span></button>`).join("") : "") + `<div class="pd-regbox"></div>`;
@@ -142,7 +142,7 @@
     if (seq !== out._seq || !out.contains(box)) return;
     const byChp = new Map(bizList().filter(b => digitsOf(b.chp_number)).map(b => [digitsOf(b.chp_number), b]));
     const rs = d.results || [];
-    const dg = q.replace(/\D/g, ""), shown = new Set(bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10).map(b => b.id));      // כבר מוצגות ברשימה המקומית למעלה
+    const dg = q.replace(/\D/g, ""), shown = new Set(bizList().filter(b => !o.exclude(b.id) && ((b.registrar_name || "").includes(q) || (b.permit_name || "").includes(q) || (b.heb_name || "").includes(q) || (dg.length >= 4 && (b.chp_number || "").includes(dg)))).slice(0, 10).map(b => b.id));      // כבר מוצגות ברשימה המקומית למעלה
     const seenB = new Set(), seenM = new Set();
     const inDb = rs.map(r => ({ r, b: byChp.get(digitsOf(r.id)) })).filter(x => x.b && !o.exclude(x.b.id) && !shown.has(x.b.id) && !seenB.has(x.b.id) && seenB.add(x.b.id));      // בלי כפילויות (הרשם מחזיר לפעמים את אותה חברה כמה פעמים)
     const miss = rs.filter(r => !byChp.has(digitsOf(r.id)) && !seenM.has(digitsOf(r.id)) && seenM.add(digitsOf(r.id)));
@@ -816,7 +816,7 @@
   // ───────── ריבוי קבצים: רשימת קבצים (U.list) עם תמונות ממוזערות בצד, המסמך הנוכחי באמצע והכרטיסיות בצד שמאל; מעבר בין קבצים בלחיצה על התמונה הממוזערת ─────────
   function similarBiz(name, excludeId) {          // עסקים ברשימה בשם דומה לשם שמוקלד (הכלה או דמיון מקורב); לאזהרה "קיים עסק ברשימה על שם..." לפני הוספת עסק חדש
     const q = String(name || "").trim(); if (NORMN(q).length < 3) return [];
-    return bizList().filter(b => b.id !== excludeId).map(b => ({ b, sc: Math.max(fuzzy(q, b.registrar_name || ""), fuzzy(q, b.permit_name || "")) })).filter(x => x.sc >= 0.62).sort((x, y) => y.sc - x.sc).slice(0, 6).map(x => x.b);
+    return bizList().filter(b => b.id !== excludeId).map(b => ({ b, sc: Math.max(fuzzy(q, b.registrar_name || ""), fuzzy(q, b.permit_name || ""), fuzzy(q, b.heb_name || "")) })).filter(x => x.sc >= 0.62).sort((x, y) => y.sc - x.sc).slice(0, 6).map(x => x.b);
   }
   const simHtml = (name, excludeId) => { const l = similarBiz(name, excludeId); return l.length ? `<div class="pd-ac-sim">⚠ קיים עסק${l.length > 1 ? "ים" : ""} ברשימה על שם דומה:<ul>${l.map(b => `<li>${displayName(b, true)} <span class="pd-sub">${E((b.chp_number || "").trim() || "בלי ח.פ.")}</span></li>`).join("")}</ul></div>` : ""; };
   function acStart(files) {
@@ -2438,7 +2438,7 @@
     const box = $("pd-f-res"), q = ND.fq.trim(); if (!box) return;
     if (q.length < 2) { box.innerHTML = ""; return; }
     const seq = ND._fseq = (ND._fseq || 0) + 1, dg = q.replace(/\D/g, "");
-    const local = bizList().map(b => ({ b, sc: (dg.length >= 4 && (b.chp_number || "").includes(dg)) ? 2 : Math.max(fuzzy(q, b.registrar_name), fuzzy(q, b.permit_name), fuzzy(q, displayName(b))) })).filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 15);
+    const local = bizList().map(b => ({ b, sc: (dg.length >= 4 && (b.chp_number || "").includes(dg)) ? 2 : Math.max(fuzzy(q, b.registrar_name), fuzzy(q, b.permit_name), fuzzy(q, b.heb_name || ""), fuzzy(q, displayName(b))) })).filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 15);
     const exts = S.ext.map(x => ({ x, sc: (dg.length >= 4 && (x.chp || "").includes(dg)) ? 2 : fuzzy(q, x.name) })).filter(r => r.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 6);
     box.innerHTML = `<div class="pd-grp">במאגר שלנו${local.length ? "" : ": לא נמצא"}</div>` + local.map(r => fCard(r.b, r.sc)).join("") +
       (exts.length ? `<div class="pd-grp weak">חברות לא רשומות (יש להן שטר)</div>` + exts.map(r => `<div class="pd-reg"><b>${E(r.x.name)}</b> <span class="pd-st bad">${EXT_HE[r.x.status] || r.x.status}</span><div class="pd-sub">${E(r.x.chp || "")} · ${(r.x.doc_ids || []).length} שטרות</div></div>`).join("") : "") +
@@ -2541,7 +2541,7 @@
   async function ndSearchC() {          // חיפוש בחברות שלנו (עם התאמה מקורבת) + ברשם החברות
     const box = $("pd-nd-res"), q = ND.sq.trim(); if (!box) return;
     const seq = ND._seq = (ND._seq || 0) + 1, dg = q.replace(/\D/g, "");
-    const local = bizList().map(b => ({ b, sc: (dg.length >= 4 && (b.chp_number || "").includes(dg)) ? 2 : Math.max(fuzzy(q, b.registrar_name), fuzzy(q, b.permit_name), fuzzy(q, displayName(b))) })).filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 12);
+    const local = bizList().map(b => ({ b, sc: (dg.length >= 4 && (b.chp_number || "").includes(dg)) ? 2 : Math.max(fuzzy(q, b.registrar_name), fuzzy(q, b.permit_name), fuzzy(q, b.heb_name || ""), fuzzy(q, displayName(b))) })).filter(x => x.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 12);
     const exts = S.ext.map(x => ({ x, sc: (dg.length >= 4 && (x.chp || "").includes(dg)) ? 2 : fuzzy(q, x.name) })).filter(r => r.sc >= 0.5).sort((a, b) => b.sc - a.sc).slice(0, 8);
     const loc = `<div class="pd-grp">במאגר שלנו${local.length ? "" : ": לא נמצא"}</div>` + local.map(r => `<button class="pd-pick" onclick="PD.openManage('${r.b.id}')">${displayName(r.b, true)} <span class="pd-sub">${E(r.b.chp_number || "")}</span>${stTag(r.b.registry_status)}${r.sc < 1 ? ' <span class="pd-sub">(שם דומה)</span>' : ""}</button>`).join("") +
       (exts.length ? `<div class="pd-grp weak">ברשימת החברות שאינן במאגר</div>` + exts.map(r => `<div class="pd-pick" style="cursor:default;border-color:#c9b46a;background:#fffaf0">${E(r.x.name)} <span class="pd-sub">${E(r.x.chp || "")}</span> <span class="pd-st bad">${EXT_HE[r.x.status] || r.x.status}</span> ${(r.x.doc_ids || []).length} שטרות</div>`).join("") : "");
