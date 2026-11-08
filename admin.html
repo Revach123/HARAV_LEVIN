@@ -3550,6 +3550,7 @@ function filteredAndSorted() {
   const textHit = b => displayName(b).toLowerCase().includes(q)
         || (b.permit_name ||"").toLowerCase().includes(q)
         || (b.registrar_name ||"").toLowerCase().includes(q)
+        || (b.heb_name   ||"").toLowerCase().includes(q)          // שם העסק בעברית (לעסק עם שם באנגלית)
         || (b.category   ||"").toLowerCase().includes(q)
         || (b.region     ||"").toLowerCase().includes(q)
         || (b.chp_number ||"").toLowerCase().includes(q)
