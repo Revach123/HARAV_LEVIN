@@ -781,6 +781,31 @@
    "kind": "upcoming",
    "last_seen": "2026-11-08"
   },
+  "U10414": {
+   "data": {
+    "chp_number": "520044314",
+    "company_name": "פרטנר",
+    "draft_no": 1,
+    "draft_title": null,
+    "id": 10414,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780140",
+    "maya_report_id": 1780140,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-08"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
