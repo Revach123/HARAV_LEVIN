@@ -302,14 +302,14 @@
    "chp_number": "515541415"
   },
   {
-   "id": 10409,
-   "maya_report_id": 1779793,
+   "id": 10412,
+   "maya_report_id": 1780094,
    "company_name": "פאי פלוס",
    "is_new_company": false,
    "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
+   "draft_no": 1,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1780094",
    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779793",
    "link_presentation": null,
    "securities": [
@@ -638,6 +638,29 @@
    ],
    "carried": true,
    "last_seen": "2026-11-05"
+  },
+  {
+   "chp_number": "516901774",
+   "company_name": "פאי פלוס",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10409,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779793",
+   "maya_report_id": 1779793,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-08"
   }
  ],
  "open": [],
