@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ניהול תיבת העדכונים</title>
+<link rel="icon" href="/favicon.png">
+<style>
+:root{--teal:#1e8f85;--dark:#274d5b;--line:#dfe7e8;--muted:#6a7c82;--bg:#f4f7f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#1f2d2d;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5}
+header{background:var(--dark);color:#fff;padding:14px 16px}
+header h1{margin:0 auto;max-width:960px;font-size:21px}
+main{max-width:960px;margin:0 auto;padding:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+h2{margin:0 0 12px;font-size:18px;color:var(--dark)}
+label{display:block;font-weight:bold;margin:0 0 4px;font-size:15px}
+input[type=text],input[type=url],input[type=password],input[type=date],select,textarea{width:100%;padding:9px 10px;font:inherit;border:1px solid #b7c9c4;border-radius:7px;background:#fff}
+textarea{min-height:70px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0}
+.chk{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.chk label{font-weight:normal;display:flex;gap:6px;align-items:center}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;background:var(--teal);color:#fff;font-weight:bold}
+button.sec{background:#e9f0f1;color:var(--dark)}
+button.del{background:#fdecea;color:#b3261e}
+.msg{margin:10px 0 0;font-weight:bold}.msg.bad{color:#b3261e}.msg.ok{color:var(--teal)}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{text-align:right;padding:8px 6px;border-bottom:1px solid #eef2f2;vertical-align:top}
+th{color:var(--muted);font-weight:bold;font-size:13px}
+td.act{white-space:nowrap}td.act button{padding:5px 10px;font-size:14px}
+.off{color:var(--muted)}
+.tag{display:inline-block;font-size:12px;font-weight:bold;padding:2px 7px;border-radius:6px;background:#e9f6f5;color:var(--teal)}
+.hint{color:var(--muted);font-size:14px;margin:4px 0 0}
+code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:inline-block;font-size:14px}
+.scroll{overflow-x:auto}
+#login{max-width:420px}
+</style>
+</head>
+<body>
+<header><h1>ניהול תיבת העדכונים (iska.co.il)</h1></header>
+<main>
+  <div class="card" id="login" hidden>
+    <h2>כניסה</h2>
+    <label for="pw">סיסמת הניהול</label>
+    <input type="password" id="pw" autocomplete="current-password">
+    <p><button type="button" id="go">כניסה</button></p>
+    <p class="msg bad" id="lmsg"></p>
+  </div>
+
+  <div id="app" hidden>
+    <div class="card">
+      <h2 id="ftitle">עדכון חדש</h2>
+      <input type="hidden" id="fid">
+      <label for="ftext">נוסח העדכון</label>
+      <textarea id="ftext" maxlength="400" placeholder="למשל: נוסף שטר היתר עיסקא חדש לרשימה"></textarea>
+      <div class="grid">
+        <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option></select></div>
+        <div><label for="fstart">מתאריך</label><input type="date" id="fstart"><p class="hint">ריק = מיד</p></div>
+        <div><label for="fend">עד תאריך</label><input type="date" id="fend"><p class="hint">ריק = בלי הגבלה</p></div>
+      </div>
+      <label for="flink">קישור (לא חובה)</label>
+      <input type="url" id="flink" dir="ltr" placeholder="https://www.iska.co.il/...">
+      <div class="chk">
+        <label><input type="checkbox" id="fpin"> מוצמד (מוצג ראשון)</label>
+        <label><input type="checkbox" id="factive" checked> פעיל</label>
+      </div>
+      <button type="button" id="save">שמירה</button>
+      <button type="button" class="sec" id="cancel" hidden>ביטול עריכה</button>
+      <p class="msg" id="smsg"></p>
+    </div>
+
+    <div class="card">
+      <h2>העדכונים הידניים</h2>
+      <div class="scroll"><table><thead><tr><th>נושא</th><th>נוסח</th><th>תאריכים</th><th>מצב</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h2>מה מוצג עכשיו באתר</h2>
+      <p class="hint">העדכונים הידניים הפעילים, וגם עדכונים אוטומטיים: חברות שנוספו בחודש האחרון ואג"ח חדשות בשלושת השבועות האחרונים. (מתעדכן באתר תוך כמה דקות.)</p>
+      <div class="scroll"><table><thead><tr><th>תאריך</th><th>נושא</th><th>נוסח</th><th>מקור</th></tr></thead><tbody id="live"></tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h2>התקנה באתר</h2>
+      <p>ב-WPCode: קטע קוד חדש מסוג HTML, מיקום "Site Wide Footer", עם השורה:</p>
+      <p><code>&lt;script src="https://harav-levin.pages.dev/news-embed.js" defer&gt;&lt;/script&gt;</code></p>
+      <p class="hint">אפשר להוסיף <code>data-top="90"</code> כדי שהפס יופיע מתחת לכותרת קבועה, ו-<code>data-companies-url="..."</code> / <code>data-bonds-url="..."</code> לקישור לרשימות המלאות.</p>
+    </div>
+  </div>
+</main>
+<script>
+const CAT = { companies: "חברות", bonds: 'אג"ח', other: "עדכונים אחרים" };
+const $ = id => document.getElementById(id);
+let token = ""; try { token = sessionStorage.getItem("adminToken") || ""; } catch {}
+let manual = [];
+const fmt = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const api = (path, opt = {}) => fetch(path, { ...opt, cache: "no-store", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+
+async function loadManual() {
+  const r = await api("/api/news?all=1");
+  if (r.status === 401) { showLogin(); return false; }
+  manual = (await r.json()).items || [];
+  const today = new Date().toISOString().slice(0, 10);
+  $("rows").innerHTML = manual.length ? manual.map(m => {
+    const live = m.active && (!m.start_date || m.start_date <= today) && (!m.end_date || m.end_date >= today);
+    const st = !m.active ? "כבוי" : m.end_date && m.end_date < today ? "פג תוקף" : m.start_date && m.start_date > today ? "עוד לא התחיל" : "מוצג";
+    return `<tr class="${live ? "" : "off"}"><td><span class="tag">${CAT[m.cat] || CAT.other}</span>${m.pinned ? " 📌" : ""}</td>
+      <td>${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener" dir="ltr">${esc(m.link)}</a>` : ""}</td>
+      <td>${m.start_date ? "מ-" + fmt(m.start_date) : "מיד"}${m.end_date ? "<br>עד " + fmt(m.end_date) : ""}</td><td>${st}</td>
+      <td class="act"><button type="button" class="sec" data-e="${m.id}">עריכה</button> <button type="button" class="del" data-d="${m.id}">מחיקה</button></td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="off">אין עדיין עדכונים ידניים</td></tr>`;
+  return true;
+}
+async function loadLive() {
+  try {
+    const d = await (await fetch("/api/news", { cache: "no-store" })).json();
+    $("live").innerHTML = (d.items || []).map(it => `<tr><td>${fmt(it.date)}</td><td>${CAT[it.cat] || ""}</td><td>${esc(it.text)}</td><td>${it.auto ? "אוטומטי" : it.pinned ? "ידני 📌" : "ידני"}</td></tr>`).join("") || `<tr><td colspan="4" class="off">אין עדכונים - הפס לא יוצג באתר</td></tr>`;
+  } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
+}
+function resetForm() {
+  $("fid").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fend").value = "";
+  $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true;
+}
+function edit(id) {
+  const m = manual.find(x => x.id === id); if (!m) return;
+  $("fid").value = m.id; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || ""; $("fend").value = m.end_date || "";
+  $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active; $("ftitle").textContent = "עריכת עדכון"; $("cancel").hidden = false; $("smsg").textContent = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+$("rows").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.e) edit(Number(b.dataset.e));
+  if (b.dataset.d && confirm("למחוק את העדכון?")) { await api(`/api/news?id=${b.dataset.d}`, { method: "DELETE" }); await loadManual(); loadLive(); }
+});
+$("cancel").addEventListener("click", resetForm);
+$("save").addEventListener("click", async () => {
+  const msg = $("smsg"); msg.className = "msg"; msg.textContent = "שומר…";
+  const body = { id: Number($("fid").value) || 0, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value, end_date: $("fend").value, pinned: $("fpin").checked, active: $("factive").checked };
+  const r = await api("/api/news", { method: "POST", body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { showLogin(); return; }
+  if (!d.ok) { msg.className = "msg bad"; msg.textContent = d.error || "השמירה נכשלה"; return; }
+  msg.className = "msg ok"; msg.textContent = "נשמר ✓"; resetForm(); await loadManual(); loadLive();
+});
+function showLogin() { $("app").hidden = true; $("login").hidden = false; $("pw").focus(); }
+async function enter() { $("login").hidden = true; $("app").hidden = false; if (await loadManual()) loadLive(); }
+$("go").addEventListener("click", async () => {
+  const pw = $("pw").value;
+  const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw }) });
+  if (!r.ok) { $("lmsg").textContent = "סיסמה שגויה"; return; }
+  token = pw; try { sessionStorage.setItem("adminToken", pw); } catch {}
+  enter();
+});
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+(async () => {
+  if (token) return enter();
+  try { const d = await (await fetch("/api/login", { cache: "no-store" })).json(); if (d.trusted) return enter(); } catch {}
+  showLogin();
+})();
+</script>
+</body>
+</html>
