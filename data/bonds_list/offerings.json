@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-07",
+ "updated": "2026-11-08",
  "upcoming": [
   {
    "id": 10358,
@@ -638,35 +638,6 @@
    ],
    "carried": true,
    "last_seen": "2026-11-05"
-  },
-  {
-   "chp_number": "520000118",
-   "company_name": "פועלים",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10402,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778925",
-   "maya_report_id": 1778925,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": "ilAAA",
-     "midroog_rating": "Aaa.il",
-     "name": "",
-     "security_type": "אג\"ח"
-    },
-    {
-     "maalot_rating": "ilAAA",
-     "midroog_rating": "Aaa.il",
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-04"
   }
  ],
  "open": [],
