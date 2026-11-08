@@ -1,7 +1,7 @@
 {
  "updated": "2026-11-08",
  "universe_started": "2026-10-29",
- "count": 797,
+ "count": 798,
  "columns": [
   "security_id",
   "security_name",
@@ -756,6 +756,34 @@
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "",
    "maalot_rating": "ilAA-",
+   "ytm_gross": "",
+   "interest_frequency": ""
+  },
+  {
+   "security_id": "",
+   "security_name": "אג\"ח - אדגר השקעות ופיתוח בע\"מ (הנפקה עתידית)",
+   "symbol": "",
+   "isin": "",
+   "security_type": "אג\"ח",
+   "asset_class": "אג\"ח קונצרני",
+   "issuer_name": "אדגר השקעות ופיתוח בע\"מ",
+   "company": "אדגר השקעות ופיתוח בע\"מ",
+   "chp_number": "520035171",
+   "agch_approved": "כן",
+   "is_private": "כן",
+   "notes": "",
+   "redemption_date": "",
+   "annual_interest": "",
+   "linkage": "",
+   "linkage_type": "",
+   "last_price": "",
+   "annual_yield": "",
+   "base_indices": "",
+   "is_tradable": false,
+   "first_seen": "2026-11-08",
+   "listed_first_seen": "",
+   "midroog_rating": "A2.il",
+   "maalot_rating": "",
    "ytm_gross": "",
    "interest_frequency": ""
   },
@@ -3444,7 +3472,7 @@
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "Baa1.il",
    "maalot_rating": "",
-   "ytm_gross": 6.96,
+   "ytm_gross": 6.95,
    "interest_frequency": 2
   },
   {
@@ -9548,7 +9576,7 @@
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "Aa2.il",
    "maalot_rating": "ilAA",
-   "ytm_gross": 3.79,
+   "ytm_gross": 3.8,
    "interest_frequency": 2
   },
   {
@@ -10444,7 +10472,7 @@
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "",
    "maalot_rating": "ilA+",
-   "ytm_gross": 2.21,
+   "ytm_gross": 2.2,
    "interest_frequency": 2
   },
   {
@@ -20440,7 +20468,7 @@
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "",
    "maalot_rating": "ilA",
-   "ytm_gross": 6.32,
+   "ytm_gross": 6.33,
    "interest_frequency": 2
   },
   {
@@ -22287,7 +22315,7 @@
    "first_seen": "2026-10-08",
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "WR",
-   "maalot_rating": "",
+   "maalot_rating": "ilA+",
    "ytm_gross": "",
    "interest_frequency": ""
   },
@@ -22315,7 +22343,7 @@
    "first_seen": "2026-10-08",
    "listed_first_seen": "2026-10-29",
    "midroog_rating": "",
-   "maalot_rating": "",
+   "maalot_rating": "ilA+",
    "ytm_gross": "",
    "interest_frequency": ""
   },
