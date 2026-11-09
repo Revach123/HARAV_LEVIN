@@ -58,20 +58,20 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
     <div class="card">
       <h2 id="ftitle">עדכון חדש</h2>
       <input type="hidden" id="fid">
-      <label for="ftitle2">כותרת (השורה הראשונה בפס)</label>
-      <input type="text" id="ftitle2" maxlength="120" placeholder="למשל: הודעה חשובה  (ריק = לפי הנושא)">
-      <p class="hint" style="margin-bottom:12px">השורה השנייה היא נוסח העדכון.</p>
+      <label for="fcat">נושא (השורה הראשונה בפס)</label>
+      <select id="fcat"><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option><option value="other">עדכון כללי</option><option value="custom">אחר - כיתוב ידני…</option></select>
+      <div id="customWrap" hidden style="margin-top:8px"><input type="text" id="ftitle2" maxlength="120" placeholder="הכיתוב שיופיע בשורה הראשונה, למשל: הודעה חשובה"></div>
+      <p class="hint" style="margin-bottom:12px">בשורה הראשונה בפס מופיע הנושא (או הכיתוב הידני), ובשורה השנייה נוסח העדכון.</p>
       <label for="ftext">נוסח העדכון (השורה השנייה)</label>
       <textarea id="ftext" maxlength="400" placeholder="למשל: נוסף שטר היתר עיסקא חדש לרשימה"></textarea>
       <div class="grid">
-        <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option></select></div>
         <div><label for="fstart">מתאריך</label><input type="date" id="fstart"><p class="hint">ריק = מיד</p></div>
         <div><label for="fdur">למשך</label><div style="display:flex;gap:6px"><input type="number" id="fdur" min="1" max="999" inputmode="numeric" style="width:90px"><select id="funit"><option value="">ללא הגבלה</option><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></div><p class="hint" id="fendHint">ללא הגבלה</p></div>
       </div>
       <label for="flink">קישור (לא חובה)</label>
       <input type="url" id="flink" dir="ltr" placeholder="https://www.iska.co.il/...">
       <div class="chk">
-        <label><input type="checkbox" id="fpin"> מוצמד (מוצג ראשון)</label>
+        <label><input type="checkbox" id="fpin" checked> מוצמד (מוצג ראשון)</label>
         <label><input type="checkbox" id="factive" checked> פעיל</label>
       </div>
       <button type="button" id="save">שמירה</button>
@@ -149,12 +149,12 @@ async function loadLive() {
   } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
 }
 function resetForm() {
-  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
-  $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
+  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "companies"; showCustom(); $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
+  $("fpin").checked = true; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
 }
 function edit(id) {
   const m = manual.find(x => x.id === id); if (!m) return;
-  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || "";
+  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.title ? "custom" : (CAT[m.cat] ? m.cat : "other"); editCat = m.cat || "other"; showCustom(); $("fstart").value = m.start_date || "";
   if (m.end_date) { const base = new Date((m.start_date || String(m.created_at || "").slice(0, 10) || isoDay(new Date())) + "T12:00:00"), end = new Date(m.end_date + "T12:00:00"); $("fdur").value = Math.max(1, Math.round((end - base) / 864e5) + 1); $("funit").value = "d"; } else { $("fdur").value = ""; $("funit").value = ""; }
   endHint();
   $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active || !!m.pending; $("ftitle").textContent = m.pending ? "עריכת עדכון שנשלח מהאתר (ממתין לאישור)" : "עריכת עדכון"; $("saveApprove").hidden = !m.pending; $("cancel").hidden = false; $("smsg").textContent = "";
@@ -176,11 +176,16 @@ async function rowClick(e) {
 $("rows").addEventListener("click", rowClick);
 $("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
+// נושא: אחד הנושאים, או "אחר" = כיתוב ידני (נשמר ככותרת; הנושא של עדכון קיים נשמר, ובעדכון חדש = עדכון כללי)
+let editCat = "other";
+function showCustom() { const c = $("fcat").value === "custom"; $("customWrap").hidden = !c; if (c && !$("fid").value) editCat = "other"; }
+$("fcat").addEventListener("change", () => { showCustom(); if ($("fcat").value === "custom") $("ftitle2").focus(); });
 ["fdur", "funit", "fstart"].forEach(id => $(id).addEventListener("input", endHint));
 $("funit").addEventListener("change", () => { if ($("funit").value && !$("fdur").value) $("fdur").value = 1; endHint(); });
 async function save(approve) {
+  if ($("fcat").value === "custom" && !$("ftitle2").value.trim()) { $("smsg").className = "msg bad"; $("smsg").textContent = "נא לכתוב את הכיתוב הידני (או לבחור נושא)"; $("ftitle2").focus(); return; }
   const msg = $("smsg"); msg.className = "msg"; msg.textContent = "שומר…";
-  const body = { id: Number($("fid").value) || 0, title: $("ftitle2").value, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value || (endDate() ? isoDay(new Date()) : ""), end_date: endDate(), pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
+  const body = { id: Number($("fid").value) || 0, title: $("fcat").value === "custom" ? $("ftitle2").value.trim() : "", text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value === "custom" ? editCat : $("fcat").value, start_date: $("fstart").value || (endDate() ? isoDay(new Date()) : ""), end_date: endDate(), pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
   const r = await api("/api/news", { method: "POST", body: JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); return; }
