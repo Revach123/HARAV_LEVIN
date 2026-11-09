@@ -390,6 +390,45 @@ def dw_get(path):
     raise RuntimeError(f"datawise {path}: {last}")
 
 
+# ── מפתח חברה לאג"ח: מספר תאגיד; ואם אין בנתוני הבורסה - מספר המנפיק (issuerId), ובחברה שבמאיה יש לה מספר תאגיד - הוא ──
+# כך גם חברות זרות / חוץ-בורסאיות (בלי ח.פ. ישראלי) מותאמות לעסק לפי המספר היחיד שנשמר בו.
+# ממשלתי / מק"מ / בנק ישראל אינם נכנסים לרשימה כלל (אין להם מספר תאגיד, ולכן אין גם מפתח לפי מנפיק).
+_GOV_COARSE = {"אג\"ח ממשלתי", "מק\"מ"}
+_MAYA_CHP_BY_ISSUER = None
+
+
+def _maya_chp_by_issuer():
+    """{מזהה חברה במאיה (= issuerId): מספר תאגיד} מ-data/bonds_list/maya_companies.json (נבנה שבועית); ריק אם אין."""
+    global _MAYA_CHP_BY_ISSUER
+    if _MAYA_CHP_BY_ISSUER is None:
+        out = {}
+        try:
+            with open(os.path.join(OUT, "maya_companies.json"), encoding="utf-8") as f:
+                for c in json.load(f).get("companies", []):
+                    if c.get("chp"):
+                        out[str(c["id"])] = chp_norm(c["chp"])
+        except (OSError, ValueError):
+            pass
+        _MAYA_CHP_BY_ISSUER = out
+    return _MAYA_CHP_BY_ISSUER
+
+
+def bond_key(r, types):
+    """מפתח החברה של שורת ניירות מהבורסה: corporateId; אחרת (לא ממשלתי) issuerId או מספר התאגיד שלו במאיה; אחרת ''."""
+    k = chp_norm(r.get("corporateId"))
+    if k and k != "0":
+        return k
+    ac = coarse_type(types.get(str(r.get("securityFullTypeCode") or ""), ""))
+    if ac in _GOV_COARSE or ac not in BOND_COARSE:
+        return ""
+    iid = r.get("issuerId")
+    try:
+        iid = str(int(iid))
+    except (TypeError, ValueError):
+        return ""
+    return _maya_chp_by_issuer().get(iid) or iid
+
+
 def fetch_datawise_securities():
     """רשימת ניירות של יום המסחר האחרון + מילון סוגים. -> (rows, date, types) או None."""
     try:
@@ -412,7 +451,7 @@ def cross_check(bonds, approved, dw):
         return {"status": "datawise_unavailable"}
     rows, dw_date, types = dw
     expected = {int(r["securityId"]) for r in rows
-                if chp_norm(r.get("corporateId")) in approved
+                if bond_key(r, types) in approved
                 and str(r.get("securityFullTypeCode") or "").startswith(BOND_CODE_PREFIXES)
                 and coarse_type(types.get(str(r.get("securityFullTypeCode")), "")) in BOND_COARSE}
     mine = {b["security_id"] for b in bonds if not b.get("manual")}
@@ -420,7 +459,7 @@ def cross_check(bonds, approved, dw):
     by_id = {int(r["securityId"]): r for r in rows}
     detail = [{"id": i, "name": (by_id[i].get("securityName") or "").strip(),
                "type": types.get(str(by_id[i].get("securityFullTypeCode")), ""),
-               "code": by_id[i].get("securityFullTypeCode"), "chp": chp_norm(by_id[i].get("corporateId"))}
+               "code": by_id[i].get("securityFullTypeCode"), "chp": bond_key(by_id[i], types)}
               for i in missing[:300]]
     limit = max(MAX_MISSING_ABS, int(MAX_MISSING_PCT * len(expected)))
     return {"status": "ok" if len(missing) <= limit else "too_many_missing",
@@ -533,7 +572,7 @@ def bond_rows_by_chp(dw_rows, types):
         stype = types.get(code, "")
         if coarse_type(stype) not in BOND_COARSE:
             continue
-        k = chp_norm(r.get("corporateId"))
+        k = bond_key(r, types)
         if k:
             out.setdefault(k, []).append((r, stype))
     return out
@@ -576,6 +615,18 @@ def stabilize_names(rows):
         json.dump(seen, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
+def write_pool(by_chp):
+    """מאגר האג"ח: כל האג"ח הסחירות בבורסה (לא ממשלתי / מק"מ / בנק ישראל), לפי מפתח החברה - גם חברות שאינן מאושרות. לא מוצג באתר:
+    האתר מציג רק את המאושרות (bonds_*.json); המאגר משמש בנייה מהירה מיד אחרי שמאשרים עסק (fast_build)."""
+    rows = [{"security_id": int(r["securityId"]), "security_name": (r.get("securityName") or "").strip(), "symbol": r.get("symbol") or "",
+             "security_type": stype, "key": k, "issuer_id": r.get("issuerId"), "company_name": (r.get("companyName") or r.get("issuerName") or "").strip()}
+            for k, items in sorted(by_chp.items()) for r, stype in items]
+    os.makedirs(OUT, exist_ok=True)
+    with open(os.path.join(OUT, "bonds_pool.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": TODAY, "count": len(rows), "rows": rows}, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"pool: {len(rows)} bonds in {len(by_chp)} companies")
+
+
 def snapshot_from_datawise(by_chp):
     """מקור חלון הבחירה: כל האג"ח הסחירות של כל חברה, לפי datawise."""
     return {k: [{"security_id": int(r["securityId"]), "name": (r.get("securityName") or "").strip(),
@@ -601,7 +652,7 @@ def add_market_bonds(bonds, approved, manual, names, snapshot, dw, ids_fn=None):
         ac = coarse_type(stype)
         if ac not in BOND_COARSE:
             continue
-        k = chp_norm(r.get("corporateId"))
+        k = bond_key(r, types)
         name = (r.get("securityName") or "").strip()
         if k:
             snapshot.setdefault(k, []).append({"security_id": sid, "name": name, "symbol": r.get("symbol") or "", "type": stype})
@@ -671,6 +722,7 @@ def main(companies_path=None):
     dw_rows, _dw_date, dw_types = dw
     by_chp = bond_rows_by_chp(dw_rows, dw_types)
     names = company_names(companies)
+    write_pool(by_chp)
     bonds = []
     for k in sorted(set(approved) | set(manual)):
         bonds.extend(desired_rows(k, by_chp.get(k, []), approved, manual, names))
