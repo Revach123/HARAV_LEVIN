@@ -140,7 +140,7 @@ const API_BASE = "https://harav-levin.pages.dev"; // "" when hosted on the same 
 const COLUMNS = {
   companies: [
     { key:"permit_name", px:200,        label:"שם החברה",            cell:"name",  w:28 },
-    { key:"chp_number", px:95,         label:'ח"פ / ח"צ',                 cell:"num",   w:12 },
+    { key:"chp_number", px:95,         label:"מספר תאגיד",                  cell:"num",   w:12 },
     { key:"category", px:150,           label:"קטגוריה",             cell:"cat",   w:16 },          // האזור (אם יש) מוצג בסוגריים בתוך העמודה, בלי עמודה נפרדת
     { key:"permit_doc", px:190,         label:"היתר עיסקא",          cell:"doc",   w:18 },
     { key:"bonds_status", px:130,       label:'אג"ח',                cell:"bonds", w:20 },
@@ -268,6 +268,18 @@ function groupSubRows(list) {
   return out;
 }
 
+// מספר מנפיק (מזהה החברה בבורסה, data/bonds_list/maya_companies.json): מוצג בסוגריים אחרי מספר התאגיד. לחברה בלי מספר תאגיד המזהה הוא מספר הבורסה.
+const MAYA = { byChp: new Map(), noChp: new Set(), p: null };
+function mayaLoad() {
+  return MAYA.p || (MAYA.p = fetch(`${API_BASE}/data/bonds_list/maya_companies.json`).then(r => (r.ok ? r.json() : null)).then(d => {
+    for (const c of (d && d.companies) || []) { if (c.chp) MAYA.byChp.set(String(c.chp).replace(/^0+(?=\d)/, ""), c.id); else MAYA.noChp.add(String(c.id)); }
+  }).catch(() => {}));
+}
+function chpShown(v) {
+  const k = String(v ?? "").trim().replace(/^0+(?=\d)/, ""); if (!k) return v ?? "";
+  return MAYA.byChp.has(k) ? `${v} (מספר מנפיק ${MAYA.byChp.get(k)})` : MAYA.noChp.has(k) ? `${v} (מספר מנפיק)` : v;
+}
+
 // ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
 let FULL_INST = false; try { FULL_INST = sessionStorage.getItem("fullInst") === "1"; } catch {}
 async function mountList(container, type) {
@@ -308,6 +320,7 @@ async function mountList(container, type) {
   }
 
   if (topic === "companies") { rows = await withDocLinks(rows, level); markSubRows(rows); markRecentCompanies(rows); }
+  await mayaLoad();
   const state = { rows, filtered: rows, cols, topic, liveTs: "", instCount, instErr };
   if (topic === "bonds" && !usedSample) {          // שערים עדכניים מהבורסה (עיכוב הבורסה כ-15 דקות): הטבלה מוצגת מיד עם שאר הנתונים, ובעמודות השער והתשואה ספינר עד שהשערים מגיעים והתשואות מחושבות ברקע
     state.liveLoading = true; for (const r of rows) if (!r._nontrad) r._livePending = true;
@@ -419,7 +432,7 @@ function render(container, state, type, usedSample) {
   const search = el("input","search"); search.type="search"; search.placeholder="חיפוש…";
   const csvBtn = el("button","btn-csv","⬇ ייצוא לאקסל");
   csvBtn.onclick = () => {   // קובץ Excel כטבלה: כל השורות של הרשימה, עם העמודות המוצגות
-    const cellVal = (c, r) => c.cell === "cat" ? catWithRegion(r) : c.cell === "bonds" ? (r[c.key] || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח')) : (c.cell === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2))) : (r[c.key] ?? ""));
+    const cellVal = (c, r) => c.cell === "cat" ? catWithRegion(r) : c.cell === "bonds" ? (r[c.key] || (Number(r.approved) === 1 ? 'יש אג"ח - מאושר' : 'אין אג"ח')) : (c.cell === "pct" ? (r[c.key] === "" || r[c.key] == null ? "" : parseFloat(Number(r[c.key]).toFixed(2))) : (c.key === "chp_number" ? chpShown(r[c.key]) : (r[c.key] ?? "")));
     const d = new Date(), dd = n => String(n).padStart(2, "0");          // שם הקובץ עם תאריך ההורדה: bonds-general-27-10-2026.xlsx
     downloadXlsx(`${type}-${dd(d.getDate())}-${dd(d.getMonth() + 1)}-${d.getFullYear()}`, type.startsWith("bonds") ? "איגרות חוב" : "חברות", state.cols.map(c => c.label),
       state.rows.map(r => state.cols.map(c => cellVal(c, r))), state.cols.map(c => c.cell === "pct" || (c.cell === "num" && c.key !== "chp_number")));
@@ -766,7 +779,7 @@ function cellFor(col, val, row) {
     return td;
   }
   if (col.cell === "cat")  { td.textContent = catWithRegion(row); return td; }
-  if (col.cell === "num")  { td.className = "num"; td.textContent = val ?? ""; return td; }
+  if (col.cell === "num")  { td.className = "num"; td.textContent = col.key === "chp_number" ? chpShown(val) : (val ?? ""); return td; }
   if (col.cell === "pct")  { td.className = "num"; td.textContent = fmtPct(val); return td; }
   if (col.cell === "chg")  {
     td.className = "num";
