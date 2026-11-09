@@ -1,0 +1,30 @@
+{
+ "key": "44528798375",
+ "rows": [
+  {
+   "id": "mw936ww5lhwi",
+   "chp_number": "44528798375",
+   "permit_name": "נורסטאר החזקות אינק",
+   "registrar_name": "נורסטאר החזקות אינק",
+   "agch_approved": "כן",
+   "visibility": "פרטי",
+   "registry_status": "",
+   "notes": "",
+   "notes_scope": "",
+   "tase_has_agch": "יש"
+  }
+ ],
+ "chp_repr": [
+  "'44528798375'"
+ ],
+ "in_approved": true,
+ "approved_entry": {
+  "company": "נורסטאר החזקות אינק",
+  "agch_approved": "כן",
+  "goyim": false,
+  "is_private": true,
+  "bond_scope": "both",
+  "bond_note": ""
+ },
+ "approved_count": 788
+}
