@@ -1,12 +1,37 @@
 {
- "updated": "2026-11-08",
+ "updated": "2026-11-09",
  "status": "ok",
  "datawise_date": "2026-11-06",
- "expected": 776,
- "maya": 776,
+ "expected": 778,
+ "maya": 778,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "dropped_no_terms": []
+ "dropped_no_terms": [
+  {
+   "security_id": 7390263,
+   "security_name": "אלקטרה אגח ו",
+   "company": "אלקטרה  בע\"מ",
+   "chp_number": "520028911"
+  },
+  {
+   "security_id": 1221787,
+   "security_name": "פטרוכימים אגחיא",
+   "company": "מפעלים פטרוכימיים בישראל בעמ",
+   "chp_number": "520029315"
+  },
+  {
+   "security_id": 1190297,
+   "security_name": "פטרוכימים אגח י",
+   "company": "מפעלים פטרוכימיים בישראל בעמ",
+   "chp_number": "520029315"
+  },
+  {
+   "security_id": 1242700,
+   "security_name": "איילון התח נד ו",
+   "company": "איילון חברה לביטוח   בע\"מ",
+   "chp_number": "520030677"
+  }
+ ]
 }
