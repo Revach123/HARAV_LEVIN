@@ -50,10 +50,6 @@ export async function onRequestPut({ request, env, params }) {
     if (result.changes === 0) {
       return Response.json({ error: "העסק כבר לא קיים במאגר (אולי נמחק בינתיים). רעננו את הדף" }, { status: 404 });
     }
-    if (body.issuer_id !== undefined) {          // מספר מנפיק בבורסה (migrations/0024); לפני המיגרציה מתעלמים
-      try { await env.DB.prepare("UPDATE businesses SET issuer_id = ? WHERE id = ?").bind(String(body.issuer_id || "").replace(/\D/g, "").slice(0, 12), id).run(); }
-      catch (e) { if (!/no such column: issuer_id/i.test(String(e.message))) throw e; }
-    }
     if (body.heb_name !== undefined) {          // שם העסק בעברית (migrations/0023); לפני המיגרציה מתעלמים
       try { await env.DB.prepare("UPDATE businesses SET heb_name = ? WHERE id = ?").bind(String(body.heb_name || "").trim().slice(0, 200), id).run(); }
       catch (e) { if (!/no such column: heb_name/i.test(String(e.message))) throw e; }

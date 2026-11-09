@@ -1336,7 +1336,7 @@ function admRowsHtml(items, grp0) {
             return `
               <tr class="${b0._isSub ? "sub-row" : ""}${alt}${bsubs.length ? " has-bonds" : ""}">
                 <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml(((b0._isSub ? b.permit_name : "") || b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${hebBox(b0)}${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div>${!b0._isSub && (b.chp_number || "").toString().trim() ? subAddWidget(b.id) : ""}</td>
-                <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${(b.chp_number || "").toString().trim() || b0._isSub ? (escHtml(b.chp_number)||"—") : `${(b.issuer_id || "").toString().trim() ? `<span style="direction:rtl;display:block;margin-bottom:3px;">${escHtml(String(b.issuer_id).trim())} (מספר מנפיק)</span>` : ""}<button type="button" class="btn-ghost" style="padding:1px 8px;font-size:12px;direction:rtl" onclick="addChp('${b.id}')">➕ הוספת ח.פ.</button>`}</span>
+                <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${(b.chp_number || "").toString().trim() || b0._isSub ? (escHtml(b.chp_number)||"—") : `<button type="button" class="btn-ghost" style="padding:1px 8px;font-size:12px;direction:rtl" onclick="addChp('${b.id}')">➕ הוספת ח.פ.</button>`}</span>
                   <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
                   <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
@@ -1442,11 +1442,6 @@ function renderForm() {
         <div id="permit-input-wrap" style="margin-top:8px;${permitMode === "other" ? "" : "display:none;"}">
           <input type="text" id="f-permit" value="${permitMode === "other" ? escHtml(b.permit_name||"") : ""}" autocomplete="off">
         </div>
-      </div>
-
-      <div class="field" id="issuer-field">
-        <label>מספר מנפיק בבורסה <span style="color:var(--light);font-weight:400">(לחברה בלי מספר תאגיד)</span></label>
-        <input type="text" id="f-issuer" value="${escHtml(b.issuer_id||"")}" inputmode="numeric" autocomplete="off" oninput="formDirty=true" style="max-width:200px;">
       </div>
 
       <div class="field" id="heb-field" style="display:none;">
@@ -3102,7 +3097,6 @@ async function doSave() {
     registrar_name: regName,
     permit_name:    permitName,
     heb_name:       (document.getElementById("f-heb")?.value || "").trim(),
-    issuer_id:      (document.getElementById("f-issuer")?.value || "").replace(/\D/g, "").slice(0, 12),
     category:       (document.getElementById("f-cat")?.value       || "").trim(),
     permits_category: (document.getElementById("f-pcat")?.value    || "").trim(),
     region:         (document.getElementById("f-region")?.value    || "").trim(),

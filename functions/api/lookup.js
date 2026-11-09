@@ -88,6 +88,20 @@ async function searchRegistryDb(db, number) {
   return null;
 }
 
+// החברות המנפיקות במאיה (data/bonds_list/maya_companies.json, נבנה שבועית): חברות עם מספר תאגיד (כולל זרות), וחברות בלי מספר תאגיד -
+// להן המזהה הוא מספר החברה בבורסה (id). לכל חברה מספר מזהה אחד.
+export async function loadMayaCompanies(request, env) {
+  try {
+    const u = new URL("/data/bonds_list/maya_companies.json", request.url);
+    const res = await (env.ASSETS ? env.ASSETS.fetch(u) : fetch(u));
+    if (!res.ok) return [];
+    const d = await res.json();
+    return Array.isArray(d.companies) ? d.companies : [];
+  } catch { return []; }
+}
+export const mayaKey = c => String(c.chp || c.id || "");
+const MAYA_BIZTYPE = "חברה מנפיקה בבורסה";
+
 export async function onRequestGet({ request, env }) {
   const url    = new URL(request.url);
   const number = (url.searchParams.get("number") || "").trim();
@@ -106,6 +120,11 @@ export async function onRequestGet({ request, env }) {
       }));
     });
     if (found) return Response.json(found);
+    // לא ברשמים הישראליים: חברה מנפיקה בבורסה (חברה זרה / בלי מספר תאגיד). קודם לפי מספר תאגיד, ואז (לחברה בלי מספר) לפי מזהה הבורסה
+    const norm = v => String(v || "").trim().replace(/^0+(?=\d)/, "");
+    const all = await loadMayaCompanies(request, env);
+    const m = all.find(c => c.chp && norm(c.chp) === norm(number)) || all.find(c => !c.chp && String(c.id) === norm(number));
+    if (m && m.name) return Response.json({ found: true, entityType: "company", name: cleanName(m.name), bizType: MAYA_BIZTYPE, type: "", status: "" });
     return Response.json({ found: false });
   } catch (e) {
     return Response.json({ error: "Failed to reach registrar: " + e.message }, { status: 502 });
