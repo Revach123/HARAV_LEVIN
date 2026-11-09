@@ -1993,7 +1993,7 @@ fetch("/data/bonds_list/maya_companies.json").then(r => (r.ok ? r.json() : null)
 }).catch(() => {});
 function chpShown(v) {
   const k = String(v ?? "").trim().replace(/^0+(?=\d)/, ""); if (!k) return "";
-  return MAYA.byChp.has(k) ? `${v} (מספר מנפיק ${MAYA.byChp.get(k)})` : MAYA.noChp.has(k) ? `${v} (מספר מנפיק)` : String(v);
+  return MAYA.noChp.has(k) ? `${v} (מספר מנפיק)` : String(v);
 }
 const chpLbl = () => "מספר תאגיד";          // כותרת אחידה: מספר תאגיד (ח.פ. / ח.צ. / שותפות / עמותה / חברה זרה)
 const GS_BIZ_LABELS = { permit_name: "שם בהיתר", registrar_name: "שם ברשם", chp_number: 'ח.פ.', entity_type: "סוג ישות", category: "קטגוריה", region: "אזור", biz_type: "סוג עסק",
