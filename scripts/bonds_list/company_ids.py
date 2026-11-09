@@ -16,6 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_approved_bonds as b  # noqa: E402
 
 PATH = os.path.join(b.OUT, "maya_company_ids.json")
+COMPANIES_PATH = os.path.join(b.OUT, "maya_companies.json")      # רשימת החברות המנפיקות במאיה (שם + מספר תאגיד, כולל זרות): לחיפוש בניהול
+_NAMES = {}                                                       # ח"פ/מספר תאגיד -> שם החברה, ממולא בסריקה
 MAX_AGE_DAYS = 8
 MIN_FOUND = 1000          # מתחת לזה הסריקה נחשבת חלקית/חסומה
 EDGE_WARN = 0.95          # מזהה מקסימלי קרוב לגבול הסריקה = ייתכנו חברות מעבר לגבול
@@ -37,6 +39,9 @@ def scan(max_id=None, fetch=None):
             k = b.chp_norm(body.get("corporateNo"))
             if k:
                 ids.setdefault(k, cid)
+                nm = str(body.get("name") or body.get("longName") or "").strip()
+                if nm:
+                    _NAMES.setdefault(k, nm)
     return ids, top, errors
 
 
@@ -75,6 +80,12 @@ def refresh(max_id=None, fetch=None):
     with open(PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
     print(f"company ids: {len(ids)} companies, highest id {top}, {errors} errors")
+    # רשימת החברות (שם + מספר + מזהה מאיה), לחיפוש בטופס הוספת עסק; רק חברות ששמן ידוע
+    companies = [{"chp": k, "name": _NAMES[k], "id": v} for k, v in sorted(ids.items()) if _NAMES.get(k)]
+    if companies:
+        with open(COMPANIES_PATH, "w", encoding="utf-8") as f:
+            json.dump({"updated": data["updated"], "companies": companies}, f, ensure_ascii=False, separators=(",", ":"))
+        print(f"company list: {len(companies)} companies with names")
     return data
 
 

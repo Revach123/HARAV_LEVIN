@@ -1407,9 +1407,9 @@ function renderForm() {
       <div class="lookup-box" id="lookup-box" style="${formModal && noChp ? "display:none;" : ""}">
         <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "grid-template-columns:1.4fr 1fr 1fr;")}">
           <div class="big-card">
-            <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
+            <span class="ico">🔢</span><b>עסק עם מספר תאגיד</b>
             <div class="lookup-row" id="chp-row">
-              <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
+              <input type="text" id="chp" placeholder="מספר תאגיד (ח.פ. / שותפות / עמותה / חברה זרה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
               <span id="chp-spin" class="spin" style="display:none;"></span>
             </div>
             <div id="name-search-wrap" style="margin-top:8px;">
@@ -1423,7 +1423,13 @@ function renderForm() {
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
-          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש ח.פ.</button>
+          <span style="display:flex;gap:6px;flex-wrap:wrap;"><button type="button" class="btn-ghost" onclick="issuerToggle()">🔎 חיפוש ברשימת החברות המנפיקות אג"ח</button>
+          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש מספר תאגיד</button></span>
+        </div>
+        <div id="issuer-panel" style="display:none;margin:6px 0 10px;">
+          <input type="search" id="issq" placeholder="שם חברה מנפיקה (חיפוש מקורב)" autocomplete="off" oninput="issuerSearch(this.value)"
+            style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:4px;font-size:14px;background:#fff;">
+          <div id="iss-out" style="text-align:right;"></div>
         </div>
       </div>
 
@@ -2104,12 +2110,12 @@ function bindEvents() {
         const lo0 = document.getElementById("lookup-out"); if (lo0) lo0.innerHTML = lookupOutHtml();
         updateFormGate(); return;
       }
-      if (!chpResult) { const lo = document.getElementById("lookup-out"); if (lo && !/^\d{7,10}$/.test(n)) lo.innerHTML = lookupOutHtml(); }
+      if (!chpResult) { const lo = document.getElementById("lookup-out"); if (lo && !/^\d{7,12}$/.test(n)) lo.innerHTML = lookupOutHtml(); }
       const ns = document.getElementById("ns-out");
       if (/^\d{3,8}$/.test(n)) { clearTimeout(pt); pt = setTimeout(() => registrySearchInto(n), 300); }            // תחילת מספר: רשימת חברות שהמספר שלהן מתחיל כך
       else if (ns && !/^\d{9,10}$/.test(n)) { clearTimeout(pt); ns.innerHTML = ""; }
       if (/^\d{9,10}$/.test(n)) { clearTimeout(pt); if (ns) ns.innerHTML = ""; }
-      if (/^\d{7,10}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, n.length >= 9 ? 0 : 450);   // מ-7 ספרות: חיפוש ברשם אוטומטי
+      if (/^\d{7,12}$/.test(n) && n !== lastAutoNumber) lt = setTimeout(() => { lastAutoNumber = n; doLookup(true); }, n.length >= 9 ? 0 : 450);   // מ-7 ספרות: חיפוש ברשם אוטומטי
     });
   }
 
@@ -2251,6 +2257,50 @@ function permitPick(m) {
   const wrap = document.getElementById("permit-input-wrap"); if (wrap) wrap.style.display = m === "other" ? "" : "none";
   if (m === "other") document.getElementById("f-permit")?.focus();
   updatePermitGate();
+}
+// חיפוש מקורב (FUZZY) ברשימת החברות המנפיקות במאיה (data/bonds_list/maya_companies.json): לעסק בלי ח.פ. שקיים ברשימת הבורסה.
+// בחירה מעבירה למצב "עסק עם מספר תאגיד" ומשלימה את הפרטים (כולל חברות זרות).
+let MAYA_LIST = null;
+async function mayaList() {
+  if (MAYA_LIST) return MAYA_LIST;
+  try { const r = await fetch("/data/bonds_list/maya_companies.json", { cache: "no-cache" }); MAYA_LIST = r.ok ? ((await r.json()).companies || []) : []; }
+  catch { MAYA_LIST = []; }
+  return MAYA_LIST;
+}
+const issNorm = x => String(x || "").toLowerCase().replace(/בע"?מ|בע״מ|\b(ltd|inc|plc|holdings?)\b/g, " ").replace(/[^0-9a-z\u0590-\u05ff]+/g, " ").trim();
+const issGrams = x => { const t = " " + x.replace(/ /g, "  ") + " ", g = new Map(); for (let i = 0; i + 3 <= t.length; i++) { const k = t.slice(i, i + 3); g.set(k, (g.get(k) || 0) + 1); } return g; };
+function issScore(q, name) {
+  const a = issNorm(q), b = issNorm(name); if (!a || !b) return 0;
+  if (b === a) return 2;
+  const words = a.split(" ").filter(Boolean);
+  if (words.every(w => b.includes(w))) return 1.5 + (b.startsWith(a) ? 0.3 : 0) - Math.min(b.length / 400, 0.2);          // כל המילים נמצאות (כולל חלקי מילה)
+  const ga = issGrams(a), gb = issGrams(b); let inter = 0, ta = 0, tb = 0;          // דמיון משולשות אותיות (טעות כתיב / שם חלקי)
+  ga.forEach((n, k) => { ta += n; inter += Math.min(n, gb.get(k) || 0); }); gb.forEach(n => { tb += n; });
+  return (2 * inter) / (ta + tb || 1);
+}
+async function issuerToggle() {
+  const p = document.getElementById("issuer-panel"); if (!p) return;
+  p.style.display = p.style.display === "none" ? "" : "none";
+  if (p.style.display !== "none") { document.getElementById("issq")?.focus(); mayaList(); }
+}
+async function issuerSearch(q) {
+  const out = document.getElementById("iss-out"); if (!out) return;
+  q = String(q || "").trim();
+  if (q.length < 2) { out.innerHTML = ""; return; }
+  const list = await mayaList();
+  if (!list.length) { out.innerHTML = `<div class="gs-info" style="margin:6px 0;">רשימת החברות המנפיקות עוד לא נטענה (נבנית שבועית)</div>`; return; }
+  const rs = list.map(c => ({ c, s: issScore(q, c.name) })).filter(x => x.s >= 0.4).sort((x, y) => y.s - x.s).slice(0, 12);
+  out.innerHTML = rs.length ? rs.map(({ c }) => { const ex = existingBiz(c.chp);
+      return `<div class="ns-row addable" data-chp="${escHtml(String(c.chp))}"><div><b>${escHtml(c.name)}</b>
+        <div class="m">מספר תאגיד ${escHtml(String(c.chp))}</div><div>${statusBadge(ex)}</div></div>${ex.length ? circ("edit", "") : circ("add", "")}</div>`; }).join("")
+    : `<div class="gs-info" style="margin:6px 0;">לא נמצאה חברה בשם הזה ברשימה</div>`;
+  out.querySelectorAll(".ns-row.addable").forEach(row => row.addEventListener("click", () => issuerPick(row.dataset.chp)));
+}
+function issuerPick(chp) {
+  const ex = existingBiz(chp);
+  if (ex.length) { openFormSkip(ex[0].id); return; }
+  if (noChp) toggleNoChp();                  // חוזרים למצב "עסק עם מספר תאגיד"
+  addCompany(chp);                           // ממלא את המספר ומשלים פרטים (חיפוש במאגרי הרשם ובחברות המנפיקות)
 }
 function toggleNoChp() {
   noChp = !noChp;

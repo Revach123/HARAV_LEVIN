@@ -88,6 +88,18 @@ async function searchRegistryDb(db, number) {
   return null;
 }
 
+// חברות מנפיקות במאיה (data/bonds_list/maya_companies.json, נבנה שבועית): כולל חברות זרות ומספרי תאגיד שאינם ח.פ. ישראלי.
+export async function loadMayaCompanies(request, env) {
+  try {
+    const u = new URL("/data/bonds_list/maya_companies.json", request.url);
+    const res = await (env.ASSETS ? env.ASSETS.fetch(u) : fetch(u));
+    if (!res.ok) return [];
+    const d = await res.json();
+    return Array.isArray(d.companies) ? d.companies : [];
+  } catch { return []; }
+}
+const MAYA_BIZTYPE = "חברה מנפיקה בבורסה (מספר תאגיד)";
+
 export async function onRequestGet({ request, env }) {
   const url    = new URL(request.url);
   const number = (url.searchParams.get("number") || "").trim();
@@ -106,6 +118,10 @@ export async function onRequestGet({ request, env }) {
       }));
     });
     if (found) return Response.json(found);
+    // לא ברשמים הישראליים: חברה מנפיקה בבורסה (למשל חברה זרה, או מספר תאגיד שאינו ח.פ.)
+    const norm = v => String(v || "").trim().replace(/^0+(?=\d)/, "");
+    const m = (await loadMayaCompanies(request, env)).find(c => norm(c.chp) === norm(number));
+    if (m) return Response.json({ found: true, entityType: "company", name: cleanName(m.name), bizType: MAYA_BIZTYPE, type: "", status: "" });
     return Response.json({ found: false });
   } catch (e) {
     return Response.json({ error: "Failed to reach registrar: " + e.message }, { status: 502 });
