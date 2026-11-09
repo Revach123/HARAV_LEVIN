@@ -237,6 +237,29 @@ def datawise_key():
     return ""
 
 
+def load_maya_companies():
+    """data/bonds_list/maya_companies.json (סריקת מאיה השבועית) -> ({מספר תאגיד מנורמל: שם}, {מזהה בורסה של חברה בלי מספר תאגיד: שם}, {מזהה בורסה: מספר תאגיד}).
+    חברות שאינן ברשם הישראלי (זרות / חוץ-בורסאיות): השם מגיע מכאן. קובץ חסר = ריק."""
+    by_chp, by_id_nochp, chp_by_id = {}, {}, {}
+    try:
+        with open(os.path.join(ROOT, "data", "bonds_list", "maya_companies.json"), encoding="utf-8") as fh:
+            for c in json.load(fh).get("companies", []):
+                name = str(c.get("name") or "").strip()
+                if c.get("chp"):
+                    chp_by_id[str(c["id"])] = maya_key(c["chp"])
+                    if name:
+                        by_chp[maya_key(c["chp"])] = name
+                elif name:
+                    by_id_nochp[str(c["id"])] = name
+    except (OSError, ValueError):
+        print("WARNING: maya_companies.json missing - no names from Maya", file=sys.stderr)
+    return by_chp, by_id_nochp, chp_by_id
+
+
+def maya_key(v):
+    return re.sub(r"^0+(?=\d)", "", str(v or "").strip())
+
+
 def fetch_bond_corporate_ids():
     """ח"פים עם אג"ח *סחירה* (datawise כולל רק ניירות סחירים), כולל ני"ע מסחריים."""
     headers = {"accept": "application/json", "accept-language": "he-IL", "apikey": datawise_key()}
@@ -251,6 +274,14 @@ def fetch_bond_corporate_ids():
                    if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES
                    }
             ids.discard("")
+            ids.discard("0")
+            # חברה בלי מספר תאגיד בנתוני הבורסה: לפי מספר המנפיק (issuerId) או מספר התאגיד שלו במאיה
+            _, _, chp_by_id = load_maya_companies()
+            for r in rows:
+                if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES and str(r.get("corporateId") or "").strip() in ("", "0") \
+                        and r.get("issuerId") not in (None, ""):
+                    iid = str(int(r["issuerId"]))
+                    ids.add(chp_by_id.get(iid) or iid)
             return ids, len(rows), str(dt)
     return None, 0, None
 
@@ -287,8 +318,9 @@ def is_liquidated(status):
     return str(status or "").startswith(("מחוסל", "חיסול", "מחוק", "נגרע"))
 
 
-def compute_changes(businesses, registry, bond_ids, any_extra=frozenset()):
+def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=None):
     changes = []
+    maya_chp, maya_nochp, _ = maya or ({}, {}, {})
     for b in businesses:
         key = numeric_chp(b.get("chp_number"))
         info = registry.get(key) if key else None
@@ -302,6 +334,12 @@ def compute_changes(businesses, registry, bond_ids, any_extra=frozenset()):
             if info["biz_type"] != (b.get("biz_type") or "").strip():
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "biz_type",
                                 "old": b.get("biz_type"), "new": info["biz_type"]})
+        if not info:          # לא ברשם הישראלי: השם מרשימת החברות של מאיה (חברה זרה / חוץ-בורסאית) - גם בעדכונים מאוחרים
+            mk = maya_key(b.get("chp_number"))
+            mname = maya_chp.get(mk) or maya_nochp.get(mk) if mk else ""
+            if mname and mname != (b.get("registrar_name") or "").strip():
+                changes.append({"id": b["id"], "chp": b["chp_number"], "field": "registrar_name",
+                                "old": b.get("registrar_name"), "new": mname})
         if bond_ids is not None:
             has = "יש" if str(b.get("chp_number") or "").strip() in bond_ids else "אין"
             if has != (b.get("tase_has_agch") or "").strip():
@@ -394,7 +432,7 @@ def main(apply=False, scope="all"):
     if scope == "bonds" and bond_ids is None:
         sys.exit("datawise unavailable or too small - nothing was updated")
 
-    changes = compute_changes(businesses, registry, bond_ids, load_any_bond_chps() if bond_ids is not None else frozenset())
+    changes = compute_changes(businesses, registry, bond_ids, load_any_bond_chps() if bond_ids is not None else frozenset(), load_maya_companies())
     not_found = [{"id": b["id"], "chp": b["chp_number"], "permit_name": b.get("permit_name"),
                   "registrar_name": b.get("registrar_name"), "entity_type": b.get("entity_type"),
                   "biz_type": b.get("biz_type")}
