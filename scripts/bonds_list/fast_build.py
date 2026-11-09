@@ -46,7 +46,7 @@ def main(chp_arg=""):
 
     current = {r["chp_number"] for r in regular}
     targets = set(manual) | {r["chp_number"] for r in regular if r.get("manual")}
-    if re.fullmatch(r"\d{4,9}", chp_arg or ""):
+    if re.fullmatch(r"[0-9A-Za-z\-/]{3,20}", chp_arg or ""):
         targets.add(b.chp_norm(chp_arg))
     targets |= {k for k in approved if k not in current and by_chp.get(k)}       # אושרה ועדיין אין לה שורות
     targets |= {k for k in current if k not in approved and k not in manual}      # הפסיקה להיות מאושרת
