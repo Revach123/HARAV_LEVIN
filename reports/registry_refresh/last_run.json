@@ -2,64 +2,113 @@
  "summary": {
   "scope": "all",
   "recovered_by_single_lookup": 0,
-  "unfound_after_batch": 88,
+  "unfound_after_batch": 89,
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 91
+   "biz_type": 94
   },
   "empty_after": {
    "registrar_name": 90,
-   "biz_type": 90
+   "biz_type": 91
   },
-  "updated": "2026-11-08T09:31:18.751269Z",
+  "updated": "2026-11-09T10:20:02.272248Z",
   "source": "d1",
-  "businesses": 1284,
-  "numeric_chp": 1280,
-  "found_in_registry": 1192,
+  "businesses": 1288,
+  "numeric_chp": 1284,
+  "found_in_registry": 1195,
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2239,
   "datawise_date": "2026-11-06",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 0,
-   "biz_type": 1,
+   "registrar_name": 1,
+   "biz_type": 3,
    "tase_has_agch": 0,
-   "registry_status": 1,
-   "has_agch_any": 0,
-   "permits_category": 0
+   "registry_status": 3,
+   "has_agch_any": 1,
+   "permits_category": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 1,
+   "biz_type": 3,
    "tase_has_agch": 0,
-   "registry_status": 1,
+   "registry_status": 3,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "פעילה": 1080,
-   "לא ידוע": 154,
+   "פעילה": 1083,
+   "לא ידוע": 155,
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 3,
   "problems": []
  },
  "changes": [
   {
-   "id": "mw6waxqamxxv",
-   "chp": "515741247",
+   "id": "mw7o15f11jz3",
+   "chp": "516496544",
    "field": "registry_status",
    "old": "",
    "new": "פעילה"
   },
   {
-   "id": "mw6waxqamxxv",
-   "chp": "515741247",
+   "id": "mw7o15f11jz3",
+   "chp": "516496544",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mw82ntdcvqnq",
+   "chp": "514960178",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw82ntdcvqnq",
+   "chp": "514960178",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  },
+  {
+   "id": "mw82ntdcvqnq",
+   "chp": "514960178",
+   "field": "has_agch_any",
+   "old": "אין",
+   "new": "יש"
+  },
+  {
+   "id": "mw82ntdcvqnq",
+   "chp": "514960178",
+   "field": "permits_category",
+   "old": "חברות נדל\"ן ובינוי",
+   "new": "חברות נדל\"ן ובינוי|חברות מנפיקות אג\"ח"
+  },
+  {
+   "id": "mw92ze80j0sz",
+   "chp": "511512295",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mw92ze80j0sz",
+   "chp": "511512295",
+   "field": "registrar_name",
+   "old": "נורסטאר ישראל בע\"מ",
+   "new": "נורסטאר ישראל  בע\"מ"
+  },
+  {
+   "id": "mw92ze80j0sz",
+   "chp": "511512295",
    "field": "biz_type",
    "old": "",
    "new": "חברה פרטית - בע\"מ"
@@ -767,6 +816,14 @@
    "chp": "570011767",
    "permit_name": "גמל - על קופת תגמולים לעובדי אל-על אגודה שיתופית",
    "registrar_name": "",
+   "entity_type": "company",
+   "biz_type": ""
+  },
+  {
+   "id": "mw936ww5lhwi",
+   "chp": "44528798375",
+   "permit_name": "נורסטאר החזקות אינק",
+   "registrar_name": "נורסטאר החזקות אינק",
    "entity_type": "company",
    "biz_type": ""
   }
