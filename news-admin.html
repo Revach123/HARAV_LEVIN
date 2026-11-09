@@ -35,6 +35,15 @@ td.act{white-space:nowrap}td.act button{padding:5px 10px;font-size:14px}
 code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:inline-block;font-size:14px}
 .scroll{overflow-x:auto}
 #login{max-width:420px}
+.auto2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.auto2 section,#fundsSec{min-width:0}
+h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
+.al{list-style:none;margin:0;padding:0;font-size:14px}
+.al.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px}
+.al li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid #eef2f2;min-width:0}
+.al .d{flex:none;color:var(--muted);font-size:12px}
+.al .x{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.al .x b{font-weight:bold;color:var(--dark)}
+@media (max-width:700px){.auto2,.al.two{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -58,20 +67,20 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
     <div class="card">
       <h2 id="ftitle">עדכון חדש</h2>
       <input type="hidden" id="fid">
-      <label for="ftitle2">כותרת (השורה הראשונה בפס)</label>
-      <input type="text" id="ftitle2" maxlength="120" placeholder="למשל: הודעה חשובה  (ריק = לפי הנושא)">
-      <p class="hint" style="margin-bottom:12px">השורה השנייה היא נוסח העדכון.</p>
+      <label for="fcat">נושא (השורה הראשונה בפס)</label>
+      <select id="fcat"><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option><option value="other">עדכון כללי</option><option value="custom">אחר - כיתוב ידני…</option></select>
+      <div id="customWrap" hidden style="margin-top:8px"><input type="text" id="ftitle2" maxlength="120" placeholder="הכיתוב שיופיע בשורה הראשונה, למשל: הודעה חשובה"></div>
+      <p class="hint" style="margin-bottom:12px">בשורה הראשונה בפס מופיע הנושא (או הכיתוב הידני), ובשורה השנייה נוסח העדכון.</p>
       <label for="ftext">נוסח העדכון (השורה השנייה)</label>
       <textarea id="ftext" maxlength="400" placeholder="למשל: נוסף שטר היתר עיסקא חדש לרשימה"></textarea>
       <div class="grid">
-        <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option></select></div>
         <div><label for="fstart">מתאריך</label><input type="date" id="fstart"><p class="hint">ריק = מיד</p></div>
         <div><label for="fdur">למשך</label><div style="display:flex;gap:6px"><input type="number" id="fdur" min="1" max="999" inputmode="numeric" style="width:90px"><select id="funit"><option value="">ללא הגבלה</option><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></div><p class="hint" id="fendHint">ללא הגבלה</p></div>
       </div>
       <label for="flink">קישור (לא חובה)</label>
       <input type="url" id="flink" dir="ltr" placeholder="https://www.iska.co.il/...">
       <div class="chk">
-        <label><input type="checkbox" id="fpin"> מוצמד (מוצג ראשון)</label>
+        <label><input type="checkbox" id="fpin" checked> מוצמד (מוצג ראשון)</label>
         <label><input type="checkbox" id="factive" checked> פעיל</label>
       </div>
       <button type="button" id="save">שמירה</button>
@@ -86,16 +95,10 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
     </div>
 
     <div class="card">
-      <h2>מה מוצג עכשיו באתר</h2>
-      <p class="hint">העדכונים הידניים הפעילים, וגם עדכונים אוטומטיים: חברות שנוספו בחודש האחרון ואג"ח חדשות בשלושת השבועות האחרונים. (מתעדכן באתר תוך כמה דקות.)</p>
-      <div class="scroll"><table><thead><tr><th>תאריך</th><th>נושא</th><th>נוסח</th><th>מקור</th></tr></thead><tbody id="live"></tbody></table></div>
-    </div>
-
-    <div class="card">
-      <h2>התקנה באתר</h2>
-      <p>ב-WPCode: קטע קוד חדש מסוג HTML, מיקום "Site Wide Footer", עם השורה:</p>
-      <p><code>&lt;script src="https://harav-levin.pages.dev/news-embed.js" defer&gt;&lt;/script&gt;</code></p>
-      <p class="hint">אפשר להוסיף <code>data-top="90"</code> כדי שהפס יופיע מתחת לכותרת קבועה, ו-<code>data-companies-url="..."</code> / <code>data-bonds-url="..."</code> לקישור לרשימות המלאות.</p>
+      <h2>עדכונים אוטומטיים (מוצגים עכשיו באתר)</h2>
+      <p class="hint">חברות שנוספו בחודש האחרון, אג"ח חדשות בשלושת השבועות האחרונים, ומסלולים שסומנו חדש / הוסר ברשימת הקרנות. מתעדכן באתר תוך כמה דקות.</p>
+      <div class="auto2"><section><h3>חברות <span class="tag" id="nCo"></span></h3><ul class="al" id="liveCo"></ul></section><section><h3>אג"ח <span class="tag" id="nBo"></span></h3><ul class="al" id="liveBo"></ul></section></div>
+      <section id="fundsSec" hidden><h3>קרנות ומסלולים <span class="tag" id="nFu"></span></h3><ul class="al two" id="liveFu"></ul></section>
     </div>
   </div>
 </main>
@@ -145,16 +148,20 @@ async function loadManual() {
 async function loadLive() {
   try {
     const d = await (await fetch("/api/news", { cache: "no-store" })).json();
-    $("live").innerHTML = (d.items || []).map(it => `<tr><td>${fmt(it.date)}</td><td>${CAT[it.cat] || ""}</td><td><b>${esc(it.title || "")}</b><br>${esc(it.text)}</td><td>${it.auto ? "אוטומטי" : it.pinned ? "ידני 📌" : "ידני"}</td></tr>`).join("") || `<tr><td colspan="4" class="off">אין עדכונים - הפס לא יוצג באתר</td></tr>`;
-  } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
+    const auto = (d.items || []).filter(it => it.auto);
+    const li = it => `<li title="${esc((it.title || "") + " - " + it.text)}"><span class="d">${fmt(it.date).slice(0, 5)}</span><span class="x"><b>${esc((it.title || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, ""))}</b> ${esc(it.text)}</span></li>`;
+    const put = (cat, ul, n) => { const r = auto.filter(it => it.cat === cat); $(ul).innerHTML = r.map(li).join("") || `<li class="off">אין כרגע</li>`; $(n).textContent = r.length; return r.length; };
+    put("companies", "liveCo", "nCo"); put("bonds", "liveBo", "nBo");
+    $("fundsSec").hidden = !put("funds", "liveFu", "nFu");
+  } catch { $("liveCo").innerHTML = `<li class="off">שגיאה בטעינה</li>`; }
 }
 function resetForm() {
-  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
-  $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
+  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "companies"; showCustom(); $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
+  $("fpin").checked = true; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
 }
 function edit(id) {
   const m = manual.find(x => x.id === id); if (!m) return;
-  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || "";
+  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.title ? "custom" : (CAT[m.cat] ? m.cat : "other"); editCat = m.cat || "other"; showCustom(); $("fstart").value = m.start_date || "";
   if (m.end_date) { const base = new Date((m.start_date || String(m.created_at || "").slice(0, 10) || isoDay(new Date())) + "T12:00:00"), end = new Date(m.end_date + "T12:00:00"); $("fdur").value = Math.max(1, Math.round((end - base) / 864e5) + 1); $("funit").value = "d"; } else { $("fdur").value = ""; $("funit").value = ""; }
   endHint();
   $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active || !!m.pending; $("ftitle").textContent = m.pending ? "עריכת עדכון שנשלח מהאתר (ממתין לאישור)" : "עריכת עדכון"; $("saveApprove").hidden = !m.pending; $("cancel").hidden = false; $("smsg").textContent = "";
@@ -176,11 +183,16 @@ async function rowClick(e) {
 $("rows").addEventListener("click", rowClick);
 $("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
+// נושא: אחד הנושאים, או "אחר" = כיתוב ידני (נשמר ככותרת; הנושא של עדכון קיים נשמר, ובעדכון חדש = עדכון כללי)
+let editCat = "other";
+function showCustom() { const c = $("fcat").value === "custom"; $("customWrap").hidden = !c; if (c && !$("fid").value) editCat = "other"; }
+$("fcat").addEventListener("change", () => { showCustom(); if ($("fcat").value === "custom") $("ftitle2").focus(); });
 ["fdur", "funit", "fstart"].forEach(id => $(id).addEventListener("input", endHint));
 $("funit").addEventListener("change", () => { if ($("funit").value && !$("fdur").value) $("fdur").value = 1; endHint(); });
 async function save(approve) {
+  if ($("fcat").value === "custom" && !$("ftitle2").value.trim()) { $("smsg").className = "msg bad"; $("smsg").textContent = "נא לכתוב את הכיתוב הידני (או לבחור נושא)"; $("ftitle2").focus(); return; }
   const msg = $("smsg"); msg.className = "msg"; msg.textContent = "שומר…";
-  const body = { id: Number($("fid").value) || 0, title: $("ftitle2").value, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value || (endDate() ? isoDay(new Date()) : ""), end_date: endDate(), pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
+  const body = { id: Number($("fid").value) || 0, title: $("fcat").value === "custom" ? $("ftitle2").value.trim() : "", text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value === "custom" ? editCat : $("fcat").value, start_date: $("fstart").value || (endDate() ? isoDay(new Date()) : ""), end_date: endDate(), pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
   const r = await api("/api/news", { method: "POST", body: JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); return; }
