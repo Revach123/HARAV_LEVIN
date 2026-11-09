@@ -59,6 +59,10 @@ export async function onRequestPost({ request, env }) {
       ).bind(...vals).run();
     }
 
+    if (body.issuer_id) {
+      try { await env.DB.prepare("UPDATE businesses SET issuer_id = ? WHERE id = ?").bind(String(body.issuer_id).replace(/\D/g, "").slice(0, 12), id).run(); }
+      catch (e) { if (!/no such column: issuer_id/i.test(String(e.message))) throw e; }
+    }
     if (body.heb_name) {
       try { await env.DB.prepare("UPDATE businesses SET heb_name = ? WHERE id = ?").bind(String(body.heb_name).trim().slice(0, 200), id).run(); }
       catch (e) { if (!/no such column: heb_name/i.test(String(e.message))) throw e; }
