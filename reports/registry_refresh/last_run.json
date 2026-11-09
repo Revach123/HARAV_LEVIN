@@ -6,13 +6,13 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 90,
-   "biz_type": 94
-  },
-  "empty_after": {
-   "registrar_name": 90,
    "biz_type": 91
   },
-  "updated": "2026-11-09T10:20:02.272248Z",
+  "empty_after": {
+   "registrar_name": 40,
+   "biz_type": 91
+  },
+  "updated": "2026-11-09T12:11:29.659176Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1284,
@@ -23,18 +23,18 @@
   "datawise_date": "2026-11-06",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 1,
-   "biz_type": 3,
+   "registrar_name": 51,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 3,
-   "has_agch_any": 1,
-   "permits_category": 1
+   "registry_status": 0,
+   "has_agch_any": 0,
+   "permits_category": 0
   },
   "fills_of_empty": {
-   "registrar_name": 0,
-   "biz_type": 3,
+   "registrar_name": 50,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 3,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
@@ -44,74 +44,367 @@
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
-  "readback_mismatches": 0,
-  "mode": "applied",
-  "statements_applied": 3,
+  "mode": "dry-run",
+  "statements_applied": 0,
   "problems": []
  },
  "changes": [
   {
-   "id": "mw7o15f11jz3",
-   "chp": "516496544",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw7o15f11jz3",
-   "chp": "516496544",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mw82ntdcvqnq",
-   "chp": "514960178",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw82ntdcvqnq",
-   "chp": "514960178",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  },
-  {
-   "id": "mw82ntdcvqnq",
-   "chp": "514960178",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mw82ntdcvqnq",
-   "chp": "514960178",
-   "field": "permits_category",
-   "old": "חברות נדל\"ן ובינוי",
-   "new": "חברות נדל\"ן ובינוי|חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mw92ze80j0sz",
-   "chp": "511512295",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mw92ze80j0sz",
-   "chp": "511512295",
+   "id": "mp64j1qp0r2p",
+   "chp": "2352046",
    "field": "registrar_name",
-   "old": "נורסטאר ישראל בע\"מ",
-   "new": "נורסטאר ישראל  בע\"מ"
+   "old": "",
+   "new": "אג'לן"
   },
   {
-   "id": "mw92ze80j0sz",
-   "chp": "511512295",
-   "field": "biz_type",
+   "id": "mp64j4eji837",
+   "chp": "1841580",
+   "field": "registrar_name",
    "old": "",
-   "new": "חברה פרטית - בע\"מ"
+   "new": "אול-יר"
+  },
+  {
+   "id": "mp64jdba8ybj",
+   "chp": "2185148",
+   "field": "registrar_name",
+   "old": "",
+   "new": "איה ניו יורק"
+  },
+  {
+   "id": "mp64jdje8zg4",
+   "chp": "1957080",
+   "field": "registrar_name",
+   "old": "",
+   "new": "איי איי סי"
+  },
+  {
+   "id": "mp64je2rxskd",
+   "chp": "510394637",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מיי סייז"
+  },
+  {
+   "id": "mp64jjstiki7",
+   "chp": "1963039",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אלטיטיוד השקעות"
+  },
+  {
+   "id": "mp64jle7n132",
+   "chp": "2624970",
+   "field": "registrar_name",
+   "old": "",
+   "new": "עלמדב"
+  },
+  {
+   "id": "mp64jme64vgn",
+   "chp": "1983001",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אמ אר אר"
+  },
+  {
+   "id": "mp64jmhjxtwo",
+   "chp": "1981143",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אמ.ג'י.ג'י"
+  },
+  {
+   "id": "mp64jmkscu26",
+   "chp": "1840550",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אמ.די.ג'י."
+  },
+  {
+   "id": "mp64jn2fuyba",
+   "chp": "2177996",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אמטראסט אר. אי."
+  },
+  {
+   "id": "mp64jnojyz3v",
+   "chp": "2160207",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אמריקן אקוויטי"
+  },
+  {
+   "id": "mp64jo9xyqq2",
+   "chp": "2059088",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אנקור הזדמנויות"
+  },
+  {
+   "id": "mp64jodkc9v3",
+   "chp": "1939883",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אנקור פרופרטיס"
+  },
+  {
+   "id": "mp64jszyhq1g",
+   "chp": "1811308",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אקסטל לימיטד"
+  },
+  {
+   "id": "mp64jz3lzl09",
+   "chp": "1814237",
+   "field": "registrar_name",
+   "old": "",
+   "new": "ברוקלנד"
+  },
+  {
+   "id": "mp64k329w9yo",
+   "chp": "1852623",
+   "field": "registrar_name",
+   "old": "",
+   "new": "ג'י.אף.איי"
+  },
+  {
+   "id": "mp64k6hy585v",
+   "chp": "1888119",
+   "field": "registrar_name",
+   "old": "",
+   "new": "דלשה קפיטל"
+  },
+  {
+   "id": "mp64k6zgniim",
+   "chp": "1744984",
+   "field": "registrar_name",
+   "old": "",
+   "new": "דה זראסאי גרופ"
+  },
+  {
+   "id": "mp64k7koodwc",
+   "chp": "1427976",
+   "field": "registrar_name",
+   "old": "",
+   "new": "דה לסר"
+  },
+  {
+   "id": "mp64kcaqbxm7",
+   "chp": "1957081",
+   "field": "registrar_name",
+   "old": "",
+   "new": "הרץ פרופרטיס"
+  },
+  {
+   "id": "mp64kct2418c",
+   "chp": "1938699",
+   "field": "registrar_name",
+   "old": "",
+   "new": "ווטרסטון"
+  },
+  {
+   "id": "mp64kdt011qb",
+   "chp": "1866231",
+   "field": "registrar_name",
+   "old": "",
+   "new": "וורטון פרופרטיז"
+  },
+  {
+   "id": "mp64kj0adxlj",
+   "chp": "1853213",
+   "field": "registrar_name",
+   "old": "",
+   "new": "טריטופ ריאלטי"
+  },
+  {
+   "id": "mp64kuvvc57r",
+   "chp": "863439895",
+   "field": "registrar_name",
+   "old": "",
+   "new": "ליווינג סטון"
+  },
+  {
+   "id": "mp64kuzmd8u9",
+   "chp": "1838682",
+   "field": "registrar_name",
+   "old": "",
+   "new": "לייטסטון"
+  },
+  {
+   "id": "mp64kv30f2xt",
+   "chp": "1001171286",
+   "field": "registrar_name",
+   "old": "",
+   "new": "לנטרה קנדה"
+  },
+  {
+   "id": "mp64kvkd7i0c",
+   "chp": "1858676",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מויניאן לימיטד"
+  },
+  {
+   "id": "mp64l354bzh7",
+   "chp": "2008787",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מליבו אינווסט."
+  },
+  {
+   "id": "mp64l7q6pf25",
+   "chp": "1947641",
+   "field": "registrar_name",
+   "old": "",
+   "new": "נובל אסטס"
+  },
+  {
+   "id": "mp64ladlhcld",
+   "chp": "1921080",
+   "field": "registrar_name",
+   "old": "",
+   "new": "סאותרן פרופרטיס"
+  },
+  {
+   "id": "mp64lc7mo4z6",
+   "chp": "1905761",
+   "field": "registrar_name",
+   "old": "",
+   "new": "נמקו ריאלטי"
+  },
+  {
+   "id": "mp64lfqa0eeb",
+   "chp": "475527",
+   "field": "registrar_name",
+   "old": "",
+   "new": "סאטל"
+  },
+  {
+   "id": "mp64lh9hrjj2",
+   "chp": "34140467",
+   "field": "registrar_name",
+   "old": "",
+   "new": "נאנט נדל\"ן"
+  },
+  {
+   "id": "mp64lihmqy53",
+   "chp": "1863501",
+   "field": "registrar_name",
+   "old": "",
+   "new": "סטרוברי"
+  },
+  {
+   "id": "mp64lk829qbv",
+   "chp": "1838863",
+   "field": "registrar_name",
+   "old": "",
+   "new": "ספנסר אקוויטי"
+  },
+  {
+   "id": "mp64llj8nfj7",
+   "chp": "1938333",
+   "field": "registrar_name",
+   "old": "",
+   "new": "וו.סי.ג'י"
+  },
+  {
+   "id": "mp64lmb0xr02",
+   "chp": "1940909",
+   "field": "registrar_name",
+   "old": "",
+   "new": "יו.איי.אר.סי"
+  },
+  {
+   "id": "mp64lq7l9ww0",
+   "chp": "33248324",
+   "field": "registrar_name",
+   "old": "",
+   "new": "פלאזה סנטרס"
+  },
+  {
+   "id": "mp64lqwhk28r",
+   "chp": "1900288",
+   "field": "registrar_name",
+   "old": "",
+   "new": "פסיפיק אוק"
+  },
+  {
+   "id": "mp64lra43cz9",
+   "chp": "1946194",
+   "field": "registrar_name",
+   "old": "",
+   "new": "צ'וזן נכסים"
+  },
+  {
+   "id": "mp64lvqf93z7",
+   "chp": "1886279",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קליין קבוצה"
+  },
+  {
+   "id": "mp64lwz91z62",
+   "chp": "1920997",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קורנרסטון"
+  },
+  {
+   "id": "mp64lxntnwig",
+   "chp": "2100460",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קלקן קפיטל"
+  },
+  {
+   "id": "mp64lyu9jc5q",
+   "chp": "1865427",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קופרליין"
+  },
+  {
+   "id": "mp64m23q4g6l",
+   "chp": "NV1239114",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קרדן אן.וי-ש"
+  },
+  {
+   "id": "mp64m4d5kbl7",
+   "chp": "1849766",
+   "field": "registrar_name",
+   "old": "",
+   "new": "רילייטד"
+  },
+  {
+   "id": "c7e34d31fdc1",
+   "chp": "2023950211",
+   "field": "registrar_name",
+   "old": "",
+   "new": "אינפליי"
+  },
+  {
+   "id": "636475105429",
+   "chp": "2203094",
+   "field": "registrar_name",
+   "old": "",
+   "new": "יילוסטון"
+  },
+  {
+   "id": "425a44d2a8b5",
+   "chp": "2185699",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קוהאן"
+  },
+  {
+   "id": "mw936ww5lhwi",
+   "chp": "44528798375",
+   "field": "registrar_name",
+   "old": "נורסטאר החזקות אינק",
+   "new": "נורסטאר החזקות"
   }
  ],
  "not_found": [
