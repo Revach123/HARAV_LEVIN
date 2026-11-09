@@ -781,6 +781,81 @@
    "kind": "upcoming",
    "last_seen": "2026-11-09"
   },
+  "U10415": {
+   "data": {
+    "chp_number": "517220448",
+    "company_name": "איביאי ריב פיק",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10415,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1780333",
+    "link_trust_indenture": null,
+    "maya_report_id": 1780333,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-09"
+  },
+  "U10416": {
+   "data": {
+    "chp_number": "520044314",
+    "company_name": "פרטנר",
+    "draft_no": 1,
+    "draft_title": null,
+    "id": 10416,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780339",
+    "maya_report_id": 1780339,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-09"
+  },
+  "U10417": {
+   "data": {
+    "chp_number": "513257873",
+    "company_name": "מגה אור",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10417,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
+    "maya_report_id": 1780342,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilAA",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-09"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
