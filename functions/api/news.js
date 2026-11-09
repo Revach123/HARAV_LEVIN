@@ -8,7 +8,8 @@
 //       - אוטומטיים: חברות שנוספו בחודש האחרון (לפי created_at, בלי ימי ייבוא גדולים - 300 ומעלה ביום),
 //         ואג"ח חדשות בשלושת השבועות האחרונים (הנפקה חדשה / אישור חדש / נוספה) - אותו כלל כמו התגיות ברשימות (display.html),
 //         ושינויים ברשימת הקרנות והמסלולים (funds.html): מסלולים שסומנו "חדש" או "הוסר" בניהול, לפי תאריך השמירה האחרונה של הרשימה.
-//  GET  /api/news?all=1      -> כל הפריטים הידניים (גם כבויים / שפג תוקפם), לניהול. דורש מנהל.
+//  GET  /api/news?all=1      -> כל הפריטים הידניים (גם כבויים / שפג תוקפם) + settings, לניהול. דורש מנהל.
+//  POST /api/news {action:"settings", co_days, bond_days}  -> כמה ימים מוצגים עדכונים אוטומטיים של חברות / אג"ח (1-365). דורש מנהל.
 //  POST /api/news {id?, cat, title, text, link, start_date, end_date, pinned, active}  -> הוספה / עדכון. דורש מנהל.
 //  POST /api/news {action:"approve", id}  -> אישור עדכון שנשלח מהאתר (מפורסם מיד). דורש מנהל.
 //  POST /api/news (multipart/form-data: submit=1, cat, text, link, name, contact, files)  -> שליחת עדכון מהאתר (כפתור "שליחת עדכון"). ציבורי.
@@ -27,7 +28,16 @@ const ymd = (d) => d.toISOString().slice(0, 10);
 const daysAgo = (n) => ymd(new Date(Date.now() - n * 864e5));
 const clean = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max);
 const DEF_TITLE = { companies: 'עדכון בחברות', bonds: 'עדכון באג"ח', funds: 'עדכון בקרנות ובמסלולים', other: 'עדכון' };
-const NEW_CO_DAYS = 30, NEW_BOND_DAYS = 21, BULK_DAY = 300;
+const NEW_CO_DAYS = 30, NEW_BOND_DAYS = 21, BULK_DAY = 300;          // ברירות מחדל; המנהל משנה בדף הניהול (טבלת site_news_meta)
+const META = "CREATE TABLE IF NOT EXISTS site_news_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL DEFAULT '')";
+const days = (v, d) => { const n = Math.floor(Number(v)); return n >= 1 && n <= 365 ? n : d; };
+async function settings(env) {
+  try {
+    const rows = (await env.DB.prepare("SELECT k, v FROM site_news_meta WHERE k IN ('co_days','bond_days')").all()).results || [];
+    const m = Object.fromEntries(rows.map((r) => [r.k, r.v]));
+    return { co_days: days(m.co_days, NEW_CO_DAYS), bond_days: days(m.bond_days, NEW_BOND_DAYS) };
+  } catch { return { co_days: NEW_CO_DAYS, bond_days: NEW_BOND_DAYS }; }          // הטבלה עוד לא נוצרה
+}
 
 const TABLE = `CREATE TABLE IF NOT EXISTS site_news (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,8 +78,8 @@ async function manualItems(env, all, origin = '') {
 }
 
 // חברות שנוספו בחודש האחרון (בלי מחוסלות/מחוקות). "פרטי" = עסק מסומן פרטי.
-async function companyItems(env) {
-  const since = daysAgo(NEW_CO_DAYS);
+async function companyItems(env, nDays = NEW_CO_DAYS) {
+  const since = daysAgo(nDays);
   try {
     const q = (withStatus, withHeb) => `SELECT id, permit_name, visibility, substr(created_at,1,10) AS d${withHeb ? ', heb_name' : ''} FROM businesses
       WHERE substr(COALESCE(created_at,''),1,10) >= ?
@@ -88,7 +98,7 @@ async function companyItems(env) {
 }
 
 // אג"ח חדשות (כמו markRecent ב-display.html): הנפקה חדשה / אישור חדש / נוספה לרשימה.
-async function bondItems(request, env) {
+async function bondItems(request, env, nDays = NEW_BOND_DAYS) {
   try {
     const url = new URL('/data/bonds_list/bonds_all.json', request.url);
     const res = await (env.ASSETS ? env.ASSETS.fetch(url) : fetch(url));
@@ -97,7 +107,7 @@ async function bondItems(request, env) {
     const cnt = {};
     for (const r of rows) { const fs = r.first_seen || ''; cnt[fs] = (cnt[fs] || 0) + 1; }
     const base = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0] || '';
-    const since = daysAgo(NEW_BOND_DAYS), groups = new Map();
+    const since = daysAgo(nDays), groups = new Map();
     for (const r of rows) {
       const fs = r.first_seen || '', ls = r.listed_first_seen || '', dated = !!r.redemption_date;
       const iss = !!(started && ls && ls > started && ls >= since && dated);
@@ -162,9 +172,10 @@ export async function onRequestGet({ request, env }) {
   const all = sp.get('all') === '1';
   if (all) {
     if (!(await checkAdmin(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
-    return json({ ok: true, items: await manualItems(env, true) }, 200, { 'Cache-Control': 'no-store' });
+    return json({ ok: true, items: await manualItems(env, true), settings: await settings(env) }, 200, { 'Cache-Control': 'no-store' });
   }
-  const [manual, cos, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env), bondItems(request, env), fundItems(env)]);
+  const st = await settings(env);
+  const [manual, cos, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env, st.co_days), bondItems(request, env, st.bond_days), fundItems(env)]);
   const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
   const items = [...manual.filter((x) => x.pinned), ...[...manual.filter((x) => !x.pinned), ...cos, ...bonds, ...funds].sort(byDate)];
   return json({ ok: true, updated: new Date().toISOString(), items }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' });
@@ -233,6 +244,16 @@ export async function onRequestPost({ request, env }) {
   if (!(await checkAdmin(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
   await ensureTable(env);
   const id = Number(b.id) || 0;
+  if (b.action === 'settings') {
+    const co = days(b.co_days, 0), bo = days(b.bond_days, 0);
+    if (!co || !bo) return json({ ok: false, error: 'נא לבחור בין יום אחד ל-365 ימים' }, 400);
+    await env.DB.prepare(META).run();
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO site_news_meta (k, v) VALUES ('co_days', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v").bind(String(co)),
+      env.DB.prepare("INSERT INTO site_news_meta (k, v) VALUES ('bond_days', ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v").bind(String(bo)),
+    ]);
+    return json({ ok: true, settings: { co_days: co, bond_days: bo } });
+  }
   if (b.action === 'approve') {
     if (!id) return json({ ok: false, error: 'missing id' }, 400);
     await env.DB.prepare("UPDATE site_news SET pending=0, active=1, start_date=CASE WHEN COALESCE(start_date,'')='' THEN date('now') ELSE start_date END, updated_at=datetime('now') WHERE id=?").bind(id).run();

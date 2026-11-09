@@ -75,7 +75,7 @@
   var el = function (tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; };
   var topPx = function () { var ab = document.getElementById("wpadminbar"); return TOP + (ab && getComputedStyle(ab).position === "fixed" ? ab.offsetHeight : 0); };
 
-  var items = [], ticker = [], idx = 0, timer = null, paused = false, bar, view, tab, pop, newest = "";
+  var items = [], ticker = [], idx = 0, timer = null, paused = false, holdUntil = 0, bar, view, tab, pop, newest = "";
 
   function buildTicker() {
     var out = [], cnt = {};
@@ -113,10 +113,10 @@
     }
     if (animate) { void nx.offsetWidth; nx.classList.remove("in"); }
   }
-  function schedule() {
+  function schedule() {          // מעבר לעדכון הבא כל DELAY; אחרי העדכון האחרון חוזר לראשון
     clearTimeout(timer);
     if (ticker.length < 2) { return; }
-    timer = setTimeout(function () { if (!paused && !document.hidden && bar.style.display !== "none") { idx = (idx + 1) % ticker.length; show(idx, true); } schedule(); }, DELAY);
+    timer = setTimeout(function () { if (!paused && Date.now() >= holdUntil && !document.hidden && bar.style.display !== "none") { idx = (idx + 1) % ticker.length; show(idx, true); } schedule(); }, DELAY);
   }
 
   function place() { var t = topPx() + "px"; if (bar) { bar.style.top = t; } if (tab) { tab.style.top = t; } }
@@ -220,8 +220,10 @@
     var all = el("button", "inb-b"); all.type = "button"; all.title = "כל העדכונים"; all.innerHTML = '⤢<span class="w"> כל העדכונים</span>'; all.addEventListener("click", function () { openPop(ticker[idx] && ticker[idx].cat); });
     var hide = el("button", "inb-b", "✕"); hide.type = "button"; hide.title = "הסתרה"; hide.setAttribute("aria-label", "הסתרת העדכונים"); hide.addEventListener("click", function () { setHidden(true); });
     bar.appendChild(all); bar.appendChild(hide);
-    bar.addEventListener("mouseenter", function () { paused = true; }); bar.addEventListener("mouseleave", function () { if (!pop) { paused = false; } });
-    bar.addEventListener("focusin", function () { paused = true; }); bar.addEventListener("focusout", function () { if (!pop) { paused = false; } });
+    // עצירה כשהעכבר על הפס או במעבר במקלדת: עד 8 שניות לכל היותר, ואז ממשיך (גם אם העכבר נשאר). נגיעה בטלפון לא עוצרת.
+    var hold = function () { holdUntil = Date.now() + 8000; }, release = function () { holdUntil = 0; };
+    bar.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") { hold(); } }); bar.addEventListener("pointerleave", release);
+    bar.addEventListener("focusin", function (e) { if (e.target.matches && e.target.matches(":focus-visible")) { hold(); } }); bar.addEventListener("focusout", release);
     tab = el("button"); tab.id = "inb-tab"; tab.type = "button"; tab.textContent = "עדכונים"; tab.appendChild(el("span", "n", String(items.length)));
     tab.addEventListener("click", function () { setHidden(false); });
     document.body.appendChild(bar); document.body.appendChild(tab);
