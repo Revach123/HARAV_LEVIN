@@ -10,28 +10,10 @@
  "limit": 23,
  "dropped_no_terms": [
   {
-   "security_id": 7390263,
-   "security_name": "אלקטרה אגח ו",
-   "company": "אלקטרה  בע\"מ",
-   "chp_number": "520028911"
-  },
-  {
-   "security_id": 1221787,
-   "security_name": "פטרוכימים אגחיא",
-   "company": "מפעלים פטרוכימיים בישראל בעמ",
-   "chp_number": "520029315"
-  },
-  {
-   "security_id": 1190297,
-   "security_name": "פטרוכימים אגח י",
-   "company": "מפעלים פטרוכימיים בישראל בעמ",
-   "chp_number": "520029315"
-  },
-  {
-   "security_id": 1242700,
-   "security_name": "איילון התח נד ו",
-   "company": "איילון חברה לביטוח   בע\"מ",
-   "chp_number": "520030677"
+   "security_id": 1223411,
+   "security_name": "פרשקובסקי אגחטז",
+   "company": "פרשקובסקי השקעות ובניין בע\"מ",
+   "chp_number": "513817817"
   }
  ]
 }
