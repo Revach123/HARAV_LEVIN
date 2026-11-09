@@ -49,10 +49,19 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
   </div>
 
   <div id="app" hidden>
+    <div class="card" id="pendCard" hidden>
+      <h2>ממתינים לאישור <span class="tag" id="pendN"></span></h2>
+      <p class="hint">עדכונים שגולשים שלחו מהאתר (כפתור "שליחת עדכון" בחלון העדכונים). הם לא מוצגים עד שמאשרים.</p>
+      <div class="scroll"><table><thead><tr><th>נשלח</th><th>נושא</th><th>נוסח</th><th>שולח</th><th></th></tr></thead><tbody id="pend"></tbody></table></div>
+    </div>
+
     <div class="card">
       <h2 id="ftitle">עדכון חדש</h2>
       <input type="hidden" id="fid">
-      <label for="ftext">נוסח העדכון</label>
+      <label for="ftitle2">כותרת (השורה הראשונה בפס)</label>
+      <input type="text" id="ftitle2" maxlength="120" placeholder="למשל: הודעה חשובה  (ריק = לפי הנושא)">
+      <p class="hint" style="margin-bottom:12px">השורה השנייה היא נוסח העדכון.</p>
+      <label for="ftext">נוסח העדכון (השורה השנייה)</label>
       <textarea id="ftext" maxlength="400" placeholder="למשל: נוסף שטר היתר עיסקא חדש לרשימה"></textarea>
       <div class="grid">
         <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option></select></div>
@@ -66,6 +75,7 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
         <label><input type="checkbox" id="factive" checked> פעיל</label>
       </div>
       <button type="button" id="save">שמירה</button>
+      <button type="button" id="saveApprove" hidden>שמירה ואישור לפרסום</button>
       <button type="button" class="sec" id="cancel" hidden>ביטול עריכה</button>
       <p class="msg" id="smsg"></p>
     </div>
@@ -103,11 +113,17 @@ async function loadManual() {
   if (r.status === 401) { showLogin(); return false; }
   manual = (await r.json()).items || [];
   const today = new Date().toISOString().slice(0, 10);
-  $("rows").innerHTML = manual.length ? manual.map(m => {
+  const pend = manual.filter(m => m.pending), list = manual.filter(m => !m.pending);
+  $("pendCard").hidden = !pend.length; $("pendN").textContent = pend.length;
+  $("pend").innerHTML = pend.map(m => `<tr><td>${fmt(m.created_at)}</td><td><span class="tag">${CAT[m.cat] || CAT.other}</span></td>
+      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(m.link)}</a>` : ""}</td>
+      <td>${esc(m.submitter || "")}${m.contact ? `<br><span dir="ltr">${esc(m.contact)}</span>` : ""}</td>
+      <td class="act"><button type="button" data-a="${m.id}">אישור</button> <button type="button" class="sec" data-e="${m.id}">עריכה</button> <button type="button" class="del" data-d="${m.id}">מחיקה</button></td></tr>`).join("");
+  $("rows").innerHTML = list.length ? list.map(m => {
     const live = m.active && (!m.start_date || m.start_date <= today) && (!m.end_date || m.end_date >= today);
     const st = !m.active ? "כבוי" : m.end_date && m.end_date < today ? "פג תוקף" : m.start_date && m.start_date > today ? "עוד לא התחיל" : "מוצג";
     return `<tr class="${live ? "" : "off"}"><td><span class="tag">${CAT[m.cat] || CAT.other}</span>${m.pinned ? " 📌" : ""}</td>
-      <td>${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener" dir="ltr">${esc(m.link)}</a>` : ""}</td>
+      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener" dir="ltr">${esc(m.link)}</a>` : ""}</td>
       <td>${m.start_date ? "מ-" + fmt(m.start_date) : "מיד"}${m.end_date ? "<br>עד " + fmt(m.end_date) : ""}</td><td>${st}</td>
       <td class="act"><button type="button" class="sec" data-e="${m.id}">עריכה</button> <button type="button" class="del" data-d="${m.id}">מחיקה</button></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="off">אין עדיין עדכונים ידניים</td></tr>`;
@@ -116,34 +132,39 @@ async function loadManual() {
 async function loadLive() {
   try {
     const d = await (await fetch("/api/news", { cache: "no-store" })).json();
-    $("live").innerHTML = (d.items || []).map(it => `<tr><td>${fmt(it.date)}</td><td>${CAT[it.cat] || ""}</td><td>${esc(it.text)}</td><td>${it.auto ? "אוטומטי" : it.pinned ? "ידני 📌" : "ידני"}</td></tr>`).join("") || `<tr><td colspan="4" class="off">אין עדכונים - הפס לא יוצג באתר</td></tr>`;
+    $("live").innerHTML = (d.items || []).map(it => `<tr><td>${fmt(it.date)}</td><td>${CAT[it.cat] || ""}</td><td><b>${esc(it.title || "")}</b><br>${esc(it.text)}</td><td>${it.auto ? "אוטומטי" : it.pinned ? "ידני 📌" : "ידני"}</td></tr>`).join("") || `<tr><td colspan="4" class="off">אין עדכונים - הפס לא יוצג באתר</td></tr>`;
   } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
 }
 function resetForm() {
-  $("fid").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fend").value = "";
-  $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true;
+  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fend").value = "";
+  $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
 }
 function edit(id) {
   const m = manual.find(x => x.id === id); if (!m) return;
-  $("fid").value = m.id; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || ""; $("fend").value = m.end_date || "";
-  $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active; $("ftitle").textContent = "עריכת עדכון"; $("cancel").hidden = false; $("smsg").textContent = "";
+  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || ""; $("fend").value = m.end_date || "";
+  $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active || !!m.pending; $("ftitle").textContent = m.pending ? "עריכת עדכון שנשלח מהאתר (ממתין לאישור)" : "עריכת עדכון"; $("saveApprove").hidden = !m.pending; $("cancel").hidden = false; $("smsg").textContent = "";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-$("rows").addEventListener("click", async e => {
+async function rowClick(e) {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.a) { await api("/api/news", { method: "POST", body: JSON.stringify({ action: "approve", id: Number(b.dataset.a) }) }); await loadManual(); loadLive(); return; }
   if (b.dataset.e) edit(Number(b.dataset.e));
   if (b.dataset.d && confirm("למחוק את העדכון?")) { await api(`/api/news?id=${b.dataset.d}`, { method: "DELETE" }); await loadManual(); loadLive(); }
-});
+}
+$("rows").addEventListener("click", rowClick);
+$("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
-$("save").addEventListener("click", async () => {
+async function save(approve) {
   const msg = $("smsg"); msg.className = "msg"; msg.textContent = "שומר…";
-  const body = { id: Number($("fid").value) || 0, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value, end_date: $("fend").value, pinned: $("fpin").checked, active: $("factive").checked };
+  const body = { id: Number($("fid").value) || 0, title: $("ftitle2").value, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value, end_date: $("fend").value, pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
   const r = await api("/api/news", { method: "POST", body: JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); return; }
   if (!d.ok) { msg.className = "msg bad"; msg.textContent = d.error || "השמירה נכשלה"; return; }
-  msg.className = "msg ok"; msg.textContent = "נשמר ✓"; resetForm(); await loadManual(); loadLive();
-});
+  msg.className = "msg ok"; msg.textContent = approve ? "נשמר ואושר לפרסום ✓" : "נשמר ✓"; resetForm(); await loadManual(); loadLive();
+}
+$("save").addEventListener("click", () => save(false));
+$("saveApprove").addEventListener("click", () => save(true));
 function showLogin() { $("app").hidden = true; $("login").hidden = false; $("pw").focus(); }
 async function enter() { $("login").hidden = true; $("app").hidden = false; if (await loadManual()) loadLive(); }
 $("go").addEventListener("click", async () => {

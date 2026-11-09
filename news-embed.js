@@ -8,6 +8,7 @@
 // העדכונים: /api/news (ידניים מדף הניהול news-admin.html + חברות ואג"ח חדשות אוטומטית).
 // הפס מתגלגל (עוצר על כל עדכון ועובר לבא; עצירה כשהעכבר עליו), כפתור לחלון גדול עם כל העדכונים לפי חברות / אג"ח / עדכונים אחרים,
 // וכפתור הסתרה: הפס מתקפל ללשונית קטנה עד סוף הביקור (וחוזר מיד כשיש עדכון חדש).
+// בחלון יש גם "שליחת עדכון": טופס קצר; העדכון נשמר כממתין לאישור ומופיע בדף הניהול (news-admin.html) לאישור / עריכה.
 (function () {
   if (window.__inbLoaded) { return; } window.__inbLoaded = true;
   var sc = document.currentScript, O = sc && sc.src ? new URL(sc.src).origin : "https://harav-levin.pages.dev";
@@ -23,15 +24,16 @@
   var css = document.createElement("style");
   css.textContent =
     "#inb,#inb *,#inb-tab,#inb-pop,#inb-pop *{box-sizing:border-box}" +
-    "#inb{position:fixed;left:50%;transform:translateX(-50%);z-index:99990;width:min(780px,calc(100% - 16px));height:38px;display:flex;align-items:center;gap:8px;padding:0 6px 0 8px;direction:rtl;font-family:inherit;font-size:15px;line-height:1;background:#274d5b;color:#fff;border-radius:0 0 12px 12px;box-shadow:0 3px 10px rgba(0,0,0,.18)}" +
+    "#inb{position:fixed;left:50%;transform:translateX(-50%);z-index:99990;width:min(780px,calc(100% - 16px));height:54px;display:flex;align-items:center;gap:8px;padding:0 8px 0 8px;direction:rtl;font-family:inherit;font-size:15px;line-height:1.25;background:#274d5b;color:#fff;border-radius:0 0 12px 12px;box-shadow:0 3px 10px rgba(0,0,0,.18)}" +
     "#inb .inb-lbl{flex:none;background:#2aada1;color:#fff;font-weight:700;font-size:13px;padding:5px 9px;border-radius:999px;white-space:nowrap}" +
     "#inb .inb-view{flex:1;min-width:0;height:100%;overflow:hidden;position:relative}" +
     "#inb .inb-it{position:absolute;inset:0;display:flex;align-items:center;gap:7px;white-space:nowrap;cursor:pointer;color:#fff;text-decoration:none;transition:transform .45s ease,opacity .45s ease}" +
     "#inb .inb-it.in{transform:translateY(100%);opacity:0}#inb .inb-it.out{transform:translateY(-100%);opacity:0}" +
-    "#inb .inb-it .t{overflow:hidden;text-overflow:ellipsis;min-width:0}" +
-    "#inb .inb-it:hover .t,#inb .inb-it:focus .t{text-decoration:underline}" +
-    "#inb .inb-cat{flex:none;font-size:12px;font-weight:700;color:#bfe9e4;border:1px solid rgba(191,233,228,.55);border-radius:6px;padding:3px 6px}" +
-    "#inb .inb-d{flex:none;font-size:12px;color:#bcd0d5}" +
+    "#inb .inb-it .tx{display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;flex:1}" +
+    "#inb .inb-it .t1{display:flex;gap:8px;align-items:baseline;font-size:13px;font-weight:700;color:#bfe9e4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+    "#inb .inb-it .t2{font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+    "#inb .inb-it:hover .t2,#inb .inb-it:focus .t2{text-decoration:underline}" +
+    "#inb .inb-d{flex:none;font-size:12px;font-weight:400;color:#bcd0d5}" +
     "#inb button,#inb-tab,#inb-pop button{font:inherit;cursor:pointer;margin:0;text-transform:none;letter-spacing:normal;box-shadow:none}" +
     "#inb .inb-b{flex:none;height:28px;min-width:28px;padding:0 8px;border:0;border-radius:7px;background:rgba(255,255,255,.13);color:#fff;font-size:13px;font-weight:700;line-height:28px;white-space:nowrap}" +
     "#inb .inb-b:hover,#inb .inb-b:focus-visible{background:rgba(255,255,255,.28)}" +
@@ -50,10 +52,17 @@
     "#inb-pop .lst li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid #eef2f2;font-size:16px;line-height:1.5}" +
     "#inb-pop .lst li.pin{background:#f4fbfa;margin:0 -18px;padding:10px 18px}" +
     "#inb-pop .lst .d{flex:none;width:84px;font-size:13px;color:#6a7c82}" +
-    "#inb-pop .lst a{color:#1e8f85}" +
+    "#inb-pop .lst a{color:#1e8f85}#inb-pop .lst .tt{display:block;font-size:14px;font-weight:700;color:#274d5b}" +
     "#inb-pop .empty{padding:24px 0;text-align:center;color:#6a7c82;font-size:16px}" +
-    "#inb-pop .ft{padding:10px 18px;border-top:1px solid #eef2f2;font-size:15px}#inb-pop .ft:empty{display:none}#inb-pop .ft a{color:#1e8f85;font-weight:700}" +
-    "@media (max-width:600px){#inb{font-size:14px;height:36px;gap:6px}#inb .inb-lbl,#inb .inb-d{display:none}#inb .inb-b .w{display:none}#inb-pop .lst .d{width:70px}#inb-pop .tabs button{font-size:14px}}" +
+    "#inb-pop .ft{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid #eef2f2;font-size:15px}#inb-pop .ft a{color:#1e8f85;font-weight:700}" +
+    "#inb-pop .snd{border:0;border-radius:8px;background:#2aada1;color:#fff;font-size:15px;font-weight:700;padding:8px 14px}#inb-pop .snd:hover{background:#1e8f85}" +
+    "#inb-pop form{overflow-y:auto;padding:14px 18px;margin:0}#inb-pop form label{display:block;font-size:14px;font-weight:700;color:#274d5b;margin:10px 0 4px}#inb-pop form .h{font-weight:400;color:#6a7c82}" +
+    "#inb-pop form input,#inb-pop form select,#inb-pop form textarea{display:block;width:100%;padding:8px 10px;font:inherit;font-size:15px;border:1px solid #b7c9c4;border-radius:7px;background:#fff;color:#1f2d2d;margin:0}" +
+    "#inb-pop form textarea{min-height:80px;resize:vertical}#inb-pop form .two{display:flex;gap:10px}#inb-pop form .two>div{flex:1;min-width:0}" +
+    "#inb-pop form .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}" +
+    "#inb-pop form .row{display:flex;gap:10px;margin-top:14px}#inb-pop form .back{border:0;border-radius:8px;background:#e9f0f1;color:#274d5b;font-size:15px;font-weight:700;padding:8px 14px}" +
+    "#inb-pop .msg{margin:10px 0 0;font-weight:700}#inb-pop .msg.bad{color:#b3261e}#inb-pop .msg.ok{color:#1e8f85;font-size:17px;line-height:1.5}" +
+    "@media (max-width:600px){#inb{height:50px;gap:6px}#inb .inb-it .t1{font-size:12px}#inb .inb-it .t2{font-size:14px}#inb .inb-lbl,#inb .inb-d{display:none}#inb .inb-b .w{display:none}#inb-pop .lst .d{width:70px}#inb-pop .tabs button{font-size:14px}}" +
     "@media (prefers-reduced-motion:reduce){#inb .inb-it{transition:none}}" +
     "@media print{#inb,#inb-tab,#inb-pop{display:none!important}}";
   document.head.appendChild(css);
@@ -73,7 +82,7 @@
     });
     CATS.forEach(function (c) {
       var more = (cnt[c[0]] || 0) - PER_CAT;
-      if (more > 0) { out.push({ id: "more-" + c[0], cat: c[0], text: c[0] === "companies" ? "ועוד " + more + " חברות שנוספו לאחרונה - לכל העדכונים" : "ועוד " + more + " אג\"ח חדשות - לכל העדכונים", more: true }); }
+      if (more > 0) { out.push({ id: "more-" + c[0], cat: c[0], title: c[0] === "companies" ? "ועוד " + more + " חברות חדשות" : "ועוד " + more + " עדכוני אג\"ח", text: "לחצו לרשימה המלאה של כל העדכונים", more: true }); }
     });
     return out;
   }
@@ -82,10 +91,11 @@
     var a = el(it.link ? "a" : "div", "inb-it");
     if (it.link) { a.href = it.link; if (!/^https?:\/\/(www\.)?iska\.co\.il/i.test(it.link)) { a.target = "_blank"; a.rel = "noopener"; } }
     else { a.tabIndex = 0; a.setAttribute("role", "button"); a.addEventListener("click", function () { openPop(it.cat); }); a.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPop(it.cat); } }); }
-    a.appendChild(el("span", "inb-cat", TAG[it.cat] || "עדכון"));
-    a.appendChild(el("span", "t", it.text));
-    if (it.date && !it.more) { a.appendChild(el("span", "inb-d", fmt(it.date))); }
-    a.title = it.text;
+    var tx = el("span", "tx"), t1 = el("span", "t1");
+    t1.appendChild(el("span", "", it.title || TAG[it.cat] || "עדכון"));
+    if (it.date && !it.more) { t1.appendChild(el("span", "inb-d", fmt(it.date))); }
+    tx.appendChild(t1); tx.appendChild(el("span", "t2", it.text)); a.appendChild(tx);
+    a.title = (it.title ? it.title + "\n" : "") + it.text;
     return a;
   }
 
@@ -120,16 +130,53 @@
     var tabs = el("div", "tabs"), lst = el("ul", "lst"), ft = el("div", "ft");
     var counts = {}; items.forEach(function (it) { counts[it.cat] = (counts[it.cat] || 0) + 1; });
     if (!cat || !counts[cat]) { cat = (CATS.filter(function (c) { return counts[c[0]]; })[0] || CATS[0])[0]; }
+    var sendBtn = el("button", "snd", "＋ שליחת עדכון"); sendBtn.type = "button";
+    sendBtn.addEventListener("click", function () { showForm(cur); });
+    var cur = cat, form = null;
+    function showForm(c) {
+      lst.style.display = "none"; ft.style.display = "none"; tabs.style.display = "none";
+      form = el("form"); form.noValidate = true;
+      form.innerHTML = '<p style="margin:0;font-size:15px;color:#34504a">יש לכם עדכון בנושא חברות, אג"ח או היתר עיסקא? כתבו אותו כאן. העדכון יפורסם אחרי בדיקה ואישור.</p>' +
+        '<div class="two"><div><label for="inb-fc">נושא</label><select id="inb-fc" name="cat"><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="other">עדכונים אחרים</option></select></div>' +
+        '<div><label for="inb-ft">כותרת <span class="h">(לא חובה)</span></label><input id="inb-ft" name="title" maxlength="120"></div></div>' +
+        '<label for="inb-fx">נוסח העדכון</label><textarea id="inb-fx" name="text" maxlength="400" required></textarea>' +
+        '<label for="inb-fl">קישור למקור <span class="h">(לא חובה)</span></label><input id="inb-fl" name="link" type="url" dir="ltr" maxlength="500" placeholder="https://">' +
+        '<div class="two"><div><label for="inb-fn">שם <span class="h">(לא חובה)</span></label><input id="inb-fn" name="name" maxlength="80" autocomplete="name"></div>' +
+        '<div><label for="inb-fp">טלפון או מייל <span class="h">(לא חובה, לבירורים)</span></label><input id="inb-fp" name="contact" maxlength="120" dir="ltr"></div></div>' +
+        '<div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>' +
+        '<div class="row"><button type="submit" class="snd">שליחה</button><button type="button" class="back">חזרה לעדכונים</button></div><p class="msg" aria-live="polite"></p>';
+      form.querySelector("select").value = c || "other";
+      box.appendChild(form);
+      var msg = form.querySelector(".msg"), sb = form.querySelector("button[type=submit]");
+      form.querySelector(".back").addEventListener("click", hideForm);
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var v = function (n) { return form.elements[n].value.trim(); };
+        if (v("text").length < 5) { msg.className = "msg bad"; msg.textContent = "נא לכתוב את נוסח העדכון"; form.elements.text.focus(); return; }
+        if (v("link") && !/^https?:\/\//i.test(v("link"))) { msg.className = "msg bad"; msg.textContent = "הקישור צריך להתחיל ב-https://"; return; }
+        sb.disabled = true; msg.className = "msg"; msg.textContent = "שולח…";
+        fetch(O + "/api/news", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify({ submit: 1, cat: v("cat"), title: v("title"), text: v("text"), link: v("link"), name: v("name"), contact: v("contact"), website: v("website") }) })
+          .then(function (r) { return r.json(); }).then(function (d) {
+            if (!d.ok) { sb.disabled = false; msg.className = "msg bad"; msg.textContent = d.error || "השליחה נכשלה"; return; }
+            Array.prototype.forEach.call(form.querySelectorAll("label,.two,textarea,input,select,p:first-child,button[type=submit]"), function (x) { x.style.display = "none"; });
+            msg.className = "msg ok"; msg.textContent = d.message || "תודה! העדכון נשלח, ויפורסם אחרי אישור.";
+          }).catch(function () { sb.disabled = false; msg.className = "msg bad"; msg.textContent = "השליחה נכשלה. נסו שוב."; });
+      });
+      form.elements.text.focus();
+    }
+    function hideForm() { if (form && form.parentNode) { form.parentNode.removeChild(form); } form = null; lst.style.display = ""; ft.style.display = ""; tabs.style.display = ""; }
     function fill(c) {
+      cur = c;
       Array.prototype.forEach.call(tabs.children, function (b) { b.className = b.getAttribute("data-c") === c ? "on" : ""; });
       lst.innerHTML = ""; ft.innerHTML = "";
       var rows = items.filter(function (it) { return it.cat === c; });
       if (!rows.length) { lst.appendChild(el("li", "empty", "אין כרגע עדכונים בנושא הזה")); }
       rows.forEach(function (it) {
         var li = el("li", it.pinned ? "pin" : ""); li.appendChild(el("span", "d", fmt(it.date)));
-        var t = el("span"); if (it.link) { var a = el("a", "", it.text); a.href = it.link; if (!/^https?:\/\/(www\.)?iska\.co\.il/i.test(it.link)) { a.target = "_blank"; a.rel = "noopener"; } t.appendChild(a); } else { t.textContent = it.text; }
+        var t = el("span"); if (it.title) { t.appendChild(el("span", "tt", it.title)); } if (it.link) { var a = el("a", "", it.text); a.href = it.link; if (!/^https?:\/\/(www\.)?iska\.co\.il/i.test(it.link)) { a.target = "_blank"; a.rel = "noopener"; } t.appendChild(a); } else { t.appendChild(document.createTextNode(it.text)); }
         li.appendChild(t); lst.appendChild(li);
       });
+      ft.appendChild(sendBtn);
       if (LINKS[c]) { var l = el("a", "", c === "companies" ? "לרשימת החברות המלאה ←" : "לרשימת האג\"ח המלאה ←"); l.href = LINKS[c]; ft.appendChild(l); }
       lst.scrollTop = 0;
     }

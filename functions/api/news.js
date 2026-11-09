@@ -2,12 +2,16 @@
 //  functions/api/news.js — תיבת העדכונים באתר (news-embed.js): עדכונים ידניים + אוטומטיים
 //
 //  GET  /api/news            -> { ok, updated, items: [...] }   ציבורי (CORS פתוח, מטמון 5 דקות)
-//       כל פריט: { id, cat: "companies"|"bonds"|"other", text, link, date, pinned, auto }
+//       כל פריט: { id, cat: "companies"|"bonds"|"other", title, text, link, date, pinned, auto }
+//       title = השורה הראשונה (למשל "חברה חדשה - היתר עיסקא פרטי"), text = השורה השנייה (שם החברה / האג"ח / נוסח העדכון)
 //       - ידניים: מהטבלה site_news (נכתבים מדף הניהול news-admin.html). רק פעילים ובטווח התאריכים.
 //       - אוטומטיים: חברות שנוספו בחודש האחרון (לפי created_at, בלי ימי ייבוא גדולים - 300 ומעלה ביום),
 //         ואג"ח חדשות בשלושת השבועות האחרונים (הנפקה חדשה / אישור חדש / נוספה) - אותו כלל כמו התגיות ברשימות (display.html).
 //  GET  /api/news?all=1      -> כל הפריטים הידניים (גם כבויים / שפג תוקפם), לניהול. דורש מנהל.
-//  POST /api/news {id?, cat, text, link, start_date, end_date, pinned, active}  -> הוספה / עדכון. דורש מנהל.
+//  POST /api/news {id?, cat, title, text, link, start_date, end_date, pinned, active}  -> הוספה / עדכון. דורש מנהל.
+//  POST /api/news {action:"approve", id}  -> אישור עדכון שנשלח מהאתר (מפורסם מיד). דורש מנהל.
+//  POST /api/news {submit:1, cat, title, text, link, name, contact}  -> שליחת עדכון מהאתר (כפתור "שליחת עדכון" בחלון העדכונים). ציבורי.
+//       נשמר כ"ממתין לאישור" (pending=1, לא מוצג) ומופיע בדף הניהול לאישור / עריכה / מחיקה. עד 5 שליחות ביום מאותה כתובת IP.
 //  DELETE /api/news?id=N     -> מחיקה. דורש מנהל.
 //  הטבלה נוצרת בפעם הראשונה ששומרים עדכון (migrations/0024_site_news.sql - אותו מבנה). לפני כן יש רק עדכונים אוטומטיים.
 // ============================================================================
@@ -19,28 +23,40 @@ const CATS = ['companies', 'bonds', 'other'];
 const ymd = (d) => d.toISOString().slice(0, 10);
 const daysAgo = (n) => ymd(new Date(Date.now() - n * 864e5));
 const clean = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max);
+const DEF_TITLE = { companies: 'עדכון בחברות', bonds: 'עדכון באג"ח', other: 'עדכון' };
 const NEW_CO_DAYS = 30, NEW_BOND_DAYS = 21, BULK_DAY = 300;
 
 const TABLE = `CREATE TABLE IF NOT EXISTS site_news (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   cat TEXT NOT NULL DEFAULT 'other',
+  title TEXT DEFAULT '',
   text TEXT NOT NULL,
   link TEXT DEFAULT '',
   start_date TEXT DEFAULT '',
   end_date TEXT DEFAULT '',
   pinned INTEGER DEFAULT 0,
   active INTEGER DEFAULT 1,
+  pending INTEGER DEFAULT 0,
+  submitter TEXT DEFAULT '',
+  contact TEXT DEFAULT '',
+  ip_hash TEXT DEFAULT '',
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 )`;
+// עמודות שנוספו אחרי שהטבלה אולי כבר נוצרה
+const COLS = ["title TEXT DEFAULT ''", "pending INTEGER DEFAULT 0", "submitter TEXT DEFAULT ''", "contact TEXT DEFAULT ''", "ip_hash TEXT DEFAULT ''"];
+async function ensureTable(env) {
+  await env.DB.prepare(TABLE).run();
+  for (const c of COLS) { try { await env.DB.prepare(`ALTER TABLE site_news ADD COLUMN ${c}`).run(); } catch {} }
+}
 
 async function manualItems(env, all) {
   try {
     const { results } = await env.DB.prepare('SELECT * FROM site_news ORDER BY pinned DESC, COALESCE(NULLIF(start_date,\'\'), substr(created_at,1,10)) DESC, id DESC').all();
     if (all) return results || [];
     const today = ymd(new Date());
-    return (results || []).filter((r) => r.active && (!r.start_date || r.start_date <= today) && (!r.end_date || r.end_date >= today))
-      .map((r) => ({ id: 'm' + r.id, cat: CATS.includes(r.cat) ? r.cat : 'other', text: r.text, link: r.link || '', date: r.start_date || String(r.created_at || '').slice(0, 10), pinned: !!r.pinned, auto: false }));
+    return (results || []).filter((r) => r.active && !r.pending && (!r.start_date || r.start_date <= today) && (!r.end_date || r.end_date >= today))
+      .map((r) => { const cat = CATS.includes(r.cat) ? r.cat : 'other'; return { id: 'm' + r.id, cat, title: clean(r.title, 120) || DEF_TITLE[cat], text: r.text, link: r.link || '', date: r.start_date || String(r.created_at || '').slice(0, 10), pinned: !!r.pinned, auto: false }; });
   } catch { return []; }          // הטבלה עוד לא נוצרה
 }
 
@@ -59,7 +75,7 @@ async function companyItems(env) {
     return (rows || []).filter((r) => r.d && clean(r.permit_name, 200)).map((r) => {
       const heb = clean(r.heb_name, 120), name = clean(r.permit_name, 160) + (heb && heb !== clean(r.permit_name, 160) ? ` (${heb})` : '');
       const priv = ['פרטי', 'רק פרטי'].includes(String(r.visibility || ''));
-      return { id: 'c' + r.id, cat: 'companies', text: `נוספה לרשימת החברות${priv ? ' (היתר עיסקא פרטי)' : ''}: ${name}`, link: '', date: r.d, pinned: false, auto: true, kind: priv ? 'private' : 'general' };
+      return { id: 'c' + r.id, cat: 'companies', title: `חברה חדשה ברשימה - היתר עיסקא ${priv ? 'פרטי' : 'כללי'}`, text: name, link: '', date: r.d, pinned: false, auto: true, kind: priv ? 'private' : 'general' };
     });
   } catch { return []; }
 }
@@ -91,15 +107,15 @@ async function bondItems(request, env) {
     const out = [];
     for (const g of groups.values()) {
       const n = g.names.length, lists = g.priv && g.gen ? 'פרטי וכללי' : g.priv ? 'פרטי' : g.gen ? 'כללי' : '';
-      const label = n > 1 ? { issue: `הנפקת ${n} אג"ח חדשות`, approval: `אושרו ${n} אג"ח`, new: `נוספו ${n} אג"ח לרשימה` }[g.kind] : { issue: 'הנפקת אג"ח חדשה', approval: 'אושרה אג"ח', new: 'נוספה אג"ח לרשימה' }[g.kind];
-      const what = n > 1 ? `${g.co}${g.co ? ' - ' : ''}${g.names.join(', ')}` : `${g.names[0]}${g.co ? ` (${g.co})` : ''}`;
-      out.push({ id: 'b' + g.ids.join('-').slice(0, 60), cat: 'bonds', text: `${label}: ${what}${lists ? ` · היתר עיסקא ${lists}` : ''}`, link: '', date: g.date, pinned: false, auto: true, kind: g.kind });
+      const title = (n > 1 ? { issue: `הנפקה חדשה - ${n} אג"ח`, approval: `אישור חדש - ${n} אג"ח`, new: `אג"ח חדשות ברשימה - ${n}` } : { issue: 'הנפקת אג"ח חדשה', approval: 'אג"ח - אישור חדש', new: 'אג"ח חדשה ברשימה' })[g.kind] + (lists ? ` · היתר עיסקא ${lists}` : '');
+      const what = n > 1 ? `${g.co}${g.co ? ': ' : ''}${g.names.join(', ')}` : `${g.names[0]}${g.co ? ` (${g.co})` : ''}`;
+      out.push({ id: 'b' + g.ids.join('-').slice(0, 60), cat: 'bonds', title, text: what, link: '', date: g.date, pinned: false, auto: true, kind: g.kind });
     }
     return out;
   } catch { return []; }
 }
 
-export async function onRequestOptions() { return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' } }); }
+export async function onRequestOptions() { return new Response(null, { status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' } }); }
 
 export async function onRequestGet({ request, env }) {
   const all = new URL(request.url).searchParams.get('all') === '1';
@@ -113,18 +129,52 @@ export async function onRequestGet({ request, env }) {
   return json({ ok: true, updated: new Date().toISOString(), items }, 200, { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' });
 }
 
+async function readBody(request) {          // JSON (מהניהול) או טקסט JSON (מהאתר, בלי בקשת preflight)
+  try { return JSON.parse(await request.text()); } catch { return null; }
+}
+const ipHash = async (request) => {
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('news:' + ip));
+  return [...new Uint8Array(h)].slice(0, 12).map((x) => x.toString(16).padStart(2, '0')).join('');
+};
+const PCORS = { ...CORS, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' };
+
+async function submit(request, env, b) {
+  const pj = (d, st = 200) => new Response(JSON.stringify(d), { status: st, headers: { ...PCORS, 'Content-Type': 'application/json; charset=utf-8' } });
+  if (clean(b.website, 10)) return pj({ ok: true });          // מלכודת לרובוטים (שדה מוסתר)
+  const text = clean(b.text, 400), title = clean(b.title, 120), link = clean(b.link, 500), cat = CATS.includes(b.cat) ? b.cat : 'other';
+  const name = clean(b.name, 80), contact = clean(b.contact, 120);
+  if (text.length < 5) return pj({ ok: false, error: 'נא לכתוב את נוסח העדכון' }, 400);
+  if (link && !/^https?:\/\//i.test(link)) return pj({ ok: false, error: 'הקישור צריך להתחיל ב-https://' }, 400);
+  await ensureTable(env);
+  const ih = await ipHash(request);
+  const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM site_news WHERE ip_hash = ? AND created_at >= datetime('now','-1 day')").bind(ih).first();
+  if (n && n.n >= 5) return pj({ ok: false, error: 'נשלחו כבר כמה עדכונים היום. אפשר לנסות שוב מחר.' }, 429);
+  await env.DB.prepare('INSERT INTO site_news (cat, title, text, link, active, pending, submitter, contact, ip_hash) VALUES (?,?,?,?,0,1,?,?,?)').bind(cat, title, text, link, name, contact, ih).run();
+  return pj({ ok: true, message: 'תודה! העדכון נשלח, ויפורסם אחרי אישור.' });
+}
+
 export async function onRequestPost({ request, env }) {
+  const b = await readBody(request);
+  if (!b) return json({ ok: false, error: 'bad_json' }, 400);
+  if (b.submit) return submit(request, env, b);
   if (!(await checkAdmin(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
-  let b; try { b = await request.json(); } catch { return json({ ok: false, error: 'bad_json' }, 400); }
-  const text = clean(b.text, 400), link = clean(b.link, 500), cat = CATS.includes(b.cat) ? b.cat : 'other';
+  await ensureTable(env);
+  const id = Number(b.id) || 0;
+  if (b.action === 'approve') {
+    if (!id) return json({ ok: false, error: 'missing id' }, 400);
+    await env.DB.prepare("UPDATE site_news SET pending=0, active=1, start_date=CASE WHEN COALESCE(start_date,'')='' THEN date('now') ELSE start_date END, updated_at=datetime('now') WHERE id=?").bind(id).run();
+    return json({ ok: true });
+  }
+  const text = clean(b.text, 400), title = clean(b.title, 120), link = clean(b.link, 500), cat = CATS.includes(b.cat) ? b.cat : 'other';
   const date = (s) => (/^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? String(s) : '');
   if (!text) return json({ ok: false, error: 'חסר נוסח העדכון' }, 400);
   if (link && !/^https?:\/\//i.test(link)) return json({ ok: false, error: 'הקישור צריך להתחיל ב-https://' }, 400);
-  const vals = [cat, text, link, date(b.start_date), date(b.end_date), b.pinned ? 1 : 0, b.active === false || b.active === 0 ? 0 : 1];
-  await env.DB.prepare(TABLE).run();
-  const id = Number(b.id) || 0;
-  if (id) await env.DB.prepare("UPDATE site_news SET cat=?, text=?, link=?, start_date=?, end_date=?, pinned=?, active=?, updated_at=datetime('now') WHERE id=?").bind(...vals, id).run();
-  else await env.DB.prepare('INSERT INTO site_news (cat, text, link, start_date, end_date, pinned, active) VALUES (?,?,?,?,?,?,?)').bind(...vals).run();
+  const vals = [cat, title, text, link, date(b.start_date), date(b.end_date), b.pinned ? 1 : 0, b.active === false || b.active === 0 ? 0 : 1];
+  if (id) {
+    const pend = b.approve ? ', pending=0' : '';          // "שמירה ואישור" לעדכון שנשלח מהאתר
+    await env.DB.prepare(`UPDATE site_news SET cat=?, title=?, text=?, link=?, start_date=?, end_date=?, pinned=?, active=?${pend}, updated_at=datetime('now') WHERE id=?`).bind(...vals, id).run();
+  } else await env.DB.prepare('INSERT INTO site_news (cat, title, text, link, start_date, end_date, pinned, active) VALUES (?,?,?,?,?,?,?,?)').bind(...vals).run();
   return json({ ok: true });
 }
 
