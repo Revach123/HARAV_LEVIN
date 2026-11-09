@@ -1,0 +1,49 @@
+name: Probe why a company is missing from the bond lists (read-only, manual)
+
+# בודק למספר תאגיד נתון: מה השורה של העסק במאגר (אישור אג"ח, סטטוס רשם, הערות), האם נכנס ל"מאושרות", ומה מאיה מחזירה לו.
+# קריאה בלבד. התוצאה: data/probe/bond_chp_probe.json
+on:
+  workflow_dispatch:
+    inputs:
+      chp:
+        description: "מספר תאגיד"
+        type: string
+        default: "44528798375"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Probe
+        env:
+          CHP: ${{ inputs.chp }}
+        run: |
+          mkdir -p data/probe
+          python - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, "scripts/bonds_list")
+          import build_approved_bonds as b
+          k = b.chp_norm(os.environ["CHP"])
+          companies = b.load_companies()
+          rows = [c for c in companies if b.chp_norm(c.get("chp_number")) == k or os.environ["CHP"] in str(c.get("chp_number"))]
+          approved = b.approved_map(companies)
+          out = {"key": k, "rows": [{x: c.get(x) for x in ("id", "chp_number", "permit_name", "registrar_name", "agch_approved", "visibility", "registry_status", "notes", "notes_scope", "tase_has_agch")} for c in rows],
+                 "chp_repr": [repr(c.get("chp_number")) for c in rows], "in_approved": k in approved, "approved_entry": approved.get(k), "approved_count": len(approved)}
+          json.dump(out, open("data/probe/bond_chp_probe.json", "w"), ensure_ascii=False, indent=1)
+          print(json.dumps(out, ensure_ascii=False, indent=1))
+          PY
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe/bond_chp_probe.json || true
+          git diff --cached --quiet || (git commit -m "bond chp probe" && git pull --rebase --autostash -X theirs && git push)
