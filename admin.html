@@ -1407,7 +1407,7 @@ function renderForm() {
       <div class="lookup-box" id="lookup-box" style="${formModal && noChp ? "display:none;" : ""}">
         <div class="chp-choice" id="chp-choice" style="${noChp ? "display:none;" : (isEdit ? "grid-template-columns:1fr;" : "grid-template-columns:1.4fr 1fr 1fr;")}">
           <div class="big-card">
-            <span class="ico">🔢</span><b>עסק עם ח.פ.</b>
+            <span class="ico">🔢</span><b>עסק עם מספר תאגיד</b>
             <div class="lookup-row" id="chp-row">
               <input type="text" id="chp" placeholder="מספר רישום (ח.פ. / שותפות / עמותה)" value="${escHtml(b.chp_number||"")}" ${noChp?"disabled":""} autocomplete="off">
               <span id="chp-spin" class="spin" style="display:none;"></span>
@@ -1423,7 +1423,7 @@ function renderForm() {
         </div>
         <div class="nochp-bar" id="nochp-bar" style="${noChp ? "" : "display:none;"}">
           <b>עסק בלי ח.פ.</b>
-          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש ח.פ.</button>
+          <button type="button" class="btn-ghost" onclick="toggleNoChp()">יש מספר תאגיד</button>
         </div>
       </div>
 
