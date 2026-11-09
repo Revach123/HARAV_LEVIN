@@ -1,0 +1,67 @@
+name: Audit approved businesses vs bourse companies (read-only, manual)
+
+# בודק לכל עסק מאושר לאג"ח (גם כאלה שהוכנסו ידנית): האם יש לו מספר, האם הוא מותאם לחברה בבורסה ויש לו אג"ח במאגר, ולעסקים בלי מספר - מציע חברה מתאימה לפי שם.
+# קריאה בלבד. התוצאה: data/probe/approved_match_audit.json
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Audit
+        run: |
+          mkdir -p data/probe
+          python - <<'PY'
+          import difflib, json, os, re, sys
+          sys.path.insert(0, "scripts/bonds_list")
+          import build_approved_bonds as b
+          norm = lambda s: re.sub(r"\s+", " ", re.sub(r"[^0-9A-Za-z֐-׿ ]", " ", re.sub(r'בע"?מ|בע״מ', " ", str(s or "")))).strip().lower()
+          companies = b.load_companies()
+          rows = [c for c in companies if (c.get("agch_approved") or "").strip() in b.APPROVED]
+          pool = json.load(open("data/bonds_list/bonds_pool.json", encoding="utf-8"))["rows"] if os.path.exists("data/bonds_list/bonds_pool.json") else []
+          pool_keys = {str(r["key"]) for r in pool}
+          maya = json.load(open("data/bonds_list/maya_companies.json", encoding="utf-8"))["companies"]
+          maya_chp = {b.chp_norm(c["chp"]): c for c in maya if c.get("chp")}
+          maya_nochp = {str(c["id"]): c for c in maya if not c.get("chp")}
+          maya_names = [(norm(c["name"]), c) for c in maya]
+          out = {"approved_businesses": len(rows), "pool_bonds": len(pool), "matched_with_bonds": 0, "no_tradable_bonds": 0, "number_not_in_bourse": [], "no_number": []}
+          for c in rows:
+              name = (c.get("registrar_name") or c.get("permit_name") or "").strip()
+              k = b.chp_norm(c.get("chp_number"))
+              if not k:
+                  n = norm(name); cands = []
+                  for mn, mc in maya_names:
+                      if not mn: continue
+                      r = difflib.SequenceMatcher(None, n, mn).ratio()
+                      if n and (n in mn or mn in n): r = max(r, 0.85)
+                      if r >= 0.6: cands.append((round(r, 2), mc["name"], mc["chp"] or mc["id"], bool(mc["chp"])))
+                  cands.sort(reverse=True)
+                  out["no_number"].append({"name": name, "visibility": c.get("visibility"), "candidates": [{"score": x[0], "name": x[1], "number": x[2], "is_corporate_number": x[3]} for x in cands[:3]]})
+              elif k in pool_keys:
+                  out["matched_with_bonds"] += 1
+              elif k in maya_chp or k in maya_nochp:
+                  out["no_tradable_bonds"] += 1
+              else:
+                  out["number_not_in_bourse"].append({"name": name, "number": k})
+          out["number_not_in_bourse_count"] = len(out["number_not_in_bourse"]); out["no_number_count"] = len(out["no_number"])
+          out["number_not_in_bourse"] = out["number_not_in_bourse"][:120]
+          json.dump(out, open("data/probe/approved_match_audit.json", "w"), ensure_ascii=False, indent=1)
+          print({k: v for k, v in out.items() if not isinstance(v, list)})
+          for x in out["no_number"][:30]: print(x)
+          PY
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/probe/approved_match_audit.json || true
+          git diff --cached --quiet || (git commit -m "approved match audit" && git pull --rebase --autostash -X theirs && git push)
