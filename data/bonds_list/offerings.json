@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-08",
+ "updated": "2026-11-09",
  "upcoming": [
   {
    "id": 10358,
@@ -638,29 +638,6 @@
    ],
    "carried": true,
    "last_seen": "2026-11-08"
-  },
-  {
-   "chp_number": "514481233",
-   "company_name": "אי.אס.איי",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10399,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778433",
-   "maya_report_id": 1778585,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-05"
   },
   {
    "chp_number": "520035171",
