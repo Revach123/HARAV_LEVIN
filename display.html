@@ -268,7 +268,7 @@ function groupSubRows(list) {
   return out;
 }
 
-// מספר מנפיק (מזהה החברה בבורסה, data/bonds_list/maya_companies.json): מוצג בסוגריים אחרי מספר התאגיד. לחברה בלי מספר תאגיד המזהה הוא מספר הבורסה.
+// מספר מנפיק (מזהה החברה בבורסה, data/bonds_list/maya_companies.json): רק לחברה בלי מספר תאגיד - המזהה שלה הוא מספר המנפיק, ומוצג עם "(מספר מנפיק)" בסוגריים.
 const MAYA = { byChp: new Map(), noChp: new Set(), p: null };
 function mayaLoad() {
   return MAYA.p || (MAYA.p = fetch(`${API_BASE}/data/bonds_list/maya_companies.json`).then(r => (r.ok ? r.json() : null)).then(d => {
@@ -277,7 +277,7 @@ function mayaLoad() {
 }
 function chpShown(v) {
   const k = String(v ?? "").trim().replace(/^0+(?=\d)/, ""); if (!k) return v ?? "";
-  return MAYA.byChp.has(k) ? `${v} (מספר מנפיק ${MAYA.byChp.get(k)})` : MAYA.noChp.has(k) ? `${v} (מספר מנפיק)` : v;
+  return MAYA.noChp.has(k) ? `${v} (מספר מנפיק)` : v;
 }
 
 // ── רכיב יחיד: טוען ומצייר רשימה אחת לתוך container ──
