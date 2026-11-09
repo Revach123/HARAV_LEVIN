@@ -2,6 +2,7 @@ import { checkAdmin } from "../_shared/auth.js";
 import { bondFlagFor } from "../company-bonds.js";
 import { normalizePcat } from "../_shared/pcat.js";
 import { syncBondFlagsFor } from "../_shared/bond-pcat.js";
+import { triggerBondsBuild, affectsBondsList } from "../_shared/bonds-build.js";
 // PUT    /api/businesses/:id   → update (admin only)
 // DELETE /api/businesses/:id   → delete (admin only)
 
@@ -17,6 +18,7 @@ export async function onRequestPut({ request, env, params }) {
     const body = await request.json();
     const { chp_number, entity_type, registrar_name, permit_name, category, region, notes, notes_scope, visibility, agch_approved, has_details } = body;
 
+    const oldRow = await env.DB.prepare("SELECT agch_approved, visibility, chp_number, registrar_name, permit_name, notes, notes_scope FROM businesses WHERE id = ?").bind(id).first().catch(() => null);
     const vals = [
       chp_number     || "",
       entity_type    || "company",
@@ -61,6 +63,7 @@ export async function onRequestPut({ request, env, params }) {
     {          // עדכון מיידי של דגל "יש אג"ח" (במקום להמתין לריצה הלילית)
       try { const f = await bondFlagFor(env, chp_number); if (f) await env.DB.prepare("UPDATE businesses SET tase_has_agch = ? WHERE id = ?").bind(f, id).run(); } catch {}
     }
+    if (affectsBondsList(oldRow, { agch_approved, visibility, chp_number, registrar_name, permit_name, notes, notes_scope })) await triggerBondsBuild(env, chp_number);          // רשימת האג"ח מתעדכנת מיד (בנייה מהירה)
     await syncBondFlagsFor(request, env, id);          // has_agch_any (יש אג"ח כולל לא סחיר) + הקטגוריה "חברות מנפיקות אג"ח" (_shared/bond-pcat.js)
     return Response.json({ success: true });
   } catch (e) {
@@ -74,7 +77,9 @@ export async function onRequestDelete({ request, env, params }) {
   }
 
   try {
+    const oldRow = await env.DB.prepare("SELECT agch_approved, chp_number FROM businesses WHERE id = ?").bind(params.id).first().catch(() => null);
     await env.DB.prepare("DELETE FROM businesses WHERE id=?").bind(params.id).run();
+    if (affectsBondsList(oldRow, null)) await triggerBondsBuild(env, oldRow.chp_number);
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
