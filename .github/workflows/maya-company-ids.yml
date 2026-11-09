@@ -29,7 +29,7 @@ jobs:
         run: |
           git config user.name  "github-actions"
           git config user.email "actions@github.com"
-          git add data/bonds_list/maya_company_ids.json
+          git add data/bonds_list/maya_company_ids.json data/bonds_list/maya_companies.json
           git diff --staged --quiet && echo "אין שינויים" && exit 0
           git commit -m "maya-company-ids: $(date -u +%FT%TZ)"
           git pull --rebase --autostash -X theirs
