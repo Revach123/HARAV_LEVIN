@@ -35,6 +35,8 @@ td.act{white-space:nowrap}td.act button{padding:5px 10px;font-size:14px}
 code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:inline-block;font-size:14px}
 .scroll{overflow-x:auto}
 #login{max-width:420px}
+.dur{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;margin:4px 0 6px}
+.dur .pair{display:flex;gap:6px}.dur input{width:90px}.dur select{width:auto}
 .auto2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.auto2 section,#fundsSec{min-width:0}
 h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
 .al{list-style:none;margin:0;padding:0;font-size:14px}
@@ -96,7 +98,18 @@ h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
 
     <div class="card">
       <h2>עדכונים אוטומטיים (מוצגים עכשיו באתר)</h2>
-      <p class="hint">חברות שנוספו בחודש האחרון, אג"ח חדשות בשלושת השבועות האחרונים, ומסלולים שסומנו חדש / הוסר ברשימת הקרנות. מתעדכן באתר תוך כמה דקות.</p>
+      <div class="dur">
+        <div><label for="coN">חברות חדשות מוצגות למשך</label><span class="pair"><input type="number" id="coN" min="1" max="365" inputmode="numeric"><select id="coU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+        <div><label for="boN">אג"ח חדשות מוצגות למשך</label><span class="pair"><input type="number" id="boN" min="1" max="365" inputmode="numeric"><select id="boU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+      </div>
+      <div class="dur">
+        <div><label for="tcN">סימון "חדש" ברשימת החברות למשך</label><span class="pair"><input type="number" id="tcN" min="1" max="365" inputmode="numeric"><select id="tcU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+        <div><label for="tbN">סימון "חדש" ברשימת האג"ח למשך</label><span class="pair"><input type="number" id="tbN" min="1" max="365" inputmode="numeric"><select id="tbU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+        <div><button type="button" id="saveDur">שמירה</button></div>
+      </div>
+      <p class="hint" style="margin:0">השורה הראשונה: כמה זמן העדכון מופיע בתיבת העדכונים. השורה השנייה: כמה זמן החברה / האג"ח מסומנת "חדש" ברשימות עצמן באתר.</p>
+      <p class="msg" id="dmsg"></p>
+      <p class="hint" id="autoHint">ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). בתיבת העדכונים תוך דקה.</p>
       <div class="auto2"><section><h3>חברות <span class="tag" id="nCo"></span></h3><ul class="al" id="liveCo"></ul></section><section><h3>אג"ח <span class="tag" id="nBo"></span></h3><ul class="al" id="liveBo"></ul></section></div>
       <section id="fundsSec" hidden><h3>קרנות ומסלולים <span class="tag" id="nFu"></span></h3><ul class="al two" id="liveFu"></ul></section>
     </div>
@@ -127,7 +140,9 @@ const api = (path, opt = {}) => fetch(path, { ...opt, cache: "no-store", headers
 async function loadManual() {
   const r = await api("/api/news?all=1");
   if (r.status === 401) { showLogin(); return false; }
-  manual = (await r.json()).items || [];
+  const data = await r.json();
+  manual = data.items || [];
+  if (data.settings) showDur(data.settings);
   const today = new Date().toISOString().slice(0, 10);
   const pend = manual.filter(m => m.pending), list = manual.filter(m => !m.pending);
   $("pendCard").hidden = !pend.length; $("pendN").textContent = pend.length;
@@ -183,6 +198,18 @@ async function rowClick(e) {
 $("rows").addEventListener("click", rowClick);
 $("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
+// משך ההצגה של העדכונים האוטומטיים (נשמר בימים; מוצג בשבועות כשמתחלק ב-7)
+const durTxt = n => n % 7 === 0 ? (n === 7 ? "שבוע" : `${n / 7} שבועות`) : (n === 1 ? "יום" : `${n} ימים`);
+function setDur(id, n) { const w = n % 7 === 0; $(id + "N").value = w ? n / 7 : n; $(id + "U").value = w ? "w" : "d"; }
+const getDur = id => Math.floor(Number($(id + "N").value)) * ($(id + "U").value === "w" ? 7 : 1);
+function showDur(st) { setDur("co", st.co_days); setDur("bo", st.bond_days); setDur("tc", st.tag_co_days); setDur("tb", st.tag_bond_days); $("autoHint").textContent = `מוצגים: חברות שנוספו לרשימה (עד ${durTxt(st.co_days)} מיום ההוספה), אג"ח חדשות (עד ${durTxt(st.bond_days)}), ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). בתיבת העדכונים תוך דקה.`; }
+$("saveDur").addEventListener("click", async () => {
+  const co = getDur("co"), bo = getDur("bo"), tc = getDur("tc"), tb = getDur("tb"), msg = $("dmsg");
+  if (![co, bo, tc, tb].every(n => n >= 1 && n <= 365)) { msg.className = "msg bad"; msg.textContent = "נא לבחור בין יום אחד ל-365 ימים"; return; }
+  const d = await (await api("/api/news", { method: "POST", body: JSON.stringify({ action: "settings", co_days: co, bond_days: bo, tag_co_days: tc, tag_bond_days: tb }) })).json().catch(() => ({}));
+  if (!d.ok) { msg.className = "msg bad"; msg.textContent = d.error || "השמירה נכשלה"; return; }
+  msg.className = "msg ok"; msg.textContent = "נשמר ✓ (ברשימות: מיד בטעינה הבאה של הדף; בתיבת העדכונים: תוך דקה)"; showDur(d.settings); loadLive();
+});
 // נושא: אחד הנושאים, או "אחר" = כיתוב ידני (נשמר ככותרת; הנושא של עדכון קיים נשמר, ובעדכון חדש = עדכון כללי)
 let editCat = "other";
 function showCustom() { const c = $("fcat").value === "custom"; $("customWrap").hidden = !c; if (c && !$("fid").value) editCat = "other"; }
