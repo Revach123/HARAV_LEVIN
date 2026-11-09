@@ -101,10 +101,15 @@ h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
       <div class="dur">
         <div><label for="coN">חברות חדשות מוצגות למשך</label><span class="pair"><input type="number" id="coN" min="1" max="365" inputmode="numeric"><select id="coU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
         <div><label for="boN">אג"ח חדשות מוצגות למשך</label><span class="pair"><input type="number" id="boN" min="1" max="365" inputmode="numeric"><select id="boU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+      </div>
+      <div class="dur">
+        <div><label for="tcN">סימון "חדש" ברשימת החברות למשך</label><span class="pair"><input type="number" id="tcN" min="1" max="365" inputmode="numeric"><select id="tcU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
+        <div><label for="tbN">סימון "חדש" ברשימת האג"ח למשך</label><span class="pair"><input type="number" id="tbN" min="1" max="365" inputmode="numeric"><select id="tbU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
         <div><button type="button" id="saveDur">שמירה</button></div>
       </div>
+      <p class="hint" style="margin:0">השורה הראשונה: כמה זמן העדכון מופיע בתיבת העדכונים. השורה השנייה: כמה זמן החברה / האג"ח מסומנת "חדש" ברשימות עצמן באתר.</p>
       <p class="msg" id="dmsg"></p>
-      <p class="hint" id="autoHint">ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). מתעדכן באתר תוך כמה דקות.</p>
+      <p class="hint" id="autoHint">ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). בתיבת העדכונים תוך דקה.</p>
       <div class="auto2"><section><h3>חברות <span class="tag" id="nCo"></span></h3><ul class="al" id="liveCo"></ul></section><section><h3>אג"ח <span class="tag" id="nBo"></span></h3><ul class="al" id="liveBo"></ul></section></div>
       <section id="fundsSec" hidden><h3>קרנות ומסלולים <span class="tag" id="nFu"></span></h3><ul class="al two" id="liveFu"></ul></section>
     </div>
@@ -197,13 +202,13 @@ $("cancel").addEventListener("click", resetForm);
 const durTxt = n => n % 7 === 0 ? (n === 7 ? "שבוע" : `${n / 7} שבועות`) : (n === 1 ? "יום" : `${n} ימים`);
 function setDur(id, n) { const w = n % 7 === 0; $(id + "N").value = w ? n / 7 : n; $(id + "U").value = w ? "w" : "d"; }
 const getDur = id => Math.floor(Number($(id + "N").value)) * ($(id + "U").value === "w" ? 7 : 1);
-function showDur(st) { setDur("co", st.co_days); setDur("bo", st.bond_days); $("autoHint").textContent = `מוצגים: חברות שנוספו לרשימה (עד ${durTxt(st.co_days)} מיום ההוספה), אג"ח חדשות (עד ${durTxt(st.bond_days)}), ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). מתעדכן באתר תוך כמה דקות.`; }
+function showDur(st) { setDur("co", st.co_days); setDur("bo", st.bond_days); setDur("tc", st.tag_co_days); setDur("tb", st.tag_bond_days); $("autoHint").textContent = `מוצגים: חברות שנוספו לרשימה (עד ${durTxt(st.co_days)} מיום ההוספה), אג"ח חדשות (עד ${durTxt(st.bond_days)}), ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). בתיבת העדכונים תוך דקה.`; }
 $("saveDur").addEventListener("click", async () => {
-  const co = getDur("co"), bo = getDur("bo"), msg = $("dmsg");
-  if (!(co >= 1 && co <= 365 && bo >= 1 && bo <= 365)) { msg.className = "msg bad"; msg.textContent = "נא לבחור בין יום אחד ל-365 ימים"; return; }
-  const d = await (await api("/api/news", { method: "POST", body: JSON.stringify({ action: "settings", co_days: co, bond_days: bo }) })).json().catch(() => ({}));
+  const co = getDur("co"), bo = getDur("bo"), tc = getDur("tc"), tb = getDur("tb"), msg = $("dmsg");
+  if (![co, bo, tc, tb].every(n => n >= 1 && n <= 365)) { msg.className = "msg bad"; msg.textContent = "נא לבחור בין יום אחד ל-365 ימים"; return; }
+  const d = await (await api("/api/news", { method: "POST", body: JSON.stringify({ action: "settings", co_days: co, bond_days: bo, tag_co_days: tc, tag_bond_days: tb }) })).json().catch(() => ({}));
   if (!d.ok) { msg.className = "msg bad"; msg.textContent = d.error || "השמירה נכשלה"; return; }
-  msg.className = "msg ok"; msg.textContent = "נשמר ✓ (באתר תוך כמה דקות)"; showDur(d.settings); loadLive();
+  msg.className = "msg ok"; msg.textContent = "נשמר ✓ (ברשימות: מיד בטעינה הבאה של הדף; בתיבת העדכונים: תוך דקה)"; showDur(d.settings); loadLive();
 });
 // נושא: אחד הנושאים, או "אחר" = כיתוב ידני (נשמר ככותרת; הנושא של עדכון קיים נשמר, ובעדכון חדש = עדכון כללי)
 let editCat = "other";
