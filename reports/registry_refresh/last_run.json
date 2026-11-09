@@ -12,7 +12,7 @@
    "registrar_name": 40,
    "biz_type": 91
   },
-  "updated": "2026-11-09T12:11:29.659176Z",
+  "updated": "2026-11-09T12:23:52.901485Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1284,
@@ -44,8 +44,9 @@
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
-  "mode": "dry-run",
-  "statements_applied": 0,
+  "readback_mismatches": 0,
+  "mode": "applied",
+  "statements_applied": 51,
   "problems": []
  },
  "changes": [
