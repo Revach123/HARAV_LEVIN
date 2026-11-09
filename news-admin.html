@@ -35,6 +35,15 @@ td.act{white-space:nowrap}td.act button{padding:5px 10px;font-size:14px}
 code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:inline-block;font-size:14px}
 .scroll{overflow-x:auto}
 #login{max-width:420px}
+.auto2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.auto2 section,#fundsSec{min-width:0}
+h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
+.al{list-style:none;margin:0;padding:0;font-size:14px}
+.al.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:16px}
+.al li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px solid #eef2f2;min-width:0}
+.al .d{flex:none;color:var(--muted);font-size:12px}
+.al .x{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.al .x b{font-weight:bold;color:var(--dark)}
+@media (max-width:700px){.auto2,.al.two{grid-template-columns:minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -86,16 +95,10 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
     </div>
 
     <div class="card">
-      <h2>מה מוצג עכשיו באתר</h2>
-      <p class="hint">העדכונים הידניים הפעילים, וגם עדכונים אוטומטיים: חברות שנוספו בחודש האחרון ואג"ח חדשות בשלושת השבועות האחרונים. (מתעדכן באתר תוך כמה דקות.)</p>
-      <div class="scroll"><table><thead><tr><th>תאריך</th><th>נושא</th><th>נוסח</th><th>מקור</th></tr></thead><tbody id="live"></tbody></table></div>
-    </div>
-
-    <div class="card">
-      <h2>התקנה באתר</h2>
-      <p>ב-WPCode: קטע קוד חדש מסוג HTML, מיקום "Site Wide Footer", עם השורה:</p>
-      <p><code>&lt;script src="https://harav-levin.pages.dev/news-embed.js" defer&gt;&lt;/script&gt;</code></p>
-      <p class="hint">אפשר להוסיף <code>data-top="90"</code> כדי שהפס יופיע מתחת לכותרת קבועה, ו-<code>data-companies-url="..."</code> / <code>data-bonds-url="..."</code> לקישור לרשימות המלאות.</p>
+      <h2>עדכונים אוטומטיים (מוצגים עכשיו באתר)</h2>
+      <p class="hint">חברות שנוספו בחודש האחרון, אג"ח חדשות בשלושת השבועות האחרונים, ומסלולים שסומנו חדש / הוסר ברשימת הקרנות. מתעדכן באתר תוך כמה דקות.</p>
+      <div class="auto2"><section><h3>חברות <span class="tag" id="nCo"></span></h3><ul class="al" id="liveCo"></ul></section><section><h3>אג"ח <span class="tag" id="nBo"></span></h3><ul class="al" id="liveBo"></ul></section></div>
+      <section id="fundsSec" hidden><h3>קרנות ומסלולים <span class="tag" id="nFu"></span></h3><ul class="al two" id="liveFu"></ul></section>
     </div>
   </div>
 </main>
@@ -145,8 +148,12 @@ async function loadManual() {
 async function loadLive() {
   try {
     const d = await (await fetch("/api/news", { cache: "no-store" })).json();
-    $("live").innerHTML = (d.items || []).map(it => `<tr><td>${fmt(it.date)}</td><td>${CAT[it.cat] || ""}</td><td><b>${esc(it.title || "")}</b><br>${esc(it.text)}</td><td>${it.auto ? "אוטומטי" : it.pinned ? "ידני 📌" : "ידני"}</td></tr>`).join("") || `<tr><td colspan="4" class="off">אין עדכונים - הפס לא יוצג באתר</td></tr>`;
-  } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
+    const auto = (d.items || []).filter(it => it.auto);
+    const li = it => `<li title="${esc((it.title || "") + " - " + it.text)}"><span class="d">${fmt(it.date).slice(0, 5)}</span><span class="x"><b>${esc((it.title || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, ""))}</b> ${esc(it.text)}</span></li>`;
+    const put = (cat, ul, n) => { const r = auto.filter(it => it.cat === cat); $(ul).innerHTML = r.map(li).join("") || `<li class="off">אין כרגע</li>`; $(n).textContent = r.length; return r.length; };
+    put("companies", "liveCo", "nCo"); put("bonds", "liveBo", "nBo");
+    $("fundsSec").hidden = !put("funds", "liveFu", "nFu");
+  } catch { $("liveCo").innerHTML = `<li class="off">שגיאה בטעינה</li>`; }
 }
 function resetForm() {
   $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "companies"; showCustom(); $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
