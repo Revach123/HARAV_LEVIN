@@ -64,9 +64,9 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
       <label for="ftext">נוסח העדכון (השורה השנייה)</label>
       <textarea id="ftext" maxlength="400" placeholder="למשל: נוסף שטר היתר עיסקא חדש לרשימה"></textarea>
       <div class="grid">
-        <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option></select></div>
+        <div><label for="fcat">נושא</label><select id="fcat"><option value="other">עדכונים אחרים</option><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option></select></div>
         <div><label for="fstart">מתאריך</label><input type="date" id="fstart"><p class="hint">ריק = מיד</p></div>
-        <div><label for="fend">עד תאריך</label><input type="date" id="fend"><p class="hint">ריק = בלי הגבלה</p></div>
+        <div><label for="fdur">למשך</label><div style="display:flex;gap:6px"><input type="number" id="fdur" min="1" max="999" inputmode="numeric" style="width:90px"><select id="funit"><option value="">ללא הגבלה</option><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></div><p class="hint" id="fendHint">ללא הגבלה</p></div>
       </div>
       <label for="flink">קישור (לא חובה)</label>
       <input type="url" id="flink" dir="ltr" placeholder="https://www.iska.co.il/...">
@@ -100,12 +100,25 @@ code{background:#f1f4f4;padding:2px 6px;border-radius:4px;direction:ltr;display:
   </div>
 </main>
 <script>
-const CAT = { companies: "חברות", bonds: 'אג"ח', other: "עדכונים אחרים" };
+const CAT = { companies: "חברות", bonds: 'אג"ח', funds: "קרנות ומסלולים", other: "עדכונים אחרים" };
+// "למשך": מספר + ימים / שבועות / חודשים מתאריך ההתחלה (או מהיום). נשמר כתאריך סיום (כולל): 7 ימים מה-1 בחודש = עד ה-7.
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+function endDate() {
+  const n = Math.floor(Number($("fdur").value)), u = $("funit").value;
+  if (!u || !(n > 0)) return "";
+  const d = new Date(($("fstart").value || isoDay(new Date())) + "T12:00:00");
+  if (u === "m") d.setMonth(d.getMonth() + n); else d.setDate(d.getDate() + n * (u === "w" ? 7 : 1));
+  d.setDate(d.getDate() - 1);
+  return isoDay(d);
+}
+function endHint() { const e = endDate(); $("fendHint").textContent = e ? `עד ${fmt(e)} (כולל)` : "ללא הגבלה"; if ($("funit").value && !$("fdur").value) $("fendHint").textContent = "נא לבחור מספר"; }
 const $ = id => document.getElementById(id);
 let token = ""; try { token = sessionStorage.getItem("adminToken") || ""; } catch {}
 let manual = [];
 const fmt = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const filesOf = m => { try { const f = JSON.parse(m.files || "[]"); return Array.isArray(f) ? f : []; } catch { return []; } };
+const filesHtml = m => filesOf(m).map(f => `<br><button type="button" class="sec" style="padding:3px 9px;font-size:13px;margin-top:4px" data-f="${esc(f.key)}" data-n="${esc(f.name)}">📎 ${esc(f.name)} (${Math.max(1, Math.round((f.size || 0) / 1024))} KB)</button>`).join("");
 const api = (path, opt = {}) => fetch(path, { ...opt, cache: "no-store", headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
 
 async function loadManual() {
@@ -116,14 +129,14 @@ async function loadManual() {
   const pend = manual.filter(m => m.pending), list = manual.filter(m => !m.pending);
   $("pendCard").hidden = !pend.length; $("pendN").textContent = pend.length;
   $("pend").innerHTML = pend.map(m => `<tr><td>${fmt(m.created_at)}</td><td><span class="tag">${CAT[m.cat] || CAT.other}</span></td>
-      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(m.link)}</a>` : ""}</td>
+      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener noreferrer" dir="ltr">${esc(m.link)}</a>` : ""}${filesHtml(m)}</td>
       <td>${esc(m.submitter || "")}${m.contact ? `<br><span dir="ltr">${esc(m.contact)}</span>` : ""}</td>
       <td class="act"><button type="button" data-a="${m.id}">אישור</button> <button type="button" class="sec" data-e="${m.id}">עריכה</button> <button type="button" class="del" data-d="${m.id}">מחיקה</button></td></tr>`).join("");
   $("rows").innerHTML = list.length ? list.map(m => {
     const live = m.active && (!m.start_date || m.start_date <= today) && (!m.end_date || m.end_date >= today);
     const st = !m.active ? "כבוי" : m.end_date && m.end_date < today ? "פג תוקף" : m.start_date && m.start_date > today ? "עוד לא התחיל" : "מוצג";
     return `<tr class="${live ? "" : "off"}"><td><span class="tag">${CAT[m.cat] || CAT.other}</span>${m.pinned ? " 📌" : ""}</td>
-      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener" dir="ltr">${esc(m.link)}</a>` : ""}</td>
+      <td>${m.title ? `<b>${esc(m.title)}</b><br>` : ""}${esc(m.text)}${m.link ? `<br><a href="${esc(m.link)}" target="_blank" rel="noopener" dir="ltr">${esc(m.link)}</a>` : ""}${filesHtml(m)}</td>
       <td>${m.start_date ? "מ-" + fmt(m.start_date) : "מיד"}${m.end_date ? "<br>עד " + fmt(m.end_date) : ""}</td><td>${st}</td>
       <td class="act"><button type="button" class="sec" data-e="${m.id}">עריכה</button> <button type="button" class="del" data-d="${m.id}">מחיקה</button></td></tr>`;
   }).join("") : `<tr><td colspan="5" class="off">אין עדיין עדכונים ידניים</td></tr>`;
@@ -136,17 +149,26 @@ async function loadLive() {
   } catch { $("live").innerHTML = `<tr><td colspan="4" class="off">שגיאה בטעינה</td></tr>`; }
 }
 function resetForm() {
-  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fend").value = "";
+  $("fid").value = ""; $("ftitle2").value = ""; $("ftext").value = ""; $("flink").value = ""; $("fcat").value = "other"; $("fstart").value = ""; $("fdur").value = ""; $("funit").value = ""; endHint();
   $("fpin").checked = false; $("factive").checked = true; $("ftitle").textContent = "עדכון חדש"; $("cancel").hidden = true; $("saveApprove").hidden = true;
 }
 function edit(id) {
   const m = manual.find(x => x.id === id); if (!m) return;
-  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || ""; $("fend").value = m.end_date || "";
+  $("fid").value = m.id; $("ftitle2").value = m.title || ""; $("ftext").value = m.text; $("flink").value = m.link || ""; $("fcat").value = m.cat; $("fstart").value = m.start_date || "";
+  if (m.end_date) { const base = new Date((m.start_date || String(m.created_at || "").slice(0, 10) || isoDay(new Date())) + "T12:00:00"), end = new Date(m.end_date + "T12:00:00"); $("fdur").value = Math.max(1, Math.round((end - base) / 864e5) + 1); $("funit").value = "d"; } else { $("fdur").value = ""; $("funit").value = ""; }
+  endHint();
   $("fpin").checked = !!m.pinned; $("factive").checked = !!m.active || !!m.pending; $("ftitle").textContent = m.pending ? "עריכת עדכון שנשלח מהאתר (ממתין לאישור)" : "עריכת עדכון"; $("saveApprove").hidden = !m.pending; $("cancel").hidden = false; $("smsg").textContent = "";
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 async function rowClick(e) {
   const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.f) {          // קובץ מצורף: נפתח עם הרשאת הניהול
+    const r = await api(`/api/news?file=${encodeURIComponent(b.dataset.f)}`);
+    if (!r.ok) { alert("הקובץ לא נמצא"); return; }
+    const url = URL.createObjectURL(await r.blob()), w = window.open(url, "_blank");
+    if (!w) { const a = document.createElement("a"); a.href = url; a.download = b.dataset.n || "file"; a.click(); }
+    setTimeout(() => URL.revokeObjectURL(url), 60000); return;
+  }
   if (b.dataset.a) { await api("/api/news", { method: "POST", body: JSON.stringify({ action: "approve", id: Number(b.dataset.a) }) }); await loadManual(); loadLive(); return; }
   if (b.dataset.e) edit(Number(b.dataset.e));
   if (b.dataset.d && confirm("למחוק את העדכון?")) { await api(`/api/news?id=${b.dataset.d}`, { method: "DELETE" }); await loadManual(); loadLive(); }
@@ -154,9 +176,11 @@ async function rowClick(e) {
 $("rows").addEventListener("click", rowClick);
 $("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
+["fdur", "funit", "fstart"].forEach(id => $(id).addEventListener("input", endHint));
+$("funit").addEventListener("change", () => { if ($("funit").value && !$("fdur").value) $("fdur").value = 1; endHint(); });
 async function save(approve) {
   const msg = $("smsg"); msg.className = "msg"; msg.textContent = "שומר…";
-  const body = { id: Number($("fid").value) || 0, title: $("ftitle2").value, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value, end_date: $("fend").value, pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
+  const body = { id: Number($("fid").value) || 0, title: $("ftitle2").value, text: $("ftext").value, link: $("flink").value.trim(), cat: $("fcat").value, start_date: $("fstart").value || (endDate() ? isoDay(new Date()) : ""), end_date: endDate(), pinned: $("fpin").checked, active: $("factive").checked, approve: !!approve };
   const r = await api("/api/news", { method: "POST", body: JSON.stringify(body) });
   const d = await r.json().catch(() => ({}));
   if (r.status === 401) { showLogin(); return; }

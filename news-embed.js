@@ -4,19 +4,20 @@
 //   data-top="90"              המרחק מראש החלון בפיקסלים (למשל מתחת לכותרת קבועה של האתר). ברירת מחדל 0.
 //   data-companies-url="..."   קישור לרשימת החברות באתר (מוצג בחלון "כל העדכונים" בלשונית החברות)
 //   data-bonds-url="..."       קישור לרשימת האג"ח באתר
+//   data-funds-url="..."       קישור לרשימת הקרנות והמסלולים באתר
 //   data-delay="5"             כמה שניות עוצר על כל עדכון
 // העדכונים: /api/news (ידניים מדף הניהול news-admin.html + חברות ואג"ח חדשות אוטומטית).
 // הפס מתגלגל (עוצר על כל עדכון ועובר לבא; עצירה כשהעכבר עליו), כפתור לחלון גדול עם כל העדכונים לפי חברות / אג"ח / עדכונים אחרים,
 // וכפתור הסתרה: הפס מתקפל ללשונית קטנה עד סוף הביקור (וחוזר מיד כשיש עדכון חדש).
-// בחלון יש גם "שליחת עדכון": טופס קצר; העדכון נשמר כממתין לאישור ומופיע בדף הניהול (news-admin.html) לאישור / עריכה.
+// בחלון יש גם "שליחת עדכון": טופס קצר (עם קבצים מצורפים); העדכון נשמר כממתין לאישור ומופיע בדף הניהול (news-admin.html) לאישור / עריכה.
 (function () {
   if (window.__inbLoaded) { return; } window.__inbLoaded = true;
   var sc = document.currentScript, O = sc && sc.src ? new URL(sc.src).origin : "https://harav-levin.pages.dev";
   var attr = function (n) { return (sc && sc.getAttribute(n)) || ""; };
   var TOP = Number(attr("data-top")) || 0, DELAY = Math.max(2, Number(attr("data-delay")) || 5) * 1000;
-  var LINKS = { companies: attr("data-companies-url"), bonds: attr("data-bonds-url") };
-  var CATS = [["companies", "חברות"], ["bonds", "אג\"ח"], ["other", "עדכונים אחרים"]];
-  var TAG = { companies: "חברות", bonds: "אג\"ח", other: "עדכון" };
+  var LINKS = { companies: attr("data-companies-url"), bonds: attr("data-bonds-url"), funds: attr("data-funds-url") };
+  var CATS = [["companies", "חברות"], ["bonds", "אג\"ח"], ["funds", "קרנות ומסלולים"], ["other", "עדכונים אחרים"]];
+  var TAG = { companies: "חברות", bonds: "אג\"ח", funds: "קרנות ומסלולים", other: "עדכון" };
   var PER_CAT = 6;          // בפס המתגלגל: עד 6 עדכונים אוטומטיים מכל סוג, ואחריהם "ועוד N"
   var KEY = "inb-hidden";
   var store = { get: function () { try { return sessionStorage.getItem(KEY) || ""; } catch (e) { return ""; } }, set: function (v) { try { if (v) { sessionStorage.setItem(KEY, v); } else { sessionStorage.removeItem(KEY); } } catch (e) {} } };
@@ -58,6 +59,9 @@
     "#inb-pop .snd{border:0;border-radius:8px;background:#2aada1;color:#fff;font-size:15px;font-weight:700;padding:8px 14px}#inb-pop .snd:hover{background:#1e8f85}" +
     "#inb-pop form{overflow-y:auto;padding:14px 18px;margin:0}#inb-pop form label{display:block;font-size:14px;font-weight:700;color:#274d5b;margin:10px 0 4px}#inb-pop form .h{font-weight:400;color:#6a7c82}" +
     "#inb-pop form input,#inb-pop form select,#inb-pop form textarea{display:block;width:100%;padding:8px 10px;font:inherit;font-size:15px;border:1px solid #b7c9c4;border-radius:7px;background:#fff;color:#1f2d2d;margin:0}" +
+    "#inb-pop form select{height:auto!important;min-height:42px;line-height:1.5!important;padding:7px 10px!important;text-indent:0!important}" +
+    "#inb-pop form input[type=file]{padding:7px 8px;font-size:14px;cursor:pointer}#inb-pop form .fl{margin:6px 0 0;padding:0;list-style:none;font-size:14px;color:#34504a}#inb-pop form .fl li{padding:2px 0}" +
+    "#inb-pop .lst .att{display:inline-block;margin-inline-start:8px;font-size:14px}" +
     "#inb-pop form textarea{min-height:80px;resize:vertical}#inb-pop form .two{display:flex;gap:10px}#inb-pop form .two>div{flex:1;min-width:0}" +
     "#inb-pop form .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}" +
     "#inb-pop form .row{display:flex;gap:10px;margin-top:14px}#inb-pop form .back{border:0;border-radius:8px;background:#e9f0f1;color:#274d5b;font-size:15px;font-weight:700;padding:8px 14px}" +
@@ -82,7 +86,7 @@
     });
     CATS.forEach(function (c) {
       var more = (cnt[c[0]] || 0) - PER_CAT;
-      if (more > 0) { out.push({ id: "more-" + c[0], cat: c[0], title: c[0] === "companies" ? "ועוד " + more + " חברות חדשות" : "ועוד " + more + " עדכוני אג\"ח", text: "לחצו לרשימה המלאה של כל העדכונים", more: true }); }
+      if (more > 0) { out.push({ id: "more-" + c[0], cat: c[0], title: c[0] === "companies" ? "ועוד " + more + " חברות חדשות" : c[0] === "funds" ? "ועוד " + more + " עדכונים בקרנות ובמסלולים" : "ועוד " + more + " עדכוני אג\"ח", text: "לחצו לרשימה המלאה של כל העדכונים", more: true }); }
     });
     return out;
   }
@@ -136,29 +140,49 @@
     function showForm(c) {
       lst.style.display = "none"; ft.style.display = "none"; tabs.style.display = "none";
       form = el("form"); form.noValidate = true;
-      form.innerHTML = '<p style="margin:0;font-size:15px;color:#34504a">יש לכם עדכון בנושא חברות, אג"ח או היתר עיסקא? כתבו אותו כאן. העדכון יפורסם אחרי בדיקה ואישור.</p>' +
-        '<div class="two"><div><label for="inb-fc">נושא</label><select id="inb-fc" name="cat"><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="other">עדכונים אחרים</option></select></div>' +
-        '<div><label for="inb-ft">כותרת <span class="h">(לא חובה)</span></label><input id="inb-ft" name="title" maxlength="120"></div></div>' +
+      form.innerHTML = '<p style="margin:0;font-size:15px;color:#34504a">יש לכם עדכון בנושא חברות, אג"ח, קרנות ומסלולים או היתר עיסקא? נשמח לשמוע.</p>' +
+        '<label for="inb-fc">נושא</label><select id="inb-fc" name="cat"><option value="companies">חברות</option><option value="bonds">אג"ח</option><option value="funds">קרנות ומסלולים</option><option value="other">עדכונים אחרים</option></select>' +
         '<label for="inb-fx">נוסח העדכון</label><textarea id="inb-fx" name="text" maxlength="400" required></textarea>' +
         '<label for="inb-fl">קישור למקור <span class="h">(לא חובה)</span></label><input id="inb-fl" name="link" type="url" dir="ltr" maxlength="500" placeholder="https://">' +
+        '<label for="inb-ff">קבצים מצורפים <span class="h">(לא חובה · עד 3 קבצים, עד 5MB כל אחד: PDF, תמונה, Word, Excel)</span></label>' +
+        '<input id="inb-ff" name="files" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.doc,.docx,.xls,.xlsx"><ul class="fl"></ul>' +
         '<div class="two"><div><label for="inb-fn">שם <span class="h">(לא חובה)</span></label><input id="inb-fn" name="name" maxlength="80" autocomplete="name"></div>' +
         '<div><label for="inb-fp">טלפון או מייל <span class="h">(לא חובה, לבירורים)</span></label><input id="inb-fp" name="contact" maxlength="120" dir="ltr"></div></div>' +
         '<div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>' +
         '<div class="row"><button type="submit" class="snd">שליחה</button><button type="button" class="back">חזרה לעדכונים</button></div><p class="msg" aria-live="polite"></p>';
       form.querySelector("select").value = c || "other";
       box.appendChild(form);
-      var msg = form.querySelector(".msg"), sb = form.querySelector("button[type=submit]");
+      var msg = form.querySelector(".msg"), sb = form.querySelector("button[type=submit]"), fin = form.elements.files, fl = form.querySelector(".fl");
+      var OK_EXT = /\.(pdf|jpe?g|png|webp|gif|docx?|xlsx?)$/i;
+      function fileErr() {
+        var fs = fin.files || [];
+        if (fs.length > 3) { return "אפשר לצרף עד 3 קבצים"; }
+        for (var i = 0; i < fs.length; i++) {
+          if (!OK_EXT.test(fs[i].name)) { return "סוג הקובץ " + fs[i].name + " לא נתמך (PDF, תמונה, Word או Excel)"; }
+          if (fs[i].size > 5 * 1024 * 1024) { return "הקובץ " + fs[i].name + " גדול מ-5MB"; }
+        }
+        return "";
+      }
+      fin.addEventListener("change", function () {
+        fl.innerHTML = "";
+        Array.prototype.forEach.call(fin.files || [], function (f) { fl.appendChild(el("li", "", "📎 " + f.name + " (" + Math.max(1, Math.round(f.size / 1024)) + " KB)")); });
+        var e = fileErr(); msg.className = e ? "msg bad" : "msg"; msg.textContent = e;
+      });
       form.querySelector(".back").addEventListener("click", hideForm);
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         var v = function (n) { return form.elements[n].value.trim(); };
         if (v("text").length < 5) { msg.className = "msg bad"; msg.textContent = "נא לכתוב את נוסח העדכון"; form.elements.text.focus(); return; }
         if (v("link") && !/^https?:\/\//i.test(v("link"))) { msg.className = "msg bad"; msg.textContent = "הקישור צריך להתחיל ב-https://"; return; }
-        sb.disabled = true; msg.className = "msg"; msg.textContent = "שולח…";
-        fetch(O + "/api/news", { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: JSON.stringify({ submit: 1, cat: v("cat"), title: v("title"), text: v("text"), link: v("link"), name: v("name"), contact: v("contact"), website: v("website") }) })
+        var fe = fileErr(); if (fe) { msg.className = "msg bad"; msg.textContent = fe; return; }
+        var fd = new FormData();
+        fd.append("submit", "1"); ["cat", "text", "link", "name", "contact", "website"].forEach(function (n) { fd.append(n, v(n)); });
+        Array.prototype.forEach.call(fin.files || [], function (f) { fd.append("files", f, f.name); });
+        sb.disabled = true; msg.className = "msg"; msg.textContent = (fin.files && fin.files.length) ? "שולח ומעלה קבצים…" : "שולח…";
+        fetch(O + "/api/news", { method: "POST", body: fd })
           .then(function (r) { return r.json(); }).then(function (d) {
             if (!d.ok) { sb.disabled = false; msg.className = "msg bad"; msg.textContent = d.error || "השליחה נכשלה"; return; }
-            Array.prototype.forEach.call(form.querySelectorAll("label,.two,textarea,input,select,p:first-child,button[type=submit]"), function (x) { x.style.display = "none"; });
+            Array.prototype.forEach.call(form.querySelectorAll("label,.two,textarea,input,select,p:first-child,button[type=submit],.fl"), function (x) { x.style.display = "none"; });
             msg.className = "msg ok"; msg.textContent = d.message || "תודה! העדכון נשלח, ויפורסם אחרי אישור.";
           }).catch(function () { sb.disabled = false; msg.className = "msg bad"; msg.textContent = "השליחה נכשלה. נסו שוב."; });
       });
@@ -174,10 +198,11 @@
       rows.forEach(function (it) {
         var li = el("li", it.pinned ? "pin" : ""); li.appendChild(el("span", "d", fmt(it.date)));
         var t = el("span"); if (it.title) { t.appendChild(el("span", "tt", it.title)); } if (it.link) { var a = el("a", "", it.text); a.href = it.link; if (!/^https?:\/\/(www\.)?iska\.co\.il/i.test(it.link)) { a.target = "_blank"; a.rel = "noopener"; } t.appendChild(a); } else { t.appendChild(document.createTextNode(it.text)); }
+        (it.files || []).forEach(function (f) { var fa = el("a", "att", "📎 " + f.name); fa.href = f.url; fa.target = "_blank"; fa.rel = "noopener"; t.appendChild(fa); });
         li.appendChild(t); lst.appendChild(li);
       });
       ft.appendChild(sendBtn);
-      if (LINKS[c]) { var l = el("a", "", c === "companies" ? "לרשימת החברות המלאה ←" : "לרשימת האג\"ח המלאה ←"); l.href = LINKS[c]; ft.appendChild(l); }
+      if (LINKS[c]) { var l = el("a", "", c === "companies" ? "לרשימת החברות המלאה ←" : c === "funds" ? "לרשימת הקרנות והמסלולים ←" : "לרשימת האג\"ח המלאה ←"); l.href = LINKS[c]; ft.appendChild(l); }
       lst.scrollTop = 0;
     }
     CATS.forEach(function (c) { var b = el("button"); b.type = "button"; b.setAttribute("data-c", c[0]); b.appendChild(document.createTextNode(c[1])); b.appendChild(el("span", "c", "(" + (counts[c[0]] || 0) + ")")); b.addEventListener("click", function () { fill(c[0]); }); tabs.appendChild(b); });

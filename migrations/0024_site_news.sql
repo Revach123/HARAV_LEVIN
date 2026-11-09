@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS site_news (
   submitter TEXT DEFAULT '',              -- שם השולח (משליחה מהאתר)
   contact TEXT DEFAULT '',                -- טלפון / מייל של השולח
   ip_hash TEXT DEFAULT '',                -- להגבלת שליחות (לא הכתובת עצמה)
+  files TEXT DEFAULT '',                  -- JSON: קבצים מצורפים [{key,name,size}] בדלי R2 (PERMITS) תחת news/<id>/
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
