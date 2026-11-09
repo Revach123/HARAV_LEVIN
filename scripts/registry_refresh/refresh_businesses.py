@@ -337,9 +337,14 @@ def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=
         if not info:          # לא ברשם הישראלי: השם מרשימת החברות של מאיה (חברה זרה / חוץ-בורסאית) - גם בעדכונים מאוחרים
             mk = maya_key(b.get("chp_number"))
             mname = maya_chp.get(mk) or maya_nochp.get(mk) if mk else ""
-            if mname and mname != (b.get("registrar_name") or "").strip():
+            old_reg = (b.get("registrar_name") or "").strip()
+            if mname and mname != old_reg:
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "registrar_name",
                                 "old": b.get("registrar_name"), "new": mname})
+                # השם שהוקלד ידנית (למשל באנגלית) לא הולך לאיבוד: נשמר כ"שם בהיתר עיסקא" אם אין שם בהיתר
+                if old_reg and not (b.get("permit_name") or "").strip():
+                    changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permit_name",
+                                    "old": b.get("permit_name"), "new": old_reg})
         if bond_ids is not None:
             has = "יש" if str(b.get("chp_number") or "").strip() in bond_ids else "אין"
             if has != (b.get("tase_has_agch") or "").strip():
