@@ -6,7 +6,6 @@ import { checkAdmin } from "./_shared/auth.js";
 // הנרמול של שלוחת הטלפון (voice-match, מוחק מקפים) לא מתאים: "פוקס-ויזל" הופך שם למילה אחת ולא נמצא.
 
 import { typeLabel } from './_shared/registry-search.js';
-import { loadMayaCompanies } from './lookup.js';
 
 const DEFUNCT = /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/;
 const PER_TABLE = 25;
@@ -72,15 +71,8 @@ export async function onRequestGet({ request, env }) {
       .filter(r => { const k = r.kind + ":" + r.id; if (seen.has(k)) return false; seen.add(k); return true; })
       .map(r => ({ id: String(r.id), name: r.name, kind: r.kind, type: typeLabel(r), status: r.status || "", defunct: DEFUNCT.test(r.status || ""), _s: /^\d+$/.test(q) ? 0 : similarity(q, r.name) }))
       .sort((a, b) => (a._s - b._s) || (a.defunct - b.defunct) || (core(a.name).length - core(b.name).length) || (a.name || "").localeCompare(b.name || "", "he"))
-      .map(({ _s, ...r }) => r);
-    // חברות מנפיקות במאיה (כולל זרות / מספר תאגיד שאינו ח.פ. ישראלי) שלא נמצאו ברשמים: לפי שם (כל המילים) או תחילת מספר
-    const have = new Set(results.map(r => String(r.id)));
-    const words = normB(q).split(" ").filter(Boolean);
-    const maya = (await loadMayaCompanies(request, env)).filter(c => !have.has(String(c.chp)) && (/^\d+$/.test(q)
-      ? String(c.chp).startsWith(q) : words.length && words.every(w => normB(c.name).includes(w))))
-      .map(c => ({ id: String(c.chp), name: c.name, kind: "maya", type: "חברה מנפיקה בבורסה", status: "", defunct: false }));
-    const top = maya.length ? results.slice(0, 20 - Math.min(maya.length, 5)) : results.slice(0, 20);          // תוצאות מהרשמים + עד 5 חברות מנפיקות מהבורסה
-    results.splice(0, results.length, ...top, ...maya.slice(0, 5));
+      .map(({ _s, ...r }) => r)
+      .slice(0, 20);
     return Response.json({ results, more: rows.length > 20, errors, ms: Date.now() - t0 });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
