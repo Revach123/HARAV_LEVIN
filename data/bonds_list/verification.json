@@ -1,31 +1,12 @@
 {
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "status": "ok",
- "datawise_date": "2026-11-06",
+ "datawise_date": "2026-11-09",
  "expected": 778,
  "maya": 778,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "dropped_no_terms": [
-  {
-   "security_id": 1233410,
-   "security_name": "מימון יש מסחרי5",
-   "company": "מימון ישיר מקבוצת ישיר (2006) בע\"מ",
-   "chp_number": "513893123"
-  },
-  {
-   "security_id": 1199470,
-   "security_name": "מנורה הון התח ח",
-   "company": "מנורה מבטחים גיוס הון בע\"מ",
-   "chp_number": "513937714"
-  },
-  {
-   "security_id": 1219369,
-   "security_name": "מנורה הון התח ט",
-   "company": "מנורה מבטחים גיוס הון בע\"מ",
-   "chp_number": "513937714"
-  }
- ]
+ "dropped_no_terms": []
 }
