@@ -393,8 +393,8 @@ function liveNote(state, hasText, long) {
 //  "הנפקה חדשה"  - הנייר הופיע לראשונה ברשימת הבורסה אחרי תחילת האיסוף (listed_first_seen > universe_started).
 //  "אישור חדש"   - הנייר כבר היה ברשימת הבורסה בתחילת האיסוף, ונכנס לרשימה שלנו אחריה (first_seen > universe_started): אג"ח קיימת שאושרה.
 //  "חדש"         - נכנס לרשימה שלנו לפני / ביום תחילת האיסוף (כבר סומן חדש קודם): אי אפשר לדעת אם הונפק או אושר, נשאר בלי פירוט.
-// כמה זמן מסומן "חדש": נקבע בדף ניהול העדכונים (news-admin.html, /api/news?tags=1). ברירת מחדל (וגם אם לא נטען): 3 שבועות לאג"ח, 30 יום לחברות.
-const TAG_DAYS = { co: 30, bond: 21 };
+// כמה זמן מסומן "חדש": נקבע בדף ניהול העדכונים (news-admin.html, /api/news?tags=1). ברירת מחדל (וגם אם לא נטען): 3 שבועות.
+const TAG_DAYS = { co: 21, bond: 21 };
 const tagDaysP = Promise.race([
   fetch(`${API_BASE}/api/news?tags=1`).then(r => r.ok ? r.json() : null).then(d => { if (d && d.tag_co_days > 0) TAG_DAYS.co = d.tag_co_days; if (d && d.tag_bond_days > 0) TAG_DAYS.bond = d.tag_bond_days; }).catch(() => {}),
   new Promise(res => setTimeout(res, 2500)),          // לא מעכב את הרשימה יותר מ-2.5 שניות
