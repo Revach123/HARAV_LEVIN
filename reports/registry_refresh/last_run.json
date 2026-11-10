@@ -5,14 +5,14 @@
   "unfound_after_batch": 89,
   "values_lost": 0,
   "empty_before": {
-   "registrar_name": 90,
+   "registrar_name": 40,
    "biz_type": 91
   },
   "empty_after": {
    "registrar_name": 40,
    "biz_type": 91
   },
-  "updated": "2026-11-09T12:23:52.901485Z",
+  "updated": "2026-11-10T06:10:23.384323Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1284,
@@ -20,10 +20,10 @@
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2239,
-  "datawise_date": "2026-11-06",
+  "datawise_date": "2026-11-09",
   "bond_companies": 363,
   "changes": {
-   "registrar_name": 51,
+   "registrar_name": 49,
    "biz_type": 0,
    "tase_has_agch": 0,
    "registry_status": 0,
@@ -31,7 +31,7 @@
    "permits_category": 0
   },
   "fills_of_empty": {
-   "registrar_name": 50,
+   "registrar_name": 0,
    "biz_type": 0,
    "tase_has_agch": 0,
    "registry_status": 0,
@@ -44,9 +44,8 @@
    "מחוסלת/חיסול": 34,
    "בפירוק": 16
   },
-  "readback_mismatches": 0,
-  "mode": "applied",
-  "statements_applied": 51,
+  "mode": "dry-run",
+  "statements_applied": 0,
   "problems": []
  },
  "changes": [
@@ -54,358 +53,344 @@
    "id": "mp64j1qp0r2p",
    "chp": "2352046",
    "field": "registrar_name",
-   "old": "",
-   "new": "אג'לן"
+   "old": "אג'לן",
+   "new": "אג'לן קומרשייל ריט הולדינגס אינק"
   },
   {
    "id": "mp64j4eji837",
    "chp": "1841580",
    "field": "registrar_name",
-   "old": "",
-   "new": "אול-יר"
+   "old": "אול-יר",
+   "new": "אול-יר הולדינגס לימיטד"
   },
   {
    "id": "mp64jdba8ybj",
    "chp": "2185148",
    "field": "registrar_name",
-   "old": "",
-   "new": "איה ניו יורק"
+   "old": "איה ניו יורק",
+   "new": "איה ניו יורק לימיטד"
   },
   {
    "id": "mp64jdje8zg4",
    "chp": "1957080",
    "field": "registrar_name",
-   "old": "",
-   "new": "איי איי סי"
+   "old": "איי איי סי",
+   "new": "איי איי סי1#,אל.טי.די"
   },
   {
    "id": "mp64je2rxskd",
    "chp": "510394637",
    "field": "registrar_name",
-   "old": "",
-   "new": "מיי סייז"
+   "old": "מיי סייז",
+   "new": "מיי סייז, אינק.(חברה זרה)"
   },
   {
    "id": "mp64jjstiki7",
    "chp": "1963039",
    "field": "registrar_name",
-   "old": "",
-   "new": "אלטיטיוד השקעות"
+   "old": "אלטיטיוד השקעות",
+   "new": "אלטיטיוד השקעות לימיטד"
   },
   {
    "id": "mp64jle7n132",
    "chp": "2624970",
    "field": "registrar_name",
-   "old": "",
-   "new": "עלמדב"
+   "old": "עלמדב",
+   "new": "עלמדב אינק."
   },
   {
    "id": "mp64jme64vgn",
    "chp": "1983001",
    "field": "registrar_name",
-   "old": "",
-   "new": "אמ אר אר"
+   "old": "אמ אר אר",
+   "new": "אמ אר אר ת'ירטין לימיטד"
   },
   {
    "id": "mp64jmhjxtwo",
    "chp": "1981143",
    "field": "registrar_name",
-   "old": "",
-   "new": "אמ.ג'י.ג'י"
+   "old": "אמ.ג'י.ג'י",
+   "new": "אמ.ג'י.ג'י (בי.וי.אי) לימיטד"
   },
   {
    "id": "mp64jmkscu26",
    "chp": "1840550",
    "field": "registrar_name",
-   "old": "",
-   "new": "אמ.די.ג'י."
+   "old": "אמ.די.ג'י.",
+   "new": "אמ.די.ג'י. ריאל אסטייט גלובל לימיטד"
   },
   {
    "id": "mp64jn2fuyba",
    "chp": "2177996",
    "field": "registrar_name",
-   "old": "",
-   "new": "אמטראסט אר. אי."
+   "old": "אמטראסט אר. אי.",
+   "new": "אמטראסט אר.אי. לימיטד"
   },
   {
    "id": "mp64jnojyz3v",
    "chp": "2160207",
    "field": "registrar_name",
-   "old": "",
-   "new": "אמריקן אקוויטי"
+   "old": "אמריקן אקוויטי",
+   "new": "אמריקן אקוויטי פרטנרס לימיטד"
   },
   {
    "id": "mp64jo9xyqq2",
    "chp": "2059088",
    "field": "registrar_name",
-   "old": "",
-   "new": "אנקור הזדמנויות"
+   "old": "אנקור הזדמנויות",
+   "new": "אנקור הזדמנויות לימיטד"
   },
   {
    "id": "mp64jodkc9v3",
    "chp": "1939883",
    "field": "registrar_name",
-   "old": "",
-   "new": "אנקור פרופרטיס"
-  },
-  {
-   "id": "mp64jszyhq1g",
-   "chp": "1811308",
-   "field": "registrar_name",
-   "old": "",
-   "new": "אקסטל לימיטד"
+   "old": "אנקור פרופרטיס",
+   "new": "אנקור פרופרטיס,לימיטד"
   },
   {
    "id": "mp64jz3lzl09",
    "chp": "1814237",
    "field": "registrar_name",
-   "old": "",
-   "new": "ברוקלנד"
+   "old": "ברוקלנד",
+   "new": "ברוקלנד אפריל לימיטד"
   },
   {
    "id": "mp64k329w9yo",
    "chp": "1852623",
    "field": "registrar_name",
-   "old": "",
-   "new": "ג'י.אף.איי"
+   "old": "ג'י.אף.איי",
+   "new": "ג'י.אף.איי ריאל אסטייט לימיטד"
   },
   {
    "id": "mp64k6hy585v",
    "chp": "1888119",
    "field": "registrar_name",
-   "old": "",
-   "new": "דלשה קפיטל"
+   "old": "דלשה קפיטל",
+   "new": "דלשה קפיטל לימיטד"
   },
   {
    "id": "mp64k6zgniim",
    "chp": "1744984",
    "field": "registrar_name",
-   "old": "",
-   "new": "דה זראסאי גרופ"
+   "old": "דה זראסאי גרופ",
+   "new": "דה זראסאי גרופ לטד"
   },
   {
    "id": "mp64k7koodwc",
    "chp": "1427976",
    "field": "registrar_name",
-   "old": "",
-   "new": "דה לסר"
+   "old": "דה לסר",
+   "new": "דה לסר גרופ לימיטד"
   },
   {
    "id": "mp64kcaqbxm7",
    "chp": "1957081",
    "field": "registrar_name",
-   "old": "",
-   "new": "הרץ פרופרטיס"
+   "old": "הרץ פרופרטיס",
+   "new": "הרץ פרופרטיס גרופ, לימיטד"
   },
   {
    "id": "mp64kct2418c",
    "chp": "1938699",
    "field": "registrar_name",
-   "old": "",
-   "new": "ווטרסטון"
+   "old": "ווטרסטון",
+   "new": "ווטרסטון פרופרטיס לימיטד"
   },
   {
    "id": "mp64kdt011qb",
    "chp": "1866231",
    "field": "registrar_name",
-   "old": "",
-   "new": "וורטון פרופרטיז"
+   "old": "וורטון פרופרטיז",
+   "new": "וורטון פרופרטיז (בי.וי.איי) לימיטד"
   },
   {
    "id": "mp64kj0adxlj",
    "chp": "1853213",
    "field": "registrar_name",
-   "old": "",
-   "new": "טריטופ ריאלטי"
+   "old": "טריטופ ריאלטי",
+   "new": "טריטופ ריאלטי לימיטד"
   },
   {
    "id": "mp64kuvvc57r",
    "chp": "863439895",
    "field": "registrar_name",
-   "old": "",
-   "new": "ליווינג סטון"
+   "old": "ליווינג סטון",
+   "new": "ליווינג סטון איממו בי.וי."
   },
   {
    "id": "mp64kuzmd8u9",
    "chp": "1838682",
    "field": "registrar_name",
-   "old": "",
-   "new": "לייטסטון"
+   "old": "לייטסטון",
+   "new": "לייטסטון אנטרפרייזס לימיטד"
   },
   {
    "id": "mp64kv30f2xt",
    "chp": "1001171286",
    "field": "registrar_name",
-   "old": "",
-   "new": "לנטרה קנדה"
-  },
-  {
-   "id": "mp64kvkd7i0c",
-   "chp": "1858676",
-   "field": "registrar_name",
-   "old": "",
-   "new": "מויניאן לימיטד"
+   "old": "לנטרה קנדה",
+   "new": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ"
   },
   {
    "id": "mp64l354bzh7",
    "chp": "2008787",
    "field": "registrar_name",
-   "old": "",
-   "new": "מליבו אינווסט."
+   "old": "מליבו אינווסט.",
+   "new": "מליבו אינווסטמנטס"
   },
   {
    "id": "mp64l7q6pf25",
    "chp": "1947641",
    "field": "registrar_name",
-   "old": "",
-   "new": "נובל אסטס"
+   "old": "נובל אסטס",
+   "new": "נובל אסטס(בי.וי.איי)לימיטד"
   },
   {
    "id": "mp64ladlhcld",
    "chp": "1921080",
    "field": "registrar_name",
-   "old": "",
-   "new": "סאותרן פרופרטיס"
+   "old": "סאותרן פרופרטיס",
+   "new": "סאות'רן פרופרטיס קפיטל לטד"
   },
   {
    "id": "mp64lc7mo4z6",
    "chp": "1905761",
    "field": "registrar_name",
-   "old": "",
-   "new": "נמקו ריאלטי"
+   "old": "נמקו ריאלטי",
+   "new": "נמקו ריאלטי לטד"
   },
   {
    "id": "mp64lfqa0eeb",
    "chp": "475527",
    "field": "registrar_name",
-   "old": "",
-   "new": "סאטל"
+   "old": "סאטל",
+   "new": "סאטל פרופרטיס פ.ל.סי"
   },
   {
    "id": "mp64lh9hrjj2",
    "chp": "34140467",
    "field": "registrar_name",
-   "old": "",
-   "new": "נאנט נדל\"ן"
+   "old": "נאנט נדל\"ן",
+   "new": "נאנט רייל אסטייט גרופ אן.וי"
   },
   {
    "id": "mp64lihmqy53",
    "chp": "1863501",
    "field": "registrar_name",
-   "old": "",
-   "new": "סטרוברי"
+   "old": "סטרוברי",
+   "new": "סטרוברי פילדס ריט לימיטד"
   },
   {
    "id": "mp64lk829qbv",
    "chp": "1838863",
    "field": "registrar_name",
-   "old": "",
-   "new": "ספנסר אקוויטי"
+   "old": "ספנסר אקוויטי",
+   "new": "ספנסר אקוויטי גרופ לימיטד"
   },
   {
    "id": "mp64llj8nfj7",
    "chp": "1938333",
    "field": "registrar_name",
-   "old": "",
-   "new": "וו.סי.ג'י"
+   "old": "וו.סי.ג'י",
+   "new": "וו.סי.ג'י נכסים לימיטד"
   },
   {
    "id": "mp64lmb0xr02",
    "chp": "1940909",
    "field": "registrar_name",
-   "old": "",
-   "new": "יו.איי.אר.סי"
+   "old": "יו.איי.אר.סי",
+   "new": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי) לימיטד"
   },
   {
    "id": "mp64lq7l9ww0",
    "chp": "33248324",
    "field": "registrar_name",
-   "old": "",
-   "new": "פלאזה סנטרס"
+   "old": "פלאזה סנטרס",
+   "new": "פלאזה סנטרס אן.וי"
   },
   {
    "id": "mp64lqwhk28r",
    "chp": "1900288",
    "field": "registrar_name",
-   "old": "",
-   "new": "פסיפיק אוק"
+   "old": "פסיפיק אוק",
+   "new": "פסיפיק אוק אסאואר(בי וי איי) הולדינגס, לטד"
   },
   {
    "id": "mp64lra43cz9",
    "chp": "1946194",
    "field": "registrar_name",
-   "old": "",
-   "new": "צ'וזן נכסים"
+   "old": "צ'וזן נכסים",
+   "new": "צ'וזן נכסים לימיטד"
   },
   {
    "id": "mp64lvqf93z7",
    "chp": "1886279",
    "field": "registrar_name",
-   "old": "",
-   "new": "קליין קבוצה"
+   "old": "קליין קבוצה",
+   "new": "קבוצת קליין אינטרנשיונל לימיטד"
   },
   {
    "id": "mp64lwz91z62",
    "chp": "1920997",
    "field": "registrar_name",
-   "old": "",
-   "new": "קורנרסטון"
+   "old": "קורנרסטון",
+   "new": "קורנרסטון פרופרטייס לימיטד"
   },
   {
    "id": "mp64lxntnwig",
    "chp": "2100460",
    "field": "registrar_name",
-   "old": "",
-   "new": "קלקן קפיטל"
+   "old": "קלקן קפיטל",
+   "new": "קלקן קפיטל לימיטד"
   },
   {
    "id": "mp64lyu9jc5q",
    "chp": "1865427",
    "field": "registrar_name",
-   "old": "",
-   "new": "קופרליין"
+   "old": "קופרליין",
+   "new": "קופרליין אמריקאס לימיטד"
   },
   {
    "id": "mp64m23q4g6l",
    "chp": "NV1239114",
    "field": "registrar_name",
-   "old": "",
-   "new": "קרדן אן.וי-ש"
+   "old": "קרדן אן.וי-ש",
+   "new": "קרדן אן.וי."
   },
   {
    "id": "mp64m4d5kbl7",
    "chp": "1849766",
    "field": "registrar_name",
-   "old": "",
-   "new": "רילייטד"
+   "old": "רילייטד",
+   "new": "רילייטד פורטפוליו מסחרי לימיטד"
   },
   {
    "id": "c7e34d31fdc1",
    "chp": "2023950211",
    "field": "registrar_name",
-   "old": "",
-   "new": "אינפליי"
+   "old": "אינפליי",
+   "new": "אינפליי אויל קורפ."
   },
   {
    "id": "636475105429",
    "chp": "2203094",
    "field": "registrar_name",
-   "old": "",
-   "new": "יילוסטון"
+   "old": "יילוסטון",
+   "new": "יילוסטון ריל אסטייט קפיטל לטד"
   },
   {
    "id": "425a44d2a8b5",
    "chp": "2185699",
    "field": "registrar_name",
-   "old": "",
-   "new": "קוהאן"
+   "old": "קוהאן",
+   "new": "קוהאן פרופרטיס לימיטד"
   },
   {
    "id": "mw936ww5lhwi",
    "chp": "44528798375",
    "field": "registrar_name",
-   "old": "נורסטאר החזקות אינק",
-   "new": "נורסטאר החזקות"
+   "old": "נורסטאר החזקות",
+   "new": "נורסטאר החזקות אינק"
   }
  ],
  "not_found": [
@@ -413,7 +398,7 @@
    "id": "mp64j1qp0r2p",
    "chp": "2352046",
    "permit_name": "אג'לן קומרשייל ריט הולדינגס אינק",
-   "registrar_name": "",
+   "registrar_name": "אג'לן",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -421,7 +406,7 @@
    "id": "mp64j4eji837",
    "chp": "1841580",
    "permit_name": "אול-יר הולדינגס",
-   "registrar_name": "",
+   "registrar_name": "אול-יר",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -437,7 +422,7 @@
    "id": "mp64jdba8ybj",
    "chp": "2185148",
    "permit_name": "איה ניו יורק",
-   "registrar_name": "",
+   "registrar_name": "איה ניו יורק",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -445,7 +430,7 @@
    "id": "mp64jdje8zg4",
    "chp": "1957080",
    "permit_name": "איי איי סי1#,אל.טי.די",
-   "registrar_name": "",
+   "registrar_name": "איי איי סי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -453,7 +438,7 @@
    "id": "mp64je2rxskd",
    "chp": "510394637",
    "permit_name": "מיי סייז, אינק",
-   "registrar_name": "",
+   "registrar_name": "מיי סייז",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -469,7 +454,7 @@
    "id": "mp64jjstiki7",
    "chp": "1963039",
    "permit_name": "אלטיטיוד השקעות",
-   "registrar_name": "",
+   "registrar_name": "אלטיטיוד השקעות",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -477,7 +462,7 @@
    "id": "mp64jle7n132",
    "chp": "2624970",
    "permit_name": "אלעד קנדה ריאלטי אינק.",
-   "registrar_name": "",
+   "registrar_name": "עלמדב",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -485,7 +470,7 @@
    "id": "mp64jme64vgn",
    "chp": "1983001",
    "permit_name": "אמ אר אר ת'ירטין",
-   "registrar_name": "",
+   "registrar_name": "אמ אר אר",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -493,7 +478,7 @@
    "id": "mp64jmhjxtwo",
    "chp": "1981143",
    "permit_name": "אמ. ג'י. ג'י (בי.וי.אי) MGG (BVI)",
-   "registrar_name": "",
+   "registrar_name": "אמ.ג'י.ג'י",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -501,7 +486,7 @@
    "id": "mp64jmkscu26",
    "chp": "1840550",
    "permit_name": "אמ. די. ג'י. ריאל אסטייט גלובל",
-   "registrar_name": "",
+   "registrar_name": "אמ.די.ג'י.",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -509,7 +494,7 @@
    "id": "mp64jn2fuyba",
    "chp": "2177996",
    "permit_name": "אמטראסט אר.אי. לימיטד",
-   "registrar_name": "",
+   "registrar_name": "אמטראסט אר. אי.",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -517,7 +502,7 @@
    "id": "mp64jnojyz3v",
    "chp": "2160207",
    "permit_name": "אמריקן אקוויטי פרטנרס",
-   "registrar_name": "",
+   "registrar_name": "אמריקן אקוויטי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -525,7 +510,7 @@
    "id": "mp64jo9xyqq2",
    "chp": "2059088",
    "permit_name": "אנקור הזדמנויות ENCORE OPPORTUNITIES",
-   "registrar_name": "",
+   "registrar_name": "אנקור הזדמנויות",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -533,7 +518,7 @@
    "id": "mp64jodkc9v3",
    "chp": "1939883",
    "permit_name": "אנקור פרופרטיס",
-   "registrar_name": "",
+   "registrar_name": "אנקור פרופרטיס",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -549,7 +534,7 @@
    "id": "mp64jszyhq1g",
    "chp": "1811308",
    "permit_name": "אקסטל לימיטד",
-   "registrar_name": "",
+   "registrar_name": "אקסטל לימיטד",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -589,15 +574,15 @@
    "id": "mp64jz3lzl09",
    "chp": "1814237",
    "permit_name": "ברוקלנד אפריל",
-   "registrar_name": "",
+   "registrar_name": "ברוקלנד",
    "entity_type": "company",
    "biz_type": ""
   },
   {
    "id": "mp64k329w9yo",
    "chp": "1852623",
-   "permit_name": "ג'י.אפ.איי ריאל אסטייט",
-   "registrar_name": "",
+   "permit_name": "ג'י.אף.איי ריאל אסטייט",
+   "registrar_name": "ג'י.אף.איי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -605,7 +590,7 @@
    "id": "mp64k6hy585v",
    "chp": "1888119",
    "permit_name": "דלשה קפיטל",
-   "registrar_name": "",
+   "registrar_name": "דלשה קפיטל",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -613,7 +598,7 @@
    "id": "mp64k6zgniim",
    "chp": "1744984",
    "permit_name": "דה זראסאי גרופ",
-   "registrar_name": "",
+   "registrar_name": "דה זראסאי גרופ",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -621,7 +606,7 @@
    "id": "mp64k7koodwc",
    "chp": "1427976",
    "permit_name": "דה לסר גרופ",
-   "registrar_name": "",
+   "registrar_name": "דה לסר",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -629,7 +614,7 @@
    "id": "mp64kcaqbxm7",
    "chp": "1957081",
    "permit_name": "הרץ פרופרטיס גרופ Hertz Properties Group",
-   "registrar_name": "",
+   "registrar_name": "הרץ פרופרטיס",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -637,7 +622,7 @@
    "id": "mp64kct2418c",
    "chp": "1938699",
    "permit_name": "ווטרסטון פרופרטיס",
-   "registrar_name": "",
+   "registrar_name": "ווטרסטון",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -645,7 +630,7 @@
    "id": "mp64kdt011qb",
    "chp": "1866231",
    "permit_name": "וורטון פרופרטיז (בי.וי.איי)",
-   "registrar_name": "",
+   "registrar_name": "וורטון פרופרטיז",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -677,7 +662,7 @@
    "id": "mp64kj0adxlj",
    "chp": "1853213",
    "permit_name": "טריטופ ריאלטי",
-   "registrar_name": "",
+   "registrar_name": "טריטופ ריאלטי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -717,7 +702,7 @@
    "id": "mp64kuvvc57r",
    "chp": "863439895",
    "permit_name": "ליווינג סטון איימו",
-   "registrar_name": "",
+   "registrar_name": "ליווינג סטון",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -725,7 +710,7 @@
    "id": "mp64kuzmd8u9",
    "chp": "1838682",
    "permit_name": "Lightstone Enterprises Limited",
-   "registrar_name": "",
+   "registrar_name": "לייטסטון",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -733,7 +718,7 @@
    "id": "mp64kv30f2xt",
    "chp": "1001171286",
    "permit_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ LANTERRA CANADA ENTERPRISES LIMITED PARTNERSHIP",
-   "registrar_name": "",
+   "registrar_name": "לנטרה קנדה",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -749,7 +734,7 @@
    "id": "mp64kvkd7i0c",
    "chp": "1858676",
    "permit_name": "מויניאן",
-   "registrar_name": "",
+   "registrar_name": "מויניאן לימיטד",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -789,7 +774,7 @@
    "id": "mp64l354bzh7",
    "chp": "2008787",
    "permit_name": "מליבו אינווסטמנטס אינק.",
-   "registrar_name": "",
+   "registrar_name": "מליבו אינווסט.",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -797,7 +782,7 @@
    "id": "mp64l7q6pf25",
    "chp": "1947641",
    "permit_name": "נובל אסטס (בי.וי.איי)",
-   "registrar_name": "",
+   "registrar_name": "נובל אסטס",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -821,7 +806,7 @@
    "id": "mp64ladlhcld",
    "chp": "1921080",
    "permit_name": "סאות'רן פרופרטיס קפיטל",
-   "registrar_name": "",
+   "registrar_name": "סאותרן פרופרטיס",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -829,7 +814,7 @@
    "id": "mp64lc7mo4z6",
    "chp": "1905761",
    "permit_name": "נמקו ריאלטי NAMCO REALTY LTD",
-   "registrar_name": "",
+   "registrar_name": "נמקו ריאלטי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -845,7 +830,7 @@
    "id": "mp64lfqa0eeb",
    "chp": "475527",
    "permit_name": "סאטל פרופרטיס לימיטד",
-   "registrar_name": "",
+   "registrar_name": "סאטל",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -869,7 +854,7 @@
    "id": "mp64lh9hrjj2",
    "chp": "34140467",
    "permit_name": "נאנט רייל אסטייט גרופ אן.וי",
-   "registrar_name": "",
+   "registrar_name": "נאנט נדל\"ן",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -877,7 +862,7 @@
    "id": "mp64lihmqy53",
    "chp": "1863501",
    "permit_name": "סטרוברי פילדס ריט",
-   "registrar_name": "",
+   "registrar_name": "סטרוברי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -893,7 +878,7 @@
    "id": "mp64lk829qbv",
    "chp": "1838863",
    "permit_name": "ספנסר אקוויטי גרופ",
-   "registrar_name": "",
+   "registrar_name": "ספנסר אקוויטי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -901,7 +886,7 @@
    "id": "mp64llj8nfj7",
    "chp": "1938333",
    "permit_name": "וו.סי.ג'י נכסים",
-   "registrar_name": "",
+   "registrar_name": "וו.סי.ג'י",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -909,7 +894,7 @@
    "id": "mp64lmb0xr02",
    "chp": "1940909",
    "permit_name": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי)",
-   "registrar_name": "",
+   "registrar_name": "יו.איי.אר.סי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -925,7 +910,7 @@
    "id": "mp64lq7l9ww0",
    "chp": "33248324",
    "permit_name": "פלאזה סנטרס אן.וי",
-   "registrar_name": "",
+   "registrar_name": "פלאזה סנטרס",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -941,7 +926,7 @@
    "id": "mp64lqwhk28r",
    "chp": "1900288",
    "permit_name": "פסיפיק אוק אסאואר הולדינגס PACIFIC OAK SOR (BVI) HOLDINGS",
-   "registrar_name": "",
+   "registrar_name": "פסיפיק אוק",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -949,7 +934,7 @@
    "id": "mp64lra43cz9",
    "chp": "1946194",
    "permit_name": "צ'וזן נכסים",
-   "registrar_name": "",
+   "registrar_name": "צ'וזן נכסים",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -957,7 +942,7 @@
    "id": "mp64lvqf93z7",
    "chp": "1886279",
    "permit_name": "קבוצת קליין אינטרנשיונל",
-   "registrar_name": "",
+   "registrar_name": "קליין קבוצה",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -973,7 +958,7 @@
    "id": "mp64lwz91z62",
    "chp": "1920997",
    "permit_name": "קורנרסטון פרופרטייס",
-   "registrar_name": "",
+   "registrar_name": "קורנרסטון",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -981,7 +966,7 @@
    "id": "mp64lxntnwig",
    "chp": "2100460",
    "permit_name": "קלקן קפיטל KALKAN CAPITAL",
-   "registrar_name": "",
+   "registrar_name": "קלקן קפיטל",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -989,7 +974,7 @@
    "id": "mp64lyu9jc5q",
    "chp": "1865427",
    "permit_name": "קופרליין אמריקאס",
-   "registrar_name": "",
+   "registrar_name": "קופרליין",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -1021,7 +1006,7 @@
    "id": "mp64m4d5kbl7",
    "chp": "1849766",
    "permit_name": "רילייטד פורטפוליו מסחרי",
-   "registrar_name": "",
+   "registrar_name": "רילייטד",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -1085,7 +1070,7 @@
    "id": "c7e34d31fdc1",
    "chp": "2023950211",
    "permit_name": "INPLAY OIL CORP.",
-   "registrar_name": "",
+   "registrar_name": "אינפליי",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -1093,7 +1078,7 @@
    "id": "636475105429",
    "chp": "2203094",
    "permit_name": "יילוסטון ריל אסטייט קפיטל YELLOWSTONE REAL ESTATE CAPITAL",
-   "registrar_name": "",
+   "registrar_name": "יילוסטון",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -1101,7 +1086,7 @@
    "id": "425a44d2a8b5",
    "chp": "2185699",
    "permit_name": "קוהאן פרופרטיס KOHAN PROPERTIES",
-   "registrar_name": "",
+   "registrar_name": "קוהאן",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -1117,7 +1102,7 @@
    "id": "mw936ww5lhwi",
    "chp": "44528798375",
    "permit_name": "נורסטאר החזקות אינק",
-   "registrar_name": "נורסטאר החזקות אינק",
+   "registrar_name": "נורסטאר החזקות",
    "entity_type": "company",
    "biz_type": ""
   }
