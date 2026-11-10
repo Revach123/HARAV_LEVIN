@@ -9,7 +9,7 @@
 //         ואג"ח חדשות בשלושת השבועות האחרונים (הנפקה חדשה / אישור חדש / נוספה) - אותו כלל כמו התגיות ברשימות (display.html),
 //         ושינויים ברשימת הקרנות והמסלולים (funds.html): מסלולים שסומנו "חדש" או "הוסר" בניהול, לפי תאריך השמירה האחרונה של הרשימה.
 //  GET  /api/news?all=1      -> כל הפריטים הידניים (גם כבויים / שפג תוקפם) + settings, לניהול. דורש מנהל.
-//  POST /api/news {action:"settings", co_days, bond_days, tag_co_days, tag_bond_days}  -> דורש מנהל. בימים (1-365):
+//  POST /api/news {action:"settings", co_days, bond_days, fund_days, tag_co_days, tag_bond_days, tag_fund_days}  -> דורש מנהל. בימים (1-365):
 //       co_days / bond_days = כמה זמן מוצגים עדכונים אוטומטיים של חברות / אג"ח בתיבה;
 //       tag_co_days / tag_bond_days = כמה זמן חברה / אג"ח מסומנת "חדש" ברשימות עצמן (display.html).
 //  GET  /api/news?tags=1     -> { tag_co_days, tag_bond_days } ציבורי, לסימון "חדש" ברשימות.
@@ -31,15 +31,16 @@ const ymd = (d) => d.toISOString().slice(0, 10);
 const daysAgo = (n) => ymd(new Date(Date.now() - n * 864e5));
 const clean = (s, max) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim().slice(0, max);
 const DEF_TITLE = { companies: 'עדכון בחברות', bonds: 'עדכון באג"ח', funds: 'עדכון בקרנות ובמסלולים', other: 'עדכון' };
-const NEW_CO_DAYS = 30, NEW_BOND_DAYS = 21, BULK_DAY = 300;          // ברירות מחדל; המנהל משנה בדף הניהול (טבלת site_news_meta)
+const NEW_CO_DAYS = 21, NEW_BOND_DAYS = 21, NEW_FUND_DAYS = 21, BULK_DAY = 300;          // ברירות מחדל; המנהל משנה בדף הניהול (טבלת site_news_meta)
 const META = "CREATE TABLE IF NOT EXISTS site_news_meta (k TEXT PRIMARY KEY, v TEXT NOT NULL DEFAULT '')";
 const days = (v, d) => { const n = Math.floor(Number(v)); return n >= 1 && n <= 365 ? n : d; };
 async function settings(env) {
+  const def = { co_days: NEW_CO_DAYS, bond_days: NEW_BOND_DAYS, fund_days: NEW_FUND_DAYS, tag_co_days: NEW_CO_DAYS, tag_bond_days: NEW_BOND_DAYS, tag_fund_days: NEW_FUND_DAYS };
   try {
-    const rows = (await env.DB.prepare("SELECT k, v FROM site_news_meta WHERE k IN ('co_days','bond_days','tag_co_days','tag_bond_days')").all()).results || [];
+    const rows = (await env.DB.prepare("SELECT k, v FROM site_news_meta WHERE k IN ('co_days','bond_days','fund_days','tag_co_days','tag_bond_days','tag_fund_days')").all()).results || [];
     const m = Object.fromEntries(rows.map((r) => [r.k, r.v]));
-    return { co_days: days(m.co_days, NEW_CO_DAYS), bond_days: days(m.bond_days, NEW_BOND_DAYS), tag_co_days: days(m.tag_co_days, NEW_CO_DAYS), tag_bond_days: days(m.tag_bond_days, NEW_BOND_DAYS) };
-  } catch { return { co_days: NEW_CO_DAYS, bond_days: NEW_BOND_DAYS, tag_co_days: NEW_CO_DAYS, tag_bond_days: NEW_BOND_DAYS }; }          // הטבלה עוד לא נוצרה
+    return Object.fromEntries(Object.keys(def).map((k) => [k, days(m[k], def[k])]));
+  } catch { return def; }          // הטבלה עוד לא נוצרה
 }
 
 const TABLE = `CREATE TABLE IF NOT EXISTS site_news (
@@ -137,12 +138,13 @@ async function bondItems(request, env, nDays = NEW_BOND_DAYS) {
 
 // שינויים ברשימת הקרנות והמסלולים (glatt_funds): mark = 'new' (מסלול חדש) / 'del' (הוסר). עדכון לכל מסלול:
 //   שורה ראשונה: סוג השינוי + סוג המוצר ("מסלול חדש · קרן השתלמות"), שורה שנייה: החברה + המסלול + מספר ("מיטב · מסלול הלכה (1234)")
-async function fundItems(env) {
+async function fundItems(env, maxDays = NEW_FUND_DAYS) {
   try {
     const rows = (await env.DB.prepare("SELECT id, tab, company, track, type, number, mark FROM glatt_funds WHERE mark IN ('new','del') ORDER BY sort, id").all()).results || [];
     if (!rows.length) return [];
     const at = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'saved_at'").first().catch(() => null);
     const date = String((at && at.v) || '').slice(0, 10) || ymd(new Date());
+    if (date < daysAgo(maxDays - 1)) return [];          // הסימון מוצג בתיבה רק כמה ימים מאז שמירת הרשימה (בדף הניהול)
     return rows.map((r) => {
       const del = r.mark === 'del', type = clean(r.type, 60), co = clean(r.company, 80), track = clean(r.track, 100), num = clean(r.number, 20);
       const change = del ? 'הוסר מהרשימה המאושרת' : 'מסלול חדש ברשימה המאושרת';
@@ -172,14 +174,18 @@ async function serveFile(request, env, key) {
 export async function onRequestGet({ request, env }) {
   const sp = new URL(request.url).searchParams;
   if (sp.get('file')) return serveFile(request, env, sp.get('file'));
-  if (sp.get('tags')) { const st = await settings(env); return json({ ok: true, tag_co_days: st.tag_co_days, tag_bond_days: st.tag_bond_days }, 200, { 'Cache-Control': 'no-store' }); }          // בלי מטמון: שינוי בניהול נראה ברשימות מיד בטעינה הבאה
+  if (sp.get('tags')) {
+    const st = await settings(env);
+    const at = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'saved_at'").first().catch(() => null), saved = String((at && at.v) || '').slice(0, 10);
+    return json({ ok: true, tag_co_days: st.tag_co_days, tag_bond_days: st.tag_bond_days, tag_fund_days: st.tag_fund_days, fund_new_active: !saved || saved >= daysAgo(st.tag_fund_days - 1) }, 200, { 'Cache-Control': 'no-store' });
+  }          // בלי מטמון: שינוי בניהול נראה ברשימות מיד בטעינה הבאה
   const all = sp.get('all') === '1';
   if (all) {
     if (!(await checkAdmin(request, env))) return json({ ok: false, error: 'Unauthorized' }, 401);
     return json({ ok: true, items: await manualItems(env, true), settings: await settings(env) }, 200, { 'Cache-Control': 'no-store' });
   }
   const st = await settings(env);
-  const [manual, cos, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env, st.co_days), bondItems(request, env, st.bond_days), fundItems(env)]);
+  const [manual, cos, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env, st.co_days), bondItems(request, env, st.bond_days), fundItems(env, st.fund_days)]);
   const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
   const items = [...manual.filter((x) => x.pinned), ...[...manual.filter((x) => !x.pinned), ...cos, ...bonds, ...funds].sort(byDate)];
   return json({ ok: true, updated: new Date().toISOString(), items }, 200, { 'Cache-Control': 'public, max-age=60' });          // שינוי בניהול מופיע בתיבה תוך דקה
@@ -249,7 +255,7 @@ export async function onRequestPost({ request, env }) {
   await ensureTable(env);
   const id = Number(b.id) || 0;
   if (b.action === 'settings') {
-    const cur = await settings(env), keys = ['co_days', 'bond_days', 'tag_co_days', 'tag_bond_days'], next = {};
+    const cur = await settings(env), keys = ['co_days', 'bond_days', 'fund_days', 'tag_co_days', 'tag_bond_days', 'tag_fund_days'], next = {};
     for (const k of keys) { next[k] = b[k] == null ? cur[k] : days(b[k], 0); if (!next[k]) return json({ ok: false, error: 'נא לבחור בין יום אחד ל-365 ימים' }, 400); }
     await env.DB.prepare(META).run();
     await env.DB.batch(keys.map((k) => env.DB.prepare('INSERT INTO site_news_meta (k, v) VALUES (?, ?) ON CONFLICT(k) DO UPDATE SET v = excluded.v').bind(k, String(next[k]))));
