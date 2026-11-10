@@ -155,15 +155,15 @@
    "chp_number": "512726712"
   },
   {
-   "id": 10378,
-   "maya_report_id": 1776492,
+   "id": 10420,
+   "maya_report_id": 1780493,
    "company_name": "אקסטל לימיטד",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776492",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780493",
    "link_presentation": null,
    "securities": [
     {
@@ -512,6 +512,27 @@
    "chp_number": "517220448"
   },
   {
+   "id": 10421,
+   "maya_report_id": 1780501,
+   "company_name": "איביאי ריב פיק",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": 3,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1780501",
+   "link_trust_indenture": null,
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "517220448"
+  },
+  {
    "id": 10289,
    "maya_report_id": 1767283,
    "company_name": "נגה נכסים",
@@ -615,6 +636,29 @@
     }
    ],
    "chp_number": ""
+  },
+  {
+   "chp_number": "1811308",
+   "company_name": "אקסטל לימיטד",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10378,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776492",
+   "maya_report_id": 1776492,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-10"
   },
   {
    "chp_number": "513257873",
