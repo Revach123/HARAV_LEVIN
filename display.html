@@ -608,7 +608,7 @@ function render(container, state, type, usedSample) {
   };
   const pass = (r, skipKey) => {
     const q = search.value.trim().toLowerCase();
-    if (q && !state.cols.some(c => String(r[c.key] ?? "").toLowerCase().includes(q))) return false;
+    if (q && !state.cols.some(c => (c.cell === "num" || c.cell === "pct") ? String(r[c.key] ?? "").toLowerCase().includes(q) : textHit(r[c.key], q))) return false;
     return state.cols.every(c => c.key === skipKey || matchFilter(c, r, state.cf[c.key]));
   };
   const apply = () => {
@@ -713,6 +713,10 @@ function sortVal(c, r) {
   if (k === "date") { const n = dateNum(v); return n == null ? "" : n; }
   return v;
 }
+// חיפוש בלי פיסוק: מתעלמים מכל סימן שאינו אות או ספרה (נקודה, גרש, גרשיים, מקף, סוגריים, פסיק, וכו'), מניקוד וממרווחים. "א.ב." = "אב", "בע"מ" = "בעמ".
+const sNorm = x => String(x ?? "").toLowerCase().replace(/[\u0591-\u05c7]/g, "").replace(/[^0-9a-z\u05d0-\u05ea]+/g, "");
+const textHit = (v, q) => { const a = String(v ?? "").toLowerCase(); if (a.includes(q.toLowerCase())) return true; const n = sNorm(q); return n.length > 0 && sNorm(a).includes(n); };
+
 function matchFilter(c, r, f) {
   if (!f) return true;
   const k = colKind(c), v = plain(c, r);
@@ -737,7 +741,7 @@ function matchFilter(c, r, f) {
     if ((m = /^(-?[\d.]+)\s*-\s*(-?[\d.]+)$/.exec(f))) return !isNaN(n) && n >= parseFloat(m[1]) && n <= parseFloat(m[2]);
   }
   if (c.__select) return String(v) === f;
-  return String(v).toLowerCase().includes(f.toLowerCase());
+  return textHit(v, f);
 }
 // תאריך עדכון אחרון = תאריך הריצה היומית האחרונה של בניית הרשימות (data/bonds_list/verification.json, שדה updated)
 // מספר באותיות עבריות (גימטריה): 22 -> כ"ב, 787 -> תשפ"ז, 15/16 -> ט"ו/ט"ז
