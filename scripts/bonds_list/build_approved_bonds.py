@@ -356,13 +356,18 @@ def add_terms(bonds, fetch=fetch_terms):
         })
 
 
-def drop_empty_terms(bonds):
-    """נייר בלי שום תנאי (אין שער, ריבית או מועד פדיון) = כנראה כבר לא נסחר (נפדה/נמחק) ומאיה עוד מציגה אותו.
-    לא מפרסמים אותו. מוחזר (נשארים, הוסרו)."""
+def has_terms(b):
+    return any(b.get(k) not in ("", None) for k in ("redemption_date", "annual_interest", "last_price"))
+
+
+def drop_empty_terms(bonds, listed_ids=None):
+    """נייר בלי שום תנאי (אין שער, ריבית או מועד פדיון) = כנראה כבר לא נסחר (נפדה/נמחק) ומאיה עוד מציגה אותו - לא מפרסמים אותו.
+    חוץ מנייר שנמצא ברשימת המסחר של הבורסה (datawise, listed_ids): הוא נסחר, והתנאים פשוט עוד לא פורסמו (למשל הנפקה חדשה) -
+    נשאר עם שם ומספר, בלי תנאים. מוחזר (נשארים, הוסרו)."""
+    listed = {str(x) for x in (listed_ids or ())}
     kept, dropped = [], []
     for b in bonds:
-        has_terms = any(b.get(k) not in ("", None) for k in ("redemption_date", "annual_interest", "last_price"))
-        (kept if has_terms else dropped).append(b)
+        (kept if has_terms(b) or str(b.get("security_id")) in listed else dropped).append(b)
     return kept, dropped
 
 
@@ -787,11 +792,15 @@ def main(companies_path=None):
     except Exception as e:  # noqa: BLE001
         print(f"WARNING: enrich failed, ratings/yield columns left empty: {e}", file=sys.stderr)
     total_before = len(bonds)
-    bonds, dropped = drop_empty_terms(bonds)
-    if len(dropped) > max(MAX_DROPPED_ABS, int(MAX_DROPPED_PCT * total_before)):
-        raise SystemExit(f"{len(dropped)}/{total_before} bonds came back without terms - terms fetch looks partial, bond lists left untouched")
+    no_terms = [b for b in bonds if not has_terms(b)]
+    if len(no_terms) > max(MAX_DROPPED_ABS, int(MAX_DROPPED_PCT * total_before)):          # הגנה: הרבה בלי תנאים = שליפת התנאים נכשלה
+        raise SystemExit(f"{len(no_terms)}/{total_before} bonds came back without terms - terms fetch looks partial, bond lists left untouched")
+    listed_ids = {int(r["securityId"]) for items in by_chp.values() for r, _t in items}          # נסחרות היום (datawise)
+    bonds, dropped = drop_empty_terms(bonds, listed_ids)
     if dropped:
         print(f"dropped {len(dropped)} bond(s) without any terms:", [(b['security_id'], b['company']) for b in dropped])
+    check["kept_no_terms"] = [{"security_id": b["security_id"], "security_name": " ".join(str(b["security_name"]).split()),
+                               "company": b["company"], "chp_number": b["chp_number"]} for b in no_terms if b not in dropped]
     check["dropped_no_terms"] = [{"security_id": b["security_id"], "security_name": " ".join(str(b["security_name"]).split()),
                                   "company": b["company"], "chp_number": b["chp_number"]} for b in dropped]
     with open(os.path.join(OUT, "verification.json"), "w", encoding="utf-8") as f:
