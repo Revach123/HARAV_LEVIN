@@ -14,6 +14,7 @@
 //     (ברירת מחדל)  → JSON
 
 import { applyBondPcatRows, withBondPcat } from "./_shared/bond-pcat.js";
+import { hasPermitFlaw } from "./_shared/note-flags.js";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -77,7 +78,8 @@ function withRegistrarNames(rows, offerings = { byChp: new Map(), byName: [] }, 
     if (hit.length === 1) { const cur = byRow.get(hit[0]); if (cur !== "open") byRow.set(hit[0], o.kind); }
   }
   const out = rows.map(r => {
-    const { _bid, _registrar, _bonds_note_all, _selective, _bonds_ok, ...rest } = r;
+    const { _bid, _registrar, _bonds_note_all, _selective, _bonds_ok, _rawnotes, _agch, ...rest } = r;
+    if (_rawnotes !== undefined && hasPermitFlaw(_rawnotes, _agch)) rest.flagged = 1;          // ריעותא / בעיה בהיתר (כמו ב-Revach): מוצג באדום
     // חברה בלי אג"ח בבורסה אבל עם הנפקה: "יש אג"ח בהנפקה" (או עתידית) + מאושר / לא מאושר (לפי אישור האג"ח של החברה), והערת אישור האג"ח חוזרת להופיע
     const off = rest.bonds_status === 'אין אג"ח' ? (offerings.byChp.get(String(rest.chp_number || "").trim()) || byRow.get(r)) : "";
     if (off) {
@@ -246,6 +248,7 @@ export async function onRequestGet(context) {
                ${bondsNoteAll} AS _bonds_note_all,
                CASE WHEN ${selective} THEN 1 ELSE 0 END AS _selective,
                CASE WHEN ${approvedCond} OR ${selective} THEN 1 ELSE 0 END AS _bonds_ok,
+               COALESCE(notes,'') AS _rawnotes, COALESCE(agch_approved,'') AS _agch,
                ${notesOut} AS notes${withPcat ? ",\n               COALESCE(permits_category,'') AS permits_category" : ""}${withBondsOnly ? `,\n               CASE WHEN ${isBondsOnly} THEN 1 ELSE 0 END AS bonds_only` : ""}
         FROM businesses
         WHERE ${whereClause} ${liquidated}
