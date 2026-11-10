@@ -18,7 +18,7 @@ export async function triggerBondsBuild(env, chp) {
   } catch { return { triggered: false, reason: "github_unreachable" }; }
 }
 
-export const APPROVED_AGCH = ["כן", "רק פרטי", "רק כללי"];
+export const APPROVED_AGCH = ["כן", "רק פרטי", "רק כללי", "פרטי + כללי"];          // כמו APPROVED ב-scripts/bonds_list/build_approved_bonds.py
 // האם שמירת עסק משפיעה על הרשימה: העסק מאושר (לפני או אחרי), ושונה שדה שמשפיע (אישור, פרטי/כללי, מספר, שם, הערה)
 export function affectsBondsList(oldRow, newRow) {
   const ap = r => APPROVED_AGCH.includes(String((r && r.agch_approved) || "").trim());

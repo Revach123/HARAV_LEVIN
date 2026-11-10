@@ -87,7 +87,7 @@ def main():
         if not lst:
             continue
         v = dict(r)
-        v["is_private"] = "כן" if r["is_private"] else "לא"
+        v["is_private"] = "כן" if "פרטי" in lst else "לא"          # כמו ברשימה הרגילה: האג"ח מאושרת גם לפרטי
         v["list"] = "+".join(sorted(lst))
         v["first_seen"] = ""
         out.append({c: v.get(c, "") for c in B.COLUMNS + ["list"]})
