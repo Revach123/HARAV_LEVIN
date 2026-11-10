@@ -491,8 +491,8 @@
    "chp_number": "512084336"
   },
   {
-   "id": 10418,
-   "maya_report_id": 1780355,
+   "id": 10422,
+   "maya_report_id": 1780503,
    "company_name": "איביאי ריב פיק",
    "is_new_company": false,
    "new_company_type": null,
@@ -506,28 +506,7 @@
      "security_type": "אג\"ח",
      "name": "",
      "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "517220448"
-  },
-  {
-   "id": 10421,
-   "maya_report_id": 1780501,
-   "company_name": "איביאי ריב פיק",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 3,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1780501",
-   "link_trust_indenture": null,
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
+     "midroog_rating": "Aaa.il"
     }
    ],
    "chp_number": "517220448"
@@ -774,6 +753,52 @@
    ],
    "carried": true,
    "last_seen": "2026-11-09"
+  },
+  {
+   "chp_number": "517220448",
+   "company_name": "איביאי ריב פיק",
+   "draft_no": 2,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10418,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1780355",
+   "link_trust_indenture": null,
+   "maya_report_id": 1780355,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-10"
+  },
+  {
+   "chp_number": "517220448",
+   "company_name": "איביאי ריב פיק",
+   "draft_no": 3,
+   "draft_title": "טיוטת דו\"ח הצעת מדף",
+   "id": 10421,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1780501",
+   "link_trust_indenture": null,
+   "maya_report_id": 1780501,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-10"
   }
  ],
  "open": [
