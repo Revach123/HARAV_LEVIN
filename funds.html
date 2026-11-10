@@ -135,10 +135,10 @@ function paint() {
   const tbl = `<table><thead><tr><th style="width:16%">שם חברה</th><th style="width:38%">שם מסלול</th><th style="width:14%">מספר קופה</th><th style="width:32%">הערות</th></tr></thead><tbody>` +
     sections.map(sc => { const fg = tc(sc.type)[2];
       return `<tr class="sec" style="--tc:${fg}"><td colspan="4">${hl(sc.type || "אחר")}</td></tr>` +
-        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}${r.mark ? " mk-" + r.mark : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
+        groups(sc.rows).map((g, gi) => g.rows.map((r, i) => `<tr class="${i === 0 && gi > 0 ? "cg" : ""}${mkOf(r) ? " mk-" + mkOf(r) : ""}" style="--tc:${fg}">${i === 0 ? `<td class="co" rowspan="${g.rows.length}">${hl(g.co)}</td>` : ""}<td>${hl(r.track)}</td><td class="num">${hl(r.number)}</td><td class="note">${hl(r.note)}</td></tr>`).join("")).join(""); }).join("") + `</tbody></table>`;
   const cards = `<div class="cards">` + sections.map(sc => { const fg = tc(sc.type)[2];
     return `<div class="sec-box" style="--tc:${fg}"><div class="sec-h" style="color:${fg}">${hl(sc.type || "אחר")}</div>` +
-      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it${r.mark ? " mk-" + r.mark : ""}">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
+      groups(sc.rows).map(g => `<div class="card">${g.co ? `<h3>${hl(g.co)}</h3>` : ""}${g.rows.map(r => `<div class="it${mkOf(r) ? " mk-" + mkOf(r) : ""}">${r.track ? `<b>${hl(r.track)}</b>` : ""}${r.number ? `<div class="meta"><span class="num">${hl(r.number)}</span></div>` : ""}${r.note ? `<div class="note">${hl(r.note)}</div>` : ""}</div>`).join("")}</div>`).join("") + `</div>`; }).join("") + `</div>`;
   out.innerHTML = tbl + cards;
 }
 document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
@@ -146,7 +146,12 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
   document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-selected", x === b ? "true" : "false"));
   paint();
 }));
-fetch("/api/glatt-funds").then(r => r.json()).then(d => {
+// סימון "מסלול חדש" מוצג רק כמה זמן שנקבע בדף ניהול העדכונים (/api/news?tags=1, fund_new_active); "הוסר" נשאר כל עוד הסימון קיים
+let FUND_NEW = true;
+const mkOf = r => (r.mark === "new" && !FUND_NEW ? "" : r.mark);
+const tagsP = fetch("/api/news?tags=1").then(r => (r.ok ? r.json() : null)).then(t => { if (t && t.fund_new_active === false) FUND_NEW = false; }).catch(() => {});
+fetch("/api/glatt-funds").then(r => r.json()).then(async d => {
+  await tagsP;
   if (d.error) throw new Error(d.error);
   st.rows = d.rows || []; st.order = d.type_order || null;
   const dl = document.getElementById("dl"); dl.disabled = false; dl.onclick = () => GlattFunds.download({ rows: st.rows, type_order: st.order, updated: d.updated });
