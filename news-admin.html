@@ -144,7 +144,7 @@ function endDate() {
 }
 function endHint() { const e = endDate(); $("fendHint").textContent = e ? `עד ${fmt(e)} (כולל)` : "ללא הגבלה"; if ($("funit").value && !$("fdur").value) $("fendHint").textContent = "נא לבחור מספר"; }
 const $ = id => document.getElementById(id);
-let token = ""; try { token = sessionStorage.getItem("adminToken") || ""; } catch {}
+let token = ""; try { token = sessionStorage.getItem("adminToken") || localStorage.getItem("adm_tok") || ""; } catch {}          // אותה כניסה של דף הניהול (admin): בלי סיסמה נוספת
 let manual = [];
 const fmt = d => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
