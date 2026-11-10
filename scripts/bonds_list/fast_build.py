@@ -79,7 +79,7 @@ def main(chp_arg=""):
             enrich.enrich(new, state_path=tmp, fetchers={"midroog": lambda: {}, "reports": lambda *a, **k: []})
         except Exception as e:  # noqa: BLE001
             print(f"WARNING: enrich skipped for new bonds: {e}", file=sys.stderr)
-        new, dropped = b.drop_empty_terms(new)
+        new, dropped = b.drop_empty_terms(new, {int(r["securityId"]) for items in by_chp.values() for r, _t in items})          # נסחרת בלי תנאים - נשארת
         if dropped:
             print(f"dropped {len(dropped)} new bond(s) without terms: {[x['security_id'] for x in dropped]}")
     state = b.load_state()
