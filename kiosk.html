@@ -129,8 +129,8 @@ function note(r) { return r.notes ? `<div class="note">${esc(r.notes)}</div>` : 
 function ln(label, val, cls) { return val === "" || val == null ? "" : `<span class="ln ${cls || ""}">${esc(label)}: <b>${val}</b></span>`; }
 // ── חדשים בראש הרשימה (כמו display.html): אג"ח לפי first_seen / listed_first_seen, חברות לפי added_at ──
 const ymd = d => d.toISOString().slice(0, 10);
-// כמה זמן מסומן "חדש": לפי דף ניהול העדכונים (/api/news?tags=1); ברירת מחדל 3 שבועות לאג"ח, 30 יום לחברות
-const TAG_DAYS = { co: 30, bond: 21 };
+// כמה זמן מסומן "חדש": לפי דף ניהול העדכונים (/api/news?tags=1); ברירת מחדל 3 שבועות
+const TAG_DAYS = { co: 21, bond: 21 };
 const tagDaysP = Promise.race([
   fetch(`${API_BASE}/api/news?tags=1`).then(r => r.ok ? r.json() : null).then(d => { if (d && d.tag_co_days > 0) TAG_DAYS.co = d.tag_co_days; if (d && d.tag_bond_days > 0) TAG_DAYS.bond = d.tag_bond_days; }).catch(() => {}),
   new Promise(res => setTimeout(res, 2500)),

@@ -7,7 +7,7 @@
 //       - ידניים: מהטבלה site_news (נכתבים מדף הניהול news-admin.html). רק פעילים ובטווח התאריכים.
 //       - אוטומטיים: חברות שנוספו בחודש האחרון (לפי created_at, בלי ימי ייבוא גדולים - 300 ומעלה ביום),
 //         ואג"ח חדשות בשלושת השבועות האחרונים (הנפקה חדשה / אישור חדש / נוספה) - אותו כלל כמו התגיות ברשימות (display.html),
-//         ושינויים ברשימת הקרנות והמסלולים (funds.html): מסלולים שסומנו "חדש" או "הוסר" בניהול, לפי תאריך השמירה האחרונה של הרשימה.
+//         ושינויים ברשימת הקרנות והמסלולים (funds.html): מסלולים שסומנו "חדש" או "הוסר" בניהול, לפי היום שבו כל מסלול סומן.
 //  GET  /api/news?all=1      -> כל הפריטים הידניים (גם כבויים / שפג תוקפם) + settings, לניהול. דורש מנהל.
 //  POST /api/news {action:"settings", co_days, bond_days, fund_days, tag_co_days, tag_bond_days, tag_fund_days}  -> דורש מנהל. בימים (1-365):
 //       co_days / bond_days = כמה זמן מוצגים עדכונים אוטומטיים של חברות / אג"ח בתיבה;
@@ -138,14 +138,32 @@ async function bondItems(request, env, nDays = NEW_BOND_DAYS) {
 
 // שינויים ברשימת הקרנות והמסלולים (glatt_funds): mark = 'new' (מסלול חדש) / 'del' (הוסר). עדכון לכל מסלול:
 //   שורה ראשונה: סוג השינוי + סוג המוצר ("מסלול חדש · קרן השתלמות"), שורה שנייה: החברה + המסלול + מספר ("מיטב · מסלול הלכה (1234)")
+// תאריך הסימון של כל מסלול: לרשימת הקרנות אין תאריכים (ושמירה של הרשימה מעדכנת תאריך אחד לכולה), ולכן היום הראשון
+// שבו מסלול נראה מסומן "חדש" / "הוסר" נשמר כאן (site_news_fund_seen). סימון שבוטל נמחק, וסימון מחדש נספר מחדש.
+// מפתח: סימון|חברה|מסלול|סוג|מספר (אותו חישוב ב-funds.html). עריכת שם / מספר של מסלול מסומן = סימון חדש.
+const fundKey = (r) => [r.company, r.track, r.type, r.number].map((x) => String(x == null ? '' : x).replace(/\s+/g, ' ').trim()).join('|');
+async function markedFunds(env) {
+  const rows = (await env.DB.prepare("SELECT id, tab, company, track, type, number, mark FROM glatt_funds WHERE mark IN ('new','del') ORDER BY sort, id").all()).results || [];
+  await env.DB.prepare('CREATE TABLE IF NOT EXISTS site_news_fund_seen (k TEXT PRIMARY KEY, first_seen TEXT NOT NULL)').run();
+  const seen = new Map(((await env.DB.prepare('SELECT k, first_seen FROM site_news_fund_seen').all()).results || []).map((x) => [x.k, x.first_seen]));
+  const today = ymd(new Date()), cur = new Set(), add = [];
+  for (const r of rows) {
+    const k = r.mark + '|' + fundKey(r); cur.add(k);
+    if (!seen.has(k)) { seen.set(k, today); add.push(k); }
+    r.first_seen = seen.get(k);
+  }
+  const gone = [...seen.keys()].filter((k) => !cur.has(k));
+  const st = [...add.map((k) => env.DB.prepare('INSERT OR IGNORE INTO site_news_fund_seen (k, first_seen) VALUES (?, ?)').bind(k, today)),
+    ...gone.map((k) => env.DB.prepare('DELETE FROM site_news_fund_seen WHERE k = ?').bind(k))];
+  if (st.length) await env.DB.batch(st);          // כותבים רק כשיש שינוי בסימונים
+  return rows;
+}
+
 async function fundItems(env, maxDays = NEW_FUND_DAYS) {
   try {
-    const rows = (await env.DB.prepare("SELECT id, tab, company, track, type, number, mark FROM glatt_funds WHERE mark IN ('new','del') ORDER BY sort, id").all()).results || [];
-    if (!rows.length) return [];
-    const at = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'saved_at'").first().catch(() => null);
-    const date = String((at && at.v) || '').slice(0, 10) || ymd(new Date());
-    if (date < daysAgo(maxDays - 1)) return [];          // הסימון מוצג בתיבה רק כמה ימים מאז שמירת הרשימה (בדף הניהול)
-    return rows.map((r) => {
+    const since = daysAgo(maxDays - 1);          // כל מסלול מוצג בתיבה כמה ימים מיום הסימון שלו (בדף הניהול)
+    return (await markedFunds(env)).filter((r) => r.first_seen >= since).map((r) => {
+      const date = r.first_seen;
       const del = r.mark === 'del', type = clean(r.type, 60), co = clean(r.company, 80), track = clean(r.track, 100), num = clean(r.number, 20);
       const change = del ? 'הוסר מהרשימה המאושרת' : 'מסלול חדש ברשימה המאושרת';
       return { id: 'f' + r.mark + r.id, cat: 'funds', title: `${change}${type ? ` · ${type}` : ''}`,
@@ -176,8 +194,9 @@ export async function onRequestGet({ request, env }) {
   if (sp.get('file')) return serveFile(request, env, sp.get('file'));
   if (sp.get('tags')) {
     const st = await settings(env);
-    const at = await env.DB.prepare("SELECT v FROM glatt_funds_meta WHERE k = 'saved_at'").first().catch(() => null), saved = String((at && at.v) || '').slice(0, 10);
-    return json({ ok: true, tag_co_days: st.tag_co_days, tag_bond_days: st.tag_bond_days, tag_fund_days: st.tag_fund_days, fund_new_active: !saved || saved >= daysAgo(st.tag_fund_days - 1) }, 200, { 'Cache-Control': 'no-store' });
+    // fund_expired: מסלולים שסומנו "חדש" לפני יותר מ-tag_fund_days (funds.html מוריד מהם את הסימון הצהוב). fund_new_active נשאר לגרסה קודמת שבמטמון.
+    let expired = []; try { const since = daysAgo(st.tag_fund_days - 1); expired = (await markedFunds(env)).filter((r) => r.mark === 'new' && r.first_seen < since).map(fundKey); } catch {}
+    return json({ ok: true, tag_co_days: st.tag_co_days, tag_bond_days: st.tag_bond_days, tag_fund_days: st.tag_fund_days, fund_expired: expired, fund_new_active: true }, 200, { 'Cache-Control': 'no-store' });
   }          // בלי מטמון: שינוי בניהול נראה ברשימות מיד בטעינה הבאה
   const all = sp.get('all') === '1';
   if (all) {
