@@ -78,6 +78,10 @@
     .sec-h{font-size:19px}
   }
   /* הטמעה באתר iska.co.il (funds.html?embed=1): בלי כפתור חזרה וכותרת, בלי הצמדה (ה-iframe באורך התוכן), רקע שקוף */
+  .dlrow{display:flex;justify-content:flex-start;margin:.5rem 0 0}
+  .dl{font:inherit;font-size:15px;font-weight:700;color:var(--navy);background:#fff;border:2px solid var(--accent-border);border-radius:10px;padding:.35rem .9rem;cursor:pointer;min-height:40px}
+  .dl:hover:not(:disabled){border-color:var(--accent);color:#1e8f85}
+  .dl:disabled{opacity:.5;cursor:default}
   html.embed .top{display:none}          /* בהטמעה הלשוניות והחיפוש נמצאים בדף המארח (funds-embed.js) ונצמדים שם לראש העמוד בגלילה */
   html.embed main table{margin-top:0}
   html.embed .cards{margin-top:0}
@@ -95,8 +99,11 @@
     </div>
     <div class="bar"><input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="חיפוש לפי חברה, שם מסלול או מספר קופה…" autocomplete="off" aria-label="חיפוש מסלול"><span class="upd" id="upd"></span></div>
   </header>
+  <div class="dlrow"><button type="button" id="dl" class="dl" disabled title="הורדת כל הרשימה (שתי הלשוניות) כקובץ Excel">⬇ הורדה לאקסל</button></div>
   <main id="out"><div class="state">טוען…</div></main>
 </div>
+<script src="xlsx-lite.js"></script>
+<script src="funds-export.js"></script>
 <script>
 const st = { tab: "pension", q: "", rows: [] };
 const E = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -109,14 +116,7 @@ function hl(s) {
   return E(s.slice(0, i)) + "<mark>" + E(s.slice(i, i + q.length)) + "</mark>" + E(s.slice(i + q.length));
 }
 // סדר קבוע: לפי סוג מוצר (בסדר שבו הסוגים מופיעים ברשימה), ובתוך כל סוג: מיטב, הראל, ואז שאר החברות לפי א-ב
-const FIRST = ["מיטב", "הראל"];
-function sortRows(rows, tab, saved) {          // השורות של לשונית אחת (כולל שורות "both" שמוצגות בשתי הלשוניות) בסדר הקבוע
-  const order = [...((saved && saved[tab]) || [])], rank = c => { c = String(c || "").trim(); const k = FIRST.indexOf(c); return k >= 0 ? [k, ""] : c ? [FIRST.length, c] : [FIRST.length + 1, ""]; };
-  const mine = rows.filter(r => r.tab === tab || r.tab === "both");
-  mine.forEach(r => { if (!order.includes(r.type)) order.push(r.type); });
-  return mine.map((r, n) => ({ r, n })).sort((a, b) => (order.indexOf(a.r.type) - order.indexOf(b.r.type))
-    || (rank(a.r.company)[0] - rank(b.r.company)[0]) || rank(a.r.company)[1].localeCompare(rank(b.r.company)[1], "he") || (a.n - b.n)).map(x => x.r);
-}
+const sortRows = GlattFunds.sortRows;          // funds-export.js (אותו סדר גם בקובץ להורדה)
 function groups(list) {          // שורות רצופות של אותה חברה ואותו סוג = קבוצה אחת
   const out = [];
   for (const r of list) { const g = out[out.length - 1]; if (g && g.co === r.company && g.type === r.type) g.rows.push(r); else out.push({ co: r.company, type: r.type, rows: [r] }); }          // הרשימה מסודרת לפי סוג מוצר: חברה מאוחדת רק בתוך אותו סוג
@@ -149,6 +149,7 @@ document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click
 fetch("/api/glatt-funds").then(r => r.json()).then(d => {
   if (d.error) throw new Error(d.error);
   st.rows = d.rows || []; st.order = d.type_order || null;
+  const dl = document.getElementById("dl"); dl.disabled = false; dl.onclick = () => GlattFunds.download({ rows: st.rows, type_order: st.order, updated: d.updated });
   document.getElementById("upd").textContent = d.updated ? "מעודכן " + d.updated : "";
   paint();
 }).catch(e => { document.getElementById("out").innerHTML = `<div class="state">הטעינה נכשלה (${E(e.message)}). נסו לרענן את הדף.</div>`; });
