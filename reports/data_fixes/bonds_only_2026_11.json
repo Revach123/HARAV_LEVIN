@@ -1,7 +1,7 @@
 {
- "updated": "2026-11-10T11:25:41.477683Z",
- "mode": "dry-run",
- "planned": 9,
+ "updated": "2026-11-10T13:29:00.513864Z",
+ "mode": "applied",
+ "planned": 10,
  "skipped": [],
  "readback_mismatches": [],
  "plan": [
@@ -138,6 +138,18 @@
     "agch_approved": {
      "from": "כן",
      "to": "רק פרטי"
+    }
+   }
+  },
+  {
+   "id": "mp64lbcdjtu6",
+   "chp": "550263107",
+   "name": "נאוויטס פטרוליום",
+   "why": "החלטה: ההת\"ע לאג\"ח בלבד, לא לחברה (אישור האג\"ח נשאר: אג\"ח מסוימים)",
+   "changes": {
+    "visibility": {
+     "from": "פרטי",
+     "to": "רק לאג\"ח"
     }
    }
   }

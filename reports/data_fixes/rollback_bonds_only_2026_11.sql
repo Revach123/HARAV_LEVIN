@@ -1,0 +1,10 @@
+UPDATE businesses SET visibility = 'פרטי', agch_approved = 'כן' WHERE id = 'mp64jj1stmpd';
+UPDATE businesses SET visibility = 'פרטי', agch_approved = 'כן' WHERE id = 'mp64jndwhikh';
+UPDATE businesses SET visibility = 'פרטי', agch_approved = 'כן' WHERE id = 'mp64l40sj30k';
+UPDATE businesses SET visibility = 'פרטי', agch_approved = 'כן' WHERE id = 'mp64lhq9rlof';
+UPDATE businesses SET visibility = '', agch_approved = 'כן' WHERE id = 'mp64k13m11hr';
+UPDATE businesses SET visibility = '', agch_approved = 'כן' WHERE id = 'mp64izrr2aw3';
+UPDATE businesses SET visibility = 'פרטי', agch_approved = 'כן' WHERE id = '83f455c80ae6';
+UPDATE businesses SET agch_approved = 'רק פרטי' WHERE id = 'mp64k1sky2bc';
+UPDATE businesses SET agch_approved = 'כן' WHERE id = 'mp64lki2okjz';
+UPDATE businesses SET visibility = 'פרטי' WHERE id = 'mp64lbcdjtu6';
