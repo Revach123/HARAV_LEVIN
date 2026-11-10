@@ -150,7 +150,8 @@ const pair = id => `<div class="pair">${lnk(id, ICON_VIEW, "צפייה")}${lnk(i
   L.addEventListener("touchstart", e => warm(e.target.closest && e.target.closest("a.ic")), { passive: true });
 }
 
-// כמו display.html: שמות החברות והשיוך ללשונית (פרטי / כללי) מגיעים מרשימות /api/lists, והמסמכים לפי השיוך שבניהול
+// כמו display.html: שמות החברות והשיוך ללשונית (פרטי / כללי) מגיעים מרשימות /api/lists, והמסמכים לפי השיוך שבניהול.
+// bonds_only=1: גם חברות "רק לאג"ח" (לא ברשימת החברות באתר, אבל השטר שלהן מוצג כאן)
 const TABS = {};          // רשימה אחת (כללי + פרטי): אין לשוניות
 const LISTS = {};
 let LINKS_P = null, TAB = "all";
@@ -159,7 +160,7 @@ const qnorm = s => String(s || "").replace(/["'׳״]/g, "");
 const getLinks = () => LINKS_P || (LINKS_P = fetch(`${API_BASE}/api/permit-docs-public`).then(r => r.json()).then(d => d.links || []).catch(() => []));
 async function loadTab(level) {
   if (LISTS[level]) return LISTS[level];
-  const listP = fetch(`${API_BASE}/api/lists?type=companies-${level}`).then(r => r.json());          // יוצאת במקביל לקישורים
+  const listP = fetch(`${API_BASE}/api/lists?type=companies-${level}&bonds_only=1`).then(r => r.json());          // יוצאת במקביל לקישורים
   listP.catch(() => {});
   const LINKS = await getLinks();
   const byChp = new Map(), byName = new Map();

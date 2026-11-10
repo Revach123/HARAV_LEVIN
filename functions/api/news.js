@@ -92,7 +92,7 @@ async function companyItems(env, nDays = NEW_CO_DAYS) {
     for (const [s, h] of [[true, true], [true, false], [false, true], [false, false]]) {          // עמודה שעדיין לא נוספה למסד
       try { rows = (await env.DB.prepare(q(s, h)).bind(since).all()).results || []; break; } catch (e) { if (!/no such column/i.test(String(e.message))) throw e; }
     }
-    return (rows || []).filter((r) => r.d && clean(r.permit_name, 200)).map((r) => {
+    return (rows || []).filter((r) => r.d && clean(r.permit_name, 200) && String(r.visibility || '') !== 'רק לאג"ח').map((r) => {          // "רק לאג"ח": לא ברשימת החברות
       const heb = clean(r.heb_name, 120), name = clean(r.permit_name, 160) + (heb && heb !== clean(r.permit_name, 160) ? ` (${heb})` : '');
       const priv = ['פרטי', 'רק פרטי'].includes(String(r.visibility || ''));
       return { id: 'c' + r.id, cat: 'companies', title: `חברה חדשה ברשימה - היתר עיסקא ${priv ? 'פרטי' : 'כללי'}`, text: name, link: '', date: r.d, pinned: false, auto: true, kind: priv ? 'private' : 'general' };

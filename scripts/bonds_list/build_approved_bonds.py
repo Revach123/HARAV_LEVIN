@@ -3,10 +3,10 @@
 scripts/bonds_list/build_approved_bonds.py
 
 בונה מחדש בכל הרצה רשימת אג"ח ממאיה (TASE), רק של חברות שבמאגר החברות של
-HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל לשתי רשימות:
-  data/bonds_list/bonds_private.{json,csv}  — חברות מסומנות visibility = "פרטי" ומאושרות (כן / רק פרטי)
-  data/bonds_list/bonds_general.{json,csv}  — כל המאושרות (כן / רק כללי), כולל חברות מסומנות "פרטי";
-                                              רק "רק פרטי" לא נכנס. (כמו functions/api/lists.js)
+HARAV_LEVIN מסומנות "מאושר לאג"ח" (agch_approved), ומפצל לשתי רשימות (bond_scope / bond_allowed):
+  data/bonds_list/bonds_private.{json,csv}  — אישור אג"ח "פרטי + כללי" / "רק פרטי", או "כן" (= כמו החברה) כשלחברה יש היתר פרטי
+  data/bonds_list/bonds_general.{json,csv}  — אישור אג"ח "פרטי + כללי" / "רק כללי", או "כן" כשלחברה יש היתר כללי
+  אישור האג"ח נפרד מהיתר החברה (visibility): חברה "רק לאג"ח" לא מופיעה ברשימות החברות, והאג"ח שלה כן.
 
 שלבים:
   1. מאגר החברות:  GET {HARAV_API}/api/lists?type=companies-all
@@ -55,7 +55,12 @@ STATE_PATH = os.path.join(OUT, "state.json")
 INTERNAL_PATH = os.path.join(OUT, "bonds_internal.json")
 NAMES_PATH = os.path.join(OUT, "names_seen.json")   # שם וסימול ראשונים של כל נייר: שמות ב-datawise מקוצרים לפעמים (ני"ע "-רמ"), אז שם שכבר נראה נשמר
 
-APPROVED = {"כן", "רק פרטי", "רק כללי"}
+AGCH_BOTH = "פרטי + כללי"          # אישור אג"ח לשתי הרשימות, בלי קשר להיתר החברה
+APPROVED = {"כן", "רק פרטי", "רק כללי", AGCH_BOTH}   # "כן" = כמו החברה (לפי visibility)
+BONDS_ONLY = 'רק לאג"ח'            # visibility: אין היתר לחברה עצמה - רק לאג"ח שלה (לא ברשימות החברות)
+# bond_scope: לאילו רשימות מאושרות אג"ח החברה. ערכים חדשים (מכאן והלאה); שורות ישנות בקובץ הבסיס עם
+# both / private_only / general_only מטופלות בכלל הישן עד הבנייה המלאה הבאה (bond_allowed).
+SCOPE_BOTH, SCOPE_PRIVATE, SCOPE_GENERAL, SCOPE_NONE = "private+general", "private", "general", "none"
 SELECTIVE = 'בחירת אג"ח מסוימים'   # אישור לאג"ח מסוימות בלבד: נבחרות בדף הניהול ונשמרות בטבלה approved_bonds
 MANUAL_SCOPES = {"private", "general", "both"}
 # ני"ע מסחריים נכללים ברשימה (כמו ב-Revach ובקובץ ה-Excel הישן): coarse_type מסווג אותם כאג"ח קונצרני.
@@ -102,16 +107,31 @@ def _clean(text):
     return " ".join(str(text or "").split())
 
 
-def bond_scope(agch, notes_raw):
-    """לאילו רשימות מאושרות אג"ח החברה: both | private_only | general_only.
-    מהשדה "אישור אג"ח" ('רק פרטי' / 'רק כללי'), או מהערה מפורשת כמו "מאושר רק לאג"ח פרטי בלבד".
-    זה נוגע לאישור האג"ח בלבד, לא להיתר העסקה של החברה."""
-    n = _clean(notes_raw)
-    if agch == "רק פרטי" or 'לאג"ח פרטי בלבד' in n or 'רק לאג"ח פרטי' in n:
-        return "private_only"
-    if agch == "רק כללי" or 'לאג"ח כללי בלבד' in n or 'רק לאג"ח כללי' in n:
-        return "general_only"
-    return "both"
+def company_permits(visibility):
+    """היתר החברה עצמה -> (יש פרטי, יש כללי). ריק = רק כללי; 'פרטי' = פרטי וכללי; 'רק פרטי'; 'רק לאג"ח' = אף אחד."""
+    v = (visibility or "").strip()
+    if v == BONDS_ONLY:
+        return False, False
+    return v in ("פרטי", "רק פרטי"), v != "רק פרטי"
+
+
+def bond_scope(agch, visibility):
+    """לאילו רשימות מאושרות אג"ח החברה, לפי השדה "אישור אג"ח" בלבד (ההערות לא משנות את השיבוץ):
+    "פרטי + כללי" / "רק פרטי" / "רק כללי" - בלי קשר להיתר החברה; "כן" = כמו היתר החברה.
+    "כן" בחברה "רק לאג"ח" (אין היתר לחברה, ודף הניהול לא מאפשר) - כללי בלבד, כמו חברה עם היתר כללי."""
+    agch = (agch or "").strip()
+    if agch == AGCH_BOTH:
+        return SCOPE_BOTH
+    if agch == "רק פרטי":
+        return SCOPE_PRIVATE
+    if agch == "רק כללי":
+        return SCOPE_GENERAL
+    if agch == "כן":
+        p, g = company_permits(visibility)
+        if not p and not g:
+            return SCOPE_GENERAL
+        return SCOPE_BOTH if p and g else SCOPE_PRIVATE if p else SCOPE_GENERAL
+    return SCOPE_NONE
 
 
 def bond_note(notes_raw, scope=""):
@@ -231,8 +251,8 @@ def approved_map(companies):
             "company": c.get("registrar_name") or c.get("permit_name") or "",
             "agch_approved": status,
             "goyim": is_goyim(c.get("notes")),
-            "is_private": (c.get("visibility") or "").strip() == "פרטי",
-            "bond_scope": bond_scope(status, c.get("notes")),
+            "is_private": company_permits(c.get("visibility"))[0],
+            "bond_scope": bond_scope(status, c.get("visibility")),
             "bond_note": "; ".join(x for x in ("בפירוק" if reg.startswith("בפרוק") else "", bond_note(c.get("notes"), c.get("notes_scope"))) if x),
         }
     return out
@@ -516,7 +536,10 @@ def bond_allowed(b, private):
         return b["manual_scope"] in (("private", "both") if private else ("general", "both"))
     if b["goyim"]:                      # בבעלות גוי — נכנס לשתי הרשימות
         return True
-    scope = b.get("bond_scope", "both")   # האם האישור לאג"ח הוא גם לכללי וגם לפרטי
+    scope = b.get("bond_scope", "both")   # לאילו רשימות מאושרות אג"ח החברה (bond_scope)
+    if scope in (SCOPE_BOTH, SCOPE_PRIVATE, SCOPE_GENERAL, SCOPE_NONE):
+        return scope in ((SCOPE_BOTH, SCOPE_PRIVATE) if private else (SCOPE_BOTH, SCOPE_GENERAL))
+    # שורה ישנה בקובץ הבסיס (לפני ההפרדה בין היתר החברה לאישור האג"ח) - הכלל הקודם, עד הבנייה המלאה הבאה
     if private:   # סימון "פרטי" + מאושר (כן / רק פרטי), ולא אישור "רק כללי"
         return b["is_private"] and b["agch_approved"] in ("כן", "רק פרטי") and scope != "general_only"
     # כללי = כל המאושרות (כן / רק כללי), *גם* חברות מסומנות "פרטי"; "רק פרטי" (בשדה האישור או בהערה מפורשת) לא נכנס
@@ -528,7 +551,7 @@ def write_lists(bonds):
     def view(b, lst=""):
         r = dict(b)
         r["listed_first_seen"] = UNIVERSE["seen"].get(str(b.get("security_id")), "") if b.get("security_id") else ""
-        r["is_private"] = "כן" if b["is_private"] else "לא"
+        r["is_private"] = "כן" if bond_allowed(b, True) else "לא"   # "קיים היתר עסקה פרטי" לאג"ח הזו (גם ברשימה הפרטית)
         r["list"] = lst
         return r
 

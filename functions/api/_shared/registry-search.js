@@ -94,10 +94,11 @@ export async function registryCandidates(db, query) {
 // 'פרטי' = יש לו גם היתר עסקה פרטי (נוסף על הכללי); ריק = היתר כללי בלבד.
 // אם לאותו עסק כמה שורות: 'פרטי' באחת מהן = "כללי וגם פרטי"; אחרת ריק באחת מהן = "כללי";
 // 'רק פרטי' מוקרא רק כשכל השורות כאלה.
+// 'רק לאג"ח' = אין היתר לחברה עצמה (רק לאג"ח שלה): לא נספר כהיתר; אם אין שורה אחרת - "אין היתר".
 export function permitIndex(businesses) {
   const byChp = new Map(), byName = new Map();
   const put = (map, key, vis) => {
-    if (!key) return;
+    if (!key || vis === 'רק לאג"ח') return;
     const kind = vis === 'רק פרטי' ? 'רק פרטי' : vis === 'פרטי' ? 'כללי+פרטי' : 'כללי';
     const prev = map.get(key);
     const rank = { 'רק פרטי': 0, 'כללי': 1, 'כללי+פרטי': 2 };

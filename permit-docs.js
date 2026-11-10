@@ -58,7 +58,12 @@
     return isMain(b) ? null : fam.find(isMain) || null; };
   const otherCos = (d, bizId) => { const b = bizById(bizId), fam = new Set(sameChpRows(b).map(x => x.id)); return (d.business_ids || []).filter(x => x !== bizId && !fam.has(x)); };          // חברות אחרות במסמך (בלי תתי-שורות של אותה חברה)
   const slotDoc = (bizId, t) => liveDocs(bizId).find(d => slotsOf(d, bizId).includes(t)) || null;
-  const needOf = b => ({ private: b.visibility === "פרטי" || b.visibility === "רק פרטי", general: b.visibility !== "רק פרטי" });
+  // אילו שטרות נדרשים לחברה: לפי היתר החברה (visibility); חברה "רק לאג"ח" (אין היתר לחברה עצמה) - לפי אישור האג"ח שלה
+  const BONDS_ONLY = 'רק לאג"ח';
+  const needOf = b => b.visibility === BONDS_ONLY
+    ? { private: ["פרטי + כללי", "רק פרטי"].includes(b.agch_approved), general: ["פרטי + כללי", "רק כללי", "כן"].includes(b.agch_approved) }
+    : { private: b.visibility === "פרטי" || b.visibility === "רק פרטי", general: b.visibility !== "רק פרטי" };
+  const regOf = b => b.visibility === BONDS_ONLY ? BONDS_ONLY : b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
   const extrasOf = bizId => liveDocs(bizId).filter(d => !slotsOf(d, bizId).length && !(d.subs || []).some(x => x.id !== bizId));          // מסמך שמתויג לתת-שורה מוצג בכרטיסיית תת-השורה, לא כמסמך נוסף של החברה
   function manageOrder(bizId) {          // סדר המסמכים בחלון הניהול ובחצים: פרטי, כללי, ואז הנוספים
     const out = [];
@@ -238,7 +243,7 @@
     const n = t => ds.filter(d => d.doc_type === t).length;
     const chips = ["general", "private", "both", "unknown"].filter(t => n(t)).map(t => `<span class="pd-chip" style="background:${TCOL[t]}">${TL[t]}${n(t) > 1 ? " ×" + n(t) : ""}</span>`).join("");
     const hasG = ds.some(d => d.doc_type === "general" || d.doc_type === "both"), hasP = ds.some(d => d.doc_type === "private" || d.doc_type === "both");
-    const wantP = b.visibility === "פרטי" || b.visibility === "רק פרטי", wantG = b.visibility !== "רק פרטי";
+    const { private: wantP, general: wantG } = needOf(b);
     const warn = (wantP && !hasP && (hasG || ds.some(d => d.doc_type === "unknown")) ? "חסר פרטי" : "") || (wantG && !hasG && hasP ? "חסר כללי" : "");
     return `<button type="button" class="pd-ok" onclick="PD.openCompany('${b.id}')">📄 ${ds.length} ${chips}</button>${warn ? `<div class="pd-warn2" title="לפי הרישום במאגר (פרטי/כללי) חסר סוג מסמך">⚠ ${warn}</div>` : ""}`;
   }
@@ -722,9 +727,9 @@
     try { const blob = await fetchPdfBlob(id), v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<iframe src="${URL.createObjectURL(blob)}#toolbar=0&navpanes=0&view=FitH" title="המסמך" style="width:100%;height:100%;border:0;background:#fff"></iframe>`; }
     catch (e) { const v = $("pd-ac-doc-v"); if (v) v.innerHTML = `<div class="pd-empty" style="color:#fff">הקובץ לא נטען: ${E(e.message)}</div>`; }
   }
-  const AC_VIS = { "": "רק כללי", "פרטי": "יש פרטי", "רק פרטי": "רק פרטי" };
+  const AC_VIS = { "": "רק כללי", "פרטי": "יש פרטי", "רק פרטי": "רק פרטי", [BONDS_ONLY]: 'רק לאג"ח (אין היתר לחברה)' };
   function acState(b, t) {          // מצב הת"ע של סוג אחד: ok (קיים) / miss (חסר) / na (לא נדרש)
-    const d = slotDoc(b.id, t), need = t === "private" ? b.visibility === "פרטי" || b.visibility === "רק פרטי" : b.visibility !== "רק פרטי";
+    const d = slotDoc(b.id, t), need = needOf(b)[t === "private" ? "private" : "general"];
     const cls = d ? "ok" : need ? "miss" : "na";
     return { d, cls, st: d ? "✓" : need ? "חסר" : "לא נדרש" };
   }
@@ -1329,7 +1334,7 @@
   }
   function ucard(b, d, o) {          // כרטיסית חברה קטנה: שם, ח.פ., כללי/פרטי, ראשיים 1/2, נוספים; מתחת: כפתורי שיוך
     o = o || {};
-    const f = cfeat(b, d), need = needOf(b), reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
+    const f = cfeat(b, d), need = needOf(b), reg = regOf(b);
     const act = o.assigned ? `<div class="pd-uc-act"><span class="pd-sub">שיוך:</span><button class="pd-link2" onclick="PD._unPicker('change','biz','${b.id}')">שינוי</button><button class="pd-link2" style="color:#c0392b" onclick="PD._unDetach('${b.id}')">ביטול</button></div>`
       : `<div class="pd-uc-act"><button class="pd-mini" onclick="PD._unAct('${b.id}','only')">שיוך בלבד</button>${need.private ? `<button class="pd-mini link" onclick="PD._unAct('${b.id}','private')">הת"ע פרטי</button>` : ""}${need.general ? `<button class="pd-mini link" onclick="PD._unAct('${b.id}','general')">הת"ע כללי</button>` : ""}</div>`;
     return `<div class="pd-uc ${f.me ? "is-main" : ""}"><div class="pd-uc-top" onclick="PD.openManage('${b.id}')" title="ניהול מסמכי החברה">
@@ -1660,7 +1665,7 @@
     if (b.post) return cdShowPost(b);
     if (!CD.filter.trim()) { try { localStorage.setItem(cdPosKey(), JSON.stringify({ id: b.id, i: CD.i })); } catch { /* בלי אחסון */ } }
     if (CD.curBiz !== b.id) { CD.curBiz = b.id; CD.selDoc = ""; }
-    const f = cfeat(b, null), need = needOf(b), reg = b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
+    const f = cfeat(b, null), need = needOf(b), reg = regOf(b);
     const docs = liveDocs(b.id), slotsFirst = ["private", "general"].map(t => slotDoc(b.id, t)).filter((x, i, a) => x && a.indexOf(x) === i), ex = docs.filter(d => !slotsOf(d, b.id).length);
     const flags = flagsOfCompany(b.id), sug = sugFor(b.id);
     if (!CD.selDoc || !S.byId.get(CD.selDoc)) CD.selDoc = (CD.mode === "suggest" && sug[0] ? sug[0].d.id : (flags[0] || {}).d ? flags[0].d.id : (slotsFirst[0] || docs[0] || (sug[0] || {}).d || {}).id) || "";
@@ -2166,7 +2171,7 @@
   // ───────── חלון "ניהול מסמכים" לחברה ─────────
   const M = { biz: "", share: new Set(), move: "", menu: "", bond: "", bondQ: "", subNew: false };
   // רישום החברה ברשימות (כללי / פרטי / רק פרטי): תווית, שינוי ומחיקה מהרשימה
-  const regLabel = b => b.visibility === "רק פרטי" ? "רק פרטי" : b.visibility === "פרטי" ? "פרטי" : "כללי";
+  const regLabel = regOf;
   function regChange() {
     const b = bizById(M.biz); if (!b) return;
     const cur = regLabel(b), btn = (l) => `<button class="pd-btn ${cur === l ? "sel" : ""}" onclick="PD._regSet('${l}')">${l}</button>`;

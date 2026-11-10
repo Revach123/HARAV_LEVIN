@@ -1,0 +1,46 @@
+name: Data fix - bonds-only companies (one-off, manual)
+
+# עדכון חד-פעמי: הפרדה בין היתר החברה לאישור האג"ח (scripts/data_fixes/bonds_only_2026_11.py).
+# ברירת מחדל: בדיקה בלבד. כתיבה: apply=true. כל שורה מתעדכנת רק אם הערכים במסד עדיין כמו שנבדקו.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "כתיבה ל-D1 (true) או בדיקה בלבד (false)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: registry-refresh
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_D1_TOKEN: ${{ secrets.CF_D1_TOKEN }}
+          APPLY: ${{ inputs.apply }}
+        run: |
+          if [ "$APPLY" = "true" ]; then python scripts/data_fixes/bonds_only_2026_11.py --apply
+          else python scripts/data_fixes/bonds_only_2026_11.py; fi
+      - name: Commit report
+        if: always()
+        run: |
+          git config user.name  "github-actions"
+          git config user.email "actions@github.com"
+          git add reports/data_fixes
+          git diff --staged --quiet && echo "אין שינויים" && exit 0
+          git commit -m "data-fix bonds-only: $(date -u +%FT%TZ)"
+          git pull --rebase --autostash
+          git push

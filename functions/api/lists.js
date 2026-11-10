@@ -3,6 +3,8 @@
 //   סינון (ציבורי):
 //     /api/lists?type=companies-private
 //     /api/lists?type=companies-general
+//     &bonds_only=1 → כולל גם חברות "רק לאג"ח" (אין היתר לחברה עצמה, רק לאג"ח שלה), עם bonds_only = 1 - לדף השטרות.
+//     בלי הפרמטר הן לא ברשימות החברות (רק באג"ח ובניהול).
 //   גולמי (ניהול/גיבוי — כל השורות, כל העמודות):
 //     /api/lists?type=companies-all
 //   אג"ח: לא כאן. קבצים סטטיים /data/bonds_list/bonds_{private,general,all}.{json,csv} (נבנים יומית ממאיה).
@@ -185,9 +187,13 @@ export async function onRequestGet(context) {
 
     if (type === "companies-private" || type === "companies-general") {
       const isPrivate = type === "companies-private";
+      // אישור האג"ח לרשימה הזו (נפרד מהיתר החברה): "פרטי + כללי" לשתיהן; "כן" = כמו החברה (והחברה ברשימה הזו)
       const approvedCond = isPrivate
-        ? "agch_approved IN ('כן','רק פרטי')"
-        : "agch_approved IN ('כן','רק כללי')";
+        ? "agch_approved IN ('כן','רק פרטי','פרטי + כללי')"
+        : "agch_approved IN ('כן','רק כללי','פרטי + כללי')";
+      // visibility = 'רק לאג"ח': אין היתר לחברה עצמה - לא ברשימות החברות; עם bonds_only=1 (דף השטרות) נכללת, מסומנת bonds_only
+      const isBondsOnly = `COALESCE(visibility,'') = 'רק לאג"ח'`;
+      const withBondsOnly = params.get("bonds_only") === "1";
       // כלל אחד: חברה בלי אג"ח (לפי הבורסה, tase_has_agch) = "אין אג"ח" - גם אם סומנה כמאושרת.
       // חברה עם אג"ח = "יש אג"ח - מאושר" או "יש אג"ח - לא מאושר". "בחירת אג"ח מסוימים" רק קובע איזו אג"ח מאושרת (ברשימת האג"ח), והסטטוס כאן נקבע באותו כלל.
       const selective = `agch_approved = 'בחירת אג"ח מסוימים'`;
@@ -212,7 +218,11 @@ export async function onRequestGet(context) {
       const notesExprBase = `CASE WHEN ${isBondNote} THEN '' ELSE TRIM(REPLACE(COALESCE(notes,''), char(160), ' ')) END`;
       // פרטי = עסקים המסומנים פרטי. כללי = כל העסקים חוץ מאלה שמסומנים במפורש "רק פרטי"
       // (כלומר גם עסקים עם היתר פרטי נכללים ברשימה הכללית, ויש עמודה שמראה מי מהם).
-      const whereClause = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit}`;
+      const baseWhere = isPrivate ? "COALESCE(visibility,'') IN ('פרטי','רק פרטי')" : `NOT ${onlyPrivateExplicit} AND NOT ${isBondsOnly}`;
+      const bondsOnlyLevel = isPrivate          // חברה "רק לאג"ח" ברשימה שהאג"ח שלה מאושרות אליה (אג"ח מסוימים - בשתיהן)
+        ? `agch_approved IN ('פרטי + כללי','רק פרטי','בחירת אג"ח מסוימים')`
+        : `agch_approved IN ('פרטי + כללי','רק כללי','כן','בחירת אג"ח מסוימים')`;
+      const whereClause = withBondsOnly ? `((${baseWhere}) OR (${isBondsOnly} AND ${bondsOnlyLevel}))` : `(${baseWhere})`;
       // סטטוס ברשם (עמודת registry_status, נקבעת ע"י registry-refresh): מחוסלות/מחוקות (מחוסלת.../חיסול.../מחוקה/נגרעה מהמרשם) לא מוצגות;
       // בפירוק (בפרוק...) נשארות ומקבלות הערה "בפירוק" בתחילת עמודת ההערות. אם העמודה עדיין לא קיימת - בלי סינון.
       // notes_scope (באיזו רשימה מוצגת ההערה): 'bonds' = רק ברשימת האג"ח, כלומר לא מוצגת כאן. כל ערך אחר (ריק/companies/both) מוצג.
@@ -236,7 +246,7 @@ export async function onRequestGet(context) {
                ${bondsNoteAll} AS _bonds_note_all,
                CASE WHEN ${selective} THEN 1 ELSE 0 END AS _selective,
                CASE WHEN ${approvedCond} OR ${selective} THEN 1 ELSE 0 END AS _bonds_ok,
-               ${notesOut} AS notes${withPcat ? ",\n               COALESCE(permits_category,'') AS permits_category" : ""}
+               ${notesOut} AS notes${withPcat ? ",\n               COALESCE(permits_category,'') AS permits_category" : ""}${withBondsOnly ? `,\n               CASE WHEN ${isBondsOnly} THEN 1 ELSE 0 END AS bonds_only` : ""}
         FROM businesses
         WHERE ${whereClause} ${liquidated}
         ORDER BY permit_name`;

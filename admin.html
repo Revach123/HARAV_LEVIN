@@ -7,7 +7,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>ניהול · מכון להיתר עסקה למהדרין</title>
 <meta name="robots" content="noindex,nofollow">
-<script src="/permit-docs.js?v=20261102e"></script>
+<script src="/permit-docs.js?v=20261110a"></script>
 <script src="/name-check.js?v=20261028h"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1164,7 +1164,7 @@ function agchLabel(b) {
   if (has !== "יש") {
     return `<span style="color:var(--light);">אין אג"ח</span>`;
   }
-  if (appr === "כן") {
+  if (AGCH_OK.includes(appr)) {
     return `<span style="color:var(--green);font-weight:500;">יש אג"ח · מאושר</span>`;
   }
   if (appr === "לא") {
@@ -1351,11 +1351,12 @@ function admRowsHtml(items, grp0) {
                   return `<span class="sc-btns ${sc?"":"need"}" title="באיזו רשימה מוצגת ההערה">${bt("companies","חברות")}${bt("bonds","אג\"ח")}${bt("both","שתיהן")}</span>`; })()}</div>
                 </td>
                 <td style="text-align:center;">
-                  <select onchange="inlineUpdate('${b.id}','visibility',this.value)"
+                  <select onchange="visChange('${b.id}', this)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.visibility?"selected":""}>רק כללי</option>
                     <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
                     <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
+                    <option value="${BONDS_ONLY}" ${b.visibility===BONDS_ONLY?"selected":""} title="אין היתר לחברה עצמה - רק לאג&quot;ח שלה: לא ברשימת החברות באתר">רק לאג"ח</option>
                   </select>
                 </td>
                 <td style="text-align:center;font-size:13px;">${
@@ -1366,10 +1367,11 @@ function admRowsHtml(items, grp0) {
                   <select onchange="agchChange('${b.id}', this)"
                     style="padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:12px;background:var(--bg);color:var(--text);cursor:pointer;direction:rtl;">
                     <option value=""   ${!b.agch_approved?"selected":""}>—</option>
-                    <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
-                    <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+                    <option value="כן" ${b.agch_approved==="כן"?"selected":""} ${b.visibility===BONDS_ONLY?"disabled":""} title="אג&quot;ח לאותן רשימות של היתר החברה">כמו החברה</option>
+                    <option value="${AGCH_BOTH}" ${b.agch_approved===AGCH_BOTH?"selected":""}>פרטי + כללי</option>
                     <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
                     <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+                    <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
                     <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>אג"ח מסוימים</option>
                   </select>${b.agch_approved === BOND_PICK ? (() => {
                     const sel = (window.PD && PD.apprOf) ? PD.apprOf(b.chp_number) : [];
@@ -1505,16 +1507,18 @@ function renderForm() {
             <option value=""   ${b.id && !b.visibility?"selected":""}>רק כללי</option>
             <option value="פרטי" ${b.visibility==="פרטי"?"selected":""}>יש גם פרטי</option>
             <option value="רק פרטי" ${b.visibility==="רק פרטי"?"selected":""}>רק פרטי</option>
+            <option value="${BONDS_ONLY}" ${b.visibility===BONDS_ONLY?"selected":""}>אין היתר לחברה – רק לאג"ח</option>
           </select>
         </div>
         <div class="field">
           <label>אישור לאג"ח</label>
           <select id="f-agch" style="width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:7px;background:var(--bg);font-size:14px;direction:rtl;color:var(--text);outline:none;">
             <option value=""   ${!b.agch_approved?"selected":""}>— לא מוגדר —</option>
-            <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כן</option>
-            <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
+            <option value="כן" ${b.agch_approved==="כן"?"selected":""}>כמו החברה (לפי פרטי / כללי)</option>
+            <option value="${AGCH_BOTH}" ${b.agch_approved===AGCH_BOTH?"selected":""}>פרטי + כללי</option>
             <option value="רק פרטי" ${b.agch_approved==="רק פרטי"?"selected":""}>רק פרטי</option>
             <option value="רק כללי" ${b.agch_approved==="רק כללי"?"selected":""}>רק כללי</option>
+            <option value="לא" ${b.agch_approved==="לא"?"selected":""}>לא</option>
             <option value="בחירת אג&quot;ח מסוימים" ${b.agch_approved===BOND_PICK?"selected":""}>בחירת אג"ח מסוימים (נבחרות בחלון נפרד)</option>
           </select>
           <button type="button" id="bp-open-btn" class="btn-ghost" style="margin-top:6px;${b.agch_approved===BOND_PICK ? "" : "display:none;"}" onclick="${b.id ? `openBondPicker('${b.id}')` : "openBondPickerFromForm()"}">⚙ פתיחת חלון בחירת האג"ח</button>
@@ -2398,7 +2402,7 @@ const digitsOf = v => String(v ?? "").replace(/\D/g, "");
 function existingBiz(id) { const d = digitsOf(id); return d ? businesses.filter(b => digitsOf(b.chp_number) === d) : []; }
 function permitLabel(list) {            // לפי visibility: ריק = כללי; 'פרטי' = יש גם פרטי; 'רק פרטי'
   const v = list.map(b => b.visibility || "");
-  return v.includes("פרטי") ? "היתר כללי + פרטי" : v.includes("") ? "היתר כללי" : "היתר פרטי בלבד";
+  return v.includes("פרטי") ? "היתר כללי + פרטי" : v.includes("") ? "היתר כללי" : v.includes("רק פרטי") ? "היתר פרטי בלבד" : 'היתר לאג"ח בלבד';
 }
 const ICON_PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v7M5 12h14"/></svg>';
@@ -2468,6 +2472,18 @@ async function doLookup(auto) {
 }
 
 const BOND_PICK = 'בחירת אג"ח מסוימים';
+// היתר החברה (visibility) נפרד מאישור האג"ח (agch_approved). 'רק לאג"ח' = אין היתר לחברה עצמה: לא ברשימת החברות באתר, רק האג"ח שלה.
+// אישור האג"ח: "כן" = כמו החברה (לפי פרטי / כללי); "פרטי + כללי" / "רק פרטי" / "רק כללי" - בלי קשר לחברה.
+const BONDS_ONLY = 'רק לאג"ח', AGCH_BOTH = "פרטי + כללי";
+const AGCH_OK = ["כן", AGCH_BOTH, "רק פרטי", "רק כללי"];          // אישורים (כמו APPROVED בבניית רשימת האג"ח)
+const BONDS_ONLY_AGCH_MSG = 'לחברה "רק לאג"ח" אין היתר משלה, ולכן "כמו החברה" לא אפשרי. יש לבחור באישור האג"ח: פרטי + כללי / רק פרטי / רק כללי / אג"ח מסוימים.';
+async function visChange(id, sel) {          // שינוי "פרטי / כללי" בטבלה; "רק לאג"ח" עם אישור "כמו החברה" - חוסם עד שבוחרים אישור מפורש
+  const biz = businesses.find(b => b.id === id); if (!biz) return;
+  if (sel.value === BONDS_ONLY && (biz.agch_approved || "") === "כן") { alert(BONDS_ONLY_AGCH_MSG); sel.value = biz.visibility || ""; return; }
+  const ok = await inlineUpdate(id, "visibility", sel.value);
+  if (ok === false) { sel.value = biz.visibility || ""; return; }
+  render();
+}
 
 // ─────────────────────────────────────────────
 //  בחירת אג"ח מסוימים (חלון קטן): הרשימה מהמאיה (נבנית יומית ב-bonds-list), פרטי / כללי לכל אג"ח,
@@ -2645,6 +2661,7 @@ function renderBondPicker() {
 async function agchChange(id, sel) {
   const biz = businesses.find(b => b.id === id); if (!biz) return;
   const val = sel.value === "__pick__" ? BOND_PICK : sel.value;
+  if (val === "כן" && biz.visibility === BONDS_ONLY) { alert(BONDS_ONLY_AGCH_MSG); sel.value = biz.agch_approved || ""; return; }
   if (val !== (biz.agch_approved || "")) { const ok = await inlineUpdate(id, "agch_approved", val); if (!ok) { sel.value = biz.agch_approved || ""; return; } render(); }
   else if (sel.value === "__pick__") sel.value = BOND_PICK;
   if (sel.value === "__pick__" || val === BOND_PICK) openBondPicker(id);
@@ -3092,10 +3109,11 @@ async function doSave() {
   }
   const visVal = (document.getElementById("f-visibility")?.value || "").trim();
   if (visVal === "?") { const e2 = document.getElementById("form-err"); if (e2) e2.textContent = "יש לבחור פרטי / כללי"; return; }
+  if (visVal === BONDS_ONLY && (document.getElementById("f-agch")?.value || "").trim() === "כן") { const e2 = document.getElementById("form-err"); if (e2) e2.textContent = BONDS_ONLY_AGCH_MSG; return; }
   if (!editBiz?.id && formDocs.length) {          // היתר עיסקא שנבחר: חובה לבחור שיוך, ושיתאים ל"פרטי / כללי" של העסק
     const e3 = document.getElementById("form-err"), open = formDocs.find(d => !d.slots);
     if (open) { open.need = true; formDocPaint(); if (e3) e3.textContent = "יש לבחור לאיזה היתר עיסקא המסמך: פרטי / כללי / משותף"; return; }
-    const hasP = visVal === "פרטי" || visVal === "רק פרטי", hasG = visVal !== "רק פרטי";
+    const hasP = visVal === "פרטי" || visVal === "רק פרטי" || visVal === BONDS_ONLY, hasG = visVal !== "רק פרטי";          // "רק לאג"ח": השטר של האג"ח - פרטי / כללי / משותף
     if (formDocs.some(d => (d.slots.includes("private") && !hasP) || (d.slots.includes("general") && !hasG))) {
       if (e3) e3.textContent = 'השיוך של ההיתר לא מתאים ל"פרטי / כללי" של העסק. יש לשנות אחד מהם.'; return;
     }
@@ -3164,7 +3182,7 @@ let formDocs = [];          // [{ file, slots: null | ["private"] | ["general"] 
 const FD_SLOTS = { private: ["private"], general: ["general"], both: ["private", "general"] };
 const FD_HE = { private: "פרטי", general: "כללי" };
 function fdVis() { return (document.getElementById("f-visibility")?.value ?? "?"); }
-function fdAllowed() { const v = fdVis(); return v === "" ? ["general"] : v === "רק פרטי" ? ["private"] : ["private", "general"]; }   // "?" = עוד לא נבחר: כמו שניהם
+function fdAllowed() { const v = fdVis(); return v === "" ? ["general"] : v === "רק פרטי" ? ["private"] : ["private", "general"]; }   // "?" = עוד לא נבחר / "רק לאג"ח": כמו שניהם
 function fdMissing() { const have = new Set(formDocs.flatMap(d => d.slots || [])); return fdAllowed().filter(t => !have.has(t)); }
 function formDocHtml() {
   const allowed = fdAllowed(), single = allowed.length === 1;
@@ -3341,7 +3359,8 @@ function updateColMap(fieldKey, value) {
 // Normalize agch_approved values from CSV → system values
 function normalizeAgch(val) {
   const v = (val || "").trim();
-  if (v === "מאושר"  || v === "כן" || v === "yes" || v === "true" || v === "1") return "כן";
+  if (v === "מאושר"  || v === "כן" || v === "yes" || v === "true" || v === "1" || v === "כמו החברה") return "כן";
+  if (v === AGCH_BOTH || v === "פרטי וכללי" || v === "פרטי+כללי" || v === "כללי + פרטי" || v === "כללי ופרטי") return AGCH_BOTH;
   if (v === "לא מאושר" || v === "לא" || v === "no"  || v === "false"|| v === "0") return "לא";
   if (v === "רק פרטי" || v === "פרטי בלבד" || v === "רק-פרטי") return "רק פרטי";
   if (v === "רק כללי" || v === "כללי בלבד" || v === "רק-כללי") return "רק כללי";
@@ -3493,7 +3512,7 @@ function exportCsv(allRows = false) {
       b.category       || "",
       b.biz_type       || "",
       b.visibility     || "",
-      b.agch_approved === "כן" ? "מאושר" : b.agch_approved === "לא" ? "לא מאושר" : b.agch_approved === BOND_PICK ? "אג\"ח מסוימים" : "",
+      b.agch_approved === "כן" ? "מאושר" : b.agch_approved === "לא" ? "לא מאושר" : b.agch_approved === BOND_PICK ? "אג\"ח מסוימים" : (b.agch_approved || ""),
       b.tase_has_agch  || "",
       b.notes          || "",
     ].map(csvCell).join(",")),
@@ -3536,7 +3555,7 @@ function clearFilters() {
 
 function agchSortKey(b) {
   if ((b.tase_has_agch||"") !== "יש") return 0;
-  if ((b.agch_approved||"") === "כן")  return 2;
+  if (AGCH_OK.includes(b.agch_approved||"") || (b.agch_approved||"") === BOND_PICK)  return 2;
   if ((b.agch_approved||"") === "לא")  return 1;
   return 1;
 }
@@ -3580,7 +3599,7 @@ function filteredAndSorted() {
       const appr = (b.agch_approved||"").trim();
       if (filterAgch === "אין"      && has === "יש")                 return false;
       if (filterAgch === "אין"      && has !== "יש")                 {} // keep
-      else if (filterAgch === "מאושר"   && !(has === "יש" && appr === "כן")) return false;
+      else if (filterAgch === "מאושר"   && !(has === "יש" && (AGCH_OK.includes(appr) || appr === BOND_PICK))) return false;
       else if (filterAgch === "לא מאושר" && !(has === "יש" && appr === "לא")) return false;
       else if (filterAgch === "יש"      && has !== "יש")             return false;
     }
