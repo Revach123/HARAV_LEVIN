@@ -8,5 +8,18 @@
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "dropped_no_terms": []
+ "dropped_no_terms": [
+  {
+   "security_id": 1248541,
+   "security_name": "לאומי אגח 190",
+   "company": "בנק לאומי לישראל בעמ",
+   "chp_number": "520018078"
+  },
+  {
+   "security_id": 1248558,
+   "security_name": "לאומי מסחרי 15",
+   "company": "בנק לאומי לישראל בעמ",
+   "chp_number": "520018078"
+  }
+ ]
 }
