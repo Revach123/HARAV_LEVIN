@@ -713,9 +713,13 @@ function sortVal(c, r) {
   if (k === "date") { const n = dateNum(v); return n == null ? "" : n; }
   return v;
 }
-// חיפוש בלי פיסוק: מתעלמים מכל סימן שאינו אות או ספרה (נקודה, גרש, גרשיים, מקף, סוגריים, פסיק, וכו'), מניקוד וממרווחים. "א.ב." = "אב", "בע"מ" = "בעמ".
+// חיפוש בלי פיסוק ובלי חשיבות לסדר המילים: מתעלמים מכל סימן שאינו אות או ספרה (נקודה, גרש, גרשיים, מקף, סוגריים, פסיק, וכו'), מניקוד וממרווחים. "א.ב." = "אב", "בע"מ" = "בעמ".
 const sNorm = x => String(x ?? "").toLowerCase().replace(/[\u0591-\u05c7]/g, "").replace(/[^0-9a-z\u05d0-\u05ea]+/g, "");
-const textHit = (v, q) => { const a = String(v ?? "").toLowerCase(); if (a.includes(q.toLowerCase())) return true; const n = sNorm(q); return n.length > 0 && sNorm(a).includes(n); };
+const textHit = (v, q) => {          // כל מילה בחיפוש (בכל סדר) נמצאת בטקסט; ובלי פיסוק
+  const a = String(v ?? "").toLowerCase(); if (a.includes(q.toLowerCase())) return true;
+  const toks = String(q).split(/\s+/).map(sNorm).filter(Boolean); if (!toks.length) return false;
+  const n = sNorm(a); return toks.every(t => n.includes(t));
+};
 
 function matchFilter(c, r, f) {
   if (!f) return true;
