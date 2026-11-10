@@ -103,20 +103,20 @@ h3{margin:4px 0 6px;font-size:16px;color:var(--dark)}
       <div class="auto3">
         <section>
           <h3>חברות <span class="tag" id="nCo"></span></h3>
-          <div class="dur one"><div><label for="coN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="coN" min="1" max="365" inputmode="numeric"><select id="coU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
-          <div><label for="tcN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tcN" min="1" max="365" inputmode="numeric"><select id="tcU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div></div>
+          <div class="dur one"><div><label for="coN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="coN" min="1" max="365" inputmode="numeric"><select id="coU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div>
+          <div><label for="tcN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tcN" min="1" max="365" inputmode="numeric"><select id="tcU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div></div>
           <ul class="al" id="liveCo"></ul>
         </section>
         <section>
           <h3>אג"ח <span class="tag" id="nBo"></span></h3>
-          <div class="dur one"><div><label for="boN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="boN" min="1" max="365" inputmode="numeric"><select id="boU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
-          <div><label for="tbN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tbN" min="1" max="365" inputmode="numeric"><select id="tbU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div></div>
+          <div class="dur one"><div><label for="boN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="boN" min="1" max="365" inputmode="numeric"><select id="boU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div>
+          <div><label for="tbN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tbN" min="1" max="365" inputmode="numeric"><select id="tbU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div></div>
           <ul class="al" id="liveBo"></ul>
         </section>
         <section>
           <h3>קרנות ומסלולים <span class="tag" id="nFu"></span></h3>
-          <div class="dur one"><div><label for="fuN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="fuN" min="1" max="365" inputmode="numeric"><select id="fuU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div>
-          <div><label for="tfN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tfN" min="1" max="365" inputmode="numeric"><select id="tfU"><option value="d">ימים</option><option value="w">שבועות</option></select></span></div></div>
+          <div class="dur one"><div><label for="fuN">מוצגים בתיבת העדכונים למשך</label><span class="pair"><input type="number" id="fuN" min="1" max="365" inputmode="numeric"><select id="fuU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div>
+          <div><label for="tfN">סימון "חדש" ברשימה למשך</label><span class="pair"><input type="number" id="tfN" min="1" max="365" inputmode="numeric"><select id="tfU"><option value="d">ימים</option><option value="w">שבועות</option><option value="m">חודשים</option></select></span></div></div>
           <ul class="al" id="liveFu"></ul>
         </section>
       </div>
@@ -175,7 +175,9 @@ async function loadLive() {
   try {
     const d = await (await fetch("/api/news", { cache: "no-store" })).json();
     const auto = (d.items || []).filter(it => it.auto);
-    const li = it => `<li title="${esc((it.title || "") + " - " + it.text)}"><span class="d">${fmt(it.date).slice(0, 5)}</span><span class="x"><b>${esc((it.title || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, ""))}</b> ${esc(it.text)}</span></li>`;
+    const tidyTitle = t => String(t || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, "").replace(/^מסלול חדש ברשימה המאושרת( · )?/, "");          // "מסלול חדש ברשימה המאושרת" מיותר כאן
+    const tidyText = it => it.cat === "bonds" ? String(it.text || "").replace(/(^|[\s,(])אג"?ח(?=[\s,)]|$)/g, "$1").replace(/\s{2,}/g, " ").replace(/\s+([,)])/g, "$1").trim() : it.text;          // ברשימת האג"ח אין צורך במילה "אגח"
+    const li = it => `<li title="${esc((it.title || "") + " - " + it.text)}"><span class="d">${fmt(it.date).slice(0, 5)}</span><span class="x"><b>${esc(tidyTitle(it.title))}</b> ${esc(tidyText(it))}</span></li>`;
     const put = (cat, ul, n) => { const r = auto.filter(it => it.cat === cat); $(ul).innerHTML = r.map(li).join("") || `<li class="off">אין כרגע</li>`; $(n).textContent = r.length; return r.length; };
     put("companies", "liveCo", "nCo"); put("bonds", "liveBo", "nBo");
     put("funds", "liveFu", "nFu");
@@ -210,9 +212,9 @@ $("rows").addEventListener("click", rowClick);
 $("pend").addEventListener("click", rowClick);
 $("cancel").addEventListener("click", resetForm);
 // משך ההצגה של העדכונים האוטומטיים (נשמר בימים; מוצג בשבועות כשמתחלק ב-7)
-const durTxt = n => n % 7 === 0 ? (n === 7 ? "שבוע" : `${n / 7} שבועות`) : (n === 1 ? "יום" : `${n} ימים`);
-function setDur(id, n) { const w = n % 7 === 0; $(id + "N").value = w ? n / 7 : n; $(id + "U").value = w ? "w" : "d"; }
-const getDur = id => Math.floor(Number($(id + "N").value)) * ($(id + "U").value === "w" ? 7 : 1);
+const durTxt = n => n % 7 === 0 ? (n === 7 ? "שבוע" : `${n / 7} שבועות`) : n % 30 === 0 ? (n === 30 ? "חודש" : `${n / 30} חודשים`) : (n === 1 ? "יום" : `${n} ימים`);
+function setDur(id, n) { const u = n % 7 === 0 ? "w" : n % 30 === 0 ? "m" : "d"; $(id + "N").value = u === "w" ? n / 7 : u === "m" ? n / 30 : n; $(id + "U").value = u; }          // חודש = 30 יום
+const getDur = id => Math.floor(Number($(id + "N").value)) * ({ w: 7, m: 30 }[$(id + "U").value] || 1);
 function showDur(st) { setDur("co", st.co_days); setDur("bo", st.bond_days); setDur("fu", st.fund_days); setDur("tc", st.tag_co_days); setDur("tb", st.tag_bond_days); setDur("tf", st.tag_fund_days); $("autoHint").textContent = `מוצגים: חברות שנוספו לרשימה (עד ${durTxt(st.co_days)} מיום ההוספה), אג"ח חדשות (עד ${durTxt(st.bond_days)}), ומסלולים שסומנו חדש / הוסר ברשימת הקרנות (כל עוד הסימון קיים). בתיבת העדכונים תוך דקה.`; }
 $("saveDur").addEventListener("click", async () => {
   const co = getDur("co"), bo = getDur("bo"), fu = getDur("fu"), tc = getDur("tc"), tb = getDur("tb"), tf = getDur("tf"), msg = $("dmsg");
