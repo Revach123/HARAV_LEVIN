@@ -37,7 +37,9 @@ def scan(max_id=None, fetch=None):
                 continue
             top = max(top, cid)
             k = b.chp_norm(body.get("corporateNo"))
-            _COMPANIES[cid] = {"id": cid, "chp": k, "name": str(body.get("name") or body.get("longName") or "").strip()}
+            short = str(body.get("name") or "").strip()
+            long_name = str(body.get("longName") or "").strip()          # השם המלא (כמו בדף החברה במאיה); השם הקצר הוא שבטבלת החברות
+            _COMPANIES[cid] = {"id": cid, "chp": k, "name": long_name or short, "short": short}
             if k:
                 ids.setdefault(k, cid)
     return ids, top, errors

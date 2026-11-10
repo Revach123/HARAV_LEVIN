@@ -240,11 +240,13 @@ def datawise_key():
 def load_maya_companies():
     """data/bonds_list/maya_companies.json (סריקת מאיה השבועית) -> ({מספר תאגיד מנורמל: שם}, {מזהה בורסה של חברה בלי מספר תאגיד: שם}, {מזהה בורסה: מספר תאגיד}).
     חברות שאינן ברשם הישראלי (זרות / חוץ-בורסאיות): השם מגיע מכאן. קובץ חסר = ריק."""
-    by_chp, by_id_nochp, chp_by_id = {}, {}, {}
+    by_chp, by_id_nochp, chp_by_id, shorts = {}, {}, {}, set()
     try:
         with open(os.path.join(ROOT, "data", "bonds_list", "maya_companies.json"), encoding="utf-8") as fh:
             for c in json.load(fh).get("companies", []):
                 name = str(c.get("name") or "").strip()
+                if c.get("short"):
+                    shorts.add(str(c["short"]).strip())
                 if c.get("chp"):
                     chp_by_id[str(c["id"])] = maya_key(c["chp"])
                     if name:
@@ -253,7 +255,7 @@ def load_maya_companies():
                     by_id_nochp[str(c["id"])] = name
     except (OSError, ValueError):
         print("WARNING: maya_companies.json missing - no names from Maya", file=sys.stderr)
-    return by_chp, by_id_nochp, chp_by_id
+    return by_chp, by_id_nochp, chp_by_id, shorts
 
 
 def maya_key(v):
@@ -276,7 +278,7 @@ def fetch_bond_corporate_ids():
             ids.discard("")
             ids.discard("0")
             # חברה בלי מספר תאגיד בנתוני הבורסה: לפי מספר המנפיק (issuerId) או מספר התאגיד שלו במאיה
-            _, _, chp_by_id = load_maya_companies()
+            _, _, chp_by_id, _ = load_maya_companies()
             for r in rows:
                 if str(r.get("securityFullTypeCode") or "")[:2] in BOND_TYPE_PREFIXES and str(r.get("corporateId") or "").strip() in ("", "0") \
                         and r.get("issuerId") not in (None, ""):
@@ -320,7 +322,7 @@ def is_liquidated(status):
 
 def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=None):
     changes = []
-    maya_chp, maya_nochp, _ = maya or ({}, {}, {})
+    maya_chp, maya_nochp, _, maya_shorts = maya or ({}, {}, {}, set())
     for b in businesses:
         key = numeric_chp(b.get("chp_number"))
         info = registry.get(key) if key else None
@@ -342,7 +344,7 @@ def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "registrar_name",
                                 "old": b.get("registrar_name"), "new": mname})
                 # השם שהוקלד ידנית (למשל באנגלית) לא הולך לאיבוד: נשמר כ"שם בהיתר עיסקא" אם אין שם בהיתר
-                if old_reg and not (b.get("permit_name") or "").strip():
+                if old_reg and old_reg not in maya_shorts and not (b.get("permit_name") or "").strip():
                     changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permit_name",
                                     "old": b.get("permit_name"), "new": old_reg})
         if bond_ids is not None:

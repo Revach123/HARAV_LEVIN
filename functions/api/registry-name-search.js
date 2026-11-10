@@ -77,7 +77,7 @@ export async function onRequestGet({ request, env }) {
     const have = new Set(results.map(r => String(r.id)));
     const words = normB(q).split(" ").filter(Boolean);
     const maya = (await loadMayaCompanies(request, env)).filter(c => c.name && !have.has(mayaKey(c)) && (/^\d+$/.test(q)
-      ? mayaKey(c).startsWith(q) : words.length && words.every(w => normB(c.name).includes(w))))
+      ? mayaKey(c).startsWith(q) : words.length && words.every(w => normB(c.name + " " + (c.short || "")).includes(w))))
       .map(c => ({ id: mayaKey(c), name: c.name, kind: "maya", type: "חברה מנפיקה בבורסה", status: "", defunct: false }));
     const top = maya.length ? results.slice(0, 20 - Math.min(maya.length, 5)) : results.slice(0, 20);
     results.splice(0, results.length, ...top, ...maya.slice(0, 5));
