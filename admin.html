@@ -1021,6 +1021,7 @@
 <div id="status-bar"></div>
 
 <script src="xlsx-lite.js"></script>
+<script src="funds-export.js"></script>
 <script>
 // ─────────────────────────────────────────────
 //  STATE
@@ -1800,11 +1801,12 @@ async function gfLoad() {
   GF.loading = false;
   if (view === "gfunds") render();
 }
+function gfDownload() { GlattFunds.download({ rows: GF.rows, type_order: { pension: gfTypeOrder("pension"), savings: gfTypeOrder("savings") }, updated: GF.updated }); }          // funds-export.js: כמו בדף funds.html
 function gfMatch(r) { const q = GF.q.trim().toLowerCase(); return !q || [r.company, r.track, r.type, r.number, r.note].join(" ").toLowerCase().includes(q); }
 function renderGFunds() {
   const head = `<div class="admin-bar" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2 style="margin:0">📋 מסלולים וקרנות גלאט הון</h2>
     <span style="flex:1"></span>
-
+    <button class="btn-ghost" style="width:auto;margin:0;padding:8px 14px" ${GF.loaded ? "" : "disabled"} title="${GF.dirty ? "כולל שינויים שעוד לא נשמרו" : "כל הרשימה (שתי הלשוניות)"}" onclick="gfDownload()">⬇ הורדה לאקסל</button>
     <button class="btn-primary" id="gf-save" style="width:auto;padding:8px 22px;margin:0" onclick="gfSave()" ${GF.dirty && !GF.saving ? "" : "disabled"}>${GF.saving ? "שומר…" : GF.dirty ? "💾 שמירה" : "✓ נשמר"}</button></div>`;
   if (GF.loading || !GF.loaded) return head + (GF.err ? `<p class="error-msg">הטעינה נכשלה: ${escHtml(GF.err)} <button class="btn-ghost" onclick="gfLoad()">ניסיון נוסף</button></p>` : `<div class="loading" style="padding:3rem 0;text-align:center;"><span class="spin"></span> טוען…</div>`);
   const tabs = `<div class="gf-tabs">${GF_TABS.map(([k, l]) => `<button class="${GF.tab === k ? "btn-primary" : "btn-ghost"}" style="width:auto;margin:0;padding:8px 14px" onclick="GF.tab='${k}';render()">${escHtml(l)} (${GF.rows.filter(r => gfIn(r, k)).length})</button>`).join("")}
