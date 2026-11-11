@@ -30,6 +30,7 @@ import { publicLinks } from './permit-links.js';
 
 // כל השטרות הציבוריים של החברה - אותה רשימה שמוצגת באתר (_shared/permit-links.js), במטמון לדקה
 let LINKS = { at: 0, list: null };
+export const clearLinksCache = () => { LINKS = { at: 0, list: null }; };          // לבדיקות
 async function linksOf(env) {
   if (LINKS.list && Date.now() - LINKS.at < 60000) return LINKS.list;
   let list = [];

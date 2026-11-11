@@ -9,7 +9,8 @@
 
 import { searchBusinesses, tokens, normalize } from './voice-match.js';
 
-export const MAX_LIST = 8;          // יותר מזה: לא מקריאים, מבקשים לדייק
+export const MAX_LIST = 8;          // תוצאות בכל דף הקראה (בטלפון: 9 = הדף הבא)
+export const MAX_PAGED = 40;        // יותר מזה (או כשהחיפוש נקטע): לא מקריאים, מבקשים לדייק
 const FETCH_LIMIT = 30;             // מועמדים לכל טבלה לכל וריאנט; הגעה לתקרה = "יותר מדי"
 const MAX_VARIANTS = 10;
 
@@ -165,7 +166,7 @@ export async function searchByName(env, query, businesses) {
   const found = searchBusinesses(query, candidates.map(toBusinessRow), 50);
   const items = found.results.map((r) => byKey.get(r.id)).filter(Boolean);
   items.sort((a, b) => (DEFUNCT.test(a.status || '') ? 1 : 0) - (DEFUNCT.test(b.status || '') ? 1 : 0));
-  return { items, total: found.total, tooMany: truncated || found.total > MAX_LIST };
+  return { items, total: found.total, tooMany: truncated || found.total > MAX_PAGED };          // עד MAX_PAGED: מוקראות בדפים של MAX_LIST (9 = תוצאות נוספות)
 }
 
 /** חיפוש לפי ח.פ. (מספר תאגיד): מחזיר פריטים מכל הטבלאות שה-id שלהן שווה. */

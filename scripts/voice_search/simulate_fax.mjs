@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { onRequest } from '../../functions/api/ivr-company.js';
 import { unit } from '../../functions/api/_shared/ivr_phrases.js';
+import { clearLinksCache } from '../../functions/api/_shared/ivr-fax.js';
 const T = (k) => unit(k, {});          // הטקסט שמוקרא (עם ניקוד), כמו שהקו שולח
 
 // ---- D1 מדומה על SQLite ----
@@ -26,6 +27,9 @@ db.exec(`
   INSERT INTO permit_doc_bonds VALUES ('d4b','1112','ארבע אגח ג','ARB.G','general','');
   INSERT INTO permit_doc_subs VALUES ('d5g',5,'general'),('d5p',5,'private');
 `);
+// 10 חברות לבדיקת הדפים (תרחיש 8). כאן ולא בתרחיש עצמו: רשימת העסקים נשמרת במטמון בקריאה הראשונה
+for (let i = 1; i <= 10; i++) db.prepare("INSERT INTO businesses VALUES (?,?,?,?,?,?)").run(100 + i, String(520000100 + i), 'company', `דפדוף ${i} בע"מ`, '', '');
+db.exec(`INSERT INTO permit_docs VALUES ('d10','docs/d10.pdf','10.pdf','general'); INSERT INTO permit_doc_companies VALUES ('d10',110,'general');`);
 const st = (sql, a = []) => ({
   all: async () => ({ results: db.prepare(sql).all(...a).map((r) => ({ ...r })) }),
   first: async () => { const r = db.prepare(sql).get(...a); return r ? { ...r } : null; },
@@ -56,46 +60,46 @@ const asks = (out, v) => assert.ok(out.includes(`=${v},`), `expected question ${
 // 1) חברה עם שטר כללי: אפשרות 3, מספר פקס, אישור, שליחה
 call = 1;
 let o = await step({ h1: '510000001' });
-assert.ok(o.includes(T('fax:offer')) && o.includes(',1.2.3,'), 'fax option offered');
-o = await step({ h1: '510000001', nx1: '3' }); asks(o, 'fx1_1');
-o = await step({ h1: '510000001', nx1: '3', fx1_1: '12' }); asks(o, 'fx1_2'); assert.ok(o.includes(T('fax:bad')));
-o = await step({ h1: '510000001', nx1: '3', fx1_1: '12', fx1_2: '031234567' }); asks(o, 'fy1_2'); assert.ok(o.includes('d-031234567'));
-o = await step({ h1: '510000001', nx1: '3', fx1_1: '12', fx1_2: '031234567', fy1_2: '1' }); asks(o, 'ns1'); assert.ok(o.includes(T('fax:sent')));
+assert.ok(o.includes(T('fax:forCo')) && o.includes(',0.*.1,'), 'fax option offered after the company');
+o = await step({ h1: '510000001', nx1: '1' }); asks(o, 'fx1_1');
+o = await step({ h1: '510000001', nx1: '1', fx1_1: '12' }); asks(o, 'fx1_2'); assert.ok(o.includes(T('fax:bad')));
+o = await step({ h1: '510000001', nx1: '1', fx1_1: '12', fx1_2: '031234567' }); asks(o, 'fy1_2'); assert.ok(o.includes('d-031234567'));
+o = await step({ h1: '510000001', nx1: '1', fx1_1: '12', fx1_2: '031234567', fy1_2: '1' }); asks(o, 'ns1'); assert.ok(o.includes(T('fax:sent')));
 assert.equal(sentFaxes.length, 1); assert.deepEqual([sentFaxes[0].key, sentFaxes[0].fax, sentFaxes[0].file], ['KEY123', '031234567', '%PDF-docs/d1.pdf']);
 // ימות שולחת שוב את אותם משתנים (למשל עם התשובה הבאה): לא שולחים פעם שנייה
-o = await step({ h1: '510000001', nx1: '3', fx1_1: '12', fx1_2: '031234567', fy1_2: '1' });
+o = await step({ h1: '510000001', nx1: '1', fx1_1: '12', fx1_2: '031234567', fy1_2: '1' });
 assert.equal(sentFaxes.length, 1, 'no duplicate send');
-o = await step({ h1: '510000001', nx1: '3', fx1_1: '12', fx1_2: '031234567', fy1_2: '1', ns1: '2' }); assert.ok(o.includes('go_to_folder'), 'bye');
+o = await step({ h1: '510000001', nx1: '1', fx1_1: '12', fx1_2: '031234567', fy1_2: '1', ns1: '*' }); assert.ok(o.startsWith('go_to_folder'), 'back to main menu');
 console.log('1 OK: general permit sent once');
 
 // 2) כללי + פרטי: בחירת שטר; שינוי מספר לפני אישור
 call = 2;
 o = await step({ h1: '510000002' }); asks(o, 'nx1');
-o = await step({ h1: '510000002', nx1: '3' }); asks(o, 'fd1');
-o = await step({ h1: '510000002', nx1: '3', fd1: '2' }); asks(o, 'fx1_1');
-o = await step({ h1: '510000002', nx1: '3', fd1: '2', fx1_1: '029999999', fy1_1: '2' }); asks(o, 'fx1_2');
-o = await step({ h1: '510000002', nx1: '3', fd1: '2', fx1_1: '029999999', fy1_1: '2', fx1_2: '0721234567', fy1_2: '1' }); asks(o, 'ns1');
+o = await step({ h1: '510000002', nx1: '1' }); asks(o, 'fd1');
+o = await step({ h1: '510000002', nx1: '1', fd1: '2' }); asks(o, 'fx1_1');
+o = await step({ h1: '510000002', nx1: '1', fd1: '2', fx1_1: '029999999', fy1_1: '2' }); asks(o, 'fx1_2');
+o = await step({ h1: '510000002', nx1: '1', fd1: '2', fx1_1: '029999999', fy1_1: '2', fx1_2: '0721234567', fy1_2: '1' }); asks(o, 'ns1');
 assert.equal(sentFaxes.at(-1).file, '%PDF-docs/d2p.pdf'); assert.equal(sentFaxes.at(-1).fax, '0721234567');
 console.log('2 OK: private permit chosen, number changed before sending');
 
 // 3) חברה בלי שטר מקושר (רק מסמך "אחר"): אין אפשרות 3
 call = 3;
 o = await step({ h1: '510000003' });
-assert.ok(!o.includes(T('fax:offer')) && o.includes(',1.2,'), 'no fax option without a linked document');
+assert.ok(!o.includes(T('fax:forCo')) && o.includes(',0.*,'), 'no fax option without a linked document');
 console.log('3 OK: no fax option without a public document');
 
 // 4) בלי FAX_API_KEY: הקו כמו קודם
 call = 4;
 o = await step({ h1: '510000001' }, { ...baseEnv, FAX_API_KEY: '' });
-assert.ok(!o.includes(T('fax:offer')), 'no fax option without key');
+assert.ok(!o.includes(T('fax:forCo')), 'no fax option without key');
 console.log('4 OK: no key -> no fax option');
 
 // 5) מגבלה: עד 3 פקסים לשיחה (סבבים 1-4 באותה שיחה)
 call = 5; const before = sentFaxes.length;
-const r = (n, extra) => ({ [`h${n}`]: '510000001', [`nx${n}`]: '3', [`fx${n}_1`]: '031111111', [`fy${n}_1`]: '1', ...extra });
+const r = (n, extra) => ({ [`h${n}`]: '510000001', [`nx${n}`]: '1', [`fx${n}_1`]: '031111111', [`fy${n}_1`]: '1', ...extra });
 let vars = {};
 for (let n = 1; n <= 4; n++) {
-  if (n > 1) vars[`ns${n - 1}`] = '1';
+  if (n > 1) vars[`ns${n - 1}`] = '0';
   vars[`h${n}`] = '510000001'; await step(vars);          // הקראת התוצאות (שומרת את מצב הסבב)
   vars = { ...vars, ...r(n) };
   o = await step(vars);
@@ -105,20 +109,36 @@ console.log('5 OK: limited to 3 faxes per call');
 // 6) כמה שטרות: "לחברה יש 4 שטרות", ואחריו לכל שטר "לשטר ... הקישו k" (חברה, אג"ח ג, מסלול הלכה כללי / פרטי)
 call = 6;
 o = await step({ h1: '510000004' }); asks(o, 'nx1');
-o = await step({ h1: '510000004', nx1: '3' }); asks(o, 'fd1');
+o = await step({ h1: '510000004', nx1: '1' }); asks(o, 'fd1');
 const plain = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
 console.log('6 prompt:', plain(o).split('=')[1]);
 for (const t of ['לחברה יש 4 שטרות', 'לשטר של החברה הקישו 1', 'לשטר לאגח ג הקישו 2', 'לשטר היתר העסקה הכללי של מסלול הלכה הקישו 3', 'לשטר היתר העסקה הפרטי של מסלול הלכה הקישו 4'])
   assert.ok(plain(o).includes(t), 'missing: ' + t);
 assert.ok(o.includes(',1.2.3.4,'), 'digits 1-4');
-o = await step({ h1: '510000004', nx1: '3', fd1: '4', fx1_1: '031234567', fy1_1: '1' }); asks(o, 'ns1');
+o = await step({ h1: '510000004', nx1: '1', fd1: '4', fx1_1: '031234567', fy1_1: '1' }); asks(o, 'ns1');
 assert.equal(sentFaxes.at(-1).file, '%PDF-docs/d5p.pdf');
-o = await step({ h1: '510000004', nx1: '3', fd1: '2' }); asks(o, 'fx1_1');
+o = await step({ h1: '510000004', nx1: '1', fd1: '2' }); asks(o, 'fx1_1');
 console.log('6 OK: several permits listed and chosen (sub-row private sent)');
 // 7) שטר אחד בלבד: בלי שאלת בחירה (ישר למספר הפקס)
 call = 7;
 await step({ h1: '510000001' });
-o = await step({ h1: '510000001', nx1: '3' }); asks(o, 'fx1_1');
+o = await step({ h1: '510000001', nx1: '1' }); asks(o, 'fx1_1');
 console.log('7 OK: single permit -> no choice question');
+// 8) יותר מ-8 תוצאות: דפים של 8, 9 = התוצאות הבאות; מספר הפקס לחברה בדף 2 מתחיל שוב מ-1
+call = 8;
+const venv = { ...baseEnv, IVR_VOICE_READ_OPTS: 'no,voice' };
+const pv = { m1: '2', s1_1: 'דפדוף', c1_1: '1' };
+o = await step(pv, venv);
+const pl = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
+assert.ok(pl(o).includes('נמצאו 10 חברות מתאימות'), 'total count'); assert.ok(pl(o).includes('לשמיעת תוצאות נוספות הקישו 9'), 'more offered');
+assert.ok(o.includes('=nx1,') && o.includes(',0.*.9,'), 'page 1 menu');
+o = await step({ ...pv, nx1: '9' }, venv);
+assert.ok(o.includes('=nx1p2,'), 'page 2 var'); assert.ok(!pl(o).includes('נמצאו'), 'no count on page 2'); assert.ok(!pl(o).includes('תוצאות נוספות'), 'last page: no 9');
+assert.equal((pl(o).match(/t-חברה\./g) || []).length, 2, 'two results on page 2');
+assert.ok(o.includes(T('fax:forCo')) && o.includes(',0.*.1,'), 'fax key 1 on page 2: ' + pl(o).slice(0, 400));
+o = await step({ ...pv, nx1: '9', nx1p2: '1', fx1_1: '031234567', fy1_1: '1' }, venv); asks(o, 'ns1');
+assert.equal(sentFaxes.at(-1).file, '%PDF-docs/d10.pdf');
+o = await step({ ...pv, nx1: '9', nx1p2: '0' }, venv); assert.ok(o.includes('=m2,'), '0 on page 2 -> new search');
+console.log('8 OK: paged results, 9 = more, fax from page 2');
 console.log('log:', db.prepare('SELECT call_id, slot, fax, chp, kind, doc_id, status FROM ivr_fax_log').all().map((x) => Object.values(x).join(' ')));
 console.log('ALL OK');

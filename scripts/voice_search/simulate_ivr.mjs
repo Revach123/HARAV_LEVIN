@@ -90,7 +90,7 @@ r = await call(env, { h1: '520018078' });
 console.log('1b', parts(r));
 assert.equal(parts(r)[0], 't-חברה פרטית'); assert.equal(parts(r)[1], 't-בנק לאומי לישראל בא אם');
 assert.equal(parts(r)[2], { 'פרטי': 't-קיים גם היתר עסקה פרטי', 'רק פרטי': 't-לעסק זה יש רק היתר עסקה פרטי' }[bl.visibility] || 't-קיים היתר עסקה כללי');
-assert.match(r, /=nx1,no,1,1,7,No,no,no,,1\.2,/);
+assert.match(r, /=nx1,no,1,1,7,No,no,no,,0\.\*,/);
 // עסק עם visibility = 'רק פרטי': רק היתר פרטי
 const prv = rows.find((x) => x.visibility === 'רק פרטי' && x.chp_number && x.chp_number !== '520018078');
 r = await call(env, { h1: prv.chp_number });
@@ -106,10 +106,10 @@ r = await call(env, { h1: '511111111' });
 console.log('1c', parts(r)); assert.deepEqual(parts(r).slice(0, 3), ['t-חברה ציבורית', 't-אבגד תעשיות בא אם', 't-לא קיים היתר עסקה']);
 r = await call(env, { h1: '551111111' }); assert.equal(parts(r)[0], 't-שותפות מוגבלת'); assert.equal(parts(r)[1], 't-קרן הדר');
 r = await call(env, { h1: '581111111' }); assert.equal(parts(r)[0], 't-עמותה'); assert.equal(parts(r)[1], 't-עמותת חסד ואמת');
-assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה\.t-לחיפוש נוסף הקישו 1 לסיום הקישו 2=nx1/);
-// nx: 1 -> סבב חדש, 2 -> סיום
-assert.match(await call(env, { h1: '511111111', nx1: '1' }), /=h2,no,10,5,/);
-assert.match(await call(env, { h1: '511111111', nx1: '2' }), /^id_list_message=t-תודה ולהתראות&go_to_folder=\/5&$/);
+assert.match(await call(env, { h1: '999999999' }), /^read=t-לא נמצאה חברה במספר הזה\.t-לחיפוש נוסף הקישו אפס לחזרה לתפריט הראשי הקישו כוכבית=nx1,no,1,1,7,No,no,no,,0\.\*,/);
+// nx: 0 -> סבב חדש, * -> חזרה לתפריט הראשי
+assert.match(await call(env, { h1: '511111111', nx1: '0' }), /=h2,no,10,5,/);
+assert.match(await call(env, { h1: '511111111', nx1: '*' }), /^go_to_folder=\/5&$/);
 assert.equal(await call(env, { hangup: 'yes' }), '');
 assert.match(await (async () => { const u = new URL('https://x/api/ivr-company?sk=bad'); return (await onRequest({ request: new Request(u), env })).text(); })(), /הרשאה/);
 
@@ -132,7 +132,7 @@ const p = parts(r); console.log('2d', p);
 assert.equal(p.length, 3 * 3 + 1);
 assert.ok(p.every((x) => !x.includes('בערבון')));
 assert.equal(p[p.length - 4], 't-חברה פרטית מחוקה'); assert.equal(p[p.length - 3], 't-אבגד ישן בא אם');
-assert.equal(p[p.length - 1], 't-לחיפוש נוסף הקישו 1 לסיום הקישו 2');
+assert.equal(p[p.length - 1], 't-לחיפוש נוסף הקישו אפס לחזרה לתפריט הראשי הקישו כוכבית');
 // שגיאות זיהוי: ק<->כ, ח/כ, תחילית ה
 for (const q of ['הבנק לאומי', 'במק לאומי']) {
   r = await call(env, { m1: '2', s1_1: q });
@@ -162,7 +162,7 @@ assert.match(await call(env, { m1: '1', h1: 'NONE' }), /^read=t-הקישו את 
 assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: 'NONE' }), /^read=t-לחיפוש נוסף.*=nx1,/);
 assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: 'NONE' }), /=t1_1,no,1,1,/);
 // חיפוש נוסף: סבב 2 מתחיל מהתפריט
-assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: '1' }), /=m2,no,1,1,/);
+assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1: '0' }), /=m2,no,1,1,/);
 
 // "בע"מ" הוא חלק נפרד אחרי שם החברה (קובץ שמע משלו)
 r = await call(mkEnv(), { h1: '520018078' });
@@ -216,15 +216,15 @@ assert.match(await call(mkEnv({ AZURE_SPEECH_KEY: 'AK', YEMOT_TOKEN: 'x:y', IVR_
 r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav' });
 assert.equal(parts(r)[1], 't-בנק לאומי לישראל בא אם'); console.log('4b', parts(r), calls);
 const n = calls.length;
-r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav', nx1: '2' });
-assert.match(r, /תודה ולהתראות/); assert.equal(calls.length, n);
+r = await call(env, { ApiCallId: 'abc-1', m1: '2', s1_1: '/6/rabc1_1_1.wav', nx1: '*' });
+assert.match(r, /^go_to_folder=/); assert.equal(calls.length, n);
 heard = '';
 r = await call(env, { ApiCallId: 'abc-2', m1: '2', s1_1: '/6/rabc2_1_1.wav' });
 assert.match(r, /לא הצלחתי להבין\.t-אמרו שוב את שם החברה=s1_2,no,record,\/6,rabc2_1_2/); console.log('4c', r);
 globalThis.fetch = realFetch;
 // קבצי שמע פעילים (המניפסט האמיתי): ביטוי שהטקסט שלו לא השתנה מושמע מקובץ (f-)
 assert.match(await callRaw(mkEnv({ IVR_AUDIO_OFF: '' }), { h1: '999999999' }), /^read=(f-\/99\/c6_[0-9a-f]+|t-[^.=]+)\.(f-\/99\/c6_[0-9a-f]+|t-[^.=]+)=nx1/);
-assert.match(await callRaw(mkEnv({ IVR_AUDIO_OFF: '' }), { nx1: '2' }), /^id_list_message=(f-\/99\/c6_[0-9a-f]+|t-[^&]+)&go_to_folder/);
+assert.match(await callRaw(mkEnv({ IVR_AUDIO_OFF: '' }), { nx1: '*' }), /^go_to_folder=/);
 // ניקוד: חֶבְרָה / הַחֶבְרָה בכל הביטויים
 for (const [k, t] of Object.entries(PHRASES)) assert.ok(!/(?<![א-ת])ה?חברה(?![א-ת])/.test(t), `חברה בלי ניקוד ב-${k}`);
 assert.equal(PHRASES.ask1, 'אִמְרוּ אֶת שֵׁם הַחֶבְרָה');
