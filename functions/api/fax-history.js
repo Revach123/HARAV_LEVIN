@@ -10,7 +10,9 @@ const DEFAULT_URL = "https://shchakim.live/shch/api/ApiSendFaxShchakim";
 const out = (obj, status = 200) => Response.json(obj, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function onRequestGet({ request, env }) {
-  if (!(await checkAdmin(request, env))) return noAuth();
+  // היומן שלנו (log=1) פתוח גם להרצה אוטומטית לאבחון (X-Cron-Secret = CRON_SECRET, קריאה בלבד); היסטוריית הספק - מנהל בלבד
+  const cs = request.headers.get("X-Cron-Secret") || "", cron = !!env.CRON_SECRET && cs.length === env.CRON_SECRET.length && cs === env.CRON_SECRET;
+  if (!(cron && new URL(request.url).searchParams.get("log")) && !(await checkAdmin(request, env))) return noAuth();
   if (new URL(request.url).searchParams.get("log")) {
     try {
       const rows = (await env.DB.prepare("SELECT id, at, company, chp, kind, doc_id, fax, caller, status, response FROM ivr_fax_log ORDER BY id DESC LIMIT 200").all()).results || [];

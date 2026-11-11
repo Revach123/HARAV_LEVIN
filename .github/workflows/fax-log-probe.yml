@@ -1,0 +1,21 @@
+name: Fax send log (read-only, manual)
+
+# מדפיס את יומן שליחות הפקס מהקו הטלפוני (ivr_fax_log): מתי, מצב, תשובת הספק. מספרי הפקס והטלפון מוסתרים. קריאה בלבד (CRON_SECRET).
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch log
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          code=$(curl -sS -m 60 -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" "https://harav-levin.pages.dev/api/fax-history?log=1" -o log.json -w '%{http_code}')
+          echo "HTTP $code"
+          sed -E 's/[0-9]{9,12}/<num>/g' log.json | jq -c '{ok, note, n: (.rows|length), rows: [.rows[:15][] | {id, at, company, kind, status, response, doc_id}]}'
