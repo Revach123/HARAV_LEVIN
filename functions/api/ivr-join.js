@@ -13,8 +13,8 @@
 //    emq / eml מייל (רשות, בהקשה)
 //    fxq / fx  פקס (רשות)
 //    ch, cl    1 = כל החברות, 2 = חברות מסוימות (cl = הקלטת השמות)
-//    rd        1 = להקריא את נוסח השטר המלא (14 פסקאות), 2 = להמשיך
-//    ag        הצהרה: 1 = מאשר ונרשם, 2 = שמיעה חוזרת של השטר המלא, 3 = ביטול
+//    rd        1 = להקריא את נוסח השטר המלא (בחלקים, ap_<n>), 2 = להמשיך
+//    ag / ag_<n> הצהרה: 1 = מאשר ונרשם, 2 = שמיעה חוזרת של השטר המלא, 3 = ביטול (_shared/ivr-agreement.js)
 //  אחרי כל הקלטה / הקשה מוקרא למצטרף מה שזוהה / הוקש, עם אישור (1) או שינוי (2). לפני כל הקלטה נאמר לסיים בסולמית.
 //  מייל: הקשה תו אחר תו, ואחריו סולמית. שני מצבים, מעבר ביניהם בכוכבית (*): אותיות (ברירת מחדל: מקש 2-9 כמספר מקומה של האות, 2 = a, 22 = b;
 //  1 = נקודה, 11 = מקף, 111 = קו תחתון) או מספרים (ספרה אחת = הספרה). בשני המצבים: 10 = מחיקה, 01 = עזרה, וסיום = סולמית לבדה (סולמית פעמיים ברצף).
@@ -28,7 +28,7 @@
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit, ttsClean } from './_shared/ivr_phrases.js';
-import { getAgreement, speakable } from './_shared/agreement.js';
+import { agreementStep } from './_shared/ivr-agreement.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
@@ -346,17 +346,10 @@ async function step({ v, env, P, bk, done, origin }) {
 
   // 9. הקראת השטר המלא (אופציונלית) והצהרה והסכמה
   if (v.rd !== '1' && v.rd !== '2') return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
-  if (v.ag !== '1' && v.ag !== '3') {
-    // ag=2 = שמיעה חוזרת של השטר המלא (ואז שוב ההצהרה). שתיקה / ערך אחר: ההצהרה לבדה נשאלת שוב.
-    // pl: השטר המלא כבר הושמע פעם אחת בשיחה הזו (נשמר גם בשרת) - לא משמיעים אותו שוב מעצמנו, רק בבקשה (2).
-    const replay = v.ag === '2' || (!has(v, 'ag') && v.rd === '1' && v.pl !== '1');
-    if (replay) v.pl = '1';
-    // הקראת השטר: TTS של ימות מהנוסח הנוכחי (נערך בניהול). בעתיד אפשר להחליף בהקלטות.
-    const ag = replay ? await getAgreement(env) : null;
-    const full = replay ? [ag.longTitle, ...ag.long].filter(Boolean).map((t) => T(speakable(t))).join('.') + '.' : '';
-    return readTap(full + P('join:declare'), 'ag', ['1', '2', '3'], { empty: EMPTY });
-  }
-  if (v.ag === '3') { v.finished = true; return done('join:cancelled'); }
+  // השטר המלא מוקרא בחלקים קצרים (בקשה לכל חלק), ואחריו ההצהרה: 1 = מאשר, 2 = שמיעה חוזרת, 3 = ביטול (_shared/ivr-agreement.js)
+  const agQ = await agreementStep({ env, v, S, setS, P, readTap, empty: EMPTY });
+  if (agQ.ask) return agQ.ask;
+  if (agQ.cancel) { v.finished = true; return done('join:cancelled'); }
 
   // הטקסטים שזוהו ואושרו (אם Azure לא מוגדר - נשארות ההקלטות בלבד)
   const texts = { fn: fnQ.text || '', ln: lnQ.text || '', ad: adQ.text || '', cl: clQ.text || '' };
@@ -399,7 +392,7 @@ const EMAIL_DOMAINS = [
 const LETTER_HE = { a: 'אֵיי', b: 'בי', c: 'סי', d: 'די', e: 'אי', f: 'אף', g: "ג'י", h: "אייץ'", i: 'אַיי', j: "ג'יי", k: 'קיי', l: 'אל', m: 'אם',
   n: 'אן', o: 'או', p: 'פי', q: 'קיו', r: 'אר', s: 'אס', t: 'טי', u: 'יו', v: 'וי', w: 'דאבליו', x: 'אקס', y: 'וואי', z: 'זד' };
 const spellChars = (str) => String(str).toLowerCase().split('').map((c) => LETTER_HE[c] || (c === '.' ? 'נקודה' : c === '_' ? 'קו תחתון' : c === '-' ? 'מקף' : c === '+' ? 'פלוס' : c)).join(' ');
-const spellEmail = (email) => {
+export const spellEmail = (email) => {          // גם בשלוחה 3 (ivr-join-voice.js)
   const [local, domain = ''] = String(email).split('@');
   const known = EMAIL_DOMAINS.find(([d]) => d === domain.toLowerCase());
   return `${spellChars(local)} שטרודל ${known ? known[1] : spellChars(domain)}`;
