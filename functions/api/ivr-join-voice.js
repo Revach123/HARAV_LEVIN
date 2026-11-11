@@ -1,14 +1,15 @@
 // ============================================================================
 //  functions/api/ivr-join-voice.js — הצטרפות להיתר עסקה פרטי בדיבור בלבד (שלוחה 3, ניסיון), זיהוי ב-ElevenLabs
 //
-//  כמו ivr-join.js (שלוחה 1), אבל כל פרט נמסר בדיבור: תעודת זהות, שם פרטי, שם משפחה, טלפון, כתובת, פקס, אימייל, שמות חברות.
+//  כמו ivr-join.js (שלוחה 1), אבל כל פרט נמסר בדיבור - אותם שדות כמו בשלוחה 1 ובטופס באתר: תעודת זהות, שם פרטי, שם משפחה,
+//  טלפון, טלפון נוסף, עיר, רחוב, מספר בית, אימייל, פקס, ושמות חברות (או כל החברות).
 //  אימייל: ההקלטה מזוהה פעמיים (עברית + זיהוי שפה אוטומטי) ו-pickEmail בוחר כתובת תקינה; מוקראת אות אחר אות. אחרי הרישום - מייל אישור.
 //  אחרי כל הקלטה: "זוהה: <מה שזוהה>. לאישור הקישו 1, להקלטה חוזרת הקישו 2". מספרים (ת.ז., טלפון, פקס) נאמרים
 //  ספרה אחר ספרה ומוקראים חזרה ספרה אחר ספרה. הקשות רק לשאלות כן / לא ולהצהרה.
 //  נרשם באותה טבלה ובאותה הצפנה כמו שלוחה 1 (save מ-ivr-join.js), עם ערוץ "טלפון - דיבור (ElevenLabs)".
 //  משתנים (כל ניסיון במשתנה חדש, כי ימות שומרת את הערך הישן):
-//    <f>_<n> הקלטה n של השדה f (id, fn, ln, ph, ad, fx, cl), <f>_c<n> אישור (1) / הקלטה חוזרת (2)
-//    pc = טלפון המתקשר (1) / אחר (2), fxq = פקס כן (1) / לא (2), emq = אימייל כן (1) / לא (2), ch = כל החברות (1) / מסוימות (2), rd / ag כמו בשלוחה 1
+//    <f>_<n> הקלטה n של השדה f (id, fn, ln, ph, p2, ct, st, hn, em, fx, cl), <f>_c<n> אישור (1) / הקלטה חוזרת (2)
+//    pc = טלפון המתקשר (1) / אחר (2), p2q = טלפון נוסף כן (1) / לא (2), fxq = פקס כן (1) / לא (2), emq = אימייל כן (1) / לא (2), ch = כל החברות (1) / מסוימות (2), rd / ag כמו בשלוחה 1
 //  התקדמות השיחה נשמרת מוצפנת בשרת (ivr_join_voice_state), כמו בשלוחה 1.
 //  ext.ini (שלוחה 3):  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join-voice / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: ELEVENLABS_API_KEY, YEMOT_TOKEN (הורדת ההקלטות), IVR_SECRET_NEW, JOINERS_KEY, binding DB.
@@ -16,7 +17,7 @@
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit, ttsClean } from './_shared/ivr_phrases.js';
-import { agreementStep } from './_shared/ivr-agreement.js';
+import { agreementStep, warmAgreement } from './_shared/ivr-agreement.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join-common.js';
@@ -31,7 +32,7 @@ const VERSION = 'טלפוני-דיבור-1';
 const CHANNEL = 'טלפון - דיבור (ElevenLabs, שלוחה 3)';
 
 // ---- מצב שיחה מוצפן (ivr_join_voice_state) ----
-const keepKey = (k) => ['pc', 'fxq', 'emq', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z]+_c?\d+$/.test(k);
+const keepKey = (k) => ['pc', 'p2q', 'fxq', 'emq', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z]+_c?\d+$/.test(k);
 const STATE_TTL_MS = 6 * 3600 * 1000;
 async function loadState(env, callId) {
   if (!callId) return {};
@@ -55,7 +56,7 @@ async function saveState(env, callId, v) {
   } catch (e) { console.log('voice state save error', e && e.message); }
 }
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   const raw = await parseYemot(request);
   if (!secretOk(env, raw.sk)) return text('id_list_message=t-שגיאת הרשאה&');
   if (raw.hangup === 'yes') return text('');
@@ -68,7 +69,7 @@ export async function onRequest({ request, env }) {
   const callId = String(raw.ApiCallId || '').replace(/\W/g, '');
   const v = { ...(await loadState(env, callId)), ...raw };
   try {
-    const out = await step({ v, env, P, bk, done, origin: new URL(request.url).origin });
+    const out = await step({ v, env, P, bk, done, origin: new URL(request.url).origin, waitUntil });
     await saveState(env, callId, v);
     return text(out);
   } catch (e) {
@@ -82,7 +83,7 @@ const empty = (x) => !x || x === EMPTY;
 const T = (txt) => `t-${ttsClean(txt)}`;
 const spaced = (d) => String(d).split('').join(' ');
 
-async function step({ v, env, P, bk, done, origin }) {
+async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const folder = (env.IVR_VOICE_REC_FOLDER || '/3').replace(/\/$/, '');
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (key) => `v${call}_${key}`;
@@ -136,9 +137,24 @@ async function step({ v, env, P, bk, done, origin }) {
     if (q.ask) return q.ask;
     phone = q.val;
   }
-  // 5. כתובת מלאה בהקלטה אחת
-  const adQ = await field('ad', 'join:askAddress', REC_ADDR_MAX);
-  if (adQ.ask) return adQ.ask;
+  // 4ב. טלפון נוסף (רשות)
+  if ((o = yn('p2q', 'join:phone2Q'))) return o;
+  let phone2 = '';
+  if (v.p2q === '1') {
+    const q = await field('p2', 'v:askPhone2', REC_MAX, { parse: num(normalizePhone), bad: 'join:badPhone', sayOf: spaced });
+    if (q.ask) return q.ask;
+    phone2 = q.val;
+  }
+  // 5. כתובת: עיר, רחוב ומספר בית (שלוש הקלטות). "אין" = בלי מספר בית
+  const ctQ = await field('ct', 'v:askCity', REC_MAX);
+  if (ctQ.ask) return ctQ.ask;
+  const stQ = await field('st', 'v:askStreet', REC_MAX);
+  if (stQ.ask) return stQ.ask;
+  const house = (t) => (/(^|\s)(אין|בלי|ללא)(\s|$)/.test(t) ? 'ללא' : (/^\d{1,4}$/.test(digitsFromSpeech(t)) ? String(Number(digitsFromSpeech(t))) : ''));
+  const hnQ = await field('hn', 'v:askHouse', REC_MAX, { parse: house, bad: 'join:badHouse', sayOf: (x) => (x === 'ללא' ? 'ללא מספר בית' : `מספר בית ${x}`) });
+  if (hnQ.ask) return hnQ.ask;
+  const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val };
+  const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
   // 6. פקס (רשות)
   if ((o = yn('fxq', 'join:faxQ'))) return o;
   let fax = '';
@@ -161,9 +177,9 @@ async function step({ v, env, P, bk, done, origin }) {
   let clQ = { val: '' };
   if (!all) { clQ = await field('cl', 'join:askList', REC_LIST_MAX); if (clQ.ask) return clQ.ask; }
   // 8. הקראת השטר המלא (אופציונלית) והצהרה - כמו בשלוחה 1
-  if (v.rd !== '1' && v.rd !== '2') return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
+  if (v.rd !== '1' && v.rd !== '2') { await warmAgreement(env, waitUntil); return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY }); }          // קבצי Azure לשטר מופקים ברקע כבר עכשיו
   // השטר המלא מוקרא בחלקים קצרים (בקשה לכל חלק), ואחריו ההצהרה: 1 = מאשר, 2 = שמיעה חוזרת, 3 = ביטול (_shared/ivr-agreement.js)
-  const agQ = await agreementStep({ env, v, S, setS, P, readTap, empty: EMPTY });
+  const agQ = await agreementStep({ env, v, S, setS, P, readTap, empty: EMPTY, waitUntil });
   if (agQ.ask) return agQ.ask;
   if (agQ.cancel) { v.finished = true; return done('join:cancelled'); }
 
@@ -171,9 +187,10 @@ async function step({ v, env, P, bk, done, origin }) {
   const id = idQ.val, texts = { fn: fnQ.val, ln: lnQ.val, ad: adQ.val, cl: clQ.val };
   const rec = (name) => `${folder}/${recFile(S(name, 'f') || `${name}_0`)}`;
   const saved = await save(env, {
-    id, phone, phone2: '', fax, all, texts, email, addr: {}, callId: String(v.ApiCallId || ''), channel: CHANNEL, version: VERSION,
+    id, phone, phone2, fax, all, texts, email, addr, callId: String(v.ApiCallId || ''), channel: CHANNEL, version: VERSION,
     files: {
-      'הקלטת תעודת זהות': rec('id'), 'הקלטת שם פרטי': rec('fn'), 'הקלטת שם משפחה': rec('ln'), 'הקלטת כתובת': rec('ad'),
+      'הקלטת תעודת זהות': rec('id'), 'הקלטת שם פרטי': rec('fn'), 'הקלטת שם משפחה': rec('ln'),
+      'הקלטת עיר': rec('ct'), 'הקלטת רחוב': rec('st'), 'הקלטת מספר בית': rec('hn'), ...(phone2 ? { 'הקלטת טלפון נוסף': rec('p2') } : {}),
       ...(v.pc !== '1' ? { 'הקלטת טלפון': rec('ph') } : {}), ...(fax ? { 'הקלטת פקס': rec('fx') } : {}), ...(email ? { 'הקלטת אימייל': rec('em') } : {}), ...(!all ? { 'הקלטת חברות': rec('cl') } : {}),
     },
   });

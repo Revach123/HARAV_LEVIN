@@ -28,7 +28,7 @@
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit, ttsClean } from './_shared/ivr_phrases.js';
-import { agreementStep } from './_shared/ivr-agreement.js';
+import { agreementStep, warmAgreement } from './_shared/ivr-agreement.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
@@ -82,7 +82,7 @@ async function saveState(env, callId, v) {
   } catch (e) { console.log("state save error", e && e.message); }
 }
 
-export async function onRequest({ request, env }) {
+export async function onRequest({ request, env, waitUntil }) {
   const raw = await parseYemot(request);
   if (!secretOk(env, raw.sk)) return text('id_list_message=t-שגיאת הרשאה&');
   if (raw.hangup === 'yes') return text('');
@@ -98,7 +98,7 @@ export async function onRequest({ request, env }) {
   const done = (...keys) => (`id_list_message=${keys.map(P).join('.')}&go_to_folder=${bk}&`);
 
   try {
-    const out = await step({ v, env, P, bk, done, origin: new URL(request.url).origin });
+    const out = await step({ v, env, P, bk, done, origin: new URL(request.url).origin, waitUntil });
     await saveState(env, callId, v);
     return text(out);
   } catch (e) {
@@ -119,7 +119,7 @@ export const normalizeFax = (x) => {
 const T = (txt) => `t-${ttsClean(txt)}`;                       // טקסט דינמי ב-TTS של ימות
 const spaced = (d) => String(d).split('').join(' ');            // ספרות מוקראות אחת אחת
 
-async function step({ v, env, P, bk, done, origin }) {
+async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const folder = (env.IVR_JOIN_REC_FOLDER || '/1').replace(/\/$/, '');
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (tag) => `j${call}_${tag}`;
@@ -345,9 +345,9 @@ async function step({ v, env, P, bk, done, origin }) {
   if (!all) { clQ = await recStep('cl', 'join:askList', REC_LIST_MAX, 'join:lblList'); if (clQ.ask) return clQ.ask; }
 
   // 9. הקראת השטר המלא (אופציונלית) והצהרה והסכמה
-  if (v.rd !== '1' && v.rd !== '2') return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY });
+  if (v.rd !== '1' && v.rd !== '2') { await warmAgreement(env, waitUntil); return readTap(P('join:askRead'), 'rd', ['1', '2'], { empty: EMPTY }); }          // קבצי Azure לשטר מופקים ברקע כבר עכשיו
   // השטר המלא מוקרא בחלקים קצרים (בקשה לכל חלק), ואחריו ההצהרה: 1 = מאשר, 2 = שמיעה חוזרת, 3 = ביטול (_shared/ivr-agreement.js)
-  const agQ = await agreementStep({ env, v, S, setS, P, readTap, empty: EMPTY });
+  const agQ = await agreementStep({ env, v, S, setS, P, readTap, empty: EMPTY, waitUntil });
   if (agQ.ask) return agQ.ask;
   if (agQ.cancel) { v.finished = true; return done('join:cancelled'); }
 
