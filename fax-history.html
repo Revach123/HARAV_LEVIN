@@ -49,6 +49,12 @@ pre{direction:ltr;text-align:left;background:#f1f4f4;padding:10px;border-radius:
       </div>
       <p class="msg" id="msg"></p>
     </div>
+    <div class="card">
+      <h2 style="margin:0 0 6px;font-size:18px">יומן השליחות שלנו (מהקו הטלפוני)</h2>
+      <p class="hint" style="margin:0 0 8px">כל ניסיון שליחה נרשם כאן מיד: "ממתין" = בדרך לספק, "נשלח" = הספק קיבל, "נכשל" = הספק דחה או שהייתה שגיאה (בעמודת התשובה רואים למה). מה שלא מופיע כאן לא הגיע לשלב השליחה.</p>
+      <div class="scroll" style="max-height:40vh"><table><thead><tr><th>מתי</th><th>חברה</th><th>סוג</th><th>מס' פקס</th><th>מתקשר</th><th>מצב</th><th>תשובת הספק</th></tr></thead><tbody id="logBody"></tbody></table></div>
+      <p class="msg" id="logMsg"></p>
+    </div>
     <div class="card" style="padding:0"><div class="scroll"><table><thead id="head"></thead><tbody id="body"></tbody></table></div></div>
     <pre id="rawBox" hidden></pre>
   </div>
@@ -89,8 +95,16 @@ async function load() {
   else $("msg").textContent = "";
   render();
 }
+const ST = { pending: "ממתין", sent: "נשלח", failed: "נכשל" };
+async function loadLog() {
+  try {
+    const d = await (await api("/api/fax-history?log=1")).json();
+    $("logMsg").textContent = d.note || ((d.rows || []).length ? "" : "אין עדיין שליחות");
+    $("logBody").innerHTML = (d.rows || []).map(r => `<tr><td dir="ltr">${esc(String(r.at || "").slice(0, 16))}</td><td>${esc(r.company)}</td><td>${esc(r.kind)}</td><td dir="ltr">${esc(r.fax)}</td><td dir="ltr">${esc(r.caller)}</td><td><b style="color:${r.status === "failed" ? "#b3261e" : r.status === "sent" ? "var(--teal)" : "#b85c00"}">${esc(ST[r.status] || r.status)}</b></td><td title="${esc(r.response)}">${esc(r.response)}</td></tr>`).join("");
+  } catch { $("logMsg").className = "msg bad"; $("logMsg").textContent = "טעינת היומן נכשלה"; }
+}
 function showLogin() { $("app").hidden = true; $("login").hidden = false; $("pw").focus(); }
-async function enter() { $("login").hidden = true; $("app").hidden = false; load(); }
+async function enter() { $("login").hidden = true; $("app").hidden = false; load(); loadLog(); }
 $("go").addEventListener("click", async () => {
   const pw = $("pw").value;
   const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw }) });
@@ -99,7 +113,7 @@ $("go").addEventListener("click", async () => {
   enter();
 });
 $("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
-$("year").addEventListener("change", load); $("reload").addEventListener("click", load);
+$("year").addEventListener("change", load); $("reload").addEventListener("click", () => { load(); loadLog(); });
 $("q").addEventListener("input", render);
 $("raw").addEventListener("click", () => { $("rawBox").hidden = !$("rawBox").hidden; });
 (async () => {
