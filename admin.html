@@ -899,6 +899,8 @@
   .home-wrap { height:auto !important; min-height:calc(100vh - 96px) !important; max-width:min(92vw,1560px) !important; gap:clamp(70px,11vh,120px) !important; padding-bottom:0; justify-content:flex-end; }
   .home-band { flex:none !important; gap:clamp(14px,2.4vh,28px) !important; }
   .home-band::before { top:calc(-1 * clamp(24px,5vh,56px)) !important; bottom:calc(-1 * clamp(24px,5vh,56px)) !important; }
+  .home-faxrow { display:flex; justify-content:flex-start; direction:rtl; position:relative; z-index:1; margin-bottom:-8px; }
+  .home-faxlink { background:#fff; color:#274d5b; border:2px solid #8fb7c2; border-radius:999px; padding:.3rem .9rem; font-size:clamp(13px,1vw,17px); font-weight:700; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,.2); }
   .home-top { flex:none !important; height:clamp(64px,9vh,96px); gap:clamp(16px,2.5vw,48px) !important; }
   .home-top .home-card { width:clamp(200px,17vw,320px) !important; }
   .home-mid { flex:none !important; height:clamp(100px,16vh,160px); gap:clamp(16px,2.5vw,48px) !important; }
@@ -1909,6 +1911,7 @@ window.addEventListener("beforeunload", e => { if (GF.dirty) { e.preventDefault(
 function renderHome() {
   if (isAdmin) setTimeout(loadJoinersCount, 0);
   return `<div class="home-wrap"><div class="home-band">
+    <div class="home-faxrow"><button type="button" class="home-faxlink" onclick="window.open('/fax-history','_blank','noopener')">📠 היסטוריית שליחת פקסים</button></div>
     <div class="home-top">
       <button class="home-card" onclick="PD.openDash('e')"><span class="ico ico-white">👥</span><b>מצטרפים<span class="home-n" id="home-jn">${joinersCount ? joinersCountText() : ""}</span></b></button>
       <button class="home-card" onclick="setView('search')"><span class="ico">🔍</span><b>חיפוש</b></button>
