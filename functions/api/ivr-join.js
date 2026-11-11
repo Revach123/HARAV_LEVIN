@@ -111,7 +111,7 @@ const has = (v, k) => Object.prototype.hasOwnProperty.call(v, k);
 const empty = (x) => !x || x === EMPTY;
 
 // פקס: מספר רגיל (0 + 8-9 ספרות) או מספר עם קידומת 153 (עד 10 ספרות בסך הכול)
-const normalizeFax = (x) => {
+export const normalizeFax = (x) => {
   let d = String(x || '').replace(/\D/g, '');
   if (d.startsWith('972')) d = '0' + d.slice(3);
   return /^(0\d{8,9}|153\d{6,7})$/.test(d) ? d : '';
@@ -511,7 +511,8 @@ async function transcribeOne(env, v, folder, recFile, key) {
 
 export { spokenEmail };
 
-async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', addr = {}, callId }) {
+// משמש גם את שלוחת ההצטרפות בדיבור (ivr-join-voice.js), עם channel ו-version משלה
+export async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email = '', addr = {}, callId, channel = '', version = '' }) {
   const key = await importKeyForWrite(env);
   const ih = await identHash(env, id);
   // הגנה מקריאה כפולה: אותה ת.ז. שנרשמה ב-3 הדקות האחרונות לא נרשמת שוב
@@ -522,7 +523,7 @@ async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email
   const rid = newRowId(), now = jerusalemNow();
   // אותם שדות כמו הטופס באתר (join.js). שמות, כתובת ואימייל נמסרים בקול, ולכן נשמרים כהקלטות (נתיב בימות).
   const extra = {
-    'ערוץ': 'טלפון (ימות המשיח)',
+    'ערוץ': channel || 'טלפון (ימות המשיח)',
     ...(phone2 ? { 'טלפון נוסף': phone2 } : {}),
     ...(fax ? { 'פקס': fax } : {}),
     'כתובת': texts.ad || '(ראו הקלטת כתובת)',
@@ -532,7 +533,7 @@ async function save(env, { id, phone, phone2, fax, all, files, texts = {}, email
     ...files,
     ...(Object.values(texts).some(Boolean) ? { 'זיהוי אוטומטי מהקלטות': 'כן - יש לבדוק מול ההקלטה' } : {}),
     'מזהה שיחה': callId,
-    'גרסת שטר': AGREEMENT_VERSION,
+    'גרסת שטר': version || AGREEMENT_VERSION,
     'אושרו התנאים': 'כן (בהקשה, בנוסח ההצהרה הטלפוני)',
   };
   const payload = {

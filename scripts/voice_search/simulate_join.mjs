@@ -34,7 +34,7 @@ const run = async (fn, vars) => {
 };
 
 // ---- תפריט ראשי ----
-assert.match(await run(menu, {}), /^read=t-שלום וברכה.*=mm,no,1,1,7,No,no,no,,1\.2,,Ok,NONE,$/);
+assert.match(await run(menu, {}), /^read=t-שלום וברכה.*=mm,no,1,1,7,No,no,no,,1\.2\.3,,Ok,NONE,$/);
 assert.equal(await run(menu, { mm: '1' }), 'go_to_folder=/1&');
 assert.equal(await run(menu, { mm: '2' }), 'go_to_folder=/2&');
 assert.equal(await run(menu, { mm: '2', join: '/5', search: '/8' }), 'go_to_folder=/8&');
