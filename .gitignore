@@ -10,3 +10,5 @@ __pycache__/
 
 # רשימת מצטרפים: פרטים אישיים, לא להעלות לגיט
 joiners_private/
+# Local secrets written by `elevenlabs onboard`
+/.env
