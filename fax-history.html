@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>היסטוריית פקסים</title>
+<link rel="icon" href="/favicon.png">
+<style>
+:root{--teal:#1e8f85;--dark:#274d5b;--line:#dfe7e8;--muted:#6a7c82;--bg:#f4f7f7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#1f2d2d;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5}
+header{background:var(--dark);color:#fff;padding:14px 24px}header h1{margin:0;font-size:21px}
+main{padding:16px 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+label{font-weight:bold;font-size:15px}
+input[type=text],input[type=password],select{padding:9px 10px;font:inherit;border:1px solid #b7c9c4;border-radius:7px;background:#fff}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;background:var(--teal);color:#fff;font-weight:bold}
+button.sec{background:#e9f0f1;color:var(--dark)}
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.msg{margin:10px 0 0;font-weight:bold}.msg.bad{color:#b3261e}.msg.ok{color:var(--teal)}
+.scroll{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid #eef2f2;vertical-align:top;white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+th{position:sticky;top:0;background:#eef4f4;color:var(--dark);font-size:13px}
+tr:hover td{background:#f8fbfb}
+.hint{color:var(--muted);font-size:14px}
+pre{direction:ltr;text-align:left;background:#f1f4f4;padding:10px;border-radius:8px;overflow:auto;max-height:50vh}
+#login{max-width:420px}
+</style>
+</head>
+<body>
+<header><h1>היסטוריית שליחת פקסים</h1></header>
+<main>
+  <div class="card" id="login" hidden>
+    <h2 style="margin:0 0 10px;font-size:18px">כניסה</h2>
+    <label for="pw">סיסמת ניהול</label><br>
+    <input type="password" id="pw" autocomplete="current-password" style="width:100%;margin:6px 0">
+    <button type="button" id="go">כניסה</button>
+    <p class="msg bad" id="lmsg"></p>
+  </div>
+  <div id="app" hidden>
+    <div class="card">
+      <div class="bar">
+        <label for="year">שנה</label><select id="year"></select>
+        <input type="text" id="q" placeholder="חיפוש בכל העמודות" style="min-width:240px;flex:1">
+        <button type="button" id="reload" class="sec">רענון</button>
+        <button type="button" id="raw" class="sec">תשובה גולמית</button>
+        <span class="hint" id="count"></span>
+      </div>
+      <p class="msg" id="msg"></p>
+    </div>
+    <div class="card" style="padding:0"><div class="scroll"><table><thead id="head"></thead><tbody id="body"></tbody></table></div></div>
+    <pre id="rawBox" hidden></pre>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let token = ""; try { token = sessionStorage.getItem("adminToken") || localStorage.getItem("adm_tok") || ""; } catch {}          // אותה כניסה של דף הניהול
+const api = path => fetch(path, { cache: "no-store", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+let rows = [], cols = [], lastData = null;
+const yNow = new Date().getFullYear();
+$("year").innerHTML = [yNow, yNow - 1, yNow - 2, yNow - 3].map(y => `<option>${y}</option>`).join("");
+function findRows(d) {          // מערך של רשומות: התשובה עצמה, או המערך הראשון שבתוכה
+  if (Array.isArray(d)) return d;
+  if (d && typeof d === "object") { for (const v of Object.values(d)) { const r = findRows(v); if (r && r.length) return r; } }
+  return null;
+}
+function render() {
+  const q = $("q").value.trim().toLowerCase();
+  const shown = rows.filter(r => !q || JSON.stringify(r).toLowerCase().includes(q));
+  $("head").innerHTML = `<tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr>`;
+  $("body").innerHTML = shown.map(r => `<tr>${cols.map(c => { const v = r && typeof r === "object" ? r[c] : r; const t = v && typeof v === "object" ? JSON.stringify(v) : v; return `<td title="${esc(t)}">${esc(t)}</td>`; }).join("")}</tr>`).join("") || `<tr><td class="hint">אין רשומות</td></tr>`;
+  $("count").textContent = `${shown.length} מתוך ${rows.length}`;
+}
+async function load() {
+  $("msg").className = "msg"; $("msg").textContent = "טוען…";
+  let d;
+  try {
+    const r = await api(`/api/fax-history?year=${$("year").value}`);
+    if (r.status === 401) { showLogin(); return; }
+    d = await r.json();
+  } catch { $("msg").className = "msg bad"; $("msg").textContent = "הטעינה נכשלה"; return; }
+  lastData = d.data; $("rawBox").textContent = JSON.stringify(d, null, 2);
+  if (!d.ok) { $("msg").className = "msg bad"; $("msg").textContent = d.error || "שגיאה"; rows = []; cols = []; render(); return; }
+  rows = findRows(d.data) || [];
+  cols = [...new Set(rows.flatMap(r => (r && typeof r === "object" ? Object.keys(r) : ["ערך"])))];
+  if (!rows.length) { $("msg").className = "msg"; $("msg").textContent = "לא הוחזרו רשומות (אם זה לא צפוי - 'תשובה גולמית' מראה מה הספק החזיר)"; }
+  else $("msg").textContent = "";
+  render();
+}
+function showLogin() { $("app").hidden = true; $("login").hidden = false; $("pw").focus(); }
+async function enter() { $("login").hidden = true; $("app").hidden = false; load(); }
+$("go").addEventListener("click", async () => {
+  const pw = $("pw").value;
+  const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw }) });
+  if (!r.ok) { $("lmsg").textContent = "סיסמה שגויה"; return; }
+  token = pw; try { sessionStorage.setItem("adminToken", pw); } catch {}
+  enter();
+});
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+$("year").addEventListener("change", load); $("reload").addEventListener("click", load);
+$("q").addEventListener("input", render);
+$("raw").addEventListener("click", () => { $("rawBox").hidden = !$("rawBox").hidden; });
+(async () => {
+  if (token) return enter();
+  try { const d = await (await fetch("/api/login", { cache: "no-store" })).json(); if (d.trusted) return enter(); } catch {}
+  showLogin();
+})();
+</script>
+</body>
+</html>
