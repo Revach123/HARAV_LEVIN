@@ -57,6 +57,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "fax:forCo": {
+  "text": "לְקַבָּלַת שְׁטַר הֶיתֵּר הָעִסְקָה לַחֶבְרָה זוֹ בְּפַקְס",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_db093f0cec88e21a05dc",
+  "pron": "e21a05dc",
+  "phoneme": true
+ },
  "fax:limit": {
   "text": "לֹא נִיתָּן לִשְׁלוֹחַ פַּקְס נוֹסָף כָּרֶגַע",
   "voice": "he-IL-AvriNeural",
@@ -1079,10 +1086,17 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
- "next": {
-  "text": "לְחִיפּוּשׂ נוֹסָף הַקִּישׁוּ 1. לְסִיּוּם הַקִּישׁוּ 2",
+ "more": {
+  "text": "לִשְׁמִיעַת תּוֹצָאוֹת נוֹסָפוֹת הַקִּישׁוּ 9",
   "voice": "he-IL-AvriNeural",
-  "path": "/99/c6_9aad4f1f96436a4e147f",
+  "path": "/99/c6_7fc0552e6e85e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "next": {
+  "text": "לְחִיפּוּשׂ נוֹסָף הַקִּישׁוּ אֶפֶס. לַחֲזָרָה לַתַּפְרִיט הָרָאשִׁי הַקִּישׁוּ כּוֹכָבִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_43eee1198868e21a05dc",
   "pron": "",
   "phoneme": false
  },
