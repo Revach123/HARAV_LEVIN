@@ -17,6 +17,14 @@ db.exec(`
   INSERT INTO businesses VALUES (3,'510000003','company','בלי שטר בע"מ','','');          -- היתר בלי שטר מקושר
   INSERT INTO permit_docs VALUES ('d1','docs/d1.pdf','shtar1.pdf','general'),('d2g','docs/d2g.pdf','g.pdf','general'),('d2p','docs/d2p.pdf','p.pdf','private'),('dx','docs/dx.pdf','x.pdf','other');
   INSERT INTO permit_doc_companies VALUES ('d1',1,'general'),('d2g',2,'general'),('d2p',2,'private'),('dx',3,'general');
+  -- חברה עם שטר, שטר לאג"ח ג ותת-שורה "מסלול הלכה" עם כללי + פרטי (כמו באתר: permit-links.js)
+  CREATE TABLE permit_doc_bonds (doc_id TEXT, security_id TEXT, name TEXT, symbol TEXT, slot TEXT, chp TEXT);
+  CREATE TABLE permit_doc_subs (doc_id TEXT, sub_id INTEGER, slot TEXT);
+  INSERT INTO businesses VALUES (4,'510000004','company','ארבע בע"מ','ארבע בע"מ',''),(5,'510000004','company','ארבע בע"מ','מסלול הלכה','');
+  INSERT INTO permit_docs VALUES ('d4','docs/d4.pdf','4.pdf','general'),('d4b','docs/d4b.pdf','4b.pdf','general'),('d5g','docs/d5g.pdf','5g.pdf','general'),('d5p','docs/d5p.pdf','5p.pdf','private');
+  INSERT INTO permit_doc_companies VALUES ('d4',4,'general'),('d4b',4,'');
+  INSERT INTO permit_doc_bonds VALUES ('d4b','1112','ארבע אגח ג','ARB.G','general','');
+  INSERT INTO permit_doc_subs VALUES ('d5g',5,'general'),('d5p',5,'private');
 `);
 const st = (sql, a = []) => ({
   all: async () => ({ results: db.prepare(sql).all(...a).map((r) => ({ ...r })) }),
@@ -94,5 +102,23 @@ for (let n = 1; n <= 4; n++) {
 }
 assert.equal(sentFaxes.length - before, 3, '3 per call'); assert.ok(o.includes(T('fax:limit')), 'limit message');
 console.log('5 OK: limited to 3 faxes per call');
+// 6) כמה שטרות: "לחברה יש 4 שטרות", ואחריו לכל שטר "לשטר ... הקישו k" (חברה, אג"ח ג, מסלול הלכה כללי / פרטי)
+call = 6;
+o = await step({ h1: '510000004' }); asks(o, 'nx1');
+o = await step({ h1: '510000004', nx1: '3' }); asks(o, 'fd1');
+const plain = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
+console.log('6 prompt:', plain(o).split('=')[1]);
+for (const t of ['לחברה יש 4 שטרות', 'לשטר של החברה הקישו 1', 'לשטר לאגח ג הקישו 2', 'לשטר היתר העסקה הכללי של מסלול הלכה הקישו 3', 'לשטר היתר העסקה הפרטי של מסלול הלכה הקישו 4'])
+  assert.ok(plain(o).includes(t), 'missing: ' + t);
+assert.ok(o.includes(',1.2.3.4,'), 'digits 1-4');
+o = await step({ h1: '510000004', nx1: '3', fd1: '4', fx1_1: '031234567', fy1_1: '1' }); asks(o, 'ns1');
+assert.equal(sentFaxes.at(-1).file, '%PDF-docs/d5p.pdf');
+o = await step({ h1: '510000004', nx1: '3', fd1: '2' }); asks(o, 'fx1_1');
+console.log('6 OK: several permits listed and chosen (sub-row private sent)');
+// 7) שטר אחד בלבד: בלי שאלת בחירה (ישר למספר הפקס)
+call = 7;
+await step({ h1: '510000001' });
+o = await step({ h1: '510000001', nx1: '3' }); asks(o, 'fx1_1');
+console.log('7 OK: single permit -> no choice question');
 console.log('log:', db.prepare('SELECT call_id, slot, fax, chp, kind, doc_id, status FROM ivr_fax_log').all().map((x) => Object.values(x).join(' ')));
 console.log('ALL OK');
