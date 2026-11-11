@@ -12,15 +12,15 @@
    "registrar_name": 40,
    "biz_type": 91
   },
-  "updated": "2026-11-10T10:23:42.713502Z",
+  "updated": "2026-11-11T09:53:40.009435Z",
   "source": "d1",
-  "businesses": 1288,
-  "numeric_chp": 1284,
-  "found_in_registry": 1195,
+  "businesses": 1287,
+  "numeric_chp": 1283,
+  "found_in_registry": 1194,
   "found_ratio": 0.931,
   "failed_batches": 0,
   "datawise_rows": 2239,
-  "datawise_date": "2026-11-09",
+  "datawise_date": "2026-11-10",
   "bond_companies": 363,
   "changes": {
    "registrar_name": 0,
@@ -42,7 +42,7 @@
    "פעילה": 1083,
    "לא ידוע": 155,
    "מחוסלת/חיסול": 34,
-   "בפירוק": 16
+   "בפירוק": 15
   },
   "readback_mismatches": 0,
   "mode": "applied",
