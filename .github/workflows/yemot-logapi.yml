@@ -1,0 +1,43 @@
+name: yemot-logapi
+
+# (עותק מ-revach) מוריד את לוג ה-API של ימות (ivr2:Log/LogApi.ymgr) ומדפיס את השורות האחרונות — לאבחון מה ימות שלחה ל-endpoint
+# ומה הוחזר. מספרי טלפון והפרמטר sk (הסוד) נמסכים. משתמש ב-YEMOT_TTS (API KEY) ב-header authorization.
+on:
+  workflow_dispatch:
+    inputs:
+      lines:
+        description: "כמה שורות אחרונות להדפיס"
+        default: "80"
+      grep:
+        description: "סינון אופציונלי (regex, למשל ivr-azure)"
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download and show LogApi.ymgr
+        env:
+          YEMOT_TTS: ${{ secrets.YEMOT_TTS }}
+          LINES: ${{ github.event.inputs.lines }}
+          GREP: ${{ github.event.inputs.grep }}
+        run: |
+          if [ -z "$YEMOT_TTS" ]; then echo "::error::חסר YEMOT_TTS"; exit 1; fi
+          curl -sS -G "https://www.call2all.co.il/ym/api/DownloadFile" \
+            -H "authorization: $YEMOT_TTS" \
+            --data-urlencode "path=ivr2:Log/LogApi.ymgr" \
+            -o "$RUNNER_TEMP/logapi.txt" -w "HTTP %{http_code}, %{size_download} bytes\n"
+          # שגיאת API חוזרת כ-JSON (responseStatus)
+          if head -c 300 "$RUNNER_TEMP/logapi.txt" | grep -q responseStatus; then
+            echo "תשובת API (לא קובץ לוג):"; head -c 600 "$RUNNER_TEMP/logapi.txt"; echo; exit 1
+          fi
+          # מסכים טלפונים וגם את פרמטר הסוד sk (ימות רושמת את כל פרמטרי ה-api_add בלוג; GitHub מסתיר רק secrets שהוגדרו אצלו)
+          mask() { sed -E -e 's/\b(0|972)[0-9]{8,9}\b/<phone>/g' -e 's/(sk\^)[^*]*/\1<redacted>/g'; }
+          echo "--- שורת כותרת:"; head -n 1 "$RUNNER_TEMP/logapi.txt" | mask
+          echo "--- ${LINES:-80} שורות אחרונות ${GREP:+(מסונן: $GREP)}:"
+          if [ -n "$GREP" ]; then grep -E -- "$GREP" "$RUNNER_TEMP/logapi.txt" | tail -n "${LINES:-80}" | mask
+          else tail -n "${LINES:-80}" "$RUNNER_TEMP/logapi.txt" | mask; fi
