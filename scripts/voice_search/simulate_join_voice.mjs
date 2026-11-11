@@ -84,12 +84,31 @@ r = await step(rec('ph_0', 'אפס חמישים ושתיים שבע אחת אח�
 r = await step({ ph_c0: '1' }, /=ad_0,no,record,\/3,vc1_ad_0,no,yes,no,1,15$/);
 r = await step(rec('ad_0', 'הרב קוק 5, בני ברק'), /^read=t-זוהה\.t-הרב קוק 5 בני ברק\.t-לאישור.*=ad_c0,/);
 r = await step({ ad_c0: '1' }, /=fxq,no,1,1,/);
-r = await step({ fxq: '2' }, /=ch,no,1,1,/);
+r = await step({ fxq: '2' }, /=emq,no,1,1,/);
+// אימייל בדיבור: זיהוי בעברית + אוטומטי, הקראה אות אחר אות ואישור
+r = await step({ emq: '1' }, /=em_0,no,record,\/3,vc1_em_0,no,yes,no,1,15$/);
+r = await step(rec('em_0', 'משהו'), /^read=t-לא הצלחנו לזהות כתבת אימייל תקינה.*=em_1,no,record,/);
+r = await step(rec('em_1', 'אם או אס אייץ שטרודל גימייל נקודה קום'), /^read=t-כתבת המייל שהוכנסה\.t-אם או אס אייץ שטרודל גימייל\.t-לאישור הקישו 1 להקלטה חוזרת הקישו 2=em_c1,/);
+r = await step({ em_c1: '1' }, /=ch,no,1,1,/);
 r = await step({ ch: '2' }, /=cl_0,no,record,\/3,vc1_cl_0,no,yes,no,1,30$/);
 r = await step(rec('cl_0', 'בנק לאומי, מגדל'), /=cl_c0,/);
 r = await step({ cl_c0: '1' }, /=rd,no,1,1,/);
-r = await step({ rd: '2' }, /=ag,no,1,1,7,No,no,no,,1\.2\.3,/);
-r = await step({ ag: '1' }, /^id_list_message=.*t-אריה כהן.*t-1 2 3 4 5 6 7 8 2.*&go_to_folder=\/&$/);
+// הקראת השטר המלא: בחלקים קצרים (כל חלק בבקשה נפרדת, בלי הקשה), ואחריהם ההצהרה
+r = await step({ rd: '1' }, /=ap_100,no,1,1,1,No,no,no,,,,Ok,NONE,/);
+let chunks = 1, maxLen = r.length;
+for (let k = 0; ; k++) {
+  vars[`ap_${100 + k}`] = 'NONE';
+  r = await run(voice, vars); maxLen = Math.max(maxLen, r.length);
+  if (/=ag_1,/.test(r)) break;
+  assert.match(r, new RegExp(`=ap_${101 + k},no,1,1,1,`), r); chunks++;
+}
+assert.ok(chunks >= 4 && maxLen < 2000, `chunks ${chunks}, longest response ${maxLen}`);
+assert.match(r, /^read=t-אני מצהיר.*=ag_1,no,1,1,7,No,no,no,,1\.2\.3,/);
+console.log('agreement OK:', chunks, 'chunks, longest response', maxLen, 'chars');
+// 2 = שמיעה חוזרת (שוב מהחלק הראשון, במשתנים חדשים), ואז אישור
+r = await step({ ag_1: '2' }, /=ap_200,no,1,1,1,/);
+for (let k = 0; ; k++) { vars[`ap_${200 + k}`] = 'NONE'; r = await run(voice, vars); if (/=ag_2,/.test(r)) break; }
+r = await step({ ag_2: '1' }, /^id_list_message=.*t-אריה כהן.*t-1 2 3 4 5 6 7 8 2.*&go_to_folder=\/&$/);
 console.log('call OK');
 
 // ---- נשמר בטבלת המצטרפים ----
@@ -99,11 +118,12 @@ const p = await decryptPii(await importKeyForWrite(env), rows[0].id, rows[0].pii
 assert.equal(p.first, 'אריה'); assert.equal(p.last, 'כהן'); assert.equal(p.phone, '0527117041'); assert.equal(p.id, '123456782'); assert.equal(p.companies, 'בנק לאומי, מגדל');
 const x = JSON.parse(p.extra);
 assert.equal(x['ערוץ'], 'טלפון - דיבור (ElevenLabs, שלוחה 3)'); assert.equal(x['כתובת'], 'הרב קוק 5, בני ברק'); assert.equal(x['הקלטת תעודת זהות'], '/3/vc1_id_2');
-assert.equal(x['הקלטת שם משפחה'], '/3/vc1_ln_1');
+assert.equal(x['הקלטת שם משפחה'], '/3/vc1_ln_1'); assert.equal(p.email, 'mosh@gmail.com'); assert.equal(x['הקלטת אימייל'], '/3/vc1_em_1');
 console.log('saved OK:', p.first, p.last, p.id, x['ערוץ']);
 // ElevenLabs: מפתח בכותרת, עברית, scribe_v1; זיהוי פעם אחת לכל הקלטה
-assert.ok(elevenCalls.every((c) => c.key === 'EK' && c.lang === 'he' && c.model === 'scribe_v1'));
-assert.equal(elevenCalls.length, 9, 'one transcription per recording: ' + elevenCalls.length);
+assert.ok(elevenCalls.every((c) => c.key === 'EK' && c.model === 'scribe_v1' && (c.lang === 'he' || c.lang === null)));
+assert.equal(elevenCalls.filter((c) => c.lang === null).length, 2, 'email: also auto language');
+assert.equal(elevenCalls.length, 9 + 4, 'one transcription per recording (email twice): ' + elevenCalls.length);
 console.log('ElevenLabs calls OK:', elevenCalls.length);
 // המצב נמחק בסיום
 assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ivr_join_voice_state').get().n, 0);

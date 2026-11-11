@@ -13,13 +13,13 @@ const TIMEOUT_MS = 20000;
 
 export const elevenConfigured = (env) => !!String(env.ELEVENLABS_API_KEY || '').trim();
 
-/** wav -> טקסט בעברית. '' אם לא זוהה / שגיאה (השגיאה נרשמת בלוג בלי תוכן). */
-export async function elevenTranscribe(env, wav) {
+/** wav -> טקסט. lang = 'he' (ברירת מחדל) או '' (זיהוי שפה אוטומטי, למשל לכתובת מייל). '' אם לא זוהה / שגיאה (השגיאה נרשמת בלוג בלי תוכן). */
+export async function elevenTranscribe(env, wav, lang = 'he') {
   const models = [...new Set([String(env.ELEVENLABS_STT_MODEL || '').trim() || 'scribe_v1', 'scribe_v2'])];
   for (const model of models) {
     const fd = new FormData();
     fd.append('model_id', model);
-    fd.append('language_code', 'he');
+    if (lang) fd.append('language_code', lang);
     fd.append('tag_audio_events', 'false');
     fd.append('diarize', 'false');
     fd.append('file', new Blob([wav], { type: 'audio/wav' }), 'rec.wav');
@@ -36,11 +36,11 @@ export async function elevenTranscribe(env, wav) {
   return '';
 }
 
-/** הקלטה בימות (נתיבים אפשריים) -> טקסט */
-export async function elevenTranscribeRecording(env, candidates) {
+/** הקלטה בימות (נתיבים אפשריים) -> טקסט בכל אחת מהשפות (הורדה אחת). ['he'] = עברית בלבד. */
+export async function elevenTranscribeRecording(env, candidates, langs = ['he']) {
   const rec = await downloadRecording(env, candidates);
-  if (!rec) return '';
-  return elevenTranscribe(env, rec.bytes);
+  if (!rec) return langs.map(() => '');
+  return Promise.all(langs.map((l) => elevenTranscribe(env, rec.bytes, l)));
 }
 
 // ---- ספרות מדיבור: "אפס חמש אחת", "052", "שלושים ושתיים" -> ספרות ----
