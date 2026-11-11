@@ -10,7 +10,7 @@
 import { searchBusinesses, tokens, normalize } from './voice-match.js';
 
 export const MAX_LIST = 8;          // תוצאות בכל דף הקראה (בטלפון: 9 = הדף הבא)
-export const MAX_PAGED = 40;        // יותר מזה (או כשהחיפוש נקטע): לא מקריאים, מבקשים לדייק
+export const MAX_PAGED = 36;        // יותר מזה (או כשהחיפוש נקטע): לא מקריאים, מבקשים לדייק
 const FETCH_LIMIT = 30;             // מועמדים לכל טבלה לכל וריאנט; הגעה לתקרה = "יותר מדי"
 const MAX_VARIANTS = 10;
 
