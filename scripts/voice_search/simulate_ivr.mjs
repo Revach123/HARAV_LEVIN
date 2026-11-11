@@ -61,7 +61,11 @@ const mkEnv = (extra = {}) => ({ IVR_SECRET: 'S', IVR_AUDIO_OFF: '1', DB: { prep
 // ניקוד (חֶבְרָה, בא אם...) מוסר מהפלט כדי שההשוואות יישארו קריאות; בדיקות הניקוד עצמן ב-callRaw
 const plain = (x) => x.replace(/[\u05b0-\u05c7]/g, '');
 async function call(env, vars) { return plain(await callRaw(env, vars)); }
-async function callRaw(env, vars) {
+// אחרי כל דיבור הקו מקריא את מה שזוהה ומבקש אישור (c<r>_<a>): בבדיקות הקיימות מאשרים אוטומטית; noConfirm=1 בודק את שלב האישור עצמו
+async function callRaw(env, vars0) {
+  const vars = { ...vars0 };
+  if (!vars.noConfirm) for (const [k, v] of Object.entries(vars0)) { const m = k.match(/^s(\d+)_(\d+)$/); if (m && v !== 'NONE' && !(`c${m[1]}_${m[2]}` in vars)) vars[`c${m[1]}_${m[2]}`] = '1'; }
+  delete vars.noConfirm;
   const u = new URL('https://x/api/ivr-company');
   u.searchParams.set('sk', 'S');
   u.searchParams.set('ApiCallId', vars.ApiCallId || 't1');
@@ -70,7 +74,10 @@ async function callRaw(env, vars) {
 }
 const rawParts = (r) => r.replace(/^read=/, '').split('=')[0].split('.');
 // "בע"מ" מושמע כחלק נפרד אחרי השם; ב-parts() הוא מודבק חזרה לשם כדי לפשט את ההשוואות
-const parts = (r) => rawParts(r).reduce((o, x) => { if (x === 't-בא אם') o[o.length - 1] += ' בא אם'; else o.push(x); return o; }, []);
+// "נמצאו N חברות מתאימות" / "נמצאה חברה אחת מתאימה" בתחילת ההקראה: מוסר מ-parts() (נבדק בנפרד ב-countOf)
+const isCount = (x) => /^t-נמצא(ה|ו) /.test(x);
+const countOf = (r) => { const x = rawParts(plain(r))[0]; return isCount(x) ? x : null; };
+const parts = (r) => rawParts(r).filter((x, i) => !(i === 0 && isCount(x))).reduce((o, x) => { if (x === 't-בא אם') o[o.length - 1] += ' בא אם'; else o.push(x); return o; }, []);
 const permitOf = (n) => rows.findIndex((x) => x.chp_number === n);
 
 // 1. ללא זיהוי דיבור: ח.פ. בלבד, בלי תפריט
@@ -141,12 +148,12 @@ assert.match(await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '2'
 // שם מלא יותר אחרי ההפניה: תוצאה יחידה
 r = await call(env, { m1: '2', s1_1: 'מנורה בטחון', t1_1: '1', s1_2: 'מנורה בטחון 7' });
 assert.equal(parts(r)[1], 't-מנורה בטחון 7 בא אם');
-// לא נמצא -> שואלים שוב; אחרי 3 כשלונות -> ח.פ.
+// לא נמצא -> שואלים שוב; אחרי 5 כשלונות (כולל "הקלטה נוספת") -> ח.פ.
 r = await call(env, { m1: '2', s1_1: 'זזזזזזז' });
 assert.match(r, /^read=t-לא נמצאה חברה בשם הזה\.t-אמרו שוב את שם החברה=s1_2,no,voice$/);
-r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ' });
+r = await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ', s1_4: 'ששששש', s1_5: 'ממממממ' });
 assert.match(r, /=h1,no,10,5,/); console.log('2g', r);
-assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
+assert.match(await call(env, { m1: '2', s1_1: 'זזזזזזז', s1_2: 'חחחחחחח', s1_3: 'צצצצצצ', s1_4: 'ששששש', s1_5: 'ממממממ', h1: '111111111' }), /^read=t-לא נמצאה חברה מתאימה\.t-לחיפוש נוסף.*=nx1/);
 assert.match(await call(env, { m1: '2', s1_1: '/6/rec001.wav' }), /לא הוגדר נכון/);
 // שאלה שלא נענתה (NONE) נשאלת שוב ושוב, באותו משתנה
 assert.match(await call(env, { m1: 'NONE' }), /^read=t-מומלץ.*=m1,no,1,1,/);
@@ -159,7 +166,7 @@ assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', nx1
 
 // "בע"מ" הוא חלק נפרד אחרי שם החברה (קובץ שמע משלו)
 r = await call(mkEnv(), { h1: '520018078' });
-assert.deepEqual(rawParts(r).slice(0, 3), ['t-חברה פרטית', 't-בנק לאומי לישראל', 't-בא אם']);
+assert.deepEqual(rawParts(r).slice(1, 4), ['t-חברה פרטית', 't-בנק לאומי לישראל', 't-בא אם']);          // [0] = "נמצאה חברה אחת מתאימה"
 // ביטוי קבוע: קובץ שמע כשיש במניפסט ועדכני, אחרת TTS
 const mf = { baam: { text: PHRASES.baam, path: '/99/abc123' }, noHear: { text: 'ישן', path: '/99/old' } };
 assert.equal(unit('baam', mf), 'f-/99/abc123');
@@ -167,6 +174,17 @@ assert.equal(plain(unit('noHear', mf)), 't-לא הצלחתי להבין');      
 assert.equal(unit('ask1', {}), 't-אִמְרוּ אֶת שֵׁם הַחֶבְרָה');
 assert.equal(plain(unit('type:חברה פרטית מחוקה', {})), 't-חברה פרטית מחוקה');
 assert.throws(() => unit('nope', {}));
+
+// 2h. כמה נמצאו: מוקרא בתחילת ההקראה
+assert.equal(countOf(await call(mkEnv(), { h1: '520018078' })), 't-נמצאה חברה אחת מתאימה');
+assert.equal(countOf(await call(env, { m1: '2', s1_1: 'אבגד' })), 't-נמצאו 3 חברות מתאימות'); console.log('2h OK: count read');
+// 2i. הקראת מה שזוהה + אישור / הקלטה נוספת
+r = await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', noConfirm: 1 });
+assert.match(r, /^read=t-זוהה\.t-אבגד לוגיסטיקה\.t-לאישור הקישו 1 להקלטה נוספת הקישו 2=c1_1,no,1,1,7,No,no,no,,1\.2,/); console.log('2i', r);
+assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', c1_1: '2' }), /^read=t-אמרו שוב את שם החברה=s1_2,no,voice$/);
+assert.equal(parts(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', c1_1: '2', s1_2: 'בנק לאומי' }))[1], 't-בנק לאומי לישראל בא אם');
+assert.match(await call(env, { m1: '2', s1_1: 'אבגד לוגיסטיקה', c1_1: 'NONE', noConfirm: 1 }), /=c1_1,no,1,1,/);          // שתיקה: שואלים שוב
+console.log('2i OK: recognized text read back, confirm / re-record');
 
 // 3. בלי DB1: נופלים חזרה לעסקים עם היתר, בלי לקרוס
 const noReg = mkEnv({ IVR_VOICE_READ_OPTS: 'no,voice', DB1: undefined });
