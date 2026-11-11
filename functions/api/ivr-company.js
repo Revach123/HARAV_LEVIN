@@ -14,9 +14,10 @@
 //    h<r>        הקשת ח.פ.
 //    s<r>_<a>    דיבור, ניסיון a (עד 5): הקלטה + Azure, או טקסט מזוהה מימות
 //    c<r>_<a>    אחרי הקראת מה שזוהה: 1 = אישור וחיפוש, 2 = הקלטה נוספת (הניסיון הבא)
-//    nx<r>       אחרי ההקראה: 1 = חיפוש נוסף (סבב חדש), 2 = סיום, 3 = שטר היתר העסקה בפקס (רק כשיש שטר מקושר ו-FAX_API_KEY)
-//    פקס (_shared/ivr-fax.js): fc<r> בחירת חברה (כשיש כמה עם שטר), fd<r> כללי / פרטי (כשיש שניהם),
-//                fx<r>_<k> מספר הפקס (ניסיון k), fy<r>_<k> אישור (1) / שינוי (2), ns<r> אחרי השליחה: 1 = חיפוש נוסף, 2 = סיום
+//    nx<r>       אחרי ההקראה: 0 = חיפוש נוסף (סבב חדש), * = חזרה לתפריט הראשי (bk), 9 = התוצאות הבאות (דף p: nx<r>p<p>),
+//                1..8 = השטר בפקס לחברה שאחריה נאמר "לקבלת השטר לחברה זו הקישו k" (רק עם שטר שמוצג באתר ו-FAX_API_KEY)
+//    פקס (_shared/ivr-fax.js): fd<r> בחירת שטר (כשיש לחברה כמה: כללי / פרטי, אג"ח, תתי-שורות),
+//                fx<r>_<k> מספר הפקס (ניסיון k), fy<r>_<k> אישור (1) / שינוי (2), ns<r> אחרי השליחה: 0 = חיפוש נוסף, * = תפריט ראשי
 //
 //  דרישות: env.IVR_SECRET, binding DB (טבלת businesses - מצב היתר העסקה).
 //  מאגר הרישום: binding DB1 = company-info-db (בלעדיו נופלים לטבלת businesses בלבד).
@@ -33,7 +34,7 @@ import { MAX_LIST, describe, permitIndex, searchByChp, searchByName } from './_s
 import { ttsClean, unit } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { folderParam, parseYemot, secretOk } from './_shared/ivr-auth.js';
-import { docChoices, docsFor, faxEnabled, loadState, normFax, reserve, saveState, sendFax } from './_shared/ivr-fax.js';
+import { docListFor, faxEnabled, loadState, normFax, reserve, saveState, sendFax } from './_shared/ivr-fax.js';
 
 const CFG = {
   TOKEN_PARAM: 'sk',       // api_add_0=sk=<secret> בהגדרת השלוחה
@@ -82,20 +83,22 @@ export async function onRequest({ request, env, waitUntil }) {
 // ----------------------------------------------------------------------------
 async function route(ctx) {
   const { v, env } = ctx;
-  for (let r = 1; r <= CFG.MAX_ROUNDS; r++) {
-    const nx = `nx${r}`;
-    if (has(v, nx)) {
-      if (v[nx] === '1') continue;                  // חיפוש נוסף -> הסבב הבא
-      if (v[nx] === '2') return `id_list_message=${P('bye')}&go_to_folder=${back(env, v)}&`;
-      if (v[nx] === '3' && faxEnabled(env)) {        // שטר בפקס
+  rounds: for (let r = 1; r <= CFG.MAX_ROUNDS; r++) {
+    if (!has(v, pageVar(r, 1))) return await round(ctx, r);
+    for (let p = 1; ; p++) {
+      const nx = pageVar(r, p);
+      if (!has(v, nx)) return await pageFromState(ctx, r, p);          // אחרי 9: הדף הבא
+      if (v[nx] === '0') continue rounds;           // חיפוש נוסף -> הסבב הבא
+      if (v[nx] === '*') return `go_to_folder=${back(env, v)}&`;          // חזרה לתפריט הראשי
+      if (v[nx] === '9') continue;                  // התוצאות הבאות
+      if (/^[1-8]$/.test(v[nx]) && faxEnabled(env)) {          // שטר בפקס לחברה k בדף הזה
         const ns = `ns${r}`;
-        if (v[ns] === '1') continue;
-        if (v[ns] === '2') return `id_list_message=${P('bye')}&go_to_folder=${back(env, v)}&`;
-        return await faxFlow(ctx, r);
+        if (v[ns] === '0') continue rounds;
+        if (v[ns] === '*') return `go_to_folder=${back(env, v)}&`;
+        return await faxFlow(ctx, r, parseInt(v[nx], 10), p);
       }
-      return readNext(r, []);                       // שתיקה / ערך אחר: שואלים שוב, בלי הגבלה
+      return p === 1 && !(await loadState(env, String(v.ApiCallId || ''), slot(r, 1))) ? readNext(r, []) : await pageFromState(ctx, r, p);          // שתיקה / ערך אחר: שואלים שוב
     }
-    return await round(ctx, r);
   }
   return `id_list_message=${P('bye')}&go_to_folder=${back(env, v)}&`;
 }
@@ -165,7 +168,7 @@ async function nameStep(ctx, r, note) {
     const found = await searchByName(env, spoken, rows);
     if (!found.items.length) { note = ['noName']; continue; }
     if (found.tooMany) {
-      // יותר מ-MAX_LIST תוצאות: לא מקריאים. מציעים שם מלא יותר, או ח.פ.
+      // יותר מ-MAX_PAGED תוצאות (או חיפוש שנקטע): לא מקריאים. מציעים שם מלא יותר, או ח.פ.
       const tKey = `t${r}_${a}`;
       if (v[tKey] !== '1' && v[tKey] !== '2') return { body: readTapRaw(P('tooMany'), tKey, ['1', '2']) };
       if (v[tKey] === '2') return { goChp: true };
@@ -179,60 +182,70 @@ async function nameStep(ctx, r, note) {
 
 // ----------------------------------------------------------------------------
 //  הקראת תוצאות: כל חברה בשלוש הודעות נפרדות (סוג, שם, מצב היתר), כולן ברצף,
-//  ובסוף שאלה: חיפוש נוסף / סיום, ו-3 = השטר בפקס כשיש שטר מקושר.
+//  אחרי כל חברה עם שטר שמוצג באתר: "לקבלת שטר היתר העסקה לחברה זו בפקס הקישו k". בסוף: 0 = חיפוש נוסף, * = תפריט ראשי.
 // ----------------------------------------------------------------------------
-async function listing(ctx, r, items) {
-  const shown = items.slice(0, MAX_LIST).length;
-  const parts = [shown === 1 ? P('found1') : say(`נמצאו ${shown} חברות מתאימות`)], faxable = [];
+// דף p של התוצאות (8 בכל דף): המשתנה nx<r> לדף הראשון, nx<r>p<p> לדפים הבאים. מצב הדף נשמר ב-slot(r, p).
+const pageVar = (r, p) => (p === 1 ? `nx${r}` : `nx${r}p${p}`);
+const slot = (r, p) => r * 100 + p;
+async function pageFromState(ctx, r, p) {
+  const st = await loadState(ctx.env, String(ctx.v.ApiCallId || ''), slot(r, Math.max(1, p - 1)));
+  if (!st || !st.items) return readNext(r, []);
+  return listing(ctx, r, st.items, p);
+}
+
+async function listing(ctx, r, all, p = 1) {
+  const items = all.slice((p - 1) * MAX_LIST, p * MAX_LIST), more = all.length > p * MAX_LIST;
+  const parts = p > 1 ? [] : [all.length === 1 ? P('found1') : say(`נמצאו ${all.length} חברות מתאימות`)], faxable = [];
   const fax = faxEnabled(ctx.env);
-  for (const item of items.slice(0, MAX_LIST)) {
+  for (const item of items) {
     const d = describe(item, ctx.permitOf);
-    if (fax && d.permit !== 'none') {             // חברה עם היתר ושטר מקושר -> אפשר לשלוח בפקס
-      const choices = docChoices(d.permit, await docsFor(ctx.env, item.id));
-      if (choices.length) faxable.push({ chp: String(item.id), name: d.name, choices: choices.map(([kind, doc]) => ({ kind, id: doc.id })) });
+    if (fax && !faxable.some((x) => x.chp === String(item.id))) {          // חברה עם שטר שמוצג באתר -> אפשר לשלוח בפקס (כל ח.פ. פעם אחת)
+      const choices = await docListFor(ctx.env, item.id);
+      if (choices.length) faxable.push({ chp: String(item.id), name: d.name, choices });
     }
     parts.push(P(`type:${d.type}`), say(d.name));              // שם החברה: TTS של ימות
     if (d.baam) parts.push(P('baam'));
     if (d.permit === 'private') parts.push(P('permit:private'), P('permit:private2'));
     else if (d.permit === 'both') parts.push(P('permit:alsoPrivate'));
     else parts.push(P(d.permit === 'general' ? 'permit:general' : 'permit:none'));
+    const k = faxable.findIndex((x) => x.chp === String(item.id) && !x.said) + 1;
+    if (k) { faxable[k - 1].said = true; parts.push(P('fax:forCo'), say(`הקישו ${k}`)); }
   }
-  if (faxable.length) {
-    await saveState(ctx.env, String(ctx.v.ApiCallId || ''), r, { list: faxable });
-    parts.push(P('next'), P('fax:offer'));
-    return readTapRaw(parts.join('.'), `nx${r}`, ['1', '2', '3']);
-  }
+  if (more) parts.push(P('more'));
   parts.push(P('next'));
-  return readTapRaw(parts.join('.'), `nx${r}`, ['1', '2']);
+  // מצב הדף (כל התוצאות + החברות עם שטר בדף הזה), לדף הבא ולפקס. נשמר רק כשצריך.
+  if (faxable.length || more) {
+    await saveState(ctx.env, String(ctx.v.ApiCallId || ''), slot(r, p), { items: all.map(({ kind, id, name, status, sub }) => ({ kind, id, name, status, sub })), list: faxable.map(({ said, ...x }) => x) });
+  }
+  return readTapRaw(parts.join('.'), pageVar(r, p), ['0', '*', ...(more ? ['9'] : []), ...faxable.map((_, i) => String(i + 1))]);
 }
 
 // ----------------------------------------------------------------------------
-//  שטר בפקס: בחירת חברה (אם יש כמה) -> כללי / פרטי (אם יש שניהם) -> מספר פקס -> אישור -> שליחה ברקע
+//  שטר בפקס לחברה k (נבחרה בהקראה) -> בחירת שטר (אם יש כמה) -> מספר פקס -> אישור -> שליחה ברקע
 // ----------------------------------------------------------------------------
-const afterFax = (r, keys) => readTapRaw(msg(notes(keys), P('next')), `ns${r}`, ['1', '2']);
+const afterFax = (r, keys) => readTapRaw(msg(notes(keys), P('next')), `ns${r}`, ['0', '*']);
 
-async function faxFlow(ctx, r) {
+async function faxFlow(ctx, r, pick, p = 1) {
   const { v, env } = ctx;
   const callId = String(v.ApiCallId || '');
-  const st = callId ? await loadState(env, callId, r) : null;
+  const st = callId ? await loadState(env, callId, slot(r, p)) : null;
   const list = (st && st.list) || [];
   if (!list.length) return afterFax(r, ['fax:none']);
 
-  let co = list[0];
-  if (list.length > 1) {
-    const fc = `fc${r}`, i = parseInt(v[fc], 10);
-    if (!(i >= 1 && i <= list.length)) {
-      const opts = list.map((c, j) => say(`לשטר של ${c.name} הקישו ${j + 1}`));
-      return readTapRaw(msg(P('fax:pickCo'), opts), fc, list.map((_, j) => String(j + 1)));
-    }
-    co = list[i - 1];
-  }
+  const co = list[pick - 1];
+  if (!co) return readNext(r, []);          // מספר שלא הוצע: שואלים שוב
 
   let doc = co.choices[0];
-  if (co.choices.length > 1) {
-    const fd = `fd${r}`;
-    if (v[fd] !== '1' && v[fd] !== '2') return readTapRaw(P('fax:pickDoc'), fd, ['1', '2']);
-    doc = co.choices.find((c) => c.kind === (v[fd] === '1' ? 'general' : 'private')) || co.choices[0];
+  const nDocs = co.choices.length;
+  if (nDocs > 1) {          // "לחברה יש N שטרות", ואחריו "לשטר ... הקישו k" לכל שטר
+    const fd = `fd${r}`, j = parseInt(v[fd], 10);
+    if (!(j >= 1 && j <= nDocs)) {
+      const two = nDocs > 9;
+      const opts = co.choices.map((c, i) => say(`${c.label} הקישו ${i + 1}`));
+      return readTapRaw(msg(say(`לחברה יש ${nDocs} שטרות`), opts, two ? say('ואחרי המספר סולמית') : ''), fd,
+        two ? null : co.choices.map((_, i) => String(i + 1)), two ? { max: 2, min: 1 } : {});
+    }
+    doc = co.choices[j - 1];
   }
 
   let note = [];
@@ -244,7 +257,7 @@ async function faxFlow(ctx, r) {
     if (v[fy] !== '1' && v[fy] !== '2') return readTapRaw(msg(P('fax:typed'), `d-${num}`, P('fax:confirm')), fy, ['1', '2']);
     if (v[fy] === '2') { note = []; continue; }
     // אושר: רישום (פעם אחת לכל ניסיון, גם אם ימות שולחת שוב) ושליחה ברקע
-    const res = await reserve(env, { callId, slot: `${r}_${k}`, caller: v.ApiPhone || '', fax: num, chp: co.chp, company: co.name, kind: doc.kind, docId: doc.id });
+    const res = await reserve(env, { callId, slot: `${r}_${k}`, caller: v.ApiPhone || '', fax: num, chp: co.chp, company: co.name, kind: doc.label, docId: doc.id });
     if (res.limit) return afterFax(r, ['fax:limit']);
     if (res.id) ctx.waitUntil(sendFax(env, res.id, doc.id, num));
     return afterFax(r, ['fax:sent']);
@@ -253,7 +266,7 @@ async function faxFlow(ctx, r) {
 }
 
 function readNext(r, noteKeys) {
-  return readTapRaw(msg(notes(noteKeys), P('next')), `nx${r}`, ['1', '2']);
+  return readTapRaw(msg(notes(noteKeys), P('next')), `nx${r}`, ['0', '*']);
 }
 
 // ----------------------------------------------------------------------------

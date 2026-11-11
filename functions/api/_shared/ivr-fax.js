@@ -8,7 +8,7 @@
 //    FAX_DAILY_MAX   (רשות)       כמה פקסים ביום בסך הכול (ברירת מחדל 50)
 //    FAX_OFF=1       (רשות)       כיבוי זמני בלי למחוק את המפתח
 //  מגבלות: עד 3 פקסים לשיחה, עד 5 ביום לאותו מספר פקס, ו-FAX_DAILY_MAX ביום בסך הכול.
-//  רק שטר שמקושר לרשימה הציבורית (כללי / פרטי) של החברה נשלח - אותם מסמכים שמוצגים באתר.
+//  רק שטרות שמוצגים באתר (_shared/permit-links.js): השטר של החברה, שטרות מיוחדים, שטרות לאג"ח ותתי-שורות.
 //  כל שליחה נרשמת בטבלה ivr_fax_log (נוצרת לבד): מתי, ח.פ., איזה שטר, מספר הפקס, המתקשר, התוצאה.
 // ============================================================================
 
@@ -26,30 +26,37 @@ export function normFax(s) {
   return '';
 }
 
-/** שטרי החברה שמקושרים לרשימה הציבורית: { general: {id,name}, private: {id,name} } (מפתח חסר = אין) */
-export async function docsFor(env, chp) {
-  const out = {};
-  const k = String(chp || '').trim().replace(/^0+/, '');
-  if (!k) return out;
-  try {
-    const { results } = await env.DB.prepare(`
-      SELECT c.slot, d.id, d.original_name FROM permit_doc_companies c
-      JOIN businesses b ON b.id = c.business_id
-      JOIN permit_docs d ON d.id = c.doc_id
-      WHERE c.slot != '' AND d.doc_type != 'other' AND LTRIM(TRIM(COALESCE(b.chp_number,'')), '0') = ?`).bind(k).all();
-    for (const r of results || []) {
-      for (const s of String(r.slot).split(',')) if ((s === 'general' || s === 'private') && !out[s]) out[s] = { id: r.id, name: r.original_name || 'permit.pdf' };
-    }
-  } catch { /* לפני טבלאות המסמכים */ }
-  return out;
+import { publicLinks } from './permit-links.js';
+
+// כל השטרות הציבוריים של החברה - אותה רשימה שמוצגת באתר (_shared/permit-links.js), במטמון לדקה
+let LINKS = { at: 0, list: null };
+export const clearLinksCache = () => { LINKS = { at: 0, list: null }; };          // לבדיקות
+async function linksOf(env) {
+  if (LINKS.list && Date.now() - LINKS.at < 60000) return LINKS.list;
+  let list = [];
+  try { list = await publicLinks(env); } catch { /* לפני טבלאות המסמכים */ }
+  LINKS = { at: Date.now(), list };
+  return list;
 }
 
-// איזה שטר מתאים למצב ההיתר (describe().permit): כללי -> הכללי, רק פרטי -> הפרטי, שניהם -> בחירה
-export function docChoices(permit, docs) {
-  if (permit === 'general') return docs.general ? [['general', docs.general]] : [];
-  if (permit === 'private') return docs.private ? [['private', docs.private]] : [];
-  if (permit === 'both') return [['general', docs.general], ['private', docs.private]].filter((x) => x[1]);
-  return [];
+/** השטרות של החברה לפי הח.פ., בסדר ההקראה, כל שטר פעם אחת: [{ id, label }]
+ *  1. השטר של החברה (כללי + פרטי בנפרד כשיש שניהם), 2. שטרות מיוחדים, 3. שטרות לאג"ח, 4. תתי-שורות (למשל "מסלול הלכה"), כל אחת באותו סדר. */
+export async function docListFor(env, chp) {
+  const k = String(chp || '').trim().replace(/^0+/, '');
+  if (!k) return [];
+  const mine = (await linksOf(env)).filter((l) => String(l.chp || '').trim().replace(/^0+/, '') === k);
+  const out = [], seen = new Set();
+  const add = (id, label) => { if (id && !seen.has(String(id))) { seen.add(String(id)); out.push({ id: String(id), label }); } };
+  const entry = (l, of) => {
+    if (l.general && l.private && l.general !== l.private) { add(l.general, `לשטר היתר העסקה הכללי של ${of}`); add(l.private, `לשטר היתר העסקה הפרטי של ${of}`); }
+    else add(l.general || l.private, `לשטר של ${of}`);
+    for (const x of l.specials || []) add(x.id, `לשטר ${x.title}${l.sub ? ` של ${of}` : ''}`);
+    for (const x of l.bond_docs || []) add(x.id, `לשטר ל${x.label}${l.sub ? ` של ${of}` : ''}`);
+  };
+  const main = mine.find((l) => !l.sub);
+  if (main) entry(main, 'החברה');
+  for (const l of mine.filter((x) => x.sub)) entry(l, String(l.sub));
+  return out;
 }
 
 // ---- מצב לשיחה (מה הוקרא בכל סבב), כי ימות לא מחזירה את התוצאות עצמן ----
