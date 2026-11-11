@@ -5,17 +5,20 @@
 //  כל חלק בבקשה נפרדת, בפקודת read קצרה (שנייה המתנה, בלי צורך בהקשה), וכשנגמר - ההצהרה (1 = מאשר, 2 = שמיעה חוזרת, 3 = ביטול).
 //  מצב (s_agr_*): g = כמה הקראות מלאות התחילו, on = באמצע הקראה, k = החלק הבא. משתני ימות: ap_<g*100+k> לחלקים,
 //  ag (בלי הקראה) / ag_<g> (אחרי הקראה g) להצהרה - כל שאלה במשתנה חדש, כי ימות שומרת את הערך הישן.
+//  קול: כל חלק מוקרא מקובץ Azure (ivr-tts-cache.js) כשכבר הופק, ואחרת ב-TTS של ימות (והקובץ מופק ברקע). ההפקה מתחילה כבר כשנשאלת
+//  השאלה "לשמוע את השטר המלא?" (warmAgreement), כך שבדרך כלל הקבצים מוכנים כשמתחילים להקריא.
 // ============================================================================
 import { getAgreement, speakable } from './agreement.js';
 import { ttsClean } from './ivr_phrases.js';
+import { audioFor, warm } from './ivr-tts-cache.js';
 
 export const CHUNK = 700;
 
-/** פסקאות השטר -> חלקים להקראה (כל חלק = הודעות t- מחוברות בנקודה, עד CHUNK תווים; פסקה ארוכה מפוצלת במשפטים) */
+/** פסקאות השטר -> חלקים להקראה: [{ tts: הודעות t- מחוברות בנקודה, text: הטקסט לקובץ Azure }], עד CHUNK תווים לחלק (פסקה ארוכה מפוצלת במשפטים) */
 export function agreementChunks(paragraphs, max = CHUNK) {
   const parts = [];
   for (const p of paragraphs.filter(Boolean)) {
-    const t = ttsClean(speakable(p));
+    const t = speakable(p).replace(/\s+/g, ' ').trim();
     if (t.length <= max) { parts.push(t); continue; }
     let cur = '';
     for (const s of t.split(/(?<=[.!?:;])\s+|\s+(?=[-–]\s)/)) {
@@ -32,25 +35,34 @@ export function agreementChunks(paragraphs, max = CHUNK) {
     cur.push(t);
   }
   if (cur.length) chunks.push(cur);
-  return chunks.map((c) => c.map((t) => `t-${t}`).join('.'));
+  return chunks.map((c) => ({ tts: c.map((t) => `t-${ttsClean(t)}`).join('.'), text: c.join(' ') }));
+}
+
+const chunksOf = async (env) => { const ag = await getAgreement(env); return agreementChunks([ag.longTitle, ...ag.long]); };
+
+/** הפקה מוקדמת של קבצי Azure לחלקי השטר (ברקע) */
+export async function warmAgreement(env, waitUntil) {
+  if (!waitUntil) return;
+  try { await warm(env, (await chunksOf(env)).map((c) => c.text), waitUntil); } catch { /* best-effort */ }
 }
 
 /**
  * שלב ההצהרה (אחרי rd: 1 = להקריא את השטר המלא, 2 = להמשיך).
  * @returns {{ask:string}|{ok:true}|{cancel:true}}
  */
-export async function agreementStep({ env, v, S, setS, P, readTap, empty = 'NONE' }) {
+export async function agreementStep({ env, v, S, setS, P, readTap, empty = 'NONE', waitUntil = null }) {
   const has = (k) => Object.prototype.hasOwnProperty.call(v, k);
   const g = Number(S('agr', 'g') || 0);
   const decl = (n) => (n === 0 ? 'ag' : `ag_${n}`);
   const chunkVar = (n, k) => `ap_${n * 100 + k}`;
   const ask = (n) => ({ ask: readTap(P('join:declare'), decl(n), ['1', '2', '3'], { empty }) });
   const read = async (n, k) => {
-    const ag = await getAgreement(env);
-    const chunks = agreementChunks([ag.longTitle, ...ag.long]);
+    const chunks = await chunksOf(env);
     if (k >= chunks.length) { setS('agr', 'on', ''); return ask(n); }
     setS('agr', 'k', k);
-    return { ask: readTap(chunks[k], chunkVar(n, k), null, { max: 1, min: 1, wait: 1, empty }) };          // שנייה אחת, בלי הקשה: ממשיכים לחלק הבא
+    if (waitUntil) for (const c of chunks.slice(k + 1)) await audioFor(env, c.text, waitUntil);          // החלקים הבאים: מוכנים בזמן
+    const f = await audioFor(env, chunks[k].text, waitUntil);
+    return { ask: readTap(f || chunks[k].tts, chunkVar(n, k), null, { max: 1, min: 1, wait: 1, empty }) };          // שנייה אחת, בלי הקשה: ממשיכים לחלק הבא
   };
   const start = async () => { setS('agr', 'g', g + 1); setS('agr', 'on', '1'); return read(g + 1, 0); };
 

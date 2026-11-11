@@ -81,9 +81,18 @@ r = await step(rec('ln_1', 'כהן'), /=ln_c1,/);
 r = await step({ ln_c1: '1' }, /=pc,no,1,1,/);                                         // טלפון המתקשר זוהה
 r = await step({ pc: '2' }, /=ph_0,no,record,/);
 r = await step(rec('ph_0', 'אפס חמישים ושתיים שבע אחת אחת שבע אפס ארבע אחת'), /^read=t-זוהה\.t-0 5 2 7 1 1 7 0 4 1\.t-לאישור.*=ph_c0,/);
-r = await step({ ph_c0: '1' }, /=ad_0,no,record,\/3,vc1_ad_0,no,yes,no,1,15$/);
-r = await step(rec('ad_0', 'הרב קוק 5, בני ברק'), /^read=t-זוהה\.t-הרב קוק 5 בני ברק\.t-לאישור.*=ad_c0,/);
-r = await step({ ad_c0: '1' }, /=fxq,no,1,1,/);
+r = await step({ ph_c0: '1' }, /=p2q,no,1,1,/);
+r = await step({ p2q: '1' }, /=p2_0,no,record,/);
+r = await step(rec('p2_0', 'אפס שלוש חמש שש שבע שמונה תשע אפס אחת'), /^read=t-זוהה\.t-0 3 5 6 7 8 9 0 1\.t-לאישור.*=p2_c0,/);
+// כתובת: עיר, רחוב, מספר בית
+r = await step({ p2_c0: '1' }, /=ct_0,no,record,\/3,vc1_ct_0,/);
+r = await step(rec('ct_0', 'בני ברק'), /^read=t-זוהה\.t-בני ברק\.t-לאישור.*=ct_c0,/);
+r = await step({ ct_c0: '1' }, /=st_0,no,record,/);
+r = await step(rec('st_0', 'הרב קוק'), /=st_c0,/);
+r = await step({ st_c0: '1' }, /=hn_0,no,record,/);
+r = await step(rec('hn_0', 'שלום'), /^read=t-מספר הבית אינו תקין.*=hn_1,no,record,/);
+r = await step(rec('hn_1', 'חמש'), /^read=t-זוהה\.t-מספר בית 5\.t-לאישור.*=hn_c1,/);
+r = await step({ hn_c1: '1' }, /=fxq,no,1,1,/);
 r = await step({ fxq: '2' }, /=emq,no,1,1,/);
 // אימייל בדיבור: זיהוי בעברית + אוטומטי, הקראה אות אחר אות ואישור
 r = await step({ emq: '1' }, /=em_0,no,record,\/3,vc1_em_0,no,yes,no,1,15$/);
@@ -117,14 +126,39 @@ assert.equal(rows.length, 1);
 const p = await decryptPii(await importKeyForWrite(env), rows[0].id, rows[0].pii);
 assert.equal(p.first, 'אריה'); assert.equal(p.last, 'כהן'); assert.equal(p.phone, '0527117041'); assert.equal(p.id, '123456782'); assert.equal(p.companies, 'בנק לאומי, מגדל');
 const x = JSON.parse(p.extra);
-assert.equal(x['ערוץ'], 'טלפון - דיבור (ElevenLabs, שלוחה 3)'); assert.equal(x['כתובת'], 'הרב קוק 5, בני ברק'); assert.equal(x['הקלטת תעודת זהות'], '/3/vc1_id_2');
+assert.equal(x['ערוץ'], 'טלפון - דיבור (ElevenLabs, שלוחה 3)'); assert.equal(x['כתובת'], 'הרב קוק 5, בני ברק');
+assert.deepEqual([x['עיר'], x['רחוב'], x['מספר בית'], x['טלפון נוסף']], ['בני ברק', 'הרב קוק', '5', '035678901']);
+assert.equal(x['הקלטת מספר בית'], '/3/vc1_hn_1'); assert.equal(x['הקלטת תעודת זהות'], '/3/vc1_id_2');
 assert.equal(x['הקלטת שם משפחה'], '/3/vc1_ln_1'); assert.equal(p.email, 'mosh@gmail.com'); assert.equal(x['הקלטת אימייל'], '/3/vc1_em_1');
 console.log('saved OK:', p.first, p.last, p.id, x['ערוץ']);
 // ElevenLabs: מפתח בכותרת, עברית, scribe_v1; זיהוי פעם אחת לכל הקלטה
 assert.ok(elevenCalls.every((c) => c.key === 'EK' && c.model === 'scribe_v1' && (c.lang === 'he' || c.lang === null)));
 assert.equal(elevenCalls.filter((c) => c.lang === null).length, 2, 'email: also auto language');
-assert.equal(elevenCalls.length, 9 + 4, 'one transcription per recording (email twice): ' + elevenCalls.length);
+assert.equal(elevenCalls.length, 17, 'one transcription per recording (email twice): ' + elevenCalls.length);
 console.log('ElevenLabs calls OK:', elevenCalls.length);
 // המצב נמחק בסיום
 assert.equal(db.prepare('SELECT COUNT(*) AS n FROM ivr_join_voice_state').get().n, 0);
+
+// ---- קבצי Azure לחלקי השטר: בפעם הראשונה TTS של ימות + הפקה ברקע, אחר כך מהקובץ ----
+const { agreementStep, warmAgreement } = await import('../../functions/api/_shared/ivr-agreement.js');
+const { readTap } = await import('../../functions/api/_shared/ivr-auth.js');
+const { unit } = await import('../../functions/api/_shared/ivr_phrases.js');
+const uploads = [], tts = [];
+const prevFetch = globalThis.fetch;
+globalThis.fetch = async (url, init = {}) => {
+  url = String(url);
+  if (url.includes('tts.speech.microsoft.com')) { tts.push(init.body); assert.equal(init.headers['X-Microsoft-OutputFormat'], 'riff-8khz-16bit-mono-pcm'); return new Response(new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 2, 3])); }
+  if (url.includes('/ym/api/UploadFile')) { uploads.push(init.body.get('path')); assert.equal(init.body.get('token'), '0771:pw'); return Response.json({ responseStatus: 'OK' }); }
+  return prevFetch(url, init);
+};
+const aenv = { ...env, AZURE_SPEECH_KEY: 'AK', IVR_AUDIO_OFF: '' };
+const bg = []; const wu = (pr) => bg.push(pr);
+const av = { rd: '1' }, ctx = { env: aenv, v: av, S: (n, k) => av[`s_${n}_${k}`], setS: (n, k, x2) => { av[`s_${n}_${k}`] = String(x2); }, P: (k) => unit(k, {}), readTap, waitUntil: wu };
+await warmAgreement(aenv, wu); await Promise.all(bg);          // כשנשאלת השאלה "לשמוע את השטר המלא?"
+assert.equal(uploads.length, 6); assert.ok(uploads.every((x2) => /^ivr2:99\/ag_[0-9a-f]{12}\.wav$/.test(x2)), uploads.join(' '));
+let q = await agreementStep(ctx);
+assert.match(q.ask, /^read=f-\/99\/ag_[0-9a-f]{12}=ap_100,/, q.ask);          // החלק הראשון מקובץ Azure
+assert.equal(uploads.length, 6, 'no duplicate production');
+console.log('agreement audio OK: 6 Azure files, read from file');
+globalThis.fetch = prevFetch;
 console.log('ALL OK');
