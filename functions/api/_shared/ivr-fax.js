@@ -111,7 +111,7 @@ export async function sendFax(env, logId, docId, fax) {
   try {
     const row = await env.DB.prepare('SELECT file_key, original_name FROM permit_docs WHERE id = ?').bind(docId).first();
     if (!row) throw new Error('document not found');
-    // גרסת הפקס (docs-fax/, שחור-לבן חד 300dpi - scripts/fax_permit_pdfs.py) אם קיימת; אחרת הגרסה הקלה (docs-lite/), אחרת המקור
+    // גרסת הפקס (docs-fax/, שחור-לבן חד 200x300 - scripts/fax_permit_pdfs.py) אם קיימת; אחרת הגרסה הקלה (docs-lite/), אחרת המקור
     const rel = row.file_key.startsWith('docs/') ? row.file_key.slice(5) : row.file_key;
     const obj = (await env.PERMITS.get('docs-fax/' + rel).catch(() => null)) || (await env.PERMITS.get('docs-lite/' + rel).catch(() => null)) || (await env.PERMITS.get(row.file_key));
     if (!obj) throw new Error('file missing in storage');

@@ -32,7 +32,7 @@ jobs:
         if: steps.pend.outputs.pending != '0'
         run: |
           sudo apt-get update -q && sudo apt-get install -y -q poppler-utils fonts-noto-core >/dev/null
-          pip install -q pillow numpy playwright && playwright install --with-deps chromium >/dev/null
+          pip install -q pillow numpy img2pdf playwright && playwright install --with-deps chromium >/dev/null
       - name: Render and send
         if: steps.pend.outputs.pending != '0'
         run: python3 -u scripts/fax_confirm_render.py

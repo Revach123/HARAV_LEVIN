@@ -1,6 +1,6 @@
 name: Fax versions of permit PDFs
 
-# גרסה לפקס של כל שטר (docs-fax/ ב-R2): שחור-לבן חד, 300dpi, דחיסת פקס. המקור לא משתנה.
+# גרסה לפקס של כל שטר (docs-fax/ ב-R2): שחור-לבן חד, 200x300 (הרזולוציה שהספק משדר), דחיסת פקס. המקור לא משתנה.
 # אוטומטי: כל חצי שעה, לשטרות שהועלו ב-3 הימים האחרונים. ידני (Run workflow): all=true מעבד את כל השטרות שעוד אין להם; apply=false זה dry-run.
 # סודות: CF_D1_AND_R2_TOKEN + CF_ACCOUNT_ID (כמו compress-new-permits).
 on:
@@ -10,6 +10,7 @@ on:
     inputs:
       all: { description: "כל השטרות שאין להם גרסת פקס (לא רק החדשים)", type: boolean, default: false }
       apply: { description: "להעלות ל-R2 (בלי זה dry-run)", type: boolean, default: true }
+      redo: { description: "להפיק מחדש גם שטרות שכבר יש להם גרסת פקס", type: boolean, default: false }
       limit: { description: "מקסימום מסמכים (0 = הכל)", default: "0" }
 
 permissions:
@@ -38,7 +39,7 @@ jobs:
         run: python3 -u scripts/fax_permit_pdfs.py --new-days 3 --count
       - name: Install tools
         if: github.event_name != 'schedule' || steps.pend.outputs.pending != '0'
-        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils >/dev/null && pip install -q pillow numpy
+        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils >/dev/null && pip install -q pillow numpy img2pdf
       - name: Build fax versions
         if: github.event_name != 'schedule' || steps.pend.outputs.pending != '0'
         run: |
@@ -46,6 +47,7 @@ jobs:
             python3 -u scripts/fax_permit_pdfs.py --new-days 3 --apply --limit 40
           else
             ARGS=""; [ "${{ inputs.apply }}" = "true" ] && ARGS="$ARGS --apply"
+            [ "${{ inputs.redo }}" = "true" ] && ARGS="$ARGS --redo"
             [ "${{ inputs.all }}" != "true" ] && ARGS="$ARGS --new-days 3"
             timeout 6600 python3 -u scripts/fax_permit_pdfs.py $ARGS --limit ${{ inputs.limit }}
           fi
