@@ -213,8 +213,12 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const hnQ = numStep('hn', 'join:askHouse', 'join:badHouse', (x) => (/^\d{1,4}$/.test(String(x)) ? (x === '0' || Number(x) === 0 ? 'ללא' : String(Number(x))) : ''), 4, 1,
     (x) => (x === 'ללא' ? 'ללא מספר בית' : `מספר בית ${x}`));
   if (hnQ.ask) return hnQ.ask;
-  const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val };
-  const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
+  // מספר דירה (בהקשה): 0 = ללא
+  const apQ = numStep('ap', 'v:askApt', 'v:badApt', (x) => (/^\d{1,4}$/.test(String(x)) ? (Number(x) === 0 ? 'ללא' : String(Number(x))) : ''), 4, 1,
+    (x) => (x === 'ללא' ? 'ללא מספר דירה' : `מספר דירה ${x}`));
+  if (apQ.ask) return apQ.ask;
+  const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val, apt: apQ.val === 'ללא' ? '' : apQ.val };
+  const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' ') + (addr.apt ? `, דירה ${addr.apt}` : ''), addr.city].filter(Boolean).join(', ') };
   // 6. אימייל (רשות): בדיבור, אות אחר אות; אחרי ניסיון אחד שנכשל (לא זוהה / שונה) - הקשה במקשי הטלפון (כמו בשלוחה 1)
   if ((o = yn('emq', 'v:emailQ'))) return o;
   let email = '';

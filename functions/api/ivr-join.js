@@ -523,6 +523,7 @@ export async function save(env, { id, phone, phone2, fax, all, files, texts = {}
     ...(addr.city ? { 'עיר': addr.city } : {}),
     ...(addr.street ? { 'רחוב': addr.street } : {}),
     ...(addr.house ? { 'מספר בית': addr.house } : {}),
+    ...(addr.apt ? { 'דירה': addr.apt } : {}),
     ...files,
     ...(Object.values(texts).some(Boolean) ? { 'זיהוי אוטומטי מהקלטות': 'כן - יש לבדוק מול ההקלטה' } : {}),
     'מזהה שיחה': callId,
