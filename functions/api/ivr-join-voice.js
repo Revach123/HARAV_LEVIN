@@ -231,14 +231,22 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       email = t.email || '';
     } else email = q.val;
   }
-  // 6ב. אישור ההצטרפות: למייל שהוזן; אם נמסר גם פקס - אפשר לקבל גם בפקס (1 = כן, כל תשובה אחרת / שתיקה = למייל בלבד). פקס בלי מייל - האישור נשלח לפקס
+  // 6ב. אישור ההצטרפות: למייל שהוזן; תמיד מציעים גם פקס (1 = כן; אם עוד לא נמסר מספר פקס - נשאל עכשיו; כל תשובה אחרת / שתיקה = בלי פקס).
+  // בלי מייל: "לקבלת האישור דרך הפקס הקישו 1". פקס שנמסר בלי מייל - האישור נשלח אליו בלי לשאול.
   let faxConfirm = !!fax && !email;
-  if (email && fax) {
+  if (!(fax && !email)) {
     if (S('cv', 'a') == null) {
-      if (!has(v, 'cv')) return readTap(P('v:confirmAlsoFax'), 'cv', null, { max: 1, min: 0, wait: 7, empty: EMPTY });
+      if (!has(v, 'cv')) return readTap(P(email ? 'v:confirmAlsoFax' : 'v:confirmFax'), 'cv', null, { max: 1, min: 0, wait: 7, empty: EMPTY });
       setS('cv', 'a', v.cv === '1' ? '1' : '0');
     }
-    faxConfirm = S('cv', 'a') === '1';
+    if (S('cv', 'a') === '1') {
+      faxConfirm = true;
+      if (!fax) {
+        const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
+        if (q.ask) return q.ask;
+        fax = q.val;
+      }
+    }
   }
   // 7. כל החברות / חברות מסוימות (שמות בדיבור)
   if (v.ch !== '1' && v.ch !== '2') return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
@@ -272,8 +280,8 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
     try {
       if (email) { mailSent = await sendConfirmation(env, email, conf); if (mailSent) await markMailSent(env, saved); }
-      if (fax && faxConfirm) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf, saved);
-    } catch { /* כשל בשליחה לא פוגע בהרשמה */ }
+      if (fax && faxConfirm) faxQueued = await queueFaxConfirmation(env, waitUntil, call, fax, conf, saved);
+    } catch (e) { console.log(`ivr-join-voice confirm error: ${e && e.message}`); }          // כשל בשליחה לא פוגע בהרשמה (השגיאה נרשמת בלוג, בלי פרטים אישיים)
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
   return `id_list_message=${P('v:okTitle')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
