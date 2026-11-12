@@ -28,6 +28,7 @@ jobs:
         run: |
           resp=$(curl -sS -m 60 -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" https://harav-levin.pages.dev/api/fax-confirm || true)
           echo "$resp" | jq -e '.ok == true' >/dev/null 2>&1 || { echo "תשובה לא תקינה מהאתר (סוד חסר / אתר לא זמין): ${resp:0:200}"; exit 1; }
+          echo "$resp" | jq -c '{n: (.items|length), last}'
           n=$(echo "$resp" | jq '.items|length')
           echo "pending=$n" >> "$GITHUB_OUTPUT"; echo "pending: $n"
       - name: Install tools
