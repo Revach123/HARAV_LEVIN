@@ -1,0 +1,38 @@
+name: Fax join confirmations
+
+# אישורי הצטרפות בפקס (שלוחה 3): מפיק PDF שחור-לבן חד מה-HTML של האישור ומחזיר לאתר, שמשגר לספק הפקס (functions/api/fax-confirm.js).
+# מופעל מיד כשנרשם אישור (אם מוגדר GITHUB_DISPATCH_TOKEN), ובנוסף כל 10 דקות כרשת ביטחון. ריצה בלי אישורים ממתינים לא מתקינה כלום.
+# סוד: CRON_SECRET (אותו סוד כמו באבחון הפקסים).
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fax-confirm
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pending?
+        id: pend
+        run: |
+          n=$(curl -sS -m 60 -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" https://harav-levin.pages.dev/api/fax-confirm | jq '.items|length' 2>/dev/null || echo 0)
+          echo "pending=$n" >> "$GITHUB_OUTPUT"; echo "pending: $n"
+      - name: Install tools
+        if: steps.pend.outputs.pending != '0'
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q poppler-utils fonts-noto-core >/dev/null
+          pip install -q pillow numpy playwright && playwright install --with-deps chromium >/dev/null
+      - name: Render and send
+        if: steps.pend.outputs.pending != '0'
+        run: python3 -u scripts/fax_confirm_render.py

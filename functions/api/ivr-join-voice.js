@@ -25,6 +25,7 @@ import { elevenConfigured, elevenTranscribeRecording, digitsFromSpeech } from '.
 import { save, normalizeFax, spellEmail } from './ivr-join.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation } from './_shared/join-mail.js';
+import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
 
 const EMPTY = 'NONE';
 const REC_MIN = 1, REC_MAX = 10, REC_ADDR_MAX = 15, REC_LIST_MAX = 30;
@@ -32,7 +33,7 @@ const VERSION = 'טלפוני-דיבור-1';
 const CHANNEL = 'טלפון - דיבור (ElevenLabs, שלוחה 3)';
 
 // ---- מצב שיחה מוצפן (ivr_join_voice_state) ----
-const keepKey = (k) => ['pc', 'p2q', 'fxq', 'emq', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z]+_c?\d+$/.test(k);
+const keepKey = (k) => ['pc', 'p2q', 'fxq', 'emq', 'cv', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z]+_c?\d+$/.test(k);
 const STATE_TTL_MS = 6 * 3600 * 1000;
 async function loadState(env, callId) {
   if (!callId) return {};
@@ -171,6 +172,12 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (q.ask) return q.ask;
     email = q.val;
   }
+  // 6ג. אופן קבלת האישור: מייל (1) או פקס (2) - נשאל רק כשנמסרו שניהם; אם נמסר רק אחד, האישור יישלח אליו
+  let via = email ? 'mail' : fax ? 'fax' : '';
+  if (email && fax) {
+    if (v.cv !== '1' && v.cv !== '2') return readTap(P('join:confirmVia'), 'cv', ['1', '2'], { empty: EMPTY });
+    via = v.cv === '2' ? 'fax' : 'mail';
+  }
   // 7. כל החברות / חברות מסוימות (שמות בדיבור)
   if (v.ch !== '1' && v.ch !== '2') return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
   const all = v.ch === '1';
@@ -197,15 +204,17 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   v.finished = true;
   if (!saved) return done('join:done');
   // מייל אישור (כמו בשלוחה 1) - "נשלח אישור למייל" מוקרא רק אם המייל באמת נשלח
-  let mailSent = false;
-  if (email) {
+  let mailSent = false, faxQueued = false;
+  if (email || fax) {
     const companies = all ? [] : (texts.cl ? texts.cl.split(/\s*[,،]\s*|\s+ו(?=[א-ת])/).filter(Boolean) : ['(לפי ההקלטה)']);
+    const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
     try {
-      mailSent = await sendConfirmation(env, email, { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin });
-    } catch { mailSent = false; }
+      if (via === 'fax') faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
+      else mailSent = await sendConfirmation(env, email, conf);
+    } catch { mailSent = false; faxQueued = false; }
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
-  return `id_list_message=${P('join:okHello')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
+  return `id_list_message=${P('join:okHello')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
 }
 
 const text = (body) => new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
