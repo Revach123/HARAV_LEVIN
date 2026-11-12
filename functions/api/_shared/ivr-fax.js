@@ -93,6 +93,18 @@ export async function reserve(env, { callId, slot, caller, fax, chp, company, ki
   return { id: res && res.meta && res.meta.last_row_id };
 }
 
+/** שליחת קובץ PDF לספק הפקס. מחזיר { status: 'sent'|'failed', response }. לעולם לא זורק על תשובת ספק (רק על תקלת רשת). */
+export async function postFax(env, fax, bytes, name) {
+  const fd = new FormData();
+  fd.append('api_key', String(env.FAX_API_KEY).trim());
+  fd.append('recipient_fax', fax);
+  fd.append('pdf_file', new Blob([bytes], { type: 'application/pdf' }), String(name || 'permit.pdf').replace(/[^\w.\-]+/g, '_') || 'permit.pdf');
+  const res = await fetch(env.FAX_API_URL || DEFAULT_URL, { method: 'POST', body: fd });
+  const response = (await res.text()).slice(0, 500);
+  // התשובה של הספק לא מתועדת: הצלחה = HTTP תקין ובלי מילת שגיאה בתשובה
+  return { status: res.ok && !/error|fail|invalid|שגיאה|נכשל/i.test(response) ? 'sent' : 'failed', response };
+}
+
 /** שליחת השטר בפקס (ברקע, אחרי שהמתקשר כבר שמע "נשלח"). התוצאה נרשמת ביומן. */
 export async function sendFax(env, logId, docId, fax) {
   let status = 'failed', response = '';
@@ -103,14 +115,7 @@ export async function sendFax(env, logId, docId, fax) {
     const rel = row.file_key.startsWith('docs/') ? row.file_key.slice(5) : row.file_key;
     const obj = (await env.PERMITS.get('docs-fax/' + rel).catch(() => null)) || (await env.PERMITS.get('docs-lite/' + rel).catch(() => null)) || (await env.PERMITS.get(row.file_key));
     if (!obj) throw new Error('file missing in storage');
-    const fd = new FormData();
-    fd.append('api_key', String(env.FAX_API_KEY).trim());
-    fd.append('recipient_fax', fax);
-    fd.append('pdf_file', new Blob([await obj.arrayBuffer()], { type: 'application/pdf' }), String(row.original_name || 'permit.pdf').replace(/[^\w.\-]+/g, '_') || 'permit.pdf');
-    const res = await fetch(env.FAX_API_URL || DEFAULT_URL, { method: 'POST', body: fd });
-    response = (await res.text()).slice(0, 500);
-    // התשובה של הספק לא מתועדת: הצלחה = HTTP תקין ובלי מילת שגיאה בתשובה
-    status = res.ok && !/error|fail|invalid|שגיאה|נכשל/i.test(response) ? 'sent' : 'failed';
+    ({ status, response } = await postFax(env, fax, await obj.arrayBuffer(), row.original_name));
   } catch (e) { response = String(e && e.message || e).slice(0, 500); }
   try { await env.DB.prepare('UPDATE ivr_fax_log SET status = ?, response = ? WHERE id = ?').bind(status, response, logId).run(); } catch { /* ignore */ }
   console.log(`ivr-fax ${logId}: ${status}`);
