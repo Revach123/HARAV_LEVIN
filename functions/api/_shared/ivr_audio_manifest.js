@@ -1282,6 +1282,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "v:askApt": {
+  "text": "הַקִּישׁוּ אֶת מִסְפַּר הַדִּירָה, וְאַחֲרָיו סוּלָּמִית. אִם אֵין מִסְפַּר דִּירָה, הַקִּישׁוּ אֶפֶס וְאַחֲרָיו סוּלָּמִית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_bf0c26a5512ee21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "v:askCity": {
   "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שֵׁם הָעִיר אוֹ הַיִּשּׁוּב שֶׁבּוֹ אַתֶּם גָּרִים, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
   "voice": "he-IL-AvriNeural",
@@ -1335,6 +1342,13 @@ export default {
   "text": "לְאַחַר הַצְּלִיל, אִמְרוּ אֶת שֵׁם הָרְחוֹב, וּבְסִיּוּם הַקִּישׁוּ סוּלָּמִית",
   "voice": "he-IL-AvriNeural",
   "path": "/99/c6_eca383a01566e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "v:badApt": {
+  "text": "מִסְפַּר הַדִּירָה אֵינוֹ תָּקִין",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b27118989768e21a05dc",
   "pron": "",
   "phoneme": false
  },
