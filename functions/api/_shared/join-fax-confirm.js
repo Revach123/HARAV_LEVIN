@@ -6,7 +6,7 @@
 //  (3) /api/fax-confirm שולח לספק ומוחק את הפרטים מהתור. ההפעלה מיידית אם מוגדר GITHUB_DISPATCH_TOKEN, ובנוסף ריצה מתוזמנת.
 // ============================================================================
 import { importKeyForWrite, encryptPii } from './joiners-crypto.js';
-import { buildConfirmation } from './join-mail.js';
+import { buildConfirmation, markFaxSent } from './join-mail.js';
 import { getAgreement } from './agreement.js';
 
 export const TABLE = 'CREATE TABLE IF NOT EXISTS join_fax_confirm (id TEXT PRIMARY KEY, at INTEGER, status TEXT, data TEXT, response TEXT DEFAULT \'\')';
@@ -22,6 +22,7 @@ export async function queueFaxConfirmation(env, waitUntil, callId, fax, conf, jo
     await env.DB.prepare(TABLE).run();
     await env.DB.prepare('INSERT INTO join_fax_confirm (id, at, status, data) VALUES (?, ?, ?, ?)')
       .bind(id, Date.now(), 'pending', await encryptPii(key, id, { fax, html, jid: String(joinerId || '') })).run();
+    await markFaxSent(env, joinerId, 'pending');          // "מחכה לשליחה" ברשימת המצטרפים
     trigger(env, waitUntil);
     return true;
   } catch (e) { console.log(`join-fax-confirm queue: ${e && e.message}`); return false; }
