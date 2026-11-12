@@ -11,13 +11,13 @@
 import argparse, glob, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from compress_permit_pdfs import d1, r2_get, r2_put, r2_exists, pages, log, sh, KEY_RE, ID_RE
-from PIL import Image, ImageFilter
-import numpy as np
 
 DPI, MAX_PAGES = 300, 40
 
 
 def binarize(g):
+    from PIL import Image, ImageFilter          # נטענים רק כשבונים קובץ (שלב הספירה רץ לפני ההתקנה)
+    import numpy as np
     """סף מקומי: פיקסל כהה בהרבה מהסביבה שלו (או כהה מאוד) = דיו. עובד גם על סריקות עם רקע לא אחיד."""
     a = np.asarray(g, dtype=np.float32)
     bg = np.asarray(g.filter(ImageFilter.BoxBlur(25)), dtype=np.float32)
@@ -26,6 +26,7 @@ def binarize(g):
 
 
 def make_fax(src, dst, td):
+    from PIL import Image
     n = pages(src)
     if not n or n > MAX_PAGES: raise RuntimeError(f"pages={n}")
     sh(["pdftoppm", "-r", str(DPI), "-gray", "-png", src, os.path.join(td, "p")], timeout=600)
