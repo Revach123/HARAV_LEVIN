@@ -1,11 +1,11 @@
 // ============================================================================
 //  functions/api/ivr-join-voice.js — הצטרפות להיתר עסקה פרטי בדיבור בלבד (שלוחה 3, ניסיון), זיהוי ב-ElevenLabs
 //
-//  כמו ivr-join.js (שלוחה 1), אבל כל פרט נמסר בדיבור - אותם שדות כמו בשלוחה 1 ובטופס באתר: תעודת זהות, שם פרטי, שם משפחה,
+//  כמו ivr-join.js (שלוחה 1), אבל שמות, כתובת, אימייל ושמות חברות נמסרים בדיבור, ומספרים (ת.ז., טלפונים, פקס, מספר בית) בהקשה - אותם שדות כמו בשלוחה 1 ובטופס באתר: תעודת זהות, שם פרטי, שם משפחה,
 //  טלפון, טלפון נוסף, עיר, רחוב, מספר בית, אימייל, פקס, ושמות חברות (או כל החברות).
 //  אימייל: ההקלטה מזוהה פעמיים (עברית + זיהוי שפה אוטומטי) ו-pickEmail בוחר כתובת תקינה; מוקראת אות אחר אות. אחרי הרישום - מייל אישור.
-//  אחרי כל הקלטה: "זוהה: <מה שזוהה>. לאישור הקישו 1, להקלטה חוזרת הקישו 2". מספרים (ת.ז., טלפון, פקס) נאמרים
-//  ספרה אחר ספרה ומוקראים חזרה ספרה אחר ספרה. הקשות רק לשאלות כן / לא ולהצהרה.
+//  אחרי כל הקלטה: "זוהה: <מה שזוהה>. לאישור הקישו 1, להקלטה חוזרת הקישו 2". מספרים מוקשים (ספרות + סולמית)
+//  ומוקראים חזרה ספרה אחר ספרה לאישור. הקשות גם לשאלות כן / לא ולהצהרה.
 //  נרשם באותה טבלה ובאותה הצפנה כמו שלוחה 1 (save מ-ivr-join.js), עם ערוץ "טלפון - דיבור (ElevenLabs)".
 //  משתנים (כל ניסיון במשתנה חדש, כי ימות שומרת את הערך הישן):
 //    <f>_<n> הקלטה n של השדה f (id, fn, ln, ph, p2, ct, st, hn, em, fx, cl), <f>_c<n> אישור (1) / הקלטה חוזרת (2)
@@ -21,7 +21,7 @@ import { agreementStep, warmAgreement } from './_shared/ivr-agreement.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join-common.js';
-import { elevenConfigured, elevenTranscribeRecording, digitsFromSpeech } from './_shared/stt-eleven.js';
+import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
 import { save, normalizeFax, spellEmail } from './ivr-join.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation } from './_shared/join-mail.js';
@@ -115,11 +115,21 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
     return { ask: readTap(`${P(heard)}.${T(sayOf(val))}.${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
-  const num = (norm) => (t) => norm(digitsFromSpeech(t)) || '';
+  // מספרים (ת.ז., טלפון, פקס, מספר בית) בהקשה, כמו בשלוחה 1: ספרות + סולמית, הקראה חוזרת לאישור (1) או שינוי (2).
+  // כל ניסיון במשתנה חדש (name_<n>), כי ימות שומרת את הערך הישן; ערך לא תקין = הודעה ושאלה חוזרת.
+  const numStep = (name, phrase, bad, norm, max, min, say = spaced, intro = '') => {
+    const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
+    const val = has(v, key) && !empty(v[key]) ? norm(v[key]) : '';
+    const ask = (i, pre = '') => readTap(pre + P(phrase), `${name}_${i}`, null, { max, min, empty: EMPTY });
+    if (!val) return { ask: ask(n, (has(v, key) && !empty(v[key]) ? `${P(bad)}.` : '') || (n === 0 ? intro : '')) };
+    if (v[ck] === '1') return { val };
+    if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: ask(n + 1) }; }
+    return { ask: readTap(`${T(say(val))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+  };
   let o;
 
   // 1. תעודת זהות (בפתיחה: הסבר קצר על השלוחה)
-  const idQ = await field('id', 'v:askId', REC_MAX, { parse: num(normalizeId), bad: 'join:badId', sayOf: spaced, intro: `${P('v:intro')}.` });
+  const idQ = numStep('id', 'join:askId', 'join:badId', normalizeId, 10, 5, spaced, `${P('v:intro')}.`);
   if (idQ.ask) return idQ.ask;
   // 2-3. שם פרטי, שם משפחה
   const fnQ = await field('fn', 'join:askFirst', REC_MAX);
@@ -134,7 +144,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (v.pc === '1') phone = callerPhone;
   }
   if (!phone) {
-    const q = await field('ph', 'v:askPhone', REC_MAX, { parse: num(normalizePhone), bad: 'join:badPhone', sayOf: spaced });
+    const q = numStep('ph', 'join:askPhone', 'join:badPhone', normalizePhone, 11, 9);
     if (q.ask) return q.ask;
     phone = q.val;
   }
@@ -142,7 +152,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if ((o = yn('p2q', 'join:phone2Q'))) return o;
   let phone2 = '';
   if (v.p2q === '1') {
-    const q = await field('p2', 'v:askPhone2', REC_MAX, { parse: num(normalizePhone), bad: 'join:badPhone', sayOf: spaced });
+    const q = numStep('p2', 'join:askPhone2', 'join:badPhone', normalizePhone, 11, 9);
     if (q.ask) return q.ask;
     phone2 = q.val;
   }
@@ -151,8 +161,8 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if (ctQ.ask) return ctQ.ask;
   const stQ = await field('st', 'v:askStreet', REC_MAX);
   if (stQ.ask) return stQ.ask;
-  const house = (t) => (/(^|\s)(אין|בלי|ללא)(\s|$)/.test(t) ? 'ללא' : (/^\d{1,4}$/.test(digitsFromSpeech(t)) ? String(Number(digitsFromSpeech(t))) : ''));
-  const hnQ = await field('hn', 'v:askHouse', REC_MAX, { parse: house, bad: 'join:badHouse', sayOf: (x) => (x === 'ללא' ? 'ללא מספר בית' : `מספר בית ${x}`) });
+  const hnQ = numStep('hn', 'join:askHouse', 'join:badHouse', (x) => (/^\d{1,4}$/.test(String(x)) ? (x === '0' || Number(x) === 0 ? 'ללא' : String(Number(x))) : ''), 4, 1,
+    (x) => (x === 'ללא' ? 'ללא מספר בית' : `מספר בית ${x}`));
   if (hnQ.ask) return hnQ.ask;
   const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val };
   const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
@@ -160,7 +170,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if ((o = yn('fxq', 'join:faxQ'))) return o;
   let fax = '';
   if (v.fxq === '1') {
-    const q = await field('fx', 'v:askFax', REC_MAX, { parse: num(normalizeFax), bad: 'join:badFax', sayOf: spaced });
+    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
     if (q.ask) return q.ask;
     fax = q.val;
   }
@@ -196,9 +206,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const saved = await save(env, {
     id, phone, phone2, fax, all, texts, email, addr, callId: String(v.ApiCallId || ''), channel: CHANNEL, version: VERSION,
     files: {
-      'הקלטת תעודת זהות': rec('id'), 'הקלטת שם פרטי': rec('fn'), 'הקלטת שם משפחה': rec('ln'),
-      'הקלטת עיר': rec('ct'), 'הקלטת רחוב': rec('st'), 'הקלטת מספר בית': rec('hn'), ...(phone2 ? { 'הקלטת טלפון נוסף': rec('p2') } : {}),
-      ...(v.pc !== '1' ? { 'הקלטת טלפון': rec('ph') } : {}), ...(fax ? { 'הקלטת פקס': rec('fx') } : {}), ...(email ? { 'הקלטת אימייל': rec('em') } : {}), ...(!all ? { 'הקלטת חברות': rec('cl') } : {}),
+      'הקלטת שם פרטי': rec('fn'), 'הקלטת שם משפחה': rec('ln'),
+      'הקלטת עיר': rec('ct'), 'הקלטת רחוב': rec('st'), 
+      ...(email ? { 'הקלטת אימייל': rec('em') } : {}), ...(!all ? { 'הקלטת חברות': rec('cl') } : {}),
     },
   });
   v.finished = true;
