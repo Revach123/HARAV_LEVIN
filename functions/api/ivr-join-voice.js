@@ -9,7 +9,7 @@
 //  נרשם באותה טבלה ובאותה הצפנה כמו שלוחה 1 (save מ-ivr-join.js), עם ערוץ "טלפון - דיבור (ElevenLabs)".
 //  משתנים (כל ניסיון במשתנה חדש, כי ימות שומרת את הערך הישן):
 //    <f>_<n> הקלטה n של השדה f (id, fn, ln, ph, p2, ct, st, hn, em, fx, cl), <f>_c<n> אישור (1) / הקלטה חוזרת (2)
-//    pc = טלפון המתקשר (1) / אחר (2), p2q = טלפון נוסף כן (1) / לא (2), fxq = פקס כן (1) / לא (2), emq = אימייל כן (1) / לא (2), ch = כל החברות (1) / מסוימות (2), rd / ag כמו בשלוחה 1
+//    pc = טלפון המתקשר (1) / אחר (2), p2q = טלפון נוסף כן (1) / לא (2), emq = אימייל כן (1) / לא (2), ch = כל החברות (1) / מסוימות (2), rd / ag כמו בשלוחה 1
 //  התקדמות השיחה נשמרת מוצפנת בשרת (ivr_join_voice_state), כמו בשלוחה 1.
 //  ext.ini (שלוחה 3):  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join-voice / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: ELEVENLABS_API_KEY, YEMOT_TOKEN (הורדת ההקלטות), IVR_SECRET_NEW, JOINERS_KEY, binding DB.
@@ -22,7 +22,7 @@ import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join-common.js';
 import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
-import { save, normalizeFax, spellEmail } from './ivr-join.js';
+import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation } from './_shared/join-mail.js';
 import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
@@ -33,7 +33,7 @@ const VERSION = 'טלפוני-דיבור-1';
 const CHANNEL = 'טלפון - דיבור (ElevenLabs, שלוחה 3)';
 
 // ---- מצב שיחה מוצפן (ivr_join_voice_state) ----
-const keepKey = (k) => ['pc', 'p2q', 'fxq', 'emq', 'cv', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z]+_c?\d+$/.test(k);
+const keepKey = (k) => ['pc', 'p2q', 'emq', 'emok', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z0-9]+_[a-z]*\d+$/.test(k);
 const STATE_TTL_MS = 6 * 3600 * 1000;
 async function loadState(env, callId) {
   if (!callId) return {};
@@ -95,8 +95,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שדה בדיבור: הקלטה -> ElevenLabs -> (parse) -> "זוהה: ..." -> 1 = אישור, 2 = הקלטה חוזרת.
   // parse מחזיר את הערך או '' (לא תקין -> bad + הקלטה חוזרת); sayOf = איך מקריאים את הערך חזרה.
   // langs: שפות הזיהוי (['he'] = עברית; '' = אוטומטי). עם יותר משפה אחת parse מקבל את כל הזיהויים (מערך).
-  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = 'heard' } = {}) => {
+  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = 'heard', tapFail = false } = {}) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
+    if (S(name, 'tap') === '1') return { tap: true };          // tapFail: אחרי ניסיון אחד שנכשל עוברים להקשה
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
     const askAt = (i, pre = '') => readRecord(pre + (i === 0 ? intro : '') + P(ask), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
@@ -110,9 +111,15 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       setS(name, 'raw', t); setS(name, 'x', t ? parse(langs ? texts : t) : ''); setS(name, 't', n);
     }
     const val = S(name, 'x') || '';
-    if (!val) { setS(name, 'n', n + 1); return { ask: askAt(n + 1, `${P(S(name, 'raw') ? bad : 'join:noHear')}.`) }; }
+    if (!val) {
+      if (tapFail) { setS(name, 'tap', '1'); return { tap: true }; }
+      setS(name, 'n', n + 1); return { ask: askAt(n + 1, `${P(S(name, 'raw') ? bad : 'join:noHear')}.`) };
+    }
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { val }; }
-    if (v[ck] === '2') { setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
+    if (v[ck] === '2') {
+      if (tapFail) { setS(name, 'tap', '1'); return { tap: true }; }
+      setS(name, 'n', n + 1); return { ask: askAt(n + 1) };
+    }
     return { ask: readTap(`${P(heard)}.${T(sayOf(val))}.${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
   // מספרים (ת.ז., טלפון, פקס, מספר בית) בהקשה, כמו בשלוחה 1: ספרות + סולמית, הקראה חוזרת לאישור (1) או שינוי (2).
@@ -166,27 +173,28 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if (hnQ.ask) return hnQ.ask;
   const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val };
   const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
-  // 6. פקס (רשות)
-  if ((o = yn('fxq', 'join:faxQ'))) return o;
-  let fax = '';
-  if (v.fxq === '1') {
-    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
-    if (q.ask) return q.ask;
-    fax = q.val;
-  }
-  // 6ב. אימייל (רשות): בדיבור, אות אחר אות; זיהוי בעברית ובזיהוי שפה אוטומטי, הקראה אות אחר אות ואישור
+  // 6. אימייל (רשות): בדיבור, אות אחר אות; אחרי ניסיון אחד שנכשל (לא זוהה / שונה) - הקשה במקשי הטלפון (כמו בשלוחה 1)
   if ((o = yn('emq', 'join:emailQ'))) return o;
   let email = '';
   if (v.emq === '1') {
-    const q = await field('em', 'v:askEmail', REC_ADDR_MAX, { langs: ['he', ''], parse: pickEmail, bad: 'v:badEmail', sayOf: spellEmail, heard: 'join:emailHeard' });
+    const q = await field('em', 'v:askEmail', REC_ADDR_MAX, { langs: ['he', ''], parse: pickEmail, bad: 'v:badEmail', sayOf: spellEmail, heard: 'join:emailHeard', tapFail: true });
     if (q.ask) return q.ask;
-    email = q.val;
+    if (q.tap) {
+      const t = await emailStep({ v, P, askKey: 'v:emailType' });
+      if (t.ask) return t.ask;
+      email = t.email || '';
+    } else email = q.val;
   }
-  // 6ג. אופן קבלת האישור: מייל (1) או פקס (2) - נשאל רק כשנמסרו שניהם; אם נמסר רק אחד, האישור יישלח אליו
-  let via = email ? 'mail' : fax ? 'fax' : '';
-  if (email && fax) {
-    if (v.cv !== '1' && v.cv !== '2') return readTap(P('join:confirmVia'), 'cv', ['1', '2'], { empty: EMPTY });
-    via = v.cv === '2' ? 'fax' : 'mail';
+  // 6ב. אישור: ברירת מחדל - למייל שהוזן. אפשר לבקש גם (או רק, כשאין מייל) בפקס: 1 = כן, כל תשובה אחרת / שתיקה = בלי פקס
+  if (S('cv', 'a') == null) {
+    if (!has(v, 'cv')) return readTap(P(email ? 'v:confirmAlsoFax' : 'v:confirmFax'), 'cv', null, { max: 1, min: 0, wait: 7, empty: EMPTY });
+    setS('cv', 'a', v.cv === '1' ? '1' : '0');
+  }
+  let fax = '';
+  if (S('cv', 'a') === '1') {
+    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
+    if (q.ask) return q.ask;
+    fax = q.val;
   }
   // 7. כל החברות / חברות מסוימות (שמות בדיבור)
   if (v.ch !== '1' && v.ch !== '2') return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
@@ -219,9 +227,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     const companies = all ? [] : (texts.cl ? texts.cl.split(/\s*[,،]\s*|\s+ו(?=[א-ת])/).filter(Boolean) : ['(לפי ההקלטה)']);
     const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
     try {
-      if (via === 'fax') faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
-      else mailSent = await sendConfirmation(env, email, conf);
-    } catch { mailSent = false; faxQueued = false; }
+      if (email) mailSent = await sendConfirmation(env, email, conf);
+      if (fax) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
+    } catch { /* כשל בשליחה לא פוגע בהרשמה */ }
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
   return `id_list_message=${P('join:okHello')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
