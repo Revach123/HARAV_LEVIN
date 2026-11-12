@@ -1422,6 +1422,13 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "v:okTitle": {
+  "text": "אִישּׁוּר הַצְטַרְפוּת",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_a24cfe00b307e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "v:spelling": {
   "text": "וְהָאִיּוּת",
   "voice": "he-IL-AvriNeural",
