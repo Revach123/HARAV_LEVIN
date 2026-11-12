@@ -23,7 +23,7 @@ def call(url, data=None):
 
 def main():
     doc_id, fax = sys.argv[1], re.sub(r"\D", "", sys.argv[2])
-    if not ID_RE.match(doc_id) or not re.match(r"^0\d{8,9}$", fax): sys.exit("bad args")
+    if not ID_RE.match(doc_id) or not re.match(r"^0\d{8,10}$", fax): sys.exit("bad args")
     rows = d1(f"SELECT file_key, original_name FROM permit_docs WHERE id = '{doc_id}'")
     if not rows or not KEY_RE.match(str(rows[0]["file_key"])): sys.exit("doc not found")
     with tempfile.TemporaryDirectory() as td:

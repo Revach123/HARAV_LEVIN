@@ -17,12 +17,12 @@ const PER_CALL = 3, PER_FAX_DAY = 5, DAILY_DEFAULT = 50;
 
 export const faxEnabled = (env) => !!String(env.FAX_API_KEY || '').trim() && String(env.FAX_OFF || '') !== '1' && !!env.PERMITS;
 
-// מספר פקס ישראלי: 0 ואחריו 8-9 ספרות (02-1234567, 072-1234567, 153-...). מחזיר ספרות בלבד או ''.
+// מספר פקס ישראלי: 0 ואחריו 8-10 ספרות (02-1234567, 072-1234567, 153-...). מחזיר ספרות בלבד או ''.
 export function normFax(s) {
   const d = String(s || '').replace(/\D/g, '');
-  if (/^0\d{8,9}$/.test(d)) return d;
+  if (/^0\d{8,10}$/.test(d)) return d;
   if (/^153\d{7,8}$/.test(d)) return d;                 // קידומת 153 (פקס לטלפון): ספק הפקס מקבל כמו שהוא
-  if (/^972\d{8,9}$/.test(d)) return '0' + d.slice(3);
+  if (/^972\d{8,10}$/.test(d)) return '0' + d.slice(3);
   return '';
 }
 
