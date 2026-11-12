@@ -201,7 +201,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if ((o = yn('fxq', 'v:faxQ'))) return o;
   let fax = '';
   if (v.fxq === '1') {
-    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
+    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 11, 9);
     if (q.ask) return q.ask;
     fax = q.val;
   }
@@ -242,7 +242,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (S('cv', 'a') === '1') {
       faxConfirm = true;
       if (!fax) {
-        const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
+        const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 11, 9);
         if (q.ask) return q.ask;
         fax = q.val;
       }

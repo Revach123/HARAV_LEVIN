@@ -20,7 +20,7 @@
 //  1 = נקודה, 11 = מקף, 111 = קו תחתון) או מספרים (ספרה אחת = הספרה). בשני המצבים: 10 = מחיקה, 01 = עזרה, וסיום = סולמית לבדה (סולמית פעמיים ברצף).
 //  ('00' אינו סיום: ייתכן 00 בכתובת)
 //  ואחר כך סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור.
-//  פקס: 9-10 ספרות (גם עם קידומת 153). בסוף - הקראת נוסח אישור הרישום.
+//  פקס: 9-11 ספרות (גם עם קידומת 153). בסוף - הקראת נוסח אישור הרישום.
 //  כל שאלה שלא נענתה נשאלת שוב ושוב (אותו משתנה), בלי הגבלת ניסיונות.
 //  ההקלטות נשמרות בימות בתיקיית השלוחה (IVR_JOIN_REC_FOLDER, ברירת מחדל /1); נתיבן נשמר ברשומה (שדות "הקלטת ..." בהערות).
 //  ext.ini:  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
@@ -110,11 +110,11 @@ export async function onRequest({ request, env, waitUntil }) {
 const has = (v, k) => Object.prototype.hasOwnProperty.call(v, k);
 const empty = (x) => !x || x === EMPTY;
 
-// פקס: מספר רגיל (0 + 8-9 ספרות) או מספר עם קידומת 153 (עד 10 ספרות בסך הכול)
+// פקס: מספר רגיל (0 + 8-10 ספרות) או מספר עם קידומת 153 (עד 11 ספרות בסך הכול)
 export const normalizeFax = (x) => {
   let d = String(x || '').replace(/\D/g, '');
   if (d.startsWith('972')) d = '0' + d.slice(3);
-  return /^(0\d{8,9}|153\d{6,7})$/.test(d) ? d : '';
+  return /^(0\d{8,10}|153\d{6,8})$/.test(d) ? d : '';
 };
 const T = (txt) => `t-${ttsClean(txt)}`;                       // טקסט דינמי ב-TTS של ימות
 const spaced = (d) => String(d).split('').join(' ');            // ספרות מוקראות אחת אחת
@@ -329,11 +329,11 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     email = q.email || '';
   }
 
-  // 7. פקס (רשות): 9-10 ספרות, גם עם קידומת 153
+  // 7. פקס (רשות): 9-11 ספרות, גם עם קידומת 153
   if ((o = yn('fxq', 'join:faxQ'))) return o;
   let fax = '';
   if (v.fxq === '1') {
-    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9, 'join:lblFax');
+    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 11, 9, 'join:lblFax');
     if (q.ask) return q.ask;
     fax = q.val;
   }

@@ -30,12 +30,12 @@ export async function onRequest({ request, env, waitUntil }) {
   let fax = '';
   for (let n = 0; n < 20 && !fax; n++) {
     const key = `fx_${n}`, ck = `fx_c${n}`;
-    const ask = (pre = '') => text(readTap(`${n === 0 ? `${T('בדיקת שליחת אישור הצטרפות לפקס')}.` : ''}${pre}${P('join:askFax')}`, key, null, { max: 10, min: 9, empty: EMPTY }));
+    const ask = (pre = '') => text(readTap(`${n === 0 ? `${T('בדיקת שליחת אישור הצטרפות לפקס')}.` : ''}${pre}${P('join:askFax')}`, key, null, { max: 11, min: 9, empty: EMPTY }));
     if (!has(v, key) || !v[key] || v[key] === EMPTY) return ask();
     const val = normalizeFax(v[key]);
-    if (!val) { if (!has(v, `fx_${n + 1}`)) return text(readTap(`${P('join:badFax')}.${P('join:askFax')}`, `fx_${n + 1}`, null, { max: 10, min: 9, empty: EMPTY })); continue; }
+    if (!val) { if (!has(v, `fx_${n + 1}`)) return text(readTap(`${P('join:badFax')}.${P('join:askFax')}`, `fx_${n + 1}`, null, { max: 11, min: 9, empty: EMPTY })); continue; }
     if (v[ck] === '1') { fax = val; break; }
-    if (v[ck] === '2') { if (!has(v, `fx_${n + 1}`)) return text(readTap(P('join:askFax'), `fx_${n + 1}`, null, { max: 10, min: 9, empty: EMPTY })); continue; }
+    if (v[ck] === '2') { if (!has(v, `fx_${n + 1}`)) return text(readTap(P('join:askFax'), `fx_${n + 1}`, null, { max: 11, min: 9, empty: EMPTY })); continue; }
     return text(readTap(`${T(val.split('').join(' '))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }));
   }
   if (!fax) return done('join:error');
