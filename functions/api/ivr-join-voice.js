@@ -276,7 +276,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     } catch { /* כשל בשליחה לא פוגע בהרשמה */ }
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
-  return `id_list_message=${P('join:okHello')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
+  return `id_list_message=${P('v:okTitle')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
 }
 
 const text = (body) => new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
