@@ -34,7 +34,7 @@ const VERSION = 'טלפוני-דיבור-1';
 const CHANNEL = 'טלפון - דיבור (ElevenLabs, שלוחה 3)';
 
 // ---- מצב שיחה מוצפן (ivr_join_voice_state) ----
-const keepKey = (k) => ['pc', 'p2q', 'emq', 'emok', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z0-9]+_[a-z]*\d+$/.test(k);
+const keepKey = (k) => ['pc', 'p2q', 'fxq', 'emq', 'emok', 'ch', 'rd', 'ag'].includes(k) || /^s_/.test(k) || /^[a-z0-9]+_[a-z]*\d+$/.test(k);
 const STATE_TTL_MS = 6 * 3600 * 1000;
 async function loadState(env, callId) {
   if (!callId) return {};
@@ -197,6 +197,14 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (q.ask) return q.ask;
     phone2 = q.val;
   }
+  // 4ג. פקס (רשות): מי שמוסיף פקס יכול לקבל בו את אישור ההצטרפות
+  if ((o = yn('fxq', 'v:faxQ'))) return o;
+  let fax = '';
+  if (v.fxq === '1') {
+    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
+    if (q.ask) return q.ask;
+    fax = q.val;
+  }
   // 5. כתובת: עיר, רחוב ומספר בית (שלוש הקלטות). "אין" = בלי מספר בית
   const ctQ = await field('ct', 'v:askCity', REC_MAX);
   if (ctQ.ask) return ctQ.ask;
@@ -208,7 +216,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const addr = { city: ctQ.val, street: stQ.val, house: hnQ.val === 'ללא' ? '' : hnQ.val };
   const adQ = { val: [[addr.street, addr.house].filter(Boolean).join(' '), addr.city].filter(Boolean).join(', ') };
   // 6. אימייל (רשות): בדיבור, אות אחר אות; אחרי ניסיון אחד שנכשל (לא זוהה / שונה) - הקשה במקשי הטלפון (כמו בשלוחה 1)
-  if ((o = yn('emq', 'join:emailQ'))) return o;
+  if ((o = yn('emq', 'v:emailQ'))) return o;
   let email = '';
   if (v.emq === '1') {
     const q = await field('em', 'v:askEmail', REC_ADDR_MAX, { langs: ['he', ''], parse: pickEmail, bad: 'v:badEmail', sayOf: spellEmail, heard: 'join:emailHeard', tapAfter: 1 });
@@ -219,16 +227,14 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       email = t.email || '';
     } else email = q.val;
   }
-  // 6ב. אישור: ברירת מחדל - למייל שהוזן. אפשר לבקש גם (או רק, כשאין מייל) בפקס: 1 = כן, כל תשובה אחרת / שתיקה = בלי פקס
-  if (S('cv', 'a') == null) {
-    if (!has(v, 'cv')) return readTap(P(email ? 'v:confirmAlsoFax' : 'v:confirmFax'), 'cv', null, { max: 1, min: 0, wait: 7, empty: EMPTY });
-    setS('cv', 'a', v.cv === '1' ? '1' : '0');
-  }
-  let fax = '';
-  if (S('cv', 'a') === '1') {
-    const q = numStep('fx', 'join:askFax', 'join:badFax', normalizeFax, 10, 9);
-    if (q.ask) return q.ask;
-    fax = q.val;
+  // 6ב. אישור ההצטרפות: למייל שהוזן; אם נמסר גם פקס - אפשר לקבל גם בפקס (1 = כן, כל תשובה אחרת / שתיקה = למייל בלבד). פקס בלי מייל - האישור נשלח לפקס
+  let faxConfirm = !!fax && !email;
+  if (email && fax) {
+    if (S('cv', 'a') == null) {
+      if (!has(v, 'cv')) return readTap(P('v:confirmAlsoFax'), 'cv', null, { max: 1, min: 0, wait: 7, empty: EMPTY });
+      setS('cv', 'a', v.cv === '1' ? '1' : '0');
+    }
+    faxConfirm = S('cv', 'a') === '1';
   }
   // 7. כל החברות / חברות מסוימות (שמות בדיבור)
   if (v.ch !== '1' && v.ch !== '2') return readTap(P('join:choice'), 'ch', ['1', '2'], { empty: EMPTY });
@@ -262,7 +268,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
     try {
       if (email) mailSent = await sendConfirmation(env, email, conf);
-      if (fax) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
+      if (fax && faxConfirm) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
     } catch { /* כשל בשליחה לא פוגע בהרשמה */ }
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
