@@ -453,8 +453,8 @@ function typeStep(v, P, name, askKey, max = 64) {
 
 // כתובת המייל: החלק שלפני @ בהקשה, ואז סיומת מרשימה (0 = הקשת סיומת אחרת באותה דרך), הקראה ואישור (2 = הקשה מחדש).
 // מצב: s_em_k ניסיון (משתני em_d<k> / em_c<k>), s_em_note הערה לשאלה הבאה.
-async function emailStep(ctx) {
-  const { v, P } = ctx;
+export async function emailStep(ctx) {
+  const { v, P, askKey = 'join:emailType' } = ctx;
   if (v.emok) return { email: v.emok };
   if (v.emskip === '1') return {};
   const S = (k, d = '') => (v[`s_em_${k}`] == null ? d : v[`s_em_${k}`]);
@@ -466,7 +466,7 @@ async function emailStep(ctx) {
     return emailStep(ctx);
   };
 
-  const lq = typeStep(v, P, 'eml', 'join:emailType');
+  const lq = typeStep(v, P, 'eml', askKey);
   if (lq.ask) { const note = noteTake(); return { ask: note ? lq.ask.replace(/^read=/, `read=${note}`) : lq.ask }; }
   const local = lq.val;
 
