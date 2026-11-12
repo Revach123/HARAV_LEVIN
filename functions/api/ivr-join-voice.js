@@ -96,7 +96,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שדה בדיבור: הקלטה -> ElevenLabs -> (parse) -> "זוהה: ..." -> 1 = אישור, 2 = הקלטה חוזרת.
   // parse מחזיר את הערך או '' (לא תקין -> bad + הקלטה חוזרת); sayOf = איך מקריאים את הערך חזרה.
   // langs: שפות הזיהוי (['he'] = עברית; '' = אוטומטי). עם יותר משפה אחת parse מקבל את כל הזיהויים (מערך).
-  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = 'heard', tapAfter = 0, spellOut = false } = {}) => {
+  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = '', tapAfter = 0, spellOut = false } = {}) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
     if (S(name, 'tap') === '1') return { tap: true };          // tapAfter: אחרי כמה ניסיונות שנכשלו עוברים להקשה
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
@@ -121,7 +121,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
       setS(name, 'n', n + 1); return { ask: askAt(n + 1) };
     }
-    return { ask: readTap(`${P(heard)}.${T(sayOf(val))}.${spellOut ? spelled(val) : ''}${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    return { ask: readTap(`${heard ? `${P(heard)}.` : ''}${T(sayOf(val))}.${spellOut ? spelled(val) : ''}${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
 
   // איות מוקרא של שם: אות אחר אות (אותיות סופיות כרגילות), בהקלטות הקבועות letter:<אות>

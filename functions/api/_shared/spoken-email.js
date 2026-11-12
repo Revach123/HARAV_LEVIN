@@ -58,6 +58,8 @@ function spokenChars(t) {
     .replace(/שטרודל|\bat sign\b|\bat\b/g, '@').replace(/נקודה|דוט|\bdot\b|\bpoint\b/g, '.')
     .replace(/קו תחתון|\bunder\s?score\b/g, '_').replace(/מקף|\bdash\b|\bhyphen\b/g, '-');
   e = e.split(/[\s,;:]+/).filter(Boolean).map((tok) => {
+    // זיהוי דיבור מחבר אותיות מאויתות במקפים ("a-z-z-l-e-v-y"): אות/ספרה בודדת, 3 קטעים לפחות = איות, לא מקף בכתובת
+    if (/^[a-z0-9](-[a-z0-9]){2,}$/.test(tok)) tok = tok.replace(/-/g, '');
     const bare = tok.replace(/[.]+$/, '').replace(/^[.]+/, (m) => m);      // נקודה בסוף אסימון היא פיסוק של הזיהוי
     if (/^[a-z]$/.test(bare)) return bare;
     return EN_LETTERS[bare] || HE_LETTERS[bare] || DIGITS[bare] || segmentHebrew(bare) || tok;
