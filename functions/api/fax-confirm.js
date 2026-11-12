@@ -6,6 +6,7 @@
 import { importKeyForWrite, decryptPii } from './_shared/joiners-crypto.js';
 import { TABLE } from './_shared/join-fax-confirm.js';
 import { postFax, reserve, normFax } from './_shared/ivr-fax.js';
+import { markFaxSent } from './_shared/join-mail.js';
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' } });
 
@@ -30,15 +31,17 @@ export async function onRequest({ request, env }) {
     if (!row) return json({ ok: false, error: 'not pending' }, 404);
     const bytes = await request.arrayBuffer();
     if (bytes.byteLength < 200 || new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') return json({ ok: false, error: 'not a pdf' }, 400);
-    let status = 'failed', response = '';
+    let status = 'failed', response = '', jid = '';
     try {
-      const fax = normFax((await decryptPii(key, id, row.data)).fax);
+      const d = await decryptPii(key, id, row.data), fax = normFax(d.fax);
+      jid = d.jid || '';
       if (!fax) throw new Error('bad fax number');
       const res = await reserve(env, { callId: 'conf-' + id, slot: 'confirm', caller: '', fax, chp: '', company: '', kind: 'אישור הצטרפות', docId: id });
       if (!res.id) throw new Error(res.limit ? 'limit' : 'duplicate');
       ({ status, response } = await postFax(env, fax, bytes, 'confirmation.pdf'));
       try { await env.DB.prepare('UPDATE ivr_fax_log SET status = ?, response = ? WHERE id = ?').bind(status, response, res.id).run(); } catch { /* ignore */ }
     } catch (e) { response = String((e && e.message) || e).slice(0, 200); }
+    if (status === 'sent') await markFaxSent(env, jid);
     await env.DB.prepare('UPDATE join_fax_confirm SET status = ?, data = ?, response = ? WHERE id = ?').bind(status, '', response, id).run();          // הפרטים נמחקים
     return json({ ok: status === 'sent', status });
   }

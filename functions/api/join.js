@@ -6,7 +6,7 @@
 //   תשובה: { ok: true, ref } - מספר אסמכתא קצר, בלי שום פרט אישי.
 // הפרטים האישיים מוצפנים כאן (AES-256-GCM, המפתח JOINERS_KEY) באותו פורמט של joiners_import.py, ונכתבים לטבלה joiners (migrations/0017).
 // בלוגים לא נרשם שום פרט אישי.
-import { sendConfirmation, buildConfirmation } from "./_shared/join-mail.js";
+import { sendConfirmation, buildConfirmation, markMailSent } from "./_shared/join-mail.js";
 import { getAgreement } from "./_shared/agreement.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
@@ -86,7 +86,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', ?, ?, ?)")
       .bind(rid, now, sha, ih, await encryptPii(key, rid, payload)).run();
     if (email && via === "mail") {
-      const task = sendConfirmation(env, email, conf);
+      const task = sendConfirmation(env, email, conf).then(ok => (ok ? markMailSent(env, rid) : null));
       if (waitUntil) waitUntil(task); else await task;
     }
     return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && via === "mail" && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });

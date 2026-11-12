@@ -25,7 +25,7 @@ import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleve
 import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
 import { tapLetter } from './_shared/ivr-addr.js';
 import { pickEmail } from './_shared/spoken-email.js';
-import { sendConfirmation } from './_shared/join-mail.js';
+import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
 import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
 
 const EMPTY = 'NONE';
@@ -271,8 +271,8 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     const companies = all ? [] : (texts.cl ? texts.cl.split(/\s*[,،]\s*|\s+ו(?=[א-ת])/).filter(Boolean) : ['(לפי ההקלטה)']);
     const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
     try {
-      if (email) mailSent = await sendConfirmation(env, email, conf);
-      if (fax && faxConfirm) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf);
+      if (email) { mailSent = await sendConfirmation(env, email, conf); if (mailSent) await markMailSent(env, saved); }
+      if (fax && faxConfirm) faxQueued = await queueFaxConfirmation(env, waitUntil, callId, fax, conf, saved);
     } catch { /* כשל בשליחה לא פוגע בהרשמה */ }
   }
   const name = `${texts.fn} ${texts.ln}`.trim();
