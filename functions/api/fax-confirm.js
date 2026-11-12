@@ -22,7 +22,9 @@ export async function onRequest({ request, env }) {
     const rows = (await env.DB.prepare("SELECT id, data FROM join_fax_confirm WHERE status = 'pending' AND at > ? ORDER BY at LIMIT 5").bind(Date.now() - 3 * 24 * 3600 * 1000).all()).results || [];
     const items = [];
     for (const r of rows) { try { items.push({ id: r.id, html: (await decryptPii(key, r.id, r.data)).html }); } catch { /* שורה פגומה: מדלגים */ } }
-    return json({ ok: true, items });
+    // אבחון (בלי פרטים אישיים): התור לפי מצב, והרשומות האחרונות
+    const last = ((await env.DB.prepare('SELECT at, status, response FROM join_fax_confirm ORDER BY at DESC LIMIT 5').all()).results || []).map((r) => ({ at: new Date(r.at).toISOString(), status: r.status, response: String(r.response || '').slice(0, 120) }));
+    return json({ ok: true, items, last });
   }
 
   if (request.method === 'POST') {
