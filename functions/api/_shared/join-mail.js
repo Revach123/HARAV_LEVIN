@@ -53,6 +53,22 @@ export async function sendMail(env, { to, subject, html, text, replyTo, amp, cc 
   } catch { return false; }
 }
 
+// רישום בטבלת joiner_mail (אותה טבלה של joiners-confirm.js) שמייל האישור נשלח למצטרף - לתצוגת "אישור" ברשימת המצטרפים
+export async function markMailSent(env, joinerId) {
+  if (!env.DB || !joinerId) return;
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_mail (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
+    await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(String(joinerId)).run();
+  } catch { /* תצוגה בלבד: לא פוגע בהרשמה */ }
+}
+export async function markFaxSent(env, joinerId) {
+  if (!env.DB || !joinerId) return;
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_fax (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
+    await env.DB.prepare("INSERT OR REPLACE INTO joiner_fax (id, sent_at) VALUES (?, datetime('now'))").bind(String(joinerId)).run();
+  } catch { /* תצוגה בלבד */ }
+}
+
 export async function sendConfirmation(env, to, data) {
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {

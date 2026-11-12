@@ -12,7 +12,7 @@ import { getAgreement } from './agreement.js';
 export const TABLE = 'CREATE TABLE IF NOT EXISTS join_fax_confirm (id TEXT PRIMARY KEY, at INTEGER, status TEXT, data TEXT, response TEXT DEFAULT \'\')';
 
 /** רושם אישור לשליחה בפקס. conf = אותם שדות כמו ל-sendConfirmation (first,last,id,date,all,companies,origin). מחזיר true אם נרשם. */
-export async function queueFaxConfirmation(env, waitUntil, callId, fax, conf) {
+export async function queueFaxConfirmation(env, waitUntil, callId, fax, conf, joinerId = '') {
   try {
     if (!env.DB || !fax || !env.FAX_API_KEY || String(env.FAX_OFF || '') === '1') return false;
     const ag = await getAgreement(env);
@@ -21,7 +21,7 @@ export async function queueFaxConfirmation(env, waitUntil, callId, fax, conf) {
     const key = await importKeyForWrite(env);
     await env.DB.prepare(TABLE).run();
     await env.DB.prepare('INSERT INTO join_fax_confirm (id, at, status, data) VALUES (?, ?, ?, ?)')
-      .bind(id, Date.now(), 'pending', await encryptPii(key, id, { fax, html })).run();
+      .bind(id, Date.now(), 'pending', await encryptPii(key, id, { fax, html, jid: String(joinerId || '') })).run();
     trigger(env, waitUntil);
     return true;
   } catch (e) { console.log(`join-fax-confirm queue: ${e && e.message}`); return false; }

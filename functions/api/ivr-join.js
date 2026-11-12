@@ -33,7 +33,7 @@ import MANIFEST from './_shared/ivr_audio_manifest.js';
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/joiners-crypto.js';
 import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
-import { sendConfirmation } from './_shared/join-mail.js';
+import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
 import { spokenEmail } from './_shared/spoken-email.js';
 import { spokenLetters } from './_shared/spoken-letters.js';
 import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
@@ -374,6 +374,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'),
       all, companies, origin,
     });
+    if (mailSent) await markMailSent(env, saved);
   }
   // הקראת נוסח האישור: "שלום <שם> ת.ז. <...>, הרינו לאשר בזאת שהתקבל הרישום..."
   const name = `${texts.fn} ${texts.ln}`.trim();
@@ -538,7 +539,7 @@ export async function save(env, { id, phone, phone2, fax, all, files, texts = {}
   };
   await env.DB.prepare("INSERT INTO joiners (id, submitted_at, cancelled_at, file_sha256, ident_hash, pii) VALUES (?, ?, '', '', ?, ?)")
     .bind(rid, now, ih, await encryptPii(key, rid, payload)).run();
-  return true;
+  return rid;          // מזהה השורה (truthy): לסימון שאישור נשלח
 }
 
 const text = (body) => new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });

@@ -2562,14 +2562,14 @@
 
   // ───────── מצטרפים להיתר עיסקא (נתונים אישיים: מנהל בלבד; מפוענחים בשרת ונשארים רק בזיכרון הדף) ─────────
   const J_HIDDEN_TOOLS = false;          // כפתורי "שגיאות כתיב באימייל" ו"כפילויות האתר הישן" מוסתרים בינתיים (הקוד נשאר; true להצגה)
-  const J = { mailSent: {}, rows: null, total: 0, cancels: 0, loading: false, err: "", q: "", f: "all", fa: "all", cf: {}, shown: 200, open: "", view: "list", cl: null, clErr: "" };
+  const J = { mailSent: {}, faxSent: {}, rows: null, total: 0, cancels: 0, loading: false, err: "", q: "", f: "all", fa: "all", cf: {}, shown: 200, open: "", view: "list", cl: null, clErr: "" };
   const jUserBusy = () => { const a = document.activeElement, b = $("pd-nd-body"); return !!(J.q || J.f !== "all" || J.fa !== "all" || Object.values(J.cf).some(v => String(v || "").trim()) || (a && b && b.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))); };
   const jProg = () => { const el = $("pd-j-prog"); if (el) el.textContent = J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""; };
   async function jLoad() {
     if (J.loading || J.rows) return;
     J.loading = true; J.err = ""; J.rows = [];
     if (!J.nedStarted) { J.nedStarted = true; jNedBg(); }          // פעם אחת בכל טעינה של הניהול
-    J.mailLoaded = false; api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; J.mailLoaded = true; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});          // מי קיבל אישור: נטען במקביל לרשימה (עד שנטען - העמודה ריקה, ולא "לא נשלח")
+    J.mailLoaded = false; api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; J.faxSent = r.fax || {}; J.mailLoaded = true; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});          // מי קיבל אישור: נטען במקביל לרשימה (עד שנטען - העמודה ריקה, ולא "לא נשלח")
     try {
       for (let off = 0; ; off += 400) {
         const r = await api(`/joiners?offset=${off}&limit=400`);
@@ -2593,7 +2593,7 @@
     J.nedBusy = false; jNedSpin();
     if (added) { if (J.loading) J.needReload = true; else { J.rows = null; jLoad(); } }
     // אישורים שנשלחו במשיכה: מרעננים את עמודת "אישור במייל" גם אם הרשימה כבר נטענה (אחרת נשאר "לא נשלח" עד רענון הדף)
-    else if (mailed && J.rows) api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});
+    else if (mailed && J.rows) api("/joiners-confirm").then(r => { J.mailSent = r.sent || {}; J.faxSent = r.fax || {}; if (ND.tab === "e" && !jUserBusy()) ndShow(); }).catch(() => {});
   }
   const jName = r => `${r.first} ${r.last}`.trim() || "(בלי שם)";
   const jDate = v => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; };          // יום/חודש/שנה
@@ -2664,14 +2664,19 @@
     { k: "addr", h: "כתובת", v: r => jX(r).addr },
     { k: "co", h: "חברות", wide: 1, v: r => { const nd = jNdChoice(r); return (r.all || nd === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || (nd === "some" ? "חברות נבחרות מהרשימה" : "")); } },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
-    { k: "mail", h: "אישור במייל", nar: 1, v: r => (/^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()) ? (!J.mailLoaded ? "" : J.mailSent[r.id] ? "נשלח" : "לא נשלח") : "אין מייל") },
+    { k: "mail", h: "אישור", nar: 1, v: r => {          // שורה למייל ושורה לפקס; "אין פרטים לשליחה" כשאין מייל תקין ואין פקס
+      const em = /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(String(r.email || "").trim()), fx = String(jX(r).fax || "").trim(), L = [];
+      if (em && J.mailLoaded) L.push(J.mailSent[r.id] ? "נשלח במייל" : "לא נשלח במייל");
+      if (J.faxSent[r.id]) L.push("נשלח בפקס"); else if (fx && !em && J.mailLoaded) L.push("לא נשלח בפקס");
+      return L.join("\n") || (em || fx ? "" : "אין פרטים לשליחה");
+    } },
   ];
   function jFiltered() {
     const f = J.q.trim().toLowerCase(), d = f.replace(/\D/g, "");
     const dup = new Map(); for (const r of J.rows) if (r.ident_hash) dup.set(r.ident_hash, (dup.get(r.ident_hash) || 0) + 1);
     const cfs = J_COLS.map(c => [c, (J.cf[c.k] || "").trim().toLowerCase()]).filter(x => x[1]);
     const rows = J.rows.filter(r => (J.f === "all" || (J.f === "cancelled" ? r.cancelled_at : !r.cancelled_at)) && (J.fa === "all" || (J.fa === "file" ? r.file_sha256 : !r.file_sha256))
-      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v === q; return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
+      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v.includes(q); return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
       && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number} ${jX(r).addr} ${jX(r).phone2}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
     return { rows, dup };
   }
@@ -2702,7 +2707,7 @@
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
     const { rows, dup } = jFiltered(), N = J_COLS.length + 4;
-    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:150px;max-width:240px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:90px;max-width:130px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : E(c.v(r) || "")}${jRecs(r).map((k, i) => J_RECCOL[k] === c.k ? `<button class="pd-mini" style="padding:0 3px;margin-inline-start:4px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>` : "").join("")}</td>`;
+    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:150px;max-width:240px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:90px;max-width:130px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : c.k === "mail" ? E(c.v(r) || "").replace(/\n/g, "<br>") : E(c.v(r) || "")}${jRecs(r).map((k, i) => J_RECCOL[k] === c.k ? `<button class="pd-mini" style="padding:0 3px;margin-inline-start:4px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>` : "").join("")}</td>`;
     const sel = (fn, cur, opts) => `<select class="pd-in pd-jsel" onchange="${fn}(this.value)">${opts.map(([k, l]) => `<option value="${k}"${cur === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>
@@ -2710,7 +2715,7 @@
         <button class="pd-btn" onclick="PD._jSync()">🔄 סנכרון מהאתר הישן</button> <button class="pd-btn" onclick="PD._jMail()">📧 שליחת אישורים</button> <button class="pd-btn" onclick="PD._jNed()">🔄 משיכה מנדרים פלוס</button><span id="pd-j-nedspin" style="margin-inline:6px">${J.nedBusy ? '<span class="pd-spin"></span>' : ""}</span> <button class="pd-btn" onclick="PD._jXl()">📥 ייבוא רשימה (אקסל / CSV)</button> ${J_HIDDEN_TOOLS ? `<button class="pd-btn" onclick="PD._jTypos()">✉️ שגיאות כתיב באימייל</button> <button class="pd-btn" onclick="PD._jOldPairs()">👯 כפילויות האתר הישן</button>` : ""}</div>
       <div class="pd-sub" style="margin-bottom:6px"><span id="pd-j-prog">${J.loading ? `נטען ${J.rows.length} מתוך ${J.total}… ` : ""}</span>${rows.length} מצטרפים בסינון מתוך ${J.total} (בקשות ביטול: ${J.cancels}). לכל עמודה יש שדה חיפוש משלה (שורה מתחת לכותרות). הפרטים האישיים מפוענחים בשרת, רק למנהל, ולא נשמרים בדפדפן. לחיצה על שורה פותחת פרטים.</div>
       <div style="overflow-x:auto;max-width:100%"><table class="pd-nd-tbl pd-jtbl" style="font-size:12px"><thead><tr>${J_COLS.map(c => `<th${c.nar ? ' style="white-space:nowrap"' : ""}>${c.h}</th>`).join("")}<th class="pd-jnar" style="white-space:nowrap">סטטוס</th><th class="pd-jnar" style="white-space:nowrap">אישור</th><th class="pd-j-act">פעולות</th></tr>
-        <tr class="pd-cfrow">${J_COLS.map(c => c.k === "mail" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('mail',this.value)">${[["", "הכל"], ["נשלח", "נשלח"], ["לא נשלח", "לא נשלח (יש מייל)"], ["אין מייל", "אין מייל"]].map(([k, l]) => `<option value="${E(k)}"${(J.cf.mail || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => jGrp(r)).filter(Boolean))].sort((a, b) => (J_GRPS.indexOf(a) + 1 || 99) - (J_GRPS.indexOf(b) + 1 || 99) || a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
+        <tr class="pd-cfrow">${J_COLS.map(c => c.k === "mail" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('mail',this.value)">${[["", "הכל"], ["נשלח במייל", "נשלח במייל"], ["נשלח בפקס", "נשלח בפקס"], ["לא נשלח", "לא נשלח"], ["אין פרטים לשליחה", "אין פרטים לשליחה"]].map(([k, l]) => `<option value="${E(k)}"${(J.cf.mail || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : c.k === "src" ? `<th style="padding:2px 4px;top:30px"><select class="pd-in pd-jsel" aria-label="סינון ${c.h}" onchange="PD._jCF('src',this.value)">${[["", "הכל"], ...[...new Set(J.rows.map(r => jGrp(r)).filter(Boolean))].sort((a, b) => (J_GRPS.indexOf(a) + 1 || 99) - (J_GRPS.indexOf(b) + 1 || 99) || a.localeCompare(b, "he")).map(v => [v, v])].map(([k, l]) => `<option value="${E(k)}"${(J.cf.src || "") === k ? " selected" : ""}>${E(l)}</option>`).join("")}</select></th>` : `<th style="padding:2px 4px;top:30px"><input class="pd-in" id="pd-cf-${c.k}" value="${E(J.cf[c.k] || "")}" oninput="PD._jCF('${c.k}',this.value)" autocomplete="off" aria-label="סינון ${c.h}" placeholder="🔎" style="width:100%;min-width:${c.nar ? 56 : 80}px;padding:2px 4px;font-size:12px"></th>`).join("")}
           <th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jF", J.f, [["all", "הכל"], ["cancelled", "ביטלו"], ["active", "פעילים"]])}</th><th class="pd-jnar" style="padding:2px 4px;top:30px">${sel("PD._jFA", J.fa, [["all", "הכל"], ["file", "יש"], ["nofile", "אין"]])}</th><th class="pd-j-act"></th></tr></thead>
       <tbody>${rows.slice(0, J.shown).map((r, ri) => {
         const n = dup.get(r.ident_hash) || 1, open = J.open === r.id, x = jX(r);

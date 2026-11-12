@@ -19,7 +19,9 @@ export async function onRequestGet({ request, env }) {
   if (!(await checkAdmin(request, env))) return noAuth();
   try { await table(env); } catch { return out({ ok: true, sent: {} }); }
   const rs = (await env.DB.prepare("SELECT id, sent_at FROM joiner_mail").all()).results ?? [];
-  return out({ ok: true, sent: Object.fromEntries(rs.map(r => [r.id, r.sent_at])) });
+  let fx = [];
+  try { fx = (await env.DB.prepare("SELECT id, sent_at FROM joiner_fax").all()).results ?? []; } catch { /* עוד לא נשלח אישור בפקס */ }
+  return out({ ok: true, sent: Object.fromEntries(rs.map(r => [r.id, r.sent_at])), fax: Object.fromEntries(fx.map(r => [r.id, r.sent_at])) });
 }
 
 // שליחה למצטרפים מנדרים פלוס בטווח תאריכים שעדיין לא קיבלו אישור (מנהל, או הרצה אוטומטית עם X-Cron-Secret ב-workflow joiner-nedarim-send).
