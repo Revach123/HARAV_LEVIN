@@ -92,21 +92,21 @@
    "chp_number": "520000118"
   },
   {
-   "id": 10408,
-   "maya_report_id": 1779696,
+   "id": 10426,
+   "maya_report_id": 1781010,
    "company_name": "בינלאומי הנפקות",
    "is_new_company": false,
    "new_company_type": null,
    "draft_no": null,
    "draft_title": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779696",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1781010",
    "link_presentation": null,
    "securities": [
     {
      "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilAAA",
      "midroog_rating": null
     }
    ],
@@ -216,27 +216,6 @@
     }
    ],
    "chp_number": "520042847"
-  },
-  {
-   "id": 10416,
-   "maya_report_id": 1780339,
-   "company_name": "פרטנר",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": 1,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780339",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": "ilAA-",
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "520044314"
   },
   {
    "id": 10121,
@@ -686,16 +665,16 @@
    "last_seen": "2026-11-12"
   },
   {
-   "chp_number": "520044314",
-   "company_name": "פרטנר",
-   "draft_no": 1,
+   "chp_number": "513141879",
+   "company_name": "בינלאומי הנפקות",
+   "draft_no": null,
    "draft_title": null,
-   "id": 10414,
+   "id": 10408,
    "is_new_company": false,
    "link_presentation": null,
    "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780140",
-   "maya_report_id": 1780140,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779696",
+   "maya_report_id": 1779696,
    "new_company_type": null,
    "securities": [
     {
@@ -706,7 +685,7 @@
     }
    ],
    "carried": true,
-   "last_seen": "2026-11-09"
+   "last_seen": "2026-11-12"
   },
   {
    "chp_number": "517220448",
@@ -802,6 +781,31 @@
   }
  ],
  "open": [
+  {
+   "offer_number": 1162163,
+   "issuer_id": 2095,
+   "issuer_name": "פרטנר",
+   "is_new_company": false,
+   "begins_at": "2026-11-16T09:30:00",
+   "ends_at": "2026-11-16T15:30:00",
+   "offer_type": "ריבית",
+   "offering_type": "הצעה אחידה",
+   "interest": 4.73,
+   "is_variable_interest": false,
+   "price_per_unit": 1000,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1781038",
+   "securities": [
+    {
+     "security_id": null,
+     "security_name": "אגח ט",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "ללא",
+     "maalot_rating": "ilAA-",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520044314"
+  },
   {
    "begins_at": "2026-11-11T09:00:00",
    "chp_number": "516901774",
@@ -982,7 +986,7 @@
    "chp_number": "520044314",
    "name": "פרטנר",
    "statuses": [
-    "הנפקה עתידית"
+    "בהנפקה"
    ]
   },
   {
