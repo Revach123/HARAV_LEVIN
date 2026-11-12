@@ -113,6 +113,27 @@
    "chp_number": "513141879"
   },
   {
+   "id": 10425,
+   "maya_report_id": 1780934,
+   "company_name": "מגה אור",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780934",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": "ilAA",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "513257873"
+  },
+  {
    "id": 10417,
    "maya_report_id": 1780342,
    "company_name": "מגה אור",
@@ -232,7 +253,7 @@
     {
      "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilAA-",
      "midroog_rating": null
     }
    ],
@@ -428,15 +449,15 @@
    "chp_number": ""
   },
   {
-   "id": 10382,
-   "maya_report_id": 1776758,
+   "id": 10424,
+   "maya_report_id": 1780929,
    "company_name": "סלדן",
    "is_new_company": true,
    "new_company_type": null,
    "draft_no": 1,
    "draft_title": "טיוטת תשקיף",
    "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776758",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780929",
    "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
    "securities": [
     {
@@ -661,6 +682,29 @@
    ],
    "carried": true,
    "last_seen": "2026-11-09"
+  },
+  {
+   "chp_number": "",
+   "company_name": "סלדן",
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף",
+   "id": 10382,
+   "is_new_company": true,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776758",
+   "maya_report_id": 1776758,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-12"
   },
   {
    "chp_number": "520044314",
@@ -954,6 +998,7 @@
   "נגה נכסים",
   "פישר ברדרס פרופ",
   "לייטסטון מוקסי",
-  "ענבר ריביות"
+  "ענבר ריביות",
+  "סלדן"
  ]
 }

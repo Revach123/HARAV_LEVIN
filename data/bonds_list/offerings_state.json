@@ -750,7 +750,7 @@
     "new_company_type": null,
     "securities": [
      {
-      "maalot_rating": null,
+      "maalot_rating": "ilAA-",
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
@@ -877,6 +877,56 @@
      {
       "maalot_rating": null,
       "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-12"
+  },
+  "U10424": {
+   "data": {
+    "chp_number": "",
+    "company_name": "סלדן",
+    "draft_no": 1,
+    "draft_title": "טיוטת תשקיף",
+    "id": 10424,
+    "is_new_company": true,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780929",
+    "maya_report_id": 1780929,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-12"
+  },
+  "U10425": {
+   "data": {
+    "chp_number": "513257873",
+    "company_name": "מגה אור",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10425,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780934",
+    "maya_report_id": 1780934,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilAA",
+      "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
      }
