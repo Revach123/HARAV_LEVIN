@@ -31,9 +31,8 @@ def main():
                 src, dst = os.path.join(td, "s.pdf"), os.path.join(td, "f.pdf")
                 pg.pdf(path=src, format="A4", margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"})
                 pg.close()
-                make_fax(src, dst, td)
-                for f in os.listdir(td):
-                    if f.startswith("p-"): os.remove(os.path.join(td, f))
+                # PDF וקטורי רגיל (טקסט חד): הספק ממיר אותו בעצמו ל-200x300 בלי גרגור. (גרסת ה-CCITT עדיין לא אומתה מול הספק - make_fax)
+                os.replace(src, dst)
                 res = call(f"{BASE}?id={iid}", open(dst, "rb").read())
                 print(f"{iid}: {res.get('status')}")
             except Exception as e:
