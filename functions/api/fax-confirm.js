@@ -3,7 +3,7 @@
 //  GET            -> { items: [{ id, html }] } אישורים שממתינים ל-PDF (עד 5)
 //  POST ?id=<id>  גוף = PDF מוכן לפקס -> נשלח לספק; הפרטים (מספר הפקס וה-HTML) נמחקים מהתור. מגבלות/יומן: אותו ivr_fax_log של הקו הטלפוני.
 // ============================================================================
-import { importKeyForWrite, decryptPii } from './_shared/joiners-crypto.js';
+import { importKeyForWrite, decryptPii, encryptPii } from './_shared/joiners-crypto.js';
 import { TABLE } from './_shared/join-fax-confirm.js';
 import { postFax, reserve, normFax } from './_shared/ivr-fax.js';
 import { markFaxSent } from './_shared/join-mail.js';
@@ -18,6 +18,15 @@ export async function onRequest({ request, env }) {
   const key = await importKeyForWrite(env);
   const u = new URL(request.url);
 
+  // ניסוי איכות (רק הרצה אוטומטית): GET ?trial=<מספר פקס> רושם שורה במצב 'trial' (לא נקראת ע"י ההפקה הרגילה), ו-POST ?id=<id> עם PDF שולח אותו למספר הזה
+  if (request.method === 'GET' && u.searchParams.get('trial')) {
+    const fax = normFax(u.searchParams.get('trial'));
+    if (!fax) return json({ ok: false, error: 'bad fax number' }, 400);
+    const id = 'trial_' + Date.now().toString(36);
+    await env.DB.prepare('INSERT INTO join_fax_confirm (id, at, status, data) VALUES (?, ?, ?, ?)').bind(id, Date.now(), 'trial', await encryptPii(key, id, { fax, html: '', jid: '' })).run();
+    return json({ ok: true, id });
+  }
+
   if (request.method === 'GET') {
     const rows = (await env.DB.prepare("SELECT id, data FROM join_fax_confirm WHERE status = 'pending' AND at > ? ORDER BY at LIMIT 5").bind(Date.now() - 3 * 24 * 3600 * 1000).all()).results || [];
     const items = [];
@@ -29,7 +38,7 @@ export async function onRequest({ request, env }) {
 
   if (request.method === 'POST') {
     const id = String(u.searchParams.get('id') || '');
-    const row = await env.DB.prepare("SELECT data FROM join_fax_confirm WHERE id = ? AND status = 'pending'").bind(id).first();
+    const row = await env.DB.prepare("SELECT data, status FROM join_fax_confirm WHERE id = ? AND status IN ('pending', 'trial')").bind(id).first();
     if (!row) return json({ ok: false, error: 'not pending' }, 404);
     const bytes = await request.arrayBuffer();
     if (bytes.byteLength < 200 || new TextDecoder().decode(bytes.slice(0, 5)) !== '%PDF-') return json({ ok: false, error: 'not a pdf' }, 400);
@@ -38,7 +47,7 @@ export async function onRequest({ request, env }) {
       const d = await decryptPii(key, id, row.data), fax = normFax(d.fax);
       jid = d.jid || '';
       if (!fax) throw new Error('bad fax number');
-      const res = await reserve(env, { callId: 'conf-' + id, slot: 'confirm', caller: '', fax, chp: '', company: '', kind: 'אישור הצטרפות', docId: id });
+      const res = await reserve(env, { callId: 'conf-' + id, slot: 'confirm', caller: '', fax, chp: '', company: '', kind: row.status === 'trial' ? 'ניסוי שטר' : 'אישור הצטרפות', docId: id });
       if (!res.id) throw new Error(res.limit ? 'limit' : 'duplicate');
       ({ status, response } = await postFax(env, fax, bytes, 'confirmation.pdf'));
       try { await env.DB.prepare('UPDATE ivr_fax_log SET status = ?, response = ? WHERE id = ?').bind(status, response, res.id).run(); } catch { /* ignore */ }
