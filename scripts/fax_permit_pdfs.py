@@ -1,5 +1,5 @@
 """
-גרסה לפקס של שטרות ההיתר (docs-fax/<אותו שם> ב-R2): PDF שכל עמוד בו תמונה שחור-לבן (1-bit) בדחיסת פקס (CCITT G4), 300dpi.
+גרסה לפקס של שטרות ההיתר (docs-fax/<אותו שם> ב-R2): PDF שכל עמוד בו תמונה שחור-לבן (1-bit) בדחיסת פקס (CCITT G4), ברזולוציה 200x300 (כמו שהספק משדר).
 הספק ממיר סריקה אפורה לנקודות ומקבל פקס מגורען; כשמקבלים ממנו שחור-לבן חד הוא לא צריך להמיר כלום.
 המקור והגרסה הקלה לא נוגעים. שליחת הפקס (functions/api/_shared/ivr-fax.js) מעדיפה docs-fax/ אם קיים. מחיקת docs-fax/ מחזירה את המצב הקודם.
 
@@ -12,7 +12,7 @@ import argparse, glob, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from compress_permit_pdfs import d1, r2_get, r2_put, r2_exists, pages, log, sh, KEY_RE, ID_RE
 
-DPI, MAX_PAGES = 300, 40
+DPI_X, DPI_Y, MAX_PAGES = 200, 300, 40          # הספק (שחקים) משדר ב-200x300: מייצרים בדיוק ברזולוציה הזו, בלי שהוא ישנה גודל
 
 
 def binarize(g):
@@ -29,11 +29,17 @@ def make_fax(src, dst, td):
     from PIL import Image
     n = pages(src)
     if not n or n > MAX_PAGES: raise RuntimeError(f"pages={n}")
-    sh(["pdftoppm", "-r", str(DPI), "-gray", "-png", src, os.path.join(td, "p")], timeout=600)
+    sh(["pdftoppm", "-rx", str(DPI_X), "-ry", str(DPI_Y), "-gray", "-png", src, os.path.join(td, "p")], timeout=600)
     files = sorted(glob.glob(os.path.join(td, "p-*.png")))
     if len(files) != n: raise RuntimeError(f"rendered {len(files)} of {n}")
-    ims = [binarize(Image.open(f).convert("L")) for f in files]
-    ims[0].save(dst, "PDF", resolution=DPI, save_all=True, append_images=ims[1:])
+    import io, img2pdf
+    tiffs = []
+    for f in files:
+        buf = io.BytesIO()
+        binarize(Image.open(f).convert("L")).save(buf, "TIFF", compression="group4")          # 1-bit CCITT G4: כמו פקס
+        tiffs.append(buf.getvalue())
+    with open(dst, "wb") as out:
+        out.write(img2pdf.convert(tiffs, layout_fun=img2pdf.get_fixed_dpi_layout_fun((DPI_X, DPI_Y))))          # גודל העמוד כמו במקור
     if pages(dst) != n or open(dst, "rb").read(5) != b"%PDF-": raise RuntimeError("bad output")
 
 
@@ -43,6 +49,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--new-days", type=int, default=0)
     ap.add_argument("--count", action="store_true")
+    ap.add_argument("--redo", action="store_true", help="מפיק מחדש גם מסמכים שכבר יש להם גרסת פקס (למשל אחרי שינוי רזולוציה)")
     a = ap.parse_args()
     if a.new_days:
         d1("CREATE TABLE IF NOT EXISTS permit_doc_fax (doc_id TEXT PRIMARY KEY, status TEXT, at TEXT DEFAULT (datetime('now')))")
@@ -60,7 +67,7 @@ def main():
         id_, key = str(r["id"]), str(r["file_key"])
         if not ID_RE.match(id_) or not KEY_RE.match(key) or ".." in key: continue
         fax = key.replace("docs/", "docs-fax/", 1) if key.startswith("docs/") else "docs-fax/" + key
-        if not a.new_days and r2_exists(fax): continue
+        if not a.new_days and not a.redo and r2_exists(fax): continue
         done += 1
         with tempfile.TemporaryDirectory() as td:
             src, dst = os.path.join(td, "o.pdf"), os.path.join(td, "f.pdf")
