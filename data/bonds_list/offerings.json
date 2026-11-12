@@ -134,27 +134,6 @@
    "chp_number": "513257873"
   },
   {
-   "id": 10417,
-   "maya_report_id": 1780342,
-   "company_name": "מגה אור",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח",
-     "name": "",
-     "maalot_rating": "ilAA",
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "513257873"
-  },
-  {
    "id": 10329,
    "maya_report_id": 1771206,
    "company_name": "מצלאוי",
@@ -751,6 +730,29 @@
    ],
    "carried": true,
    "last_seen": "2026-11-09"
+  },
+  {
+   "chp_number": "513257873",
+   "company_name": "מגה אור",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10417,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
+   "maya_report_id": 1780342,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": "ilAA",
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-12"
   },
   {
    "chp_number": "517220448",

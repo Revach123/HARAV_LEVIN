@@ -1,13 +1,38 @@
 {
- "updated": "2026-11-11",
+ "updated": "2026-11-12",
  "status": "ok",
- "datawise_date": "2026-11-10",
+ "datawise_date": "2026-11-11",
  "expected": 778,
  "maya": 778,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "kept_no_terms": [],
+ "kept_no_terms": [
+  {
+   "security_id": 1236280,
+   "security_name": "איה ניורק אגח א",
+   "company": "איה ניו יורק לימיטד",
+   "chp_number": "2185148"
+  },
+  {
+   "security_id": 1206564,
+   "security_name": "גאון אחז אגח ה",
+   "company": "ב. גאון אחזקות בע\"מ",
+   "chp_number": "512623950"
+  },
+  {
+   "security_id": 1197607,
+   "security_name": "אקויטל אגח 4",
+   "company": "אקויטל בע\"מ",
+   "chp_number": "520030859"
+  },
+  {
+   "security_id": 1189950,
+   "security_name": "אלה השק אגח א",
+   "company": "אלה ר. הנדסת בנין והשקעות בע\"מ",
+   "chp_number": "520040015"
+  }
+ ],
  "dropped_no_terms": []
 }
