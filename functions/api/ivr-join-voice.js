@@ -23,6 +23,7 @@ import { importKeyForWrite, encryptPii, decryptPii } from './_shared/joiners-cry
 import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join-common.js';
 import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
 import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
+import { tapLetter } from './_shared/ivr-addr.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation } from './_shared/join-mail.js';
 import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
@@ -95,9 +96,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שדה בדיבור: הקלטה -> ElevenLabs -> (parse) -> "זוהה: ..." -> 1 = אישור, 2 = הקלטה חוזרת.
   // parse מחזיר את הערך או '' (לא תקין -> bad + הקלטה חוזרת); sayOf = איך מקריאים את הערך חזרה.
   // langs: שפות הזיהוי (['he'] = עברית; '' = אוטומטי). עם יותר משפה אחת parse מקבל את כל הזיהויים (מערך).
-  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = 'heard', tapFail = false } = {}) => {
+  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = 'heard', tapAfter = 0, spellOut = false } = {}) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
-    if (S(name, 'tap') === '1') return { tap: true };          // tapFail: אחרי ניסיון אחד שנכשל עוברים להקשה
+    if (S(name, 'tap') === '1') return { tap: true };          // tapAfter: אחרי כמה ניסיונות שנכשלו עוברים להקשה
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
     const askAt = (i, pre = '') => readRecord(pre + (i === 0 ? intro : '') + P(ask), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
@@ -112,16 +113,49 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     }
     const val = S(name, 'x') || '';
     if (!val) {
-      if (tapFail) { setS(name, 'tap', '1'); return { tap: true }; }
+      if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
       setS(name, 'n', n + 1); return { ask: askAt(n + 1, `${P(S(name, 'raw') ? bad : 'join:noHear')}.`) };
     }
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { val }; }
     if (v[ck] === '2') {
-      if (tapFail) { setS(name, 'tap', '1'); return { tap: true }; }
+      if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
       setS(name, 'n', n + 1); return { ask: askAt(n + 1) };
     }
-    return { ask: readTap(`${P(heard)}.${T(sayOf(val))}.${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
+    return { ask: readTap(`${P(heard)}.${T(sayOf(val))}.${spellOut ? spelled(val) : ''}${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
+
+  // איות מוקרא של שם: אות אחר אות (אותיות סופיות כרגילות), בהקלטות הקבועות letter:<אות>
+  const BASE = { ך: 'כ', ם: 'מ', ן: 'נ', ף: 'פ', ץ: 'צ' }, FINAL = { כ: 'ך', מ: 'ם', נ: 'ן', פ: 'ף', צ: 'ץ' };
+  const spelled = (val) => {
+    const ls = [...String(val)].map((c) => BASE[c] || c).filter((c) => /^[א-ת]$/.test(c));
+    return ls.length ? `${P('v:spelling')}.${ls.map((l) => P(`letter:${l}`)).join('.')}.` : '';
+  };
+
+  // הקשת שם באותיות עבריות בלבד (בלי מצב מספרים), אחרי שהזיהוי בדיבור נכשל: אות אחת בכל הקשה (מקש לפי מקום האות) ואחריה סולמית; סולמית לבדה = סיום.
+  // withSpell: בסוף מוקרא השם ואיות שלו לפני האישור (שם משפחה); אחרת רק השם (שם פרטי). אישור: 1 = מאשר, 2 = הקשה מחדש.
+  const hebTap = (name, askKey, withSpell) => {
+    const r = Number(S(name, 'tn') || 0), key = `${name}_t${r}`, acc = S(name, 'tx') || '';
+    const final = (t) => (t ? t.slice(0, -1) + (FINAL[t.slice(-1)] || t.slice(-1)) : t);
+    const tap = (pre, i, a) => readTap(pre + P(a ? 'join:nextLetter' : S(name, 'ti') ? 'join:firstLetter' : askKey), `${name}_t${i}`, null, { max: 3, min: 0, wait: 15, empty: EMPTY });
+    const advance = (pre, a) => { setS(name, 'ti', '1'); setS(name, 'tn', r + 1); setS(name, 'tx', a); return { ask: tap(pre, r + 1, a) }; };
+    const ck = `${name}_tc${S(name, 'tk') || 0}`;
+    const confirm = () => ({ ask: readTap(`${T(final(acc))}.${withSpell ? spelled(final(acc)) : ''}${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) });
+    if (S(name, 'tf') === '1') {
+      if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'x', final(acc)); return { val: final(acc) }; }
+      if (v[ck] === '2') { setS(name, 'tk', Number(S(name, 'tk') || 0) + 1); setS(name, 'tf', ''); setS(name, 'ti', ''); return advance('', ''); }
+      return confirm();
+    }
+    if (!has(v, key)) return { ask: tap('', r, acc) };
+    const raw = empty(v[key]) ? '' : String(v[key]);
+    if (!raw) {                                              // סולמית לבדה = סיום; אם עוד לא הוקשה אות - שואלים שוב
+      if (!acc) return advance('', '');
+      setS(name, 'tf', '1'); return confirm();
+    }
+    const l = tapLetter(raw);
+    if (!l) return advance(`${P('join:badLetter')}.`, acc);
+    return advance(`${P('join:typed')}.${P(`letter:${l}`)}.`, acc + l);
+  };
+  const orTap = (q, name, askKey, withSpell) => (q.tap ? hebTap(name, askKey, withSpell) : q);
   // מספרים (ת.ז., טלפון, פקס, מספר בית) בהקשה, כמו בשלוחה 1: ספרות + סולמית, הקראה חוזרת לאישור (1) או שינוי (2).
   // כל ניסיון במשתנה חדש (name_<n>), כי ימות שומרת את הערך הישן; ערך לא תקין = הודעה ושאלה חוזרת.
   const numStep = (name, phrase, bad, norm, max, min, say = spaced, intro = '') => {
@@ -139,9 +173,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const idQ = numStep('id', 'join:askId', 'join:badId', normalizeId, 10, 5, spaced, `${P('v:intro')}.`);
   if (idQ.ask) return idQ.ask;
   // 2-3. שם פרטי, שם משפחה
-  const fnQ = await field('fn', 'join:askFirst', REC_MAX);
+  const fnQ = orTap(await field('fn', 'join:askFirst', REC_MAX, { tapAfter: 2 }), 'fn', 'v:nameType', false);
   if (fnQ.ask) return fnQ.ask;
-  const lnQ = await field('ln', 'join:askLast', REC_MAX);
+  const lnQ = orTap(await field('ln', 'join:askLast', REC_MAX, { tapAfter: 1, spellOut: true }), 'ln', 'v:nameType', true);
   if (lnQ.ask) return lnQ.ask;
   // 4. טלפון: המספר שממנו מתקשרים (1) או אחר בדיבור (2)
   let phone = '';
@@ -177,7 +211,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   if ((o = yn('emq', 'join:emailQ'))) return o;
   let email = '';
   if (v.emq === '1') {
-    const q = await field('em', 'v:askEmail', REC_ADDR_MAX, { langs: ['he', ''], parse: pickEmail, bad: 'v:badEmail', sayOf: spellEmail, heard: 'join:emailHeard', tapFail: true });
+    const q = await field('em', 'v:askEmail', REC_ADDR_MAX, { langs: ['he', ''], parse: pickEmail, bad: 'v:badEmail', sayOf: spellEmail, heard: 'join:emailHeard', tapAfter: 1 });
     if (q.ask) return q.ask;
     if (q.tap) {
       const t = await emailStep({ v, P, askKey: 'v:emailType' });
