@@ -61,11 +61,12 @@ export async function markMailSent(env, joinerId) {
     await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(String(joinerId)).run();
   } catch { /* תצוגה בלבד: לא פוגע בהרשמה */ }
 }
-export async function markFaxSent(env, joinerId) {
+// מצב אישור הפקס של מצטרף: 'pending' (בתור), 'failed', או זמן השליחה (state = 'sent')
+export async function markFaxSent(env, joinerId, state = 'sent') {
   if (!env.DB || !joinerId) return;
   try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_fax (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
-    await env.DB.prepare("INSERT OR REPLACE INTO joiner_fax (id, sent_at) VALUES (?, datetime('now'))").bind(String(joinerId)).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO joiner_fax (id, sent_at) VALUES (?, " + (state === 'sent' ? "datetime('now')" : '?') + ")").bind(...(state === 'sent' ? [String(joinerId)] : [String(joinerId), state])).run();
   } catch { /* תצוגה בלבד */ }
 }
 

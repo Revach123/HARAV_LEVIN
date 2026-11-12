@@ -41,7 +41,7 @@ export async function onRequest({ request, env }) {
       ({ status, response } = await postFax(env, fax, bytes, 'confirmation.pdf'));
       try { await env.DB.prepare('UPDATE ivr_fax_log SET status = ?, response = ? WHERE id = ?').bind(status, response, res.id).run(); } catch { /* ignore */ }
     } catch (e) { response = String((e && e.message) || e).slice(0, 200); }
-    if (status === 'sent') await markFaxSent(env, jid);
+    await markFaxSent(env, jid, status === 'sent' ? 'sent' : 'failed');
     await env.DB.prepare('UPDATE join_fax_confirm SET status = ?, data = ?, response = ? WHERE id = ?').bind(status, '', response, id).run();          // הפרטים נמחקים
     return json({ ok: status === 'sent', status });
   }
