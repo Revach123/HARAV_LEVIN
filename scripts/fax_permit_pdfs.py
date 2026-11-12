@@ -1,18 +1,19 @@
 """
-גרסה לפקס של שטרות ההיתר (docs-fax/<אותו שם> ב-R2): PDF שכל עמוד בו תמונה שחור-לבן (1-bit) בדחיסת פקס (CCITT G4), ברזולוציה 200x300 (כמו שהספק משדר).
+גרסה לפקס של שטרות ההיתר (docs-fax2/<אותו שם> ב-R2): PDF שכל עמוד בו תמונה שחור-לבן (1-bit, דחיסת Flate) על קנבס A4 בגודל 1728x2292 - מה שהספק משדר בפועל (אומת: פקס חד וקריא).
 הספק ממיר סריקה אפורה לנקודות ומקבל פקס מגורען; כשמקבלים ממנו שחור-לבן חד הוא לא צריך להמיר כלום.
-המקור והגרסה הקלה לא נוגעים. שליחת הפקס (functions/api/_shared/ivr-fax.js) מעדיפה docs-fax/ אם קיים. מחיקת docs-fax/ מחזירה את המצב הקודם.
+המקור והגרסה הקלה לא נוגעים. שליחת הפקס (functions/api/_shared/ivr-fax.js) מעדיפה docs-fax2/ אם קיים. מחיקת docs-fax2/ מחזירה את המצב הקודם.
 
 שימוש: python fax_permit_pdfs.py [--apply] [--limit N] [--new-days D] [--redo]
   --new-days D  רק מסמכים שהועלו ב-D הימים האחרונים ועוד אין להם גרסה לפקס (המעקב בטבלה permit_doc_fax ב-D1)
-  בלי --new-days  כל המסמכים שאין להם docs-fax/ (בדיקה מול R2)
+  בלי --new-days  כל המסמכים שאין להם docs-fax2/ (בדיקה מול R2)
   ברירת מחדל dry-run (בלי העלאה). דורש wrangler, poppler-utils, pillow, numpy ו-CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID.
 """
 import argparse, glob, os, re, subprocess, sys, tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from compress_permit_pdfs import d1, r2_get, r2_put, r2_exists, pages, log, sh, KEY_RE, ID_RE
 
-DPI_X, DPI_Y, MAX_PAGES = 200, 300, 40          # הספק (שחקים) משדר ב-200x300: מייצרים בדיוק ברזולוציה הזו, בלי שהוא ישנה גודל
+DPI_X, DPI_Y, MAX_PAGES = 204, 196, 40          # הספק (שחקים) משדר בפועל 1728x2292 (A4 ב-204x196)
+W, H = 1728, 2292
 
 
 def binarize(g):
@@ -26,20 +27,28 @@ def binarize(g):
 
 
 def make_fax(src, dst, td):
+    """כל עמוד -> תמונת 1-bit על קנבס A4 בגודל 1728x2292 (מה שהספק משדר בפועל), בדחיסת Flate (לא CCITT: הספק החזיר 0 עמודים על CCITT).
+    אומת מול הספק: פקס חד וקריא. עמוד רחב מסתובב, ועמוד שלא נכנס מוקטן."""
     from PIL import Image
+    import io, img2pdf
     n = pages(src)
     if not n or n > MAX_PAGES: raise RuntimeError(f"pages={n}")
     sh(["pdftoppm", "-rx", str(DPI_X), "-ry", str(DPI_Y), "-gray", "-png", src, os.path.join(td, "p")], timeout=600)
     files = sorted(glob.glob(os.path.join(td, "p-*.png")))
     if len(files) != n: raise RuntimeError(f"rendered {len(files)} of {n}")
-    import io, img2pdf
-    tiffs = []
+    pngs = []
     for f in files:
-        buf = io.BytesIO()
-        binarize(Image.open(f).convert("L")).save(buf, "TIFF", compression="group4")          # 1-bit CCITT G4: כמו פקס
-        tiffs.append(buf.getvalue())
+        g = Image.open(f).convert("L")
+        if g.width > g.height: g = g.rotate(90, expand=True)          # עמוד לרוחב: מסתובב לעמוד לאורך
+        if g.width > W or g.height > H:
+            k = min(W / g.width, H / g.height)
+            g = g.resize((max(1, int(g.width * k)), max(1, int(g.height * k))), Image.LANCZOS)
+        bw = binarize(g)
+        canvas = Image.new("1", (W, H), 1)
+        canvas.paste(bw, ((W - bw.width) // 2, (H - bw.height) // 2))
+        buf = io.BytesIO(); canvas.save(buf, "PNG"); pngs.append(buf.getvalue())
     with open(dst, "wb") as out:
-        out.write(img2pdf.convert(tiffs, layout_fun=img2pdf.get_fixed_dpi_layout_fun((DPI_X, DPI_Y))))          # גודל העמוד כמו במקור
+        out.write(img2pdf.convert(pngs, layout_fun=img2pdf.get_fixed_dpi_layout_fun((W / (210 / 25.4), H / (297 / 25.4)))))
     if pages(dst) != n or open(dst, "rb").read(5) != b"%PDF-": raise RuntimeError("bad output")
 
 
@@ -66,7 +75,7 @@ def main():
         if a.limit and done >= a.limit: break
         id_, key = str(r["id"]), str(r["file_key"])
         if not ID_RE.match(id_) or not KEY_RE.match(key) or ".." in key: continue
-        fax = key.replace("docs/", "docs-fax/", 1) if key.startswith("docs/") else "docs-fax/" + key
+        fax = key.replace("docs/", "docs-fax2/", 1) if key.startswith("docs/") else "docs-fax2/" + key
         if not a.new_days and not a.redo and r2_exists(fax): continue
         done += 1
         with tempfile.TemporaryDirectory() as td:
