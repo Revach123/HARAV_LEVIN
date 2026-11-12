@@ -111,10 +111,9 @@ export async function sendFax(env, logId, docId, fax) {
   try {
     const row = await env.DB.prepare('SELECT file_key, original_name FROM permit_docs WHERE id = ?').bind(docId).first();
     if (!row) throw new Error('document not found');
-    // גרסת הפקס (docs-fax/, שחור-לבן חד 200x300 - scripts/fax_permit_pdfs.py) אם קיימת; אחרת הגרסה הקלה (docs-lite/), אחרת המקור
+    // גרסת הפקס (docs-fax2/, שחור-לבן חד 1728x2292 - scripts/fax_permit_pdfs.py) אם קיימת; אחרת הגרסה הקלה (docs-lite/), אחרת המקור
     const rel = row.file_key.startsWith('docs/') ? row.file_key.slice(5) : row.file_key;
-    // docs-fax (CCITT) עדיין לא אומת מול הספק: נשלח ממנו רק עם FAX_USE_DOCS_FAX=1
-    const obj = (String(env.FAX_USE_DOCS_FAX || '') === '1' ? await env.PERMITS.get('docs-fax/' + rel).catch(() => null) : null) || (await env.PERMITS.get('docs-lite/' + rel).catch(() => null)) || (await env.PERMITS.get(row.file_key));
+    const obj = (await env.PERMITS.get('docs-fax2/' + rel).catch(() => null)) || (await env.PERMITS.get('docs-lite/' + rel).catch(() => null)) || (await env.PERMITS.get(row.file_key));
     if (!obj) throw new Error('file missing in storage');
     ({ status, response } = await postFax(env, fax, await obj.arrayBuffer(), row.original_name));
   } catch (e) { response = String(e && e.message || e).slice(0, 500); }
