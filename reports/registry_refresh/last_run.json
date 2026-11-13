@@ -12,23 +12,23 @@
    "registrar_name": 40,
    "biz_type": 91
   },
-  "updated": "2026-11-12T10:18:18.013482Z",
+  "updated": "2026-11-13T10:01:46.989711Z",
   "source": "d1",
   "businesses": 1287,
   "numeric_chp": 1283,
   "found_in_registry": 1194,
   "found_ratio": 0.931,
   "failed_batches": 0,
-  "datawise_rows": 2240,
-  "datawise_date": "2026-11-11",
-  "bond_companies": 363,
+  "datawise_rows": 2239,
+  "datawise_date": "2026-11-12",
+  "bond_companies": 361,
   "changes": {
    "registrar_name": 0,
    "biz_type": 0,
-   "tase_has_agch": 0,
+   "tase_has_agch": 2,
    "registry_status": 0,
-   "has_agch_any": 0,
-   "permits_category": 0
+   "has_agch_any": 1,
+   "permits_category": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -46,10 +46,39 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 3,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mp64jdba8ybj",
+   "chp": "2185148",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64jv06kllt",
+   "chp": "512623950",
+   "field": "tase_has_agch",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64kjsuvw8z",
+   "chp": "520044314",
+   "field": "has_agch_any",
+   "old": "יש",
+   "new": "אין"
+  },
+  {
+   "id": "mp64kjsuvw8z",
+   "chp": "520044314",
+   "field": "permits_category",
+   "old": "חברות מנפיקות אג\"ח|חברות תקשורת",
+   "new": "חברות תקשורת"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
