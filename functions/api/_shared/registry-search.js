@@ -51,11 +51,29 @@ function variantSets(words) {
 
 // shorts = מילים קצרות מ-3 תווים (למשל מספר): ל-FTS trigram אין בהן שימוש, אז הן מצמצמות
 // ב-LIKE על התוצאות שה-FTS כבר החזיר (זול), כדי שהן לא יגרמו לחתך שרירותי של 30 מועמדים.
-function ftsStatements(db, variant, shorts = []) {
+//
+// rankText = השאילתה המנורמלת. ה-LIMIT חותך מועמדים *אחרי* מיון לפי התאמה (זהה / מתחיל ב / מתחיל במילה /
+// מכיל, אחר כך פעילות לפני מחוקים, ואז שם קצר), כך שעם מילה נפוצה ("יו" + "דיגיטל") ההתאמות הטובות ביותר
+// לא נחתכות באופן שרירותי לפני שמגיעים לדירוג הקפדני. אותו דירוג כמו /api/search באתר (revach).
+const DEFUNCT_SQL = (st) => `(${['מחוק', 'נמחק', 'מבוטל', 'פירוק', 'מפורק', 'מחוסל', 'חוסל', 'חיסול'].map((w) => `${st} LIKE '%${w}%'`).join(' OR ')})`;
+
+// תבנית LIKE מוגבלת ל-50 בייט (עברית = 2 בייט לתו): מקצרים בטוח.
+function likePrefix(s, maxBytes = 40) {
+  const enc = new TextEncoder().encode(s);
+  if (enc.length <= maxBytes) return s;
+  const dec = new TextDecoder('utf-8', { fatal: true });
+  for (let n = maxBytes; n > 0; n--) { try { return dec.decode(enc.slice(0, n)); } catch { /* באמצע תו */ } }
+  return '';
+}
+
+function ftsStatements(db, variant, shorts = [], rankText = '') {
   const expr = variant.map(ftsPhrase).join(' AND ');
   const like = shorts.map(() => ' AND c.name_norm LIKE ?').join('');
-  const args = [expr, ...shorts.map((w) => `%${w}%`)];
-  const q = (tbl, sub) => `SELECT c.id,c.name,c.status,c.${sub} AS sub FROM ${tbl}_fts f JOIN ${tbl} c ON c.id=f.id WHERE ${tbl}_fts MATCH ?${like} LIMIT ${FETCH_LIMIT}`;
+  const lp = likePrefix(rankText);
+  const rankArgs = [rankText, `${lp}%`, `% ${lp}%`];
+  const args = [expr, ...shorts.map((w) => `%${w}%`), ...rankArgs];
+  const order = `CASE WHEN c.name_norm = ? THEN 0 WHEN c.name_norm LIKE ? THEN 1 WHEN c.name_norm LIKE ? THEN 2 ELSE 3 END, CASE WHEN ${DEFUNCT_SQL('c.status')} THEN 1 ELSE 0 END, length(c.name_norm)`;
+  const q = (tbl, sub) => `SELECT c.id,c.name,c.status,c.${sub} AS sub FROM ${tbl}_fts f JOIN ${tbl} c ON c.id=f.id WHERE ${tbl}_fts MATCH ?${like} ORDER BY ${order} LIMIT ${FETCH_LIMIT}`;
   return [
     db.prepare(q('companies', 'corp_type')).bind(...args),
     db.prepare(q('partnerships', 'ptype')).bind(...args),
@@ -65,8 +83,8 @@ function ftsStatements(db, variant, shorts = []) {
 
 const KINDS = ['company', 'partnership', 'association'];
 
-async function fetchVariants(db, variants, shorts) {
-  const stmts = variants.flatMap((v) => ftsStatements(db, v, shorts));
+async function fetchVariants(db, variants, shorts, rankText) {
+  const stmts = variants.flatMap((v) => ftsStatements(db, v, shorts, rankText));
   const out = await db.batch(stmts);
   const rows = new Map();
   let truncated = false;
@@ -83,8 +101,9 @@ export async function registryCandidates(db, query) {
   const { tier1, tier2 } = variantSets(words);
   if (!tier1.length) return { rows: [], truncated: false };
   const shorts = words.filter((w) => w.length < 3);
-  let got = await fetchVariants(db, tier1, shorts);
-  if (!got.rows.length && tier2.length) got = await fetchVariants(db, tier2, shorts);
+  const rankText = words.join(' ');
+  let got = await fetchVariants(db, tier1, shorts, rankText);
+  if (!got.rows.length && tier2.length) got = await fetchVariants(db, tier2, shorts, rankText);
   return got;
 }
 
