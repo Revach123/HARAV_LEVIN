@@ -44,6 +44,33 @@
    "chp_number": "520035171"
   },
   {
+   "id": 10427,
+   "maya_report_id": 1781160,
+   "company_name": "בזק",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1781160",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    },
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520031931"
+  },
+  {
    "id": 10300,
    "maya_report_id": 1768243,
    "company_name": "חברה לישראל",
@@ -911,6 +938,13 @@
   {
    "chp_number": "520028010",
    "name": "חברה לישראל",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "520031931",
+   "name": "בזק",
    "statuses": [
     "הנפקה עתידית"
    ]
