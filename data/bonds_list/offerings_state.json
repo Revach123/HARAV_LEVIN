@@ -27,7 +27,7 @@
     ]
    },
    "kind": "open",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "O1219260": {
    "data": {
@@ -81,7 +81,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10121": {
    "data": {
@@ -106,7 +106,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10128": {
    "data": {
@@ -131,7 +131,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10131": {
    "data": {
@@ -156,7 +156,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10225": {
    "data": {
@@ -181,7 +181,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10227": {
    "data": {
@@ -206,7 +206,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10237": {
    "data": {
@@ -231,7 +231,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10243": {
    "data": {
@@ -256,7 +256,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10259": {
    "data": {
@@ -281,7 +281,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10287": {
    "data": {
@@ -306,7 +306,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10289": {
    "data": {
@@ -331,7 +331,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10296": {
    "data": {
@@ -356,7 +356,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10300": {
    "data": {
@@ -381,7 +381,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10316": {
    "data": {
@@ -406,7 +406,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10329": {
    "data": {
@@ -431,7 +431,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10358": {
    "data": {
@@ -456,7 +456,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10371": {
    "data": {
@@ -481,7 +481,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10378": {
    "data": {
@@ -507,31 +507,6 @@
    },
    "kind": "upcoming",
    "last_seen": "2026-11-10"
-  },
-  "U10379": {
-   "data": {
-    "chp_number": "513257873",
-    "company_name": "מגה אור",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10379,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
-    "maya_report_id": 1776611,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-09"
   },
   "U10382": {
    "data": {
@@ -581,7 +556,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10405": {
    "data": {
@@ -606,7 +581,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10407": {
    "data": {
@@ -637,7 +612,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10408": {
    "data": {
@@ -687,7 +662,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10413": {
    "data": {
@@ -712,32 +687,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
-  },
-  "U10415": {
-   "data": {
-    "chp_number": "517220448",
-    "company_name": "איביאי ריב פיק",
-    "draft_no": 1,
-    "draft_title": "טיוטת דו\"ח הצעת מדף",
-    "id": 10415,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": "https://maya.tase.co.il/he/reports/1780333",
-    "link_trust_indenture": null,
-    "maya_report_id": 1780333,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-09"
+   "last_seen": "2026-11-13"
   },
   "U10417": {
    "data": {
@@ -812,7 +762,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10421": {
    "data": {
@@ -862,7 +812,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10424": {
    "data": {
@@ -887,7 +837,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10425": {
    "data": {
@@ -912,7 +862,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U10426": {
    "data": {
@@ -937,7 +887,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   },
   "U9973": {
    "data": {
@@ -962,7 +912,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-12"
+   "last_seen": "2026-11-13"
   }
  }
 }
