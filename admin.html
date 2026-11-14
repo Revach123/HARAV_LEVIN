@@ -1190,7 +1190,7 @@ const PCAT_SEP = "|";                       // כמה קטגוריות לעסק 
 const pcatSplit = s => String(s || "").split(PCAT_SEP).map(x => x.trim()).filter(Boolean);
 const PCAT_BONDS = 'חברות מנפיקות אג"ח';          // נקבעת אוטומטית בשרת לפי "יש אג"ח" (כולל לא סחיר) - לא מוסיפים / מסירים ידנית
 function pcatBoxHtml(val) {
-  const cur = pcatSplit(val), all = [...new Set(["עסקים", "עמותות", ...businesses.flatMap(x => pcatSplit(x.permits_category))])].sort((x, y) => x.localeCompare(y, "he"));
+  const cur = pcatSplit(val), all = [...new Set(businesses.flatMap(x => pcatSplit(x.permits_category)))].sort((x, y) => x.localeCompare(y, "he"));
   return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">${cur.map((c, i) => c === PCAT_BONDS
       ? `<span style="background:#eef6ee;border:1px solid #9cc79c;border-radius:14px;padding:3px 10px;font-size:.9em" title="אוטומטי: חברה שרשום אצלה יש אג&quot;ח (כולל לא סחיר) נכנסת לקטגוריה הזו, ובלי אג&quot;ח יוצאת ממנה">${escHtml(c)} <span style="color:var(--muted)">(אוטומטי)</span></span>`
       : `<span style="background:#e8f0fb;border:1px solid #9bb8e0;border-radius:14px;padding:3px 10px;font-size:.9em">${escHtml(c)} <a href="#" style="color:#a00;text-decoration:none" onclick="pcatDel(${i});return false" title="הסר">✕</a></span>`).join("") || '<span style="color:var(--light)">ללא קטגוריה</span>'}</div>
@@ -1212,7 +1212,7 @@ async function catInline(id, sel) {
   render();
 }
 function rowPcatHtml(b) {
-  const cur = pcatSplit(b.permits_category), all = [...new Set(["עסקים", "עמותות", ...businesses.flatMap(x => pcatSplit(x.permits_category))])].filter(x => !cur.includes(x) && x !== PCAT_BONDS && x !== "שונות").sort((x, y) => x.localeCompare(y, "he"));
+  const cur = pcatSplit(b.permits_category), all = [...new Set(businesses.flatMap(x => pcatSplit(x.permits_category)))].filter(x => !cur.includes(x) && x !== PCAT_BONDS && x !== "שונות").sort((x, y) => x.localeCompare(y, "he"));
   const chips = cur.map((c, i) => c === PCAT_BONDS
     ? `<span class="pc-chip auto" title="אוטומטי: לפי יש אג&quot;ח">${escHtml(c)}</span>`
     : `<span class="pc-chip">${escHtml(c)}${c === "שונות" ? "" : ` <a href="#" onclick="rowPcatDel('${b.id}',${i});return false" title="הסר מהרשימה">✕</a>`}</span>`).join("");
