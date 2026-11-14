@@ -134,12 +134,16 @@ export function permitIndex(businesses) {
 // ---------------------------------------------------------------------------
 //  תיאור לתוצאה: סוג, שם (בע"מ נשאר ומוקרא בראשי תיבות), מצב היתר
 // ---------------------------------------------------------------------------
+// חל"צ: ברשם היא "חברה פרטית"; מזוהה לפי השם או כשאותו מספר רשום גם ברשם העמותות (pbc, dedupeById)
+const isPbc = (item) => !!item.pbc || /(^|[^א-ת])חל["״'׳]?צ([^א-ת]|$)/.test(String(item.name || ''));
+
 export function typeLabel(item) {
   if (item.kind === 'other') return '';      // רשות מקומית / אגודה שיתופית: אין סוג מתאים להקראה - רק השם
   const s = String(item.sub || '');
   let label;
   if (item.kind === 'partnership') label = /מוגבלת/.test(s) ? 'שותפות מוגבלת' : /כללית/.test(s) ? 'שותפות כללית' : 'שותפות';
   else if (item.kind === 'association') label = 'עמותה';
+  else if (isPbc(item)) label = 'חברה לתועלת הציבור';
   else label = /ציבורי/.test(s) ? 'חברה ציבורית' : /פרטי/.test(s) ? 'חברה פרטית' : 'חברה';
   return DEFUNCT.test(item.status || '') ? `${label} מחוקה` : label;
 }
@@ -182,11 +186,14 @@ const kindOfNumber = (d) => (/^(58|599)/.test(d) ? 'association' : /^55/.test(d)
 // הרשומה שתואמת לקידומת: 58 עמותה, 55 שותפות, אחרת חברה. (כמו בדף החיפוש ב-Revach)
 function dedupeById(items) {
   const want = (id) => (/^58/.test(id) ? 'association' : /^55/.test(id) ? 'partnership' : 'company');
-  const byId = new Map();
+  const byId = new Map(), kinds = new Map();
   for (const it of items) {
     const id = digitsOnly(it.id) || String(it.id), prev = byId.get(id);
+    if (!kinds.has(id)) kinds.set(id, new Set());
+    kinds.get(id).add(it.kind);
     if (!prev || (prev.kind !== want(id) && it.kind === want(id))) byId.set(id, it);
   }
+  for (const [id, it] of byId) if (it.kind === 'company' && kinds.get(id).has('association')) it.pbc = true;
   const keep = new Set(byId.values());
   return items.filter((it) => keep.has(it));
 }
