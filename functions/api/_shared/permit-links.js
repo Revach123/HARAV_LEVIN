@@ -36,6 +36,8 @@ export async function publicLinks(env) {
     const k = keyOf(r);
     const e = entry(r);
     for (const s of String(r.slot).split(",")) if (s === "general" || s === "private") e[s] = r.doc_id;
+    // מזהי רשומות העסק שהשטר מקושר אליהן - לשטר של עסק בלי מספר תאגיד לפי הרשומה שנמצאה בחיפוש (ivr-fax.js)
+    if (!e.chp && r.bid != null) { e.bids = e.bids || []; if (!e.bids.includes(String(r.bid))) e.bids.push(String(r.bid)); }
     by.set(k, e);
   }
   try {          // מסמכים ראשיים מיוחדים (מיגרציה 0013): { id, title } ברשימה נפרדת לכל חברה

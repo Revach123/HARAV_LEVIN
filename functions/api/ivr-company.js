@@ -200,7 +200,7 @@ async function listing(ctx, r, all, p = 1) {
   for (const item of items) {
     const d = describe(item, ctx.permitOf);
     if (fax && !faxable.some((x) => x.chp === String(item.id))) {          // חברה עם שטר שמוצג באתר -> אפשר לשלוח בפקס (כל ח.פ. פעם אחת)
-      const choices = await docListFor(ctx.env, item.id, item.name);
+      const choices = await docListFor(ctx.env, item.id);
       if (choices.length) faxable.push({ chp: String(item.id), name: d.name, choices });
     }
     parts.push(d.type ? P(`type:${d.type}`) : '', say(d.name));   // שם החברה: TTS של ימות (רשות/אגודה שיתופית: בלי סוג)

@@ -41,15 +41,13 @@ async function linksOf(env) {
 
 /** השטרות של החברה לפי הח.פ., בסדר ההקראה, כל שטר פעם אחת: [{ id, label }]
  *  1. השטר של החברה (כללי + פרטי בנפרד כשיש שניהם), 2. שטרות מיוחדים, 3. שטרות לאג"ח, 4. תתי-שורות (למשל "מסלול הלכה"), כל אחת באותו סדר. */
-export async function docListFor(env, chp, name = '') {
+export async function docListFor(env, chp) {
   const k = String(chp || '').trim().replace(/^0+/, '');
   if (!k) return [];
-  // עסק בלי מספר תאגיד (id "b:<מזהה>", registry-search.js): השטר מקושר לפי השם (permit-links: מפתח "n:<שם>")
-  const byName = k.startsWith('b:');
-  const nm = String(name || '').replace(/\s+/g, ' ').trim();
-  if (byName && !nm) return [];
-  const mine = (await linksOf(env)).filter((l) => (byName
-    ? !String(l.chp || '').trim() && String(l.name || '').replace(/\s+/g, ' ').trim() === nm
+  // עסק בלי מספר תאגיד: id "b:<מזהה הרשומה>" (registry-search.js) - השטר לפי אותה רשומה שנמצאה בחיפוש
+  const bid = k.startsWith('b:') ? k.slice(2) : null;
+  const mine = (await linksOf(env)).filter((l) => (bid !== null
+    ? (l.bids || []).includes(bid)
     : String(l.chp || '').trim().replace(/^0+/, '') === k));
   const out = [], seen = new Set();
   const add = (id, label) => { if (id && !seen.has(String(id))) { seen.add(String(id)); out.push({ id: String(id), label }); } };

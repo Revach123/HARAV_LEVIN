@@ -141,16 +141,16 @@ assert.equal(sentFaxes.at(-1).file, '%PDF-docs/d10.pdf');
 o = await step({ ...pv, nx1: '9', nx1p2: '0' }, venv); assert.ok(o.includes('=m2,'), '0 on page 2 -> new search');
 console.log('8 OK: paged results, 9 = more, fax from page 2');
 console.log('log:', db.prepare('SELECT call_id, slot, fax, chp, kind, doc_id, status FROM ivr_fax_log').all().map((x) => Object.values(x).join(' ')));
-// ---- עסק בלי מספר תאגיד (חנות): השטר מקושר לפי השם, ומוצע בפקס לפי id "b:<מזהה>" + השם ----
+// ---- עסק בלי מספר תאגיד (חנות): השטר לפי הרשומה שנמצאה בחיפוש (id "b:<מזהה>"), גם כשיש עוד חנות באותו שם ----
 db.exec(`
-  INSERT INTO businesses VALUES (9,'','company','','חנות כיפות של זלמן','פרטי'),(10,'','company','','חנות אחרת','');
+  INSERT INTO businesses VALUES (9,'','company','','חנות כיפות של זלמן','פרטי'),(10,'','company','','חנות אחרת',''),(11,'','company','','חנות כיפות של זלמן','');
   INSERT INTO permit_docs VALUES ('d9','docs/d9.pdf','9.pdf','private');
   INSERT INTO permit_doc_companies VALUES ('d9',9,'private');
 `);
 clearLinksCache();
-assert.deepEqual((await docListFor(baseEnv, 'b:9', 'חנות כיפות של זלמן')).map((x) => x.id), ['d9'], 'no-number business: doc by name');
-assert.deepEqual(await docListFor(baseEnv, 'b:10', 'חנות אחרת'), [], 'no-number business without a doc');
-assert.deepEqual(await docListFor(baseEnv, 'b:9', ''), [], 'no name -> nothing');
+assert.deepEqual((await docListFor(baseEnv, 'b:9')).map((x) => x.id), ['d9'], 'no-number business: doc of that record');
+assert.deepEqual(await docListFor(baseEnv, 'b:11'), [], 'same name, other record: no doc');
+assert.deepEqual(await docListFor(baseEnv, 'b:10'), [], 'no-number business without a doc');
 assert.deepEqual((await docListFor(baseEnv, '510000001')).map((x) => x.id), ['d1'], 'by number unchanged');
 
 console.log('ALL OK');
