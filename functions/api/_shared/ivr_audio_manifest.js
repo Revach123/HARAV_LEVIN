@@ -1184,6 +1184,34 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
+ "type:אגודה עות'מאנית": {
+  "text": "אגודה עות'מאנית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_19054601851be21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "type:אגודה עות'מאנית מחוקה": {
+  "text": "אגודה עות'מאנית מחוקה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_541baec9a691e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "type:הקדש ציבורי": {
+  "text": "הקדש ציבורי",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_bbd6d46907e2e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "type:הקדש ציבורי מחוקה": {
+  "text": "הקדש ציבורי מחוקה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b3649729cd54e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "type:חברה": {
   "text": "חֶבְרָה",
   "voice": "he-IL-AvriNeural",
