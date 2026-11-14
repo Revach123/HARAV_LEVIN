@@ -178,6 +178,19 @@ function fromBusinesses(businesses) {
 // "ברשם" = מספר ישראלי בן 9 ספרות שמתחיל ב-5 *וגם* שרענון הרשם מצא לו שם (registrar_name).
 // אותו כלל כמו ב-Revach (build_heter_iska.py: notInRegistry). השם - כפי שהוא ברשימה (permit_name).
 const kindOfNumber = (d) => (/^(58|599)/.test(d) ? 'association' : /^55/.test(d) ? 'partnership' : /^(50|57)/.test(d) ? 'other' : 'company');
+// אותו מספר בשתי טבלאות (חל"צ: גם ברשם החברות וגם ברשם העמותות) - פעם אחת בלבד,
+// הרשומה שתואמת לקידומת: 58 עמותה, 55 שותפות, אחרת חברה. (כמו בדף החיפוש ב-Revach)
+function dedupeById(items) {
+  const want = (id) => (/^58/.test(id) ? 'association' : /^55/.test(id) ? 'partnership' : 'company');
+  const byId = new Map();
+  for (const it of items) {
+    const id = digitsOnly(it.id) || String(it.id), prev = byId.get(id);
+    if (!prev || (prev.kind !== want(id) && it.kind === want(id))) byId.set(id, it);
+  }
+  const keep = new Set(byId.values());
+  return items.filter((it) => keep.has(it));
+}
+
 export function notInRegistry(businesses) {
   const seen = new Set(), out = [];
   for (const b of businesses || []) {
@@ -195,7 +208,7 @@ export async function searchByName(env, query, businesses) {
   let candidates, truncated = false;
   if (env.DB1) {
     ({ rows: candidates, truncated } = await registryCandidates(env.DB1, query));
-    candidates = candidates.concat(notInRegistry(businesses));
+    candidates = dedupeById(candidates.concat(notInRegistry(businesses)));
   } else {
     console.log('registry-search: DB1 not bound - searching businesses only');
     candidates = fromBusinesses(businesses);
@@ -221,7 +234,7 @@ export async function searchByChp(env, chp, businesses) {
     const items = [];
     out.forEach((res, i) => (res.results || []).forEach((r) => items.push({ kind: KINDS[i], ...r })));
     if (!items.length) items.push(...notInRegistry(businesses).filter((it) => digitsOnly(it.id) === id));
-    return items;
+    return dedupeById(items);
   }
   return fromBusinesses(businesses.filter((b) => digitsOnly(b.chp_number) === id));
 }
