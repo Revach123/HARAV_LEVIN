@@ -1191,6 +1191,20 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
+ "type:חברה לתועלת הציבור": {
+  "text": "חֶבְרָה לתועלת הציבור",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_db85d19b4f22e21a05dc",
+  "pron": "e21a05dc",
+  "phoneme": true
+ },
+ "type:חברה לתועלת הציבור מחוקה": {
+  "text": "חֶבְרָה לתועלת הציבור מחוקה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_1131a99f2322e21a05dc",
+  "pron": "e21a05dc",
+  "phoneme": true
+ },
  "type:חברה מחוקה": {
   "text": "חֶבְרָה מחוקה",
   "voice": "he-IL-AvriNeural",
