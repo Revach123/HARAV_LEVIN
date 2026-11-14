@@ -23,6 +23,7 @@ import { importKeyForWrite, encryptPii, decryptPii } from './_shared/joiners-cry
 import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join-common.js';
 import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
 import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
+import { loadNameKeyterms } from './_shared/name-keyterms.js';
 import { tapLetter, canonName, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
@@ -173,9 +174,10 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const idQ = numStep('id', 'join:askId', 'join:badId', normalizeId, 10, 5, spaced, `${P('v:intro')}.`);
   if (idQ.ask) return idQ.ask;
   // 2-3. שם פרטי, שם משפחה
-  const fnQ = orTap(await field('fn', 'join:askFirst', REC_MAX, { tapAfter: 2 }), 'fn', 'v:nameType', false);
+  // שמות: השמות הנפוצים במאגר המצטרפים כ-keyterms (נבנים ב-/api/name-keyterms; אם עוד לא נבנו - בלי הכוונה)
+  const fnQ = orTap(await field('fn', 'join:askFirst', REC_MAX, { tapAfter: 2, keyterms: () => loadNameKeyterms(env, 'first') }), 'fn', 'v:nameType', false);
   if (fnQ.ask) return fnQ.ask;
-  const lnQ = orTap(await field('ln', 'join:askLast', REC_MAX, { tapAfter: 1, spellOut: true }), 'ln', 'v:nameType', true);
+  const lnQ = orTap(await field('ln', 'join:askLast', REC_MAX, { tapAfter: 1, spellOut: true, keyterms: () => loadNameKeyterms(env, 'last') }), 'ln', 'v:nameType', true);
   if (lnQ.ask) return lnQ.ask;
   // 4. טלפון: המספר שממנו מתקשרים (1) או אחר בדיבור (2)
   let phone = '';
