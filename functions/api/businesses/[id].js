@@ -3,6 +3,7 @@ import { bondFlagFor } from "../company-bonds.js";
 import { normalizePcat } from "../_shared/pcat.js";
 import { syncBondFlagsFor } from "../_shared/bond-pcat.js";
 import { triggerBondsBuild, affectsBondsList } from "../_shared/bonds-build.js";
+import { syncAssocPcatFor } from "../_shared/assoc-pcat.js";
 // PUT    /api/businesses/:id   → update (admin only)
 // DELETE /api/businesses/:id   → delete (admin only)
 
@@ -65,6 +66,7 @@ export async function onRequestPut({ request, env, params }) {
     }
     if (affectsBondsList(oldRow, { agch_approved, visibility, chp_number, registrar_name, permit_name, notes, notes_scope })) await triggerBondsBuild(env, chp_number);          // רשימת האג"ח מתעדכנת מיד (בנייה מהירה)
     await syncBondFlagsFor(request, env, id);          // has_agch_any (יש אג"ח כולל לא סחיר) + הקטגוריה "חברות מנפיקות אג"ח" (_shared/bond-pcat.js)
+    await syncAssocPcatFor(env, id);                   // "עמותות" לעמותה בלי קטגוריה, "חנויות ומוסדות" -> "עסקים" (_shared/assoc-pcat.js)
     return Response.json({ success: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

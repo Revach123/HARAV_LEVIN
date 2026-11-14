@@ -151,7 +151,7 @@ OPTIONAL_COLS = ("registry_status", "has_agch_any", "permits_category")   # עמ
 
 
 def load_businesses(d1):
-    cols = "id, chp_number, permit_name, registrar_name, entity_type, biz_type, tase_has_agch"
+    cols = "id, chp_number, permit_name, registrar_name, entity_type, biz_type, tase_has_agch, notes"
     if d1.can_write:   # מקור אמת: D1 עצמו
         try:
             have = {r["name"] for r in d1.query("PRAGMA table_info(businesses)")[0]["results"]}
@@ -315,6 +315,32 @@ def with_bond_pcat(value, has):
     return "|".join(cur) if cur else "שונות"
 
 
+ASSOC_PCAT, BIZ_PCAT, OLD_BIZ_PCAT = "עמותות", "עסקים", "חנויות ומוסדות"
+
+
+def is_association(b):
+    """כמו isAssociation ב-functions/api/_shared/assoc-pcat.js."""
+    name = f"{b.get('permit_name') or ''} {b.get('registrar_name') or ''}"
+    return bool(re.fullmatch(r"58\d{7}", re.sub(r"\D", "", str(b.get("chp_number") or "")))
+                or b.get("entity_type") == "association" or "עמותה" in str(b.get("biz_type") or "")
+                or re.search(r"\(\s*ע[\"״']?ר\s*\)", name) or "עמותה" in str(b.get("notes") or ""))
+
+
+def with_assoc_pcat(value, b):
+    """כמו withAssocPcat ב-functions/api/_shared/assoc-pcat.js: "חנויות ומוסדות" -> "עסקים"; עמותה בלי קטגוריה
+    שנבחרה (ריק / "שונות") -> "עמותות". קטגוריה שנבחרה ידנית לא נדרסת."""
+    cur = []
+    for x in (x.strip() for x in str(value or "").split("|")):
+        x = BIZ_PCAT if x == OLD_BIZ_PCAT else x
+        if x and x not in cur:
+            cur.append(x)
+    chosen = [x for x in cur if x not in ("שונות", BOND_PCAT)]
+    if not chosen and is_association(b):
+        cur = [ASSOC_PCAT] + [x for x in cur if x != "שונות"]
+    cur = [x for x in cur if x != "שונות"]
+    return "|".join(cur) if cur else "שונות"
+
+
 # ── חישוב השינויים ───────────────────────────────────────────────────────────
 def is_liquidated(status):
     return str(status or "").startswith(("מחוסל", "חיסול", "מחוק", "נגרע"))
@@ -357,10 +383,13 @@ def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=
                 changes.append({"id": b["id"], "chp": b["chp_number"], "field": "has_agch_any",
                                 "old": b.get("has_agch_any"), "new": "יש" if any_has else "אין"})
             if "permits_category" in b:
-                pc = with_bond_pcat(b.get("permits_category"), any_has)
-                if pc != (b.get("permits_category") or ""):
-                    changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permits_category",
-                                    "old": b.get("permits_category"), "new": pc})
+                b["_pc"] = with_bond_pcat(b.get("permits_category"), any_has)
+        # קטגוריה: "חברות מנפיקות אג"ח" (למעלה, כשיש נתוני אג"ח) ואז "עמותות"/"עסקים" (assoc-pcat.js) - שינוי אחד
+        if "permits_category" in b:
+            pc = with_assoc_pcat(b.pop("_pc", b.get("permits_category")), b)
+            if pc != (b.get("permits_category") or ""):
+                changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permits_category",
+                                "old": b.get("permits_category"), "new": pc})
     return changes
 
 
