@@ -115,6 +115,10 @@ def main():
     for code, names in streets.items():
         with open(os.path.join(OUT, "streets", f"{code}.json"), "w", encoding="utf-8") as fh:
             json.dump(sorted(names), fh, ensure_ascii=False, separators=(",", ":"))
+    # רשימת ה-keyterms לזיהוי שם היישוב בדיבור (ElevenLabs Scribe: עד 1000 מונחים של עד 50 תווים): היישובים עם הכי הרבה רחובות
+    top = [n for c, n in sorted(city_list, key=lambda x: (-len(streets.get(x[0], ())), x[1])) if len(n) <= 50][:1000]
+    with open(os.path.join(OUT, "cities-top.json"), "w", encoding="utf-8") as fh:
+        json.dump(top, fh, ensure_ascii=False, separators=(",", ":"))
     print(f"cities: {len(city_list)}, streets: {sum(len(s) for s in streets.values())}, "
           f"without streets: {sum(1 for s in streets.values() if not s)}", file=sys.stderr)
     for probe in ("ירושלים", "בני ברק", "בית שמש", "אלעד"):

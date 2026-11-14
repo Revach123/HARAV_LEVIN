@@ -3,7 +3,8 @@
 //
 //  POST https://api.elevenlabs.io/v1/speech-to-text  (multipart: model_id, file, language_code)  כותרת xi-api-key.
 //  סוד: ELEVENLABS_API_KEY (Cloudflare Pages -> Settings -> Variables and Secrets). בלי מפתח - elevenConfigured() = false.
-//  אופציונלי: ELEVENLABS_STT_MODEL (ברירת מחדל scribe_v1; אם המודל נדחה מנסים scribe_v2).
+//  אופציונלי: ELEVENLABS_STT_MODEL (ברירת מחדל scribe_v3; אם המודל נדחה מנסים scribe_v2 ואז scribe_v1).
+//  keyterms (רשות): עד 1000 מונחים של עד 50 תווים (שמות יישובים / רחובות), שדה keyterms חוזר בטופס. אם הבקשה נדחית בגללם - שוב בלעדיהם.
 //  ההקלטה עצמה מורדת מימות (downloadRecording ב-stt-azure.js, דורש YEMOT_TOKEN).
 // ============================================================================
 import { downloadRecording } from './stt-azure.js';
@@ -13,34 +14,47 @@ const TIMEOUT_MS = 20000;
 
 export const elevenConfigured = (env) => !!String(env.ELEVENLABS_API_KEY || '').trim();
 
-/** wav -> טקסט. lang = 'he' (ברירת מחדל) או '' (זיהוי שפה אוטומטי, למשל לכתובת מייל). '' אם לא זוהה / שגיאה (השגיאה נרשמת בלוג בלי תוכן). */
-export async function elevenTranscribe(env, wav, lang = 'he') {
-  const models = [...new Set([String(env.ELEVENLABS_STT_MODEL || '').trim() || 'scribe_v1', 'scribe_v2'])];
-  for (const model of models) {
+/** wav -> טקסט. lang = 'he' (ברירת מחדל) או '' (זיהוי שפה אוטומטי, למשל לכתובת מייל). keyterms = מונחים להכוונת הזיהוי.
+ *  '' אם לא זוהה / שגיאה (השגיאה נרשמת בלוג בלי תוכן). */
+export const KEYTERMS_MAX = 1000, KEYTERM_LEN = 50;
+export async function elevenTranscribe(env, wav, lang = 'he', keyterms = []) {
+  const models = [...new Set([String(env.ELEVENLABS_STT_MODEL || '').trim() || 'scribe_v3', 'scribe_v2', 'scribe_v1'])];
+  const terms = [...new Set((keyterms || []).map((x) => String(x || '').trim()).filter((x) => x && x.length <= KEYTERM_LEN))].slice(0, KEYTERMS_MAX);
+  const once = async (model, withTerms) => {
     const fd = new FormData();
     fd.append('model_id', model);
     if (lang) fd.append('language_code', lang);
     fd.append('tag_audio_events', 'false');
     fd.append('diarize', 'false');
+    if (withTerms) for (const k of terms) fd.append('keyterms', k);
     fd.append('file', new Blob([wav], { type: 'audio/wav' }), 'rec.wav');
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), TIMEOUT_MS);
     try {
       const res = await fetch(URL_STT, { method: 'POST', headers: { 'xi-api-key': String(env.ELEVENLABS_API_KEY).trim() }, body: fd, signal: ctl.signal });
       clearTimeout(t);
-      if (res.ok) { const j = await res.json(); return String((j && j.text) || '').replace(/\s+/g, ' ').trim(); }
-      const err = (await res.text()).slice(0, 200);
-      console.log(`stt-eleven ${model}: HTTP ${res.status}`);
-      if (!/model/i.test(err)) return '';          // שגיאה שאינה בגלל המודל: לא מנסים מודל אחר
-    } catch (e) { clearTimeout(t); console.log(`stt-eleven ${model}: ${e && e.name}`); return ''; }
+      if (res.ok) { const j = await res.json(); return { text: String((j && j.text) || '').replace(/\s+/g, ' ').trim() }; }
+      const err = (await res.text()).slice(0, 300);
+      console.log(`stt-eleven ${model}${withTerms ? ` +${terms.length} keyterms` : ''}: HTTP ${res.status}`);
+      return { status: res.status, err };
+    } catch (e) { clearTimeout(t); console.log(`stt-eleven ${model}: ${e && e.name}`); return { status: 0, err: '' }; }
+  };
+  for (const model of models) {
+    let r = await once(model, terms.length > 0);
+    if (r.text != null) return r.text;
+    if (terms.length && r.status >= 400 && r.status < 500 && !/model/i.test(r.err)) {          // keyterms נדחו (פורמט / מגבלה / הרשאה): אותו מודל בלעדיהם
+      r = await once(model, false);
+      if (r.text != null) return r.text;
+    }
+    if (!r.status || !/model/i.test(r.err)) return '';          // שגיאה שאינה בגלל המודל: לא מנסים מודל אחר
   }
   return '';
 }
 
 /** הקלטה בימות (נתיבים אפשריים) -> טקסט בכל אחת מהשפות (הורדה אחת). ['he'] = עברית בלבד. */
-export async function elevenTranscribeRecording(env, candidates, langs = ['he']) {
+export async function elevenTranscribeRecording(env, candidates, langs = ['he'], keyterms = []) {
   const rec = await downloadRecording(env, candidates);
   if (!rec) return langs.map(() => '');
-  return Promise.all(langs.map((l) => elevenTranscribe(env, rec.bytes, l)));
+  return Promise.all(langs.map((l) => elevenTranscribe(env, rec.bytes, l, keyterms)));
 }
 
 // ---- ספרות מדיבור: "אפס חמש אחת", "052", "שלושים ושתיים" -> ספרות ----

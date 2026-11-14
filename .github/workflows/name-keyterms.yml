@@ -1,0 +1,27 @@
+name: Name keyterms (manual)
+
+# בונה (מחדש) את רשימות השמות הנפוצים של המצטרפים, שנשלחות כ-keyterms לזיהוי הדיבור בשלוחה 3.
+# הרשימות נשמרות מוצפנות ב-D1 (ivr_keyterms). בלוג מודפסים רק מספרים - בלי שמות (המאגר והלוגים ציבוריים).
+on:
+  workflow_dispatch:
+    inputs:
+      min:
+        description: "מספר הופעות מינימלי של שם (ברירת מחדל 2)"
+        required: false
+        default: "2"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Build
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          MIN: ${{ inputs.min }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CRON_SECRET:-}" ]; then echo "::error::חסר הסוד CRON_SECRET"; exit 1; fi
+          code=$(curl -sS -m 300 -X POST -H "User-Agent: Mozilla/5.0" -H "X-Cron-Secret: $CRON_SECRET" "https://harav-levin.pages.dev/api/name-keyterms?min=${MIN:-2}" -o out.json -w '%{http_code}')
+          if [ "$code" != "200" ]; then echo "::error::HTTP $code: $(head -c 300 out.json)"; exit 1; fi
+          jq -c '{joiners, undecryptable, min, at, first, last}' out.json

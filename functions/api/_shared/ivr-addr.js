@@ -11,6 +11,8 @@
 //  (שמות הרחובות ביישוב). נבנים מ-data.gov.il ע"י scripts/ivr_addr/build_addr.py (workflow ‏ivr-addr-data).
 // ============================================================================
 
+import { normalize as vmNorm, fold as vmFold, skeleton as vmSkel } from './voice-match.js';
+
 const KEYS = { 2: 'דהו', 3: 'אבג', 4: 'מנ', 5: 'יכל', 6: 'זחט', 7: 'רשת', 8: 'צק', 9: 'סעפ' };
 const FINALS = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
 const TAP = {};
@@ -80,6 +82,12 @@ async function getJson(env, origin, path) {
   } catch { return null; }
 }
 
+/** שמות היישובים להכוונת זיהוי הדיבור (עד 1000, הגדולים קודם; build_addr.py) או [] */
+export async function loadCitiesTop(env, origin) {
+  const d = await getJson(env, origin, '/data/ivr-addr/cities-top.json');
+  return Array.isArray(d) ? d : [];
+}
+
 /** [[סמל, שם], ...] או null אם הנתונים לא זמינים */
 export async function loadCities(env, origin) {
   const d = await getJson(env, origin, '/data/ivr-addr/cities.json');
@@ -91,4 +99,25 @@ export async function loadStreets(env, origin, code) {
   if (!/^\d+$/.test(String(code || ''))) return null;
   const d = await getJson(env, origin, `/data/ivr-addr/streets/${code}.json`);
   return Array.isArray(d) ? d : null;
+}
+
+// ---- שם מזיהוי דיבור -> השם ברשימה (יישוב / רחוב) ----
+// השוואה אחרי נרמול: בלי ניקוד, גרשיים, מקפים, סוגריים ורווחים כפולים; אותיות דומות בצליל מאוחדות (voice-match.js);
+// ואם אין התאמה - גם בלי ו/י (כתיב מלא / חסר), ובלי תואר בהתחלה ("רחוב", "הרב" וכו'). רק התאמה יחידה מחליפה את הטקסט.
+const spokenForms = (s) => {
+  const ws = vmNorm(String(s || '').replace(/\([^)]*\)/g, ' ')).split(' ').filter(Boolean), out = [ws.join('')];
+  let i = 0;
+  while (i < ws.length - 1 && TITLES.has(ws[i])) { i++; out.push(ws.slice(i).join('')); }
+  return out.map(vmFold);
+};
+export function canonName(names, spoken) {
+  const q = spokenForms(spoken).filter(Boolean);
+  if (!q.length || !Array.isArray(names)) return '';
+  for (const conv of [(x) => x, (x) => vmSkel(x)]) {
+    const qs = new Set(q.map(conv)), hits = new Set();
+    for (const n of names) if (spokenForms(n).some((f) => qs.has(conv(f)))) hits.add(n);
+    if (hits.size === 1) return [...hits][0];
+    if (hits.size > 1) return '';
+  }
+  return '';
 }
