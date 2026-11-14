@@ -179,7 +179,7 @@ async function loadLive() {
   try {
     const d = await (await fetch("/api/news", { cache: "no-store" })).json();
     const auto = (d.items || []).filter(it => it.auto);
-    const tidyTitle = t => String(t || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, "").replace(/^מסלול חדש ברשימה המאושרת( · )?/, "");          // "מסלול חדש ברשימה המאושרת" מיותר כאן
+    const tidyTitle = t => String(t || "").replace(/ · היתר עיסקא.*$/, "").replace(/^חברה חדשה ברשימה - היתר עיסקא /, "").replace(/^(מסלול|קרן) חדש(ה)? ברשימה המאושרת( · )?/, "");          // "מסלול / קרן חדשה ברשימה המאושרת" מיותר כאן
     const tidyText = it => it.cat === "bonds" ? String(it.text || "").replace(/(^|[\s,(])אג"?ח(?=[\s,)]|$)/g, "$1").replace(/\s{2,}/g, " ").replace(/\s+([,)])/g, "$1").trim() : it.text;          // ברשימת האג"ח אין צורך במילה "אגח"
     const li = it => `<li title="${esc((it.title || "") + " - " + it.text)}"><span class="d">${fmt(it.date).slice(0, 5)}</span><span class="x"><b>${esc(tidyTitle(it.title))}</b> ${esc(tidyText(it))}</span></li>`;
     const put = (cat, ul, n) => { const r = auto.filter(it => it.cat === cat); $(ul).innerHTML = r.map(li).join("") || `<li class="off">אין כרגע</li>`; $(n).textContent = r.length; return r.length; };

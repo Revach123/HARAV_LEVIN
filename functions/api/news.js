@@ -137,7 +137,7 @@ async function bondItems(request, env, nDays = NEW_BOND_DAYS) {
 }
 
 // שינויים ברשימת הקרנות והמסלולים (glatt_funds): mark = 'new' (מסלול חדש) / 'del' (הוסר). עדכון לכל מסלול:
-//   שורה ראשונה: סוג השינוי + סוג המוצר ("מסלול חדש · קרן השתלמות"), שורה שנייה: החברה + המסלול + מספר ("מיטב · מסלול הלכה (1234)")
+//   שורה ראשונה: סוג השינוי + סוג המוצר ("מסלול חדש · קרן השתלמות", ולקרן סל / נאמנות / כספית: "קרן חדשה · קרן סל"), שורה שנייה: החברה + המסלול + מספר ("מיטב · מסלול הלכה (1234)")
 // תאריך הסימון של כל מסלול: לרשימת הקרנות אין תאריכים (ושמירה של הרשימה מעדכנת תאריך אחד לכולה), ולכן היום הראשון
 // שבו מסלול נראה מסומן "חדש" / "הוסר" נשמר כאן (site_news_fund_seen). סימון שבוטל נמחק, וסימון מחדש נספר מחדש.
 // מפתח: סימון|חברה|מסלול|סוג|מספר (אותו חישוב ב-funds.html). עריכת שם / מספר של מסלול מסומן = סימון חדש.
@@ -165,9 +165,11 @@ async function fundItems(env, maxDays = NEW_FUND_DAYS) {
     return (await markedFunds(env)).filter((r) => r.first_seen >= since).map((r) => {
       const date = r.first_seen;
       const del = r.mark === 'del', type = clean(r.type, 60), co = clean(r.company, 80), track = clean(r.track, 100), num = clean(r.number, 20);
-      const change = del ? 'הוסר מהרשימה המאושרת' : 'מסלול חדש ברשימה המאושרת';
+      // קרן סל / קרן נאמנות / קרן כספית היא קרן ולא מסלול: "קרן חדשה", והשם בלי הקידומת "מסלול"
+      const isFund = ['קרן סל', 'קרן נאמנות', 'קרן כספית'].includes(type);
+      const change = del ? 'הוסר מהרשימה המאושרת' : isFund ? 'קרן חדשה ברשימה המאושרת' : 'מסלול חדש ברשימה המאושרת';
       return { id: 'f' + r.mark + r.id, cat: 'funds', title: `${change}${type ? ` · ${type}` : ''}`,
-        text: [co, track ? (/^מסלול/.test(track) ? track : `מסלול ${track}`) : '', num ? `מס' ${num}` : ''].filter(Boolean).join(' · '), link: '', date, pinned: false, auto: true, kind: del ? 'removed' : 'new' };
+        text: [co, track ? (isFund || /^מסלול/.test(track) ? track : `מסלול ${track}`) : '', num ? `מס' ${num}` : ''].filter(Boolean).join(' · '), link: '', date, pinned: false, auto: true, kind: del ? 'removed' : 'new' };
     });
   } catch { return []; }          // הטבלה עוד לא קיימת
 }
