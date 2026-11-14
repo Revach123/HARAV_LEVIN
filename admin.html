@@ -182,6 +182,16 @@
   col.c-name2    { width: 318px; }
   col.c-details  { width: 235px; }
   td.biz-cell, td.det-cell { white-space: normal; vertical-align: top; }
+  .cat-sel { max-width: 150px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 5px; font-size: 12px; background: var(--bg); color: var(--text); cursor: pointer; direction: rtl; }
+  .pc-wrap { margin-top: 6px; display: flex; align-items: center; gap: 4px; justify-content: center; }
+  .pc-line { display: flex; gap: 4px; flex-wrap: nowrap; overflow: hidden; max-width: 190px; min-width: 0; }
+  .pc-line.open { flex-wrap: wrap; max-width: none; overflow: visible; }
+  .pc-chip { background: #e8f0fb; border: 1px solid #9bb8e0; border-radius: 12px; padding: 1px 8px; font-size: 11.5px; white-space: nowrap; }
+  .pc-chip.auto { background: #eef6ee; border-color: #9cc79c; }
+  .pc-chip a { color: #a00; text-decoration: none; }
+  .pc-more { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0 2px; }
+  .pc-add { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; border-radius: 50%; border: 1px solid #9bb8e0; background: #fff; color: #1a5fb4; font-weight: 700; cursor: pointer; overflow: hidden; }
+  .pc-add select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; align-items: center; }
   .kv .k { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .kv .v { min-width: 0; overflow-wrap: anywhere; }
@@ -1186,6 +1196,49 @@ function pcatBoxHtml(val) {
       : `<span style="background:#e8f0fb;border:1px solid #9bb8e0;border-radius:14px;padding:3px 10px;font-size:.9em">${escHtml(c)} <a href="#" style="color:#a00;text-decoration:none" onclick="pcatDel(${i});return false" title="הסר">✕</a></span>`).join("") || '<span style="color:var(--light)">ללא קטגוריה</span>'}</div>
     <select onchange="pcatAdd(this)"><option value="">➕ הוספת קטגוריה…</option>${all.filter(x => !cur.includes(x) && x !== PCAT_BONDS).map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select>`;
 }
+// ── טבלת העדכון: שינוי קטגוריית החברה (dropdown) וקטגוריות לרשימת השטרות (פיצרים: מחיקה / + הוספה), נשמרים מיד ──
+function catSelectHtml(b) {
+  const cur = (b.category || "").trim(), all = uniqueCats();
+  if (cur && !all.includes(cur)) all.push(cur);
+  return `<select class="cat-sel" onchange="catInline('${b.id}', this)" title="שינוי קטגוריה">
+    <option value=""${cur ? "" : " selected"}>— ללא —</option>${all.map(x => `<option value="${escHtml(x)}"${x === cur ? " selected" : ""}>${escHtml(x)}</option>`).join("")}<option value="__new">➕ קטגוריה חדשה…</option></select>`;
+}
+async function catInline(id, sel) {
+  const isNew = sel.value === "__new";
+  const v = isNew ? (prompt("שם הקטגוריה החדשה:") || "").trim() : sel.value;
+  const biz = businesses.find(b => b.id === id);
+  if (!biz || (isNew && !v)) { render(); return; }
+  if (v !== (biz.category || "")) await inlineUpdateMany(id, { category: v });
+  render();
+}
+function rowPcatHtml(b) {
+  const cur = pcatSplit(b.permits_category), all = [...new Set(businesses.flatMap(x => pcatSplit(x.permits_category)))].filter(x => !cur.includes(x) && x !== PCAT_BONDS && x !== "שונות").sort((x, y) => x.localeCompare(y, "he"));
+  const chips = cur.map((c, i) => c === PCAT_BONDS
+    ? `<span class="pc-chip auto" title="אוטומטי: לפי יש אג&quot;ח">${escHtml(c)}</span>`
+    : `<span class="pc-chip">${escHtml(c)}${c === "שונות" ? "" : ` <a href="#" onclick="rowPcatDel('${b.id}',${i});return false" title="הסר מהרשימה">✕</a>`}</span>`).join("");
+  return `<div class="pc-wrap" title="קטגוריות לרשימת השטרות: ${escHtml(cur.join(", ") || "ללא")}">
+    <div class="pc-line" id="pcl-${b.id}">${chips}</div>
+    <button type="button" class="pc-more" onclick="document.getElementById('pcl-${b.id}').classList.toggle('open')" title="הצגת כל הקטגוריות">…</button>
+    <label class="pc-add" title="הוספת קטגוריה לרשימת השטרות">+<select onchange="rowPcatAdd('${b.id}', this)"><option value="">הוספת קטגוריה…</option>${all.map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select></label></div>`;
+}
+async function rowPcatSave(id, list) {
+  await inlineUpdateMany(id, { permits_category: list.join(PCAT_SEP) });
+  render();
+}
+async function rowPcatAdd(id, sel) {
+  let v = sel.value;
+  if (v === "__new") v = (prompt("שם הקטגוריה החדשה (לרשימת השטרות):") || "").trim();
+  const biz = businesses.find(b => b.id === id);
+  if (!biz || !v) { render(); return; }
+  const cur = pcatSplit(biz.permits_category).filter(x => x !== "שונות");
+  if (!cur.includes(v)) cur.push(v);
+  await rowPcatSave(id, cur);
+}
+async function rowPcatDel(id, i) {
+  const biz = businesses.find(b => b.id === id); if (!biz) return;
+  const cur = pcatSplit(biz.permits_category); cur.splice(i, 1);
+  await rowPcatSave(id, cur);
+}
 function pcatRender() { const h = document.getElementById("f-pcat"), b = document.getElementById("pcat-box"); if (h && b) b.innerHTML = pcatBoxHtml(h.value); }
 function pcatAdd(sel) {
   const h = document.getElementById("f-pcat"); let v = sel.value;
@@ -1341,7 +1394,7 @@ function admRowsHtml(items, grp0) {
                 <td class="biz-cell"><div class="kv"><span class="k"></span><span class="v biz-name">${b0._isSub ? "↳ " : ""}${(b.chp_number || "").toString().trim() ? escHtml(((b0._isSub ? b.permit_name : "") || b.registrar_name || b.permit_name || "").trim() || "—") : `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="עסק בלי ח.פ.: אפשר לעדכן את השם" onchange="nameInline('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">`}</span>${hebBox(b0)}${(b.chp_number || "").toString().trim() ? `${samePermitName(b) ? `<span class="k"></span><span class="v pn-same"><span class="pn-txt">שם זהה בהיתר עסקה</span> <button type="button" class="pn-edit" onclick="pnEdit(this)" title="עריכת השם בהיתר עסקה">✏️</button><input type="text" style="display:none" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" data-s="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);"></span>` : `<span class="k">שם בהיתר עסקה</span><span class="v">${(b.chp_number || "").toString().trim() ? `<input type="text" value="${escHtml((b.permit_name || b.registrar_name || "").trim())}" title="שם בהיתר עסקה" onchange="permitNameSave('${b.id}', this.value)" style="width:100%;box-sizing:border-box;padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:var(--bg);color:var(--text);">` : '<span style="color:var(--light)">—</span>'}</span>`}` : ""}</div>${!b0._isSub && (b.chp_number || "").toString().trim() ? subAddWidget(b.id) : ""}</td>
                 <td class="det-cell"><div class="kv"><span class="k">${chpLbl(b.chp_number, b.biz_type)}</span><span class="v" style="direction:ltr;text-align:right;">${(b.chp_number || "").toString().trim() || b0._isSub ? (escHtml(chpShown(b.chp_number))||"—") : `<button type="button" class="btn-ghost" style="padding:1px 8px;font-size:12px;direction:rtl" onclick="addChp('${b.id}')">➕ הוספת ח.פ.</button>`}</span>
                   <span class="k">סוג עסק</span><span class="v">${escHtml(b.biz_type)||"—"}${b.registry_status && !/^פעיל/.test(b.registry_status) ? ` <span style="${/^(מחוסל|חיסול|מחוק|נגרע)/.test(b.registry_status)?"color:var(--red);font-weight:500;":/^בפרוק/.test(b.registry_status)?"color:#b85c00;font-weight:500;":"color:var(--muted);"}">(${escHtml(b.registry_status)})</span>` : ""}</span>
-                  <span class="k">קטגוריה</span><span class="v">${escHtml(b.category)||"—"}</span></div></td>
+                  <span class="k">קטגוריה</span><span class="v">${catSelectHtml(b)}</span></div></td>
                 <td style="font-size:12px;">${escHtml(b.region)||"—"}</td>
                 <td>
                   <input type="text" value="${escHtml(b.notes ?? "")}" placeholder="הערה"
@@ -1384,7 +1437,7 @@ function admRowsHtml(items, grp0) {
                   })() : ""}
                 </td>
                 ${window.PD ? PD.slotCells(b) : "<td></td><td></td>"}
-                <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}</td>
+                <td class="pd-cell" style="text-align:center;">${window.PD ? PD.extraCell(b) : ""}${b0._isSub ? "" : rowPcatHtml(b)}</td>
                 <td style="text-align:center;white-space:nowrap;">
                   <button class="row-del" onclick="preDelete('${b.id}')">מחיקה</button>
                 </td>
