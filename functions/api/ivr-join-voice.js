@@ -24,7 +24,7 @@ import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join
 import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
 import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
 import { loadNameKeyterms } from './_shared/name-keyterms.js';
-import { tapLetter, canonName, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
+import { tapLetter, canonName, likeliest, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
 import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
@@ -97,7 +97,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שדה בדיבור: הקלטה -> ElevenLabs -> (parse) -> "זוהה: ..." -> 1 = אישור, 2 = הקלטה חוזרת.
   // parse מחזיר את הערך או '' (לא תקין -> bad + הקלטה חוזרת); sayOf = איך מקריאים את הערך חזרה.
   // langs: שפות הזיהוי (['he'] = עברית; '' = אוטומטי). עם יותר משפה אחת parse מקבל את כל הזיהויים (מערך).
-  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = '', tapAfter = 0, spellOut = false, keyterms = null } = {}) => {
+  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = '', tapAfter = 0, spellOut = false, keyterms = null, rank = null } = {}) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
     if (S(name, 'tap') === '1') return { tap: true };          // tapAfter: אחרי כמה ניסיונות שנכשלו עוברים להקשה
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
@@ -108,7 +108,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
       const texts = (await elevenTranscribeRecording(env, [
         ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
         `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
-      ], langs || ['he'], keyterms ? await keyterms() : [])).map((x) => clean(x, 300).replace(/[.,!?]+$/g, '').trim());
+      ], langs || ['he'], keyterms ? await keyterms() : [], rank)).map((x) => clean(x, 300).replace(/[.,!?]+$/g, '').trim());
       const t = texts.find(Boolean) || '';
       setS(name, 'raw', t); setS(name, 'x', t ? parse(langs ? texts : t) : ''); setS(name, 't', n);
     }
@@ -216,7 +216,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const cityCode = (cities && (cities.find((c) => c[1] === ctQ.val) || [])[0]) || '';
   const streets = cityCode ? await loadStreets(env, origin, cityCode) : null;
   const stQ = await field('st', 'v:askStreet', REC_MAX, streets && streets.length
-    ? { keyterms: async () => streets, parse: (t) => canonName(streets, t) || t } : {});
+    ? { keyterms: async () => streets, rank: likeliest, parse: (t) => canonName(streets, t) || t } : {});
   if (stQ.ask) return stQ.ask;
   const hnQ = numStep('hn', 'join:askHouse', 'join:badHouse', (x) => (/^\d{1,4}$/.test(String(x)) ? (x === '0' || Number(x) === 0 ? 'ללא' : String(Number(x))) : ''), 4, 1,
     (x) => (x === 'ללא' ? 'ללא מספר בית' : `מספר בית ${x}`));

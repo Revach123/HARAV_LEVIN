@@ -129,3 +129,20 @@ export function canonName(names, spoken) {
   }
   return '';
 }
+
+/** n השמות שהכי דומים לטקסט שזוהה (לרשימה גדולה מ-n, למשל 4000 רחובות בירושלים): מילים משותפות (בלי חשיבות לסדר,
+ *  בלי ו/י) ואחריהן דמיון אותיות (זוגות אותיות משותפים). מחזיר את הרשימה כמו שהיא אם היא קטנה מ-n. */
+export function likeliest(names, spoken, n) {
+  if (!Array.isArray(names) || names.length <= n) return names || [];
+  const skelWords = (s) => spokenWords(s).flat().map(vmSkel).filter(Boolean);
+  const pairs = (w) => { const out = new Set(); for (let i = 0; i < w.length - 1; i++) out.add(w.slice(i, i + 2)); return out; };
+  const qw = new Set(skelWords(spoken)), qp = pairs([...qw].join(''));
+  if (!qw.size) return names.slice(0, n);
+  const scored = names.map((name, i) => {
+    const ws = new Set(skelWords(name)), p = pairs([...ws].join(''));
+    let common = 0; for (const w of ws) if (qw.has(w)) common++;
+    let pc = 0; for (const x of p) if (qp.has(x)) pc++;
+    return { name, i, s: common * 10 + (p.size + qp.size ? (2 * pc) / (p.size + qp.size) : 0) };
+  });
+  return scored.sort((a, b) => b.s - a.s || a.i - b.i).slice(0, n).map((x) => x.name);
+}

@@ -13,11 +13,11 @@ import { checkAdmin } from './_shared/auth.js';
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit, ttsClean } from './_shared/ivr_phrases.js';
 import MANIFEST from './_shared/ivr_audio_manifest.js';
-import { elevenConfigured, elevenTranscribe } from './_shared/stt-eleven.js';
+import { elevenConfigured, elevenTranscribe, KEYTERMS_MAX } from './_shared/stt-eleven.js';
 import { downloadRecording } from './_shared/stt-azure.js';
 import { sttGet, sttPut } from './_shared/stt-cache.js';
 import { loadNameKeyterms } from './_shared/name-keyterms.js';
-import { canonName, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
+import { canonName, likeliest, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
 
 const EMPTY = 'NONE', REC_MIN = 1, REC_MAX = 10, MAX_ROUNDS = 60;
 const T = (txt) => `t-${ttsClean(txt)}`;
@@ -50,10 +50,14 @@ async function step({ v, env, P, bk, origin }) {
     if (cached != null) { try { return JSON.parse(cached); } catch {} }
     const value = String(v[key] || '');
     const recd = await downloadRecording(env, [...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []), `${folder}/${file(key)}.wav`, `${folder}/${file(key)}`]);
-    const out = recd
-      ? await Promise.all([elevenTranscribe(env, recd.bytes, 'he'), terms.length ? elevenTranscribe(env, recd.bytes, 'he', terms) : Promise.resolve(null)])
-      : ['', null];
-    const res = { plain: clean(out[0]), kt: out[1] == null ? null : clean(out[1]), n: terms.length };
+    let out = ['', null], sent = terms.length;
+    if (recd && terms.length > KEYTERMS_MAX) {          // רשימה גדולה (רחובות בעיר גדולה): קודם בלי הכוונה, ואז 1000 הדומים ביותר למה שזוהה
+      const plain = await elevenTranscribe(env, recd.bytes, 'he');
+      const pick = plain ? likeliest(terms, plain, KEYTERMS_MAX) : [];
+      sent = pick.length;
+      out = [plain, pick.length ? await elevenTranscribe(env, recd.bytes, 'he', pick) : null];
+    } else if (recd) out = await Promise.all([elevenTranscribe(env, recd.bytes, 'he'), terms.length ? elevenTranscribe(env, recd.bytes, 'he', terms) : Promise.resolve(null)]);
+    const res = { plain: clean(out[0]), kt: out[1] == null ? null : clean(out[1]), n: sent };
     await sttPut(env, `lab${call}`, slot, JSON.stringify(res));
     return res;
   };
@@ -90,7 +94,7 @@ async function step({ v, env, P, bk, origin }) {
       if (city && !streets.length) return menu(k + 1, say('עיר', cr, city) + T('ביישוב אין רחובות ברשימה') + '.');
       return rec(say('עיר', cr, city) + (city ? '' : T('הרחוב יזוהה בלי רשימת רחובות') + '.') + P('v:askStreet'), s);
     }
-    const sr = await transcribe(s, k * 10 + 2, streets.slice(0, 1000));
+    const sr = await transcribe(s, k * 10 + 2, streets);
     const street = streets.length ? (canonName(streets, sr.kt || sr.plain) || canonName(streets, sr.plain)) : undefined;
     await logRow(env, 'street', sr, street || '', city);
     return menu(k + 1, say('רחוב', sr, street));

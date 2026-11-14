@@ -51,10 +51,16 @@ export async function elevenTranscribe(env, wav, lang = 'he', keyterms = []) {
 }
 
 /** הקלטה בימות (נתיבים אפשריים) -> טקסט בכל אחת מהשפות (הורדה אחת). ['he'] = עברית בלבד. */
-export async function elevenTranscribeRecording(env, candidates, langs = ['he'], keyterms = []) {
+//  rank(list, text, n): כשיש יותר מ-1000 מונחים (רחובות בעיר גדולה) - קודם זיהוי בלי הכוונה, ואז נשלחים 1000 המונחים
+//  שהכי דומים למה שזוהה (rank). בלי rank - 1000 הראשונים.
+export async function elevenTranscribeRecording(env, candidates, langs = ['he'], keyterms = [], rank = null) {
   const rec = await downloadRecording(env, candidates);
   if (!rec) return langs.map(() => '');
-  return Promise.all(langs.map((l) => elevenTranscribe(env, rec.bytes, l, keyterms)));
+  return Promise.all(langs.map(async (l) => {
+    if (keyterms.length <= KEYTERMS_MAX || !rank) return elevenTranscribe(env, rec.bytes, l, keyterms);
+    const plain = await elevenTranscribe(env, rec.bytes, l);
+    return plain ? (await elevenTranscribe(env, rec.bytes, l, rank(keyterms, plain, KEYTERMS_MAX))) || plain : '';
+  }));
 }
 
 // ---- ספרות מדיבור: "אפס חמש אחת", "052", "שלושים ושתיים" -> ספרות ----

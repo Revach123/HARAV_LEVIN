@@ -8,7 +8,7 @@ import { KEYTERMS_MAX, KEYTERM_LEN } from './stt-eleven.js';
 
 const TABLE = 'CREATE TABLE IF NOT EXISTS ivr_keyterms (kind TEXT PRIMARY KEY, data TEXT, at INTEGER)';
 
-// שם "אמיתי" מהמאגר: אותיות עבריות (ורווח / מקף / גרש), בלי ניקוד; בלי ערכי מקום ("טלפוני (ראו הקלטת שם פרטי)" וכו')
+// שם "אמיתי" מהמאגר (נספר לפי מילים): אותיות עבריות (ורווח / מקף / גרש), בלי ניקוד; בלי ערכי מקום ("טלפוני (ראו הקלטת שם פרטי)" וכו')
 export function cleanName(s) {
   let t = String(s || '').replace(/[֑-ׇ]/g, '').replace(/[״"]/g, '').replace(/[׳`]/g, "'").replace(/\s+/g, ' ').trim();
   if (!t || /[()]|טלפוני|ראו הקלטת/.test(t)) return '';
@@ -28,7 +28,9 @@ export async function buildNameKeyterms(env, { min = 2 } = {}) {
     for (const r of rs) {
       total++;
       let p; try { p = await decryptPii(key, r.id, r.pii); } catch { bad++; continue; }
-      for (const f of Object.keys(counts)) { const n = cleanName(p && p[f]); if (n) counts[f].set(n, (counts[f].get(n) || 0) + 1); }
+      for (const f of Object.keys(counts)) {          // לפי מילים: "שמואל פרידי בונים" -> שמואל, פרידי, בונים (יותר צירופים באותן 1000 משבצות)
+        for (const w of new Set(cleanName(p && p[f]).split(' '))) if (w.replace(/['\-]/g, '').length >= 2) counts[f].set(w, (counts[f].get(w) || 0) + 1);
+      }
     }
   }
   await env.DB.prepare(TABLE).run();
