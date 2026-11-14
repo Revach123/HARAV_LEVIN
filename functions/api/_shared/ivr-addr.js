@@ -102,20 +102,28 @@ export async function loadStreets(env, origin, code) {
 }
 
 // ---- שם מזיהוי דיבור -> השם ברשימה (יישוב / רחוב) ----
-// השוואה אחרי נרמול: בלי ניקוד, גרשיים, מקפים, סוגריים ורווחים כפולים; אותיות דומות בצליל מאוחדות (voice-match.js);
-// ואם אין התאמה - גם בלי ו/י (כתיב מלא / חסר), ובלי תואר בהתחלה ("רחוב", "הרב" וכו'). רק התאמה יחידה מחליפה את הטקסט.
-const spokenForms = (s) => {
-  const ws = vmNorm(String(s || '').replace(/\([^)]*\)/g, ' ')).split(' ').filter(Boolean), out = [ws.join('')];
-  let i = 0;
-  while (i < ws.length - 1 && TITLES.has(ws[i])) { i++; out.push(ws.slice(i).join('')); }
-  return out.map(vmFold);
+// השוואה אחרי נרמול: בלי ניקוד, גרשיים, מקפים, סוגריים ורווחים כפולים; אותיות דומות בצליל מאוחדות (voice-match.js); תואר בהתחלה
+// ("רחוב", "הרב" וכו') אפשר להשמיט. שלבים, מהמחמיר למקל: כמו שהוא; בלי ו/י (כתיב מלא / חסר: חזקיהו = חזקיה);
+// ואז גם בלי חשיבות לסדר המילים (ברשימה הרשמית שם המשפחה קודם: "הרב שבתאי חזקיה" = "חזקיהו שבתאי"). רק התאמה יחידה מחליפה את הטקסט.
+const spokenWords = (s) => {
+  const ws = vmNorm(String(s || '').replace(/\([^)]*\)/g, ' ')).split(' ').filter(Boolean), out = [ws];
+  let i = 0;          // התארים נבדקים לפני איחוד האותיות ("רחוב", לא "רכוב")
+  while (i < ws.length - 1 && TITLES.has(ws[i])) { i++; out.push(ws.slice(i)); }
+  return out.map((f) => f.map(vmFold));
 };
+const STAGES = [
+  (ws) => ws.join(''),
+  (ws) => ws.map(vmSkel).join(''),
+  (ws) => ws.slice().sort().join(' '),
+  (ws) => ws.map(vmSkel).sort().join(' '),
+];
 export function canonName(names, spoken) {
-  const q = spokenForms(spoken).filter(Boolean);
+  const q = spokenWords(spoken).filter((ws) => ws.length);
   if (!q.length || !Array.isArray(names)) return '';
-  for (const conv of [(x) => x, (x) => vmSkel(x)]) {
-    const qs = new Set(q.map(conv)), hits = new Set();
-    for (const n of names) if (spokenForms(n).some((f) => qs.has(conv(f)))) hits.add(n);
+  const prepared = names.map((n) => [n, spokenWords(n)]);
+  for (const key of STAGES) {
+    const qs = new Set(q.map(key)), hits = new Set();
+    for (const [n, forms] of prepared) if (forms.some((f) => qs.has(key(f)))) hits.add(n);
     if (hits.size === 1) return [...hits][0];
     if (hits.size > 1) return '';
   }
