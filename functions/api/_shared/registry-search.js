@@ -138,7 +138,7 @@ export function permitIndex(businesses) {
 const isPbc = (item) => !!item.pbc || /(^|[^א-ת])חל["״'׳]?צ([^א-ת]|$)/.test(String(item.name || ''));
 
 export function typeLabel(item) {
-  if (item.kind === 'other') return '';      // רשות מקומית / אגודה שיתופית: אין סוג מתאים להקראה - רק השם
+  if (item.kind === 'other' || item.kind === 'business') return '';   // רשות / אגודה שיתופית / עסק בלי מספר: רק השם
   const s = String(item.sub || '');
   let label;
   if (item.kind === 'partnership') label = /מוגבלת/.test(s) ? 'שותפות מוגבלת' : /כללית/.test(s) ? 'שותפות כללית' : 'שותפות';
@@ -202,7 +202,15 @@ export function notInRegistry(businesses) {
   const seen = new Set(), out = [];
   for (const b of businesses || []) {
     const d = digitsOnly(b.chp_number);
-    if (!d || seen.has(d)) continue;
+    if (!d) {
+      // עסק בלי מספר תאגיד (בעיקר חנויות): נמצא לפי השם בלבד, מוקרא בלי סוג ובלי מספר
+      const name = String(b.permit_name || b.registrar_name || '').trim();
+      if (!name || seen.has('n:' + name)) continue;
+      seen.add('n:' + name);
+      out.push({ kind: 'business', id: `b:${b.id}`, name, status: '', sub: '' });
+      continue;
+    }
+    if (seen.has(d)) continue;
     if (String(b.registrar_name || '').trim() && /^5\d{8}$/.test(d)) continue;
     seen.add(d);
     out.push({ kind: kindOfNumber(d), id: String(b.chp_number).trim(), name: b.permit_name || b.registrar_name, status: '', sub: '' });
