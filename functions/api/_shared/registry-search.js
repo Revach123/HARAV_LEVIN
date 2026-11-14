@@ -134,15 +134,37 @@ export function permitIndex(businesses) {
 // ---------------------------------------------------------------------------
 //  תיאור לתוצאה: סוג, שם (בע"מ נשאר ומוקרא בראשי תיבות), מצב היתר
 // ---------------------------------------------------------------------------
-// חל"צ: ברשם היא "חברה פרטית"; מזוהה לפי השם או כשאותו מספר רשום גם ברשם העמותות (pbc, dedupeById)
+// חל"צ: ברשם היא "חברה פרטית". מזוהה לפי הרשימה הרשמית (GuideStar, נטענת שבועית ל-Revach -
+// pbc_ids.json, loadPbcIds), לפי השם, או כשאותו מספר רשום גם ברשם העמותות (pbc, dedupeById)
 const isPbc = (item) => !!item.pbc || /(^|[^א-ת])חל["״'׳]?צ([^א-ת]|$)/.test(String(item.name || ''));
+const PBC_URL = 'https://revach.pages.dev/data/registry/pbc_ids.json';
+let PBC = { at: 0, ids: null };
+export async function loadPbcIds() {
+  if (PBC.ids && Date.now() - PBC.at < (PBC.ok ? 12 * 3600e3 : 600e3)) return PBC.ids;
+  try {
+    const r = await fetch(PBC_URL, { signal: AbortSignal.timeout(3000), cf: { cacheTtl: 3600 } });
+    if (!r.ok) throw new Error(String(r.status));
+    PBC = { at: Date.now(), ok: true, ids: new Set((await r.json()).map(String)) };
+  } catch {
+    // בלי הרשימה - נשארים עם השם וכפילות הרישום; לא מנסים שוב בכל שיחה (10 דקות), אבל שומרים רשימה קודמת אם הייתה
+    PBC = { at: Date.now(), ok: false, ids: PBC.ids || new Set() };
+  }
+  return PBC.ids;
+}
+export async function markPbc(items) {
+  const ids = await loadPbcIds();
+  for (const it of items) if (it.kind === 'company' && ids.has(digitsOnly(it.id))) it.pbc = true;
+  return items;
+}
+// אגודות עות'מאניות והקדשות ציבוריים (GuideStar -> טבלת associations, הסוג שמור ב-category)
+const ASSOC_TYPES = new Set(["אגודה עות'מאנית", 'הקדש ציבורי']);
 
 export function typeLabel(item) {
   if (item.kind === 'other' || item.kind === 'business') return '';   // רשות / אגודה שיתופית / עסק בלי מספר: רק השם
   const s = String(item.sub || '');
   let label;
   if (item.kind === 'partnership') label = /מוגבלת/.test(s) ? 'שותפות מוגבלת' : /כללית/.test(s) ? 'שותפות כללית' : 'שותפות';
-  else if (item.kind === 'association') label = 'עמותה';
+  else if (item.kind === 'association') label = ASSOC_TYPES.has(s) ? s : 'עמותה';
   else if (isPbc(item)) label = 'חברה לתועלת הציבור';
   else label = /ציבורי/.test(s) ? 'חברה ציבורית' : /פרטי/.test(s) ? 'חברה פרטית' : 'חברה';
   return DEFUNCT.test(item.status || '') ? `${label} מחוקה` : label;
@@ -232,6 +254,7 @@ export async function searchByName(env, query, businesses) {
   const found = searchBusinesses(query, candidates.map(toBusinessRow), 50);
   const items = found.results.map((r) => byKey.get(r.id)).filter(Boolean);
   items.sort((a, b) => (DEFUNCT.test(a.status || '') ? 1 : 0) - (DEFUNCT.test(b.status || '') ? 1 : 0));
+  await markPbc(items);
   return { items, total: found.total, tooMany: truncated || found.total > MAX_PAGED };          // עד MAX_PAGED: מוקראות בדפים של MAX_LIST (9 = תוצאות נוספות)
 }
 
@@ -249,7 +272,7 @@ export async function searchByChp(env, chp, businesses) {
     const items = [];
     out.forEach((res, i) => (res.results || []).forEach((r) => items.push({ kind: KINDS[i], ...r })));
     if (!items.length) items.push(...notInRegistry(businesses).filter((it) => digitsOnly(it.id) === id));
-    return dedupeById(items);
+    return markPbc(dedupeById(items));
   }
   return fromBusinesses(businesses.filter((b) => digitsOnly(b.chp_number) === id));
 }

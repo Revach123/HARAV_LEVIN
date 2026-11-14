@@ -5,7 +5,7 @@ import { checkAdmin } from "./_shared/auth.js";
 // ⚠ נרמול: גרסה B של revach (גרש/מקף -> רווח), כי עמודת name_norm והאינדקס נבנו כך (ראו revach functions/api/search.js).
 // הנרמול של שלוחת הטלפון (voice-match, מוחק מקפים) לא מתאים: "פוקס-ויזל" הופך שם למילה אחת ולא נמצא.
 
-import { typeLabel } from './_shared/registry-search.js';
+import { markPbc, typeLabel } from './_shared/registry-search.js';
 import { loadMayaCompanies, mayaKey } from './lookup.js';
 
 const DEFUNCT = /מחוק|נמחק|מבוטל|פירוק|מפורק|מחוסל|חוסל|חיסול/;
@@ -67,6 +67,7 @@ export async function onRequestGet({ request, env }) {
       else errors.push(`${t}: ${String(res.reason && res.reason.message || res.reason)}`);
     });
     if (out.slice(0, tables.length).every(r => r.status !== "fulfilled")) return Response.json({ error: errors.join(" | ") }, { status: 500 });
+    await markPbc(rows);             // חל"צ לפי הרשימה הרשמית (typeLabel: "חברה לתועלת הציבור")
     const seen = new Set();          // אותו תאגיד לא יופיע פעמיים (שורות כפולות באינדקס החיפוש)
     const results = rows
       .filter(r => { const k = r.kind + ":" + r.id; if (seen.has(k)) return false; seen.add(k); return true; })
