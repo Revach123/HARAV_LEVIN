@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ניסויי זיהוי דיבור</title>
+<link rel="icon" href="/favicon.png">
+<style>
+:root{--teal:#1e8f85;--dark:#274d5b;--line:#dfe7e8;--muted:#6a7c82;--bg:#f4f7f7;--good:#1e7e4a;--bad:#b3261e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#1f2d2d;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5}
+header{background:var(--dark);color:#fff;padding:14px 24px}header h1{margin:0;font-size:21px}
+main{padding:16px 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:0 0 16px}
+label{font-weight:bold;font-size:15px}
+input[type=password]{padding:9px 10px;font:inherit;border:1px solid #b7c9c4;border-radius:7px;background:#fff}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 16px;background:var(--teal);color:#fff;font-weight:bold}
+.bar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.msg{margin:10px 0 0;font-weight:bold}.msg.bad{color:var(--bad)}
+.scroll{overflow:auto;max-height:75vh;border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid #eef2f2;vertical-align:top}
+th{position:sticky;top:0;background:#eef4f4;color:var(--dark);font-size:13px;white-space:nowrap}
+tr:hover td{background:#f8fbfb}
+.hint{color:var(--muted);font-size:14px}
+.diff{background:#fff4d6;border-radius:4px;padding:0 3px}
+.ok{color:var(--good);font-weight:bold}.no{color:var(--bad)}
+#login{max-width:420px}
+</style>
+</head>
+<body>
+<header><h1>ניסויי זיהוי דיבור (שלוחת הניסויים)</h1></header>
+<main>
+  <div class="card" id="login" hidden>
+    <h2 style="margin:0 0 10px;font-size:18px">כניסה</h2>
+    <label for="pw">סיסמת ניהול</label><br>
+    <input type="password" id="pw" autocomplete="current-password" style="width:100%;margin:6px 0">
+    <button type="button" id="go">כניסה</button>
+    <p class="msg bad" id="lmsg"></p>
+  </div>
+  <div id="app" hidden>
+    <div class="card">
+      <div class="bar"><button type="button" id="reload">רענון</button>
+        <span class="hint">50 הניסיונות האחרונים. מסומן בצהוב: כשההכוונה שינתה את התוצאה.</span></div>
+      <p class="msg" id="msg"></p>
+      <div class="scroll"><table>
+        <thead><tr><th>זמן</th><th>שדה</th><th>בלי הכוונה</th><th>עם הכוונה</th><th>מונחים</th><th>ברשימה</th><th>עיר</th></tr></thead>
+        <tbody id="body"></tbody>
+      </table></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+let token = ""; try { token = sessionStorage.getItem("adminToken") || localStorage.getItem("adm_tok") || ""; } catch {}          // אותה כניסה של דף הניהול
+const api = path => fetch(path, { cache: "no-store", headers: token ? { Authorization: `Bearer ${token}` } : {} });
+const KIND = { first: "שם פרטי", last: "שם משפחה", city: "עיר", street: "רחוב" };
+const time = iso => { try { return new Date(iso).toLocaleString("he-IL", { timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }); } catch { return iso; } };
+async function load() {
+  $("msg").className = "msg"; $("msg").textContent = "טוען…";
+  try {
+    const r = await api("/api/ivr-voice-lab?log=1");
+    if (r.status === 401) { token = ""; try { sessionStorage.removeItem("adminToken"); } catch {} return showLogin(); }
+    const d = await r.json();
+    const rows = d.rows || [];
+    $("msg").textContent = d.error ? "שגיאה: " + d.error : rows.length ? "" : "אין עדיין ניסיונות";
+    $("body").innerHTML = rows.map(x => {
+      const changed = x.n > 0 && x.kt && x.kt !== x.plain;
+      const matched = x.kind === "city" || x.kind === "street" ? (x.matched ? `<span class="ok">${esc(x.matched)}</span>` : `<span class="no">לא נמצא</span>`) : "";
+      return `<tr><td>${esc(time(x.at))}</td><td>${esc(KIND[x.kind] || x.kind)}</td><td>${esc(x.plain) || '<span class="no">לא זוהה</span>'}</td>
+        <td>${x.n > 0 ? (changed ? `<span class="diff">${esc(x.kt)}</span>` : esc(x.kt) || '<span class="no">לא זוהה</span>') : '<span class="hint">אין רשימה</span>'}</td>
+        <td>${x.n || ""}</td><td>${matched}</td><td>${esc(x.ctx)}</td></tr>`;
+    }).join("");
+  } catch { $("msg").className = "msg bad"; $("msg").textContent = "הטעינה נכשלה"; }
+}
+function showLogin() { $("app").hidden = true; $("login").hidden = false; $("pw").focus(); }
+function enter() { $("login").hidden = true; $("app").hidden = false; load(); }
+$("go").addEventListener("click", async () => {
+  const pw = $("pw").value;
+  const r = await fetch("/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw }) });
+  if (!r.ok) { $("lmsg").textContent = "סיסמה שגויה"; return; }
+  token = pw; try { sessionStorage.setItem("adminToken", pw); } catch {}
+  enter();
+});
+$("pw").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+$("reload").addEventListener("click", load);
+(async () => {
+  if (token) return enter();
+  try { const d = await (await fetch("/api/login", { cache: "no-store" })).json(); if (d.trusted) return enter(); } catch {}
+  showLogin();
+})();
+</script>
+</body>
+</html>

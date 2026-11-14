@@ -197,7 +197,7 @@ title=חיפוש היתר עסקה חברות
 | שורש (התפריט הראשי) | `type=api` / `api_link=https://harav-levin.pages.dev/api/ivr-menu` / `api_add_0=sk=<IVR_SECRET_NEW>` |
 | `/2` חיפוש חברות | כמו למעלה, עם `api_link=.../api/ivr-company`, ובנוסף `api_add_1=bk=/` (חזרה לתפריט הראשי במקום `/5`) ו-`api_add_2=rf=/2` (תיקיית ההקלטות) |
 | `/1` הצטרפות | `type=api` / `api_link=https://harav-levin.pages.dev/api/ivr-join` / `api_add_0=sk=<IVR_SECRET_NEW>` / `api_add_1=bk=/` |
-| `/9` ניסויי זיהוי דיבור (שם פרטי / משפחה / כתובת, בלי רישום) | `type=api` / `api_link=https://harav-levin.pages.dev/api/ivr-voice-lab` / `api_add_0=sk=<IVR_SECRET_NEW>` / `api_add_1=bk=/` / `api_add_2=rf=/9` (תיקיית השלוחה). יומן הניסויים: `/api/ivr-voice-lab?log=1` (מנהל) |
+| `/9` ניסויי זיהוי דיבור (שם פרטי / משפחה / כתובת, בלי רישום) | `type=api` / `api_link=https://harav-levin.pages.dev/api/ivr-voice-lab` / `api_add_0=sk=<IVR_SECRET_NEW>` / `api_add_1=bk=/` / `api_add_2=rf=/9` (תיקיית השלוחה). יומן הניסויים: הדף `/voice-lab` (כניסת מנהל) |
 
 בתפריט הראשי: 1 = `/1` (הצטרפות), 2 = `/2` (חיפוש). אפשר לשנות עם `api_add_1=join=/x` ו-`api_add_2=search=/y`. הקלטות החיפוש נשמרות בתיקייה `rf`, והקלטות ההצטרפות ב-`/1` (`IVR_JOIN_REC_FOLDER`).
 
