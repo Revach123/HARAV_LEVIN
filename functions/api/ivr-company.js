@@ -203,7 +203,7 @@ async function listing(ctx, r, all, p = 1) {
       const choices = await docListFor(ctx.env, item.id);
       if (choices.length) faxable.push({ chp: String(item.id), name: d.name, choices });
     }
-    parts.push(P(`type:${d.type}`), say(d.name));              // שם החברה: TTS של ימות
+    parts.push(d.type ? P(`type:${d.type}`) : '', say(d.name));   // שם החברה: TTS של ימות (רשות/אגודה שיתופית: בלי סוג)
     if (d.baam) parts.push(P('baam'));
     if (d.permit === 'private') parts.push(P('permit:private'), P('permit:private2'));
     else if (d.permit === 'both') parts.push(P('permit:alsoPrivate'));
