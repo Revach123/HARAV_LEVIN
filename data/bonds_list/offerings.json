@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-13",
+ "updated": "2026-11-14",
  "upcoming": [
   {
    "id": 10358,
@@ -623,29 +623,6 @@
    "chp_number": ""
   },
   {
-   "chp_number": "1811308",
-   "company_name": "אקסטל לימיטד",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10378,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776492",
-   "maya_report_id": 1776492,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-10"
-  },
-  {
    "chp_number": "",
    "company_name": "סלדן",
    "draft_no": 1,
@@ -713,52 +690,6 @@
    ],
    "carried": true,
    "last_seen": "2026-11-12"
-  },
-  {
-   "chp_number": "517220448",
-   "company_name": "איביאי ריב פיק",
-   "draft_no": 2,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "id": 10418,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1780355",
-   "link_trust_indenture": null,
-   "maya_report_id": 1780355,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-10"
-  },
-  {
-   "chp_number": "517220448",
-   "company_name": "איביאי ריב פיק",
-   "draft_no": 3,
-   "draft_title": "טיוטת דו\"ח הצעת מדף",
-   "id": 10421,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1780501",
-   "link_trust_indenture": null,
-   "maya_report_id": 1780501,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-10"
   }
  ],
  "open": [
