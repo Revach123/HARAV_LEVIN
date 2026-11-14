@@ -1,38 +1,13 @@
 {
- "updated": "2026-11-13",
+ "updated": "2026-11-14",
  "status": "ok",
- "datawise_date": "2026-11-12",
- "expected": 777,
- "maya": 777,
+ "datawise_date": "2026-11-13",
+ "expected": 776,
+ "maya": 776,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "kept_no_terms": [
-  {
-   "security_id": 1177526,
-   "security_name": "ג'נרישן קפ אגחב",
-   "company": "ג'נריישן קפיטל  בע\"מ",
-   "chp_number": "515846558"
-  },
-  {
-   "security_id": 1184555,
-   "security_name": "ג'נרישן קפ אגחג",
-   "company": "ג'נריישן קפיטל  בע\"מ",
-   "chp_number": "515846558"
-  },
-  {
-   "security_id": 1214964,
-   "security_name": "ג'נרישן קפ אגחד",
-   "company": "ג'נריישן קפיטל  בע\"מ",
-   "chp_number": "515846558"
-  },
-  {
-   "security_id": 1189950,
-   "security_name": "אלה השק אגח א",
-   "company": "אלה ר. הנדסת בנין והשקעות בע\"מ",
-   "chp_number": "520040015"
-  }
- ],
+ "kept_no_terms": [],
  "dropped_no_terms": []
 }
