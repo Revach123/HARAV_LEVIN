@@ -1,11 +1,11 @@
 name: Fax versions of permit PDFs
 
 # גרסה לפקס של כל שטר (docs-fax/ ב-R2): שחור-לבן חד, 200x300 (הרזולוציה שהספק משדר), דחיסת פקס. המקור לא משתנה.
-# אוטומטי: כל חצי שעה, לשטרות שהועלו ב-3 הימים האחרונים. ידני (Run workflow): all=true מעבד את כל השטרות שעוד אין להם; apply=false זה dry-run.
+# אוטומטי: רק כשמועלה שטר - functions/api/permit-docs.js מפעיל את ה-workflow (triggerFaxPdf, הסוד GITHUB_DISPATCH_TOKEN),
+# והריצה מעבדת את השטרות מ-3 הימים האחרונים שעוד אין להם גרסת פקס. אין ריצה מתוזמנת (חסכון בדקות).
+# ידני (Run workflow): ברירת המחדל משלימה את כל מה שחסר מ-3 הימים האחרונים; all=true - כל השטרות; apply=false זה dry-run.
 # סודות: CF_D1_AND_R2_TOKEN + CF_ACCOUNT_ID (כמו compress-new-permits).
 on:
-  schedule:
-    - cron: "10,40 * * * *"
   workflow_dispatch:
     inputs:
       all: { description: "כל השטרות שאין להם גרסת פקס (לא רק החדשים)", type: boolean, default: false }

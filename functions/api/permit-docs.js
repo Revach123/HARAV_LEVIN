@@ -1,6 +1,6 @@
 import { checkAdmin } from "./_shared/auth.js";
 import { TYPES, MAX_BYTES, noAuth, noStore, newId, withBusinesses, existingBusinessIds, hex } from "./_shared/permit-docs.js";
-import { triggerCompress } from "./_shared/compress-trigger.js";
+import { triggerCompress, triggerFaxPdf } from './_shared/compress-trigger.js';
 // מאגר מסמכי היתר עסקה - כל הנקודות למנהל בלבד (בשלב זה אין תצוגה ציבורית).
 // GET  /api/permit-docs                → כל המסמכים עם החברות המשויכות לכל אחד  { docs: [...] }
 // GET  /api/permit-docs?sha=<sha256>   → בדיקת כפילות: { exists: bool, doc }
@@ -69,6 +69,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     }
     const row = await env.DB.prepare("SELECT * FROM permit_docs WHERE id = ?").bind(id).first();
     triggerCompress(env, waitUntil, buf.byteLength);          // דחיסה מיידית של הגרסה הקלה לצפייה (ברקע; ללא סוד GITHUB_DISPATCH_TOKEN - הריצה המתוזמנת מטפלת)
+    triggerFaxPdf(env, waitUntil);                            // גרסת הפקס של השטר - רק בהעלאה (אין ריצה מתוזמנת)
     return Response.json({ success: true, doc: (await withBusinesses(env, [row]))[0] });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
