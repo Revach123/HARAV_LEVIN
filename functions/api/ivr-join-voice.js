@@ -13,7 +13,7 @@
 //  התקדמות השיחה נשמרת מוצפנת בשרת (ivr_join_voice_state), כמו בשלוחה 1.
 //  ext.ini (שלוחה 3):  type=api / api_link=https://harav-levin.pages.dev/api/ivr-join-voice / api_add_0=sk=<IVR_SECRET_NEW> / api_add_1=bk=/
 //  דרישות: ELEVENLABS_API_KEY, YEMOT_TOKEN (הורדת ההקלטות), IVR_SECRET_NEW, JOINERS_KEY, binding DB.
-//  אופציונלי: IVR_VOICE_REC_FOLDER (תיקיית ההקלטות בימות, ברירת מחדל /3).
+//  אופציונלי: תיקיית ההקלטות בימות - api_add_2=rf=/<השלוחה> ב-ext.ini, או IVR_VOICE_REC_FOLDER (ברירת מחדל /3).
 // ============================================================================
 import { folderParam, parseYemot, readRecord, readTap, secretOk } from './_shared/ivr-auth.js';
 import { unit, ttsClean } from './_shared/ivr_phrases.js';
@@ -87,7 +87,7 @@ const T = (txt) => `t-${ttsClean(txt)}`;
 const spaced = (d) => String(d).split('').join(' ');
 
 async function step({ v, env, P, bk, done, origin, waitUntil }) {
-  const folder = (env.IVR_VOICE_REC_FOLDER || '/3').replace(/\/$/, '');
+  const folder = folderParam(v, 'rf', env.IVR_VOICE_REC_FOLDER || '/3').replace(/\/$/, '');          // ext.ini: api_add_2=rf=/1 (תיקיית השלוחה)
   const call = String(v.ApiCallId || 'x').replace(/\W/g, '');
   const recFile = (key) => `v${call}_${key}`;
   const S = (name, k) => v[`s_${name}_${k}`];
