@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14",
+ "updated": "2026-11-15",
  "upcoming": [
   {
    "id": 10358,
@@ -717,33 +717,6 @@
     }
    ],
    "chp_number": "520044314"
-  },
-  {
-   "begins_at": "2026-11-11T09:00:00",
-   "chp_number": "516901774",
-   "ends_at": "2026-11-11T16:00:00",
-   "interest": 0.1,
-   "is_new_company": false,
-   "is_variable_interest": true,
-   "issuer_id": 2454,
-   "issuer_name": "פאי פלוס",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1780457",
-   "offer_number": 1219260,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": "ilAA+",
-     "midroog_rating": null,
-     "security_id": null,
-     "security_name": "אג\"ח ה'",
-     "security_type": "אג\"ח מובנות"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-11"
   }
  ],
  "companies": [
@@ -843,13 +816,6 @@
    "name": "ג'י טי נדל\"ן",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "516901774",
-   "name": "פאי פלוס",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
