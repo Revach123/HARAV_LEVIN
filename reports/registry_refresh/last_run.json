@@ -2,22 +2,22 @@
  "summary": {
   "scope": "all",
   "recovered_by_single_lookup": 0,
-  "unfound_after_batch": 89,
+  "unfound_after_batch": 91,
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 40,
-   "biz_type": 91
+   "biz_type": 92
   },
   "empty_after": {
    "registrar_name": 40,
-   "biz_type": 91
+   "biz_type": 92
   },
-  "updated": "2026-11-14T09:26:08.482326Z",
+  "updated": "2026-11-15T09:56:08.640515Z",
   "source": "d1",
-  "businesses": 1287,
-  "numeric_chp": 1283,
+  "businesses": 1288,
+  "numeric_chp": 1285,
   "found_in_registry": 1194,
-  "found_ratio": 0.931,
+  "found_ratio": 0.929,
   "failed_batches": 0,
   "datawise_rows": 2240,
   "datawise_date": "2026-11-13",
@@ -25,10 +25,10 @@
   "changes": {
    "registrar_name": 0,
    "biz_type": 0,
-   "tase_has_agch": 1,
+   "tase_has_agch": 0,
    "registry_status": 0,
-   "has_agch_any": 2,
-   "permits_category": 2
+   "has_agch_any": 1,
+   "permits_category": 1
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -39,54 +39,41 @@
    "permits_category": 0
   },
   "registry_status_counts": {
+   "לא ידוע": 156,
    "פעילה": 1083,
-   "לא ידוע": 155,
    "מחוסלת/חיסול": 34,
    "בפירוק": 15
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 3,
+  "statements_applied": 1,
   "problems": []
  },
  "changes": [
   {
-   "id": "mp64jdba8ybj",
-   "chp": "2185148",
+   "id": "mp64jixaaw7j",
+   "chp": "520040015",
    "field": "has_agch_any",
    "old": "יש",
    "new": "אין"
-  },
-  {
-   "id": "mp64jdba8ybj",
-   "chp": "2185148",
-   "field": "permits_category",
-   "old": "חברות מנפיקות אג\"ח|חברות נדל\"ן ובינוי",
-   "new": "חברות נדל\"ן ובינוי"
   },
   {
    "id": "mp64jixaaw7j",
    "chp": "520040015",
-   "field": "tase_has_agch",
-   "old": "יש",
-   "new": "אין"
-  },
-  {
-   "id": "mp64jv06kllt",
-   "chp": "512623950",
-   "field": "has_agch_any",
-   "old": "יש",
-   "new": "אין"
-  },
-  {
-   "id": "mp64jv06kllt",
-   "chp": "512623950",
    "field": "permits_category",
-   "old": "חברות מנפיקות אג\"ח",
-   "new": "שונות"
+   "old": "חברות מנפיקות אג\"ח|חברות נדל\"ן ובינוי",
+   "new": "חברות נדל\"ן ובינוי"
   }
  ],
  "not_found": [
+  {
+   "id": "mp64ip5cv118",
+   "chp": "589916006",
+   "permit_name": "לאומית שירותי בריאות",
+   "registrar_name": "לאומית שירותי בריאות",
+   "entity_type": "company",
+   "biz_type": ""
+  },
   {
    "id": "mp64j1qp0r2p",
    "chp": "2352046",
@@ -680,6 +667,14 @@
    "biz_type": ""
   },
   {
+   "id": "mp64m1itd2mn",
+   "chp": "589958495",
+   "permit_name": "קופת חולים מאוחדת",
+   "registrar_name": "",
+   "entity_type": "company",
+   "biz_type": ""
+  },
+  {
    "id": "mp64m1t2x6mb",
    "chp": "500226402",
    "permit_name": "ראש העין - עירייה",
@@ -801,11 +796,6 @@
   }
  ],
  "non_numeric_chp": [
-  {
-   "id": "mp64m1itd2mn",
-   "chp": "5849/99",
-   "permit_name": "קופת חולים מאוחדת"
-  },
   {
    "id": "mp64m23q4g6l",
    "chp": "NV1239114",
