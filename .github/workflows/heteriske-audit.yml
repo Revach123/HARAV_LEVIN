@@ -41,7 +41,7 @@ jobs:
     timeout-minutes: 180
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configure git identity (for mid-run checkpoint commits)
         run: |
@@ -49,7 +49,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -83,7 +83,7 @@ jobs:
 
       - name: Upload heteriske audit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: heteriske-audit-report
           path: scripts/heteriske_audit/out/
@@ -119,7 +119,7 @@ jobs:
 
       - name: Upload similar-names audit results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: similar-names-audit-report
           path: scripts/registry_audit/out/
