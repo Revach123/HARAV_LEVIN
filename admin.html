@@ -192,6 +192,10 @@
   .pc-more { border: none; background: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 0 2px; }
   .pc-add { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; border-radius: 50%; border: 1px solid #9bb8e0; background: #fff; color: #1a5fb4; font-weight: 700; cursor: pointer; overflow: hidden; }
   .pc-add select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+  /* tooltip של הקטגוריות (מיקום fixed מול המסך - הטבלה לא חותכת אותו) */
+  #pc-tip { position: fixed; z-index: 9999; display: none; background: #1f2d3d; color: #fff; border-radius: 8px; padding: 7px 11px; font-size: 12.5px; line-height: 1.55; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: none; max-width: 280px; direction: rtl; }
+  #pc-tip b { display: block; font-size: 11.5px; color: #b9cbe0; font-weight: 600; margin-bottom: 2px; }
+  #pc-tip div::before { content: "• "; color: #9bb8e0; }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 6px; align-items: center; }
   .kv .k { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .kv .v { min-width: 0; overflow-wrap: anywhere; }
@@ -1216,11 +1220,25 @@ function rowPcatHtml(b) {
   const chips = cur.map((c, i) => c === PCAT_BONDS
     ? `<span class="pc-chip auto" title="אוטומטי: לפי יש אג&quot;ח">${escHtml(c)}</span>`
     : `<span class="pc-chip">${escHtml(c)}${c === "שונות" ? "" : ` <a href="#" onclick="rowPcatDel('${b.id}',${i});return false" title="הסר מהרשימה">✕</a>`}</span>`).join("");
-  return `<div class="pc-wrap" title="קטגוריות לרשימת השטרות: ${escHtml(cur.join(", ") || "ללא")}">
+  return `<div class="pc-wrap" data-pcats="${escHtml(cur.join(PCAT_SEP))}" onmouseenter="pcTipShow(this)" onmouseleave="pcTipHide()">
     <div class="pc-line" id="pcl-${b.id}">${chips}</div>
-    <button type="button" class="pc-more" onclick="document.getElementById('pcl-${b.id}').classList.toggle('open')" title="הצגת כל הקטגוריות">…</button>
+    <button type="button" class="pc-more" onclick="document.getElementById('pcl-${b.id}').classList.toggle('open')" aria-label="הצגת כל הקטגוריות">…</button>
     <label class="pc-add" title="הוספת קטגוריה לרשימת השטרות">+<select onchange="rowPcatAdd('${b.id}', this)"><option value="">הוספת קטגוריה…</option>${all.map(x => `<option value="${escHtml(x)}">${escHtml(x)}</option>`).join("")}<option value="__new">קטגוריה חדשה…</option></select></label></div>`;
 }
+/* tooltip: כל הקטגוריות שנבחרו, אחת בכל שורה - גם כשהשורה בתא חתוכה */
+function pcTipShow(el) {
+  const cats = pcatSplit(el.dataset.pcats);
+  let t = document.getElementById("pc-tip");
+  if (!t) { t = document.createElement("div"); t.id = "pc-tip"; document.body.appendChild(t); }
+  t.innerHTML = `<b>קטגוריות לרשימת השטרות (${cats.length})</b>` + (cats.length ? cats.map(c => `<div>${escHtml(c)}</div>`).join("") : "<div>ללא</div>");
+  t.style.display = "block";
+  const r = el.getBoundingClientRect(), w = t.offsetWidth, h = t.offsetHeight;
+  const below = r.bottom + 6 + h <= window.innerHeight;
+  t.style.top = (below ? r.bottom + 6 : Math.max(4, r.top - 6 - h)) + "px";
+  t.style.left = Math.min(Math.max(4, r.left + r.width / 2 - w / 2), window.innerWidth - w - 4) + "px";
+}
+function pcTipHide() { const t = document.getElementById("pc-tip"); if (t) t.style.display = "none"; }
+document.addEventListener("scroll", pcTipHide, true);   // גלילה / רינדור מחדש - בלי tooltip תקוע
 async function rowPcatSave(id, list) {
   await inlineUpdateMany(id, { permits_category: list.join(PCAT_SEP) });
   render();
