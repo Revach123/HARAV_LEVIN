@@ -2474,11 +2474,12 @@
     if (J.loading || J.rows) return;
     J.loading = true; J.err = ""; J.rows = [];
     try {
-      for (let off = 0; ; off += 400) {
-        const r = await api(`/joiners?offset=${off}&limit=400`);
-        J.total = r.total; J.cancels = r.cancels; J.rows.push(...r.rows);
+      for (let off = 0, cur = null; ; off += 400) {          // דפדוף לפי סמן (next) - כל עמוד קורא רק את שורותיו במסד; הספירות מגיעות בעמוד הראשון
+        const r = await api(`/joiners?limit=400` + (cur ? `&after=${encodeURIComponent(cur)}` : ""));
+        if (r.total != null) { J.total = r.total; J.cancels = r.cancels; }
+        J.rows.push(...r.rows); cur = r.next;
         if (ND.tab === "e") { if (off === 0 || !jUserBusy()) ndShow(); else jProg(); }          // כל עוד המשתמש מסנן / מקליד: לא מציירים מחדש בכל קבוצה (זה קוטע את הסינון), רק מעדכנים את המונה
-        if (off + 400 >= r.total) break;
+        if (!cur || !r.rows.length) break;
       }
     } catch (e) { J.err = e.message || "שגיאה"; J.rows = null; }
     J.loading = false;
