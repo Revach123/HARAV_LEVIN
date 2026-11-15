@@ -241,7 +241,21 @@ export function notInRegistry(businesses) {
 }
 
 /** @returns {{items:Array, total:number, tooMany:boolean}} items מדורגים, פעילים לפני מחוקים */
+// קופות החולים רשומות בשמן הרשמי בלי "קופת חולים" ("לאומית שירותי בריאות", "מכבי שירותי בריאות",
+// "שירותי בריאות כללית"): חיפוש עם "קופת חולים" / "קופ"ח" מחפש גם עם "שירותי בריאות" ומאחד (כמו באתר Revach)
+const HMO = /קופ(?:ת|["״'׳])?\s*ח(?:ולים)?(?=\s|$)/;
 export async function searchByName(env, query, businesses) {
+  const first = await searchByNameOnce(env, query, businesses);
+  if (!HMO.test(String(query || ''))) return first;
+  const alt = String(query).replace(HMO, 'שירותי בריאות').replace(/\s+/g, ' ').trim();
+  const second = await searchByNameOnce(env, alt, businesses);
+  const have = new Set(first.items.map((i) => `${i.kind}:${i.id}`));
+  const add = second.items.filter((i) => !have.has(`${i.kind}:${i.id}`));
+  if (!add.length) return first;
+  return { items: add.concat(first.items), total: first.total + add.length, tooMany: first.tooMany && second.tooMany };
+}
+
+async function searchByNameOnce(env, query, businesses) {
   let candidates, truncated = false;
   if (env.DB1) {
     ({ rows: candidates, truncated } = await registryCandidates(env.DB1, query));
