@@ -15,6 +15,17 @@ const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
 const toRow = (r, p) => ({ id: r.id, submitted_at: r.submitted_at, cancelled_at: r.cancelled_at, file_sha256: r.file_sha256, ident_hash: r.ident_hash,
   first: p.first || "", last: p.last || "", phone: p.phone || "", email: p.email || "", id_number: p.id || "", ip: p.ip || "", companies: p.companies || "", all: p.all || "", extra: p.extra || "", src: p.src || "",
   undecryptable: !p.first && !p.last && !p.email && !p.phone ? 1 : 0 });
+// אינדקס לדפדוף רשימת המצטרפים (ר' onRequestGet). נוצר פעם אחת לכל isolate; IF NOT EXISTS - זול כשכבר קיים.
+let listIndexP = null;
+function ensureListIndex(env) {
+  // וגם submitted_at=NULL -> '' (ברירת המחדל של העמודה): השוואת הסמן (submitted_at, id) < (?, ?) מדלגת על NULL, כך ששורה כזו לא הייתה נטענת
+  if (!listIndexP) listIndexP = env.DB.batch([
+    env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_joiners_date_id ON joiners(submitted_at, id)"),
+    env.DB.prepare("UPDATE joiners SET submitted_at = '' WHERE submitted_at IS NULL"),
+  ]).catch(() => { listIndexP = null; });
+  return listIndexP;
+}
+
 export async function onRequestGet({ request, env }) {
   const u = new URL(request.url);
   // ?domains=1: ספירת סיומות האימייל בלבד (בלי שום פרט אישי) - מנהל, או הרצה אוטומטית עם X-Cron-Secret (workflow joiner-email-domains)
@@ -115,9 +126,23 @@ export async function onRequestGet({ request, env }) {
     const offset = Math.max(0, parseInt(u.searchParams.get("offset") || "0", 10) || 0), limit = Math.min(500, Math.max(1, parseInt(u.searchParams.get("limit") || "400", 10) || 400));
     let key;
     try { key = await importKey(env); } catch { return Response.json({ error: "המפתח JOINERS_KEY לא מוגדר באתר" }, { status: 503, headers: H }); }
-    const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiners").first()).n;
-    const cancels = (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiner_cancels").first()).n;
-    const rs = (await env.DB.prepare("SELECT id, submitted_at, cancelled_at, file_sha256, ident_hash, pii FROM joiners ORDER BY submitted_at DESC, id LIMIT ? OFFSET ?").bind(limit, offset).all()).results ?? [];
+    // דפדוף לפי סמן (after = submitted_at + TAB + id של השורה האחרונה בעמוד הקודם) על אינדקס (submitted_at, id):
+    // כל עמוד קורא רק את השורות שלו. ב-OFFSET עם מיון שאין לו אינדקס, כל עמוד סרק וממיין את כל הטבלה (~פי 60 קריאות לכל טעינת רשימה).
+    // הספירות רק בעמוד הראשון (בעמודים הבאים הדף כבר יודע אותן).
+    await ensureListIndex(env);
+    const after = u.searchParams.get("after");
+    const total = after == null ? (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiners").first()).n : null;
+    const cancels = after == null ? (await env.DB.prepare("SELECT COUNT(*) AS n FROM joiner_cancels").first()).n : null;
+    const cols = "SELECT id, submitted_at, cancelled_at, file_sha256, ident_hash, pii FROM joiners";
+    let rs;
+    if (after != null) {
+      const [ad, ...aid] = String(after).split("\t");
+      rs = (await env.DB.prepare(`${cols} WHERE (submitted_at, id) < (?, ?) ORDER BY submitted_at DESC, id DESC LIMIT ?`).bind(ad, aid.join("\t"), limit).all()).results ?? [];
+    } else {
+      rs = (await env.DB.prepare(`${cols} ORDER BY submitted_at DESC, id DESC LIMIT ? OFFSET ?`).bind(limit, offset).all()).results ?? [];
+    }
+    const last = rs[rs.length - 1];
+    const next = rs.length === limit && last ? `${last.submitted_at ?? ""}\t${last.id}` : null;
     const rows = [];
     let bad = 0;
     for (const r of rs) {
@@ -126,7 +151,7 @@ export async function onRequestGet({ request, env }) {
       rows.push(toRow(r, p));
     }
     if (rs.length && bad === rs.length) return Response.json({ error: "הפענוח נכשל: JOINERS_KEY באתר אינו תואם למפתח שבו הוצפנה הרשימה" }, { status: 500, headers: H });
-    return Response.json({ total, cancels, rows }, { headers: H });
+    return Response.json({ total, cancels, rows, next }, { headers: H });
   } catch (e) {
     return Response.json({ error: "שגיאה בקריאת הרשימה" }, { status: 500, headers: H });
   }
