@@ -1,4 +1,5 @@
 import { GROUPS, bump, dataVersion } from "./_shared/data-version.js";
+import { notifyRevach } from "./_shared/revach-notify.js";
 
 // מטמון קצה (Cloudflare Cache API) לתשובות ציבוריות שנקראות הרבה ומשתנות לעיתים רחוקות: רשימות החברות, קישורי השטרות וקובצי ה-PDF.
 // פגיעה במטמון חוסכת את כל שאילתות ה-D1 / קריאת R2 / קידוד base64. שינוי בניהול מתעדכן בציבורי תוך TTL (שניות) לכל היותר.
@@ -52,6 +53,9 @@ export async function onRequest(context) {
   const response = await next();
 
   if (write && group && env.DB && response.ok) { try { await bump(env, group); ver = await dataVersion(env); } catch { ver = null; } }
+  // שינוי מוצלח ברשימת העסקים (הוספה / עדכון / מחיקה) - Revach בונה מחדש את רשימת ההיתרים שלו מיד.
+  // לא ל-sync-tase: הוא רק מפעיל ריצה ב-GitHub, והנתונים משתנים רק בסופה (ומשם - בריצה היומית של Revach).
+  if (write && response.ok && /^\/api\/businesses(\/|$)/.test(path)) notifyRevach(env, context.waitUntil, `${request.method} ${path}`);
 
   // Attach CORS to every response
   const newHeaders = new Headers(response.headers);
