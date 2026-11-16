@@ -412,6 +412,10 @@ def apply_updates(d1, stmts, max_bytes=60000):
         chunk.append(s); size += len(s) + 1
     if chunk:
         d1.query("\n".join(chunk)); sent += len(chunk)
+    if sent:
+        # מונה הגרסה של רשימת העסקים (app_meta) - כך דף הניהול הפתוח יודע לטעון מחדש (ר' _shared/data-version.js)
+        d1.query("CREATE TABLE IF NOT EXISTS app_meta (k TEXT PRIMARY KEY, v INTEGER NOT NULL DEFAULT 0);\n"
+                 "INSERT INTO app_meta (k, v) VALUES ('biz', 1) ON CONFLICT(k) DO UPDATE SET v = v + 1;")
     return sent
 
 
