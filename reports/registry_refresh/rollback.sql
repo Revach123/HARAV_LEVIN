@@ -1,1 +1,0 @@
-UPDATE businesses SET has_agch_any = 'יש', permits_category = 'חברות מנפיקות אג"ח|חברות נדל"ן ובינוי' WHERE id = 'mp64jixaaw7j';

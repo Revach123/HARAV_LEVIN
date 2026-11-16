@@ -12,7 +12,7 @@
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-15T09:56:08.640515Z",
+  "updated": "2026-11-16T10:13:21.200926Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1285,
@@ -27,8 +27,8 @@
    "biz_type": 0,
    "tase_has_agch": 0,
    "registry_status": 0,
-   "has_agch_any": 1,
-   "permits_category": 1
+   "has_agch_any": 0,
+   "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -46,25 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 1,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64jixaaw7j",
-   "chp": "520040015",
-   "field": "has_agch_any",
-   "old": "יש",
-   "new": "אין"
-  },
-  {
-   "id": "mp64jixaaw7j",
-   "chp": "520040015",
-   "field": "permits_category",
-   "old": "חברות מנפיקות אג\"ח|חברות נדל\"ן ובינוי",
-   "new": "חברות נדל\"ן ובינוי"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64ip5cv118",
