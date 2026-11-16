@@ -1,5 +1,5 @@
 // גרסת נתונים לבדיקת עדכונים בדפדפן: { biz: { v, s }, docs: { v, s } }
-// v = מונה שעולה בכל שינוי דרך ה-API (app_meta); s = חתימה מהנתונים עצמם (כמות + עדכון אחרון), כדי לתפוס גם שינויים שנעשו ישירות ב-D1.
+// v = מונה שעולה בכל שינוי דרך ה-API (app_meta). s נשאר ריק (תאימות לדפדפן).
 export const GROUPS = {
   biz: p => /^\/api\/businesses(\/|$)/.test(p) || /^\/api\/sync-tase/.test(p),
   docs: p => /^\/api\/(permit-docs|permit-ext|permit-review|approved-bonds)(\/|$|\?)/.test(p),
@@ -11,16 +11,11 @@ export async function bump(env, group) {
 }
 
 export async function dataVersion(env) {
-  const one = async (sql) => { try { return await env.DB.prepare(sql).first(); } catch { return null; } };
-  const [m, b, d, l] = await Promise.all([
-    (async () => { try { return (await env.DB.prepare("SELECT k, v FROM app_meta").all()).results || []; } catch { return []; } })(),
-    one("SELECT COUNT(*) AS n, MAX(updated_at) AS u FROM businesses"),
-    one("SELECT COUNT(*) AS n, MAX(updated_at) AS u FROM permit_docs"),
-    one("SELECT COUNT(*) AS n, TOTAL(LENGTH(slot)) AS t FROM permit_doc_companies"),
-  ]);
+  // רק המונים (שורה לכל קבוצה). קודם נוספה "חתימה" מהנתונים עצמם (COUNT/MAX/TOTAL(LENGTH) על שלוש טבלאות)
+  // כדי לתפוס שינויים ישירים ב-D1 - כל בדיקה קראה את הטבלאות במלואן (כ-1.8 מיליון שורות ביום מדף ניהול פתוח).
+  // כל כתיבה עוברת דרך ה-API (המונה עולה ב-_middleware), והסקריפט היחיד שכותב ישירות (registry_refresh) מעלה את המונה בעצמו.
+  let m = [];
+  try { m = (await env.DB.prepare("SELECT k, v FROM app_meta").all()).results || []; } catch { m = []; }
   const mv = k => Number((m.find(x => x.k === k) || {}).v || 0);
-  return {
-    biz: { v: mv("biz"), s: `${b ? b.n : ""}|${b ? b.u : ""}` },
-    docs: { v: mv("docs"), s: `${d ? d.n : ""}|${d ? d.u : ""}|${l ? l.n : ""}|${l ? l.t : ""}` },
-  };
+  return { biz: { v: mv("biz"), s: "" }, docs: { v: mv("docs"), s: "" } };
 }
