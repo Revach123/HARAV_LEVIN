@@ -725,14 +725,14 @@
     "new_company_type": null,
     "securities": [
      {
-      "maalot_rating": null,
-      "midroog_rating": null,
+      "maalot_rating": "ilAA",
+      "midroog_rating": "Aa2.il",
       "name": "",
       "security_type": "אג\"ח"
      },
      {
-      "maalot_rating": null,
-      "midroog_rating": null,
+      "maalot_rating": "ilAA",
+      "midroog_rating": "Aa2.il",
       "name": "",
       "security_type": "אג\"ח"
      }
