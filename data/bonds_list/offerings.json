@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-15",
+ "updated": "2026-11-16",
  "upcoming": [
   {
    "id": 10358,
@@ -621,75 +621,6 @@
     }
    ],
    "chp_number": ""
-  },
-  {
-   "chp_number": "",
-   "company_name": "סלדן",
-   "draft_no": 1,
-   "draft_title": "טיוטת תשקיף",
-   "id": 10382,
-   "is_new_company": true,
-   "link_presentation": "https://maya.tase.co.il/he/reports/1774345",
-   "link_prospectus": "https://maya.tase.co.il/he/reports/1773968",
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776758",
-   "maya_report_id": 1776758,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-12"
-  },
-  {
-   "chp_number": "513141879",
-   "company_name": "בינלאומי הנפקות",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10408,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1779696",
-   "maya_report_id": 1779696,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-12"
-  },
-  {
-   "chp_number": "513257873",
-   "company_name": "מגה אור",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10417,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1776611",
-   "maya_report_id": 1780342,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": "ilAA",
-     "midroog_rating": null,
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-12"
   }
  ],
  "open": [
@@ -889,7 +820,6 @@
   "נגה נכסים",
   "פישר ברדרס פרופ",
   "לייטסטון מוקסי",
-  "ענבר ריביות",
-  "סלדן"
+  "ענבר ריביות"
  ]
 }
