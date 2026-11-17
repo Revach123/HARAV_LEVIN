@@ -20,10 +20,11 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{--navy:#274d5b;--accent:#2aada1;--accent-dark:#1e8f85;--accent-bg:#e9f6f5;--accent-border:#b9e3de;
     --border:#dfe7e8;--text:#3b3d3d;--muted:#6a7c82}
-  html{-webkit-text-size-adjust:100%}
+  html{-webkit-text-size-adjust:100%;overflow-x:hidden}   /* אין גלילה לצדדים - כך הכפתורים הקבועים תמיד באמצע */
+  :root{--sa:max(1rem,env(safe-area-inset-left),env(safe-area-inset-right))}   /* אותו שוליים בשני הצדדים (גם במסך אופקי עם חריץ) */
   body{font-family:'Alef','Heebo','Assistant',system-ui,-apple-system,'Segoe UI',sans-serif;background:#f4f7f7;color:var(--text);
     font-size:18px;line-height:1.6;-webkit-tap-highlight-color:transparent;min-height:100vh;
-    padding:0 max(1rem,env(safe-area-inset-left)) max(1.5rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-right))}
+    padding:0 var(--sa) max(1.5rem,env(safe-area-inset-bottom)) var(--sa);overflow-x:hidden}
   .wrap{max-width:560px;margin:0 auto}
   .hero{text-align:center;padding:.7rem 0 .6rem;border-bottom:2px solid var(--accent-border);margin-bottom:1rem}
   .hero img{height:68px;width:auto;display:block;margin:0 auto .3rem}
@@ -31,8 +32,8 @@
     .view{display:none}
   body[data-view=home] #v-home,body[data-view=funds] #v-funds{display:block}
   /* כפתורים קבועים בתחתית המסך (רק בדף הראשי); הטקסט נגלל מאחוריהם */
-  .dock{display:none;position:fixed;inset-inline:0;bottom:0;z-index:30;background:#fff;border-top:2px solid var(--accent-border);
-    box-shadow:0 -4px 14px rgba(0,0,0,.08);padding:.6rem max(1rem,env(safe-area-inset-right)) max(.6rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left))}
+  .dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:2px solid var(--accent-border);
+    box-shadow:0 -4px 14px rgba(0,0,0,.08);padding:.6rem var(--sa) max(.6rem,env(safe-area-inset-bottom)) var(--sa)}
   body[data-view=home] .dock{display:block}
   .dock-in{max-width:560px;margin:0 auto}
   .dock .big{min-height:54px;margin:0;padding:.4rem .9rem;font-size:19px;justify-content:center;text-align:center}
