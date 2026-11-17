@@ -1,13 +1,26 @@
 {
- "updated": "2026-11-16",
+ "updated": "2026-11-17",
  "status": "ok",
- "datawise_date": "2026-11-13",
+ "datawise_date": "2026-11-16",
  "expected": 776,
  "maya": 776,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "kept_no_terms": [],
+ "kept_no_terms": [
+  {
+   "security_id": 1232727,
+   "security_name": "ירושליםהנ אגח כ",
+   "company": "ירושלים מימון והנפקות (2005) בע\"מ",
+   "chp_number": "513682146"
+  },
+  {
+   "security_id": 1171305,
+   "security_name": "מרכנתיל הנ אגחד",
+   "company": "מרכנתיל הנפקות בע\"מ",
+   "chp_number": "513686154"
+  }
+ ],
  "dropped_no_terms": []
 }
