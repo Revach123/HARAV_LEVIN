@@ -19124,8 +19124,8 @@
    "issuer_name": "פז קמעונאות ואנרגיה  בע\"מ",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054",
-   "agch_approved": "כן",
-   "is_private": "לא",
+   "agch_approved": "פרטי + כללי",
+   "is_private": "כן",
    "notes": "",
    "redemption_date": "23/11/2026",
    "annual_interest": "3.93",
@@ -19141,7 +19141,7 @@
    "maalot_rating": "",
    "ytm_gross": "",
    "interest_frequency": "",
-   "list": "כללי"
+   "list": "כללי+פרטי"
   },
   {
    "security_id": 1139542,
@@ -19153,8 +19153,8 @@
    "issuer_name": "פז קמעונאות ואנרגיה  בע\"מ",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054",
-   "agch_approved": "כן",
-   "is_private": "לא",
+   "agch_approved": "פרטי + כללי",
+   "is_private": "כן",
    "notes": "",
    "redemption_date": "30/11/2028",
    "annual_interest": "1.94",
@@ -19170,7 +19170,7 @@
    "maalot_rating": "ilAA-",
    "ytm_gross": "",
    "interest_frequency": "",
-   "list": "כללי"
+   "list": "כללי+פרטי"
   },
   {
    "security_id": 1142595,
@@ -19182,8 +19182,8 @@
    "issuer_name": "פז קמעונאות ואנרגיה  בע\"מ",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054",
-   "agch_approved": "כן",
-   "is_private": "לא",
+   "agch_approved": "פרטי + כללי",
+   "is_private": "כן",
    "notes": "",
    "redemption_date": "01/12/2030",
    "annual_interest": "1.23",
@@ -19199,7 +19199,7 @@
    "maalot_rating": "ilAA-",
    "ytm_gross": "",
    "interest_frequency": "",
-   "list": "כללי"
+   "list": "כללי+פרטי"
   },
   {
    "security_id": 1162817,
@@ -19211,8 +19211,8 @@
    "issuer_name": "פז קמעונאות ואנרגיה  בע\"מ",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054",
-   "agch_approved": "כן",
-   "is_private": "לא",
+   "agch_approved": "פרטי + כללי",
+   "is_private": "כן",
    "notes": "",
    "redemption_date": "30/11/2031",
    "annual_interest": "2.43",
@@ -19228,7 +19228,7 @@
    "maalot_rating": "ilAA-",
    "ytm_gross": "",
    "interest_frequency": "",
-   "list": "כללי"
+   "list": "כללי+פרטי"
   },
   {
    "security_id": 1205947,
@@ -19240,8 +19240,8 @@
    "issuer_name": "פז קמעונאות ואנרגיה  בע\"מ",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054",
-   "agch_approved": "כן",
-   "is_private": "לא",
+   "agch_approved": "פרטי + כללי",
+   "is_private": "כן",
    "notes": "",
    "redemption_date": "31/05/2035",
    "annual_interest": "5.86",
@@ -19257,7 +19257,7 @@
    "maalot_rating": "ilAA-",
    "ytm_gross": "",
    "interest_frequency": "",
-   "list": "כללי"
+   "list": "כללי+פרטי"
   },
   {
    "security_id": 1169648,
