@@ -1,25 +1,37 @@
 {
- "updated": "2026-11-17",
+ "updated": "2026-11-18",
  "status": "ok",
- "datawise_date": "2026-11-16",
- "expected": 776,
- "maya": 776,
+ "datawise_date": "2026-11-17",
+ "expected": 777,
+ "maya": 777,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
  "kept_no_terms": [
   {
-   "security_id": 1232727,
-   "security_name": "ירושליםהנ אגח כ",
-   "company": "ירושלים מימון והנפקות (2005) בע\"מ",
-   "chp_number": "513682146"
+   "security_id": 1236413,
+   "security_name": "מהדרין אגח ב",
+   "company": "מהדרין בעמ",
+   "chp_number": "520018482"
   },
   {
-   "security_id": 1171305,
-   "security_name": "מרכנתיל הנ אגחד",
-   "company": "מרכנתיל הנפקות בע\"מ",
-   "chp_number": "513686154"
+   "security_id": 6390405,
+   "security_name": "דיסק השק אגח יא",
+   "company": "חברת השקעות דיסקונט בע\"מ",
+   "chp_number": "520023896"
+  },
+  {
+   "security_id": 1243401,
+   "security_name": "מבנה אגח כז",
+   "company": "מבנה נדל\"ן (כ.ד)  בע\"מ",
+   "chp_number": "520024126"
+  },
+  {
+   "security_id": 2260438,
+   "security_name": "מבנה אגח טז",
+   "company": "מבנה נדל\"ן (כ.ד)  בע\"מ",
+   "chp_number": "520024126"
   }
  ],
  "dropped_no_terms": []
