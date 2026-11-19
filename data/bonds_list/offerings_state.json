@@ -29,12 +29,41 @@
    "kind": "open",
    "last_seen": "2026-11-16"
   },
+  "O1211150": {
+   "data": {
+    "begins_at": "2026-11-19T09:30:00",
+    "chp_number": "510216054",
+    "ends_at": "2026-11-19T15:30:00",
+    "interest": 5.86,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1363,
+    "issuer_name": "פז אנרגיה",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1782255",
+    "offer_number": 1211150,
+    "offer_type": "מחיר",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1102,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": "ilAA-",
+      "midroog_rating": null,
+      "security_id": 1205947,
+      "security_name": "פז אנרגיה אגח ט",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-19"
+  },
   "O1219245": {
    "data": {
     "begins_at": "2026-11-19T09:00:00",
     "chp_number": "510706153",
     "ends_at": "2026-11-19T16:30:00",
-    "interest": 0,
+    "interest": 0.1,
     "is_new_company": false,
     "is_variable_interest": true,
     "issuer_id": 1773,
@@ -46,11 +75,11 @@
     "price_per_unit": 1000,
     "securities": [
      {
-      "linkage_type": null,
+      "linkage_type": "ללא",
       "maalot_rating": null,
-      "midroog_rating": null,
+      "midroog_rating": "P-1.il",
       "security_id": null,
-      "security_name": "ניירות ערך מסחריים (סדרה 6)",
+      "security_name": "נע\"מ 6",
       "security_type": "ני\"ע מסחריים"
      }
     ]
@@ -63,7 +92,7 @@
     "begins_at": "2026-11-19T09:30:00",
     "chp_number": "510216054",
     "ends_at": "2026-11-19T15:30:00",
-    "interest": 0,
+    "interest": 0.14,
     "is_new_company": false,
     "is_variable_interest": true,
     "issuer_id": 1363,
@@ -75,11 +104,11 @@
     "price_per_unit": 1000,
     "securities": [
      {
-      "linkage_type": null,
-      "maalot_rating": null,
+      "linkage_type": "ללא",
+      "maalot_rating": "ilA-1+",
       "midroog_rating": null,
       "security_id": null,
-      "security_name": "נע\"מ סדרה 3",
+      "security_name": "נע\"מ  3",
       "security_type": "ני\"ע מסחריים"
      }
     ]

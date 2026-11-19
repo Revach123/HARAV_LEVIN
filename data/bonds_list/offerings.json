@@ -750,21 +750,46 @@
    "ends_at": "2026-11-19T16:30:00",
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 0,
+   "interest": 0.1,
    "is_variable_interest": true,
    "price_per_unit": 1000,
    "link_offer_report": "https://maya.tase.co.il/he/reports/1782236",
    "securities": [
     {
      "security_id": null,
-     "security_name": "ניירות ערך מסחריים (סדרה 6)",
+     "security_name": "נע\"מ 6",
      "security_type": "ני\"ע מסחריים",
-     "linkage_type": null,
+     "linkage_type": "ללא",
      "maalot_rating": null,
-     "midroog_rating": null
+     "midroog_rating": "P-1.il"
     }
    ],
    "chp_number": "510706153"
+  },
+  {
+   "offer_number": 1211150,
+   "issuer_id": 1363,
+   "issuer_name": "פז אנרגיה",
+   "is_new_company": false,
+   "begins_at": "2026-11-19T09:30:00",
+   "ends_at": "2026-11-19T15:30:00",
+   "offer_type": "מחיר",
+   "offering_type": "הצעה אחידה",
+   "interest": 5.86,
+   "is_variable_interest": false,
+   "price_per_unit": 1102,
+   "link_offer_report": "https://maya.tase.co.il/he/reports/1782255",
+   "securities": [
+    {
+     "security_id": 1205947,
+     "security_name": "פז אנרגיה אגח ט",
+     "security_type": "אג\"ח קונצרני",
+     "linkage_type": "ללא",
+     "maalot_rating": "ilAA-",
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "510216054"
   },
   {
    "offer_number": 1231950,
@@ -775,17 +800,17 @@
    "ends_at": "2026-11-19T15:30:00",
    "offer_type": "ריבית",
    "offering_type": "הצעה אחידה",
-   "interest": 0,
+   "interest": 0.14,
    "is_variable_interest": true,
    "price_per_unit": 1000,
    "link_offer_report": "https://maya.tase.co.il/he/reports/1782255",
    "securities": [
     {
      "security_id": null,
-     "security_name": "נע\"מ סדרה 3",
+     "security_name": "נע\"מ  3",
      "security_type": "ני\"ע מסחריים",
-     "linkage_type": null,
-     "maalot_rating": null,
+     "linkage_type": "ללא",
+     "maalot_rating": "ilA-1+",
      "midroog_rating": null
     }
    ],
