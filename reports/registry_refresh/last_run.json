@@ -12,23 +12,23 @@
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-18T10:43:58.885881Z",
+  "updated": "2026-11-19T10:48:12.613405Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1285,
   "found_in_registry": 1194,
   "found_ratio": 0.929,
   "failed_batches": 0,
-  "datawise_rows": 2243,
-  "datawise_date": "2026-11-17",
+  "datawise_rows": 2242,
+  "datawise_date": "2026-11-18",
   "bond_companies": 361,
   "changes": {
-   "registrar_name": 2,
+   "registrar_name": 0,
    "biz_type": 0,
-   "tase_has_agch": 1,
+   "tase_has_agch": 0,
    "registry_status": 0,
-   "has_agch_any": 1,
-   "permits_category": 1
+   "has_agch_any": 0,
+   "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 0,
@@ -46,46 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 3,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64kjsuvw8z",
-   "chp": "520044314",
-   "field": "tase_has_agch",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64kjsuvw8z",
-   "chp": "520044314",
-   "field": "has_agch_any",
-   "old": "אין",
-   "new": "יש"
-  },
-  {
-   "id": "mp64kjsuvw8z",
-   "chp": "520044314",
-   "field": "permits_category",
-   "old": "חברות תקשורת",
-   "new": "חברות תקשורת|חברות מנפיקות אג\"ח"
-  },
-  {
-   "id": "mp64kr59ry2z",
-   "chp": "515028751",
-   "field": "registrar_name",
-   "old": "לידר טופ קפיטל מימון וייעוץ בע\"מ",
-   "new": "טופ קפיטל מימון וצמיחה בע\"מ"
-  },
-  {
-   "id": "adb9aa7ec10e",
-   "chp": "520039827",
-   "field": "registrar_name",
-   "old": "אל-בן חברת רכוש והשקעות בעמ",
-   "new": "אריא ג'י. אר גרופ בע\"מ"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64ip5cv118",
