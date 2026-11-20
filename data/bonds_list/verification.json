@@ -1,26 +1,13 @@
 {
- "updated": "2026-11-19",
+ "updated": "2026-11-20",
  "status": "ok",
- "datawise_date": "2026-11-18",
+ "datawise_date": "2026-11-19",
  "expected": 777,
  "maya": 777,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "kept_no_terms": [
-  {
-   "security_id": 1230762,
-   "security_name": "רוטשטיין אגח יד",
-   "company": "רוטשטיין נדל\"ן  בע\"מ",
-   "chp_number": "520039959"
-  },
-  {
-   "security_id": 1248665,
-   "security_name": "קרדן נדלן אגח ז",
-   "company": "קרדן נדל\"ן יזום ופיתוח בע\"מ",
-   "chp_number": "520041005"
-  }
- ],
+ "kept_no_terms": [],
  "dropped_no_terms": []
 }
