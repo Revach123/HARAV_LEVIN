@@ -905,6 +905,31 @@
    "kind": "upcoming",
    "last_seen": "2026-11-20"
   },
+  "U10434": {
+   "data": {
+    "chp_number": "520028010",
+    "company_name": "חברה לישראל",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10434,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1768243",
+    "maya_report_id": 1782562,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-20"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",
