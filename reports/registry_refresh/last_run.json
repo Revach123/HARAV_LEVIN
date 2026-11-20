@@ -12,7 +12,7 @@
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-19T10:48:12.613405Z",
+  "updated": "2026-11-20T10:29:21.391365Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1285,
@@ -20,7 +20,7 @@
   "found_ratio": 0.929,
   "failed_batches": 0,
   "datawise_rows": 2242,
-  "datawise_date": "2026-11-18",
+  "datawise_date": "2026-11-19",
   "bond_companies": 361,
   "changes": {
    "registrar_name": 0,
