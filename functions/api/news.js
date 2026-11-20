@@ -101,6 +101,27 @@ async function companyItems(env, nDays = NEW_CO_DAYS) {
   } catch { return []; }
 }
 
+// שינויים בחברות קיימות (שינוי היתר / אישור אג"ח / הערה / הסרה): נרשמים בטבלת מעקב יומי באתר revach.pages.dev (functions/api/levin-changes.js,
+// אותו מקור של המייל היומי), כי למאגר כאן אין היסטוריה של שינויים. חברות חדשות מוצגות ע"י companyItems (לפי created_at).
+const CHANGES_URL = 'https://revach.pages.dev/api/levin-changes';
+async function changeItems(nDays = NEW_CO_DAYS) {
+  try {
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 3000);
+    const res = await fetch(`${CHANGES_URL}?days=${nDays}`, { signal: ctl.signal, headers: { Accept: 'application/json' } }).finally(() => clearTimeout(t));
+    if (!res.ok) return [];
+    return ((await res.json()).items || []).filter((c) => c.date && clean(c.name, 200)).map((c) => {
+      const name = clean(c.name, 160), nv = clean(c.new_value, 60), ov = clean(c.old_value, 60);
+      let title;
+      if (c.kind === 'removed') title = 'חברה הוסרה מהרשימה';
+      else if (c.field === 'visibility') title = nv === '' ? 'היתר העיסקא של החברה הוסר' : nv === 'רק לאג"ח' ? 'שינוי היתר - החברה עברה לרשימת האג"ח בלבד'
+        : `שינוי היתר - החברה עברה להיתר ${['פרטי', 'רק פרטי'].includes(nv) ? 'פרטי' : nv === 'כללי' ? 'כללי' : nv}`;
+      else if (c.field === 'agch_approved') title = 'שינוי באישור לאג"ח של החברה';
+      else title = 'עודכנה הערה לחברה';
+      return { id: 'x' + clean(c.chp, 20) + c.field + c.date, cat: 'companies', title, text: name + (c.field === 'visibility' && ov && nv ? ` (היה: ${ov})` : ''), link: '', date: c.date, pinned: false, auto: true, kind: 'change' };
+    });
+  } catch { return []; }
+}
+
 // אג"ח חדשות (כמו markRecent ב-display.html): הנפקה חדשה / אישור חדש / נוספה לרשימה.
 async function bondItems(request, env, nDays = NEW_BOND_DAYS) {
   try {
@@ -206,9 +227,9 @@ export async function onRequestGet({ request, env }) {
     return json({ ok: true, items: await manualItems(env, true), settings: await settings(env) }, 200, { 'Cache-Control': 'no-store' });
   }
   const st = await settings(env);
-  const [manual, cos, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env, st.co_days), bondItems(request, env, st.bond_days), fundItems(env, st.fund_days)]);
+  const [manual, cos, chg, bonds, funds] = await Promise.all([manualItems(env, false, new URL(request.url).origin), companyItems(env, st.co_days), changeItems(st.co_days), bondItems(request, env, st.bond_days), fundItems(env, st.fund_days)]);
   const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
-  const items = [...manual.filter((x) => x.pinned), ...[...manual.filter((x) => !x.pinned), ...cos, ...bonds, ...funds].sort(byDate)];
+  const items = [...manual.filter((x) => x.pinned), ...[...manual.filter((x) => !x.pinned), ...cos, ...chg, ...bonds, ...funds].sort(byDate)];
   return json({ ok: true, updated: new Date().toISOString(), items }, 200, { 'Cache-Control': 'public, max-age=60' });          // שינוי בניהול מופיע בתיבה תוך דקה
 }
 
