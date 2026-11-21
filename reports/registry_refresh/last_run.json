@@ -12,7 +12,7 @@
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-20T10:29:21.391365Z",
+  "updated": "2026-11-21T10:13:29.992864Z",
   "source": "d1",
   "businesses": 1288,
   "numeric_chp": 1285,
@@ -20,7 +20,7 @@
   "found_ratio": 0.929,
   "failed_batches": 0,
   "datawise_rows": 2242,
-  "datawise_date": "2026-11-19",
+  "datawise_date": "2026-11-20",
   "bond_companies": 361,
   "changes": {
    "registrar_name": 0,
@@ -438,7 +438,7 @@
   {
    "id": "mp64l354bzh7",
    "chp": "2008787",
-   "permit_name": "מליבו אינווסטמנטס אינק.",
+   "permit_name": "מליבו",
    "registrar_name": "מליבו אינווסטמנטס",
    "entity_type": "company",
    "biz_type": ""
