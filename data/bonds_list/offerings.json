@@ -113,6 +113,33 @@
    "chp_number": "44528798375"
   },
   {
+   "id": 10435,
+   "maya_report_id": 1782815,
+   "company_name": "רבוע כחול נדל\"ן",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1782815",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "ני\"ע מסחרי",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    },
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "513765859"
+  },
+  {
    "id": 10432,
    "maya_report_id": 1782188,
    "company_name": "מגה אור",
@@ -885,6 +912,13 @@
   {
    "chp_number": "513257873",
    "name": "מגה אור",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "513765859",
+   "name": "רבוע כחול נדל\"ן",
    "statuses": [
     "הנפקה עתידית"
    ]
