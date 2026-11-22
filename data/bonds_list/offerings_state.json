@@ -197,7 +197,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10121": {
    "data": {
@@ -222,7 +222,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10128": {
    "data": {
@@ -247,7 +247,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10131": {
    "data": {
@@ -272,7 +272,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10225": {
    "data": {
@@ -297,7 +297,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10227": {
    "data": {
@@ -322,7 +322,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10237": {
    "data": {
@@ -347,7 +347,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10243": {
    "data": {
@@ -372,7 +372,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10259": {
    "data": {
@@ -397,7 +397,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10287": {
    "data": {
@@ -422,7 +422,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10289": {
    "data": {
@@ -447,7 +447,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10296": {
    "data": {
@@ -472,7 +472,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10300": {
    "data": {
@@ -522,7 +522,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10329": {
    "data": {
@@ -547,7 +547,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10358": {
    "data": {
@@ -572,7 +572,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10371": {
    "data": {
@@ -597,7 +597,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10404": {
    "data": {
@@ -622,7 +622,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10405": {
    "data": {
@@ -647,7 +647,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10410": {
    "data": {
@@ -672,7 +672,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10413": {
    "data": {
@@ -697,7 +697,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10420": {
    "data": {
@@ -722,7 +722,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10422": {
    "data": {
@@ -747,7 +747,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10424": {
    "data": {
@@ -772,32 +772,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
-  },
-  "U10425": {
-   "data": {
-    "chp_number": "513257873",
-    "company_name": "מגה אור",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10425,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1780934",
-    "maya_report_id": 1780934,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilAA",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-18"
+   "last_seen": "2026-11-22"
   },
   "U10427": {
    "data": {
@@ -828,7 +803,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10430": {
    "data": {
@@ -853,7 +828,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10431": {
    "data": {
@@ -878,7 +853,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10432": {
    "data": {
@@ -903,7 +878,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U10434": {
    "data": {
@@ -928,7 +903,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   },
   "U9973": {
    "data": {
@@ -953,7 +928,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-21"
+   "last_seen": "2026-11-22"
   }
  }
 }
