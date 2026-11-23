@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22",
+ "updated": "2026-11-23",
  "upcoming": [
   {
    "id": 10358,
@@ -667,170 +667,7 @@
    "last_seen": "2026-11-20"
   }
  ],
- "open": [
-  {
-   "begins_at": "2026-11-19T09:00:00",
-   "chp_number": "510706153",
-   "ends_at": "2026-11-19T16:30:00",
-   "interest": 0.1,
-   "is_new_company": false,
-   "is_variable_interest": true,
-   "issuer_id": 1773,
-   "issuer_name": "ישראכרט",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1782236",
-   "offer_number": 1219245,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": null,
-     "midroog_rating": "P-1.il",
-     "security_id": null,
-     "security_name": "נע\"מ 6",
-     "security_type": "ני\"ע מסחריים"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  },
-  {
-   "begins_at": "2026-11-19T09:30:00",
-   "chp_number": "510216054",
-   "ends_at": "2026-11-19T15:30:00",
-   "interest": 0.14,
-   "is_new_company": false,
-   "is_variable_interest": true,
-   "issuer_id": 1363,
-   "issuer_name": "פז אנרגיה",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1782255",
-   "offer_number": 1231950,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": "ilA-1+",
-     "midroog_rating": null,
-     "security_id": null,
-     "security_name": "נע\"מ  3",
-     "security_type": "ני\"ע מסחריים"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  },
-  {
-   "begins_at": "2026-11-19T09:30:00",
-   "chp_number": "513141879",
-   "ends_at": "2026-11-19T16:30:00",
-   "interest": 2.83,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 1153,
-   "issuer_name": "בינלאומי הנפקות",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1782203",
-   "offer_number": 1243880,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "מדד",
-     "maalot_rating": "ilAA-",
-     "midroog_rating": "Aa3.il",
-     "security_id": null,
-     "security_name": "כ.התחייבות כח",
-     "security_type": "אגח הוני ניתן למחיקה"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  },
-  {
-   "begins_at": "2026-11-19T09:30:00",
-   "chp_number": "520000118",
-   "ends_at": "2026-11-19T16:30:00",
-   "interest": 0.18,
-   "is_new_company": false,
-   "is_variable_interest": true,
-   "issuer_id": 662,
-   "issuer_name": "פועלים",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1781887",
-   "offer_number": 1247030,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": "ilAAA",
-     "midroog_rating": "Aaa.il",
-     "security_id": null,
-     "security_name": "אג\"ח 108",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  },
-  {
-   "begins_at": "2026-11-19T09:30:00",
-   "chp_number": "520000118",
-   "ends_at": "2026-11-19T16:30:00",
-   "interest": 4.59,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 662,
-   "issuer_name": "פועלים",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1781887",
-   "offer_number": 1247048,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": "ilAAA",
-     "midroog_rating": "Aaa.il",
-     "security_id": null,
-     "security_name": "אג\"ח 109",
-     "security_type": "אג\"ח קונצרני"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  },
-  {
-   "begins_at": "2026-11-19T09:30:00",
-   "chp_number": "513141879",
-   "ends_at": "2026-11-19T16:30:00",
-   "interest": 4.17,
-   "is_new_company": false,
-   "is_variable_interest": false,
-   "issuer_id": 1153,
-   "issuer_name": "בינלאומי הנפקות",
-   "link_offer_report": "https://maya.tase.co.il/he/reports/1782203",
-   "offer_number": 1247238,
-   "offer_type": "ריבית",
-   "offering_type": "הצעה אחידה",
-   "price_per_unit": 1000,
-   "securities": [
-    {
-     "linkage_type": "ללא",
-     "maalot_rating": "ilAAA",
-     "midroog_rating": "Aaa.il",
-     "security_id": null,
-     "security_name": "כ.התחייבות כט",
-     "security_type": "אגח הוני ניתן למחיקה"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-19"
-  }
- ],
+ "open": [],
  "companies": [
   {
    "chp_number": "1811308",
@@ -851,20 +688,6 @@
    "name": "נורסטאר החזקות",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "510216054",
-   "name": "פז אנרגיה",
-   "statuses": [
-    "בהנפקה"
-   ]
-  },
-  {
-   "chp_number": "510706153",
-   "name": "ישראכרט",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
@@ -900,13 +723,6 @@
    "name": "מצלאוי",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "513141879",
-   "name": "בינלאומי הנפקות",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
@@ -970,13 +786,6 @@
    "name": "איביאי ריב פיק",
    "statuses": [
     "הנפקה עתידית"
-   ]
-  },
-  {
-   "chp_number": "520000118",
-   "name": "פועלים",
-   "statuses": [
-    "בהנפקה"
    ]
   },
   {
