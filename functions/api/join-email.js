@@ -300,7 +300,7 @@ export async function save(env, v, email, messageId, origin, channel = 'מייל
     .bind(ih, jerusalemNow(new Date(Date.now() - 3 * 60000))).first();
   if (recent) return;
   const rid = newRowId(), now = jerusalemNow();
-  const address = [[v.street, v.house].filter(Boolean).join(' '), v.city].filter(Boolean).join(', ');
+  const address = [v.street, v.house].filter(Boolean).join(' ');          // רחוב ומספר בית; העיר בשדה נפרד (כמו בטופס באתר), ובניהול מוצגת בשורה נוספת
   const extra = {
     'ערוץ': channel,
     ...(v.phone2 ? { 'טלפון נוסף': v.phone2 } : {}),
