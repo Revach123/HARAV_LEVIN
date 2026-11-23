@@ -195,7 +195,7 @@
 
   // ───────── טעינה ואינדקס ─────────
   function reindex() {
-    S.byBiz = new Map(); S.byId = new Map();
+    S.byBiz = new Map(); S.byId = new Map(); S._rv = (S._rv || 0) + 1;
     for (const d of S.docs) {
       S.byId.set(d.id, d);
       for (const b of new Set([...(d.business_ids || []), ...(d.subs || []).map(x => x.id)])) { if (!S.byBiz.has(b)) S.byBiz.set(b, []); S.byBiz.get(b).push(d); }
@@ -217,6 +217,7 @@
     let fresh = false;
     try { const r = await pDocs; S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; fresh = true; }
     catch (e) { if (!S.stale) S.err = e.message || "שגיאה"; S.loaded = true; }
+    loadNames();          // שמות החברות שנמצאו במסמכים (להצעות שיוך): יוצא עכשיו במקביל לשאר, ולא רק אחרי סיום כל הטעינה
     try { await pAppr; } catch { /* לפני מיגרציה */ }
     if (fresh) { S.stale = false; try { localStorage.setItem(DOCS_CACHE, JSON.stringify({ docs: S.docs, appr: [...(S.appr || new Map())] })); } catch { /* אין מקום */ } }
     S._freshDone();
@@ -281,32 +282,43 @@
   const openCompany = bizId => openManage(bizId);
 
   // הורדת קובץ המסמך. ברשת עם סינון תוכן (נטפרי) הורדת PDF נחסמת ("Blocked by NetFree"): במקרה כזה עוברים אוטומטית להעברה כ-JSON (base64) ושומרים את הבחירה
+  // לצפייה (חלון המסמך, תמונות ממוזערות, קריאת טקסט) נטענת הגרסה הקלה של השטר (docs-lite: אותם עמודים ואותה שכבת טקסט, קטנה בהרבה) כשהיא קיימת;
+  // המקור המלא - רק לפי בקשה (full). השרת מאפשר לדפדפן לשמור את הקובץ במטמון שלו, כך שפתיחה חוזרת (גם בכניסה הבאה) אינה מורידה שוב
   const pdfCache = new Map();      // מטמון של הבטחות (גם טעינה מראש): פתיחה חוזרת של אותו מסמך מיידית
-  function fetchPdfBlob(id) {
-    if (pdfCache.has(id)) return pdfCache.get(id);
+  const pdfMeta = new Map();       // מפתח -> { lite: הוצגה הגרסה הקלה, sha: טביעת הקובץ שהתקבל לפי השרת (לבדיקת שלמות) }
+  const pdfKey = (id, full) => (full ? id + "|full" : id);
+  function fetchPdfBlob(id, full) {
+    const k = pdfKey(id, full);
+    if (pdfCache.has(k)) { const p = pdfCache.get(k); pdfCache.delete(k); pdfCache.set(k, p); return p; }          // שימוש אחרון: נשאר במטמון
     const t0 = performance.now();
-    const p = fetchPdfBlobNet(id).then(b => { S.lastMs = Math.round(performance.now() - t0); return b; }, e => { pdfCache.delete(id); throw e; });
-    pdfCache.set(id, p);
-    if (pdfCache.size > 16) pdfCache.delete(pdfCache.keys().next().value);
+    const p = fetchPdfBlobNet(id, full).then(r => { S.lastMs = Math.round(performance.now() - t0); pdfMeta.set(k, { lite: r.lite, sha: r.sha, ms: Math.round(performance.now() - t0) }); return r.blob; }, e => { pdfCache.delete(k); throw e; });
+    pdfCache.set(k, p);
+    if (pdfCache.size > 40) { const old = pdfCache.keys().next().value; pdfCache.delete(old); pdfMeta.delete(old); }
     return p;
   }
-  async function fetchPdfBlobNet(id) {
+  function seedPdf(doc, buf) {          // אחרי העלאה הקובץ כבר בדפדפן: פתיחתו מיד, בלי להוריד אותו שוב מהשרת
+    if (!doc || !doc.id || !buf || pdfCache.has(doc.id)) return;
+    pdfCache.set(doc.id, Promise.resolve(new Blob([buf], { type: "application/pdf" })));
+    pdfMeta.set(doc.id, { lite: false, sha: doc.sha256 || "" });
+  }
+  async function fetchPdfBlobNet(id, full) {
+    const qs = full ? "" : "lite=1";
     const viaJson = async () => {
-      const r = await fetch(`/api/permit-docs/${id}/file?enc=b64`, { headers: authH() });
+      const r = await fetch(`/api/permit-docs/${id}/file?enc=b64${qs ? "&" + qs : ""}`, { headers: authH() });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j.error || r.statusText || "HTTP " + r.status);
       const bin = atob(j.data), u8 = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-      return new Blob([u8], { type: "application/pdf" });
+      return { blob: new Blob([u8], { type: "application/pdf" }), lite: !!j.lite, sha: j.sha || "" };
     };
     let pref = false; try { const t = +localStorage.getItem("pd_b64") || 0; pref = t > Date.now() - 3600e3; } catch {}      // המעבר ל-JSON נזכר שעה בלבד: אחרי שהחסימה תוקנה חוזרים להורדה הרגילה
     if (pref) return viaJson();
     try {
-      const r = await fetch(`/api/permit-docs/${id}/file`, { headers: authH() });
+      const r = await fetch(`/api/permit-docs/${id}/file${qs ? "?" + qs : ""}`, { headers: authH() });
       if (!r.ok) throw new Error(r.statusText || "HTTP " + r.status);
       const b = await r.blob();
       if (new TextDecoder().decode(await b.slice(0, 5).arrayBuffer()) !== "%PDF-") throw new Error("לא PDF");
-      return new Blob([b], { type: "application/pdf" });
+      return { blob: new Blob([b], { type: "application/pdf" }), lite: r.headers.get("X-Pdf-Lite") === "1", sha: r.headers.get("X-Sha256") || "" };
     } catch (e) {
       try { localStorage.setItem("pd_b64", String(Date.now())); } catch {}
       return viaJson();
@@ -359,7 +371,12 @@
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
   }
   const REJ_KEY = "pd_sug_rej";          // הצעות שיוך שבוטלו (מסמך|חברה): לא יוצעו שוב; נשמר בדפדפן הזה
-  const rejSet = () => { try { return new Set(JSON.parse(localStorage.getItem(REJ_KEY) || "[]")); } catch { return new Set(); } };
+  let rejMemo = { raw: null, set: new Set() };
+  const rejSet = () => {          // נקרא לכל חברה בחישוב הדשבורד: מפענחים מחדש רק כשהערך השמור השתנה
+    let raw = "[]"; try { raw = localStorage.getItem(REJ_KEY) || "[]"; } catch { /* בלי אחסון */ }
+    if (raw !== rejMemo.raw) { let set; try { set = new Set(JSON.parse(raw)); } catch { set = new Set(); } rejMemo = { raw, set }; }
+    return new Set(rejMemo.set);
+  };
   function sugRej(docId, bid) {
     const r = rejSet(); r.add(docId + "|" + bid);
     try { localStorage.setItem(REJ_KEY, JSON.stringify([...r])); } catch { /* בלי אחסון */ }
@@ -379,15 +396,26 @@
     const d = S.byId.get(docId); if (!d) return;
     close("pd-manage");
     S.docFromList = !!fromList;          // נפתח מהרשימה הראשית: בסגירה חוזרים אליה ולא לחלון הניהול
-    let blobUrl = "", fileErr = "";
+    let blobUrl = "", fileErr = "", full = false, loading = true;
     overlay("pd-doc", `<div class="pd-body">טוען…</div>`, true);
-    closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); const ret = fromBiz || sugBiz; if (ret && !S._nav && !fromList && bizById(ret)) openManage(ret); };
-    try {
-      const blob = await fetchPdfBlob(docId);
-      blobUrl = URL.createObjectURL(blob);
-      if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(docId, pdf)).catch(() => {});
-      try { S.integrity = S.integrity || {}; S.integrity[docId] = (await sha256(await blob.arrayBuffer())) === d.sha256; } catch { /* בלי בדיקה */ }
-    } catch (e) { blobUrl = ""; fileErr = e.message; }
+    const box0 = $("pd-doc").querySelector(".pd-box");
+    closers["pd-doc"] = () => { if (blobUrl) URL.revokeObjectURL(blobUrl); blobUrl = ""; const ret = fromBiz || sugBiz; if (ret && !S._nav && !fromList && bizById(ret)) openManage(ret); };
+    const alive = () => $("pd-doc") && $("pd-doc").querySelector(".pd-box") === box0 && box0.dataset.docId === docId;          // החלון עדיין מציג את המסמך הזה
+    const viewHtml = () => blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>` : loading ? `<div class="pd-empty" style="color:#fff">טוען מסמך…</div>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`;
+    const showFile = async wantFull => {          // טעינת הקובץ לתצוגה (הגרסה הקלה, או המקור לפי בקשה) בלי לצייר מחדש את שאר החלון
+      loading = true; fileErr = ""; full = !!wantFull;
+      try {
+        const blob = await fetchPdfBlob(docId, full); if (!alive()) return;
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        blobUrl = URL.createObjectURL(blob); loading = false;
+        const v = box0.querySelector(".pd-view"); if (v) v.innerHTML = viewHtml();
+        if (!d.pages) blob.arrayBuffer().then(buf => pdfDoc(buf)).then(pdf => ensureMeta(docId, pdf)).catch(() => {});
+        const m = pdfMeta.get(pdfKey(docId, full)) || {}, want = m.lite ? m.sha : d.sha256;          // בדיקה שהקובץ לא שונה בדרך (סינון תוכן): מול טביעת הקובץ שנשלח
+        S.integrity = S.integrity || {};
+        if (want) { try { S.integrity[docId] = (await sha256(await blob.arrayBuffer())) === want; } catch { /* בלי בדיקה */ } } else delete S.integrity[docId];
+      } catch (e) { if (!alive()) return; loading = false; fileErr = e.message; const v = box0.querySelector(".pd-view"); if (v) v.innerHTML = viewHtml(); }
+      if (alive()) paint();
+    };
     const paint = () => {
       const doc = S.byId.get(docId); if (!doc) { close("pd-doc"); return; }
       const side = $("pd-doc-side"), keep = side ? side.scrollTop : 0;
@@ -399,7 +427,8 @@
       const ord = fromBiz ? manageOrder(fromBiz) : [], pos = ord.indexOf(docId);
       const nav = fromBiz && ord.length > 1 ? `<button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',-1)" title="המסמך הקודם של החברה">→</button><span class="pd-sub">${pos + 1} / ${ord.length}</span><button class="pd-btn" onclick="PD._nav('${docId}','${fromBiz}',1)" title="המסמך הבא של החברה">←</button>` : "";
       const slotBtns = fromBiz ? `<h4>קישור לרשימה של ${E(bizName(fromBiz))}</h4><div class="pd-btns">${["private", "general"].map(t => `<button class="pd-btn ${slotsOf(doc, fromBiz).includes(t) ? "sel" : ""}" onclick="PD._slot('${docId}','${fromBiz}','${t}')">${slotsOf(doc, fromBiz).includes(t) ? "✓ " : ""}הת"ע ${SLOT_HE[t]}</button>`).join("")}</div>` : "";
-      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${sizeHtml(doc.size)}${metaText(doc) ? " · " + metaText(doc).split(" · ").map(bdi).join(" · ") : ""}${S.lastMs ? " · נטען ב-" + (S.lastMs / 1000).toFixed(1) + " שנ'" : ""}</span>${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
+      const lite = !full && (pdfMeta.get(docId) || {}).lite;
+      const headHtml = `<div class="pd-head">${nav}<b>${E(doc.original_name || doc.id)}</b><span class="pd-sub">${sizeHtml(doc.size)}${metaText(doc) ? " · " + metaText(doc).split(" · ").map(bdi).join(" · ") : ""}${!loading && (pdfMeta.get(pdfKey(docId, full)) || {}).ms ? " · נטען ב-" + (pdfMeta.get(pdfKey(docId, full)).ms / 1000).toFixed(1) + " שנ'" : ""}</span>${lite ? `<button class="pd-mini" onclick="PD._docFull()" title="מוצגת גרסה קלה לצפייה (אותם עמודים ואותו טקסט, בדחיסה). לחיצה: הצגת הקובץ המקורי במלואו">גרסה קלה · הצגת המקור</button>` : full ? '<span class="pd-sub">מוצג המקור</span>' : ""}${S.integrity && S.integrity[docId] === false ? ' <span style="color:#c0392b;font-weight:600">⚠ הקובץ שהתקבל שונה מהקובץ שנשמר (ייתכן סינון תוכן ברשת)</span>' : ""}<button class="pd-btn" onclick="PD._home()" title="סגירת החלונות וחזרה לדף הראשי של הניהול">🏠 ראשי</button><button class="pd-x" onclick="PD._close('pd-doc')">✕</button></div>`;
       const sideHtml = `
             ${sugBar}${slotBtns}${ctx ? otherDocsHtml(ctx, docId) + suggestHtml(ctx, true) : ""}
             <h4>חברות משויכות (${ids.length})</h4>${chips}
@@ -412,11 +441,12 @@
         $("pd-doc-side").innerHTML = sideHtml;
       } else {
         box.dataset.docId = docId;
-        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${blobUrl ? `<iframe src="${blobUrl}#toolbar=0&navpanes=0&view=FitH" title="המסמך"></iframe>` : `<div class="pd-empty">${E(fileErr || "הקובץ לא זמין")}</div>`}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
+        box.innerHTML = headHtml + `<div class="pd-split"><div class="pd-view">${viewHtml()}</div><div class="pd-side" id="pd-doc-side">` + sideHtml + `</div></div>`;
       }
       const s2 = $("pd-doc-side"); if (s2) { s2.scrollTop = keep; s2.querySelectorAll("img[data-thumb]").forEach(img => thumb(img.dataset.thumb).then(u => { if (img.isConnected && u) { img.src = u; if (img.nextElementSibling) img.nextElementSibling.style.display = "none"; } })); }
     };
     S._paintDoc = paint; paint();
+    S._docFull = () => showFile(true); showFile(false);          // הקובץ נטען אחרי שהחלון כבר מוצג
     loadNames().then(() => { if (S._paintDoc === paint && $("pd-doc")) paint(); });          // הצעות לפי שם החברה
   }
   async function updateDoc(id, patch) {
@@ -457,7 +487,7 @@
   async function doDelete(id) {
     try {
       await api("/permit-docs/" + id, "DELETE");
-      S.docs = S.docs.filter(d => d.id !== id); reindex(); pdfCache.delete(id);
+      S.docs = S.docs.filter(d => d.id !== id); reindex(); pdfCache.delete(id); pdfCache.delete(pdfKey(id, true));
       close("pd-confirm"); close("pd-doc");
       if ($("pd-un")) { Q.curId = ""; uqShow(); }
       say("המסמך נמחק");
@@ -1012,8 +1042,9 @@
     const res = await fetch("/api/permit-docs", { method: "POST", headers: { ...authH(), "Content-Type": "application/json" },
       body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: c.type, business_ids: ids, note: c.note || "" }) });
     const data = await res.json().catch(() => ({}));
-    if (res.status === 409 && data.doc) return data.doc;
+    if (res.status === 409 && data.doc) { seedPdf(data.doc, c.buf); return data.doc; }
     if (!res.ok) throw new Error(data.error || res.statusText);
+    seedPdf(data.doc, c.buf);
     return data.doc;
   }
   // העלאת היתר עיסקא לעסק שנוסף עכשיו מטופס "הוספת עסק" (admin.html): העלאה ושיוך לפי הבחירה פרטי / כללי / משותף
@@ -1080,7 +1111,7 @@
         body: JSON.stringify({ file_b64: btoa(bin), name: c.file.name, doc_type: job.type, business_ids: job.ids, note: job.note }) });
       const data = await res.json().catch(() => ({}));
       if (res.status === 409 && data.doc) {
-        replaceDoc(data.doc); job.doc = data.doc.id;
+        seedPdf(data.doc, c.buf); replaceDoc(data.doc); job.doc = data.doc.id;
         if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
         if (job.vis && typeof inlineUpdateMany === "function") await inlineUpdateMany(job.vis.id, { visibility: job.vis.value });
         if (job.slots) { await upLink(job, data.doc); job.status = "ok"; job.msg = "קובץ זהה כבר היה במאגר: שויך מחדש"; S._fm = null; refresh(); upBg(); return; }
@@ -1092,7 +1123,7 @@
         job.status = "dup"; job.msg = "קובץ זהה כבר קיים (" + (data.doc.original_name || data.doc.id) + ")"; upBg(); return;
       }
       if (!res.ok) throw new Error(data.error || res.statusText);
-      replaceDoc(data.doc); job.doc = data.doc.id;
+      seedPdf(data.doc, c.buf); replaceDoc(data.doc); job.doc = data.doc.id;
       if (job.vis && typeof inlineUpdateMany === "function") await inlineUpdateMany(job.vis.id, { visibility: job.vis.value });
       if (job.slots) await upLink(job, data.doc);
       if (job.ext) { const co = await extEnsure(job.ext); await extAssign(data.doc.id, co.id); }
@@ -1141,7 +1172,7 @@
         const data = await res.json().catch(() => ({}));
         if (res.status === 409 && data.doc) { BK.dup.push({ name: file.name, doc: data.doc }); continue; }
         if (!res.ok) throw new Error(data.error || res.statusText);
-        replaceDoc(data.doc); BK.ok.push({ name: file.name, doc: data.doc });
+        seedPdf(data.doc, buf); replaceDoc(data.doc); BK.ok.push({ name: file.name, doc: data.doc });
       } catch (e) { BK.fail.push({ name: file.name, err: e.message || "שגיאה" }); }
     }
     refresh();
@@ -2148,8 +2179,26 @@
 
   // ───────── תמונה קטנה של העמוד הראשון (pdf.js, עד 3 במקביל) ─────────
   const thumbs = new Map(), thumbUrls = new Map(), thumbWait = []; let thumbActive = 0;
+  // התמונות נשמרות גם בדפדפן (IndexedDB; הקובץ של מסמך לעולם אינו משתנה): בפתיחה הבאה של חלון החברה הן מוצגות מיד, בלי להוריד ולצייר שוב את השטרות
+  let thumbDbP = null;
+  function thumbDb() {
+    if (!thumbDbP) thumbDbP = new Promise(res => {
+      try { const rq = indexedDB.open("hl_pd_thumbs", 1); rq.onupgradeneeded = () => rq.result.createObjectStore("t"); rq.onsuccess = () => res(rq.result); rq.onerror = () => res(null); rq.onblocked = () => res(null); }
+      catch { res(null); }
+    });
+    return thumbDbP;
+  }
+  async function thumbGet(id) {
+    const db = await thumbDb(); if (!db) return "";
+    return new Promise(res => { try { const rq = db.transaction("t").objectStore("t").get(id); rq.onsuccess = () => res(typeof rq.result === "string" ? rq.result : ""); rq.onerror = () => res(""); } catch { res(""); } });
+  }
+  async function thumbPut(id, url) {
+    const db = await thumbDb(); if (!db || !url) return;
+    try { db.transaction("t", "readwrite").objectStore("t").put(url, id); } catch { /* בלי מקום: בלי שמירה */ }
+  }
   function thumb(id) {
     if (thumbs.has(id)) return thumbs.get(id);
+    const saved = thumbGet(id);
     const run = async () => {
       try {
         const pdf = await pdfDoc(await (await fetchPdfBlob(id)).arrayBuffer());
@@ -2160,10 +2209,10 @@
         return cv.toDataURL("image/jpeg", 0.72);
       } catch { return ""; }
     };
-    const p = new Promise(res => {
-      const go = () => { thumbActive++; run().then(res).finally(() => { thumbActive--; const n = thumbWait.shift(); if (n) n(); }); };
+    const p = saved.then(u => u || new Promise(res => {
+      const go = () => { thumbActive++; run().then(u2 => { thumbPut(id, u2); res(u2); }).finally(() => { thumbActive--; const n = thumbWait.shift(); if (n) n(); }); };
       thumbActive < 3 ? go() : thumbWait.push(go);
-    }).then(u => { if (u) thumbUrls.set(id, u); else thumbs.delete(id); return u; });
+    })).then(u => { if (u) thumbUrls.set(id, u); else thumbs.delete(id); return u; });
     thumbs.set(id, p);
     return p;
   }
@@ -2271,8 +2320,26 @@
     const ck = b.id + "|" + keys.join("|"), cache = S._ndc && S._ndc.df === S.nameDf ? S._ndc : (S._ndc = { df: S.nameDf, m: new Map() });
     if (cache.m.has(ck)) return cache.m.get(ck);
     cache.m.set(ck, out);
-    for (const [n, ids] of S.nameDf) if (ids.size <= NGENERIC_DF && keys.some(k => nameHit(n, k))) for (const id of ids) out.add(id);
+    const idx = nameWordIdx();
+    for (const k of keys) for (const n of idx.get(k.split(" ")[0]) || []) if (nameHit(n, k)) for (const id of S.nameDf.get(n)) out.add(id);
     return out;
+  }
+  // מילה -> שמות (שאינם כלליים) שמופיעה בהם כמילה שלמה. התאמה (nameHit) מחייבת שהמילה הראשונה של שם החברה תופיע כמילה שלמה בשם שבמסמך,
+  // כך שמספיק לבדוק רק את השמות שמכילים אותה (במקום כל השמות × כל החברות)
+  function nameWordIdx() {
+    if (S._nwi && S._nwi.df === S.nameDf) return S._nwi.m;
+    const m = new Map();
+    for (const [n, ids] of S.nameDf) { if (ids.size > NGENERIC_DF) continue; for (const w of new Set(n.split(" "))) { if (!m.has(w)) m.set(w, []); m.get(w).push(n); } }
+    S._nwi = { df: S.nameDf, m };
+    return m;
+  }
+  function coWordIdx() {          // מילה ראשונה של שם חברה -> [{ b, k }] (לחיפוש הפוך: חברות ששמן מופיע בשם שבמסמך)
+    const ci = coIndex();
+    if (S._cwi && S._cwi.ci === ci) return S._cwi.m;
+    const m = new Map();
+    for (const x of ci) for (const k of x.keys) { const w = k.split(" ")[0]; if (!m.has(w)) m.set(w, []); m.get(w).push({ b: x.b, k }); }
+    S._cwi = { ci, m };
+    return m;
   }
   function coIndex() {
     if (S._coIdx && S._coIdxN === bizList().length) return S._coIdx;
@@ -2282,7 +2349,8 @@
   function companiesByName(d) {          // חברות ששמן מופיע במסמך
     const ns = S.docNames && S.docNames.get(d.id); if (!ns) return [];
     const out = new Map();
-    for (const n of ns) { if (nameGeneric(n)) continue; for (const x of coIndex()) if (x.keys.some(k => nameHit(n, k))) out.set(x.b.id, x.b); }
+    const idx = coWordIdx();
+    for (const n of ns) { if (nameGeneric(n)) continue; for (const w of new Set(n.split(" "))) for (const x of idx.get(w) || []) if (!out.has(x.b.id) && nameHit(n, x.k)) out.set(x.b.id, x.b); }
     return [...out.values()];
   }
   function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה ואינם משויכים אליה כלל (מסמך שכבר משויך לחברה, גם כנוסף או לאג"ח, אינו הצעה), וסוגם מתאים לשטר החסר: [{ d, why }]
@@ -2295,7 +2363,16 @@
     return out;
   }
   const SUG_TYPES = ["private", "general"];          // הצעות: כל מסמך לא משויך שנמצא בו ח.פ. או שם החברה, בלי קשר לסוג השטר שחסר
-  function ndMissing() {
+  let ndmMemo = null;
+  const HE_COLL = new Intl.Collator("he");
+  function ndMissing() {          // נקרא כמה פעמים באותו ציור (מספר בלשונית / בכרטיס, והטבלה): מחושב פעם אחת, והתוצאה נמחקת מיד אחרי הציור
+    const k = [ND.miss, ND.sug, ND.q, S._rv, bizList().length, !!S.nameDf, !!S.hp].join("|");
+    if (ndmMemo && ndmMemo.k === k && ndmMemo.list === bizList()) return ndmMemo.rows;
+    const rows = ndMissing0();
+    ndmMemo = { k, list: bizList(), rows }; Promise.resolve().then(() => { ndmMemo = null; });
+    return rows;
+  }
+  function ndMissing0() {
     const out = [];
     for (const b of bizList()) {
       if (INACTIVE_ST.test(b.registry_status || "")) continue;
@@ -2310,7 +2387,7 @@
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
-      .sort((x, y) => String(displayName(x.b)).localeCompare(String(displayName(y.b)), "he"));
+      .map(e => ({ e, n: String(displayName(e.b)) })).sort((x, y) => HE_COLL.compare(x.n, y.n)).map(x => x.e);
   }
   const ndDocsB = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other");
   const ndExt = () => S.ext.filter(x => ND.gone || extGroup(x) === "nodb");
@@ -2332,7 +2409,7 @@
     if (!($("pd-nd-body") && $("pd-nd-tabs") && app.contains($("pd-nd-body")))) {
       app.innerHTML = `<div class="admin-tabs" id="pd-nd-tabs"></div><div id="pd-nd-body"></div>`;
     }
-    (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(ndShow);
+    Promise.all([S.loaded ? null : load(), loadNames()]).then(ndShow);          // המסמכים והשמות במקביל (לא בזה אחר זה)
     if (S.loaded) ndShow();
   }
   function ndShow() {
@@ -2463,7 +2540,7 @@
     if (!el) return;
     el.innerHTML = ndTabF();
     const go = () => { if ($("pd-f-q") && ND.fq.trim().length >= 2) unifiedSearch(); };
-    go(); (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(go);
+    go(); Promise.all([S.loaded ? null : load(), loadNames()]).then(go);
   }
   function ndTabC() {
     const q = ND.sq.trim();
@@ -3508,7 +3585,7 @@
   document.head.appendChild(css);
 
   window.PD = { reload: () => load(), apprReload, apprOf: chp => ((S.appr && S.appr.get(digitsOf(chp))) || []).slice().sort((a, b) => bondLabel(a).localeCompare(bondLabel(b), "he")), bondLabel: x => bondLabel(x), onView: v => PD._formHooks.onView(v), hideTabs: () => PD._formHooks.hideTabs(), similar: (n, id) => similarBiz(n, id), simHtml: (n, id) => simHtml(n, id), searchPage, _fQ: v => { ND.fq = v; later(ND, "_ft", unifiedSearch); }, _evOpen: evOpen, _evAdd: () => { const g = evGroup(); if (g) extAdd(g, g.name); }, _evSearch: evSearch, _evNew: evAddNew, _rowUp: rowUpload, _ruPick: ruPick, _sugRej: sugRej, _regEdit: regEdit, _sugOk: sugOk, _regChange: regChange, _regSet: regSet, _regDel: regDel, _jQ: jAct.q, _jF: jAct.f, _jFA: jAct.fa, _jCF: jAct.cf, _jOpen: jAct.open, _jMore: jAct.more, _jRetry: jAct.retry, _jFile: jFile, _jPlay: jPlay, _jEdit: jEdit, _jView: v => jAct.view(v), _jFind: jFind, _jCDel: jCDel, _jSave: jSave, _jDel: jDel, _jDelGo: jDelGo, _jCancel: jCancel, _jImp: jImp, _jXl: jXl, _jTypos: jTypos,  _jOldPairs: jOldPairs, _jMine: jMine, _jmDel: jmDel, _jmMerge: jmMerge, _jmEdit: jmEdit, _jtDel: jtDel, _jSync: jSync, _jNed: jNed, _jMail: jMail, _jmGo: jmGo, _jmStop: () => { JM.stop = true; }, _jmSet: (k, v) => { JM[k] = v; jmPaint(); }, _jmSrc: (x, on) => { if (on) JM.src.add(x); else JM.src.delete(x); jmPaint(); }, _bulk: bulkRun, _bulkStop: () => { BK.stop = true; }, _bulkOpen: bulkOpen, _upPick: () => upPick(), _unBatchOff: () => { Q.batch = ""; Q.curId = ""; Q.i = 0; uqShow(); }, openDash, dashPage, _ndTab: ndAct.tab, _ndAddCo: ndAddCo, _ndQ: ndAct.q, _ndMiss: ndAct.miss, _ndSug: ndAct.sug, _ndTq: ndAct.tq, _ndGone: ndAct.gone, _ndOpenDoc: ndAct.openDoc, bondDocs: bondDocsOf, docStatus, docCounts, bizAdded, cell, slotCell, slotCells, extraCell, openManage, _slot: toggleSlot, _nav: nav, _mgShare: mgShare, _mgRemove: mgRemove, _mgMove: mgMove, _toExtras: (id, biz) => toExtras(id, biz), _menu: (id, on) => { M.menu = on ? id : (M.menu === id ? "" : M.menu); }, _mgSearch: mgSearch, refresh, homeCards, openUnassigned, unassignedCount, state: S, load, openUpload, openCompany, openDoc, suggest, phraseKind,
-    _close: close, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
+    _close: close, _docFull: () => { if (S._docFull) S._docFull(); }, _setType: setType, _setNote: setNote, _unassign: unassign, _addSearch: addSearch, _assign: assign, _askDelete: askDelete, _doDelete: doDelete,
     _files: upFiles, _upNew: upNewFor, _upRetry: upRetry, _acPick: acPick, _acPcat: acPcat, _acShow: acShow, _formHooks: { onView: v => { if (U.formFlow && v !== "form") { U.formFlow = false; setTimeout(() => { if (U.list && U.list.some(e => e.st === "pending")) openUpload({ addCompany: true, bizId: U.preset, resume: true }); else acCleanup(); }, 60); } }, hideTabs: () => !!U.formFlow }, _similar: similarBiz, _simHtml: simHtml, _acNc: acNc, _acNcGo: acNcGo, _acNcVal: v => { if (U.cur) U.cur.ncVal = v; const el = $("pd-ac-ncsim"); if (el) el.innerHTML = simHtml(v); }, _acExt: hp => { const c = U.cur; if (c && c.pick && c.pick.kind === "new") acExt(hp, c.pick.name); }, _acDoc: acDoc, _acUnpick: acUnpick, _acGo: acGo, _acBig: acBig, _next: upNext, _tog: upTog, _type: t => { U.cur.type = t; U.cur.typeTouched = true; upReview(); }, _upNote: v => { U.cur.note = v; }, _upSearch: upSearch,
     _upAdd: id => { U.cur.sel.add(id); upReview(); }, _save: upSave, _ocr: upOcr,
     _unSrc: k => { srcMode = k; try { localStorage.setItem("pd_src", k); } catch { /* בלי אחסון */ } Q.curId = ""; Q.i = 0; const el = $("pd-un-src"); if (el) el.innerHTML = SRC.map(([x, l]) => `<button class="pd-mini ${srcMode === x ? "sel" : ""}" onclick="PD._unSrc('${x}')">${l}</button>`).join(""); uqShow(); },

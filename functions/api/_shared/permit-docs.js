@@ -10,9 +10,59 @@ export const newId = () => crypto.randomUUID().replace(/-/g, "").slice(0, 12);
 export const SLOTS = ["general", "private"];
 export const cleanSlot = v => SLOTS.filter(x => (Array.isArray(v) ? v : String(v || "").split(",")).includes(x)).join(",");
 
+// כל הקישורים בבקשה אחת ל-D1 (batch): במקום חמש שאילתות ברצף (חמישה סבבים לשרת) - סבב אחד. נכשל (סכמה ישנה) -> null, וממשיכים בדרך הרגילה
+async function linksBatch(env, W, B) {
+  try {
+    const q = sql => env.DB.prepare(sql + W).bind(...B);
+    const [l, x, sp, bl, sb] = await env.DB.batch([
+      q("SELECT doc_id, business_id, slot FROM permit_doc_companies"),
+      q("SELECT doc_id, ext_id FROM permit_doc_ext"),
+      q("SELECT doc_id, business_id, title, detail FROM permit_doc_special"),
+      q("SELECT doc_id, security_id, name, symbol, company, chp, slot FROM permit_doc_bonds"),
+      q("SELECT doc_id, sub_id, slot FROM permit_doc_subs"),
+    ]);
+    return { links: l.results ?? [], ext: x.results ?? [], special: sp.results ?? [], bonds: bl.results ?? [], subs: sb.results ?? [] };
+  } catch { return null; }
+}
+
+// הרשימה המלאה (GET /api/permit-docs): המסמכים וכל הקישורים בבקשה אחת ל-D1
+export async function allDocsWithBusinesses(env) {
+  try {
+    const [d, l, x, sp, bl, sb] = await env.DB.batch([
+      env.DB.prepare("SELECT * FROM permit_docs ORDER BY created_at DESC, id"),
+      env.DB.prepare("SELECT doc_id, business_id, slot FROM permit_doc_companies"),
+      env.DB.prepare("SELECT doc_id, ext_id FROM permit_doc_ext"),
+      env.DB.prepare("SELECT doc_id, business_id, title, detail FROM permit_doc_special"),
+      env.DB.prepare("SELECT doc_id, security_id, name, symbol, company, chp, slot FROM permit_doc_bonds"),
+      env.DB.prepare("SELECT doc_id, sub_id, slot FROM permit_doc_subs"),
+    ]);
+    return attach(d.results ?? [], { links: l.results ?? [], ext: x.results ?? [], special: sp.results ?? [], bonds: bl.results ?? [], subs: sb.results ?? [] });
+  } catch {          // סכמה ישנה: הדרך הרגילה (שאילתה לכל טבלה, עם התאמה למיגרציות חסרות)
+    const res = await env.DB.prepare("SELECT * FROM permit_docs ORDER BY created_at DESC, id").all();
+    return withBusinesses(env, res.results ?? []);
+  }
+}
+
+function attach(rows, r) {
+  const ids = rows.map(x => x.id);
+  const links = new Map(ids.map(i => [i, []])), slots = new Map(ids.map(i => [i, {}])), ext = new Map(ids.map(i => [i, []])),
+        specials = new Map(ids.map(i => [i, {}])), bonds = new Map(ids.map(i => [i, []])), subs = new Map(ids.map(i => [i, []]));
+  for (const l of r.links) if (links.has(l.doc_id)) { links.get(l.doc_id).push(l.business_id); if (l.slot) slots.get(l.doc_id)[l.business_id] = l.slot; }
+  for (const l of r.ext) if (ext.has(l.doc_id)) ext.get(l.doc_id).push(l.ext_id);
+  for (const l of r.special) if (specials.has(l.doc_id)) specials.get(l.doc_id)[l.business_id] = { title: l.title, detail: l.detail || "" };
+  for (const l of r.bonds) if (bonds.has(l.doc_id)) bonds.get(l.doc_id).push({ id: l.security_id, name: l.name, symbol: l.symbol, company: l.company, chp: l.chp, slot: l.slot || "" });
+  for (const l of r.subs) if (subs.has(l.doc_id)) subs.get(l.doc_id).push({ id: l.sub_id, slot: l.slot || "" });
+  return rows.map(x => ({ ...x, business_ids: links.get(x.id) || [], slots: slots.get(x.id) || {}, ext_ids: ext.get(x.id) || [], bonds: bonds.get(x.id) || [], specials: specials.get(x.id) || {}, subs: subs.get(x.id) || [] }));
+}
+
 // slots: לכל מסמך { מזהה_חברה: "general" | "private" | "general,private" } - רק לחברות שהמסמך מקושר אצלן לרשימה (אחרת המפתח חסר)
 export async function withBusinesses(env, rows) {
   const ids = rows.map(r => r.id);
+  if (!ids.length) return [];
+  {
+    const few = ids.length <= 40, fast = await linksBatch(env, few ? ` WHERE doc_id IN (${ids.map(() => "?").join(",")})` : "", few ? ids : []);
+    if (fast) return attach(rows, fast);
+  }
   // מסמך בודד / מעט מסמכים (שמירה, פתיחה): שולפים רק את השורות שלהם; לרשימה המלאה שליפה אחת של הכל (בלי אלפי פרמטרים)
   const few = ids.length > 0 && ids.length <= 40, W = few ? ` WHERE doc_id IN (${ids.map(() => "?").join(",")})` : "", B = few ? ids : [];
   const links = new Map(ids.map(i => [i, []])), slots = new Map(ids.map(i => [i, {}]));
