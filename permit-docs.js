@@ -195,7 +195,7 @@
 
   // ───────── טעינה ואינדקס ─────────
   function reindex() {
-    S.byBiz = new Map(); S.byId = new Map();
+    S.byBiz = new Map(); S.byId = new Map(); S._rv = (S._rv || 0) + 1;
     for (const d of S.docs) {
       S.byId.set(d.id, d);
       for (const b of new Set([...(d.business_ids || []), ...(d.subs || []).map(x => x.id)])) { if (!S.byBiz.has(b)) S.byBiz.set(b, []); S.byBiz.get(b).push(d); }
@@ -217,6 +217,7 @@
     let fresh = false;
     try { const r = await pDocs; S.docs = r.docs || []; S.err = ""; reindex(); S.loaded = true; fresh = true; }
     catch (e) { if (!S.stale) S.err = e.message || "שגיאה"; S.loaded = true; }
+    loadNames();          // שמות החברות שנמצאו במסמכים (להצעות שיוך): יוצא עכשיו במקביל לשאר, ולא רק אחרי סיום כל הטעינה
     try { await pAppr; } catch { /* לפני מיגרציה */ }
     if (fresh) { S.stale = false; try { localStorage.setItem(DOCS_CACHE, JSON.stringify({ docs: S.docs, appr: [...(S.appr || new Map())] })); } catch { /* אין מקום */ } }
     S._freshDone();
@@ -359,7 +360,12 @@
       : `<div class="pd-sub">${S.hp ? "אין הצעות נוספות (לא נמצא מסמך לא משויך עם ח.פ. או שם החברה)." : "אין נתוני טקסט (צריך לייבא את מיפוי המסמכים)."}</div>`);
   }
   const REJ_KEY = "pd_sug_rej";          // הצעות שיוך שבוטלו (מסמך|חברה): לא יוצעו שוב; נשמר בדפדפן הזה
-  const rejSet = () => { try { return new Set(JSON.parse(localStorage.getItem(REJ_KEY) || "[]")); } catch { return new Set(); } };
+  let rejMemo = { raw: null, set: new Set() };
+  const rejSet = () => {          // נקרא לכל חברה בחישוב הדשבורד: מפענחים מחדש רק כשהערך השמור השתנה
+    let raw = "[]"; try { raw = localStorage.getItem(REJ_KEY) || "[]"; } catch { /* בלי אחסון */ }
+    if (raw !== rejMemo.raw) { let set; try { set = new Set(JSON.parse(raw)); } catch { set = new Set(); } rejMemo = { raw, set }; }
+    return new Set(rejMemo.set);
+  };
   function sugRej(docId, bid) {
     const r = rejSet(); r.add(docId + "|" + bid);
     try { localStorage.setItem(REJ_KEY, JSON.stringify([...r])); } catch { /* בלי אחסון */ }
@@ -2271,8 +2277,26 @@
     const ck = b.id + "|" + keys.join("|"), cache = S._ndc && S._ndc.df === S.nameDf ? S._ndc : (S._ndc = { df: S.nameDf, m: new Map() });
     if (cache.m.has(ck)) return cache.m.get(ck);
     cache.m.set(ck, out);
-    for (const [n, ids] of S.nameDf) if (ids.size <= NGENERIC_DF && keys.some(k => nameHit(n, k))) for (const id of ids) out.add(id);
+    const idx = nameWordIdx();
+    for (const k of keys) for (const n of idx.get(k.split(" ")[0]) || []) if (nameHit(n, k)) for (const id of S.nameDf.get(n)) out.add(id);
     return out;
+  }
+  // מילה -> שמות (שאינם כלליים) שמופיעה בהם כמילה שלמה. התאמה (nameHit) מחייבת שהמילה הראשונה של שם החברה תופיע כמילה שלמה בשם שבמסמך,
+  // כך שמספיק לבדוק רק את השמות שמכילים אותה (במקום כל השמות × כל החברות)
+  function nameWordIdx() {
+    if (S._nwi && S._nwi.df === S.nameDf) return S._nwi.m;
+    const m = new Map();
+    for (const [n, ids] of S.nameDf) { if (ids.size > NGENERIC_DF) continue; for (const w of new Set(n.split(" "))) { if (!m.has(w)) m.set(w, []); m.get(w).push(n); } }
+    S._nwi = { df: S.nameDf, m };
+    return m;
+  }
+  function coWordIdx() {          // מילה ראשונה של שם חברה -> [{ b, k }] (לחיפוש הפוך: חברות ששמן מופיע בשם שבמסמך)
+    const ci = coIndex();
+    if (S._cwi && S._cwi.ci === ci) return S._cwi.m;
+    const m = new Map();
+    for (const x of ci) for (const k of x.keys) { const w = k.split(" ")[0]; if (!m.has(w)) m.set(w, []); m.get(w).push({ b: x.b, k }); }
+    S._cwi = { ci, m };
+    return m;
   }
   function coIndex() {
     if (S._coIdx && S._coIdxN === bizList().length) return S._coIdx;
@@ -2282,7 +2306,8 @@
   function companiesByName(d) {          // חברות ששמן מופיע במסמך
     const ns = S.docNames && S.docNames.get(d.id); if (!ns) return [];
     const out = new Map();
-    for (const n of ns) { if (nameGeneric(n)) continue; for (const x of coIndex()) if (x.keys.some(k => nameHit(n, k))) out.set(x.b.id, x.b); }
+    const idx = coWordIdx();
+    for (const n of ns) { if (nameGeneric(n)) continue; for (const w of new Set(n.split(" "))) for (const x of idx.get(w) || []) if (!out.has(x.b.id) && nameHit(n, x.k)) out.set(x.b.id, x.b); }
     return [...out.values()];
   }
   function hintDocs(b, miss) {          // מסמכים שנמצא בהם ח.פ. או שם של החברה ואינם משויכים אליה כלל (מסמך שכבר משויך לחברה, גם כנוסף או לאג"ח, אינו הצעה), וסוגם מתאים לשטר החסר: [{ d, why }]
@@ -2295,7 +2320,16 @@
     return out;
   }
   const SUG_TYPES = ["private", "general"];          // הצעות: כל מסמך לא משויך שנמצא בו ח.פ. או שם החברה, בלי קשר לסוג השטר שחסר
-  function ndMissing() {
+  let ndmMemo = null;
+  const HE_COLL = new Intl.Collator("he");
+  function ndMissing() {          // נקרא כמה פעמים באותו ציור (מספר בלשונית / בכרטיס, והטבלה): מחושב פעם אחת, והתוצאה נמחקת מיד אחרי הציור
+    const k = [ND.miss, ND.sug, ND.q, S._rv, bizList().length, !!S.nameDf, !!S.hp].join("|");
+    if (ndmMemo && ndmMemo.k === k && ndmMemo.list === bizList()) return ndmMemo.rows;
+    const rows = ndMissing0();
+    ndmMemo = { k, list: bizList(), rows }; Promise.resolve().then(() => { ndmMemo = null; });
+    return rows;
+  }
+  function ndMissing0() {
     const out = [];
     for (const b of bizList()) {
       if (INACTIVE_ST.test(b.registry_status || "")) continue;
@@ -2310,7 +2344,7 @@
     }
     const f = ND.q.trim().toLowerCase();
     return out.filter(e => !f || `${displayName(e.b)} ${e.b.chp_number || ""}`.toLowerCase().includes(f) || fuzzy(f, displayName(e.b)) >= 0.5)
-      .sort((x, y) => String(displayName(x.b)).localeCompare(String(displayName(y.b)), "he"));
+      .map(e => ({ e, n: String(displayName(e.b)) })).sort((x, y) => HE_COLL.compare(x.n, y.n)).map(x => x.e);
   }
   const ndDocsB = () => S.docs.filter(d => isUnassigned(d) && d.doc_type !== "other");
   const ndExt = () => S.ext.filter(x => ND.gone || extGroup(x) === "nodb");
@@ -2332,7 +2366,7 @@
     if (!($("pd-nd-body") && $("pd-nd-tabs") && app.contains($("pd-nd-body")))) {
       app.innerHTML = `<div class="admin-tabs" id="pd-nd-tabs"></div><div id="pd-nd-body"></div>`;
     }
-    (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(ndShow);
+    Promise.all([S.loaded ? null : load(), loadNames()]).then(ndShow);          // המסמכים והשמות במקביל (לא בזה אחר זה)
     if (S.loaded) ndShow();
   }
   function ndShow() {
@@ -2463,7 +2497,7 @@
     if (!el) return;
     el.innerHTML = ndTabF();
     const go = () => { if ($("pd-f-q") && ND.fq.trim().length >= 2) unifiedSearch(); };
-    go(); (S.loaded ? Promise.resolve() : load()).then(() => loadNames()).then(go);
+    go(); Promise.all([S.loaded ? null : load(), loadNames()]).then(go);
   }
   function ndTabC() {
     const q = ND.sq.trim();

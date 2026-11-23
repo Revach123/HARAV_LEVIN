@@ -1,5 +1,5 @@
 import { checkAdmin } from "./_shared/auth.js";
-import { TYPES, MAX_BYTES, noAuth, noStore, newId, withBusinesses, existingBusinessIds, hex } from "./_shared/permit-docs.js";
+import { TYPES, MAX_BYTES, noAuth, noStore, newId, withBusinesses, allDocsWithBusinesses, existingBusinessIds, hex } from "./_shared/permit-docs.js";
 import { triggerCompress, triggerFaxPdf } from './_shared/compress-trigger.js';
 // מאגר מסמכי היתר עסקה - כל הנקודות למנהל בלבד (בשלב זה אין תצוגה ציבורית).
 // GET  /api/permit-docs                → כל המסמכים עם החברות המשויכות לכל אחד  { docs: [...] }
@@ -19,8 +19,7 @@ export async function onRequestGet({ request, env }) {
       const doc = row ? (await withBusinesses(env, [row]))[0] : null;
       return Response.json({ exists: !!row, doc });
     }
-    const res = await env.DB.prepare("SELECT * FROM permit_docs ORDER BY created_at DESC, id").all();
-    return Response.json({ docs: await withBusinesses(env, res.results ?? []) });
+    return Response.json({ docs: await allDocsWithBusinesses(env) });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });
   }
