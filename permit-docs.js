@@ -2757,7 +2757,7 @@
     const dup = new Map(); for (const r of J.rows) if (r.ident_hash) dup.set(r.ident_hash, (dup.get(r.ident_hash) || 0) + 1);
     const cfs = J_COLS.map(c => [c, (J.cf[c.k] || "").trim().toLowerCase()]).filter(x => x[1]);
     const rows = J.rows.filter(r => (J.f === "all" || (J.f === "cancelled" ? r.cancelled_at : !r.cancelled_at)) && (J.fa === "all" || (J.fa === "file" ? r.file_sha256 : !r.file_sha256))
-      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v.includes(q); return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
+      && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v.split("\n").some(l => l.startsWith(q)); /* לפי תחילת שורה: "נשלח בפקס" לא תופס את "לא נשלח בפקס" */ return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
       && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number} ${jX(r).addr} ${jX(r).city} ${jX(r).phone2}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
     return { rows, dup };
   }
