@@ -221,6 +221,23 @@ assert.match(r, /^go_to_folder=/); assert.equal(calls.length, n);
 heard = '';
 r = await call(env, { ApiCallId: 'abc-2', m1: '2', s1_1: '/6/rabc2_1_1.wav' });
 assert.match(r, /לא הצלחתי להבין\.t-אמרו שוב את שם החברה=s1_2,no,record,\/6,rabc2_1_2/); console.log('4c', r);
+// 4d. ElevenLabs כשמוגדר (כמו שלוחת ההצטרפות): בלי Azure, ההקלטה נמחקת אחרי הזיהוי
+const eCalls = [];
+globalThis.fetch = async (url, init = {}) => {
+  url = String(url); eCalls.push(url.split('?')[0].split('/').pop());
+  if (url.includes('DownloadFile')) return new Response(new Uint8Array([0x52, 0x49, 0x46, 0x46, ...new Array(100).fill(0)]));
+  if (url === 'https://api.elevenlabs.io/v1/speech-to-text') {
+    assert.equal(init.headers['xi-api-key'], 'EK'); assert.equal(init.body.get('language_code'), 'he');
+    return Response.json({ text: 'בנק לאומי' });
+  }
+  if (url.includes('FileAction')) return Response.json({ responseStatus: 'OK' });
+  throw new Error('unexpected ' + url);
+};
+const eenv = mkEnv({ ELEVENLABS_API_KEY: 'EK', YEMOT_TOKEN: '0771:pw' });          // בלי AZURE_SPEECH_KEY
+assert.match(await call(eenv, { ApiCallId: 'el-1', m1: '2' }), /=s1_1,no,record,/);          // מצב הקלטה גם בלי Azure
+r = await call(eenv, { ApiCallId: 'el-1', m1: '2', s1_1: '/6/rel1_1_1.wav' });
+assert.equal(parts(r)[1], 't-בנק לאומי לישראל בא אם');
+assert.deepEqual(eCalls, ['DownloadFile', 'speech-to-text', 'FileAction']); console.log('4d ElevenLabs OK', eCalls);
 globalThis.fetch = realFetch;
 // קבצי שמע פעילים (המניפסט האמיתי): ביטוי שהטקסט שלו לא השתנה מושמע מקובץ (f-)
 assert.match(await callRaw(mkEnv({ IVR_AUDIO_OFF: '' }), { h1: '999999999' }), /^read=(f-\/99\/c6_[0-9a-f]+|t-[^.=]+)\.(f-\/99\/c6_[0-9a-f]+|t-[^.=]+)=nx1/);

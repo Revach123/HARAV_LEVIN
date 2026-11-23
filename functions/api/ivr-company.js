@@ -21,14 +21,16 @@
 //
 //  דרישות: env.IVR_SECRET, binding DB (טבלת businesses - מצב היתר העסקה).
 //  מאגר הרישום: binding DB1 = company-info-db (בלעדיו נופלים לטבלת businesses בלבד).
-//  זיהוי חיצוני: AZURE_SPEECH_KEY, AZURE_SPEECH_REGION, YEMOT_TOKEN (או YEMOT_TTS).
+//  זיהוי חיצוני: ElevenLabs (ELEVENLABS_API_KEY) כשמוגדר - כמו שלוחת ההצטרפות; אחרת Azure (AZURE_SPEECH_KEY, AZURE_SPEECH_REGION).
+//  בשניהם ההקלטה מורדת מימות (YEMOT_TOKEN או YEMOT_TTS) ונמחקת אחרי הזיהוי.
 //  סוד: IVR_SECRET (קו ישן) או IVR_SECRET_NEW (קו חדש). פרמטר אופציונלי מהשלוחה: bk=<תיקיית חזרה> (api_add_1=bk=/), rf=<תיקיית ההקלטות> (api_add_2=rf=/2).
 //  אופציונלי: IVR_AUDIO_OFF=1 (בלי קבצי שמע של Azure), IVR_VOICE_READ_OPTS, IVR_REC_FOLDER (ברירת מחדל /6), IVR_REC_MAX_SEC (8),
 //             IVR_REC_MIN_SEC (1), IVR_BACK_FOLDER (ברירת מחדל /5).
 // ============================================================================
 
 import { loadBusinesses } from './_shared/businesses-cache.js';
-import { sttConfigured, transcribeRecording } from './_shared/stt-azure.js';
+import { deleteRecording, downloadRecording, sttConfigured, transcribeRecording } from './_shared/stt-azure.js';
+import { elevenConfigured, elevenTranscribe } from './_shared/stt-eleven.js';
 import { sttGet, sttPut } from './_shared/stt-cache.js';
 import { MAX_LIST, describe, permitIndex, searchByChp, searchByName } from './_shared/registry-search.js';
 import { ttsClean, unit } from './_shared/ivr_phrases.js';
@@ -69,7 +71,7 @@ export async function onRequest({ request, env, waitUntil }) {
 
   try {
     const rows = await loadBusinesses(env);
-    const ctx = { v: raw, env, rows, permitOf: permitIndex(rows), record: sttConfigured(env), waitUntil: waitUntil || ((p) => p) };
+    const ctx = { v: raw, env, rows, permitOf: permitIndex(rows), record: sttReady(env), waitUntil: waitUntil || ((p) => p) };
     ctx.voice = ctx.record || !!env.IVR_VOICE_READ_OPTS;
     return text(await route(ctx));
   } catch (e) {
@@ -291,18 +293,22 @@ const intEnv = (val, dflt) => { const n = parseInt(val, 10); return Number.isFin
 const recFolder = (env, v) => folderParam(v || {}, 'rf', env.IVR_REC_FOLDER || '/6').replace(/\/$/, '');   // rf=<תיקייה> (api_add_2=rf=/2) דורס
 const recFile = (v, r, a) => `r${String(v.ApiCallId || 'x').replace(/\W/g, '')}_${r}_${a}`;
 
-// הקלטה -> טקסט (עם מטמון לשיחה, כי כל שלב הוא בקשה חדשה).
+// זיהוי דיבור זמין: ElevenLabs או Azure, ובשניהם צריך הרשאה להוריד את ההקלטה מימות
+const sttReady = (env) => (elevenConfigured(env) && !!(env.YEMOT_TOKEN || env.YEMOT_TTS)) || sttConfigured(env);
+
+// הקלטה -> טקסט (עם מטמון לשיחה, כי כל שלב הוא בקשה חדשה). ElevenLabs כשמוגדר, אחרת Azure.
 async function recognize(env, v, r, a, value) {
   const callId = String(v.ApiCallId || '');
   const slot = r * 10 + a;
   const cached = await sttGet(env, callId, slot);
   if (cached !== null) return cached;
   const folder = recFolder(env, v), file = recFile(v, r, a);
-  const { text } = await transcribeRecording(env, [
-    ...(looksLikeRecording(value) ? [value] : []),
-    `${folder}/${file}.wav`,
-    `${folder}/${file}`,
-  ]);
+  const cands = [...(looksLikeRecording(value) ? [value] : []), `${folder}/${file}.wav`, `${folder}/${file}`];
+  let text = '';
+  if (elevenConfigured(env)) {          // ElevenLabs (כמו שלוחת ההצטרפות); ההקלטה נמחקת אחרי הזיהוי
+    const rec = await downloadRecording(env, cands);
+    if (rec) { text = await elevenTranscribe(env, rec.bytes, 'he'); await deleteRecording(env, rec.path); }
+  } else ({ text } = await transcribeRecording(env, cands));
   if (text) await sttPut(env, callId, slot, text);       // תוצאה ריקה לא נשמרת: שאלה חוזרת באותו משתנה תזוהה מחדש
   return text;
 }
