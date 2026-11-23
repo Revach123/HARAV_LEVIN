@@ -6,25 +6,25 @@
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 40,
-   "biz_type": 92
+   "biz_type": 93
   },
   "empty_after": {
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-22T10:17:38.631104Z",
+  "updated": "2026-11-23T11:14:50.778044Z",
   "source": "d1",
-  "businesses": 1288,
-  "numeric_chp": 1285,
-  "found_in_registry": 1194,
+  "businesses": 1289,
+  "numeric_chp": 1286,
+  "found_in_registry": 1195,
   "found_ratio": 0.929,
   "failed_batches": 0,
-  "datawise_rows": 2242,
+  "datawise_rows": 2243,
   "datawise_date": "2026-11-20",
   "bond_companies": 361,
   "changes": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 1,
    "tase_has_agch": 0,
    "registry_status": 0,
    "has_agch_any": 0,
@@ -32,24 +32,32 @@
   },
   "fills_of_empty": {
    "registrar_name": 0,
-   "biz_type": 0,
+   "biz_type": 1,
    "tase_has_agch": 0,
    "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "לא ידוע": 156,
+   "לא ידוע": 157,
    "פעילה": 1083,
    "מחוסלת/חיסול": 34,
    "בפירוק": 15
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 1,
   "problems": []
  },
- "changes": [],
+ "changes": [
+  {
+   "id": "mwrzpojbq3ue",
+   "chp": "580023810",
+   "field": "biz_type",
+   "old": "",
+   "new": "עמותה רשומה"
+  }
+ ],
  "not_found": [
   {
    "id": "mp64ip5cv118",

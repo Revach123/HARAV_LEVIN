@@ -1,0 +1,1 @@
+UPDATE businesses SET biz_type = '' WHERE id = 'mwrzpojbq3ue';
