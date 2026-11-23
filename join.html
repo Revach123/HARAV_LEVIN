@@ -178,11 +178,11 @@
         </div>
         <div class="err" data-for="email"></div></div>
       <div class="field"><label class="lbl" for="fax">פקס</label>
-        <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"></div>
+        <input id="fax" name="fax" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="fax"></div></div>
       <div class="field sendvia" id="sendVia" role="radiogroup" aria-label="אישור הצטרפות ישלח ל">
         <div class="lbl">אישור הצטרפות ישלח ל...</div>
         <label class="viaopt off" id="viaMailL"><input type="radio" name="via" value="mail" id="viaMail" disabled><span>מייל</span></label>
-        <label class="viaopt off" id="viaFaxL" title="אפשרות זו אינה פעילה עדיין"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס <small class="viasoon">- אפשרות זו אינה פעילה עדיין, בעז"ה בקרוב</small></span></label>
+        <label class="viaopt off" id="viaFaxL"><input type="radio" name="via" value="fax" id="viaFax" disabled><span>פקס</span></label>
         <div class="viamsg" id="viaMsg" aria-live="polite"></div>
       </div>
       </div>
@@ -351,17 +351,19 @@ function setErrs(map, form) {
   O.addEventListener("input", () => { const c = O.value.replace(/[^A-Za-z0-9.\-]/g, ""); if (c !== O.value) O.value = c; sync(); });
   document.querySelector("#fJoin").addEventListener("input", e => { if (e.target === L || e.target === O) { H.dispatchEvent(new Event("input", { bubbles: true })); } });
 })();
-// בחירת אופן קבלת האישור: מייל (ברירת מחדל אם הוזנה כתובת) או פקס (עדיין לא פעיל). שורה בלי נתון - באפור וללא אפשרות בחירה.
+// בחירת אופן קבלת האישור: מייל או פקס. שורה בלי נתון - באפור וללא אפשרות בחירה. ברירת מחדל: מייל אם הוזן, אחרת פקס אם הוזן
+const faxOk = s => { const d = String(s || "").replace(/\D/g, ""); return /^0\d{8,10}$/.test(d) || /^153\d{7,8}$/.test(d) || /^972\d{8,10}$/.test(d); };
 (function () {
   const L = $("emailLocal"), F = $("fax"), M = $("viaMail"), X = $("viaFax"), msg = $("viaMsg");
   function upd() {
-    const mOk = L.value.trim().length > 0;
-    M.disabled = !mOk; X.disabled = true; X.checked = false;          // פקס: תמיד מושבת עד שהאפשרות תופעל
-    $("viaMailL").classList.toggle("off", !mOk); $("viaFaxL").classList.add("off");
-    if (!mOk) M.checked = false; else if (!M.checked) M.checked = true;          // ברירת מחדל: מייל, אם הוזנה כתובת
-    msg.textContent = !mOk ? "לקבלת אישור, יש להזין כתובת מייל תקינה (שליחה בפקס עדיין אינה פעילה)" : "";
+    const mOk = L.value.trim().length > 0, fOk = faxOk(F.value);
+    M.disabled = !mOk; X.disabled = !fOk;
+    $("viaMailL").classList.toggle("off", !mOk); $("viaFaxL").classList.toggle("off", !fOk);
+    if (!mOk) M.checked = false; if (!fOk) X.checked = false;
+    if (!M.checked && !X.checked) { if (mOk) M.checked = true; else if (fOk) X.checked = true; }
+    msg.textContent = !mOk && !fOk ? "לקבלת אישור, יש להזין כתובת מייל או מספר פקס" : "";
   }
-  L.addEventListener("input", upd); $("emailDom").addEventListener("change", upd);
+  L.addEventListener("input", upd); $("emailDom").addEventListener("change", upd); F.addEventListener("input", upd);
   upd();
 })();
 // אימייל: רק תווים לועזיים (אותיות עבריות ורווחים נמחקים בהקלדה ובהדבקה). שאר השדות חופשיים.
@@ -500,6 +502,7 @@ $("fJoin").addEventListener("submit", async e => {
   if (v("phone2") && !validPhone(v("phone2"))) errs.phone2 = "מספר הטלפון הנוסף אינו תקין";
   if ($("emailLocal").value.trim() && !$("emailDom").value) errs.email = "נא לבחור סיומת למייל";
   else if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה (באותיות באנגלית בלבד)";
+  if (v("fax") && !faxOk(v("fax"))) errs.fax = "מספר הפקס אינו תקין";
   if (v("city").length < 2) errs.city = "נא למלא עיר";
   if (v("address").length < 3) errs.address = "נא למלא כתובת";
   const ch = f.querySelector('input[name="choice"]:checked');
@@ -517,7 +520,7 @@ $("fJoin").addEventListener("submit", async e => {
     const { status, j } = await post("/api/join", body);
     if (j && j.ok) {
       $("dName").textContent = `${body.first} ${body.last}`; $("dId").textContent = body.id;
-      $("mailNote").textContent = (j.mail && body.email) ? ` עותק נשלח אל ${body.email}.` : "";
+      $("mailNote").textContent = (j.mail && body.email) ? ` עותק נשלח אל ${body.email}.` : j.fax ? ` עותק יישלח לפקס ${body.fax} בעוד מספר דקות.` : "";
       $("dWhen").textContent = `תאריך: ${todayIL}`;
       $("dChoice").textContent = ch.value === "all" ? "התקשרות: בחרת להתקשר מול כל עסקים שנרשמו למאגר, כולל עסקים שירשמו בהמשך" : `התקשרות: בחרת להתקשר מול ${chosen.size} חברות שנבחרו מהרשימה`;
       $("printAgree").innerHTML = `<h2>שטר רישום להיתר עיסקא פרטי</h2><p>${esc(body.first)} ${esc(body.last)} · ת.ז. ${esc(body.id)} · ${todayIL}</p>`

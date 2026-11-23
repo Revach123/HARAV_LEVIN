@@ -34,6 +34,7 @@ import { importKeyForWrite, encryptPii, decryptPii, identHash } from './_shared/
 import { normalizeId, normalizePhone, jerusalemNow, newRowId, clean, validEmail } from './_shared/join-common.js';
 import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt-azure.js';
 import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
+import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
 import { spokenEmail } from './_shared/spoken-email.js';
 import { spokenLetters } from './_shared/spoken-letters.js';
 import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
@@ -367,20 +368,21 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   });
   v.finished = true;
   // מייל אישור (כמו בטופס באתר) - רק לכתובת שאומתה; "נשלח אישור למייל" מוקרא רק אם המייל באמת נשלח.
-  let mailSent = false;
-  if (saved && email) {
+  // פקס שנמסר בלי מייל - האישור נשלח לפקס (כמו בשלוחת ההצטרפות בדיבור)
+  let mailSent = false, faxQueued = false;
+  if (saved && (email || fax)) {
     const companies = all ? [] : (texts.cl ? texts.cl.split(/\s*[,،]\s*|\s+ו(?=[א-ת])/).filter(Boolean) : ['(לפי ההקלטה)']);
-    mailSent = await sendConfirmation(env, email, {
-      first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'),
-      all, companies, origin,
-    });
-    if (mailSent) await markMailSent(env, saved);
+    const conf = { first: texts.fn || '', last: texts.ln || '', id, date: jerusalemNow().slice(0, 10).split('-').reverse().join('/'), all, companies, origin };
+    try {
+      if (email) { mailSent = await sendConfirmation(env, email, conf); if (mailSent) await markMailSent(env, saved); }
+      if (fax && !email) faxQueued = await queueFaxConfirmation(env, waitUntil, String(v.ApiCallId || ''), fax, conf, saved);
+    } catch (e) { console.log(`ivr-join confirm error: ${e && e.message}`); }          // כשל בשליחה לא פוגע בהרשמה
   }
   // הקראת נוסח האישור: "שלום <שם> ת.ז. <...>, הרינו לאשר בזאת שהתקבל הרישום..."
   const name = `${texts.fn} ${texts.ln}`.trim();
   const confirmText = `${P('join:okHello')}.${name ? `${T(name)}.` : ''}${P('join:okId')}.${T(spaced(id))}.${P('join:okBody')}`;
   if (!saved) return done('join:done');
-  return `id_list_message=${confirmText}.${mailSent ? `${P('join:mailSent')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
+  return `id_list_message=${confirmText}.${mailSent ? `${P('join:mailSent')}.` : ''}${faxQueued ? `${P('join:faxQueued')}.` : ''}${P('join:thanks')}&go_to_folder=${bk}&`;
 }
 
 // ---- אימייל ----

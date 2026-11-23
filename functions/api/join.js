@@ -8,6 +8,8 @@
 // בלוגים לא נרשם שום פרט אישי.
 import { sendConfirmation, buildConfirmation, markMailSent } from "./_shared/join-mail.js";
 import { getAgreement } from "./_shared/agreement.js";
+import { queueFaxConfirmation } from "./_shared/join-fax-confirm.js";
+import { normFax } from "./_shared/ivr-fax.js";
 import { importKeyForWrite, encryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { reply, normalizeId, normalizePhone, validEmail, clean, originOk, readJson, jerusalemNow, newRowId } from "./_shared/join-common.js";
 
@@ -44,6 +46,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   if (!phone) errors.phone = "מספר הטלפון אינו תקין";
   if (clean(b.phone2, 30) && !phone2) errors.phone2 = "מספר הטלפון הנוסף אינו תקין";
   if (email && !validEmail(email)) errors.email = "כתובת הדוא\"ל אינה תקינה";
+  if (fax && !normFax(fax)) errors.fax = "מספר הפקס אינו תקין";
   if (address.length < 3) errors.address = "נא למלא כתובת";
   if (b.city !== undefined && city.length < 2) errors.city = "נא למלא עיר";          // דף ישן במטמון (בלי שדה עיר) - נקלט בלי עיר
   if (b.consent !== true) errors.consent = "יש לאשר את תנאי שטר הרישום";
@@ -74,7 +77,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     extra["גרסת שטר"] = clean(b.agreement_version, 40);
     extra["sha256 של נוסח השטר שהוצג"] = /^[0-9a-f]{64}$/.test(String(b.agreement_sha256 || "")) ? b.agreement_sha256 : "";
     extra["אושרו התנאים"] = "כן";
-    extra["אישור יישלח ב"] = via === "mail" ? "מייל" : via === "fax" ? "פקס (עדיין לא פעיל, לא נשלח)" : "לא נבחר";
+    extra["אישור יישלח ב"] = via === "mail" ? "מייל" : via === "fax" ? "פקס" : "לא נבחר";
     const payload = {
       first, last, phone, email, id,
       ip: request.headers.get("CF-Connecting-IP") || "",
@@ -91,7 +94,9 @@ export async function onRequestPost({ request, env, waitUntil }) {
       const task = sendConfirmation(env, email, conf).then(ok => (ok ? markMailSent(env, rid) : null));
       if (waitUntil) waitUntil(task); else await task;
     }
-    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && via === "mail" && env.WP_MAIL_URL && env.WP_MAIL_SECRET) });
+    // פקס: נבחר במפורש, או שאין מייל לשליחה (גם בדף ישן במטמון שבו הפקס עוד לא היה אפשרות)
+    const faxNo = normFax(fax), faxQueued = !!faxNo && (via === "fax" || !email) && await queueFaxConfirmation(env, waitUntil, "site", faxNo, conf, rid);
+    return reply({ ok: true, ref: rid.slice(-6).toUpperCase(), mail: !!(email && via === "mail" && env.WP_MAIL_URL && env.WP_MAIL_SECRET), fax: faxQueued });
   } catch {
     return reply({ ok: false, error: "אירעה שגיאה בשמירת הטופס. נא לנסות שוב." }, 500);
   }
