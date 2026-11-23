@@ -855,6 +855,56 @@
    "kind": "upcoming",
    "last_seen": "2026-11-23"
   },
+  "U10440": {
+   "data": {
+    "chp_number": "513609131",
+    "company_name": "גבאי קבוצה",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10440,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783087",
+    "maya_report_id": 1783087,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-23"
+  },
+  "U10441": {
+   "data": {
+    "chp_number": "520020116",
+    "company_name": "הכשרת הישוב",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10441,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783138",
+    "maya_report_id": 1783138,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-23"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",

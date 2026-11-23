@@ -1,9 +1,9 @@
 {
- "updated": "2026-11-22",
+ "updated": "2026-11-23",
  "status": "ok",
  "datawise_date": "2026-11-20",
- "expected": 777,
- "maya": 777,
+ "expected": 778,
+ "maya": 778,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
@@ -14,12 +14,6 @@
    "security_name": "פז אנרג מסחרי 2",
    "company": "פז קמעונאות ואנרגיה  בע\"מ",
    "chp_number": "510216054"
-  },
-  {
-   "security_id": 1191386,
-   "security_name": "הראל פיקד אגח ג",
-   "company": "הראל פיקדון סחיר  בע\"מ",
-   "chp_number": "515989440"
   }
  ],
  "dropped_no_terms": []

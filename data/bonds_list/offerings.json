@@ -92,6 +92,27 @@
    "chp_number": "520028010"
   },
   {
+   "id": 10441,
+   "maya_report_id": 1783138,
+   "company_name": "הכשרת הישוב",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783138",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520020116"
+  },
+  {
    "id": 10430,
    "maya_report_id": 1781957,
    "company_name": "נורסטאר החזקות",
@@ -390,6 +411,27 @@
     }
    ],
    "chp_number": "2352046"
+  },
+  {
+   "id": 10440,
+   "maya_report_id": 1783087,
+   "company_name": "גבאי קבוצה",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783087",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "513609131"
   },
   {
    "id": 10131,
@@ -831,6 +873,13 @@
    ]
   },
   {
+   "chp_number": "513609131",
+   "name": "גבאי קבוצה",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
    "chp_number": "513765859",
    "name": "רבוע כחול נדל\"ן",
    "statuses": [
@@ -882,6 +931,13 @@
   {
    "chp_number": "517220448",
    "name": "איביאי ריב פיק",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "520020116",
+   "name": "הכשרת הישוב",
    "statuses": [
     "הנפקה עתידית"
    ]
