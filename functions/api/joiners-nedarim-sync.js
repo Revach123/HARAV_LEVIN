@@ -10,6 +10,8 @@ import { noAuth } from "./_shared/permit-docs.js";
 import { importKeyForWrite, encryptPii, decryptPii, identHash } from "./_shared/joiners-crypto.js";
 import { originOk, readJson, clean } from "./_shared/join-common.js";
 import { sendConfirmation, saveConfirmationFile } from "./_shared/join-mail.js";
+import { queueFaxConfirmation } from "./_shared/join-fax-confirm.js";
+import { normFax } from "./_shared/ivr-fax.js";
 
 const H = { "Cache-Control": "no-store" };
 const out = (obj, status = 200) => Response.json(obj, { status, headers: H });
@@ -70,7 +72,7 @@ async function pull(env, tofes, lastId, max = BATCH) {
   return j;
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, waitUntil }) {
   // הרצה יומית אוטומטית (GitHub Actions, .github/workflows/nedarim-sync.yml): כותרת X-Cron-Secret = הסוד CRON_SECRET. אחרת - מנהל מהאתר עצמו
   const cron = await cronOk(request, env);
   if (!cron && !(await checkAdmin(request, env))) return noAuth();
@@ -117,7 +119,7 @@ export async function onRequestPost({ request, env }) {
     const mail = env.WP_MAIL_URL && env.WP_MAIL_SECRET;          // מייל אישור לכל מצטרף חדש בכל משיכה (יומית, אוטומטית בפתיחת הרשימה, או ידנית מהכפתור)          // אישור במייל למצטרפים החדשים: ברקע בפתיחת רשימת המצטרפים (mail:true) ובהרצה היומית
     if (mail) await env.DB.prepare("CREATE TABLE IF NOT EXISTS joiner_mail (id TEXT PRIMARY KEY, sent_at TEXT NOT NULL)").run();
     const origin = new URL(request.url).origin, validEmail = v => /^[\x21-\x7e]+@[\x21-\x7e]+\.[\x21-\x7e]{2,}$/.test(v) && !/[<>"']/.test(v);
-    let added = 0, existing = 0, last = since, mailed = 0, mailFailed = 0;
+    let added = 0, existing = 0, last = since, mailed = 0, mailFailed = 0, faxed = 0;
     for (const r of rows) {
       const n = parseInt(r.ID, 10); if (Number.isFinite(n)) last = Math.max(last, n);
       const rid = await sha1_16("nedarim:" + tofes + ":" + r.ID);
@@ -134,9 +136,13 @@ export async function onRequestPost({ request, env }) {
         const d = when.slice(0, 10).split("-").reverse().join("/");
         const ok = await sendConfirmation(env, p.email, { first: p.first, last: p.last, id: p.id, date: d, all: false, companies: [], origin, intro: `מצורף אישור על הצטרפותך מתאריך ${d}.` });
         if (ok) { mailed++; await env.DB.prepare("INSERT OR REPLACE INTO joiner_mail (id, sent_at) VALUES (?, datetime('now'))").bind(rid).run(); } else mailFailed++;
+      } else if (!validEmail(p.email)) {          // בלי מייל תקין, עם מספר פקס: האישור נשלח לפקס (פעם אחת, רק למצטרף חדש)
+        let fx = ""; try { fx = normFax(JSON.parse(p.extra || "{}")["פקס"]); } catch { fx = ""; }
+        const d = when.slice(0, 10).split("-").reverse().join("/");
+        if (fx && await queueFaxConfirmation(env, waitUntil, "ned", fx, { first: p.first, last: p.last, id: p.id, date: d, all: false, companies: [], origin, intro: `מצורף אישור על הצטרפותך מתאריך ${d}.` }, rid)) faxed++;
       }
     }
     if (last !== since) await setSetting(env, SETTING, last);
-    return out({ ok: true, added, existing, mailed, mail_failed: mailFailed, more: rows.length === BATCH, last_id: last });
+    return out({ ok: true, added, existing, mailed, mail_failed: mailFailed, faxed, more: rows.length === BATCH, last_id: last });
   } catch (e) { return out({ error: e && e.message ? e.message : "שגיאה בסנכרון" }, 502); }
 }
