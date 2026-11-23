@@ -2721,8 +2721,10 @@
   function jX(r) {
     if (r._x) return r._x;
     let o = {}; try { const j = JSON.parse(r.extra || ""); if (j && typeof j === "object" && !Array.isArray(j)) o = j; } catch { /* טקסט חופשי */ }
-    const shown = new Set(["כתובת", "טלפון נוסף", "פקס", "ערוץ", "Field1", "Field11", "Field12", ...Object.keys(J_REC)]);
-    return (r._x = { addr: String(o["כתובת"] || ""), phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
+    const shown = new Set(["כתובת", "עיר", "טלפון נוסף", "פקס", "ערוץ", "Field1", "Field11", "Field12", ...Object.keys(J_REC)]);
+    let addr = String(o["כתובת"] || "").trim(); const city = String(o["עיר"] || "").trim();
+    if (city && addr.endsWith(", " + city)) addr = addr.slice(0, -(city.length + 2)).trim();          // רישומים ישנים (מייל / טלפון): העיר הייתה בסוף הכתובת - מוצגת בשורה נפרדת
+    return (r._x = { addr, city: city && !addr.includes(city) ? city : "", phone2: String(o["טלפון נוסף"] || ""), fax: String(o["פקס"] || ""), src: jSrc(r, o),
       rest: Object.keys(o).filter(k => !shown.has(k) && o[k]).map(k => `${k}: ${o[k]}`).join(" · "), raw: Object.keys(o).length ? "" : String(r.extra || "") });
   }
   // קבוצת מקור לסינון (לכל טופס באתר הישן יש מספר משלו - בסינון הם אחת): טלפון / אתר / נדרים פלוס / קהילות / אתר ישן / ידני
@@ -2739,7 +2741,7 @@
     { k: "phone", h: "טלפון", nar: 1, ltr: 1, v: r => `${r.phone} ${jX(r).phone2}`.trim() },          // הטלפון הנוסף מוצג מתחת לעיקרי (ומסונן יחד איתו)
     { k: "fax", h: "פקס", nar: 1, ltr: 1, v: r => jX(r).fax },
     { k: "email", h: 'דוא"ל', ltr: 1, v: r => r.email },
-    { k: "addr", h: "כתובת", v: r => jX(r).addr },
+    { k: "addr", h: "כתובת", v: r => [jX(r).addr, jX(r).city].filter(Boolean).join("\n") },          // העיר בשורה נפרדת (אם אינה כבר בכתובת)
     { k: "co", h: "חברות", wide: 1, v: r => { const nd = jNdChoice(r); return (r.all || nd === "all" ? "לבחירת כל החברות שנרשמו וירשמו בהמשך" + (r.companies ? ": " : "") : "") + (r.companies || (nd === "some" ? "חברות נבחרות מהרשימה" : "")); } },
     { k: "src", h: "מקור", nar: 1, v: r => jX(r).src },
     { k: "mail", h: "אישור", nar: 1, v: r => {          // שורה למייל ושורה לפקס; "אין פרטים לשליחה" כשאין מייל תקין ואין פקס
@@ -2756,7 +2758,7 @@
     const cfs = J_COLS.map(c => [c, (J.cf[c.k] || "").trim().toLowerCase()]).filter(x => x[1]);
     const rows = J.rows.filter(r => (J.f === "all" || (J.f === "cancelled" ? r.cancelled_at : !r.cancelled_at)) && (J.fa === "all" || (J.fa === "file" ? r.file_sha256 : !r.file_sha256))
       && cfs.every(([c, q]) => { const v = String(c.v(r) || "").toLowerCase(), dq = q.replace(/\D/g, ""); if (c.k === "src") return jGrp(r).toLowerCase() === q; if (c.k === "mail") return v.includes(q); return v.includes(q) || (c.ltr && dq.length >= 3 && v.replace(/\D/g, "").includes(dq)); })
-      && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number} ${jX(r).addr} ${jX(r).phone2}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
+      && (!f || (() => { const h = `${jName(r)} ${r.phone} ${r.email} ${r.companies} ${r.id_number} ${jX(r).addr} ${jX(r).city} ${jX(r).phone2}`.toLowerCase(); return h.includes(f) || (d.length >= 4 && h.replace(/\D/g, "").includes(d)); })()));
     return { rows, dup };
   }
   async function jLoadCancels() {
@@ -2786,7 +2788,7 @@
     if (J.err) return `<div class="pd-sub" style="color:#c0392b;margin:12px 0">${E(J.err)} <button class="pd-link" onclick="PD._jRetry()">נסה שוב</button></div>`;
     if (!J.rows) { jLoad(); return `<div class="pd-sub" style="margin:12px 0">טוען את הרשימה…</div>`; }
     const { rows, dup } = jFiltered(), N = J_COLS.length + 4;
-    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:150px;max-width:240px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:90px;max-width:130px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : c.k === "mail" ? E(c.v(r) || "").replace(/\n/g, "<br>") : E(c.v(r) || "")}${jRecs(r).map((k, i) => J_RECCOL[k] === c.k ? `<button class="pd-mini" style="padding:0 3px;margin-inline-start:4px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>` : "").join("")}</td>`;
+    const cell = (c, r) => `<td${c.ltr ? ' dir="ltr"' : ""} style="${c.ltr ? "text-align:right;" : ""}${c.nar ? "white-space:nowrap;" : ""}${c.wide ? "min-width:150px;max-width:240px;" : ""}${c.k === "email" ? "overflow-wrap:anywhere;min-width:90px;max-width:130px;" : ""}${c.k === "first" || c.k === "last" ? "font-weight:700;" : ""}">${c.k === "phone" ? `${E(r.phone)}${jX(r).phone2 ? `<br><span class="pd-sub" title="טלפון נוסף">${E(jX(r).phone2)}</span>` : ""}` : c.k === "mail" || c.k === "addr" ? E(c.v(r) || "").replace(/\n/g, "<br>") : E(c.v(r) || "")}${jRecs(r).map((k, i) => J_RECCOL[k] === c.k ? `<button class="pd-mini" style="padding:0 3px;margin-inline-start:4px;font-size:11px;line-height:1.3" title="השמעת ${E(k)}" aria-label="השמעת ${E(k)}" onclick="event.stopPropagation();PD._jPlay('${r.id}',${i},this)">🔊</button>` : "").join("")}</td>`;
     const sel = (fn, cur, opts) => `<select class="pd-in pd-jsel" onchange="${fn}(this.value)">${opts.map(([k, l]) => `<option value="${k}"${cur === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
     return `<div class="pd-nd-bar"><input class="pd-in" id="pd-nd-jq" style="flex:1;min-width:220px" placeholder="חיפוש בכל העמודות" value="${E(J.q)}" oninput="PD._jQ(this.value)" autocomplete="off">
         <button class="pd-btn" onclick="PD._jEdit('')">➕ הוספת מצטרף</button>

@@ -1,7 +1,7 @@
 // functions/api/join.js
 // קליטת טופס "רישום לקוח להיתר עיסקא פרטי" מהאתר (join.html) לרשימת המצטרפים שמוצגת במסך המנהל.
 //   POST /api/join   Content-Type: application/json
-//   גוף: { first, last, id, phone, phone2, email, fax, address, choice: "all"|"list", companies: [שם,...], consent: true,
+//   גוף: { first, last, id, phone, phone2, email, fax, city, address (רחוב ומספר בית), choice: "all"|"list", companies: [שם,...], consent: true,
 //          agreement_sha256, agreement_version, form_date, t (אלפיות שנייה מטעינת הדף), website (honeypot, חייב להיות ריק) }
 //   תשובה: { ok: true, ref } - מספר אסמכתא קצר, בלי שום פרט אישי.
 // הפרטים האישיים מוצפנים כאן (AES-256-GCM, המפתח JOINERS_KEY) באותו פורמט של joiners_import.py, ונכתבים לטבלה joiners (migrations/0017).
@@ -33,7 +33,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   // בוטים: שדה מלכודת מלא, או טופס שנשלח מהר מדי. מחזירים "הצלחה" בלי לשמור, כדי לא לעזור להם ללמוד מה נדחה.
   if (clean(b.website, 50) || (Number(b.t) || 0) < MIN_FILL_MS) return reply({ ok: true, ref: "0" });
 
-  const first = clean(b.first, 40), last = clean(b.last, 40), address = clean(b.address, 160);
+  const first = clean(b.first, 40), last = clean(b.last, 40), address = clean(b.address, 160), city = clean(b.city, 60);
   const id = normalizeId(b.id), phone = normalizePhone(b.phone), phone2 = b.phone2 ? normalizePhone(b.phone2) : "";
   const email = clean(b.email, 120), fax = clean(b.fax, 30);
   const via = b.confirm_via === "fax" ? "fax" : b.confirm_via === "mail" || (b.confirm_via === undefined && email) ? "mail" : "";          // אופן קבלת האישור (לקוח ישן בלי השדה: מייל אם יש)
@@ -45,6 +45,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
   if (clean(b.phone2, 30) && !phone2) errors.phone2 = "מספר הטלפון הנוסף אינו תקין";
   if (email && !validEmail(email)) errors.email = "כתובת הדוא\"ל אינה תקינה";
   if (address.length < 3) errors.address = "נא למלא כתובת";
+  if (b.city !== undefined && city.length < 2) errors.city = "נא למלא עיר";          // דף ישן במטמון (בלי שדה עיר) - נקלט בלי עיר
   if (b.consent !== true) errors.consent = "יש לאשר את תנאי שטר הרישום";
   const choice = b.choice === "all" ? "all" : b.choice === "list" ? "list" : "";
   if (!choice) errors.choice = "נא לבחור אחת משתי האפשרויות";
@@ -68,6 +69,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     if (phone2) extra["טלפון נוסף"] = phone2;
     if (fax) extra["פקס"] = fax;
     extra["כתובת"] = address;
+    if (city) extra["עיר"] = city;
     extra["תאריך בטופס"] = clean(b.form_date, 20);
     extra["גרסת שטר"] = clean(b.agreement_version, 40);
     extra["sha256 של נוסח השטר שהוצג"] = /^[0-9a-f]{64}$/.test(String(b.agreement_sha256 || "")) ? b.agreement_sha256 : "";

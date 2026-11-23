@@ -102,7 +102,7 @@
   @media (min-width:860px){
     .wrap{max-width:900px}
     .fgrid{display:grid;grid-template-columns:1fr 1fr;column-gap:1.2rem}
-    .fgrid .field:has(#address),.fgrid .field:has(#emailLocal),.fgrid .field:has(#fax),.fgrid .sendvia{grid-column:1/-1}
+    .fgrid .field:has(#emailLocal),.fgrid .field:has(#fax),.fgrid .sendvia{grid-column:1/-1}
     .btn{max-width:420px;margin-inline:auto}
     .fgrid .field{margin-bottom:.55rem}
     .fgrid input{min-height:46px}
@@ -162,8 +162,10 @@
         <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" dir="ltr" style="text-align:right" required><div class="err" data-for="phone"></div></div>
       <div class="field"><label class="lbl" for="phone2">טלפון נוסף</label>
         <input id="phone2" name="phone2" type="tel" inputmode="tel" autocomplete="off" maxlength="20" dir="ltr" style="text-align:right"><div class="err" data-for="phone2"></div></div>
-      <div class="field"><label class="lbl" for="address">כתובת <span class="req">*</span></label>
-        <input id="address" name="address" type="text" autocomplete="street-address" maxlength="160" required><div class="err" data-for="address"></div></div>
+      <div class="field"><label class="lbl" for="city">עיר <span class="req">*</span></label>
+        <input id="city" name="city" type="text" autocomplete="address-level2" maxlength="60" list="cityList" required><datalist id="cityList"></datalist><div class="err" data-for="city"></div></div>
+      <div class="field"><label class="lbl" for="address">כתובת (רחוב ומספר בית) <span class="req">*</span></label>
+        <input id="address" name="address" type="text" autocomplete="address-line1" maxlength="160" required><div class="err" data-for="address"></div></div>
       <div class="field"><label class="lbl" for="emailLocal">מייל</label>
         <input id="email" name="email" type="hidden">
         <div class="emailrow" dir="ltr">
@@ -478,6 +480,14 @@ async function post(path, body) {
   return { status: r.status, j };
 }
 
+// רשימת היישובים להשלמה בשדה "עיר" (אותה רשימה של הקו הטלפוני); נטענת רק בכניסה לשדה. אפשר גם להקליד יישוב שאינו ברשימה
+$("city").addEventListener("focus", function load() {
+  $("city").removeEventListener("focus", load);
+  fetch("/data/ivr-addr/cities.json").then(r => r.json()).then(list => {
+    $("cityList").innerHTML = list.map(c => `<option value="${String(c[1]).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;")}">`).join("");
+  }).catch(() => {});
+});
+
 // ── שליחת הרשמה ──
 $("fJoin").addEventListener("submit", async e => {
   e.preventDefault();
@@ -490,6 +500,7 @@ $("fJoin").addEventListener("submit", async e => {
   if (v("phone2") && !validPhone(v("phone2"))) errs.phone2 = "מספר הטלפון הנוסף אינו תקין";
   if ($("emailLocal").value.trim() && !$("emailDom").value) errs.email = "נא לבחור סיומת למייל";
   else if (v("email") && !validEmail(v("email"))) errs.email = "כתובת הדוא\"ל אינה תקינה (באותיות באנגלית בלבד)";
+  if (v("city").length < 2) errs.city = "נא למלא עיר";
   if (v("address").length < 3) errs.address = "נא למלא כתובת";
   const ch = f.querySelector('input[name="choice"]:checked');
   if (!ch) errs.choice = "נא לבחור אחת משתי האפשרויות";
@@ -500,7 +511,7 @@ $("fJoin").addEventListener("submit", async e => {
   const btn = $("joinBtn"); btn.disabled = true; btn.textContent = "שולח…";
   try {
     const text = agreementText();
-    const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), confirm_via: (document.querySelector("input[name=via]:checked") || {}).value || "", address: v("address"),
+    const body = { first: v("first"), last: v("last"), id: v("id"), phone: v("phone"), phone2: v("phone2"), email: v("email"), fax: v("fax"), confirm_via: (document.querySelector("input[name=via]:checked") || {}).value || "", city: v("city"), address: v("address"),
       choice: ch.value, companies: ch.value === "list" ? [...chosen] : [], consent: true, agreement_version: AGREEMENT_VERSION + (shortMode ? "-short" : "-long"), agreement_sha256: await sha256Hex(text),
       form_date: todayIL, t: Date.now() - loadedAt, website: $("website").value, channel: document.body.classList.contains("embed") ? "site" : "kehilot" };
     const { status, j } = await post("/api/join", body);
