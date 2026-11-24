@@ -1,42 +1,5 @@
 {
  "items": {
-  "O1239532": {
-   "data": {
-    "begins_at": "2026-11-23T09:00:00",
-    "chp_number": "513230029",
-    "ends_at": "2026-11-23T16:00:00",
-    "interest": 4.78,
-    "is_new_company": false,
-    "is_variable_interest": false,
-    "issuer_id": 1597,
-    "issuer_name": "מגדל ביטוח הון",
-    "link_offer_report": "https://maya.tase.co.il/he/reports/1782878",
-    "offer_number": 1239532,
-    "offer_type": "מחיר",
-    "offering_type": "הצעה אחידה",
-    "price_per_unit": 1009,
-    "securities": [
-     {
-      "linkage_type": "ללא",
-      "maalot_rating": "ilAA-",
-      "midroog_rating": "Aa3.il",
-      "security_id": 1233113,
-      "security_name": "מגדל הון אגח יז",
-      "security_type": "אג\"ח קונצרני"
-     },
-     {
-      "linkage_type": "ללא",
-      "maalot_rating": "ilAA-",
-      "midroog_rating": "Aa3.il",
-      "security_id": 1233139,
-      "security_name": "מגדל הון אגח יח",
-      "security_type": "אג\"ח קונצרני"
-     }
-    ]
-   },
-   "kind": "open",
-   "last_seen": "2026-11-23"
-  },
   "U10118": {
    "data": {
     "chp_number": "",
@@ -60,7 +23,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10121": {
    "data": {
@@ -85,7 +48,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10128": {
    "data": {
@@ -110,7 +73,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10131": {
    "data": {
@@ -135,7 +98,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10225": {
    "data": {
@@ -160,7 +123,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10227": {
    "data": {
@@ -185,7 +148,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10237": {
    "data": {
@@ -210,7 +173,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10243": {
    "data": {
@@ -235,7 +198,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10259": {
    "data": {
@@ -260,7 +223,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10287": {
    "data": {
@@ -285,7 +248,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10289": {
    "data": {
@@ -310,7 +273,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10296": {
    "data": {
@@ -335,32 +298,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
-  },
-  "U10300": {
-   "data": {
-    "chp_number": "520028010",
-    "company_name": "חברה לישראל",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10300,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1768243",
-    "maya_report_id": 1768243,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": null,
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-20"
+   "last_seen": "2026-11-24"
   },
   "U10316": {
    "data": {
@@ -385,7 +323,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10329": {
    "data": {
@@ -410,7 +348,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10358": {
    "data": {
@@ -435,7 +373,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10371": {
    "data": {
@@ -460,7 +398,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10404": {
    "data": {
@@ -485,7 +423,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10405": {
    "data": {
@@ -510,7 +448,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10410": {
    "data": {
@@ -535,7 +473,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10413": {
    "data": {
@@ -560,7 +498,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10420": {
    "data": {
@@ -585,7 +523,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10422": {
    "data": {
@@ -610,7 +548,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10424": {
    "data": {
@@ -635,7 +573,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10427": {
    "data": {
@@ -666,7 +604,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10430": {
    "data": {
@@ -691,7 +629,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10431": {
    "data": {
@@ -716,7 +654,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10432": {
    "data": {
@@ -741,7 +679,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10434": {
    "data": {
@@ -766,7 +704,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10435": {
    "data": {
@@ -828,7 +766,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10439": {
    "data": {
@@ -853,7 +791,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10440": {
    "data": {
@@ -878,7 +816,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U10441": {
    "data": {
@@ -903,7 +841,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   },
   "U9973": {
    "data": {
@@ -928,7 +866,7 @@
     ]
    },
    "kind": "upcoming",
-   "last_seen": "2026-11-23"
+   "last_seen": "2026-11-24"
   }
  }
 }
