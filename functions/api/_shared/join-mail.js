@@ -4,6 +4,7 @@
 //   WP_MAIL_SECRET  (סוד)   אותה סיסמה שמוגדרת בסקריפט בוורדפרס (wp-mail-endpoint.php)
 // בלי שניהם לא נשלח מייל וההרשמה ממשיכה כרגיל.
 import { DEFAULT_LONG, getAgreement, plain } from "./agreement.js";
+import { sendCloudMailin } from "./cloudmailin.js";
 
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -45,6 +46,10 @@ ${agr.map(p).join("")}${known ? `<p style="margin:8px 0 0;font-size:14px;line-he
 // amp: חלק AMP (text/x-amp-html) אופציונלי - דורש את גרסת wp-mail-endpoint.php שמכירה amp
 // cc: עותק (דורש את גרסת wp-mail-endpoint.php שמכירה cc)
 export async function sendMail(env, { to, subject, html, text, replyTo, amp, cc }) {
+  // MAIL_PROVIDER = "cloudmailin": שליחה דרך CloudMailin (ר' _shared/cloudmailin.js) במקום וורדפרס
+  if (String(env.MAIL_PROVIDER || "").toLowerCase() === "cloudmailin") {
+    return (await sendCloudMailin(env, { to, cc, subject, html, text, replyTo, amp })).ok;
+  }
   if (!env.WP_MAIL_URL || !env.WP_MAIL_SECRET || !to) return false;
   try {
     const r = await fetch(env.WP_MAIL_URL, { method: "POST", headers: { "Content-Type": "application/json", "X-Iska-Secret": env.WP_MAIL_SECRET },
