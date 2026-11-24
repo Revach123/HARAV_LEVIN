@@ -24,6 +24,7 @@ import { normalizeId, normalizePhone, clean, jerusalemNow } from './_shared/join
 import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
 import { save, normalizeFax, spellEmail, emailStep } from './ivr-join.js';
 import { loadNameKeyterms } from './_shared/name-keyterms.js';
+import { spokenLetters, LETTER_KEYTERMS } from './_shared/spoken-letters.js';
 import { tapLetter, canonName, likeliest, loadCities, loadCitiesTop, loadStreets } from './_shared/ivr-addr.js';
 import { pickEmail } from './_shared/spoken-email.js';
 import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
@@ -97,31 +98,33 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שדה בדיבור: הקלטה -> ElevenLabs -> (parse) -> "זוהה: ..." -> 1 = אישור, 2 = הקלטה חוזרת.
   // parse מחזיר את הערך או '' (לא תקין -> bad + הקלטה חוזרת); sayOf = איך מקריאים את הערך חזרה.
   // langs: שפות הזיהוי (['he'] = עברית; '' = אוטומטי). עם יותר משפה אחת parse מקבל את כל הזיהויים (מערך).
-  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = '', tapAfter = 0, spellOut = false, keyterms = null, rank = null } = {}) => {
+  // spellAsk: אחרי ניסיון שנכשל - איות בדיבור אות אחר אות (שמות האותיות כ-keyterms), ורק אם גם זה נכשל - הקשה (tapAfter)
+  const field = async (name, ask, max, { parse = (t) => t, bad = 'join:noHear', sayOf = (x) => x, intro = '', langs = null, heard = '', tapAfter = 0, spellOut = false, keyterms = null, rank = null, spellAsk = '' } = {}) => {
     if (S(name, 'ok') === '1') return { val: S(name, 'x') || '' };
     if (S(name, 'tap') === '1') return { tap: true };          // tapAfter: אחרי כמה ניסיונות שנכשלו עוברים להקשה
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`, ck = `${name}_c${n}`;
-    const askAt = (i, pre = '') => readRecord(pre + (i === 0 ? intro : '') + P(ask), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
+    const sp = S(name, 'sp') === '1';
+    const askAt = (i, pre = '') => readRecord(pre + (i === 0 ? intro : '') + P(S(name, 'sp') === '1' ? spellAsk : ask), `${name}_${i}`, folder, recFile(`${name}_${i}`), REC_MIN, max);
+    // ניסיון שנכשל: קודם איות בדיבור (פעם אחת), אחר כך הקשה (tapAfter), אחרת הקלטה חוזרת
+    const retry = (pre = '') => {
+      if (spellAsk && !sp) { setS(name, 'sp', '1'); setS(name, 'n', n + 1); return { ask: askAt(n + 1) }; }
+      if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
+      setS(name, 'n', n + 1); return { ask: askAt(n + 1, pre) };
+    };
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
     if (S(name, 't') !== String(n)) {          // זיהוי פעם אחת לכל הקלטה (נשמר במצב השיחה)
       const value = String(v[key]);
       const texts = (await elevenTranscribeRecording(env, [
         ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
         `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
-      ], langs || ['he'], keyterms ? await keyterms() : [], rank)).map((x) => clean(x, 300).replace(/[.,!?]+$/g, '').trim());
+      ], langs || ['he'], sp ? LETTER_KEYTERMS : keyterms ? await keyterms() : [], sp ? null : rank)).map((x) => clean(x, 300).replace(/[.,!?]+$/g, '').trim());
       const t = texts.find(Boolean) || '';
-      setS(name, 'raw', t); setS(name, 'x', t ? parse(langs ? texts : t) : ''); setS(name, 't', n);
+      setS(name, 'raw', t); setS(name, 'x', t ? (sp ? spokenLetters(t) : parse(langs ? texts : t)) : ''); setS(name, 't', n);
     }
     const val = S(name, 'x') || '';
-    if (!val) {
-      if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
-      setS(name, 'n', n + 1); return { ask: askAt(n + 1, `${P(S(name, 'raw') ? bad : 'join:noHear')}.`) };
-    }
+    if (!val) return retry(`${P(S(name, 'raw') ? bad : 'join:noHear')}.`);
     if (v[ck] === '1') { setS(name, 'ok', '1'); setS(name, 'f', key); return { val }; }
-    if (v[ck] === '2') {
-      if (tapAfter && n + 1 >= tapAfter) { setS(name, 'tap', '1'); return { tap: true }; }
-      setS(name, 'n', n + 1); return { ask: askAt(n + 1) };
-    }
+    if (v[ck] === '2') return retry();
     return { ask: readTap(`${heard ? `${P(heard)}.` : ''}${T(sayOf(val))}.${spellOut ? spelled(val) : ''}${P('v:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
   };
 
@@ -177,7 +180,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   // שמות: השמות הנפוצים במאגר המצטרפים כ-keyterms (נבנים ב-/api/name-keyterms; אם עוד לא נבנו - בלי הכוונה)
   const fnQ = orTap(await field('fn', 'join:askFirst', REC_MAX, { tapAfter: 2, keyterms: () => loadNameKeyterms(env, 'first') }), 'fn', 'v:nameType', false);
   if (fnQ.ask) return fnQ.ask;
-  const lnQ = orTap(await field('ln', 'join:askLast', REC_MAX, { tapAfter: 1, spellOut: true, keyterms: () => loadNameKeyterms(env, 'last') }), 'ln', 'v:nameType', true);
+  const lnQ = orTap(await field('ln', 'join:askLast', REC_MAX, { tapAfter: 1, spellOut: true, keyterms: () => loadNameKeyterms(env, 'last'), spellAsk: 'join:askSpell' }), 'ln', 'v:nameType', true);
   if (lnQ.ask) return lnQ.ask;
   // 4. טלפון: המספר שממנו מתקשרים (1) או אחר בדיבור (2)
   let phone = '';
