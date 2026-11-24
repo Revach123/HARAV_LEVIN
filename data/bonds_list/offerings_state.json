@@ -843,6 +843,62 @@
    "kind": "upcoming",
    "last_seen": "2026-11-24"
   },
+  "U10442": {
+   "data": {
+    "chp_number": "513765859",
+    "company_name": "רבוע כחול נדל\"ן",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10442,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1782939",
+    "maya_report_id": 1783450,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": "ilA-1",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "ני\"ע מסחרי"
+     },
+     {
+      "maalot_rating": "ilAA",
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-24"
+  },
+  "U10443": {
+   "data": {
+    "chp_number": "516214871",
+    "company_name": "אלומה",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10443,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783503",
+    "maya_report_id": 1783503,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-24"
+  },
   "U9973": {
    "data": {
     "chp_number": "515763894",

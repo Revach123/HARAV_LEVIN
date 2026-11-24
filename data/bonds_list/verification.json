@@ -1,20 +1,13 @@
 {
- "updated": "2026-11-23",
+ "updated": "2026-11-24",
  "status": "ok",
- "datawise_date": "2026-11-20",
- "expected": 778,
- "maya": 778,
+ "datawise_date": "2026-11-23",
+ "expected": 780,
+ "maya": 780,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
- "kept_no_terms": [
-  {
-   "security_id": 1231968,
-   "security_name": "פז אנרג מסחרי 2",
-   "company": "פז קמעונאות ואנרגיה  בע\"מ",
-   "chp_number": "510216054"
-  }
- ],
+ "kept_no_terms": [],
  "dropped_no_terms": []
 }

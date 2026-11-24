@@ -134,8 +134,8 @@
    "chp_number": "44528798375"
   },
   {
-   "id": 10438,
-   "maya_report_id": 1782939,
+   "id": 10442,
+   "maya_report_id": 1783450,
    "company_name": "רבוע כחול נדל\"ן",
    "is_new_company": false,
    "new_company_type": null,
@@ -146,15 +146,15 @@
    "link_presentation": null,
    "securities": [
     {
-     "security_type": "אג\"ח",
+     "security_type": "ני\"ע מסחרי",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilA-1",
      "midroog_rating": null
     },
     {
-     "security_type": "ני\"ע מסחרי",
+     "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilAA",
      "midroog_rating": null
     }
    ],
@@ -243,6 +243,27 @@
     }
    ],
    "chp_number": "1811308"
+  },
+  {
+   "id": 10443,
+   "maya_report_id": 1783503,
+   "company_name": "אלומה",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1783503",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "516214871"
   },
   {
    "id": 10128,
@@ -734,6 +755,35 @@
    ],
    "carried": true,
    "last_seen": "2026-11-23"
+  },
+  {
+   "chp_number": "513765859",
+   "company_name": "רבוע כחול נדל\"ן",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10438,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1782939",
+   "maya_report_id": 1782939,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח"
+    },
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "ני\"ע מסחרי"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-24"
   }
  ],
  "open": [],
@@ -860,6 +910,13 @@
   {
    "chp_number": "515763894",
    "name": "ג'י טי נדל\"ן",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "516214871",
+   "name": "אלומה",
    "statuses": [
     "הנפקה עתידית"
    ]
