@@ -1198,6 +1198,20 @@ export default {
   "pron": "",
   "phoneme": false
  },
+ "type:אגודה שיתופית": {
+  "text": "אגודה שיתופית",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_bf3a421f0005e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "type:אגודה שיתופית מחוקה": {
+  "text": "אגודה שיתופית מחוקה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_86deddcf43b9e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "type:הקדש ציבורי": {
   "text": "הקדש ציבורי",
   "voice": "he-IL-AvriNeural",
