@@ -115,14 +115,16 @@ def sql_q(v):
 
 # ── D1 ──────────────────────────────────────────────────────────────────────
 class D1:
-    def __init__(self):
+    def __init__(self, name="business-registry-db"):
         self.account = os.environ.get("CF_ACCOUNT_ID", "")
         self.token = os.environ.get("CF_D1_TOKEN", "")
-        self.db = os.environ.get("CF_DATABASE_ID") or self._db_from_wrangler()
+        # CF_DATABASE_ID = המסד הראשי (business-registry-db); מסד אחר (למשל company-info-db) - תמיד לפי שמו ב-wrangler.toml
+        self.db = (os.environ.get("CF_DATABASE_ID") if name == "business-registry-db" else "") or self._db_from_wrangler(name)
 
     @staticmethod
-    def _db_from_wrangler():
-        """מזהה המסד business-registry-db — לפי *שם* המסד (ב-wrangler.toml יש כמה מסדים)."""
+    def _db_from_wrangler(name="business-registry-db"):
+        """מזהה המסד לפי *שם* המסד (ב-wrangler.toml יש כמה מסדים)."""
+        db_name = name
         try:
             with open(os.path.join(ROOT, "wrangler.toml"), encoding="utf-8") as f:
                 text = f.read()
@@ -131,7 +133,7 @@ class D1:
         for block in text.split("[[d1_databases]]")[1:]:
             name = re.search(r'database_name\s*=\s*"([^"]+)"', block)
             ident = re.search(r'database_id\s*=\s*"([^"]+)"', block)
-            if name and ident and name.group(1) == "business-registry-db":
+            if name and ident and name.group(1) == db_name:
                 return ident.group(1)
         return ""
 
@@ -212,6 +214,33 @@ def fetch_source(numbers, source):
                 time.sleep(0.5)
         time.sleep(1)
     return found, failed
+
+
+# אגודות שיתופיות ומפלגות: לא באחד משלושת הרשמים של data.gov.il שלמעלה אלא בטבלת associations ב-company-info-db (נטענות שם ע"י
+# load_cooperatives.py / load_parties.py ב-Revach). סוג העסק זהה ל-functions/api/lookup.js (מה שנקבע בהוספת עסק חדש).
+LOCAL_BIZ_TYPES = {"אגודה שיתופית": "אגודה שיתופית רשומה", "מפלגה": "מפלגה רשומה"}
+
+
+def fetch_local_registry(numbers):
+    """-> {מספר: {name, biz_type, status}} למספרים שאינם ב-data.gov.il, מ-company-info-db (בלי DB/סודות: ריק + אזהרה)."""
+    out = {}
+    if not numbers:
+        return out
+    db = D1("company-info-db")
+    if not db.can_write:
+        print("WARNING: no CF secrets / company-info-db id - cooperatives and parties are not refreshed", file=sys.stderr)
+        return out
+    cats = ",".join(sql_q(c) for c in LOCAL_BIZ_TYPES)
+    for i in range(0, len(numbers), 90):
+        ids = ",".join(str(int(n)) for n in numbers[i:i + 90])
+        rows = db.query(f"SELECT id, name, status, category FROM associations WHERE id IN ({ids}) AND category IN ({cats})")[0]["results"]
+        for r in rows:
+            name = clean_name(r.get("name"))
+            if name:
+                # למפלגה אין סטטוס בקובץ ("רשומה" הוא רק ברירת המחדל שלנו) - לא כותבים registry_status
+                out[str(int(r["id"]))] = {"name": name, "biz_type": LOCAL_BIZ_TYPES[r["category"]],
+                                          "status": "" if r["category"] == "מפלגה" else str(r.get("status") or "")}
+    return out
 
 
 def numeric_chp(v):
@@ -458,6 +487,14 @@ def main(apply=False, scope="all"):
                     break
                 time.sleep(0.3)
         print(f"  second-chance single lookups: {len(unfound)} tried, {recovered} recovered")
+        try:
+            local = fetch_local_registry([n for n in numerics if n not in registry and str(n).startswith(("57", "59"))])
+        except RuntimeError as e:
+            local = {}
+            print(f"WARNING: local registry (cooperatives/parties) failed: {e}", file=sys.stderr)
+        for k, v in local.items():
+            registry.setdefault(k, v)
+        print(f"  cooperatives / parties (company-info-db): {len(local)} found")
     found_ratio = len(registry) / len(numerics) if numerics else 0
 
     bond_ids, dw_rows, dw_date = None, 0, None

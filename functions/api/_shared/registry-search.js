@@ -157,7 +157,7 @@ export async function markPbc(items) {
   return items;
 }
 // אגודות עות'מאניות, הקדשות ציבוריים (GuideStar) ואגודות שיתופיות (רשם האגודות השיתופיות) -> טבלת associations, הסוג שמור ב-category
-const ASSOC_TYPES = new Set(["אגודה עות'מאנית", 'הקדש ציבורי', 'אגודה שיתופית']);   // אגודה שיתופית: מרשם האגודות השיתופיות (revach: load_cooperatives.py)
+const ASSOC_TYPES = new Set(["אגודה עות'מאנית", 'הקדש ציבורי', 'אגודה שיתופית', 'מפלגה']);   // אגודה שיתופית: מרשם האגודות השיתופיות (revach: load_cooperatives.py)
 
 export function typeLabel(item) {
   if (item.kind === 'other' || item.kind === 'business') return '';   // רשות / אגודה שיתופית / עסק בלי מספר: רק השם
