@@ -85,7 +85,7 @@
     {
      "security_type": "אג\"ח",
      "name": "",
-     "maalot_rating": null,
+     "maalot_rating": "ilA+",
      "midroog_rating": null
     }
    ],
@@ -111,27 +111,6 @@
     }
    ],
    "chp_number": "520020116"
-  },
-  {
-   "id": 10430,
-   "maya_report_id": 1781957,
-   "company_name": "נורסטאר החזקות",
-   "is_new_company": false,
-   "new_company_type": null,
-   "draft_no": null,
-   "draft_title": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1781957",
-   "link_presentation": null,
-   "securities": [
-    {
-     "security_type": "אג\"ח להמרה",
-     "name": "",
-     "maalot_rating": null,
-     "midroog_rating": null
-    }
-   ],
-   "chp_number": "44528798375"
   },
   {
    "id": 10432,
@@ -722,6 +701,29 @@
    ],
    "carried": true,
    "last_seen": "2026-11-24"
+  },
+  {
+   "chp_number": "44528798375",
+   "company_name": "נורסטאר החזקות",
+   "draft_no": null,
+   "draft_title": null,
+   "id": 10430,
+   "is_new_company": false,
+   "link_presentation": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1781957",
+   "maya_report_id": 1781957,
+   "new_company_type": null,
+   "securities": [
+    {
+     "maalot_rating": null,
+     "midroog_rating": null,
+     "name": "",
+     "security_type": "אג\"ח להמרה"
+    }
+   ],
+   "carried": true,
+   "last_seen": "2026-11-25"
   }
  ],
  "open": [

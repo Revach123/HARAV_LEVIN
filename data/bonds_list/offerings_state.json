@@ -754,7 +754,7 @@
     "new_company_type": null,
     "securities": [
      {
-      "maalot_rating": null,
+      "maalot_rating": "ilA+",
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
