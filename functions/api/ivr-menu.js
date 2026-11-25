@@ -2,16 +2,16 @@
 //  functions/api/ivr-menu.js — התפריט הראשי של הקו החדש בימות המשיח
 //
 //  שלוחת api בשורש הקו. מנגנת את ההודעה הראשית (ivr_phrases.js: mainMenu) ומעבירה:
-//    1 = הצטרפות להיתר עסקה פרטי (שלוחת ivr-join, ברירת מחדל /1)
+//    1 = הצטרפות להיתר עסקה פרטי (שלוחה /1 בימות, שמריצה את ivr-join-voice - הצטרפות בדיבור)
 //    2 = חיפוש חברות (שלוחת ivr-company, ברירת מחדל /2)
-//    3 = הצטרפות בדיבור בלבד (שלוחת ivr-join-voice, ניסיון, ברירת מחדל /3)
+//    3 = נסתר (לא מוקרא בתפריט): שלוחת הניסויים ivr-voice-lab, ברירת מחדל /3 - לבדיקות זיהוי הדיבור
 //  ext.ini:
 //    type=api
 //    api_link=https://harav-levin.pages.dev/api/ivr-menu
 //    api_add_0=sk=<IVR_SECRET_NEW>
 //    api_add_1=join=/1        (אופציונלי)
 //    api_add_2=search=/2      (אופציונלי)
-//    api_add_3=voice=/3       (אופציונלי)
+//    api_add_3=voice=/3       (אופציונלי; שלוחת הניסויים הנסתרת)
 //  בלי מצב בשרת: הבחירה במשתנה mm. כל ערך אחר (שתיקה וכו') - השאלה נשאלת שוב, בלי הגבלה.
 // ============================================================================
 import { folderParam, parseYemot, readTap, secretOk } from './_shared/ivr-auth.js';
@@ -32,7 +32,7 @@ export async function onRequest({ request, env }) {
   // שאלה שלא נענתה (שתיקה / ערך אחר) נשאלת שוב ושוב, באותו משתנה, בלי הגבלה.
   if (v.mm === '1') return text(`go_to_folder=${join}&`);
   if (v.mm === '2') return text(`go_to_folder=${search}&`);
-  if (v.mm === '3') return text(`go_to_folder=${voice}&`);
+  if (v.mm === '3') return text(`go_to_folder=${voice}&`);          // נסתר: שלוחת הניסויים
   return text(readTap(P('mainMenu'), 'mm', ['1', '2', '3'], { empty: EMPTY }));
 }
 
