@@ -1282,6 +1282,20 @@ export default {
   "pron": "e21a05dc",
   "phoneme": true
  },
+ "type:מפלגה": {
+  "text": "מפלגה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_11fc59fc3f07e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
+ "type:מפלגה מחוקה": {
+  "text": "מפלגה מחוקה",
+  "voice": "he-IL-AvriNeural",
+  "path": "/99/c6_b2b2503f4840e21a05dc",
+  "pron": "",
+  "phoneme": false
+ },
  "type:עמותה": {
   "text": "עמותה",
   "voice": "he-IL-AvriNeural",
