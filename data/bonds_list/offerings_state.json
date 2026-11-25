@@ -29,6 +29,35 @@
    "kind": "open",
    "last_seen": "2026-11-25"
   },
+  "O1239813": {
+   "data": {
+    "begins_at": "2026-11-26T09:00:00",
+    "chp_number": "513257873",
+    "ends_at": "2026-11-26T16:00:00",
+    "interest": 3.43,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 1450,
+    "issuer_name": "מגה אור",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1784063",
+    "offer_number": 1239813,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "מדד",
+      "maalot_rating": "ilAA",
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אג\"ח יג'",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-25"
+  },
   "O1247196": {
    "data": {
     "begins_at": "2026-11-25T10:00:00",
@@ -743,31 +772,6 @@
    "kind": "upcoming",
    "last_seen": "2026-11-25"
   },
-  "U10432": {
-   "data": {
-    "chp_number": "513257873",
-    "company_name": "מגה אור",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10432,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1782188",
-    "maya_report_id": 1782188,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilAA",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-25"
-  },
   "U10439": {
    "data": {
     "chp_number": "510381601",
@@ -885,6 +889,31 @@
      {
       "maalot_rating": null,
       "midroog_rating": "A2.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-25"
+  },
+  "U10445": {
+   "data": {
+    "chp_number": "550012405",
+    "company_name": "מודיעין יהש",
+    "draft_no": 1,
+    "draft_title": "טיוטת דו\"ח הצעת מדף",
+    "id": 10445,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1644280",
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1644280",
+    "maya_report_id": 1784065,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
      }
