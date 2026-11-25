@@ -156,8 +156,8 @@ export async function markPbc(items) {
   for (const it of items) if (it.kind === 'company' && ids.has(digitsOnly(it.id))) it.pbc = true;
   return items;
 }
-// אגודות עות'מאניות והקדשות ציבוריים (GuideStar -> טבלת associations, הסוג שמור ב-category)
-const ASSOC_TYPES = new Set(["אגודה עות'מאנית", 'הקדש ציבורי']);
+// אגודות עות'מאניות, הקדשות ציבוריים (GuideStar) ואגודות שיתופיות (רשם האגודות השיתופיות) -> טבלת associations, הסוג שמור ב-category
+const ASSOC_TYPES = new Set(["אגודה עות'מאנית", 'הקדש ציבורי', 'אגודה שיתופית']);   // אגודה שיתופית: מרשם האגודות השיתופיות (revach: load_cooperatives.py)
 
 export function typeLabel(item) {
   if (item.kind === 'other' || item.kind === 'business') return '';   // רשות / אגודה שיתופית / עסק בלי מספר: רק השם
@@ -205,9 +205,9 @@ function fromBusinesses(businesses) {
 // אותו כלל כמו ב-Revach (build_heter_iska.py: notInRegistry). השם - כפי שהוא ברשימה (permit_name).
 const kindOfNumber = (d) => (/^(58|599)/.test(d) ? 'association' : /^55/.test(d) ? 'partnership' : /^(50|57)/.test(d) ? 'other' : 'company');
 // אותו מספר בשתי טבלאות (חל"צ: גם ברשם החברות וגם ברשם העמותות) - פעם אחת בלבד,
-// הרשומה שתואמת לקידומת: 58 עמותה, 55 שותפות, אחרת חברה. (כמו בדף החיפוש ב-Revach)
+// הרשומה שתואמת לקידומת: 58 עמותה, 57 אגודה שיתופית, 55 שותפות, אחרת חברה. (כמו בדף החיפוש ב-Revach)
 function dedupeById(items) {
-  const want = (id) => (/^58/.test(id) ? 'association' : /^55/.test(id) ? 'partnership' : 'company');
+  const want = (id) => (/^(58|57)/.test(id) ? 'association' : /^55/.test(id) ? 'partnership' : 'company');          // 57 = אגודה שיתופית (טבלת associations)
   const byId = new Map(), kinds = new Map();
   for (const it of items) {
     const id = digitsOnly(it.id) || String(it.id), prev = byId.get(id);
