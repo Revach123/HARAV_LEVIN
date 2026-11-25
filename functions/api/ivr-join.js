@@ -36,9 +36,7 @@ import { azureTranscribe, downloadRecording, sttConfigured } from './_shared/stt
 import { sendConfirmation, markMailSent } from './_shared/join-mail.js';
 import { queueFaxConfirmation } from './_shared/join-fax-confirm.js';
 import { spokenEmail } from './_shared/spoken-email.js';
-import { spokenLetters, LETTER_KEYTERMS } from './_shared/spoken-letters.js';
-import { elevenConfigured, elevenTranscribeRecording } from './_shared/stt-eleven.js';
-import { loadNameKeyterms } from './_shared/name-keyterms.js';
+import { spokenLetters } from './_shared/spoken-letters.js';
 import { matchNames, tapLetter, loadCities, loadStreets } from './_shared/ivr-addr.js';
 
 const EMPTY = 'NONE';
@@ -216,8 +214,7 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     if (!l) return advance(`${P('join:badLetter')}.`, acc);
     return advance(`${P('join:typed')}.${P(`letter:${l}`)}.`, acc + l);
   };
-  // keyterms: הכוונת הזיהוי (ElevenLabs) - שמות נפוצים במאגר; בשלב האיות - שמות האותיות בכל ההגיות
-  const recStep = async (name, askKey, max, label, spellKey = '', typeOpt = false, keyterms = null) => {
+  const recStep = async (name, askKey, max, label, spellKey = '', typeOpt = false) => {
     if (S(name, 'ok') === '1') return { text: S(name, 'x') || '' };
     if (typeOpt && S(name, 't') === '1') return hebType(name);
     const n = Number(S(name, 'n') || 0), key = `${name}_${n}`;
@@ -238,10 +235,10 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
     }
     // spellKey: אם הזיהוי נכשל, מבקשים איות אות אחר אות (מצב sp)
     if (!has(v, key) || empty(v[key])) return { ask: askAt(n) };
-    if (!sttReady(env)) { setS(name, 'ok', '1'); setS(name, 'x', ''); setS(name, 'f', key); return { text: '' }; }
+    if (!sttConfigured(env)) { setS(name, 'ok', '1'); setS(name, 'x', ''); setS(name, 'f', key); return { text: '' }; }
     if (S(name, 'tn') !== String(n)) {
       const spelled = S(name, 'sp') === '1';
-      const t = await transcribeOne(env, v, folder, recFile, key, spelled ? LETTER_KEYTERMS : keyterms ? await keyterms() : []);
+      const t = await transcribeOne(env, v, folder, recFile, key);
       setS(name, 'x', spelled ? spokenLetters(t) : t); setS(name, 'tn', n);
     }
     const text = S(name, 'x') || '';
@@ -264,9 +261,9 @@ async function step({ v, env, P, bk, done, origin, waitUntil }) {
   const id = idQ.val;
 
   // 2. שם פרטי ושם משפחה (שתי הקלטות נפרדות)
-  const fnQ = await recStep('fn', 'join:askFirst', REC_MAX, 'join:lblFirst', '', true, () => loadNameKeyterms(env, 'first'));
+  const fnQ = await recStep('fn', 'join:askFirst', REC_MAX, 'join:lblFirst', '', true);
   if (fnQ.ask) return fnQ.ask;
-  const lnQ = await recStep('ln', 'join:askLast', REC_MAX, 'join:lblLast', 'join:askSpell', false, () => loadNameKeyterms(env, 'last'));
+  const lnQ = await recStep('ln', 'join:askLast', REC_MAX, 'join:lblLast', 'join:askSpell');
   if (lnQ.ask) return lnQ.ask;
 
   // 3. טלפון: אם זוהה מספר המתקשר - בוחרים בו (1) או מקישים אחר (2)
@@ -496,21 +493,15 @@ export async function emailStep(ctx) {
   return { ask: readTap(`${P('join:emailHeard')}.${T(spellEmail(email))}.${P('join:confirm')}`, ck, ['1', '2'], { empty: EMPTY }) };
 }
 
-// זיהוי דיבור: ElevenLabs (עם keyterms); Azure רק אם אין מפתח ElevenLabs
-const sttReady = (env) => (elevenConfigured(env) && !!(env.YEMOT_TOKEN || env.YEMOT_TTS)) || sttConfigured(env);
-
 // הקלטה אחת -> טקסט (עברית). אין מחיקה של ההקלטה, כדי שאפשר יהיה לבדוק מול הטקסט שזוהה.
-async function transcribeOne(env, v, folder, recFile, key, keyterms = []) {
+async function transcribeOne(env, v, folder, recFile, key) {
   try {
     const value = String(v[key] || '');
-    const candidates = [
+    const rec = await downloadRecording(env, [
       ...(/\.(wav|mp3|ogg)$/i.test(value) || /^\/.*\//.test(value) ? [value] : []),
       `${folder}/${recFile(key)}.wav`, `${folder}/${recFile(key)}`,
-    ];
-    let t = '';
-    if (elevenConfigured(env)) t = (await elevenTranscribeRecording(env, candidates, ['he'], keyterms || []))[0] || '';
-    else { const rec = await downloadRecording(env, candidates); t = rec ? await azureTranscribe(env, rec.bytes) : ''; }
-    return clean(t, 200).replace(/[.,!?]+$/g, '').trim();
+    ]);
+    return rec ? clean(await azureTranscribe(env, rec.bytes), 200).replace(/[.,!?]+$/g, '').trim() : '';
   } catch { return ''; }
 }
 
