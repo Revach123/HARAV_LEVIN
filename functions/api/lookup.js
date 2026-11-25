@@ -84,7 +84,7 @@ async function searchRegistryDb(db, number) {
     return { found: true, entityType: "company", name: cleanName(r.name), bizType: `${isPublic ? "חברה ציבורית" : "חברה פרטית"} - ${lim}`, type: r.corp_type || "", status: r.status || "" };
   }
   if (row(p)) return { found: true, entityType: "partnership", name: cleanName(p.value.name), bizType: 'שותפות - לא בע"מ', type: p.value.ptype || "", status: p.value.status || "" };
-  if (row(a)) return { found: true, entityType: "association", name: cleanName(a.value.name), bizType: a.value.category === "אגודה שיתופית" ? "אגודה שיתופית רשומה" : "עמותה רשומה", type: a.value.category || "", status: a.value.status || "" };
+  if (row(a)) return { found: true, entityType: "association", name: cleanName(a.value.name), bizType: a.value.category === "אגודה שיתופית" ? "אגודה שיתופית רשומה" : a.value.category === "מפלגה" ? "מפלגה רשומה" : "עמותה רשומה", type: a.value.category || "", status: a.value.status || "" };
   return null;
 }
 
