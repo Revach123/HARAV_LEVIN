@@ -12,7 +12,7 @@
    "registrar_name": 40,
    "biz_type": 92
   },
-  "updated": "2026-11-24T12:58:44.919836Z",
+  "updated": "2026-11-25T11:44:54.230010Z",
   "source": "d1",
   "businesses": 1289,
   "numeric_chp": 1286,
@@ -20,11 +20,11 @@
   "found_ratio": 0.929,
   "failed_batches": 0,
   "datawise_rows": 2249,
-  "datawise_date": "2026-11-23",
+  "datawise_date": "2026-11-24",
   "bond_companies": 361,
   "changes": {
-   "registrar_name": 1,
-   "biz_type": 1,
+   "registrar_name": 0,
+   "biz_type": 0,
    "tase_has_agch": 0,
    "registry_status": 0,
    "has_agch_any": 0,
@@ -46,25 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 2,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64lvjatbur",
-   "chp": "513605519",
-   "field": "registrar_name",
-   "old": "קבוצת צילו-בלו  בע\"מ",
-   "new": "קבוצת צילו-בלו בע\"מ"
-  },
-  {
-   "id": "638cb82a0903",
-   "chp": "511602138",
-   "field": "biz_type",
-   "old": "חברה פרטית - בע\"מ",
-   "new": "חברה ציבורית - בע\"מ"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64ip5cv118",
