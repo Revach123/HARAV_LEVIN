@@ -58,6 +58,35 @@
    "kind": "open",
    "last_seen": "2026-11-25"
   },
+  "O5760293": {
+   "data": {
+    "begins_at": "2026-11-26T08:30:00",
+    "chp_number": "520028010",
+    "ends_at": "2026-11-26T15:30:00",
+    "interest": 4.91,
+    "is_new_company": false,
+    "is_variable_interest": false,
+    "issuer_id": 576,
+    "issuer_name": "חברה לישראל",
+    "link_offer_report": "https://maya.tase.co.il/he/reports/1783969",
+    "offer_number": 5760293,
+    "offer_type": "ריבית",
+    "offering_type": "הצעה אחידה",
+    "price_per_unit": 1000,
+    "securities": [
+     {
+      "linkage_type": "ללא",
+      "maalot_rating": "ilA+",
+      "midroog_rating": null,
+      "security_id": null,
+      "security_name": "אגח 16",
+      "security_type": "אג\"ח קונצרני"
+     }
+    ]
+   },
+   "kind": "open",
+   "last_seen": "2026-11-25"
+  },
   "U10118": {
    "data": {
     "chp_number": "",
@@ -730,31 +759,6 @@
     "securities": [
      {
       "maalot_rating": "ilAA",
-      "midroog_rating": null,
-      "name": "",
-      "security_type": "אג\"ח"
-     }
-    ]
-   },
-   "kind": "upcoming",
-   "last_seen": "2026-11-25"
-  },
-  "U10434": {
-   "data": {
-    "chp_number": "520028010",
-    "company_name": "חברה לישראל",
-    "draft_no": null,
-    "draft_title": null,
-    "id": 10434,
-    "is_new_company": false,
-    "link_presentation": null,
-    "link_prospectus": null,
-    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1768243",
-    "maya_report_id": 1782562,
-    "new_company_type": null,
-    "securities": [
-     {
-      "maalot_rating": "ilA+",
       "midroog_rating": null,
       "name": "",
       "security_type": "אג\"ח"
