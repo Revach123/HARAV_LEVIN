@@ -239,7 +239,8 @@ def fetch_local_registry(numbers):
             name = clean_name(r.get("name"))
             if name:
                 # סטטוס ברשם: כמו שהוא בטבלה (אגודה שיתופית: פעילה / בפירוק / מחוקה (סגורה); הקדש: פעיל; לעות'מאנית ולמפלגה אין סטטוס בנתונים)
-                out[str(int(r["id"]))] = {"name": name, "biz_type": LOCAL_BIZ_TYPES[r["category"]], "status": str(r.get("status") or "")}
+                st = str(r.get("status") or "")
+                out[str(int(r["id"]))] = {"name": name, "biz_type": LOCAL_BIZ_TYPES[r["category"]], "status": "" if st == "רשומה" else st}   # "רשומה" לא מוסיף מידע (לא נכתב כסטטוס)
     return out
 
 
