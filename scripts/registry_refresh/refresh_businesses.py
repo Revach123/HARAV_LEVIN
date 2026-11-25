@@ -218,6 +218,7 @@ def fetch_source(numbers, source):
 
 # אגודות שיתופיות, מפלגות, אגודות עות'מאניות והקדשות: לא באחד משלושת הרשמים של data.gov.il שלמעלה אלא בטבלת associations ב-company-info-db (נטענות שם ע"י
 # load_cooperatives.py / load_parties.py ב-Revach). סוג העסק זהה ל-functions/api/lookup.js (מה שנקבע בהוספת עסק חדש).
+MAYA_BIZTYPE = "חברה מנפיקה בבורסה"   # כמו ב-functions/api/lookup.js
 LOCAL_BIZ_TYPES = {"אגודה שיתופית": "אגודה שיתופית רשומה", "מפלגה": "מפלגה רשומה",
                    "אגודה עות'מאנית": "אגודה עות'מאנית רשומה", "הקדש ציבורי": "הקדש ציבורי רשום"}
 
@@ -403,6 +404,10 @@ def compute_changes(businesses, registry, bond_ids, any_extra=frozenset(), maya=
                 if old_reg and old_reg not in maya_shorts and not (b.get("permit_name") or "").strip():
                     changes.append({"id": b["id"], "chp": b["chp_number"], "field": "permit_name",
                                     "old": b.get("permit_name"), "new": old_reg})
+            # סוג עסק לחברה שנמצאה רק במאיה (זרה / חוץ-בורסאית): כמו בהוספת עסק חדש (functions/api/lookup.js, MAYA_BIZTYPE). רק כשהסוג ריק - לא דורסים ערך קיים
+            if mname and not (b.get("biz_type") or "").strip():
+                changes.append({"id": b["id"], "chp": b["chp_number"], "field": "biz_type",
+                                "old": b.get("biz_type"), "new": MAYA_BIZTYPE})
         if bond_ids is not None:
             has = "יש" if str(b.get("chp_number") or "").strip() in bond_ids else "אין"
             if has != (b.get("tase_has_agch") or "").strip():
