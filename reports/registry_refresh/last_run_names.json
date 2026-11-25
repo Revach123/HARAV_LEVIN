@@ -9,38 +9,38 @@
    "biz_type": 93
   },
   "empty_after": {
-   "registrar_name": 32,
-   "biz_type": 84
+   "registrar_name": 29,
+   "biz_type": 80
   },
-  "updated": "2026-11-25T13:26:47.412627Z",
+  "updated": "2026-11-25T13:32:46.626499Z",
   "source": "d1",
   "businesses": 1290,
   "numeric_chp": 1287,
-  "found_in_registry": 1204,
-  "found_ratio": 0.936,
+  "found_in_registry": 1208,
+  "found_ratio": 0.939,
   "failed_batches": 0,
   "datawise_rows": 0,
   "datawise_date": null,
   "bond_companies": null,
   "changes": {
-   "registrar_name": 8,
-   "biz_type": 9,
+   "registrar_name": 11,
+   "biz_type": 13,
    "tase_has_agch": 0,
-   "registry_status": 8,
+   "registry_status": 9,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
-   "registrar_name": 8,
-   "biz_type": 9,
+   "registrar_name": 11,
+   "biz_type": 13,
    "tase_has_agch": 0,
-   "registry_status": 8,
+   "registry_status": 9,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "לא ידוע": 150,
-   "פעילה": 1091,
+   "לא ידוע": 149,
+   "פעילה": 1092,
    "מחוסלת/חיסול": 34,
    "בפירוק": 15
   },
@@ -49,6 +49,13 @@
   "problems": []
  },
  "changes": [
+  {
+   "id": "mp64ip5cv118",
+   "chp": "589916006",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
   {
    "id": "mp64jj6clqcs",
    "chp": "570009852",
@@ -92,6 +99,27 @@
    "new": "אגודה שיתופית רשומה"
   },
   {
+   "id": "mp64l2bo6aqg",
+   "chp": "589902279",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מכבי שירותי בריאות"
+  },
+  {
+   "id": "mp64l2bo6aqg",
+   "chp": "589902279",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64lqm44x9j",
+   "chp": "599000098",
+   "field": "registry_status",
+   "old": "",
+   "new": "רשומה"
+  },
+  {
    "id": "mp64lqm44x9j",
    "chp": "599000098",
    "field": "registrar_name",
@@ -125,6 +153,34 @@
    "field": "biz_type",
    "old": "",
    "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64m1itd2mn",
+   "chp": "589958495",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קופת חולים מאוחדת"
+  },
+  {
+   "id": "mp64m1itd2mn",
+   "chp": "589958495",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64mabaj7ay",
+   "chp": "589906114",
+   "field": "registrar_name",
+   "old": "",
+   "new": "שירותי בריאות כללית"
+  },
+  {
+   "id": "mp64mabaj7ay",
+   "chp": "589906114",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
   },
   {
    "id": "mp64mf0legx4",
@@ -226,14 +282,6 @@
   }
  ],
  "not_found": [
-  {
-   "id": "mp64ip5cv118",
-   "chp": "589916006",
-   "permit_name": "לאומית שירותי בריאות",
-   "registrar_name": "לאומית שירותי בריאות",
-   "entity_type": "company",
-   "biz_type": ""
-  },
   {
    "id": "mp64j1qp0r2p",
    "chp": "2352046",
@@ -587,14 +635,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64l2bo6aqg",
-   "chp": "589902279",
-   "permit_name": "מכבי שירותי בריאות",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
    "id": "mp64l354bzh7",
    "chp": "2008787",
    "permit_name": "מליבו",
@@ -795,14 +835,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64m1itd2mn",
-   "chp": "589958495",
-   "permit_name": "קופת חולים מאוחדת",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
    "id": "mp64m1t2x6mb",
    "chp": "500226402",
    "permit_name": "ראש העין - עירייה",
@@ -838,14 +870,6 @@
    "id": "mp64m5wmk4nx",
    "chp": "500226501",
    "permit_name": "רעננה - עירייה",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64mabaj7ay",
-   "chp": "589906114",
-   "permit_name": "שירותי בריאות כללית",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""

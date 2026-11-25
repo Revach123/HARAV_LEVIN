@@ -67,6 +67,9 @@ async function searchSource(source, number) {
   };
 }
 
+// סוג עסק לשורות associations שאינן עמותות רגילות (נטענות לטבלה בריפו revach). אותה רשימה ב-scripts/registry_refresh/refresh_businesses.py (LOCAL_BIZ_TYPES).
+const LOCAL_ASSOC_BIZ_TYPES = { "אגודה שיתופית": "אגודה שיתופית רשומה", "מפלגה": "מפלגה רשומה", "אגודה עות'מאנית": "אגודה עות'מאנית רשומה", "הקדש ציבורי": "הקדש ציבורי רשום" };
+
 // קודם המאגר המקומי (DB1 = company-info-db, עותק שבועי של הרשמים): מהיר, ולא תלוי ב-data.gov.il. אם אין שם - עוברים לרשם החי.
 async function searchRegistryDb(db, number) {
   if (!db || !/^\d{1,12}$/.test(number)) return null;
@@ -84,7 +87,7 @@ async function searchRegistryDb(db, number) {
     return { found: true, entityType: "company", name: cleanName(r.name), bizType: `${isPublic ? "חברה ציבורית" : "חברה פרטית"} - ${lim}`, type: r.corp_type || "", status: r.status || "" };
   }
   if (row(p)) return { found: true, entityType: "partnership", name: cleanName(p.value.name), bizType: 'שותפות - לא בע"מ', type: p.value.ptype || "", status: p.value.status || "" };
-  if (row(a)) return { found: true, entityType: "association", name: cleanName(a.value.name), bizType: a.value.category === "אגודה שיתופית" ? "אגודה שיתופית רשומה" : a.value.category === "מפלגה" ? "מפלגה רשומה" : "עמותה רשומה", type: a.value.category || "", status: a.value.status || "" };
+  if (row(a)) return { found: true, entityType: "association", name: cleanName(a.value.name), bizType: LOCAL_ASSOC_BIZ_TYPES[a.value.category] || "עמותה רשומה", type: a.value.category || "", status: a.value.status || "" };
   return null;
 }
 

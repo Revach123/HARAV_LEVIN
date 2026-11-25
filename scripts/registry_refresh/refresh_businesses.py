@@ -216,19 +216,20 @@ def fetch_source(numbers, source):
     return found, failed
 
 
-# אגודות שיתופיות ומפלגות: לא באחד משלושת הרשמים של data.gov.il שלמעלה אלא בטבלת associations ב-company-info-db (נטענות שם ע"י
+# אגודות שיתופיות, מפלגות, אגודות עות'מאניות והקדשות: לא באחד משלושת הרשמים של data.gov.il שלמעלה אלא בטבלת associations ב-company-info-db (נטענות שם ע"י
 # load_cooperatives.py / load_parties.py ב-Revach). סוג העסק זהה ל-functions/api/lookup.js (מה שנקבע בהוספת עסק חדש).
-LOCAL_BIZ_TYPES = {"אגודה שיתופית": "אגודה שיתופית רשומה", "מפלגה": "מפלגה רשומה"}
+LOCAL_BIZ_TYPES = {"אגודה שיתופית": "אגודה שיתופית רשומה", "מפלגה": "מפלגה רשומה",
+                   "אגודה עות'מאנית": "אגודה עות'מאנית רשומה", "הקדש ציבורי": "הקדש ציבורי רשום"}
 
 
 def fetch_local_registry(numbers):
-    """-> {מספר: {name, biz_type, status}} למספרים שאינם ב-data.gov.il, מ-company-info-db (בלי DB/סודות: ריק + אזהרה)."""
+    """-> {מספר: {name, biz_type, status}} למספרים שאינם בשלושת הרשמים של data.gov.il, מ-company-info-db (בלי DB/סודות: ריק + אזהרה)."""
     out = {}
     if not numbers:
         return out
     db = D1("company-info-db")
     if not db.can_write:
-        print("WARNING: no CF secrets / company-info-db id - cooperatives and parties are not refreshed", file=sys.stderr)
+        print("WARNING: no CF secrets / company-info-db id - cooperatives, parties, Ottoman and hekdeshot are not refreshed", file=sys.stderr)
         return out
     cats = ",".join(sql_q(c) for c in LOCAL_BIZ_TYPES)
     for i in range(0, len(numbers), 90):
@@ -237,9 +238,9 @@ def fetch_local_registry(numbers):
         for r in rows:
             name = clean_name(r.get("name"))
             if name:
-                # למפלגה אין סטטוס בקובץ ("רשומה" הוא רק ברירת המחדל שלנו) - לא כותבים registry_status
-                out[str(int(r["id"]))] = {"name": name, "biz_type": LOCAL_BIZ_TYPES[r["category"]],
-                                          "status": "" if r["category"] == "מפלגה" else str(r.get("status") or "")}
+                # סטטוס ברשם: כמו שהוא בטבלה (אגודה שיתופית: פעילה / בפירוק / מחוקה (סגורה); הקדש: פעיל; לעות'מאנית ולמפלגה אין סטטוס בנתונים)
+                st = str(r.get("status") or "")
+                out[str(int(r["id"]))] = {"name": name, "biz_type": LOCAL_BIZ_TYPES[r["category"]], "status": "" if st == "רשומה" else st}   # "רשומה" לא מוסיף מידע (לא נכתב כסטטוס)
     return out
 
 
@@ -488,13 +489,13 @@ def main(apply=False, scope="all"):
                 time.sleep(0.3)
         print(f"  second-chance single lookups: {len(unfound)} tried, {recovered} recovered")
         try:
-            local = fetch_local_registry([n for n in numerics if n not in registry and str(n).startswith(("57", "59"))])
+            local = fetch_local_registry([n for n in numerics if n not in registry])
         except RuntimeError as e:
             local = {}
             print(f"WARNING: local registry (cooperatives/parties) failed: {e}", file=sys.stderr)
         for k, v in local.items():
             registry.setdefault(k, v)
-        print(f"  cooperatives / parties (company-info-db): {len(local)} found")
+        print(f"  cooperatives / parties / Ottoman / hekdeshot (company-info-db): {len(local)} found")
     found_ratio = len(registry) / len(numerics) if numerics else 0
 
     bond_ids, dw_rows, dw_date = None, 0, None
