@@ -10,9 +10,9 @@
   },
   "empty_after": {
    "registrar_name": 29,
-   "biz_type": 80
+   "biz_type": 29
   },
-  "updated": "2026-11-25T13:32:46.626499Z",
+  "updated": "2026-11-25T14:08:12.782778Z",
   "source": "d1",
   "businesses": 1290,
   "numeric_chp": 1287,
@@ -24,23 +24,23 @@
   "bond_companies": null,
   "changes": {
    "registrar_name": 11,
-   "biz_type": 13,
+   "biz_type": 64,
    "tase_has_agch": 0,
-   "registry_status": 9,
+   "registry_status": 8,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
    "registrar_name": 11,
-   "biz_type": 13,
+   "biz_type": 64,
    "tase_has_agch": 0,
-   "registry_status": 9,
+   "registry_status": 8,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "לא ידוע": 149,
-   "פעילה": 1092,
+   "לא ידוע": 150,
+   "פעילה": 1091,
    "מחוסלת/חיסול": 34,
    "בפירוק": 15
   },
@@ -55,6 +55,41 @@
    "field": "biz_type",
    "old": "",
    "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64j1qp0r2p",
+   "chp": "2352046",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64j4eji837",
+   "chp": "1841580",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jdba8ybj",
+   "chp": "2185148",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jdje8zg4",
+   "chp": "1957080",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64je2rxskd",
+   "chp": "510394637",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jj6clqcs",
@@ -76,6 +111,167 @@
    "field": "biz_type",
    "old": "",
    "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64jjstiki7",
+   "chp": "1963039",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jle7n132",
+   "chp": "2624970",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jme64vgn",
+   "chp": "1983001",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jmhjxtwo",
+   "chp": "1981143",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jmkscu26",
+   "chp": "1840550",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jn2fuyba",
+   "chp": "2177996",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jnojyz3v",
+   "chp": "2160207",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jo9xyqq2",
+   "chp": "2059088",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jodkc9v3",
+   "chp": "1939883",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jszyhq1g",
+   "chp": "1811308",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jz3lzl09",
+   "chp": "1814237",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k329w9yo",
+   "chp": "1852623",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k6hy585v",
+   "chp": "1888119",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k6zgniim",
+   "chp": "1744984",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k7koodwc",
+   "chp": "1427976",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kcaqbxm7",
+   "chp": "1957081",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kct2418c",
+   "chp": "1938699",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kdt011qb",
+   "chp": "1866231",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kj0adxlj",
+   "chp": "1853213",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kuvvc57r",
+   "chp": "863439895",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kuzmd8u9",
+   "chp": "1838682",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kv30f2xt",
+   "chp": "1001171286",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kvkd7i0c",
+   "chp": "1858676",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64l1v21bv6",
@@ -113,11 +309,81 @@
    "new": "אגודה עות'מאנית רשומה"
   },
   {
-   "id": "mp64lqm44x9j",
-   "chp": "599000098",
-   "field": "registry_status",
+   "id": "mp64l354bzh7",
+   "chp": "2008787",
+   "field": "biz_type",
    "old": "",
-   "new": "רשומה"
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64l7q6pf25",
+   "chp": "1947641",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64ladlhcld",
+   "chp": "1921080",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lc7mo4z6",
+   "chp": "1905761",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lfqa0eeb",
+   "chp": "475527",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lh9hrjj2",
+   "chp": "34140467",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lihmqy53",
+   "chp": "1863501",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lk829qbv",
+   "chp": "1838863",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64llj8nfj7",
+   "chp": "1938333",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lmb0xr02",
+   "chp": "1940909",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lq7l9ww0",
+   "chp": "33248324",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lqm44x9j",
@@ -132,6 +398,27 @@
    "field": "biz_type",
    "old": "",
    "new": "מפלגה רשומה"
+  },
+  {
+   "id": "mp64lqwhk28r",
+   "chp": "1900288",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lra43cz9",
+   "chp": "1946194",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lvqf93z7",
+   "chp": "1886279",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lww19d55",
@@ -155,6 +442,27 @@
    "new": "אגודה שיתופית רשומה"
   },
   {
+   "id": "mp64lwz91z62",
+   "chp": "1920997",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lxntnwig",
+   "chp": "2100460",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lyu9jc5q",
+   "chp": "1865427",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
    "id": "mp64m1itd2mn",
    "chp": "589958495",
    "field": "registrar_name",
@@ -167,6 +475,20 @@
    "field": "biz_type",
    "old": "",
    "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64m23q4g6l",
+   "chp": "NV1239114",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64m4d5kbl7",
+   "chp": "1849766",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64mabaj7ay",
@@ -246,6 +568,27 @@
    "new": "אגודה שיתופית רשומה"
   },
   {
+   "id": "c7e34d31fdc1",
+   "chp": "2023950211",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "636475105429",
+   "chp": "2203094",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "425a44d2a8b5",
+   "chp": "2185699",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
    "id": "1b86e39d0349",
    "chp": "570011767",
    "field": "registry_status",
@@ -265,6 +608,13 @@
    "field": "biz_type",
    "old": "",
    "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mw936ww5lhwi",
+   "chp": "44528798375",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mww45yd3dpjo",
