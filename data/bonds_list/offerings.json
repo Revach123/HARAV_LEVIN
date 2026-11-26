@@ -71,6 +71,39 @@
    "chp_number": "520031931"
   },
   {
+   "id": 10450,
+   "maya_report_id": 1784499,
+   "company_name": "מזרחי טפחות הנפ",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784499",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    },
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    },
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "520032046"
+  },
+  {
    "id": 10445,
    "maya_report_id": 1784065,
    "company_name": "מודיעין יהש",
@@ -258,6 +291,27 @@
     }
    ],
    "chp_number": "511930125"
+  },
+  {
+   "id": 10448,
+   "maya_report_id": 1784323,
+   "company_name": "יוניברסל מוטורס",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784323",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "ני\"ע מסחרי",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
+    }
+   ],
+   "chp_number": "511809071"
   },
   {
    "id": 10121,
@@ -617,6 +671,27 @@
    "chp_number": "514960178"
   },
   {
+   "id": 10449,
+   "maya_report_id": 1784289,
+   "company_name": "אביעד ריביות",
+   "is_new_company": false,
+   "new_company_type": null,
+   "draft_no": null,
+   "draft_title": null,
+   "link_prospectus": null,
+   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784289",
+   "link_presentation": null,
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": "517352274"
+  },
+  {
    "id": 10404,
    "maya_report_id": 1778964,
    "company_name": "לייטסטון מוקסי",
@@ -654,6 +729,27 @@
      "name": "",
      "maalot_rating": null,
      "midroog_rating": "Aaa.il"
+    }
+   ],
+   "chp_number": ""
+  },
+  {
+   "id": 10423,
+   "maya_report_id": 1780822,
+   "company_name": "שבלת",
+   "is_new_company": true,
+   "new_company_type": "חברת אג\"ח חדשה",
+   "draft_no": 1,
+   "draft_title": "טיוטת תשקיף להשלמה",
+   "link_prospectus": "https://maya.tase.co.il/he/reports/1780822",
+   "link_trust_indenture": null,
+   "link_presentation": "https://maya.tase.co.il/he/reports/1780842",
+   "securities": [
+    {
+     "security_type": "אג\"ח",
+     "name": "",
+     "maalot_rating": null,
+     "midroog_rating": null
     }
    ],
    "chp_number": ""
@@ -828,6 +924,13 @@
    ]
   },
   {
+   "chp_number": "511809071",
+   "name": "יוניברסל מוטורס",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
    "chp_number": "511930125",
    "name": "סלקום",
    "statuses": [
@@ -926,6 +1029,13 @@
    ]
   },
   {
+   "chp_number": "517352274",
+   "name": "אביעד ריביות",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
    "chp_number": "520020116",
    "name": "הכשרת הישוב",
    "statuses": [
@@ -942,6 +1052,13 @@
   {
    "chp_number": "520031931",
    "name": "בזק",
+   "statuses": [
+    "הנפקה עתידית"
+   ]
+  },
+  {
+   "chp_number": "520032046",
+   "name": "מזרחי טפחות הנפ",
    "statuses": [
     "הנפקה עתידית"
    ]
@@ -989,6 +1106,7 @@
   "נגה נכסים",
   "פישר ברדרס פרופ",
   "לייטסטון מוקסי",
-  "ענבר ריביות"
+  "ענבר ריביות",
+  "שבלת"
  ]
 }

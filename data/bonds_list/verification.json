@@ -1,37 +1,25 @@
 {
- "updated": "2026-11-25",
+ "updated": "2026-11-26",
  "status": "ok",
- "datawise_date": "2026-11-24",
- "expected": 780,
- "maya": 780,
+ "datawise_date": "2026-11-25",
+ "expected": 778,
+ "maya": 778,
  "missing_in_maya": [],
  "missing_detail": [],
  "extra_in_maya": [],
  "limit": 23,
  "kept_no_terms": [
   {
-   "security_id": 1231976,
-   "security_name": "ישראכרט מסחרי 5",
-   "company": "ישראכרט   בע\"מ",
-   "chp_number": "510706153"
+   "security_id": 1232099,
+   "security_name": "בינל הנפ מסחרי2",
+   "company": "הבינלאומי הראשון הנפקות בע\"מ",
+   "chp_number": "513141879"
   },
   {
-   "security_id": 7190242,
-   "security_name": "לוי אגח ח",
-   "company": "א. לוי השקעות ובנין בע\"מ",
-   "chp_number": "520041096"
-  },
-  {
-   "security_id": 1233162,
-   "security_name": "לוי אגח ט",
-   "company": "א. לוי השקעות ובנין בע\"מ",
-   "chp_number": "520041096"
-  },
-  {
-   "security_id": 1218122,
-   "security_name": "אנלייט אנר אגחז",
-   "company": "אנלייט אנרגיה מתחדשת בע\"מ",
-   "chp_number": "520041146"
+   "security_id": 1223296,
+   "security_name": "אאורה אגח יט",
+   "company": "אאורה השקעות בע\"מ",
+   "chp_number": "520038274"
   }
  ],
  "dropped_no_terms": []

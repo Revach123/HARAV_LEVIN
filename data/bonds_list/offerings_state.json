@@ -637,6 +637,31 @@
    "kind": "upcoming",
    "last_seen": "2026-11-26"
   },
+  "U10423": {
+   "data": {
+    "chp_number": "",
+    "company_name": "שבלת",
+    "draft_no": 1,
+    "draft_title": "טיוטת תשקיף להשלמה",
+    "id": 10423,
+    "is_new_company": true,
+    "link_presentation": "https://maya.tase.co.il/he/reports/1780842",
+    "link_prospectus": "https://maya.tase.co.il/he/reports/1780822",
+    "link_trust_indenture": null,
+    "maya_report_id": 1780822,
+    "new_company_type": "חברת אג\"ח חדשה",
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-26"
+  },
   "U10424": {
    "data": {
     "chp_number": "",
@@ -882,6 +907,93 @@
     "maya_report_id": 1784065,
     "new_company_type": null,
     "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-26"
+  },
+  "U10448": {
+   "data": {
+    "chp_number": "511809071",
+    "company_name": "יוניברסל מוטורס",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10448,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784323",
+    "maya_report_id": 1784323,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "ני\"ע מסחרי"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-26"
+  },
+  "U10449": {
+   "data": {
+    "chp_number": "517352274",
+    "company_name": "אביעד ריביות",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10449,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784289",
+    "maya_report_id": 1784289,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": "Aaa.il",
+      "name": "",
+      "security_type": "אג\"ח"
+     }
+    ]
+   },
+   "kind": "upcoming",
+   "last_seen": "2026-11-26"
+  },
+  "U10450": {
+   "data": {
+    "chp_number": "520032046",
+    "company_name": "מזרחי טפחות הנפ",
+    "draft_no": null,
+    "draft_title": null,
+    "id": 10450,
+    "is_new_company": false,
+    "link_presentation": null,
+    "link_prospectus": null,
+    "link_trust_indenture": "https://maya.tase.co.il/he/reports/1784499",
+    "maya_report_id": 1784499,
+    "new_company_type": null,
+    "securities": [
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     },
+     {
+      "maalot_rating": null,
+      "midroog_rating": null,
+      "name": "",
+      "security_type": "אג\"ח"
+     },
      {
       "maalot_rating": null,
       "midroog_rating": null,
