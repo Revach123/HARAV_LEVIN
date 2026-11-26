@@ -2,63 +2,651 @@
  "summary": {
   "scope": "all",
   "recovered_by_single_lookup": 0,
-  "unfound_after_batch": 91,
+  "unfound_after_batch": 92,
   "values_lost": 0,
   "empty_before": {
    "registrar_name": 40,
-   "biz_type": 92
+   "biz_type": 94
   },
   "empty_after": {
-   "registrar_name": 40,
-   "biz_type": 92
+   "registrar_name": 29,
+   "biz_type": 29
   },
-  "updated": "2026-11-25T11:44:54.230010Z",
+  "updated": "2026-11-26T11:31:42.242184Z",
   "source": "d1",
-  "businesses": 1289,
-  "numeric_chp": 1286,
-  "found_in_registry": 1195,
-  "found_ratio": 0.929,
+  "businesses": 1291,
+  "numeric_chp": 1288,
+  "found_in_registry": 1209,
+  "found_ratio": 0.939,
   "failed_batches": 0,
-  "datawise_rows": 2249,
-  "datawise_date": "2026-11-24",
+  "datawise_rows": 2246,
+  "datawise_date": "2026-11-25",
   "bond_companies": 361,
   "changes": {
-   "registrar_name": 0,
-   "biz_type": 0,
+   "registrar_name": 11,
+   "biz_type": 65,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 9,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
-   "registrar_name": 0,
-   "biz_type": 0,
+   "registrar_name": 11,
+   "biz_type": 65,
    "tase_has_agch": 0,
-   "registry_status": 0,
+   "registry_status": 9,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "registry_status_counts": {
-   "לא ידוע": 157,
-   "פעילה": 1083,
-   "מחוסלת/חיסול": 34,
+   "לא ידוע": 150,
+   "פעילה": 1091,
+   "מחוסלת/חיסול": 35,
    "בפירוק": 15
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 0,
+  "statements_applied": 65,
   "problems": []
  },
- "changes": [],
- "not_found": [
+ "changes": [
   {
    "id": "mp64ip5cv118",
    "chp": "589916006",
-   "permit_name": "לאומית שירותי בריאות",
-   "registrar_name": "לאומית שירותי בריאות",
-   "entity_type": "company",
-   "biz_type": ""
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
   },
+  {
+   "id": "mp64j1qp0r2p",
+   "chp": "2352046",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64j4eji837",
+   "chp": "1841580",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jdba8ybj",
+   "chp": "2185148",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jdje8zg4",
+   "chp": "1957080",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64je2rxskd",
+   "chp": "510394637",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jj6clqcs",
+   "chp": "570009852",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64jj6clqcs",
+   "chp": "570009852",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קרן מקפת מרכז לפנסיה ותגמולים אגודה שיתופית בע\"מ"
+  },
+  {
+   "id": "mp64jj6clqcs",
+   "chp": "570009852",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64jjstiki7",
+   "chp": "1963039",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jle7n132",
+   "chp": "2624970",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jme64vgn",
+   "chp": "1983001",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jmhjxtwo",
+   "chp": "1981143",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jmkscu26",
+   "chp": "1840550",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jn2fuyba",
+   "chp": "2177996",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jnojyz3v",
+   "chp": "2160207",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jo9xyqq2",
+   "chp": "2059088",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jodkc9v3",
+   "chp": "1939883",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jszyhq1g",
+   "chp": "1811308",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64jz3lzl09",
+   "chp": "1814237",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k329w9yo",
+   "chp": "1852623",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k6hy585v",
+   "chp": "1888119",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k6zgniim",
+   "chp": "1744984",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64k7koodwc",
+   "chp": "1427976",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kcaqbxm7",
+   "chp": "1957081",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kct2418c",
+   "chp": "1938699",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kdt011qb",
+   "chp": "1866231",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kj0adxlj",
+   "chp": "1853213",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kuvvc57r",
+   "chp": "863439895",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kuzmd8u9",
+   "chp": "1838682",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kv30f2xt",
+   "chp": "1001171286",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64kvkd7i0c",
+   "chp": "1858676",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64l1v21bv6",
+   "chp": "570009175",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64l1v21bv6",
+   "chp": "570009175",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מירון-מושב עובדים של הפועל המזרחי להתישבות שיתופית בע\"מ"
+  },
+  {
+   "id": "mp64l1v21bv6",
+   "chp": "570009175",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64l2bo6aqg",
+   "chp": "589902279",
+   "field": "registrar_name",
+   "old": "",
+   "new": "מכבי שירותי בריאות"
+  },
+  {
+   "id": "mp64l2bo6aqg",
+   "chp": "589902279",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64l354bzh7",
+   "chp": "2008787",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64l7q6pf25",
+   "chp": "1947641",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64ladlhcld",
+   "chp": "1921080",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lc7mo4z6",
+   "chp": "1905761",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lfqa0eeb",
+   "chp": "475527",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lh9hrjj2",
+   "chp": "34140467",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lihmqy53",
+   "chp": "1863501",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lk829qbv",
+   "chp": "1838863",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64llj8nfj7",
+   "chp": "1938333",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lmb0xr02",
+   "chp": "1940909",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lq7l9ww0",
+   "chp": "33248324",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lqm44x9j",
+   "chp": "599000098",
+   "field": "registrar_name",
+   "old": "",
+   "new": "הסתדרות אגודת ישראל בארץ ישראל"
+  },
+  {
+   "id": "mp64lqm44x9j",
+   "chp": "599000098",
+   "field": "biz_type",
+   "old": "",
+   "new": "מפלגה רשומה"
+  },
+  {
+   "id": "mp64lqwhk28r",
+   "chp": "1900288",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lra43cz9",
+   "chp": "1946194",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lvqf93z7",
+   "chp": "1886279",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lww19d55",
+   "chp": "570005959",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64lww19d55",
+   "chp": "570005959",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קופת תגמולים של עובדי עירית חיפה אגודה שיתופית בע\"מ"
+  },
+  {
+   "id": "mp64lww19d55",
+   "chp": "570005959",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64lwz91z62",
+   "chp": "1920997",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lxntnwig",
+   "chp": "2100460",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64lyu9jc5q",
+   "chp": "1865427",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64m1itd2mn",
+   "chp": "589958495",
+   "field": "registrar_name",
+   "old": "",
+   "new": "קופת חולים מאוחדת"
+  },
+  {
+   "id": "mp64m1itd2mn",
+   "chp": "589958495",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64m23q4g6l",
+   "chp": "NV1239114",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64m4d5kbl7",
+   "chp": "1849766",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mp64mabaj7ay",
+   "chp": "589906114",
+   "field": "registrar_name",
+   "old": "",
+   "new": "שירותי בריאות כללית"
+  },
+  {
+   "id": "mp64mabaj7ay",
+   "chp": "589906114",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה עות'מאנית רשומה"
+  },
+  {
+   "id": "mp64mf0legx4",
+   "chp": "570000745",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64mf0legx4",
+   "chp": "570000745",
+   "field": "registrar_name",
+   "old": "",
+   "new": "תנובה מרכז שיתופי לשיווק תוצרת חקלאית בישראל בע\"מ"
+  },
+  {
+   "id": "mp64mf0legx4",
+   "chp": "570000745",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64mfc5bkbt",
+   "chp": "570025700",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64mfc5bkbt",
+   "chp": "570025700",
+   "field": "registrar_name",
+   "old": "",
+   "new": "תעשיות מזון תנובה - אגודה שיתופית חקלאית בישראל בע\"מ"
+  },
+  {
+   "id": "mp64mfc5bkbt",
+   "chp": "570025700",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mp64mfg1jeug",
+   "chp": "570053512",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mp64mfg1jeug",
+   "chp": "570053512",
+   "field": "registrar_name",
+   "old": "",
+   "new": "תעשיות רהיטים לביא- אגודה שיתופית חקלאית בע\"מ"
+  },
+  {
+   "id": "mp64mfg1jeug",
+   "chp": "570053512",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "c7e34d31fdc1",
+   "chp": "2023950211",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "636475105429",
+   "chp": "2203094",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "425a44d2a8b5",
+   "chp": "2185699",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "1b86e39d0349",
+   "chp": "570011767",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "1b86e39d0349",
+   "chp": "570011767",
+   "field": "registrar_name",
+   "old": "",
+   "new": "גמל-על, קופת תגמולים לעובדי אל על, אגודה שיתופית בע\"מ"
+  },
+  {
+   "id": "1b86e39d0349",
+   "chp": "570011767",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mw936ww5lhwi",
+   "chp": "44528798375",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה מנפיקה בבורסה"
+  },
+  {
+   "id": "mww45yd3dpjo",
+   "chp": "570014332",
+   "field": "registry_status",
+   "old": "",
+   "new": "פעילה"
+  },
+  {
+   "id": "mww45yd3dpjo",
+   "chp": "570014332",
+   "field": "biz_type",
+   "old": "",
+   "new": "אגודה שיתופית רשומה"
+  },
+  {
+   "id": "mwwboz7b1yq5",
+   "chp": "515643484",
+   "field": "registry_status",
+   "old": "",
+   "new": "מחוסלת מרצון"
+  },
+  {
+   "id": "mwwboz7b1yq5",
+   "chp": "515643484",
+   "field": "biz_type",
+   "old": "",
+   "new": "חברה פרטית - בע\"מ"
+  }
+ ],
+ "not_found": [
   {
    "id": "mp64j1qp0r2p",
    "chp": "2352046",
@@ -104,14 +692,6 @@
    "chp": "510394637",
    "permit_name": "מיי סייז, אינק",
    "registrar_name": "מיי סייז, אינק.(חברה זרה)",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64jj6clqcs",
-   "chp": "570009852",
-   "permit_name": "קרן מקפת מרכז לפנסיה ותגמולים אגודה שיתופית על שם קופה מרכזית לתגמולים ופנסיה לפקיד",
-   "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -420,22 +1000,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64l1v21bv6",
-   "chp": "570009175",
-   "permit_name": "מירון - מושב עובדים של הפועל המזרחי להתישבות שיתופית",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64l2bo6aqg",
-   "chp": "589902279",
-   "permit_name": "מכבי שירותי בריאות",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
    "id": "mp64l354bzh7",
    "chp": "2008787",
    "permit_name": "מליבו",
@@ -580,14 +1144,6 @@
    "biz_type": ""
   },
   {
-   "id": "mp64lqm44x9j",
-   "chp": "599000098",
-   "permit_name": "הסתדרות אגודת ישראל בארץ ישראל",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
    "id": "mp64lqwhk28r",
    "chp": "1900288",
    "permit_name": "פסיפיק אוק אסאואר הולדינגס PACIFIC OAK SOR (BVI) HOLDINGS",
@@ -608,14 +1164,6 @@
    "chp": "1886279",
    "permit_name": "קבוצת קליין אינטרנשיונל",
    "registrar_name": "קבוצת קליין אינטרנשיונל לימיטד",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64lww19d55",
-   "chp": "570005959",
-   "permit_name": "קופת תגמולים של עובדי עירית חיפה אגודה שיתופית",
-   "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
   },
@@ -647,14 +1195,6 @@
    "id": "mp64lzostzz2",
    "chp": "500210349",
    "permit_name": "קרית מלאכי - עירייה",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64m1itd2mn",
-   "chp": "589958495",
-   "permit_name": "קופת חולים מאוחדת",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -700,41 +1240,9 @@
    "biz_type": ""
   },
   {
-   "id": "mp64mabaj7ay",
-   "chp": "589906114",
-   "permit_name": "שירותי בריאות כללית",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
    "id": "mp64meh6yia9",
    "chp": "500250006",
    "permit_name": "תל אביב - עירייה",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64mf0legx4",
-   "chp": "570000745",
-   "permit_name": "תנובה מרכז שיתופי לשיווק תוצרת חקלאית בישראל",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64mfc5bkbt",
-   "chp": "570025700",
-   "permit_name": "תעשיות מזון תנובה - אגודה שיתופית חקלאית בישראל",
-   "registrar_name": "",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "mp64mfg1jeug",
-   "chp": "570053512",
-   "permit_name": "תעשיות רהיטים לביא",
    "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
@@ -760,14 +1268,6 @@
    "chp": "2185699",
    "permit_name": "קוהאן פרופרטיס KOHAN PROPERTIES",
    "registrar_name": "קוהאן פרופרטיס לימיטד",
-   "entity_type": "company",
-   "biz_type": ""
-  },
-  {
-   "id": "1b86e39d0349",
-   "chp": "570011767",
-   "permit_name": "גמל - על קופת תגמולים לעובדי אל-על אגודה שיתופית",
-   "registrar_name": "",
    "entity_type": "company",
    "biz_type": ""
   },
