@@ -5,36 +5,36 @@
   "unfound_after_batch": 92,
   "values_lost": 0,
   "empty_before": {
-   "registrar_name": 40,
-   "biz_type": 94
+   "registrar_name": 29,
+   "biz_type": 29
   },
   "empty_after": {
    "registrar_name": 29,
    "biz_type": 29
   },
-  "updated": "2026-11-26T11:31:42.242184Z",
+  "updated": "2026-11-27T11:25:56.085526Z",
   "source": "d1",
   "businesses": 1291,
   "numeric_chp": 1288,
   "found_in_registry": 1209,
   "found_ratio": 0.939,
   "failed_batches": 0,
-  "datawise_rows": 2246,
-  "datawise_date": "2026-11-25",
-  "bond_companies": 361,
+  "datawise_rows": 2251,
+  "datawise_date": "2026-11-26",
+  "bond_companies": 362,
   "changes": {
-   "registrar_name": 11,
-   "biz_type": 65,
+   "registrar_name": 0,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 9,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
   "fills_of_empty": {
-   "registrar_name": 11,
-   "biz_type": 65,
+   "registrar_name": 0,
+   "biz_type": 0,
    "tase_has_agch": 0,
-   "registry_status": 9,
+   "registry_status": 0,
    "has_agch_any": 0,
    "permits_category": 0
   },
@@ -46,606 +46,10 @@
   },
   "readback_mismatches": 0,
   "mode": "applied",
-  "statements_applied": 65,
+  "statements_applied": 0,
   "problems": []
  },
- "changes": [
-  {
-   "id": "mp64ip5cv118",
-   "chp": "589916006",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה עות'מאנית רשומה"
-  },
-  {
-   "id": "mp64j1qp0r2p",
-   "chp": "2352046",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64j4eji837",
-   "chp": "1841580",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jdba8ybj",
-   "chp": "2185148",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jdje8zg4",
-   "chp": "1957080",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64je2rxskd",
-   "chp": "510394637",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jj6clqcs",
-   "chp": "570009852",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64jj6clqcs",
-   "chp": "570009852",
-   "field": "registrar_name",
-   "old": "",
-   "new": "קרן מקפת מרכז לפנסיה ותגמולים אגודה שיתופית בע\"מ"
-  },
-  {
-   "id": "mp64jj6clqcs",
-   "chp": "570009852",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mp64jjstiki7",
-   "chp": "1963039",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jle7n132",
-   "chp": "2624970",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jme64vgn",
-   "chp": "1983001",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jmhjxtwo",
-   "chp": "1981143",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jmkscu26",
-   "chp": "1840550",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jn2fuyba",
-   "chp": "2177996",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jnojyz3v",
-   "chp": "2160207",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jo9xyqq2",
-   "chp": "2059088",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jodkc9v3",
-   "chp": "1939883",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jszyhq1g",
-   "chp": "1811308",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64jz3lzl09",
-   "chp": "1814237",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64k329w9yo",
-   "chp": "1852623",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64k6hy585v",
-   "chp": "1888119",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64k6zgniim",
-   "chp": "1744984",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64k7koodwc",
-   "chp": "1427976",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kcaqbxm7",
-   "chp": "1957081",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kct2418c",
-   "chp": "1938699",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kdt011qb",
-   "chp": "1866231",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kj0adxlj",
-   "chp": "1853213",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kuvvc57r",
-   "chp": "863439895",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kuzmd8u9",
-   "chp": "1838682",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kv30f2xt",
-   "chp": "1001171286",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64kvkd7i0c",
-   "chp": "1858676",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64l1v21bv6",
-   "chp": "570009175",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64l1v21bv6",
-   "chp": "570009175",
-   "field": "registrar_name",
-   "old": "",
-   "new": "מירון-מושב עובדים של הפועל המזרחי להתישבות שיתופית בע\"מ"
-  },
-  {
-   "id": "mp64l1v21bv6",
-   "chp": "570009175",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mp64l2bo6aqg",
-   "chp": "589902279",
-   "field": "registrar_name",
-   "old": "",
-   "new": "מכבי שירותי בריאות"
-  },
-  {
-   "id": "mp64l2bo6aqg",
-   "chp": "589902279",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה עות'מאנית רשומה"
-  },
-  {
-   "id": "mp64l354bzh7",
-   "chp": "2008787",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64l7q6pf25",
-   "chp": "1947641",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64ladlhcld",
-   "chp": "1921080",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lc7mo4z6",
-   "chp": "1905761",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lfqa0eeb",
-   "chp": "475527",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lh9hrjj2",
-   "chp": "34140467",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lihmqy53",
-   "chp": "1863501",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lk829qbv",
-   "chp": "1838863",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64llj8nfj7",
-   "chp": "1938333",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lmb0xr02",
-   "chp": "1940909",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lq7l9ww0",
-   "chp": "33248324",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lqm44x9j",
-   "chp": "599000098",
-   "field": "registrar_name",
-   "old": "",
-   "new": "הסתדרות אגודת ישראל בארץ ישראל"
-  },
-  {
-   "id": "mp64lqm44x9j",
-   "chp": "599000098",
-   "field": "biz_type",
-   "old": "",
-   "new": "מפלגה רשומה"
-  },
-  {
-   "id": "mp64lqwhk28r",
-   "chp": "1900288",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lra43cz9",
-   "chp": "1946194",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lvqf93z7",
-   "chp": "1886279",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lww19d55",
-   "chp": "570005959",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64lww19d55",
-   "chp": "570005959",
-   "field": "registrar_name",
-   "old": "",
-   "new": "קופת תגמולים של עובדי עירית חיפה אגודה שיתופית בע\"מ"
-  },
-  {
-   "id": "mp64lww19d55",
-   "chp": "570005959",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mp64lwz91z62",
-   "chp": "1920997",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lxntnwig",
-   "chp": "2100460",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64lyu9jc5q",
-   "chp": "1865427",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64m1itd2mn",
-   "chp": "589958495",
-   "field": "registrar_name",
-   "old": "",
-   "new": "קופת חולים מאוחדת"
-  },
-  {
-   "id": "mp64m1itd2mn",
-   "chp": "589958495",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה עות'מאנית רשומה"
-  },
-  {
-   "id": "mp64m23q4g6l",
-   "chp": "NV1239114",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64m4d5kbl7",
-   "chp": "1849766",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mp64mabaj7ay",
-   "chp": "589906114",
-   "field": "registrar_name",
-   "old": "",
-   "new": "שירותי בריאות כללית"
-  },
-  {
-   "id": "mp64mabaj7ay",
-   "chp": "589906114",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה עות'מאנית רשומה"
-  },
-  {
-   "id": "mp64mf0legx4",
-   "chp": "570000745",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64mf0legx4",
-   "chp": "570000745",
-   "field": "registrar_name",
-   "old": "",
-   "new": "תנובה מרכז שיתופי לשיווק תוצרת חקלאית בישראל בע\"מ"
-  },
-  {
-   "id": "mp64mf0legx4",
-   "chp": "570000745",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mp64mfc5bkbt",
-   "chp": "570025700",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64mfc5bkbt",
-   "chp": "570025700",
-   "field": "registrar_name",
-   "old": "",
-   "new": "תעשיות מזון תנובה - אגודה שיתופית חקלאית בישראל בע\"מ"
-  },
-  {
-   "id": "mp64mfc5bkbt",
-   "chp": "570025700",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mp64mfg1jeug",
-   "chp": "570053512",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mp64mfg1jeug",
-   "chp": "570053512",
-   "field": "registrar_name",
-   "old": "",
-   "new": "תעשיות רהיטים לביא- אגודה שיתופית חקלאית בע\"מ"
-  },
-  {
-   "id": "mp64mfg1jeug",
-   "chp": "570053512",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "c7e34d31fdc1",
-   "chp": "2023950211",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "636475105429",
-   "chp": "2203094",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "425a44d2a8b5",
-   "chp": "2185699",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "1b86e39d0349",
-   "chp": "570011767",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "1b86e39d0349",
-   "chp": "570011767",
-   "field": "registrar_name",
-   "old": "",
-   "new": "גמל-על, קופת תגמולים לעובדי אל על, אגודה שיתופית בע\"מ"
-  },
-  {
-   "id": "1b86e39d0349",
-   "chp": "570011767",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mw936ww5lhwi",
-   "chp": "44528798375",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה מנפיקה בבורסה"
-  },
-  {
-   "id": "mww45yd3dpjo",
-   "chp": "570014332",
-   "field": "registry_status",
-   "old": "",
-   "new": "פעילה"
-  },
-  {
-   "id": "mww45yd3dpjo",
-   "chp": "570014332",
-   "field": "biz_type",
-   "old": "",
-   "new": "אגודה שיתופית רשומה"
-  },
-  {
-   "id": "mwwboz7b1yq5",
-   "chp": "515643484",
-   "field": "registry_status",
-   "old": "",
-   "new": "מחוסלת מרצון"
-  },
-  {
-   "id": "mwwboz7b1yq5",
-   "chp": "515643484",
-   "field": "biz_type",
-   "old": "",
-   "new": "חברה פרטית - בע\"מ"
-  }
- ],
+ "changes": [],
  "not_found": [
   {
    "id": "mp64j1qp0r2p",
@@ -653,7 +57,7 @@
    "permit_name": "אג'לן קומרשייל ריט הולדינגס אינק",
    "registrar_name": "אג'לן קומרשייל ריט הולדינגס אינק",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64j4eji837",
@@ -661,7 +65,7 @@
    "permit_name": "אול-יר הולדינגס",
    "registrar_name": "אול-יר הולדינגס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64j5kponfn",
@@ -677,7 +81,7 @@
    "permit_name": "איה ניו יורק",
    "registrar_name": "איה ניו יורק לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jdje8zg4",
@@ -685,7 +89,7 @@
    "permit_name": "איי איי סי1#,אל.טי.די",
    "registrar_name": "איי איי סי1#,אל.טי.די",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64je2rxskd",
@@ -693,7 +97,7 @@
    "permit_name": "מיי סייז, אינק",
    "registrar_name": "מיי סייז, אינק.(חברה זרה)",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jjstiki7",
@@ -701,7 +105,7 @@
    "permit_name": "אלטיטיוד השקעות",
    "registrar_name": "אלטיטיוד השקעות לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jle7n132",
@@ -709,7 +113,7 @@
    "permit_name": "אלעד קנדה ריאלטי אינק.",
    "registrar_name": "עלמדב אינק.",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jme64vgn",
@@ -717,7 +121,7 @@
    "permit_name": "אמ אר אר ת'ירטין",
    "registrar_name": "אמ אר אר ת'ירטין לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jmhjxtwo",
@@ -725,7 +129,7 @@
    "permit_name": "אמ. ג'י. ג'י (בי.וי.אי) MGG (BVI)",
    "registrar_name": "אמ.ג'י.ג'י (בי.וי.אי) לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jmkscu26",
@@ -733,7 +137,7 @@
    "permit_name": "אמ. די. ג'י. ריאל אסטייט גלובל",
    "registrar_name": "אמ.די.ג'י. ריאל אסטייט גלובל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jn2fuyba",
@@ -741,7 +145,7 @@
    "permit_name": "אמטראסט אר.אי. לימיטד",
    "registrar_name": "אמטראסט אר.אי. לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jnojyz3v",
@@ -749,7 +153,7 @@
    "permit_name": "אמריקן אקוויטי פרטנרס",
    "registrar_name": "אמריקן אקוויטי פרטנרס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jo9xyqq2",
@@ -757,7 +161,7 @@
    "permit_name": "אנקור הזדמנויות ENCORE OPPORTUNITIES",
    "registrar_name": "אנקור הזדמנויות לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jodkc9v3",
@@ -765,7 +169,7 @@
    "permit_name": "אנקור פרופרטיס",
    "registrar_name": "אנקור פרופרטיס,לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jork1622",
@@ -781,7 +185,7 @@
    "permit_name": "אקסטל לימיטד",
    "registrar_name": "אקסטל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64jut645ta",
@@ -821,7 +225,7 @@
    "permit_name": "ברוקלנד אפריל",
    "registrar_name": "ברוקלנד אפריל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64k329w9yo",
@@ -829,7 +233,7 @@
    "permit_name": "ג'י.אף.איי ריאל אסטייט",
    "registrar_name": "ג'י.אף.איי ריאל אסטייט לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64k6hy585v",
@@ -837,7 +241,7 @@
    "permit_name": "דלשה קפיטל",
    "registrar_name": "דלשה קפיטל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64k6zgniim",
@@ -845,7 +249,7 @@
    "permit_name": "דה זראסאי גרופ",
    "registrar_name": "דה זראסאי גרופ לטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64k7koodwc",
@@ -853,7 +257,7 @@
    "permit_name": "דה לסר גרופ",
    "registrar_name": "דה לסר גרופ לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kcaqbxm7",
@@ -861,7 +265,7 @@
    "permit_name": "הרץ פרופרטיס גרופ Hertz Properties Group",
    "registrar_name": "הרץ פרופרטיס גרופ, לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kct2418c",
@@ -869,7 +273,7 @@
    "permit_name": "ווטרסטון פרופרטיס",
    "registrar_name": "ווטרסטון פרופרטיס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kdt011qb",
@@ -877,7 +281,7 @@
    "permit_name": "וורטון פרופרטיז (בי.וי.איי)",
    "registrar_name": "וורטון פרופרטיז (בי.וי.איי) לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kfoyy3od",
@@ -909,7 +313,7 @@
    "permit_name": "טריטופ ריאלטי",
    "registrar_name": "טריטופ ריאלטי לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64klwzp3ul",
@@ -949,7 +353,7 @@
    "permit_name": "ליווינג סטון איימו",
    "registrar_name": "ליווינג סטון איממו בי.וי.",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kuzmd8u9",
@@ -957,7 +361,7 @@
    "permit_name": "Lightstone Enterprises Limited",
    "registrar_name": "לייטסטון אנטרפרייזס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kv30f2xt",
@@ -965,7 +369,7 @@
    "permit_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ LANTERRA CANADA ENTERPRISES LIMITED PARTNERSHIP",
    "registrar_name": "לנטרה קנדה אנטרפרייזס לימיטד פרטנרשיפ",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kvh11wi5",
@@ -981,7 +385,7 @@
    "permit_name": "מויניאן",
    "registrar_name": "מויניאן לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64kwu965qi",
@@ -1005,7 +409,7 @@
    "permit_name": "מליבו",
    "registrar_name": "מליבו אינווסטמנטס",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64l7q6pf25",
@@ -1013,7 +417,7 @@
    "permit_name": "נובל אסטס (בי.וי.איי)",
    "registrar_name": "נובל אסטס(בי.וי.איי)לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64l8fl2ca7",
@@ -1037,7 +441,7 @@
    "permit_name": "סאות'רן פרופרטיס קפיטל",
    "registrar_name": "סאות'רן פרופרטיס קפיטל לטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lc7mo4z6",
@@ -1045,7 +449,7 @@
    "permit_name": "נמקו ריאלטי NAMCO REALTY LTD",
    "registrar_name": "נמקו ריאלטי לטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64le6qas2w",
@@ -1061,7 +465,7 @@
    "permit_name": "סאטל פרופרטיס לימיטד",
    "registrar_name": "סאטל פרופרטיס פ.ל.סי",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lftn9h8p",
@@ -1085,7 +489,7 @@
    "permit_name": "נאנט רייל אסטייט גרופ אן.וי",
    "registrar_name": "נאנט רייל אסטייט גרופ אן.וי",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lihmqy53",
@@ -1093,7 +497,7 @@
    "permit_name": "סטרוברי פילדס ריט",
    "registrar_name": "סטרוברי פילדס ריט לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64litek23y",
@@ -1109,7 +513,7 @@
    "permit_name": "ספנסר אקוויטי גרופ",
    "registrar_name": "ספנסר אקוויטי גרופ לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64llj8nfj7",
@@ -1117,7 +521,7 @@
    "permit_name": "וו.סי.ג'י נכסים",
    "registrar_name": "וו.סי.ג'י נכסים לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lmb0xr02",
@@ -1125,7 +529,7 @@
    "permit_name": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי)",
    "registrar_name": "יו.איי.אר.סי-ג'י.אס.איי (בי.וי.איי) לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64ln5p4sjz",
@@ -1141,7 +545,7 @@
    "permit_name": "פלאזה סנטרס אן.וי",
    "registrar_name": "פלאזה סנטרס אן.וי",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lqwhk28r",
@@ -1149,7 +553,7 @@
    "permit_name": "פסיפיק אוק אסאואר הולדינגס PACIFIC OAK SOR (BVI) HOLDINGS",
    "registrar_name": "פסיפיק אוק אסאואר(בי וי איי) הולדינגס, לטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lra43cz9",
@@ -1157,7 +561,7 @@
    "permit_name": "צ'וזן נכסים",
    "registrar_name": "צ'וזן נכסים לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lvqf93z7",
@@ -1165,7 +569,7 @@
    "permit_name": "קבוצת קליין אינטרנשיונל",
    "registrar_name": "קבוצת קליין אינטרנשיונל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lwz91z62",
@@ -1173,7 +577,7 @@
    "permit_name": "קורנרסטון פרופרטייס",
    "registrar_name": "קורנרסטון פרופרטייס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lxntnwig",
@@ -1181,7 +585,7 @@
    "permit_name": "קלקן קפיטל KALKAN CAPITAL",
    "registrar_name": "קלקן קפיטל לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lyu9jc5q",
@@ -1189,7 +593,7 @@
    "permit_name": "קופרליין אמריקאס",
    "registrar_name": "קופרליין אמריקאס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64lzostzz2",
@@ -1221,7 +625,7 @@
    "permit_name": "רילייטד פורטפוליו מסחרי",
    "registrar_name": "רילייטד פורטפוליו מסחרי לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mp64m54hjvjx",
@@ -1253,7 +657,7 @@
    "permit_name": "INPLAY OIL CORP.",
    "registrar_name": "אינפליי אויל קורפ.",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "636475105429",
@@ -1261,7 +665,7 @@
    "permit_name": "יילוסטון ריל אסטייט קפיטל YELLOWSTONE REAL ESTATE CAPITAL",
    "registrar_name": "יילוסטון ריל אסטייט קפיטל לטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "425a44d2a8b5",
@@ -1269,7 +673,7 @@
    "permit_name": "קוהאן פרופרטיס KOHAN PROPERTIES",
    "registrar_name": "קוהאן פרופרטיס לימיטד",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   },
   {
    "id": "mw936ww5lhwi",
@@ -1277,7 +681,7 @@
    "permit_name": "נורסטאר החזקות אינק",
    "registrar_name": "נורסטאר החזקות אינק",
    "entity_type": "company",
-   "biz_type": ""
+   "biz_type": "חברה מנפיקה בבורסה"
   }
  ],
  "non_numeric_chp": [
