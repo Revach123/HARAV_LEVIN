@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-27",
+ "updated": "2026-11-28",
  "upcoming": [
   {
    "id": 10358,
@@ -753,29 +753,6 @@
     }
    ],
    "chp_number": ""
-  },
-  {
-   "chp_number": "520035171",
-   "company_name": "אדגר השקעות",
-   "draft_no": null,
-   "draft_title": null,
-   "id": 10413,
-   "is_new_company": false,
-   "link_presentation": null,
-   "link_prospectus": null,
-   "link_trust_indenture": "https://maya.tase.co.il/he/reports/1778715",
-   "maya_report_id": 1780104,
-   "new_company_type": null,
-   "securities": [
-    {
-     "maalot_rating": null,
-     "midroog_rating": "A2.il",
-     "name": "",
-     "security_type": "אג\"ח"
-    }
-   ],
-   "carried": true,
-   "last_seen": "2026-11-24"
   },
   {
    "chp_number": "44528798375",
